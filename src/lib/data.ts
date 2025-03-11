@@ -1,4 +1,3 @@
-
 import { Resident, Announcement, ForumPost, CrimeReport, DashboardStats, Comment } from './types';
 
 // Mock Residents Data
@@ -175,7 +174,7 @@ export const forumPosts: ForumPost[] = [
   {
     id: '1',
     title: 'Water Supply Interruption',
-    content: 'Has anyone else experienced water supply interruption in the western part of our barangay? It's been 2 days now and we're still without water.',
+    content: 'Has anyone else experienced water supply interruption in the western part of our barangay? It\'s been 2 days now and we\'re still without water.',
     authorId: '3',
     authorName: 'Pedro Reyes',
     datePosted: '2023-07-05',
@@ -199,7 +198,7 @@ export const forumPosts: ForumPost[] = [
   {
     id: '3',
     title: 'Basketball Tournament Proposal',
-    content: 'I'd like to propose organizing a basketball tournament for the youth in our barangay during the summer vacation. Who would be interested in participating or helping organize?',
+    content: 'I\'d like to propose organizing a basketball tournament for the youth in our barangay during the summer vacation. Who would be interested in participating or helping organize?',
     authorId: '4',
     authorName: 'Rosa Diaz',
     datePosted: '2023-07-10',
@@ -211,7 +210,7 @@ export const forumPosts: ForumPost[] = [
   {
     id: '4',
     title: 'Garbage Collection Schedule',
-    content: 'Can someone please clarify the garbage collection schedule? It seems to have changed recently and our trash wasn't collected this week.',
+    content: 'Can someone please clarify the garbage collection schedule? It seems to have changed recently and our trash wasn\'t collected this week.',
     authorId: '1',
     authorName: 'Juan Dela Cruz',
     datePosted: '2023-07-12',
@@ -241,7 +240,7 @@ export const comments: Comment[] = [
     postId: '1',
     authorId: '2',
     authorName: 'Maria Santos',
-    content: 'We're experiencing the same issue in our area. I called the water utility company and they said they're fixing a main pipe that burst. Should be resolved by tomorrow.',
+    content: 'We\'re experiencing the same issue in our area. I called the water utility company and they said they\'re fixing a main pipe that burst. Should be resolved by tomorrow.',
     datePosted: '2023-07-05',
     likes: 5
   },
@@ -277,7 +276,7 @@ export const comments: Comment[] = [
     postId: '4',
     authorId: '3',
     authorName: 'Pedro Reyes',
-    content: 'The new schedule is Monday and Thursday mornings for our area. They announced it last month but didn't distribute printed schedules.',
+    content: 'The new schedule is Monday and Thursday mornings for our area. They announced it last month but didn\'t distribute printed schedules.',
     datePosted: '2023-07-12',
     likes: 4
   }
@@ -342,7 +341,7 @@ export const crimeReports: CrimeReport[] = [
     id: '4',
     reportNumber: 'CR-2023-004',
     reportTitle: 'Motorcycle Theft',
-    description: 'Red Honda motorcycle (Plate #: ABC 123) stolen from in front of the owner's residence between 10 PM and 6 AM.',
+    description: 'Red Honda motorcycle (Plate #: ABC 123) stolen from in front of the owner\'s residence between 10 PM and 6 AM.',
     dateReported: '2023-07-10',
     dateOfIncident: '2023-07-09',
     location: 'Mabini Street, House #78',
