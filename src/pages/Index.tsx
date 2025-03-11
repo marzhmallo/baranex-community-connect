@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ResidentsList } from "@/components/residents/ResidentsList";
+import ResidentsList from "@/components/residents/ResidentsList";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import AnnouncementsList from "@/components/announcements/AnnouncementsList";
 import CalendarView from "@/components/calendar/CalendarView";

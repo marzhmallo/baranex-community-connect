@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { DayContentProps } from "react-day-picker";
 
 // Mock event data
 const events = [
@@ -12,14 +13,6 @@ const events = [
   { id: 4, title: "COVID-19 Awareness", date: new Date(2023, 5, 25), type: "health" },
   { id: 5, title: "Budget Hearing", date: new Date(2023, 5, 28), type: "meeting" },
 ];
-
-type CalendarDay = {
-  date: Date;
-  events: typeof events;
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  isSelected: boolean;
-};
 
 const CalendarView = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -51,18 +44,20 @@ const CalendarView = () => {
             onSelect={handleSelect}
             className="rounded-md border"
             components={{
-              DayContent: ({ day }: { day: CalendarDay }) => {
+              DayContent: (props: DayContentProps) => {
+                const { date: dayDate } = props;
+                
                 // Find events for this day
                 const dayEvents = events.filter(
                   (event) => 
-                    event.date.getDate() === day.date.getDate() &&
-                    event.date.getMonth() === day.date.getMonth() &&
-                    event.date.getFullYear() === day.date.getFullYear()
+                    event.date.getDate() === dayDate.getDate() &&
+                    event.date.getMonth() === dayDate.getMonth() &&
+                    event.date.getFullYear() === dayDate.getFullYear()
                 );
                 
                 return (
                   <div className="relative h-full w-full p-2">
-                    <span>{day.date.getDate()}</span>
+                    <span>{dayDate.getDate()}</span>
                     {dayEvents.length > 0 && (
                       <div className="absolute bottom-1 right-1 flex gap-0.5">
                         {dayEvents.length > 3 ? (

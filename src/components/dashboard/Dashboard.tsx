@@ -9,7 +9,8 @@ import {
   AlertCircle,
   BarChart3,
   Clock,
-  ArrowRight
+  ArrowRight,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
