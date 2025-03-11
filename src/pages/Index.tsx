@@ -6,8 +6,16 @@ import ResidentsList from "@/components/residents/ResidentsList";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import AnnouncementsList from "@/components/announcements/AnnouncementsList";
 import CalendarView from "@/components/calendar/CalendarView";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { LogOut } from "lucide-react";
 
 const Index = () => {
+  const handleSignOut = () => {
+    // In a real app, this would handle authentication sign out
+    console.log("Signed out");
+    alert("You have been signed out");
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -48,6 +56,21 @@ const Index = () => {
             </a>
           </Button>
         </nav>
+        
+        {/* Add theme toggle and sign out buttons at the bottom */}
+        <div className="p-4 border-t border-sidebar-border mt-auto">
+          <div className="space-y-2">
+            <ThemeToggle />
+            <Button 
+              variant="sidebar" 
+              className="w-full justify-start text-red-500 hover:text-red-400 hover:bg-red-900/20"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              <span>Sign Out</span>
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Main content */}

@@ -75,6 +75,15 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+
+    --sidebar-background: 222 33% 7%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 224.3 76.3% 48%;
   }
 }
 
@@ -88,40 +97,4 @@
   }
 }
 
-@layer components {
-  .baranex-card {
-    @apply bg-white rounded-lg shadow-md p-6 border border-gray-100;
-  }
-  
-  .baranex-stat-card {
-    @apply bg-white rounded-lg shadow-md p-4 border border-gray-100 flex flex-col hover:shadow-lg transition-shadow duration-200;
-  }
-  
-  .baranex-section-title {
-    @apply text-xl font-semibold text-baranex-primary mb-4;
-  }
-  
-  .baranex-list-item {
-    @apply border-b border-gray-100 py-3 last:border-0 hover:bg-gray-50 transition-colors duration-150 rounded-md;
-  }
-  
-  .baranex-badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
-  }
-  
-  .baranex-badge-success {
-    @apply baranex-badge bg-green-100 text-green-800;
-  }
-  
-  .baranex-badge-warning {
-    @apply baranex-badge bg-yellow-100 text-yellow-800;
-  }
-  
-  .baranex-badge-danger {
-    @apply baranex-badge bg-red-100 text-red-800;
-  }
-  
-  .baranex-badge-info {
-    @apply baranex-badge bg-blue-100 text-blue-800;
-  }
-}
+/* ... keep existing code (component classes) */
