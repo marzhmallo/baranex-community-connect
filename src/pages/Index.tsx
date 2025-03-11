@@ -85,22 +85,23 @@ const Index = () => {
           <div className="w-full md:w-auto md:hidden">
             <h1 className="text-xl font-bold text-center">BaranEX</h1>
           </div>
-          <div className="ml-auto">
-            {/* Removed redundant buttons here */}
+          <div className="ml-auto flex items-center gap-4">
+            <Button variant="outline" size="sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bell mr-2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+              Notifications
+            </Button>
+            <Button size="sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-circle-2 mr-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+              Admin
+            </Button>
           </div>
         </header>
 
         {/* Page content */}
         <main className="flex-1 p-6 overflow-auto">
           <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList className="grid grid-cols-5 w-full max-w-3xl mx-auto">
-              <TabsTrigger value="dashboard" id="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="residents" id="residents">Residents</TabsTrigger>
-              <TabsTrigger value="announcements" id="announcements">Announcements</TabsTrigger>
-              <TabsTrigger value="calendar" id="calendar">Calendar</TabsTrigger>
-              <TabsTrigger value="statistics" id="statistics">Statistics</TabsTrigger>
-            </TabsList>
-
+            {/* Remove the TabsList with navigation buttons, as they duplicate the sidebar functionality */}
+            
             <TabsContent value="dashboard" className="space-y-6">
               <h2 className="text-2xl font-bold">Dashboard</h2>
               <DashboardStats />
