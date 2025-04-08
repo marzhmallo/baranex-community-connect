@@ -8,12 +8,24 @@ import AnnouncementsList from "@/components/announcements/AnnouncementsList";
 import CalendarView from "@/components/calendar/CalendarView";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LogOut } from "lucide-react";
+import { useState } from "react";
 
 const Index = () => {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  
   const handleSignOut = () => {
     // In a real app, this would handle authentication sign out
     console.log("Signed out");
     alert("You have been signed out");
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Scroll to the tab content
+    const element = document.getElementById(value);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -25,35 +37,45 @@ const Index = () => {
           <p className="text-sm text-sidebar-foreground/70">Barangay Census System</p>
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          <Button variant="sidebar" className="w-full justify-start" asChild>
-            <a href="#dashboard" className="flex items-center space-x-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-layout-dashboard"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-              <span>Dashboard</span>
-            </a>
+          <Button 
+            variant="sidebar" 
+            className={`w-full justify-start ${activeTab === "dashboard" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`} 
+            onClick={() => handleTabChange("dashboard")}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-layout-dashboard"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <span className="ml-2">Dashboard</span>
           </Button>
-          <Button variant="sidebar" className="w-full justify-start" asChild>
-            <a href="#residents" className="flex items-center space-x-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              <span>Residents</span>
-            </a>
+          <Button 
+            variant="sidebar" 
+            className={`w-full justify-start ${activeTab === "residents" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`} 
+            onClick={() => handleTabChange("residents")}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span className="ml-2">Residents</span>
           </Button>
-          <Button variant="sidebar" className="w-full justify-start" asChild>
-            <a href="#announcements" className="flex items-center space-x-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-megaphone"><path d="m3 11 18-5v12L3 13"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-              <span>Announcements</span>
-            </a>
+          <Button 
+            variant="sidebar" 
+            className={`w-full justify-start ${activeTab === "announcements" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`} 
+            onClick={() => handleTabChange("announcements")}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-megaphone"><path d="m3 11 18-5v12L3 13"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+            <span className="ml-2">Announcements</span>
           </Button>
-          <Button variant="sidebar" className="w-full justify-start" asChild>
-            <a href="#calendar" className="flex items-center space-x-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-              <span>Calendar</span>
-            </a>
+          <Button 
+            variant="sidebar" 
+            className={`w-full justify-start ${activeTab === "calendar" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`} 
+            onClick={() => handleTabChange("calendar")}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <span className="ml-2">Calendar</span>
           </Button>
-          <Button variant="sidebar" className="w-full justify-start" asChild>
-            <a href="#statistics" className="flex items-center space-x-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bar-chart-3"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-              <span>Statistics</span>
-            </a>
+          <Button 
+            variant="sidebar" 
+            className={`w-full justify-start ${activeTab === "statistics" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`} 
+            onClick={() => handleTabChange("statistics")}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bar-chart-3"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+            <span className="ml-2">Statistics</span>
           </Button>
         </nav>
         
@@ -99,30 +121,30 @@ const Index = () => {
 
         {/* Page content */}
         <main className="flex-1 p-6 overflow-auto">
-          <Tabs defaultValue="dashboard" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             {/* Remove the TabsList with navigation buttons, as they duplicate the sidebar functionality */}
             
-            <TabsContent value="dashboard" className="space-y-6">
+            <TabsContent value="dashboard" className="space-y-6" id="dashboard">
               <h2 className="text-2xl font-bold">Dashboard</h2>
               <DashboardStats />
             </TabsContent>
 
-            <TabsContent value="residents" className="space-y-6">
+            <TabsContent value="residents" className="space-y-6" id="residents">
               <h2 className="text-2xl font-bold">Resident Registry</h2>
               <ResidentsList />
             </TabsContent>
 
-            <TabsContent value="announcements" className="space-y-6">
+            <TabsContent value="announcements" className="space-y-6" id="announcements">
               <h2 className="text-2xl font-bold">Announcements</h2>
               <AnnouncementsList />
             </TabsContent>
 
-            <TabsContent value="calendar" className="space-y-6">
+            <TabsContent value="calendar" className="space-y-6" id="calendar">
               <h2 className="text-2xl font-bold">Calendar</h2>
               <CalendarView />
             </TabsContent>
 
-            <TabsContent value="statistics" className="space-y-6">
+            <TabsContent value="statistics" className="space-y-6" id="statistics">
               <h2 className="text-2xl font-bold">Statistics</h2>
               <div className="grid gap-6 md:grid-cols-2">
                 <Card>
