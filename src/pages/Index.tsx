@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import ResidentsList from "@/components/residents/ResidentsList";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import AnnouncementsList from "@/components/announcements/AnnouncementsList";
@@ -121,9 +121,7 @@ const Index = () => {
 
         {/* Page content */}
         <main className="flex-1 p-6 overflow-auto">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            {/* Remove the TabsList with navigation buttons, as they duplicate the sidebar functionality */}
-            
+          <Tabs value={activeTab} className="space-y-6">
             <TabsContent value="dashboard" className="space-y-6" id="dashboard">
               <h2 className="text-2xl font-bold">Dashboard</h2>
               <DashboardStats />
