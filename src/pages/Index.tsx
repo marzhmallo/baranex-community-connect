@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -6,8 +5,9 @@ import ResidentsList from "@/components/residents/ResidentsList";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import AnnouncementsList from "@/components/announcements/AnnouncementsList";
 import CalendarView from "@/components/calendar/CalendarView";
+import DocumentsPage from "@/components/documents/DocumentsPage";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { LogOut } from "lucide-react";
+import { FileText, LogOut } from "lucide-react";
 import { useState } from "react";
 
 const Index = () => {
@@ -52,6 +52,14 @@ const Index = () => {
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span className="ml-2">Residents</span>
+          </Button>
+          <Button 
+            variant="sidebar" 
+            className={`w-full justify-start ${activeTab === "documents" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`} 
+            onClick={() => handleTabChange("documents")}
+          >
+            <FileText className="h-5 w-5" />
+            <span className="ml-2">Documents</span>
           </Button>
           <Button 
             variant="sidebar" 
@@ -130,6 +138,11 @@ const Index = () => {
             <TabsContent value="residents" className="space-y-6" id="residents">
               <h2 className="text-2xl font-bold">Resident Registry</h2>
               <ResidentsList />
+            </TabsContent>
+
+            <TabsContent value="documents" className="space-y-6" id="documents">
+              <h2 className="text-2xl font-bold">Document Management</h2>
+              <DocumentsPage />
             </TabsContent>
 
             <TabsContent value="announcements" className="space-y-6" id="announcements">
