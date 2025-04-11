@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Check, Loader2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 // Form schema
 const formSchema = z.object({
@@ -50,6 +51,7 @@ interface DocumentIssueFormProps {
 
 const DocumentIssueForm = ({ onClose }: DocumentIssueFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   // Initialize form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -70,12 +72,28 @@ const DocumentIssueForm = ({ onClose }: DocumentIssueFormProps) => {
     
     // Simulate API call
     setTimeout(() => {
-      console.log(values);
+      console.log("Document request submitted:", values);
+      
+      // Success notification
+      toast({
+        title: "Document Request Submitted",
+        description: `${documentTypeLabels[values.documentType as keyof typeof documentTypeLabels]} request for ${values.residentName} has been submitted.`,
+        variant: "default",
+      });
+      
       setIsSubmitting(false);
+      form.reset();
       onClose();
-      // In a real app, you'd save this to your database
     }, 1500);
   }
+
+  // Document type labels for display
+  const documentTypeLabels = {
+    barangay_clearance: "Barangay Clearance",
+    business_permit: "Business Permit",
+    certificate_of_residency: "Certificate of Residency",
+    indigency_certificate: "Certificate of Indigency",
+  };
 
   return (
     <div className="space-y-6">
