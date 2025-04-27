@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -9,8 +10,8 @@ import DocumentsPage from "@/components/documents/DocumentsPage";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { FileText, LogOut } from "lucide-react";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { toast } from "@/components/ui/toast";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
