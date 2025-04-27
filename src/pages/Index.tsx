@@ -9,14 +9,21 @@ import DocumentsPage from "@/components/documents/DocumentsPage";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { FileText, LogOut } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/components/ui/toast";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   
-  const handleSignOut = () => {
-    // In a real app, this would handle authentication sign out
-    console.log("Signed out");
-    alert("You have been signed out");
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleTabChange = (value: string) => {
@@ -50,7 +57,7 @@ const Index = () => {
             className={`w-full justify-start ${activeTab === "residents" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`} 
             onClick={() => handleTabChange("residents")}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 1 0 7.75"/></svg>
             <span className="ml-2">Residents</span>
           </Button>
           <Button 
