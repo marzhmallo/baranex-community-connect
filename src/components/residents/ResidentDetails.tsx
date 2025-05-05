@@ -48,9 +48,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => {
-        e.preventDefault();
-      }}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Resident Details</span>
@@ -152,7 +150,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
           <div className="flex justify-end gap-2">
             <Button variant="outline">Edit Details</Button>
             <DialogClose asChild>
-              <Button variant="ghost" className="focus:ring-0 focus-visible:ring-0">Close</Button>
+              <Button variant="ghost">Close</Button>
             </DialogClose>
           </div>
         </div>
