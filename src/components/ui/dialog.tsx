@@ -39,12 +39,11 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       onInteractOutside={(e) => {
-        // Use a custom handler to properly manage outside clicks
         if (onInteractOutside) {
+          // Cast to expected type
           onInteractOutside(e as unknown as React.MouseEvent<HTMLDivElement>);
         }
-
-        // Prevent event from causing issues with the rest of the UI
+        // Always prevent default to avoid issues with pointer events
         e.preventDefault();
       }}
       className={cn(

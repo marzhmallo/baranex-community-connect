@@ -4,13 +4,38 @@ import ResidentsList from '@/components/residents/ResidentsList';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ResidentForm from '@/components/residents/ResidentForm';
 
 const ResidentsPage = () => {
+  const [isAddResidentOpen, setIsAddResidentOpen] = React.useState(false);
+
+  const handleCloseDialog = () => {
+    // Add a small delay before fully closing to ensure proper cleanup
+    setTimeout(() => {
+      // Clean up after dialog is fully closed
+      document.body.style.pointerEvents = '';
+    }, 100);
+    setIsAddResidentOpen(false);
+  };
+
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Resident Registry</h1>
-        <p className="text-muted-foreground mt-2">Manage and track resident information in your barangay</p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Resident Registry</h1>
+          <p className="text-muted-foreground mt-2">Manage and track resident information in your barangay</p>
+        </div>
+        
+        <Button 
+          onClick={() => setIsAddResidentOpen(true)}
+          className="bg-baranex-primary hover:bg-baranex-primary/90"
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          Add Resident
+        </Button>
       </div>
       
       <Card className="shadow-lg border-t-4 border-t-baranex-primary bg-card text-card-foreground">
@@ -20,6 +45,34 @@ const ResidentsPage = () => {
           </ScrollArea>
         </CardContent>
       </Card>
+      
+      {/* Add Resident Dialog */}
+      <Dialog 
+        open={isAddResidentOpen} 
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            handleCloseDialog();
+          } else {
+            setIsAddResidentOpen(true);
+          }
+        }}
+      >
+        <DialogContent 
+          className="sm:max-w-[600px]"
+          onInteractOutside={(e) => {
+            // Prevent issues with outside clicks
+            e.preventDefault();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Add New Resident</DialogTitle>
+            <DialogDescription>
+              Enter the resident's information below. Required fields are marked with an asterisk (*).
+            </DialogDescription>
+          </DialogHeader>
+          <ResidentForm onSubmit={handleCloseDialog} />
+        </DialogContent>
+      </Dialog>
       
       {/* Make sure Toaster is included on the page */}
       <Toaster />
