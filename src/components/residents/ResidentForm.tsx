@@ -202,62 +202,54 @@ const ResidentForm = ({
     setIsSubmitting(true);
     
     try {
-      const residentToSave = {
-        // Core fields
+      // Create the resident data object based on form values
+      const residentToSave: Partial<Resident> = {
         id: resident?.id,
-        firstName: values.firstName.trim(),
-        lastName: values.lastName.trim(),
-        middleName: values.middleName?.trim() || null,
-        suffix: values.suffix?.trim() || null,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        middleName: values.middleName,
+        suffix: values.suffix,
         gender: values.gender,
         birthDate: values.birthDate,
-        civilStatus: values.civilStatus,
-        nationality: values.nationality?.trim() || null,
-        occupation: values.occupation?.trim() || null,
-        monthlyIncome: values.monthlyIncome,
-        contactNumber: values.contactNumber?.trim() || null,
-        email: values.email?.trim() || null,
-        purok: values.purok?.trim() || null,
-        yearsInBarangay: values.yearsInBarangay,
         address: values.address,
-        
-        // Document flags
+        contactNumber: values.contactNumber,
+        email: values.email,
+        occupation: values.occupation,
+        civilStatus: values.civilStatus,
+        monthlyIncome: values.monthlyIncome,
+        yearsInBarangay: values.yearsInBarangay,
+        purok: values.purok,
+        barangay: values.barangay,
+        municipality: values.municipality,
+        province: values.province,
+        region: values.region,
+        country: values.country,
+        nationality: values.nationality,
         isVoter: values.isVoter,
         hasPhilhealth: values.hasPhilhealth,
         hasSss: values.hasSss,
         hasPagibig: values.hasPagibig,
         hasTin: values.hasTin,
-        
-        // Address fields
-        barangay: values.barangay?.trim() || null,
-        municipality: values.municipality?.trim() || null,
-        region: values.region?.trim() || null,
-        province: values.province?.trim() || null,
-        country: values.country?.trim() || null,
-        
-        // Other fields
-        remarks: values.remarks?.trim() || null,
-        status: mapFormStatusToDB(values.status),
         classifications: values.classifications,
-        
-        // Emergency contact
+        remarks: values.remarks,
+        status: mapFormStatusToDB(values.status),
         emergencyContact: {
-          name: values.emergencyContactName?.trim() || 'Not specified',
-          relationship: values.emergencyContactRelationship?.trim() || 'Not specified',
-          contactNumber: values.emergencyContactNumber?.trim() || 'Not specified'
+          name: values.emergencyContactName,
+          relationship: values.emergencyContactRelationship,
+          contactNumber: values.emergencyContactNumber
         }
       };
       
       console.log("Sending to saveResident:", residentToSave);
       
       // Use the saveResident function
-      const { success, error } = await saveResident(residentToSave);
+      const result = await saveResident(residentToSave);
       
-      console.log("saveResident result:", { success, error });
+      console.log("saveResident result:", result);
 
-      if (!success) {
-        console.error("Error in saveResident:", error);
-        throw error;
+      if (!result.success) {
+        console.error("Error in saveResident:", result.error);
+        throw new Error(result.error);
       }
 
       // Show success toast

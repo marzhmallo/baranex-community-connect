@@ -1,4 +1,3 @@
-
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -111,81 +110,85 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
 };
 
 // Function to save (create or update) a resident
-export const saveResident = async (resident: Resident): Promise<{ success: boolean; error: any }> => {
+export const saveResident = async (residentData: Partial<Resident>) => {
   try {
-    console.log("saveResident called with:", resident);
+    console.log("saveResident called with:", residentData);
     
-    // Map application model back to database fields, using exact database column names
-    const residentData = {
-      id: resident.id || crypto.randomUUID(), // Generate UUID for new residents
-      first_name: resident.firstName,
-      last_name: resident.lastName,
-      middle_name: resident.middleName || null,
-      suffix: resident.suffix || null,
-      gender: resident.gender,
-      birthdate: resident.birthDate,
-      address: resident.address || null,
-      mobile_number: resident.contactNumber || null,
-      email: resident.email || null,
-      occupation: resident.occupation || null,
-      status: resident.status,
-      civil_status: resident.civilStatus,
-      monthly_income: resident.monthlyIncome || null,
-      years_in_barangay: resident.yearsInBarangay || null,
-      purok: resident.purok,
-      barangaydb: resident.barangay,
-      municipalitycity: resident.municipality,
-      provinze: resident.province,
-      regional: resident.region,
-      countryph: resident.country || null,
-      nationality: resident.nationality || null,
-      is_voter: resident.isVoter || false,
-      has_philhealth: resident.hasPhilhealth || false,
-      has_sss: resident.hasSss || false,
-      has_pagibig: resident.hasPagibig || false,
-      has_tin: resident.hasTin || false,
-      classifications: resident.classifications || [],
-      remarks: resident.remarks || null,
-      emname: resident.emergencyContact?.name || null,
-      emrelation: resident.emergencyContact?.relationship || null,
-      // Convert emergency contact number to number or null
-      emcontact: resident.emergencyContact?.contactNumber && 
-                resident.emergencyContact.contactNumber !== 'Not specified' && 
-                resident.emergencyContact.contactNumber.trim() !== '' ? 
-                parseInt(resident.emergencyContact.contactNumber.replace(/\D/g, '')) || null : null,
-      updated_at: new Date().toISOString()
+    // Prepare the base data
+    const baseData = {
+      first_name: residentData.firstName?.trim(),
+      middle_name: residentData.middleName?.trim() || null,
+      last_name: residentData.lastName?.trim(),
+      birthdate: residentData.birthDate,
+      gender: residentData.gender,
+      civil_status: residentData.civilStatus,
+      mobile_number: residentData.contactNumber?.trim() || null,
+      email: residentData.email?.trim() || null,
+      address: residentData.address?.trim(),
+      purok: residentData.purok?.trim() || null,
+      occupation: residentData.occupation?.trim() || null,
+      monthly_income: residentData.monthlyIncome,
+      years_in_barangay: residentData.yearsInBarangay,
+      is_voter: residentData.isVoter,
+      has_philhealth: residentData.hasPhilhealth,
+      has_sss: residentData.hasSss,
+      has_pagibig: residentData.hasPagibig,
+      has_tin: residentData.hasTin,
+      nationality: residentData.nationality?.trim() || null,
+      remarks: residentData.remarks?.trim() || null,
+      status: residentData.status,
+      classifications: residentData.classifications,
+      // Address fields with special names
+      barangaydb: residentData.barangay?.trim() || null,
+      municipalitycity: residentData.municipality?.trim() || null,
+      regional: residentData.region?.trim() || null,
+      provinze: residentData.province?.trim() || null,
+      countryph: residentData.country?.trim() || null,
+      // Emergency contact
+      emname: residentData.emergencyContact?.name?.trim() || null,
+      emrelation: residentData.emergencyContact?.relationship?.trim() || null,
+      emcontact: residentData.emergencyContact?.contactNumber?.trim() || null,
+      // Timestamps
+      updated_at: new Date().toISOString(),
+      ...(!residentData.id && { created_at: new Date().toISOString() }) // Only for new records
     };
 
-    console.log("Processed resident data for Supabase:", residentData);
-    
-    let result;
+    console.log("Processed resident data for Supabase:", baseData);
 
-    // Check if this is an update or create operation
-    if (resident.id) {
-      // Update existing resident
-      console.log("Updating resident with ID:", resident.id);
-      result = await supabase
-        .from('residents')
-        .update(residentData)
-        .eq('id', resident.id);
-    } else {
-      // Create new resident
-      console.log("Creating new resident with generated ID:", residentData.id);
-      result = await supabase
-        .from('residents')
-        .insert(residentData);
+    // For new residents, generate UUID
+    if (!residentData.id) {
+      baseData.id = crypto.randomUUID();
     }
-    
-    if (result.error) {
-      console.error("Supabase error:", result.error);
-      return { success: false, error: result.error };
+
+    // Conditional insert/update
+    const { data, error } = residentData.id
+      ? await supabase
+          .from('residents')
+          .update(baseData)
+          .eq('id', residentData.id)
+          .select()
+          .single()
+      : await supabase
+          .from('residents')
+          .insert(baseData)
+          .select()
+          .single();
+
+    if (error) {
+      console.error('Supabase error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      return { success: false, error: error.message };
     }
-    
-    console.log("Resident saved successfully:", result);
-    return { success: true, error: null };
+
+    console.log("Resident saved successfully:", data);
+    return { success: true, data };
   } catch (error) {
-    console.error("Exception saving resident:", error);
-    return { success: false, error };
+    console.error('Unexpected error:', error);
+    return { success: false, error: 'An unexpected error occurred' };
   }
 };
 
