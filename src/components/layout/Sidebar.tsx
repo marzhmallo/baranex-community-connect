@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
@@ -14,6 +14,8 @@ import {
   HelpCircle,
   LogOut
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 const navItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -27,6 +29,21 @@ const navItems = [
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      // Redirect to auth page on successful sign out
+      navigate('/auth');
+    }
+  };
   
   return (
     <aside className="hidden md:flex md:w-64 fixed inset-y-0 z-40 flex-col bg-sidebar border-r border-sidebar-border">
@@ -77,7 +94,10 @@ const Sidebar = () => {
               <HelpCircle className="mr-3 h-5 w-5 text-sidebar-foreground/60" />
               Help
             </button>
-            <button className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-sidebar-foreground hover:bg-red-700/50 hover:text-white w-full">
+            <button 
+              onClick={handleSignOut}
+              className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-sidebar-foreground hover:bg-red-700/50 hover:text-white w-full"
+            >
               <LogOut className="mr-3 h-5 w-5 text-sidebar-foreground/60" />
               Logout
             </button>
