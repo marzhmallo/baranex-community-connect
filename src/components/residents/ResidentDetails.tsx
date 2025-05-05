@@ -34,14 +34,14 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Active':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
-      case 'Inactive':
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Inactive</Badge>;
+      case 'Permanent':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Permanent</Badge>;
+      case 'Temporary':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Temporary</Badge>;
       case 'Deceased':
         return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Deceased</Badge>;
-      case 'Transferred':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Transferred</Badge>;
+      case 'Relocated':
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Relocated</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -49,12 +49,14 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => {
+        e.preventDefault();
+      }}>
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Resident Details</span>
             <DialogClose asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="focus:ring-0 focus-visible:ring-0">
                 <X className="h-4 w-4" />
               </Button>
             </DialogClose>
@@ -140,11 +142,13 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                 <div>
                   <p className="text-sm text-gray-500">Classification</p>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {resident.classifications?.map((classification, index) => (
-                      <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
-                        {classification}
-                      </Badge>
-                    )) || "None specified"}
+                    {resident.classifications?.length ? 
+                      resident.classifications.map((classification, index) => (
+                        <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
+                          {classification}
+                        </Badge>
+                      )) 
+                      : "None specified"}
                   </div>
                 </div>
               </div>
@@ -154,7 +158,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
           <div className="flex justify-end gap-2">
             <Button variant="outline">Edit Details</Button>
             <DialogClose asChild>
-              <Button variant="ghost">Close</Button>
+              <Button variant="ghost" className="focus:ring-0 focus-visible:ring-0">Close</Button>
             </DialogClose>
           </div>
         </div>
