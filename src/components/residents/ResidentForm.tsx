@@ -77,23 +77,34 @@ interface ResidentFormProps {
   resident?: Resident;
 }
 
+// Map database status to form status
+const mapDBStatusToForm = (dbStatus: string): "Active" | "Inactive" | "Deceased" | "Transferred" => {
+  switch (dbStatus) {
+    case 'Permanent': return 'Active';
+    case 'Temporary': return 'Inactive';
+    case 'Deceased': return 'Deceased';
+    case 'Relocated': return 'Transferred';
+    default: return 'Inactive'; // Default fallback
+  }
+};
+
+// Map form status to database format
+const mapApplicationStatus = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
+  switch (formStatus) {
+    case 'Active': return 'Permanent';
+    case 'Inactive': return 'Temporary';
+    case 'Deceased': return 'Deceased';
+    case 'Transferred': return 'Relocated';
+    default: return 'Temporary'; // Default fallback
+  }
+};
+
 const ResidentForm = ({
   onSubmit,
   resident
 }: ResidentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
-  
-  // Map database status to form status
-  const mapDBStatusToForm = (dbStatus: string): "Active" | "Inactive" | "Deceased" | "Transferred" => {
-    switch (dbStatus) {
-      case 'Permanent': return 'Active';
-      case 'Temporary': return 'Inactive';
-      case 'Deceased': return 'Deceased';
-      case 'Relocated': return 'Transferred';
-      default: return 'Inactive'; // Default fallback
-    }
-  };
   
   // Transform resident data for the form
   const transformResidentForForm = (resident: Resident): ResidentFormValues => {
@@ -187,6 +198,7 @@ const ResidentForm = ({
   });
   
   const handleSubmit = async (values: ResidentFormValues) => {
+    console.log("Form submitted with values:", values);
     setIsSubmitting(true);
     
     try {
@@ -196,8 +208,8 @@ const ResidentForm = ({
         // Personal Info
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
-        middleName: values.middleName.trim() || undefined,
-        suffix: values.suffix.trim() || undefined,
+        middleName: values.middleName?.trim() || undefined,
+        suffix: values.suffix?.trim() || undefined,
         gender: values.gender,
         birthDate: values.birthDate,
         
@@ -211,15 +223,15 @@ const ResidentForm = ({
         country: values.country.trim() || undefined,
         
         // Contact
-        contactNumber: values.contactNumber.trim() || undefined,
-        email: values.email.trim() || undefined,
+        contactNumber: values.contactNumber?.trim() || undefined,
+        email: values.email?.trim() || undefined,
         
         // Status
         status: mapApplicationStatus(values.status),
         civilStatus: values.civilStatus,
         
         // Economic
-        occupation: values.occupation.trim() || undefined,
+        occupation: values.occupation?.trim() || undefined,
         monthlyIncome: values.monthlyIncome,
         yearsInBarangay: values.yearsInBarangay,
         
@@ -231,7 +243,7 @@ const ResidentForm = ({
         hasTin: values.hasTin,
         
         // Other
-        nationality: values.nationality.trim() || undefined,
+        nationality: values.nationality?.trim() || undefined,
         classifications: values.classifications,
         remarks: values.remarks?.trim() || undefined,
         
@@ -243,10 +255,17 @@ const ResidentForm = ({
         }
       };
       
+      console.log("Sending to saveResident:", residentToSave);
+      
       // Use the saveResident function
       const { success, error } = await saveResident(residentToSave);
       
-      if (!success) throw error;
+      console.log("saveResident result:", { success, error });
+
+      if (!success) {
+        console.error("Error in saveResident:", error);
+        throw error;
+      }
 
       // Show success toast
       toast({
@@ -273,7 +292,8 @@ const ResidentForm = ({
     }
   };
 
-  return <FormProvider {...form}>
+  return (
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <ScrollArea className="pr-4 h-[calc(85vh-180px)]">
           <div className="pr-4 space-y-6">
@@ -679,18 +699,8 @@ const ResidentForm = ({
           </Button>
         </div>
       </form>
-    </FormProvider>;
-};
-
-// Helper function referenced in the component but was missing
-const mapApplicationStatus = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
-  switch (formStatus) {
-    case 'Active': return 'Permanent';
-    case 'Inactive': return 'Temporary';
-    case 'Deceased': return 'Deceased';
-    case 'Transferred': return 'Relocated';
-    default: return 'Temporary'; // Default fallback
-  }
+    </FormProvider>
+  );
 };
 
 export default ResidentForm;

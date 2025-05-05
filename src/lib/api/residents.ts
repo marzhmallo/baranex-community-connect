@@ -1,4 +1,3 @@
-
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -132,7 +131,7 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
   };
 };
 
-// Add new function to create a resident
+// Function to create a resident
 export const createResident = async (residentData: any): Promise<{ success: boolean; error: any }> => {
   try {
     const { error } = await supabase
@@ -151,9 +150,10 @@ export const createResident = async (residentData: any): Promise<{ success: bool
   }
 };
 
-// Add new function to save (create or update) a resident
+// Function to save (create or update) a resident
 export const saveResident = async (resident: Resident): Promise<{ success: boolean; error: any }> => {
   try {
+    console.log("saveResident called with:", resident);
     // Map application model back to database fields, using exact database column names
     const residentData = {
       id: resident.id,
@@ -167,7 +167,7 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       mobile_number: resident.contactNumber || null,
       email: resident.email || null,
       occupation: resident.occupation || null,
-      status: mapApplicationStatus(resident.status),
+      status: resident.status,
       civil_status: resident.civilStatus,
       monthly_income: resident.monthlyIncome || null,
       years_in_barangay: resident.yearsInBarangay || null,
@@ -188,40 +188,41 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       emname: resident.emergencyContact?.name || null,
       emrelation: resident.emergencyContact?.relationship || null,
       // Convert string to number or null if needed
-      emcontact: resident.emergencyContact?.contactNumber ? 
+      emcontact: resident.emergencyContact?.contactNumber && resident.emergencyContact.contactNumber.trim() !== '' ? 
         parseInt(resident.emergencyContact.contactNumber.replace(/\D/g, '')) || null : null
     };
+
+    console.log("Processed resident data for DB:", residentData);
     
+    let result;
     // Check if this is an update or create operation
     if (resident.id) {
       // Update existing resident
-      const { error } = await supabase
+      console.log("Updating resident with ID:", resident.id);
+      result = await supabase
         .from('residents')
         .update(residentData)
         .eq('id', resident.id);
-      
-      if (error) {
-        console.error("Error updating resident:", error);
-        return { success: false, error };
-      }
     } else {
       // Create new resident with generated UUID
       // Remove id field for insert since it will be auto-generated
       const { id, ...dataWithoutId } = residentData;
       
-      const { error } = await supabase
+      console.log("Creating new resident");
+      result = await supabase
         .from('residents')
         .insert({
           ...dataWithoutId,
           id: crypto.randomUUID(), // Generate a new UUID for the resident
         });
-      
-      if (error) {
-        console.error("Error creating resident:", error);
-        return { success: false, error };
-      }
     }
     
+    if (result.error) {
+      console.error("Error saving resident:", result.error);
+      return { success: false, error: result.error };
+    }
+    
+    console.log("Resident saved successfully:", result);
     return { success: true, error: null };
   } catch (error) {
     console.error("Exception saving resident:", error);
