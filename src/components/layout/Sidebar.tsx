@@ -1,36 +1,27 @@
-
-import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  Users, 
+  LogOut, 
+  User, 
   Calendar, 
-  MessageSquare, 
   FileText, 
   BarChart3, 
+  MessageSquare,
   AlertTriangle,
-  Settings,
-  HelpCircle,
-  LogOut
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
 
-const navItems = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Residents', href: '/residents', icon: Users },
-  { name: 'Announcements', href: '/announcements', icon: Calendar },
-  { name: 'Forum', href: '/forum', icon: MessageSquare },
-  { name: 'Crime Reports', href: '/crime-reports', icon: FileText },
-  { name: 'Statistics', href: '/statistics', icon: BarChart3 },
-  { name: 'Emergency Response', href: '/emergencies', icon: AlertTriangle },
-];
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Sidebar = () => {
-  const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
-  
+
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -40,68 +31,92 @@ const Sidebar = () => {
         variant: "destructive",
       });
     } else {
-      // Redirect to auth page on successful sign out
-      navigate('/auth');
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out",
+      });
+      navigate("/auth");
     }
   };
   
   return (
-    <aside className="hidden md:flex md:w-64 fixed inset-y-0 z-40 flex-col bg-sidebar border-r border-sidebar-border">
-      <div className="flex flex-col h-full w-64 min-w-64 max-w-64"> {/* Fixed width */}
-        <div className="h-16 flex items-center border-b border-sidebar-border px-6">
-          <Link to="/" className="text-xl font-bold tracking-tight flex items-center">
-            <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Baran</span>
-            <span className="text-baranex-accent">EX</span>
+    <aside
+      className={cn(
+        "fixed left-0 top-0 bottom-0 z-40 h-screen bg-sidebar transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-16" : "w-64"
+      )}
+    >
+      <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between p-4">
+          {!isCollapsed && (
+            <Link to="/" className="text-xl font-bold tracking-tight flex items-center">
+              <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Baran</span>
+              <span className="text-baranex-accent">EX</span>
+            </Link>
+          )}
+          <Button
+            variant="sidebar"
+            size="icon"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="ml-auto"
+          >
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        <nav className="flex-1 space-y-1 p-2">
+          <Link to="/" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+            <User className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Dashboard</span>}
           </Link>
-        </div>
-        
-        <div className="flex-1 overflow-auto py-4 px-3">
-          <nav className="space-y-1 w-full">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.href;
-              
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "group flex items-center px-3 py-2 text-sm font-medium rounded-md w-full",
-                    isActive
-                      ? "bg-sidebar-accent text-white"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-white"
-                  )}
-                >
-                  <item.icon className={cn(
-                    "mr-3 h-5 w-5 flex-shrink-0",
-                    isActive
-                      ? "text-sidebar-primary"
-                      : "text-sidebar-foreground/60 group-hover:text-white"
-                  )} />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-        
+
+          <Link to="/residents" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+            <User className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Residents</span>}
+          </Link>
+
+          <Link to="/calendar" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+            <Calendar className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Calendar</span>}
+          </Link>
+
+          <Link to="/announcements" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+            <Calendar className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Announcements</span>}
+          </Link>
+
+          <Link to="/forum" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+            <MessageSquare className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Forum</span>}
+          </Link>
+
+          <Link to="/crime-reports" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+            <FileText className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Crime Reports</span>}
+          </Link>
+
+          <Link to="/statistics" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+            <BarChart3 className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Statistics</span>}
+          </Link>
+
+          <Link to="/emergencies" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+            <AlertTriangle className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Emergency Response</span>}
+          </Link>
+        </nav>
+
         <div className="p-4 border-t border-sidebar-border">
-          <div className="flex flex-col space-y-2">
-            <button className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-white w-full">
-              <Settings className="mr-3 h-5 w-5 text-sidebar-foreground/60" />
-              Settings
-            </button>
-            <button className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-white w-full">
-              <HelpCircle className="mr-3 h-5 w-5 text-sidebar-foreground/60" />
-              Help
-            </button>
-            <button 
-              onClick={handleSignOut}
-              className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-sidebar-foreground hover:bg-red-700/50 hover:text-white w-full"
-            >
-              <LogOut className="mr-3 h-5 w-5 text-sidebar-foreground/60" />
-              Logout
-            </button>
-          </div>
+          {!isCollapsed && <ThemeToggle />}
+          
+          <Button 
+            variant="sidebar"
+            className={cn("w-full justify-start mt-2", isCollapsed ? "px-2" : "")}
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Sign Out</span>}
+          </Button>
         </div>
       </div>
     </aside>
