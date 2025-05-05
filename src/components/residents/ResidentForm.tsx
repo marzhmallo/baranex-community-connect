@@ -51,7 +51,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
     defaultValues: {
       firstName: "",
       lastName: "",
-      gender: "Male",
+      gender: "",
       birthDate: "",
       address: "",
       contactNumber: "",
