@@ -296,6 +296,14 @@ const ResidentForm = ({
     }
   };
 
+  // Function to handle cancel button click - fixed the undefined onCancel error
+  const handleCancel = () => {
+    // Reset form values
+    form.reset();
+    // Close dialog by calling onSubmit (which executes handleCloseDialog from parent)
+    onSubmit();
+  };
+
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -740,22 +748,21 @@ const ResidentForm = ({
           </div>
         </ScrollArea>
         
-    
-    <div className="flex justify-end space-x-4 pt-4 border-t mt-6">
-      <Button
-        variant="outline"
-        type="button"
-        onClick={onCancel} // replace with your actual cancel handler
-        disabled={isSubmitting}
-      >
-        Cancel
-      </Button>
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving..." : resident ? "Update Resident" : "Save Resident"}
-      </Button>
-    </div>
-  </form>
-</FormProvider>
+        <div className="flex justify-end space-x-4 pt-4 border-t mt-6">
+          <Button
+            variant="outline"
+            type="button"
+            onClick={handleCancel}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : resident ? "Update Resident" : "Save Resident"}
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
   );
 };
 
