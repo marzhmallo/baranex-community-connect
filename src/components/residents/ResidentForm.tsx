@@ -15,9 +15,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Available resident classifications
 const residentClassifications = [{
-  id: "resident",
-  label: "Resident"
-}, {
   id: "indigent",
   label: "Indigent"
 }, {
@@ -385,19 +382,19 @@ const ResidentForm = ({
             </div>
 
             <h3 className="text-lg font-medium mb-4 pt-4 border-t">Resident Classifications</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
               <FormField control={form.control} name="classifications" render={() => <FormItem>
-                    <div className="mb-2">
+                    <div className="mb-4">
                       <FormLabel>Classifications</FormLabel>
-                      <FormDescription className="mx-0 px-0 py-0 my-[5px]">
+                      <FormDescription className="mt-1">
                         Select all that apply to this resident
                       </FormDescription>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 mx-0 my-px py-0 px-0 rounded-none">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {residentClassifications.map(classification => <FormField key={classification.id} control={form.control} name="classifications" render={({
                   field
                 }) => {
-                  return <FormItem key={classification.id} className="flex flex-row items-start space-x-3 space-y-0">
+                  return <FormItem key={classification.id} className="flex flex-row items-center space-x-3 space-y-0 p-2 border rounded-md hover:bg-accent">
                                 <FormControl>
                                   <Checkbox checked={field.value?.includes(classification.id)} onCheckedChange={checked => {
                         const currentValues = [...(field.value || [])];
