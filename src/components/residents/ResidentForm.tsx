@@ -1,31 +1,32 @@
+
 import React, { useState } from 'react';
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { Button } from "@/components/ui/button"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
-  Form,
   FormControl,
   FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast"
-import { useQueryClient } from '@tanstack/react-query'
+import { toast } from "@/hooks/use-toast";
+import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Form as FormProvider } from "@/components/ui/form";
 
 // Form schema using zod
 const formSchema = z.object({
@@ -176,7 +177,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
   };
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <ScrollArea className="pr-4 h-[calc(85vh-180px)]">
           <div className="pr-4 space-y-6">
@@ -407,7 +408,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
                 )}
               />
 
-                <FormField
+              <FormField
                 control={form.control}
                 name="yearsInBarangay"
                 render={({ field }) => (
@@ -637,53 +638,54 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
             </div>
     
             <div className="border-t pt-4">
-              <h3 className="text-lg font-medium mb-4">Emergency Contact Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <h3 className="text-lg font-medium mb-4">Additional Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
-            <FormField
-              control={form.control}
-              name="remarks"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Remarks</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Additional notes about this resident" 
-                      className="resize-none" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  control={form.control}
+                  name="remarks"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Remarks</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Additional notes about this resident" 
+                          className="resize-none" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Resident Status *</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                      <SelectItem value="Deceased">Deceased</SelectItem>
-                      <SelectItem value="Transferred">Transferred</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Resident Status *</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Inactive">Inactive</SelectItem>
+                          <SelectItem value="Deceased">Deceased</SelectItem>
+                          <SelectItem value="Transferred">Transferred</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
           </div>
         </ScrollArea>
         
@@ -696,7 +698,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
           </Button>
         </div>
       </form>
-    </Form>
+    </FormProvider>
   );
 };
 
