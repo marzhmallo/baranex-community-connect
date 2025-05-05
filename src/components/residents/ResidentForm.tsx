@@ -80,21 +80,21 @@ interface ResidentFormProps {
 // Map database status to form status
 const mapDBStatusToForm = (dbStatus: string): "Active" | "Inactive" | "Deceased" | "Transferred" => {
   switch (dbStatus) {
-    case 'Permanent': return 'Permanent';
-    case 'Temporary': return 'Temporary';
+    case 'Permanent': return 'Active';
+    case 'Temporary': return 'Inactive';
     case 'Deceased': return 'Deceased';
-    case 'Relocated': return 'Relocated';
+    case 'Relocated': return 'Transferred';
     default: return 'Inactive'; // Default fallback
   }
 };
 
 // Map form status to database format
-const mapApplicationStatus = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
+const mapFormStatusToDB = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
   switch (formStatus) {
-    case 'Permanent': return 'Permanent';
-    case 'Temporary': return 'Temporary';
+    case 'Active': return 'Permanent';
+    case 'Inactive': return 'Temporary';
     case 'Deceased': return 'Deceased';
-    case 'Relocated': return 'Relocated';
+    case 'Transferred': return 'Relocated';
     default: return 'Temporary'; // Default fallback
   }
 };
@@ -203,51 +203,51 @@ const ResidentForm = ({
     
     try {
       const residentToSave = {
-  // Core fields
-  id: resident?.id,
-  first_name: values.firstName.trim(),
-  last_name: values.lastName.trim(),
-  middle_name: values.middleName?.trim() || null,
-  suffix: values.suffix?.trim() || null,
-  gender: values.gender,
-  birthdate: values.birthDate, // Note lowercase 'd'
-  civil_status: values.civilStatus,
-  nationality: values.nationality?.trim() || null,
-  occupation: values.occupation?.trim() || null,
-  monthly_income: values.monthlyIncome,
-  mobile_number: values.contactNumber?.trim() || null,
-  email: values.email?.trim() || null,
-  purok: values.purok?.trim() || null,
-  years_in_barangay: values.yearsInBarangay,
-
-  // Document flags (corrected lowercase)
-  is_voter: values.isVoter,
-  has_philhealth: values.hasPhilhealth,
-  has_sss: values.hasSss,
-  has_pagibig: values.hasPagibig,
-  has_tin: values.hasTin,
-
-  // Address fields (special names)
-  barangaydb: values.barangay?.trim() || null,
-  municipalitycity: values.municipality?.trim() || null,
-  regional: values.region?.trim() || null,
-  provinze: values.province?.trim() || null,
-  countryph: values.country?.trim() || null,
-
-  // Other fields
-  remarks: values.remarks?.trim() || null,
-  status: mapApplicationStatus(values.status), // Convert Active→Permanent etc.
-  classifications: values.classifications,
-
-  // Emergency contact (as separate columns)
-  emname: values.emergencyContactName?.trim() || null,
-  emrelation: values.emergencyContactRelationship?.trim() || null,
-  emcontact: values.emergencyContactNumber?.trim() || null,
-
-  // Timestamps
-  updated_at: new Date().toISOString(),
-  ...(!resident?.id && { created_at: new Date().toISOString() }) // Only for new records
-};
+        // Core fields
+        id: resident?.id,
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+        middleName: values.middleName?.trim() || null,
+        suffix: values.suffix?.trim() || null,
+        gender: values.gender,
+        birthDate: values.birthDate,
+        civilStatus: values.civilStatus,
+        nationality: values.nationality?.trim() || null,
+        occupation: values.occupation?.trim() || null,
+        monthlyIncome: values.monthlyIncome,
+        contactNumber: values.contactNumber?.trim() || null,
+        email: values.email?.trim() || null,
+        purok: values.purok?.trim() || null,
+        yearsInBarangay: values.yearsInBarangay,
+        address: values.address,
+        
+        // Document flags
+        isVoter: values.isVoter,
+        hasPhilhealth: values.hasPhilhealth,
+        hasSss: values.hasSss,
+        hasPagibig: values.hasPagibig,
+        hasTin: values.hasTin,
+        
+        // Address fields
+        barangay: values.barangay?.trim() || null,
+        municipality: values.municipality?.trim() || null,
+        region: values.region?.trim() || null,
+        province: values.province?.trim() || null,
+        country: values.country?.trim() || null,
+        
+        // Other fields
+        remarks: values.remarks?.trim() || null,
+        status: mapFormStatusToDB(values.status),
+        classifications: values.classifications,
+        
+        // Emergency contact
+        emergencyContact: {
+          name: values.emergencyContactName?.trim() || 'Not specified',
+          relationship: values.emergencyContactRelationship?.trim() || 'Not specified',
+          contactNumber: values.emergencyContactNumber?.trim() || 'Not specified'
+        }
+      };
+      
       console.log("Sending to saveResident:", residentToSave);
       
       // Use the saveResident function

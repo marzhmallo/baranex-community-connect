@@ -1,29 +1,8 @@
+
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
 export type ResidentStatus = "Permanent" | "Temporary" | "Deceased" | "Relocated";
-
-// Function to map database status to our application status
-const mapDatabaseStatus = (status: string): ResidentStatus => {
-  switch (status) {
-    case 'Permanent': return 'Permanent';
-    case 'Temporary': return 'Temporary';
-    case 'Deceased': return 'Deceased';
-    case 'Relocated': return 'Relocated';
-    default: return 'Temporary'; // Default fallback
-  }
-};
-
-// Function to map application status to database status
-const mapApplicationStatus = (status: string): string => {
-  switch (status) {
-    case 'Active': return 'Permanent';
-    case 'Inactive': return 'Temporary';
-    case 'Deceased': return 'Deceased';
-    case 'Transferred': return 'Relocated';
-    default: return status; // If it's already using db naming
-  }
-};
 
 // Function to fetch all residents
 export const getResidents = async (): Promise<Resident[]> => {
@@ -55,7 +34,7 @@ export const getResidents = async (): Promise<Resident[]> => {
       contactNumber: resident.mobile_number,
       email: resident.email || '',
       occupation: resident.occupation || '',
-      status: mapDatabaseStatus(resident.status),
+      status: resident.status as ResidentStatus,
       civilStatus: resident.civil_status,
       monthlyIncome: resident.monthly_income || 0,
       yearsInBarangay: resident.years_in_barangay || 0,
@@ -109,7 +88,7 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     contactNumber: data.mobile_number,
     email: data.email || '',
     occupation: data.occupation || '',
-    status: mapDatabaseStatus(data.status),
+    status: data.status as ResidentStatus,
     civilStatus: data.civil_status,
     monthlyIncome: data.monthly_income || 0,
     yearsInBarangay: data.years_in_barangay || 0,
@@ -131,32 +110,14 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
   };
 };
 
-// Function to create a resident
-export const createResident = async (residentData: any): Promise<{ success: boolean; error: any }> => {
-  try {
-    const { error } = await supabase
-      .from('residents')
-      .insert(residentData);
-    
-    if (error) {
-      console.error("Error creating resident:", error);
-      return { success: false, error };
-    }
-    
-    return { success: true, error: null };
-  } catch (error) {
-    console.error("Exception creating resident:", error);
-    return { success: false, error };
-  }
-};
-
 // Function to save (create or update) a resident
 export const saveResident = async (resident: Resident): Promise<{ success: boolean; error: any }> => {
   try {
     console.log("saveResident called with:", resident);
+    
     // Map application model back to database fields, using exact database column names
     const residentData = {
-      id: resident.id,
+      id: resident.id || crypto.randomUUID(), // Generate UUID for new residents
       first_name: resident.firstName,
       last_name: resident.lastName,
       middle_name: resident.middleName || null,
@@ -174,7 +135,7 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       purok: resident.purok,
       barangaydb: resident.barangay,
       municipalitycity: resident.municipality,
-      provinze: resident.province, // Note the "z" in provinze (actual database column name)
+      provinze: resident.province,
       regional: resident.region,
       countryph: resident.country || null,
       nationality: resident.nationality || null,
@@ -187,14 +148,18 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       remarks: resident.remarks || null,
       emname: resident.emergencyContact?.name || null,
       emrelation: resident.emergencyContact?.relationship || null,
-      // Convert string to number or null if needed
-      emcontact: resident.emergencyContact?.contactNumber && resident.emergencyContact.contactNumber.trim() !== '' ? 
-        parseInt(resident.emergencyContact.contactNumber.replace(/\D/g, '')) || null : null
+      // Convert emergency contact number to number or null
+      emcontact: resident.emergencyContact?.contactNumber && 
+                resident.emergencyContact.contactNumber !== 'Not specified' && 
+                resident.emergencyContact.contactNumber.trim() !== '' ? 
+                parseInt(resident.emergencyContact.contactNumber.replace(/\D/g, '')) || null : null,
+      updated_at: new Date().toISOString()
     };
 
-    console.log("Processed resident data for DB:", residentData);
+    console.log("Processed resident data for Supabase:", residentData);
     
     let result;
+
     // Check if this is an update or create operation
     if (resident.id) {
       // Update existing resident
@@ -204,17 +169,11 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
         .update(residentData)
         .eq('id', resident.id);
     } else {
-      // Create new resident with generated UUID
-      // Remove id field for insert since it will be auto-generated
-      const { id, ...dataWithoutId } = residentData;
-      
-      console.log("Creating new resident");
+      // Create new resident
+      console.log("Creating new resident with generated ID:", residentData.id);
       result = await supabase
         .from('residents')
-        .insert({
-          ...dataWithoutId,
-          id: crypto.randomUUID(), // Generate a new UUID for the resident
-        });
+        .insert(residentData);
     }
     
     if (result.error) {
@@ -230,4 +189,22 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
   }
 };
 
-// Add more functions for CRUD operations as needed
+// Function to create a resident (legacy function, use saveResident instead)
+export const createResident = async (residentData: any): Promise<{ success: boolean; error: any }> => {
+  try {
+    console.log("Legacy createResident function called, consider using saveResident instead");
+    const { error } = await supabase
+      .from('residents')
+      .insert(residentData);
+    
+    if (error) {
+      console.error("Error creating resident:", error);
+      return { success: false, error };
+    }
+    
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Exception creating resident:", error);
+    return { success: false, error };
+  }
+};
