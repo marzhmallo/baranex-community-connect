@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -758,4 +759,67 @@ const ResidentRow = ({
             : resident.status === 'Temporary'
             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800'
             : resident.status === 'Deceased'
-            ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 hover
+            ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800'
+            : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800'
+        }`}>
+          {resident.status}
+        </Badge>
+      </TableCell>
+      <TableCell>{age}</TableCell>
+      <TableCell>{ageGroup}</TableCell>
+      <TableCell>{purok}</TableCell>
+      <TableCell>{resident.contactNumber || 'N/A'}</TableCell>
+      <TableCell>
+        <div className="flex flex-wrap gap-1">
+          {resident.classifications?.map((classification, index) => (
+            <Badge 
+              key={index}
+              variant="outline" 
+              className={`text-xs ${
+                classification === 'indigent' 
+                  ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800'
+                : classification === 'student'
+                  ? 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-800'
+                : classification === 'ofw'
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800'
+                : classification === 'pwd'
+                  ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800'
+                : classification === 'missing'
+                  ? 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800'
+                : ''
+              }`}
+            >
+              {classification}
+            </Badge>
+          ))}
+        </div>
+      </TableCell>
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onViewDetails(resident)}>
+              <Eye className="h-4 w-4 mr-2" />
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
+};
+
+export default ResidentsList;
