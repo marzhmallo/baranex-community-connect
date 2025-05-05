@@ -30,7 +30,7 @@ export const getResidents = async (): Promise<Resident[]> => {
       suffix: resident.suffix || '',
       gender: resident.gender,
       birthDate: resident.birthdate,
-      address: resident.address,
+      address: resident.address || '',  // Ensure address is never null
       contactNumber: resident.mobile_number,
       email: resident.email || '',
       occupation: resident.occupation || '',
@@ -85,7 +85,7 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     suffix: data.suffix || '',
     gender: data.gender,
     birthDate: data.birthdate,
-    address: data.address,
+    address: data.address || '', // Ensure address is never null
     contactNumber: data.mobile_number,
     email: data.email || '',
     occupation: data.occupation || '',
@@ -164,7 +164,8 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       civil_status: residentData.civilStatus,
       mobile_number: residentData.contactNumber?.trim() || null,
       email: residentData.email?.trim() || null,
-      address: residentData.address?.trim(),
+      // Always ensure there's a value for the address field
+      address: residentData.address?.trim() || "No detailed address provided",
       purok: residentData.purok?.trim() || null,
       occupation: residentData.occupation?.trim() || null,
       monthly_income: residentData.monthlyIncome,
@@ -248,6 +249,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
         regional: databaseFields.regional || "Unknown",
         countryph: databaseFields.countryph || "Philippines",
         purok: databaseFields.purok || "Unknown",
+        address: databaseFields.address || "No address provided", // Ensure address is never null
         status: databaseFields.status || "Temporary",
         nationality: databaseFields.nationality || "Filipino",  // Add missing required field
         // Include all other fields from databaseFields
@@ -255,7 +257,6 @@ export const saveResident = async (residentData: Partial<Resident>) => {
         suffix: databaseFields.suffix,
         mobile_number: databaseFields.mobile_number,
         email: databaseFields.email,
-        address: databaseFields.address,
         occupation: databaseFields.occupation,
         monthly_income: databaseFields.monthly_income,
         years_in_barangay: databaseFields.years_in_barangay,

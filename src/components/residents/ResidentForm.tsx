@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -36,7 +37,6 @@ const formSchema = z.object({
   suffix: z.string().optional(),
   gender: z.enum(["Male", "Female", "Other"]),
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Please enter a valid date in YYYY-MM-DD format"),
-  address: z.string().min(5, "Address must be at least 5 characters"),
   purok: z.string().min(1, "Purok is required"),
   barangay: z.string().min(1, "Barangay is required"),
   municipality: z.string().min(1, "Municipality is required"),
@@ -126,7 +126,6 @@ const ResidentForm = ({
       birthDate: resident.birthDate,
       
       // Address
-      address: resident.address,
       purok: resident.purok ?? "",
       barangay: resident.barangay ?? "",
       municipality: resident.municipality ?? "",
@@ -176,7 +175,6 @@ const ResidentForm = ({
     suffix: "",
     gender: "Male",
     birthDate: "",
-    address: "",
     purok: "",
     barangay: "",
     municipality: "",
@@ -233,6 +231,9 @@ const ResidentForm = ({
     setIsSubmitting(true);
     
     try {
+      // Construct address string from individual components
+      const addressString = `Purok ${values.purok}, ${values.barangay}, ${values.municipality}, ${values.province}, ${values.region}`;
+      
       // Create the resident data object based on form values
       const residentToSave: Partial<Resident> = {
         id: resident?.id,
@@ -242,7 +243,8 @@ const ResidentForm = ({
         suffix: values.suffix,
         gender: values.gender,
         birthDate: values.birthDate,
-        address: values.address,
+        // Setting composite address string to ensure the address field is filled
+        address: addressString,
         contactNumber: values.contactNumber,
         email: values.email,
         occupation: values.occupation,

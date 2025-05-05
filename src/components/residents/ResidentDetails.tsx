@@ -77,6 +77,11 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     handleClose();
   };
 
+  // Generate full address display
+  const fullAddress = resident.purok ? 
+    `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}, ${resident.region}` : 
+    resident.address || 'Address not provided';
+
   return (
     <Dialog 
       open={open} 
@@ -167,7 +172,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-gray-500">Address</p>
-                        <p>{resident.address}</p>
+                        <p>{fullAddress}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Contact Number</p>
