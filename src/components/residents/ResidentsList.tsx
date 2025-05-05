@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -83,6 +82,10 @@ const ResidentsList = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  
+  // Add state for edit dialog
+  const [isEditResidentOpen, setIsEditResidentOpen] = useState(false);
+  const [residentToEdit, setResidentToEdit] = useState<Resident | null>(null);
   
   // Sorting state
   const [sortField, setSortField] = useState<SortField>('name');
@@ -327,6 +330,11 @@ const ResidentsList = () => {
   const handleViewDetails = (resident: Resident) => {
     setSelectedResident(resident);
     setIsDetailsOpen(true);
+  };
+  
+  const handleEditResident = (resident: Resident) => {
+    setResidentToEdit(resident);
+    setIsEditResidentOpen(true);
   };
 
   const handlePageSizeChange = (value: string) => {
@@ -676,7 +684,8 @@ const ResidentsList = () => {
                         <ResidentRow 
                           key={resident.id} 
                           resident={resident} 
-                          onViewDetails={handleViewDetails} 
+                          onViewDetails={handleViewDetails}
+                          onEditResident={handleEditResident}
                         />
                       ))}
                     </TableBody>
@@ -766,17 +775,48 @@ const ResidentsList = () => {
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
       />
+      
+      {/* Add Resident Dialog */}
+      <Dialog open={isAddResidentOpen} onOpenChange={setIsAddResidentOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Resident</DialogTitle>
+            <DialogDescription>
+              Enter the resident's information below. Required fields are marked with an asterisk (*).
+            </DialogDescription>
+          </DialogHeader>
+          <ResidentForm onSubmit={() => setIsAddResidentOpen(false)} />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Resident Dialog */}
+      <Dialog open={isEditResidentOpen} onOpenChange={setIsEditResidentOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Resident</DialogTitle>
+            <DialogDescription>
+              Update the resident's information below. Required fields are marked with an asterisk (*).
+            </DialogDescription>
+          </DialogHeader>
+          <ResidentForm 
+            resident={residentToEdit} 
+            onSubmit={() => setIsEditResidentOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-// Update ResidentRow component to display the new fields
+// Update ResidentRow component to include the edit functionality
 const ResidentRow = ({ 
   resident, 
-  onViewDetails 
+  onViewDetails,
+  onEditResident
 }: { 
   resident: Resident;
   onViewDetails: (resident: Resident) => void;
+  onEditResident: (resident: Resident) => void;
 }) => {
   // Calculate age
   const birthDate = new Date(resident.birthDate);
@@ -862,7 +902,7 @@ const ResidentRow = ({
               <Eye className="h-4 w-4 mr-2" />
               View details
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEditResident(resident)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </DropdownMenuItem>
