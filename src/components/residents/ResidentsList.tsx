@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -12,6 +13,9 @@ import {
   Printer,
   FileText,
   Check,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +65,13 @@ import {
 } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// Define the age group options
+type AgeGroup = 'Child' | 'Teen' | 'Young Adult' | 'Adult' | 'Elderly';
+
+// Define the sort options
+type SortField = 'name' | 'gender' | 'status' | 'age' | 'ageGroup' | 'purok' | 'contact';
+type SortDirection = 'asc' | 'desc';
+
 const ResidentsList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
@@ -71,6 +82,10 @@ const ResidentsList = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  
+  // Sorting state
+  const [sortField, setSortField] = useState<SortField>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   // Fetch residents data from Supabase
   const { data: residents = [], isLoading, error } = useQuery({
@@ -104,8 +119,38 @@ const ResidentsList = () => {
     return Array.from(classifications);
   }, [residents]);
   
+  // Function to determine age group
+  const getAgeGroup = (age: number): AgeGroup => {
+    if (age <= 12) return 'Child';
+    if (age <= 19) return 'Teen';
+    if (age <= 29) return 'Young Adult';
+    if (age <= 59) return 'Adult';
+    return 'Elderly';
+  };
+  
+  // Function to handle sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field and default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+  
+  // Get sort icon for header
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <ArrowUpDown className="h-4 w-4 ml-2" />;
+    return sortDirection === 'asc' ? 
+      <ArrowUp className="h-4 w-4 ml-2" /> : 
+      <ArrowDown className="h-4 w-4 ml-2" />;
+  };
+  
   const filteredResidents = useMemo(() => {
-    return residents.filter(resident => {
+    // Filter by search, status, tab, and classifications
+    const filtered = residents.filter(resident => {
       // Search filter
       const matchesSearch = 
         searchQuery === '' || 
@@ -131,7 +176,56 @@ const ResidentsList = () => {
       
       return matchesSearch && matchesStatus && matchesTab && matchesClassifications;
     });
-  }, [searchQuery, selectedStatus, activeTab, selectedClassifications, residents]);
+    
+    // Apply sorting
+    return [...filtered].sort((a, b) => {
+      // Calculate ages first to avoid repeated calculations
+      const dateA = new Date(a.birthDate);
+      const dateB = new Date(b.birthDate);
+      const today = new Date();
+      
+      let ageA = today.getFullYear() - dateA.getFullYear();
+      const mA = today.getMonth() - dateA.getMonth();
+      if (mA < 0 || (mA === 0 && today.getDate() < dateA.getDate())) {
+        ageA--;
+      }
+      
+      let ageB = today.getFullYear() - dateB.getFullYear();
+      const mB = today.getMonth() - dateB.getMonth();
+      if (mB < 0 || (mB === 0 && today.getDate() < dateB.getDate())) {
+        ageB--;
+      }
+      
+      const ageGroupA = getAgeGroup(ageA);
+      const ageGroupB = getAgeGroup(ageB);
+      
+      const directionModifier = sortDirection === 'asc' ? 1 : -1;
+      
+      switch (sortField) {
+        case 'name':
+          return (`${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)) * directionModifier;
+        case 'gender':
+          return (a.gender.localeCompare(b.gender)) * directionModifier;
+        case 'status':
+          return (a.status.localeCompare(b.status)) * directionModifier;
+        case 'age':
+          return (ageA - ageB) * directionModifier;
+        case 'ageGroup':
+          // Order by age group: Child, Teen, Young Adult, Adult, Elderly
+          const ageGroupOrder = { 'Child': 1, 'Teen': 2, 'Young Adult': 3, 'Adult': 4, 'Elderly': 5 };
+          return (ageGroupOrder[ageGroupA] - ageGroupOrder[ageGroupB]) * directionModifier;
+        case 'purok':
+          // Some residents might not have a purok field
+          const purokA = (a as any).purok || '';
+          const purokB = (b as any).purok || '';
+          return purokA.localeCompare(purokB) * directionModifier;
+        case 'contact':
+          return ((a.contactNumber || '').localeCompare(b.contactNumber || '')) * directionModifier;
+        default:
+          return 0;
+      }
+    });
+  }, [searchQuery, selectedStatus, activeTab, selectedClassifications, residents, sortField, sortDirection]);
 
   // Calculate pagination
   const pageCount = Math.ceil(filteredResidents.length / pageSize);
@@ -385,7 +479,93 @@ const ResidentsList = () => {
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-baranex-primary"></div>
                 </div>
               ) : (
-                renderResidentsTable(paginatedResidents, handleViewDetails)
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/70"
+                          onClick={() => handleSort('name')}
+                        >
+                          <div className="flex items-center">
+                            Name {getSortIcon('name')}
+                          </div>
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/70"
+                          onClick={() => handleSort('gender')}
+                        >
+                          <div className="flex items-center">
+                            Gender {getSortIcon('gender')}
+                          </div>
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/70"
+                          onClick={() => handleSort('status')}
+                        >
+                          <div className="flex items-center">
+                            Status {getSortIcon('status')}
+                          </div>
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/70"
+                          onClick={() => handleSort('age')}
+                        >
+                          <div className="flex items-center">
+                            Age {getSortIcon('age')}
+                          </div>
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/70"
+                          onClick={() => handleSort('ageGroup')}
+                        >
+                          <div className="flex items-center">
+                            Age Group {getSortIcon('ageGroup')}
+                          </div>
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/70"
+                          onClick={() => handleSort('purok')}
+                        >
+                          <div className="flex items-center">
+                            Purok {getSortIcon('purok')}
+                          </div>
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/70"
+                          onClick={() => handleSort('contact')}
+                        >
+                          <div className="flex items-center">
+                            Contact {getSortIcon('contact')}
+                          </div>
+                        </TableHead>
+                        <TableHead>Classifications</TableHead>
+                        <TableHead className="w-[80px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedResidents.map((resident) => (
+                        <ResidentRow 
+                          key={resident.id} 
+                          resident={resident} 
+                          onViewDetails={handleViewDetails} 
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+              
+              {filteredResidents.length === 0 && !isLoading && (
+                <div className="py-12 text-center text-muted-foreground bg-muted/30">
+                  <div className="flex flex-col items-center justify-center">
+                    <svg className="h-12 w-12 text-muted-foreground mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-lg font-medium text-foreground">No residents found</p>
+                    <p className="text-sm mt-1">Try adjusting your search or filter criteria.</p>
+                  </div>
+                </div>
               )}
             </TabsContent>
           ))}
@@ -462,50 +642,7 @@ const ResidentsList = () => {
   );
 };
 
-const renderResidentsTable = (residents: Resident[], onViewDetails: (resident: Resident) => void) => {
-  if (residents.length === 0) {
-    return (
-      <div className="py-12 text-center text-muted-foreground bg-muted/30">
-        <div className="flex flex-col items-center justify-center">
-          <svg className="h-12 w-12 text-muted-foreground mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-lg font-medium text-foreground">No residents found</p>
-          <p className="text-sm mt-1">Try adjusting your search or filter criteria.</p>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader className="bg-muted/50">
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Gender</TableHead>
-            <TableHead>Age</TableHead>
-            <TableHead>Address</TableHead>
-            <TableHead>Contact</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Classifications</TableHead>
-            <TableHead className="w-[80px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {residents.map((resident) => (
-            <ResidentRow 
-              key={resident.id} 
-              resident={resident} 
-              onViewDetails={onViewDetails} 
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-};
-
+// Update ResidentRow component to display the new fields
 const ResidentRow = ({ 
   resident, 
   onViewDetails 
@@ -522,17 +659,26 @@ const ResidentRow = ({
     age--;
   }
   
+  // Determine age group
+  const getAgeGroup = (age: number): string => {
+    if (age <= 12) return 'Child';
+    if (age <= 19) return 'Teen';
+    if (age <= 29) return 'Young Adult';
+    if (age <= 59) return 'Adult';
+    return 'Elderly';
+  };
+  
+  const ageGroup = getAgeGroup(age);
+  
+  // Get purok if available (from database or as a property)
+  const purok = (resident as any).purok || 'Not specified';
+  
   return (
     <TableRow className="hover:bg-muted/50">
       <TableCell className="font-medium">
         {resident.firstName} {resident.lastName}
       </TableCell>
       <TableCell>{resident.gender}</TableCell>
-      <TableCell>{age}</TableCell>
-      <TableCell className="max-w-[200px] truncate" title={resident.address}>
-        {resident.address}
-      </TableCell>
-      <TableCell>{resident.contactNumber}</TableCell>
       <TableCell>
         <Badge className={`px-2 py-1 rounded-full text-xs font-medium ${
           resident.status === 'Permanent' 
@@ -546,6 +692,24 @@ const ResidentRow = ({
           {resident.status}
         </Badge>
       </TableCell>
+      <TableCell>{age}</TableCell>
+      <TableCell>
+        <Badge className={`px-2 py-1 rounded-full text-xs font-medium ${
+          ageGroup === 'Child' 
+            ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300' 
+            : ageGroup === 'Teen'
+            ? 'bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300'
+            : ageGroup === 'Young Adult'
+            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300'
+            : ageGroup === 'Adult'
+            ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300'
+            : 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300'
+        }`}>
+          {ageGroup}
+        </Badge>
+      </TableCell>
+      <TableCell>{purok}</TableCell>
+      <TableCell>{resident.contactNumber || 'N/A'}</TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1 max-w-[150px]">
           {resident.classifications?.map((classification, index) => (
@@ -558,6 +722,9 @@ const ResidentRow = ({
               {classification}
             </Badge>
           ))}
+          {(!resident.classifications || resident.classifications.length === 0) && (
+            <span className="text-muted-foreground text-xs">None</span>
+          )}
         </div>
       </TableCell>
       <TableCell>
