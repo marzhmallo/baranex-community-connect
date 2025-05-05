@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -107,7 +108,7 @@ const Sidebar = () => {
         </nav>
 
         <div className="p-4 border-t border-sidebar-border">
-          {!isCollapsed && <ThemeToggle />}
+          <ThemeToggle isCollapsed={isCollapsed} />
           
           <Button 
             variant="sidebar"

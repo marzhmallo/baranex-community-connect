@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import Sidebar from "./components/layout/Sidebar";
+import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,26 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === "/auth";
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  
+  // Watch for sidebar collapsed state changes from DOM
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target instanceof Element) {
+          const sidebarWidth = document.querySelector('aside')?.getBoundingClientRect().width;
+          setIsSidebarCollapsed(sidebarWidth !== undefined && sidebarWidth < 100);
+        }
+      });
+    });
+    
+    const sidebar = document.querySelector('aside');
+    if (sidebar) {
+      observer.observe(sidebar, { attributes: true });
+    }
+    
+    return () => observer.disconnect();
+  }, []);
   
   return (
     <AuthProvider>
@@ -33,7 +54,11 @@ const AppContent = () => {
         {/* Only render sidebar when NOT on auth page */}
         {!isAuthPage && <Sidebar />}
         
-        <div className={`flex-1 ${!isAuthPage ? "md:ml-64" : ""}`}> {/* Adjust margin based on sidebar presence */}
+        <div 
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            !isAuthPage ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
+          }`}
+        > 
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Index />} />
