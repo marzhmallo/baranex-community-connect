@@ -346,11 +346,23 @@ const ResidentsList = () => {
   };
 
   const handleCloseEditDialog = () => {
-    // Add a small delay before fully closing to ensure proper cleanup
-    setTimeout(() => {
-      setResidentToEdit(null);
-    }, 100);
+    // First close the dialog through state
     setIsEditResidentOpen(false);
+    
+    // Then clean up any lingering effects to ensure UI remains interactive
+    setTimeout(() => {
+      document.body.classList.remove('overflow-hidden');
+      document.body.style.pointerEvents = '';
+      
+      // Remove any focus traps or aria-hidden attributes that might be lingering
+      const elements = document.querySelectorAll('[aria-hidden="true"]');
+      elements.forEach(el => {
+        el.setAttribute('aria-hidden', 'false');
+      });
+      
+      // After everything is cleaned up, we can reset the resident to edit
+      setResidentToEdit(null);
+    }, 150);
   };
 
   const handlePageSizeChange = (value: string) => {
@@ -564,12 +576,23 @@ const ResidentsList = () => {
                 open={isAddResidentOpen} 
                 onOpenChange={(isOpen) => {
                   if (!isOpen) {
+                    // First close the dialog through state
+                    setIsAddResidentOpen(false);
+                    
+                    // Then clean up any lingering effects to ensure UI remains interactive
                     setTimeout(() => {
-                      // Clean up after dialog is fully closed
+                      document.body.classList.remove('overflow-hidden');
                       document.body.style.pointerEvents = '';
-                    }, 100);
+                      
+                      // Remove any focus traps or aria-hidden attributes that might be lingering
+                      const elements = document.querySelectorAll('[aria-hidden="true"]');
+                      elements.forEach(el => {
+                        el.setAttribute('aria-hidden', 'false');
+                      });
+                    }, 150);
+                  } else {
+                    setIsAddResidentOpen(true);
                   }
-                  setIsAddResidentOpen(isOpen);
                 }}
               >
                 <DialogContent 
@@ -586,11 +609,20 @@ const ResidentsList = () => {
                     </DialogDescription>
                   </DialogHeader>
                   <ResidentForm onSubmit={() => {
+                    // First close the dialog through state
                     setIsAddResidentOpen(false);
-                    // Ensure pointer events are reset
+                    
+                    // Then clean up any lingering effects to ensure UI remains interactive
                     setTimeout(() => {
+                      document.body.classList.remove('overflow-hidden');
                       document.body.style.pointerEvents = '';
-                    }, 100);
+                      
+                      // Remove any focus traps or aria-hidden attributes that might be lingering
+                      const elements = document.querySelectorAll('[aria-hidden="true"]');
+                      elements.forEach(el => {
+                        el.setAttribute('aria-hidden', 'false');
+                      });
+                    }, 150);
                   }} />
                 </DialogContent>
               </Dialog>
@@ -817,12 +849,23 @@ const ResidentsList = () => {
         open={isAddResidentOpen} 
         onOpenChange={(isOpen) => {
           if (!isOpen) {
+            // First close the dialog through state
+            setIsAddResidentOpen(false);
+            
+            // Then clean up any lingering effects to ensure UI remains interactive
             setTimeout(() => {
-              // Clean up after dialog is fully closed
+              document.body.classList.remove('overflow-hidden');
               document.body.style.pointerEvents = '';
-            }, 100);
+              
+              // Remove any focus traps or aria-hidden attributes that might be lingering
+              const elements = document.querySelectorAll('[aria-hidden="true"]');
+              elements.forEach(el => {
+                el.setAttribute('aria-hidden', 'false');
+              });
+            }, 150);
+          } else {
+            setIsAddResidentOpen(true);
           }
-          setIsAddResidentOpen(isOpen);
         }}
       >
         <DialogContent 
@@ -839,11 +882,20 @@ const ResidentsList = () => {
             </DialogDescription>
           </DialogHeader>
           <ResidentForm onSubmit={() => {
+            // First close the dialog through state
             setIsAddResidentOpen(false);
-            // Ensure pointer events are reset
+            
+            // Then clean up any lingering effects to ensure UI remains interactive
             setTimeout(() => {
+              document.body.classList.remove('overflow-hidden');
               document.body.style.pointerEvents = '';
-            }, 100);
+              
+              // Remove any focus traps or aria-hidden attributes that might be lingering
+              const elements = document.querySelectorAll('[aria-hidden="true"]');
+              elements.forEach(el => {
+                el.setAttribute('aria-hidden', 'false');
+              });
+            }, 150);
           }} />
         </DialogContent>
       </Dialog>
@@ -852,8 +904,11 @@ const ResidentsList = () => {
       <Dialog 
         open={isEditResidentOpen} 
         onOpenChange={(isOpen) => {
-          if (!isOpen) handleCloseEditDialog();
-          else setIsEditResidentOpen(isOpen);
+          if (!isOpen) {
+            handleCloseEditDialog();
+          } else {
+            setIsEditResidentOpen(true);
+          }
         }}
       >
         <DialogContent 
@@ -871,13 +926,7 @@ const ResidentsList = () => {
           </DialogHeader>
           <ResidentForm 
             resident={residentToEdit} 
-            onSubmit={() => {
-              handleCloseEditDialog();
-              // Ensure pointer events are reset
-              setTimeout(() => {
-                document.body.style.pointerEvents = '';
-              }, 100);
-            }} 
+            onSubmit={handleCloseEditDialog} 
           />
         </DialogContent>
       </Dialog>
