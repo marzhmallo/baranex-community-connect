@@ -173,19 +173,13 @@ const ResidentsList = () => {
       // Status filter
       const matchesStatus = selectedStatus === null || resident.status === selectedStatus;
       
-      // Tab filter
+      // Tab filter - Only status tabs now
       const matchesTab = 
         activeTab === 'all' || 
         (activeTab === 'permanent' && resident.status === 'Permanent') ||
         (activeTab === 'temporary' && resident.status === 'Temporary') ||
         (activeTab === 'deceased' && resident.status === 'Deceased') ||
-        (activeTab === 'relocated' && resident.status === 'Relocated') ||
-        // Add classification tabs
-        (activeTab === 'indigent' && resident.classifications?.includes('indigent')) ||
-        (activeTab === 'student' && resident.classifications?.includes('student')) ||
-        (activeTab === 'ofw' && resident.classifications?.includes('ofw')) ||
-        (activeTab === 'pwd' && resident.classifications?.includes('pwd')) ||
-        (activeTab === 'missing' && resident.classifications?.includes('missing'));
+        (activeTab === 'relocated' && resident.status === 'Relocated');
       
       // Classifications filter
       const matchesClassifications = 
@@ -278,7 +272,7 @@ const ResidentsList = () => {
   };
 
   const handleClassificationCardClick = (classification: string) => {
-    setActiveTab(classification.toLowerCase());
+    // Instead of changing tab, just set the classification filter
     setSelectedClassifications([classification]);
     setCurrentPage(1); // Reset to first page on classification card click
   };
@@ -404,12 +398,6 @@ const ResidentsList = () => {
               <TabsTrigger value="temporary" className="rounded-md data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-900/30 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300">Temporary</TabsTrigger>
               <TabsTrigger value="deceased" className="rounded-md data-[state=active]:bg-red-50 dark:data-[state=active]:bg-red-900/30 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-300">Deceased</TabsTrigger>
               <TabsTrigger value="relocated" className="rounded-md data-[state=active]:bg-purple-50 dark:data-[state=active]:bg-purple-900/30 data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-300">Relocated</TabsTrigger>
-              {/* Add classification tabs */}
-              <TabsTrigger value="indigent" className="rounded-md data-[state=active]:bg-amber-50 dark:data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-300">Indigent</TabsTrigger>
-              <TabsTrigger value="student" className="rounded-md data-[state=active]:bg-cyan-50 dark:data-[state=active]:bg-cyan-900/30 data-[state=active]:text-cyan-700 dark:data-[state=active]:text-cyan-300">Student</TabsTrigger>
-              <TabsTrigger value="ofw" className="rounded-md data-[state=active]:bg-indigo-50 dark:data-[state=active]:bg-indigo-900/30 data-[state=active]:text-indigo-700 dark:data-[state=active]:text-indigo-300">OFW</TabsTrigger>
-              <TabsTrigger value="pwd" className="rounded-md data-[state=active]:bg-pink-50 dark:data-[state=active]:bg-pink-900/30 data-[state=active]:text-pink-700 dark:data-[state=active]:text-pink-300">PWD</TabsTrigger>
-              <TabsTrigger value="missing" className="rounded-md data-[state=active]:bg-orange-50 dark:data-[state=active]:bg-orange-900/30 data-[state=active]:text-orange-700 dark:data-[state=active]:text-orange-300">Missing</TabsTrigger>
             </TabsList>
             
             <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
@@ -555,8 +543,8 @@ const ResidentsList = () => {
             </div>
           </div>
           
-          {/* Tabs Content - Update to include classification tabs */}
-          {['all', 'permanent', 'temporary', 'deceased', 'relocated', 'indigent', 'student', 'ofw', 'pwd', 'missing'].map(tab => (
+          {/* Tabs Content - Only include status tabs */}
+          {['all', 'permanent', 'temporary', 'deceased', 'relocated'].map(tab => (
             <TabsContent key={tab} value={tab} className="m-0">
               {isLoading ? (
                 <div className="flex justify-center items-center py-12">
@@ -770,73 +758,4 @@ const ResidentRow = ({
             : resident.status === 'Temporary'
             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800'
             : resident.status === 'Deceased'
-            ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800'
-            : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800'
-        }`}>
-          {resident.status}
-        </Badge>
-      </TableCell>
-      <TableCell>{age}</TableCell>
-      <TableCell>
-        <Badge className={`px-2 py-1 rounded-full text-xs font-medium ${
-          ageGroup === 'Child' 
-            ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300' 
-            : ageGroup === 'Teen'
-            ? 'bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300'
-            : ageGroup === 'Young Adult'
-            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300'
-            : ageGroup === 'Adult'
-            ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300'
-            : 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300'
-        }`}>
-          {ageGroup}
-        </Badge>
-      </TableCell>
-      <TableCell>{purok}</TableCell>
-      <TableCell>{resident.contactNumber || 'N/A'}</TableCell>
-      <TableCell>
-        <div className="flex flex-wrap gap-1 max-w-[150px]">
-          {resident.classifications?.map((classification, index) => (
-            <Badge 
-              key={index} 
-              variant="outline" 
-              className="bg-blue-50 dark:bg-blue-900/20 text-xs text-blue-800 dark:text-blue-300 border-blue-100 dark:border-blue-800/50 truncate max-w-full"
-              title={classification}
-            >
-              {classification}
-            </Badge>
-          ))}
-          {(!resident.classifications || resident.classifications.length === 0) && (
-            <span className="text-muted-foreground text-xs">None</span>
-          )}
-        </div>
-      </TableCell>
-      <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => onViewDetails(resident)}>
-              <Eye className="h-4 w-4 mr-2" />
-              View Details
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center cursor-pointer">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center text-red-600 cursor-pointer focus:text-red-700 dark:text-red-500 dark:focus:text-red-400">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
-    </TableRow>
-  );
-};
-
-export default ResidentsList;
+            ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 hover
