@@ -11,25 +11,28 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { createResident } from "@/lib/api/residents";
+import { createResident, saveResident } from "@/lib/api/residents";
+import { Resident } from "@/lib/types";
 
 // Available resident classifications
-const residentClassifications = [{
-  id: "indigent",
-  label: "Indigent"
-}, {
-  id: "student",
-  label: "Student"
-}, {
-  id: "ofw",
-  label: "OFW"
-}, {
-  id: "pwd",
-  label: "PWD"
-}, {
-  id: "missing",
-  label: "Missing"
-}];
+const residentClassifications = [
+  {
+    id: "indigent",
+    label: "Indigent"
+  }, {
+    id: "student",
+    label: "Student"
+  }, {
+    id: "ofw",
+    label: "OFW"
+  }, {
+    id: "pwd",
+    label: "PWD"
+  }, {
+    id: "missing",
+    label: "Missing"
+  }
+];
 
 // Form schema using zod
 const formSchema = z.object({
@@ -68,101 +71,107 @@ const formSchema = z.object({
 
 interface ResidentFormProps {
   onSubmit: () => void;
+  resident?: Resident;
 }
 
 const ResidentForm = ({
-  onSubmit
+  onSubmit,
+  resident
 }: ResidentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
+  
+  const defaultValues = resident || {
+    firstName: "",
+    lastName: "",
+    middleName: "",
+    suffix: "",
+    gender: "Male",
+    birthDate: "",
+    address: "",
+    purok: "",
+    barangay: "",
+    municipality: "",
+    province: "",
+    region: "",
+    country: "",
+    contactNumber: "",
+    email: "",
+    occupation: "",
+    civilStatus: "Single",
+    monthlyIncome: 0,
+    yearsInBarangay: 0,
+    nationality: "",
+    isVoter: false,
+    hasPhilhealth: false,
+    hasSss: false,
+    hasPagibig: false,
+    hasTin: false,
+    classifications: [],
+    emergencyContactName: "",
+    emergencyContactRelationship: "",
+    emergencyContactNumber: "",
+    status: "Active",
+    remarks: ""
+  };
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      middleName: "",
-      suffix: "",
-      gender: "Male",
-      birthDate: "",
-      address: "",
-      purok: "",
-      barangay: "",
-      municipality: "",
-      province: "",
-      region: "",
-      country: "",
-      contactNumber: "",
-      email: "",
-      occupation: "",
-      civilStatus: "Single",
-      monthlyIncome: 0,
-      yearsInBarangay: 0,
-      nationality: "",
-      isVoter: false,
-      hasPhilhealth: false,
-      hasSss: false,
-      hasPagibig: false,
-      hasTin: false,
-      classifications: [],
-      emergencyContactName: "",
-      emergencyContactRelationship: "",
-      emergencyContactNumber: "",
-      status: "Active",
-      remarks: ""
-    }
+    defaultValues
   });
   
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Generate a UUID for the new resident
-      const uuid = crypto.randomUUID();
-
-      // Map form values to match Supabase table structure
-      const residentData = {
-        id: uuid,
-        first_name: values.firstName,
-        last_name: values.lastName,
-        middle_name: values.middleName || null,
-        suffix: values.suffix || null,
+      // Create resident object to save
+      const residentToSave: Resident = {
+        id: resident?.id || "", // Empty string will be handled by saveResident
+        firstName: values.firstName,
+        lastName: values.lastName,
+        middleName: values.middleName || "",
+        suffix: values.suffix || "",
         gender: values.gender,
-        birthdate: values.birthDate,
+        birthDate: values.birthDate,
         address: values.address,
-        mobile_number: values.contactNumber || null,
-        email: values.email || null,
-        occupation: values.occupation || null,
-        status: values.status === 'Active' ? 'Permanent' : values.status === 'Inactive' ? 'Temporary' : values.status === 'Deceased' ? 'Deceased' : 'Relocated',
-        civil_status: values.civilStatus,
-        purok: values.purok,
-        barangaydb: values.barangay,
-        municipalitycity: values.municipality,
-        provinze: values.province,
-        regional: values.region,
-        countryph: values.country,
-        nationality: values.nationality,
-        monthly_income: values.monthlyIncome || null,
-        years_in_barangay: values.yearsInBarangay || null,
-        is_voter: values.isVoter,
-        has_philhealth: values.hasPhilhealth,
-        has_sss: values.hasSss,
-        has_pagibig: values.hasPagibig,
-        has_tin: values.hasTin,
+        contactNumber: values.contactNumber || undefined,
+        email: values.email || undefined,
+        status: values.status === 'Active' ? 'Permanent' : 
+                values.status === 'Inactive' ? 'Temporary' : 
+                values.status === 'Deceased' ? 'Deceased' : 'Relocated',
+        civilStatus: values.civilStatus,
+        occupation: values.occupation || undefined,
+        yearsInBarangay: values.yearsInBarangay,
         classifications: values.classifications || [],
-        remarks: values.remarks || null,
-        emname: values.emergencyContactName || null,
-        emrelation: values.emergencyContactRelationship || null,
-        emcontact: values.emergencyContactNumber ? parseInt(values.emergencyContactNumber) : null
+        monthlyIncome: values.monthlyIncome,
+        purok: values.purok,
+        barangay: values.barangay,
+        municipality: values.municipality,
+        province: values.province,
+        region: values.region,
+        country: values.country,
+        nationality: values.nationality,
+        isVoter: values.isVoter,
+        hasPhilhealth: values.hasPhilhealth,
+        hasSss: values.hasSss,
+        hasPagibig: values.hasPagibig,
+        hasTin: values.hasTin,
+        remarks: values.remarks || undefined,
+        emergencyContact: {
+          name: values.emergencyContactName || "Emergency contact not set",
+          relationship: values.emergencyContactRelationship || "Not specified",
+          contactNumber: values.emergencyContactNumber || "Not specified"
+        }
       };
       
-      // Use the new createResident function to save the data
-      const { success, error } = await createResident(residentData);
+      // Use the new saveResident function
+      const { success, error } = await saveResident(residentToSave);
       
       if (!success) throw error;
 
       // Show success toast
       toast({
-        title: "Resident added successfully",
-        description: `${values.firstName} ${values.lastName} has been added to the database.`
+        title: resident ? "Resident updated successfully" : "Resident added successfully",
+        description: `${values.firstName} ${values.lastName} has been ${resident ? 'updated in' : 'added to'} the database.`
       });
 
       // Invalidate residents query to refresh the list
@@ -173,10 +182,10 @@ const ResidentForm = ({
       // Close the dialog
       onSubmit();
     } catch (error: any) {
-      console.error('Error adding resident:', error);
+      console.error('Error saving resident:', error);
       toast({
-        title: "Error adding resident",
-        description: error.message || "There was a problem adding the resident.",
+        title: "Error saving resident",
+        description: error.message || "There was a problem saving the resident.",
         variant: "destructive"
       });
     } finally {
@@ -586,7 +595,7 @@ const ResidentForm = ({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save Resident"}
+            {isSubmitting ? "Saving..." : resident ? "Update Resident" : "Save Resident"}
           </Button>
         </div>
       </form>

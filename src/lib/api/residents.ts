@@ -140,4 +140,78 @@ export const createResident = async (residentData: any): Promise<{ success: bool
   }
 };
 
+// Add new function to save (create or update) a resident
+export const saveResident = async (resident: Resident): Promise<{ success: boolean; error: any }> => {
+  try {
+    // Map application model back to database fields
+    const residentData = {
+      id: resident.id,
+      first_name: resident.firstName,
+      last_name: resident.lastName,
+      middle_name: resident.middleName || null,
+      suffix: resident.suffix || null,
+      gender: resident.gender,
+      birthdate: resident.birthDate,
+      address: resident.address,
+      mobile_number: resident.contactNumber || null,
+      email: resident.email || null,
+      occupation: resident.occupation || null,
+      status: resident.status,
+      civil_status: resident.civilStatus,
+      monthly_income: resident.monthlyIncome || null,
+      years_in_barangay: resident.yearsInBarangay || null,
+      purok: resident.purok,
+      barangaydb: resident.barangay,
+      municipalitycity: resident.municipality,
+      provinze: resident.province,
+      regional: resident.region,
+      countryph: resident.country || null,
+      nationality: resident.nationality || null,
+      is_voter: resident.isVoter || false,
+      has_philhealth: resident.hasPhilhealth || false,
+      has_sss: resident.hasSss || false,
+      has_pagibig: resident.hasPagibig || false,
+      has_tin: resident.hasTin || false,
+      classifications: resident.classifications || [],
+      remarks: resident.remarks || null,
+      emname: resident.emergencyContact?.name || null,
+      emrelation: resident.emergencyContact?.relationship || null,
+      emcontact: resident.emergencyContact?.contactNumber ? 
+        resident.emergencyContact.contactNumber.replace(/\D/g, '') : null
+    };
+    
+    // Check if this is an update or create operation
+    if (resident.id) {
+      // Update existing resident
+      const { error } = await supabase
+        .from('residents')
+        .update(residentData)
+        .eq('id', resident.id);
+      
+      if (error) {
+        console.error("Error updating resident:", error);
+        return { success: false, error };
+      }
+    } else {
+      // Create new resident with generated UUID
+      const { error } = await supabase
+        .from('residents')
+        .insert({
+          ...residentData,
+          id: crypto.randomUUID(),
+        });
+      
+      if (error) {
+        console.error("Error creating resident:", error);
+        return { success: false, error };
+      }
+    }
+    
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Exception saving resident:", error);
+    return { success: false, error };
+  }
+};
+
 // Add more functions for CRUD operations as needed
