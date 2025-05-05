@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -70,6 +69,9 @@ const formSchema = z.object({
   remarks: z.string().optional()
 });
 
+// Define the type for form values based on the schema
+type ResidentFormValues = z.infer<typeof formSchema>;
+
 interface ResidentFormProps {
   onSubmit: () => void;
   resident?: Resident;
@@ -83,7 +85,7 @@ const ResidentForm = ({
   const queryClient = useQueryClient();
   
   // Map resident status from database to form status
-  const mapResidentStatus = (databaseStatus: string): string => {
+  const mapResidentStatus = (databaseStatus: string): "Active" | "Inactive" | "Deceased" | "Transferred" => {
     switch (databaseStatus) {
       case 'Permanent': return 'Active';
       case 'Temporary': return 'Inactive';
@@ -94,13 +96,13 @@ const ResidentForm = ({
   };
   
   // Transform resident data for the form
-  const transformResidentForForm = (resident: Resident) => {
+  const transformResidentForForm = (resident: Resident): ResidentFormValues => {
     return {
       firstName: resident.firstName,
       lastName: resident.lastName,
       middleName: resident.middleName || "",
       suffix: resident.suffix || "",
-      gender: resident.gender,
+      gender: resident.gender as "Male" | "Female" | "Other",
       birthDate: resident.birthDate,
       address: resident.address,
       purok: resident.purok || "",
@@ -112,7 +114,7 @@ const ResidentForm = ({
       contactNumber: resident.contactNumber || "",
       email: resident.email || "",
       occupation: resident.occupation || "",
-      civilStatus: resident.civilStatus,
+      civilStatus: resident.civilStatus as "Single" | "Married" | "Widowed" | "Divorced" | "Separated",
       monthlyIncome: resident.monthlyIncome || 0,
       yearsInBarangay: resident.yearsInBarangay || 0,
       nationality: resident.nationality || "",
@@ -130,7 +132,7 @@ const ResidentForm = ({
     };
   };
   
-  const defaultValues = resident ? transformResidentForForm(resident) : {
+  const defaultValues: ResidentFormValues = resident ? transformResidentForForm(resident) : {
     firstName: "",
     lastName: "",
     middleName: "",
@@ -160,16 +162,16 @@ const ResidentForm = ({
     emergencyContactName: "",
     emergencyContactRelationship: "",
     emergencyContactNumber: "",
-    status: "Active",
+    status: "Active", // Set the explicit type here
     remarks: ""
   };
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<ResidentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues
   });
   
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (values: ResidentFormValues) => {
     setIsSubmitting(true);
     try {
       // Create resident object to save
