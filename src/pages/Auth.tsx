@@ -1,21 +1,39 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  const recaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // This is Google's test key, you should replace it with your own
+
+  const handleCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token);
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!captchaToken) {
+      toast({
+        title: "Captcha Required",
+        description: "Please complete the captcha verification",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -23,6 +41,9 @@ const Auth = () => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            captchaToken,
+          }
         });
         if (error) throw error;
         toast({
@@ -33,6 +54,9 @@ const Auth = () => {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
+          options: {
+            captchaToken,
+          }
         });
         if (error) throw error;
         navigate("/");
@@ -79,7 +103,15 @@ const Auth = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            
+            <div className="flex justify-center my-4">
+              <ReCAPTCHA
+                sitekey={recaptchaSiteKey}
+                onChange={handleCaptchaChange}
+              />
+            </div>
+            
+            <Button type="submit" className="w-full" disabled={isLoading || !captchaToken}>
               {isLoading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
             </Button>
             <Button
