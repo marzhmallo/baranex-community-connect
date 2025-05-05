@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -186,58 +185,58 @@ const ResidentsList = () => {
         <ResidentStatusCard
           label="Permanent Residents"
           count={permanentCount}
-          bgColor="bg-gradient-to-br from-green-50 to-green-100"
-          textColor="text-green-800"
-          iconBgColor="bg-green-200"
-          iconColor="text-green-700"
+          bgColor="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/40 dark:to-green-900/30"
+          textColor="text-green-800 dark:text-green-300"
+          iconBgColor="bg-green-200 dark:bg-green-800"
+          iconColor="text-green-700 dark:text-green-300"
           onClick={() => handleStatusCardClick('Permanent')}
         />
         
         <ResidentStatusCard
           label="Temporary Residents"
           count={temporaryCount}
-          bgColor="bg-gradient-to-br from-blue-50 to-blue-100"
-          textColor="text-blue-800"
-          iconBgColor="bg-blue-200"
-          iconColor="text-blue-700"
+          bgColor="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/30"
+          textColor="text-blue-800 dark:text-blue-300"
+          iconBgColor="bg-blue-200 dark:bg-blue-800"
+          iconColor="text-blue-700 dark:text-blue-300"
           onClick={() => handleStatusCardClick('Temporary')}
         />
         
         <ResidentStatusCard
           label="Deceased Residents"
           count={deceasedCount}
-          bgColor="bg-gradient-to-br from-red-50 to-red-100"
-          textColor="text-red-800"
-          iconBgColor="bg-red-200"
-          iconColor="text-red-700"
+          bgColor="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/40 dark:to-red-900/30"
+          textColor="text-red-800 dark:text-red-300"
+          iconBgColor="bg-red-200 dark:bg-red-800"
+          iconColor="text-red-700 dark:text-red-300"
           onClick={() => handleStatusCardClick('Deceased')}
         />
         
         <ResidentStatusCard
           label="Relocated Residents"
           count={relocatedCount}
-          bgColor="bg-gradient-to-br from-purple-50 to-purple-100"
-          textColor="text-purple-800"
-          iconBgColor="bg-purple-200"
-          iconColor="text-purple-700"
+          bgColor="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/40 dark:to-purple-900/30"
+          textColor="text-purple-800 dark:text-purple-300"
+          iconBgColor="bg-purple-200 dark:bg-purple-800"
+          iconColor="text-purple-700 dark:text-purple-300"
           onClick={() => handleStatusCardClick('Relocated')}
         />
       </div>
       
-      <div className="bg-white rounded-lg shadow-md">
+      <div className="bg-card text-card-foreground rounded-lg shadow-md">
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b bg-slate-50">
-            <TabsList className="h-10 bg-slate-100/80">
-              <TabsTrigger value="all" className="rounded-md data-[state=active]:bg-white">All Residents</TabsTrigger>
-              <TabsTrigger value="permanent" className="rounded-md data-[state=active]:bg-green-50 data-[state=active]:text-green-700">Permanent</TabsTrigger>
-              <TabsTrigger value="temporary" className="rounded-md data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Temporary</TabsTrigger>
-              <TabsTrigger value="deceased" className="rounded-md data-[state=active]:bg-red-50 data-[state=active]:text-red-700">Deceased</TabsTrigger>
-              <TabsTrigger value="relocated" className="rounded-md data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">Relocated</TabsTrigger>
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b bg-muted/50">
+            <TabsList className="h-10 bg-background/80">
+              <TabsTrigger value="all" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-accent">All Residents</TabsTrigger>
+              <TabsTrigger value="permanent" className="rounded-md data-[state=active]:bg-green-50 dark:data-[state=active]:bg-green-900/30 data-[state=active]:text-green-700 dark:data-[state=active]:text-green-300">Permanent</TabsTrigger>
+              <TabsTrigger value="temporary" className="rounded-md data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-900/30 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300">Temporary</TabsTrigger>
+              <TabsTrigger value="deceased" className="rounded-md data-[state=active]:bg-red-50 dark:data-[state=active]:bg-red-900/30 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-300">Deceased</TabsTrigger>
+              <TabsTrigger value="relocated" className="rounded-md data-[state=active]:bg-purple-50 dark:data-[state=active]:bg-purple-900/30 data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-300">Relocated</TabsTrigger>
             </TabsList>
             
             <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Search residents..."
@@ -335,7 +334,7 @@ const ResidentsList = () => {
             </div>
           </div>
           
-          <div className="flex justify-between items-center p-4 bg-white border-b">
+          <div className="flex justify-between items-center p-4 bg-card border-b">
             <div className="flex space-x-2">
               <Button variant="outline" size="sm" className="flex items-center">
                 <Printer className="h-4 w-4 mr-2" />
@@ -466,12 +465,12 @@ const ResidentsList = () => {
 const renderResidentsTable = (residents: Resident[], onViewDetails: (resident: Resident) => void) => {
   if (residents.length === 0) {
     return (
-      <div className="py-12 text-center text-gray-500 bg-gray-50/30">
+      <div className="py-12 text-center text-muted-foreground bg-muted/30">
         <div className="flex flex-col items-center justify-center">
-          <svg className="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-12 w-12 text-muted-foreground mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="text-lg font-medium">No residents found</p>
+          <p className="text-lg font-medium text-foreground">No residents found</p>
           <p className="text-sm mt-1">Try adjusting your search or filter criteria.</p>
         </div>
       </div>
@@ -481,7 +480,7 @@ const renderResidentsTable = (residents: Resident[], onViewDetails: (resident: R
   return (
     <div className="overflow-x-auto">
       <Table>
-        <TableHeader className="bg-slate-50">
+        <TableHeader className="bg-muted/50">
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Gender</TableHead>
@@ -524,7 +523,7 @@ const ResidentRow = ({
   }
   
   return (
-    <TableRow className="hover:bg-slate-50/70">
+    <TableRow className="hover:bg-muted/50">
       <TableCell className="font-medium">
         {resident.firstName} {resident.lastName}
       </TableCell>
@@ -537,12 +536,12 @@ const ResidentRow = ({
       <TableCell>
         <Badge className={`px-2 py-1 rounded-full text-xs font-medium ${
           resident.status === 'Permanent' 
-            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800' 
             : resident.status === 'Temporary'
-            ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800'
             : resident.status === 'Deceased'
-            ? 'bg-red-100 text-red-800 hover:bg-red-200'
-            : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+            ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800'
+            : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800'
         }`}>
           {resident.status}
         </Badge>
@@ -553,7 +552,7 @@ const ResidentRow = ({
             <Badge 
               key={index} 
               variant="outline" 
-              className="bg-blue-50 text-xs text-blue-800 border-blue-100 truncate max-w-full"
+              className="bg-blue-50 dark:bg-blue-900/20 text-xs text-blue-800 dark:text-blue-300 border-blue-100 dark:border-blue-800/50 truncate max-w-full"
               title={classification}
             >
               {classification}
@@ -578,7 +577,7 @@ const ResidentRow = ({
               Edit
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center text-red-600 cursor-pointer focus:text-red-700">
+            <DropdownMenuItem className="flex items-center text-red-600 cursor-pointer focus:text-red-700 dark:text-red-500 dark:focus:text-red-400">
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </DropdownMenuItem>
