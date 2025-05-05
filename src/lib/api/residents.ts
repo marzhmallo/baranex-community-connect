@@ -115,8 +115,44 @@ export const saveResident = async (residentData: Partial<Resident>) => {
   try {
     console.log("saveResident called with:", residentData);
     
-    // Prepare the base data - using explicit typing to avoid TypeScript errors
-    const baseData: Record<string, any> = {
+    // Define the expected database schema fields for Supabase
+    interface ResidentDatabaseFields {
+      first_name?: string;
+      middle_name?: string | null;
+      last_name?: string;
+      birthdate?: string;
+      gender?: string;
+      civil_status?: string;
+      mobile_number?: string | null;
+      email?: string | null;
+      address?: string | null;
+      purok?: string | null;
+      occupation?: string | null;
+      monthly_income?: number;
+      years_in_barangay?: number;
+      is_voter?: boolean;
+      has_philhealth?: boolean;
+      has_sss?: boolean;
+      has_pagibig?: boolean;
+      has_tin?: boolean;
+      nationality?: string | null;
+      remarks?: string | null;
+      status?: string;
+      classifications?: string[];
+      barangaydb?: string;
+      municipalitycity?: string;
+      regional?: string;
+      provinze?: string;
+      countryph?: string;
+      emname?: string | null;
+      emrelation?: string | null;
+      emcontact?: number | null;
+      suffix?: string | null;
+      updated_at?: string;
+    }
+    
+    // Map from our application model to database model
+    const databaseFields: ResidentDatabaseFields = {
       first_name: residentData.firstName?.trim(),
       middle_name: residentData.middleName?.trim() || null,
       last_name: residentData.lastName?.trim(),
@@ -145,7 +181,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       regional: residentData.region?.trim() || "Unknown",
       provinze: residentData.province?.trim() || "Unknown",
       countryph: residentData.country?.trim() || "Philippines",
-      // Emergency contact - handle conversion properly
+      // Emergency contact - handle each field individually
       emname: residentData.emergencyContact?.name?.trim() || null,
       emrelation: residentData.emergencyContact?.relationship?.trim() || null,
     };
@@ -153,19 +189,19 @@ export const saveResident = async (residentData: Partial<Resident>) => {
     // Convert emergency contact number to numeric format if provided
     if (residentData.emergencyContact?.contactNumber) {
       const numericValue = residentData.emergencyContact.contactNumber.replace(/\D/g, '');
-      baseData.emcontact = numericValue.length > 0 ? parseFloat(numericValue) : null;
+      databaseFields.emcontact = numericValue.length > 0 ? parseFloat(numericValue) : null;
     } else {
-      baseData.emcontact = null;
+      databaseFields.emcontact = null;
     }
 
     // For existing residents, update
     if (residentData.id) {
       console.log("Updating existing resident:", residentData.id);
-      baseData.updated_at = new Date().toISOString();
+      databaseFields.updated_at = new Date().toISOString();
       
       const { data, error } = await supabase
         .from('residents')
-        .update(baseData)
+        .update(databaseFields)
         .eq('id', residentData.id)
         .select()
         .single();
@@ -187,13 +223,17 @@ export const saveResident = async (residentData: Partial<Resident>) => {
     else {
       console.log("Creating new resident");
       // Add required fields for new residents
-      baseData.id = crypto.randomUUID();
-      baseData.created_at = new Date().toISOString();
-      baseData.updated_at = new Date().toISOString();
+      const newId = crypto.randomUUID();
+      const newResidentData = {
+        ...databaseFields,
+        id: newId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
       
       const { data, error } = await supabase
         .from('residents')
-        .insert(baseData)
+        .insert(newResidentData)
         .select()
         .single();
 
