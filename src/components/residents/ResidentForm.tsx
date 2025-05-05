@@ -322,24 +322,6 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
             </div>
 
             <h3 className="text-lg font-medium mb-4 pt-4 border-t">Contact Information</h3>
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Street Address *</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Complete street address" 
-                      className="resize-none" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <FormField
                 control={form.control}
@@ -424,6 +406,25 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
                   </FormItem>
                 )}
               />
+
+                <FormField
+                control={form.control}
+                name="yearsInBarangay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Years in Barangay</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="5" 
+                        onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                        value={field.value === undefined ? '' : field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -485,25 +486,6 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
                       <Input 
                         type="number" 
                         placeholder="20000" 
-                        onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                        value={field.value === undefined ? '' : field.value}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="yearsInBarangay"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Years in Barangay</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="5" 
                         onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
                         value={field.value === undefined ? '' : field.value}
                       />
@@ -653,7 +635,11 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
                 />
               </div>
             </div>
-
+    
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-medium mb-4">Emergency Contact Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
             <FormField
               control={form.control}
               name="remarks"
