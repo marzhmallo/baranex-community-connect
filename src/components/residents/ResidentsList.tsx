@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -242,22 +243,8 @@ const ResidentsList = () => {
         case 'status':
           return (a.status.localeCompare(b.status)) * directionModifier;
         case 'age':
-          // Age calculation code is kept here
           return (ageA - ageB) * directionModifier;
         case 'ageGroup':
-          // Calculate ages first
-          let ageA = today.getFullYear() - dateA.getFullYear();
-          const mA = today.getMonth() - dateA.getMonth();
-          if (mA < 0 || (mA === 0 && today.getDate() < dateA.getDate())) {
-            ageA--;
-          }
-          
-          let ageB = today.getFullYear() - dateB.getFullYear();
-          const mB = today.getMonth() - dateB.getMonth();
-          if (mB < 0 || (mB === 0 && today.getDate() < dateB.getDate())) {
-            ageB--;
-          }
-          
           const ageGroupOrder = { 'Child': 1, 'Teen': 2, 'Young Adult': 3, 'Adult': 4, 'Elderly': 5 };
           return (ageGroupOrder[ageGroupA] - ageGroupOrder[ageGroupB]) * directionModifier;
         case 'purok':

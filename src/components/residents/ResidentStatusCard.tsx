@@ -11,6 +11,7 @@ interface ResidentStatusCardProps {
   iconBgColor: string;
   iconColor: string;
   onClick?: () => void;
+  isActive?: boolean;
 }
 
 const ResidentStatusCard = ({
@@ -20,11 +21,14 @@ const ResidentStatusCard = ({
   textColor,
   iconBgColor,
   iconColor,
-  onClick
+  onClick,
+  isActive = false
 }: ResidentStatusCardProps) => {
   return (
     <Card 
-      className={`${bgColor} border-transparent cursor-pointer transition-transform hover:scale-105`}
+      className={`${bgColor} border-transparent cursor-pointer transition-transform hover:scale-105 ${
+        isActive ? 'ring-2 ring-primary ring-offset-2' : ''
+      }`}
       onClick={onClick}
     >
       <CardContent className="p-4 flex justify-between items-center">
