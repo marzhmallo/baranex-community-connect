@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ResidentForm from '@/components/residents/ResidentForm';
+import { useQueryClient } from '@tanstack/react-query';
 
 const ResidentsPage = () => {
   const [isAddResidentOpen, setIsAddResidentOpen] = React.useState(false);
+  const queryClient = useQueryClient();
 
   const handleCloseDialog = () => {
     // First close the dialog through state
@@ -25,6 +27,11 @@ const ResidentsPage = () => {
       const elements = document.querySelectorAll('[aria-hidden="true"]');
       elements.forEach(el => {
         el.setAttribute('aria-hidden', 'false');
+      });
+
+      // Refresh the residents list
+      queryClient.invalidateQueries({
+        queryKey: ['residents']
       });
     }, 150);
   };
