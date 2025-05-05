@@ -289,3 +289,6 @@ export default async function DashboardPage() {
     </>
   )
 }
+
+
+export default Dashboard;
