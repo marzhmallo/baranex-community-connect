@@ -202,61 +202,52 @@ const ResidentForm = ({
     setIsSubmitting(true);
     
     try {
-      const residentToSave: Resident = {
-        id: resident?.id, // Undefined for new residents
-        
-        // Personal Info
-        id: resident?.id,
+      const residentToSave = {
+  // Core fields
+  id: resident?.id,
   first_name: values.firstName.trim(),
-  middle_name: values.middleName?.trim() || null, // Use null instead of undefined
   last_name: values.lastName.trim(),
+  middle_name: values.middleName?.trim() || null,
   suffix: values.suffix?.trim() || null,
   gender: values.gender,
-  birthdate: values.birthDate,
-        
-        // Address
-        address: values.address.trim(),
-        purok: values.purok.trim() || undefined,
-       barangaydb: values.barangay?.trim() || null, // ← Different name
-  municipalitycity: values.municipality?.trim() || null, // ← Combined field
-  regional: values.region?.trim() || null, // ← Different name
-  provinze: values.province?.trim() || null, // ← Note spelling
-  countryph: values.country?.trim() || null, // ← Different name
+  birthdate: values.birthDate, // Note lowercase 'd'
+  civil_status: values.civilStatus,
+  nationality: values.nationality?.trim() || null,
+  occupation: values.occupation?.trim() || null,
+  monthly_income: values.monthlyIncome,
+  mobile_number: values.contactNumber?.trim() || null,
+  email: values.email?.trim() || null,
+  purok: values.purok?.trim() || null,
+  years_in_barangay: values.yearsInBarangay,
 
-        
-        // Contact
-        mobile_number: values.contactNumber?.trim() || undefined,
-        email: values.email?.trim() || undefined,
-        
-        // Status
-        status: mapApplicationStatus(values.status),
-        civil_status: values.civilStatus,
-        
-        // Economic
-        occupation: values.occupation?.trim() || undefined,
-        monthly_income: values.monthlyIncome,
-        years_in_barangay: values.yearsInBarangay,
-        
-        // Documents
-        is_Voter: values.isVoter,
-        has_Philhealth: values.hasPhilhealth,
-        has_Sss: values.hasSss,
-        has_Pagibig: values.hasPagibig,
-        has_Tin: values.hasTin,
-        
-        // Other
-        nationality: values.nationality?.trim() || undefined,
-        classifications: values.classifications,
-        remarks: values.remarks?.trim() || undefined,
-        
-        // Emergency Contact
-        emergencyContact: {
-          emname: values.emergencyContactName?.trim() || '',
-          emrelation: values.emergencyContactRelationship?.trim() || '',
-          emcontact: values.emergencyContactNumber?.trim() || ''
-        }
-      };
-      
+  // Document flags (corrected lowercase)
+  is_voter: values.isVoter,
+  has_philhealth: values.hasPhilhealth,
+  has_sss: values.hasSss,
+  has_pagibig: values.hasPagibig,
+  has_tin: values.hasTin,
+
+  // Address fields (special names)
+  barangaydb: values.barangay?.trim() || null,
+  municipalitycity: values.municipality?.trim() || null,
+  regional: values.region?.trim() || null,
+  provinze: values.province?.trim() || null,
+  countryph: values.country?.trim() || null,
+
+  // Other fields
+  remarks: values.remarks?.trim() || null,
+  status: mapApplicationStatus(values.status), // Convert Active→Permanent etc.
+  classifications: values.classifications,
+
+  // Emergency contact (as separate columns)
+  emname: values.emergencyContactName?.trim() || null,
+  emrelation: values.emergencyContactRelationship?.trim() || null,
+  emcontact: values.emergencyContactNumber?.trim() || null,
+
+  // Timestamps
+  updated_at: new Date().toISOString(),
+  ...(!resident?.id && { created_at: new Date().toISOString() }) // Only for new records
+};
       console.log("Sending to saveResident:", residentToSave);
       
       // Use the saveResident function
