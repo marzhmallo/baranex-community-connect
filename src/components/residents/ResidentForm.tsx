@@ -85,52 +85,67 @@ const ResidentForm = ({
   const queryClient = useQueryClient();
   
   // Map resident status from database to form status
-  const mapResidentStatus = (databaseStatus: string): "Active" | "Inactive" | "Deceased" | "Transferred" => {
+  const mapResidentStatus = (databaseStatus: string): "Permanent" | "Temporary" | "Deceased" | "Transferred" => {
     switch (databaseStatus) {
-      case 'Permanent': return 'Active';
-      case 'Temporary': return 'Inactive';
+      case 'Permanent': return 'Permanent';
+      case 'Temporary': return 'Temporary';
       case 'Deceased': return 'Deceased';
-      case 'Relocated': return 'Transferred';
-      default: return 'Active'; // Default fallback
+      case 'Relocated': return 'Relocated';
+      default: return 'Temporary'; // Default fallback
     }
   };
   
   // Transform resident data for the form
-  const transformResidentForForm = (resident: Resident): ResidentFormValues => {
-    return {
-      firstName: resident.firstName,
-      lastName: resident.lastName,
-      middleName: resident.middleName || "",
-      suffix: resident.suffix || "",
-      gender: resident.gender as "Male" | "Female" | "Other",
-      birthDate: resident.birthDate,
-      address: resident.address,
-      purok: resident.purok || "",
-      barangay: resident.barangay || "",
-      municipality: resident.municipality || "",
-      province: resident.province || "",
-      region: resident.region || "",
-      country: resident.country || "",
-      contactNumber: resident.contactNumber || "",
-      email: resident.email || "",
-      occupation: resident.occupation || "",
-      civilStatus: resident.civilStatus as "Single" | "Married" | "Widowed" | "Divorced" | "Separated",
-      monthlyIncome: resident.monthlyIncome || 0,
-      yearsInBarangay: resident.yearsInBarangay || 0,
-      nationality: resident.nationality || "",
-      isVoter: resident.isVoter || false,
-      hasPhilhealth: resident.hasPhilhealth || false,
-      hasSss: resident.hasSss || false,
-      hasPagibig: resident.hasPagibig || false,
-      hasTin: resident.hasTin || false,
-      classifications: resident.classifications || [],
-      emergencyContactName: resident.emergencyContact?.name || "",
-      emergencyContactRelationship: resident.emergencyContact?.relationship || "",
-      emergencyContactNumber: resident.emergencyContact?.contactNumber || "",
-      status: mapResidentStatus(resident.status),
-      remarks: resident.remarks || ""
-    };
+const transformResidentForForm = (resident: Resident): ResidentFormValues => {
+  return {
+    // Personal Info
+    firstName: resident.firstName,
+    lastName: resident.lastName,
+    middleName: resident.middleName ?? "",
+    suffix: resident.suffix ?? "",
+    gender: resident.gender as "Male" | "Female" | "Other",
+    birthDate: resident.birthDate,
+    
+    // Address
+    address: resident.address,
+    purok: resident.purok ?? "",
+    barangay: resident.barangay ?? "",
+    municipality: resident.municipality ?? "",
+    province: resident.province ?? "",
+    region: resident.region ?? "",
+    country: resident.country ?? "",
+    
+    // Contact
+    contactNumber: resident.contactNumber ?? "",
+    email: resident.email ?? "",
+    
+    // Civil Status
+    civilStatus: resident.civilStatus as "Single" | "Married" | "Widowed" | "Divorced" | "Separated",
+    status: mapDBStatusToForm(resident.status),
+    
+    // Economic
+    occupation: resident.occupation ?? "",
+    monthlyIncome: resident.monthlyIncome ?? 0,
+    yearsInBarangay: resident.yearsInBarangay ?? 0,
+    
+    // Documents
+    isVoter: resident.isVoter ?? false,
+    hasPhilhealth: resident.hasPhilhealth ?? false,
+    hasSss: resident.hasSss ?? false,
+    hasPagibig: resident.hasPagibig ?? false,
+    hasTin: resident.hasTin ?? false,
+    
+    // Other
+    nationality: resident.nationality ?? "",
+    classifications: resident.classifications ?? [],
+    remarks: resident.remarks ?? "",
+    
+    // Emergency Contact
+    emergencyContactName: resident.emergencyContact.name ?? "",
+    emergencyContactRelationship: resident.emergencyContact.relationship ?? "",
+    emergencyContactNumber: resident.emergencyContact.contactNumber ?? ""
   };
+};
   
   const defaultValues: ResidentFormValues = resident ? transformResidentForForm(resident) : {
     firstName: "",
@@ -162,7 +177,7 @@ const ResidentForm = ({
     emergencyContactName: "",
     emergencyContactRelationship: "",
     emergencyContactNumber: "",
-    status: "Active", // Set the explicit type here
+    status: "Temporary", // Set the explicit type here
     remarks: ""
   };
   
@@ -171,49 +186,63 @@ const ResidentForm = ({
     defaultValues
   });
   
-  const handleSubmit = async (values: ResidentFormValues) => {
-    setIsSubmitting(true);
-    try {
-      // Create resident object to save
-      const residentToSave: Resident = {
-        id: resident?.id || "", // Empty string will be handled by saveResident
-        firstName: values.firstName,
-        lastName: values.lastName,
-        middleName: values.middleName || "",
-        suffix: values.suffix || "",
-        gender: values.gender,
-        birthDate: values.birthDate,
-        address: values.address,
-        contactNumber: values.contactNumber || undefined,
-        email: values.email || undefined,
-        status: values.status === 'Active' ? 'Permanent' : 
-                values.status === 'Inactive' ? 'Temporary' : 
-                values.status === 'Deceased' ? 'Deceased' : 'Relocated',
-        civilStatus: values.civilStatus,
-        occupation: values.occupation || undefined,
-        yearsInBarangay: values.yearsInBarangay,
-        classifications: values.classifications || [],
-        monthlyIncome: values.monthlyIncome,
-        purok: values.purok,
-        barangay: values.barangay,
-        municipality: values.municipality,
-        province: values.province,
-        region: values.region,
-        country: values.country,
-        nationality: values.nationality,
-        isVoter: values.isVoter,
-        hasPhilhealth: values.hasPhilhealth,
-        hasSss: values.hasSss,
-        hasPagibig: values.hasPagibig,
-        hasTin: values.hasTin,
-        remarks: values.remarks || undefined,
-        emergencyContact: {
-          name: values.emergencyContactName || "Emergency contact not set",
-          relationship: values.emergencyContactRelationship || "Not specified",
-          contactNumber: values.emergencyContactNumber || "Not specified"
-        }
-      };
+const handleSubmit = async (values: ResidentFormValues) => {
+  setIsSubmitting(true);
+  
+  try {
+    const residentToSave: Resident = {
+      id: resident?.id ?? undefined, // Undefined for new residents
       
+      // Personal Info
+      firstName: values.firstName.trim(),
+      lastName: values.lastName.trim(),
+      middleName: values.middleName.trim() || undefined,
+      suffix: values.suffix.trim() || undefined,
+      gender: values.gender,
+      birthDate: values.birthDate,
+      
+      // Address
+      address: values.address.trim(),
+      purok: values.purok.trim() || undefined,
+      barangay: values.barangay.trim() || undefined,
+      municipality: values.municipality.trim() || undefined,
+      province: values.province.trim() || undefined,
+      region: values.region.trim() || undefined,
+      country: values.country.trim() || undefined,
+      
+      // Contact
+      contactNumber: values.contactNumber.trim() || undefined,
+      email: values.email.trim() || undefined,
+      
+      // Status
+      status: mapFormStatusToDB(values.status),
+      civilStatus: values.civilStatus,
+      
+      // Economic
+      occupation: values.occupation.trim() || undefined,
+      monthlyIncome: values.monthlyIncome,
+      yearsInBarangay: values.yearsInBarangay,
+      
+      // Documents
+      isVoter: values.isVoter,
+      hasPhilhealth: values.hasPhilhealth,
+      hasSss: values.hasSss,
+      hasPagibig: values.hasPagibig,
+      hasTin: values.hasTin,
+      
+      // Other
+      nationality: values.nationality.trim() || undefined,
+      classifications: values.classifications,
+      remarks: values.remarks.trim() || undefined,
+      
+      // Emergency Contact
+      emergencyContact: {
+        name: values.emergencyContactName.trim(),
+        relationship: values.emergencyContactRelationship.trim(),
+        contactNumber: values.emergencyContactNumber.trim()
+      }
+    };
+    
       // Use the saveResident function
       const { success, error } = await saveResident(residentToSave);
       
