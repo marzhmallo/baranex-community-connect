@@ -69,7 +69,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
       onOpenChange={() => handleClose()}
     >
       <DialogContent 
-        className="sm:max-w-[600px] max-h-[90vh]"
+        className="sm:max-w-[600px] max-h-[90vh] flex flex-col"
       >
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
@@ -80,8 +80,8 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="h-[calc(85vh-120px)]">
-          <div className="grid gap-6 pr-4">
+        <ScrollArea className="flex-1 h-[calc(85vh-180px)] pr-4">
+          <div className="grid gap-6">
             {/* Personal Information */}
             <Card>
               <CardContent className="pt-6">
@@ -172,7 +172,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
           </div>
         </ScrollArea>
         
-        <div className="flex justify-end gap-2 pt-4 border-t mt-4">
+        <div className="flex justify-end gap-2 pt-4 border-t mt-4 w-full">
           <Button variant="outline">Edit Details</Button>
           <Button variant="ghost" onClick={handleClose}>Close</Button>
         </div>
