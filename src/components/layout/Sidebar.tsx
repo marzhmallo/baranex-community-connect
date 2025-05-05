@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   LogOut, 
@@ -22,6 +22,14 @@ import { toast } from "@/hooks/use-toast";
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
+
+  // Dispatch a custom event when sidebar state changes
+  useEffect(() => {
+    const event = new CustomEvent('sidebarStateChange', { 
+      detail: { isCollapsed } 
+    });
+    window.dispatchEvent(event);
+  }, [isCollapsed]);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();

@@ -29,23 +29,18 @@ const AppContent = () => {
   const isAuthPage = location.pathname === "/auth";
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
-  // Watch for sidebar collapsed state changes from DOM
+  // Listen for custom sidebar state change events
   useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.target instanceof Element) {
-          const sidebarWidth = document.querySelector('aside')?.getBoundingClientRect().width;
-          setIsSidebarCollapsed(sidebarWidth !== undefined && sidebarWidth < 100);
-        }
-      });
-    });
+    const handleSidebarChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      setIsSidebarCollapsed(customEvent.detail.isCollapsed);
+    };
     
-    const sidebar = document.querySelector('aside');
-    if (sidebar) {
-      observer.observe(sidebar, { attributes: true });
-    }
+    window.addEventListener('sidebarStateChange', handleSidebarChange);
     
-    return () => observer.disconnect();
+    return () => {
+      window.removeEventListener('sidebarStateChange', handleSidebarChange);
+    };
   }, []);
   
   return (
