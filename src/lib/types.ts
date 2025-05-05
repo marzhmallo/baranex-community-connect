@@ -1,25 +1,18 @@
-
 // Resident types
 export interface Resident {
   id: string;
   firstName: string;
   lastName: string;
-  gender: 'Male' | 'Female' | 'Other';
-  birthDate: string;
+  gender: string;
+  birthDate: string; // ISO format date string
   address: string;
-  contactNumber: string;
+  contactNumber?: string;
   email?: string;
-  occupation?: string;
-  educationLevel?: string;
-  familySize?: number;
-  profileImageUrl?: string;
-  emergencyContact?: {
-    name: string;
-    relationship: string;
-    contactNumber: string;
-  };
-  dateRegistered: string;
   status: 'Active' | 'Inactive' | 'Deceased' | 'Transferred';
+  civilStatus?: string;
+  occupation?: string;
+  yearsInBarangay?: number;
+  classifications?: string[];
 }
 
 // Announcement types

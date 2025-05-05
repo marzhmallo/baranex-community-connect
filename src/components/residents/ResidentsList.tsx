@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { 
   Search, 
   Filter, 
@@ -11,10 +12,11 @@ import {
   Download,
   Printer,
   FileText,
-  Users
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,30 +46,61 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Resident } from '@/lib/types';
 import { residents } from '@/lib/data';
 import ResidentForm from './ResidentForm';
+import ResidentStatusCard from './ResidentStatusCard';
+import ResidentDetails from './ResidentDetails';
 
 const ResidentsList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [selectedClassifications, setSelectedClassifications] = useState<string[]>([]);
   const [isAddResidentOpen, setIsAddResidentOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
-  const filteredResidents = residents.filter(resident => {
-    const matchesSearch = 
-      searchQuery === '' || 
-      `${resident.firstName} ${resident.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      resident.address.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = selectedStatus === null || resident.status === selectedStatus;
-    
-    const matchesTab = 
-      activeTab === 'all' || 
-      (activeTab === 'active' && resident.status === 'Active') ||
-      (activeTab === 'inactive' && resident.status === 'Inactive') ||
-      (activeTab === 'deceased' && resident.status === 'Deceased') ||
-      (activeTab === 'transferred' && resident.status === 'Transferred');
-    
-    return matchesSearch && matchesStatus && matchesTab;
-  });
+  // Calculate counts by status
+  const activeCount = residents.filter(r => r.status === 'Active').length;
+  const inactiveCount = residents.filter(r => r.status === 'Inactive').length;
+  const deceasedCount = residents.filter(r => r.status === 'Deceased').length;
+  const transferredCount = residents.filter(r => r.status === 'Transferred').length;
+
+  // Get unique classifications
+  const allClassifications = useMemo(() => {
+    const classifications = new Set<string>();
+    residents.forEach(resident => {
+      resident.classifications?.forEach(c => classifications.add(c));
+    });
+    return Array.from(classifications);
+  }, []);
+  
+  const filteredResidents = useMemo(() => {
+    return residents.filter(resident => {
+      // Search filter
+      const matchesSearch = 
+        searchQuery === '' || 
+        `${resident.firstName} ${resident.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        resident.address.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Status filter
+      const matchesStatus = selectedStatus === null || resident.status === selectedStatus;
+      
+      // Tab filter
+      const matchesTab = 
+        activeTab === 'all' || 
+        (activeTab === 'active' && resident.status === 'Active') ||
+        (activeTab === 'inactive' && resident.status === 'Inactive') ||
+        (activeTab === 'deceased' && resident.status === 'Deceased') ||
+        (activeTab === 'transferred' && resident.status === 'Transferred');
+      
+      // Classifications filter
+      const matchesClassifications = 
+        selectedClassifications.length === 0 || 
+        (resident.classifications && 
+          selectedClassifications.every(c => resident.classifications?.includes(c)));
+      
+      return matchesSearch && matchesStatus && matchesTab && matchesClassifications;
+    });
+  }, [searchQuery, selectedStatus, activeTab, selectedClassifications]);
   
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -77,63 +110,67 @@ const ResidentsList = () => {
     setSelectedStatus(status);
   };
 
-  // Count residents by status
-  const activeCount = residents.filter(r => r.status === 'Active').length;
-  const inactiveCount = residents.filter(r => r.status === 'Inactive').length;
-  const deceasedCount = residents.filter(r => r.status === 'Deceased').length;
-  const transferredCount = residents.filter(r => r.status === 'Transferred').length;
+  const handleClassificationToggle = (classification: string) => {
+    if (selectedClassifications.includes(classification)) {
+      setSelectedClassifications(prev => prev.filter(c => c !== classification));
+    } else {
+      setSelectedClassifications(prev => [...prev, classification]);
+    }
+  };
+
+  const handleStatusCardClick = (status: string) => {
+    setActiveTab(status.toLowerCase());
+    setSelectedStatus(status);
+  };
+
+  const handleViewDetails = (resident: Resident) => {
+    setSelectedResident(resident);
+    setIsDetailsOpen(true);
+  };
 
   return (
     <div className="space-y-6">
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-4 flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium text-green-700">Active Residents</p>
-              <p className="text-2xl font-bold text-green-800">{activeCount}</p>
-            </div>
-            <div className="h-10 w-10 rounded-full bg-green-200 flex items-center justify-center">
-              <Users className="h-5 w-5 text-green-700" />
-            </div>
-          </CardContent>
-        </Card>
+        <ResidentStatusCard
+          label="Active Residents"
+          count={activeCount}
+          bgColor="bg-gradient-to-br from-green-50 to-green-100"
+          textColor="text-green-800"
+          iconBgColor="bg-green-200"
+          iconColor="text-green-700"
+          onClick={() => handleStatusCardClick('Active')}
+        />
         
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-4 flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium text-blue-700">Inactive Residents</p>
-              <p className="text-2xl font-bold text-blue-800">{inactiveCount}</p>
-            </div>
-            <div className="h-10 w-10 rounded-full bg-blue-200 flex items-center justify-center">
-              <Users className="h-5 w-5 text-blue-700" />
-            </div>
-          </CardContent>
-        </Card>
+        <ResidentStatusCard
+          label="Inactive Residents"
+          count={inactiveCount}
+          bgColor="bg-gradient-to-br from-blue-50 to-blue-100"
+          textColor="text-blue-800"
+          iconBgColor="bg-blue-200"
+          iconColor="text-blue-700"
+          onClick={() => handleStatusCardClick('Inactive')}
+        />
         
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-          <CardContent className="p-4 flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium text-red-700">Deceased Residents</p>
-              <p className="text-2xl font-bold text-red-800">{deceasedCount}</p>
-            </div>
-            <div className="h-10 w-10 rounded-full bg-red-200 flex items-center justify-center">
-              <Users className="h-5 w-5 text-red-700" />
-            </div>
-          </CardContent>
-        </Card>
+        <ResidentStatusCard
+          label="Deceased Residents"
+          count={deceasedCount}
+          bgColor="bg-gradient-to-br from-red-50 to-red-100"
+          textColor="text-red-800"
+          iconBgColor="bg-red-200"
+          iconColor="text-red-700"
+          onClick={() => handleStatusCardClick('Deceased')}
+        />
         
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-4 flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium text-purple-700">Transferred Residents</p>
-              <p className="text-2xl font-bold text-purple-800">{transferredCount}</p>
-            </div>
-            <div className="h-10 w-10 rounded-full bg-purple-200 flex items-center justify-center">
-              <Users className="h-5 w-5 text-purple-700" />
-            </div>
-          </CardContent>
-        </Card>
+        <ResidentStatusCard
+          label="Transferred Residents"
+          count={transferredCount}
+          bgColor="bg-gradient-to-br from-purple-50 to-purple-100"
+          textColor="text-purple-800"
+          iconBgColor="bg-purple-200"
+          iconColor="text-purple-700"
+          onClick={() => handleStatusCardClick('Transferred')}
+        />
       </div>
       
       <Card>
@@ -187,6 +224,45 @@ const ResidentsList = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {allClassifications.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center">
+                      <Filter className="h-4 w-4 mr-2" />
+                      Classifications
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Filter by Classification</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {allClassifications.map(classification => (
+                      <DropdownMenuItem 
+                        key={classification} 
+                        onClick={() => handleClassificationToggle(classification)}
+                      >
+                        <div className="flex items-center">
+                          {selectedClassifications.includes(classification) && (
+                            <Check className="h-4 w-4 mr-2 text-primary" />
+                          )}
+                          <span className={selectedClassifications.includes(classification) ? "ml-6" : ""}>
+                            {classification}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                    {selectedClassifications.length > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setSelectedClassifications([])}>
+                          Clear filters
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               
               <Dialog open={isAddResidentOpen} onOpenChange={setIsAddResidentOpen}>
                 <DialogTrigger asChild>
@@ -230,23 +306,24 @@ const ResidentsList = () => {
           </div>
           
           <TabsContent value="all" className="m-0">
-            {renderResidentsTable(filteredResidents)}
+            {renderResidentsTable(filteredResidents, handleViewDetails)}
           </TabsContent>
           <TabsContent value="active" className="m-0">
-            {renderResidentsTable(filteredResidents)}
+            {renderResidentsTable(filteredResidents, handleViewDetails)}
           </TabsContent>
           <TabsContent value="inactive" className="m-0">
-            {renderResidentsTable(filteredResidents)}
+            {renderResidentsTable(filteredResidents, handleViewDetails)}
           </TabsContent>
           <TabsContent value="deceased" className="m-0">
-            {renderResidentsTable(filteredResidents)}
+            {renderResidentsTable(filteredResidents, handleViewDetails)}
           </TabsContent>
           <TabsContent value="transferred" className="m-0">
-            {renderResidentsTable(filteredResidents)}
+            {renderResidentsTable(filteredResidents, handleViewDetails)}
           </TabsContent>
         </Tabs>
       </Card>
       
+      {/* Pagination */}
       <div className="flex justify-between items-center text-sm text-gray-500">
         <div>Total: {residents.length} residents</div>
         <div className="flex items-center space-x-4">
@@ -255,11 +332,18 @@ const ResidentsList = () => {
           <Button variant="outline" size="sm" disabled>Next</Button>
         </div>
       </div>
+
+      {/* Resident Details Dialog */}
+      <ResidentDetails
+        resident={selectedResident}
+        open={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+      />
     </div>
   );
 };
 
-const renderResidentsTable = (residents: Resident[]) => {
+const renderResidentsTable = (residents: Resident[], onViewDetails: (resident: Resident) => void) => {
   if (residents.length === 0) {
     return (
       <div className="py-8 text-center text-gray-500">
@@ -279,12 +363,17 @@ const renderResidentsTable = (residents: Resident[]) => {
             <TableHead>Address</TableHead>
             <TableHead>Contact</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Classifications</TableHead>
             <TableHead className="w-[80px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {residents.map((resident) => (
-            <ResidentRow key={resident.id} resident={resident} />
+            <ResidentRow 
+              key={resident.id} 
+              resident={resident} 
+              onViewDetails={onViewDetails} 
+            />
           ))}
         </TableBody>
       </Table>
@@ -292,7 +381,13 @@ const renderResidentsTable = (residents: Resident[]) => {
   );
 };
 
-const ResidentRow = ({ resident }: { resident: Resident }) => {
+const ResidentRow = ({ 
+  resident, 
+  onViewDetails 
+}: { 
+  resident: Resident;
+  onViewDetails: (resident: Resident) => void;
+}) => {
   // Calculate age
   const birthDate = new Date(resident.birthDate);
   const today = new Date();
@@ -327,6 +422,19 @@ const ResidentRow = ({ resident }: { resident: Resident }) => {
         </span>
       </TableCell>
       <TableCell>
+        <div className="flex flex-wrap gap-1">
+          {resident.classifications?.map((classification, index) => (
+            <Badge 
+              key={index} 
+              variant="outline" 
+              className="bg-blue-50 text-xs text-blue-800 border-blue-100"
+            >
+              {classification}
+            </Badge>
+          ))}
+        </div>
+      </TableCell>
+      <TableCell>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -334,7 +442,7 @@ const ResidentRow = ({ resident }: { resident: Resident }) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem className="flex items-center">
+            <DropdownMenuItem className="flex items-center" onClick={() => onViewDetails(resident)}>
               <Eye className="h-4 w-4 mr-2" />
               View Details
             </DropdownMenuItem>
