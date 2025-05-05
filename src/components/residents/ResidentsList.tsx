@@ -91,10 +91,10 @@ const ResidentsList = () => {
   }, [error]);
 
   // Calculate counts by status
-  const activeCount = residents.filter(r => r.status === 'Active').length;
-  const inactiveCount = residents.filter(r => r.status === 'Inactive').length;
+  const permanentCount = residents.filter(r => r.status === 'Permanent').length;
+  const temporaryCount = residents.filter(r => r.status === 'Temporary').length;
   const deceasedCount = residents.filter(r => r.status === 'Deceased').length;
-  const transferredCount = residents.filter(r => r.status === 'Transferred').length;
+  const relocatedCount = residents.filter(r => r.status === 'Relocated').length;
 
   // Get unique classifications
   const allClassifications = useMemo(() => {
@@ -119,10 +119,10 @@ const ResidentsList = () => {
       // Tab filter
       const matchesTab = 
         activeTab === 'all' || 
-        (activeTab === 'active' && resident.status === 'Active') ||
-        (activeTab === 'inactive' && resident.status === 'Inactive') ||
+        (activeTab === 'permanent' && resident.status === 'Permanent') ||
+        (activeTab === 'temporary' && resident.status === 'Temporary') ||
         (activeTab === 'deceased' && resident.status === 'Deceased') ||
-        (activeTab === 'transferred' && resident.status === 'Transferred');
+        (activeTab === 'relocated' && resident.status === 'Relocated');
       
       // Classifications filter
       const matchesClassifications = 
@@ -184,23 +184,23 @@ const ResidentsList = () => {
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6">
         <ResidentStatusCard
-          label="Active Residents"
-          count={activeCount}
+          label="Permanent Residents"
+          count={permanentCount}
           bgColor="bg-gradient-to-br from-green-50 to-green-100"
           textColor="text-green-800"
           iconBgColor="bg-green-200"
           iconColor="text-green-700"
-          onClick={() => handleStatusCardClick('Active')}
+          onClick={() => handleStatusCardClick('Permanent')}
         />
         
         <ResidentStatusCard
-          label="Inactive Residents"
-          count={inactiveCount}
+          label="Temporary Residents"
+          count={temporaryCount}
           bgColor="bg-gradient-to-br from-blue-50 to-blue-100"
           textColor="text-blue-800"
           iconBgColor="bg-blue-200"
           iconColor="text-blue-700"
-          onClick={() => handleStatusCardClick('Inactive')}
+          onClick={() => handleStatusCardClick('Temporary')}
         />
         
         <ResidentStatusCard
@@ -214,13 +214,13 @@ const ResidentsList = () => {
         />
         
         <ResidentStatusCard
-          label="Transferred Residents"
-          count={transferredCount}
+          label="Relocated Residents"
+          count={relocatedCount}
           bgColor="bg-gradient-to-br from-purple-50 to-purple-100"
           textColor="text-purple-800"
           iconBgColor="bg-purple-200"
           iconColor="text-purple-700"
-          onClick={() => handleStatusCardClick('Transferred')}
+          onClick={() => handleStatusCardClick('Relocated')}
         />
       </div>
       
@@ -229,10 +229,10 @@ const ResidentsList = () => {
           <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b bg-slate-50">
             <TabsList className="h-10 bg-slate-100/80">
               <TabsTrigger value="all" className="rounded-md data-[state=active]:bg-white">All Residents</TabsTrigger>
-              <TabsTrigger value="active" className="rounded-md data-[state=active]:bg-green-50 data-[state=active]:text-green-700">Active</TabsTrigger>
-              <TabsTrigger value="inactive" className="rounded-md data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Inactive</TabsTrigger>
+              <TabsTrigger value="permanent" className="rounded-md data-[state=active]:bg-green-50 data-[state=active]:text-green-700">Permanent</TabsTrigger>
+              <TabsTrigger value="temporary" className="rounded-md data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Temporary</TabsTrigger>
               <TabsTrigger value="deceased" className="rounded-md data-[state=active]:bg-red-50 data-[state=active]:text-red-700">Deceased</TabsTrigger>
-              <TabsTrigger value="transferred" className="rounded-md data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">Transferred</TabsTrigger>
+              <TabsTrigger value="relocated" className="rounded-md data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">Relocated</TabsTrigger>
             </TabsList>
             
             <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
@@ -261,17 +261,17 @@ const ResidentsList = () => {
                   <DropdownMenuItem onClick={() => handleStatusFilter(null)}>
                     All Statuses
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusFilter('Active')}>
-                    Active
+                  <DropdownMenuItem onClick={() => handleStatusFilter('Permanent')}>
+                    Permanent
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusFilter('Inactive')}>
-                    Inactive
+                  <DropdownMenuItem onClick={() => handleStatusFilter('Temporary')}>
+                    Temporary
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleStatusFilter('Deceased')}>
                     Deceased
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusFilter('Transferred')}>
-                    Transferred
+                  <DropdownMenuItem onClick={() => handleStatusFilter('Relocated')}>
+                    Relocated
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -379,7 +379,7 @@ const ResidentsList = () => {
           </div>
           
           {/* Tabs Content */}
-          {['all', 'active', 'inactive', 'deceased', 'transferred'].map(tab => (
+          {['all', 'permanent', 'temporary', 'deceased', 'relocated'].map(tab => (
             <TabsContent key={tab} value={tab} className="m-0">
               {isLoading ? (
                 <div className="flex justify-center items-center py-12">
@@ -536,9 +536,9 @@ const ResidentRow = ({
       <TableCell>{resident.contactNumber}</TableCell>
       <TableCell>
         <Badge className={`px-2 py-1 rounded-full text-xs font-medium ${
-          resident.status === 'Active' 
+          resident.status === 'Permanent' 
             ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-            : resident.status === 'Inactive'
+            : resident.status === 'Temporary'
             ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
             : resident.status === 'Deceased'
             ? 'bg-red-100 text-red-800 hover:bg-red-200'

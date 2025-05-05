@@ -49,22 +49,22 @@ export async function fetchResidents() {
 /**
  * Map database status values to our application status values
  */
-function mapStatusValue(status: string | null): 'Active' | 'Inactive' | 'Deceased' | 'Transferred' {
-  if (!status) return 'Active';
+function mapStatusValue(status: string | null): 'Permanent' | 'Temporary' | 'Deceased' | 'Relocated' {
+  if (!status) return 'Temporary';
   
   // Map from database status to our application status
   // Adjust this mapping based on what's in your database
   switch (status.toLowerCase()) {
     case 'active':
-      return 'Active';
+      return 'Permanent';
     case 'inactive':
-      return 'Inactive';
+      return 'Temporary';
     case 'deceased':
       return 'Deceased';
     case 'transferred':
-      return 'Transferred';
+      return 'Relocated';
     default:
-      return 'Active';
+      return 'Temporary';
   }
 }
 

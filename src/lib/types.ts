@@ -9,7 +9,7 @@ export interface Resident {
   address: string;
   contactNumber?: string;
   email?: string;
-  status: 'Active' | 'Inactive' | 'Deceased' | 'Transferred';
+  status: 'Permanent' | 'Temporary' | 'Deceased' | 'Relocated';
   civilStatus?: string;
   occupation?: string;
   yearsInBarangay?: number;
