@@ -32,7 +32,7 @@ export async function fetchResidents() {
       educationLevel: '', // Field doesn't exist in DB schema
       familySize: 0, // Field doesn't exist in DB schema
       dateRegistered: item.created_at || '',
-      status: mapStatusValue(item.status),
+      status: item.status,
       civilStatus: item.civil_status || '',
       yearsInBarangay: item.years_in_barangay || 0,
       classifications: item.classifications || [],
@@ -120,7 +120,7 @@ export async function fetchResidentById(id: string) {
       educationLevel: '', // Field doesn't exist in DB schema
       familySize: 0, // Field doesn't exist in DB schema
       dateRegistered: data.created_at || '',
-      status: mapStatusValue(data.status),
+      status: data.status,
       civilStatus: data.civil_status || '',
       yearsInBarangay: data.years_in_barangay || 0,
       classifications: data.classifications || [],
