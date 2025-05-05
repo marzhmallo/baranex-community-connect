@@ -145,7 +145,12 @@ const ResidentForm = ({
         has_pagibig: values.hasPagibig,
         has_tin: values.hasTin,
         classifications: values.classifications,
-        remarks: values.remarks || null
+        remarks: values.remarks || null,
+        emergency_contact: JSON.stringify({
+          name: values.emergencyContactName,
+          relationship: values.emergencyContactRelationship,
+          contactNumber: values.emergencyContactNumber
+        })
       };
       const {
         error

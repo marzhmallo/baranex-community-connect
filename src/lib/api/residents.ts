@@ -25,43 +25,60 @@ export const getResidents = async (): Promise<Resident[]> => {
   if (error) throw error;
 
   // Map database fields to our application model
-  return data.map(resident => ({
-    id: resident.id,
-    firstName: resident.first_name,
-    lastName: resident.last_name,
-    middleName: resident.middle_name || '',
-    suffix: resident.suffix || '',
-    gender: resident.gender,
-    birthDate: resident.birthdate,
-    address: resident.address,
-    contactNumber: resident.mobile_number,
-    email: resident.email || '',
-    occupation: resident.occupation || '',
-    status: mapDatabaseStatus(resident.status),
-    civilStatus: resident.civil_status,
-    monthlyIncome: resident.monthly_income || 0,
-    yearsInBarangay: resident.years_in_barangay || 0,
-    purok: resident.purok,
-    barangay: resident.barangaydb,
-    municipality: resident.municipalitycity,
-    province: resident.provinze,
-    region: resident.regional,
-    country: resident.countryph || '',
-    nationality: resident.nationality || '',
-    isVoter: resident.is_voter,
-    hasPhilhealth: resident.has_philhealth,
-    hasSss: resident.has_sss,
-    hasPagibig: resident.has_pagibig,
-    hasTin: resident.has_tin,
-    classifications: resident.classifications, // Use classifications from database or default
-    remarks: resident.remarks || '',
-    // Fixed emergencyContact to match the type in Resident interface
-    emergencyContact: {
+  return data.map(resident => {
+    // Parse emergency contact if available
+    let emergencyContact = {
       name: 'Emergency contact not set',
       relationship: 'Not specified',
       contactNumber: 'Not specified'
+    };
+    
+    if (resident.emergency_contact) {
+      try {
+        const parsedContact = JSON.parse(resident.emergency_contact);
+        emergencyContact = {
+          name: parsedContact.name || emergencyContact.name,
+          relationship: parsedContact.relationship || emergencyContact.relationship,
+          contactNumber: parsedContact.contactNumber || emergencyContact.contactNumber
+        };
+      } catch (e) {
+        console.error('Failed to parse emergency contact:', e);
+      }
     }
-  }));
+
+    return {
+      id: resident.id,
+      firstName: resident.first_name,
+      lastName: resident.last_name,
+      middleName: resident.middle_name || '',
+      suffix: resident.suffix || '',
+      gender: resident.gender,
+      birthDate: resident.birthdate,
+      address: resident.address,
+      contactNumber: resident.mobile_number,
+      email: resident.email || '',
+      occupation: resident.occupation || '',
+      status: mapDatabaseStatus(resident.status),
+      civilStatus: resident.civil_status,
+      monthlyIncome: resident.monthly_income || 0,
+      yearsInBarangay: resident.years_in_barangay || 0,
+      purok: resident.purok,
+      barangay: resident.barangaydb,
+      municipality: resident.municipalitycity,
+      province: resident.provinze,
+      region: resident.regional,
+      country: resident.countryph || '',
+      nationality: resident.nationality || '',
+      isVoter: resident.is_voter,
+      hasPhilhealth: resident.has_philhealth,
+      hasSss: resident.has_sss,
+      hasPagibig: resident.has_pagibig,
+      hasTin: resident.has_tin,
+      classifications: resident.classifications, // Use classifications from database or default
+      remarks: resident.remarks || '',
+      emergencyContact
+    };
+  });
 };
 
 // Function to fetch a single resident by ID
@@ -74,6 +91,26 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
 
   if (error) throw error;
   if (!data) return null;
+
+  // Parse emergency contact if available
+  let emergencyContact = {
+    name: 'Emergency contact not set',
+    relationship: 'Not specified',
+    contactNumber: 'Not specified'
+  };
+  
+  if (data.emergency_contact) {
+    try {
+      const parsedContact = JSON.parse(data.emergency_contact);
+      emergencyContact = {
+        name: parsedContact.name || emergencyContact.name,
+        relationship: parsedContact.relationship || emergencyContact.relationship,
+        contactNumber: parsedContact.contactNumber || emergencyContact.contactNumber
+      };
+    } catch (e) {
+      console.error('Failed to parse emergency contact:', e);
+    }
+  }
 
   // Map database fields to our application model
   return {
@@ -106,12 +143,7 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     hasTin: data.has_tin,
     classifications: data.classifications, // Use classifications from database or default
     remarks: data.remarks || '',
-    // Fixed emergencyContact to match the type in Resident interface
-    emergencyContact: {
-      name: 'Emergency contact not set',
-      relationship: 'Not specified',
-      contactNumber: 'Not specified'
-    }
+    emergencyContact
   };
 };
 
