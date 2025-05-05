@@ -13,12 +13,20 @@ const ResidentsPage = () => {
   const [isAddResidentOpen, setIsAddResidentOpen] = React.useState(false);
 
   const handleCloseDialog = () => {
-    // Add a small delay before fully closing to ensure proper cleanup
-    setTimeout(() => {
-      // Clean up after dialog is fully closed
-      document.body.style.pointerEvents = '';
-    }, 100);
+    // First close the dialog through state
     setIsAddResidentOpen(false);
+    
+    // Then clean up any lingering effects to ensure UI remains interactive
+    setTimeout(() => {
+      document.body.classList.remove('overflow-hidden');
+      document.body.style.pointerEvents = '';
+      
+      // Remove any focus traps or aria-hidden attributes that might be lingering
+      const elements = document.querySelectorAll('[aria-hidden="true"]');
+      elements.forEach(el => {
+        el.setAttribute('aria-hidden', 'false');
+      });
+    }, 150);
   };
 
   return (
@@ -59,10 +67,6 @@ const ResidentsPage = () => {
       >
         <DialogContent 
           className="sm:max-w-[600px]"
-          onInteractOutside={(e) => {
-            // Prevent issues with outside clicks
-            e.preventDefault();
-          }}
         >
           <DialogHeader>
             <DialogTitle>Add New Resident</DialogTitle>

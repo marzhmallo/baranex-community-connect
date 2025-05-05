@@ -12,8 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 type ResidentDetailsProps = {
   resident: Resident | null;
@@ -48,34 +46,30 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     }
   };
 
-  // Safe close handler with timeout for cleanup
-  const handleCloseDialog = () => {
-    // Add a small delay before fully closing to ensure proper cleanup
-    setTimeout(() => {
-      // Clean up after dialog is fully closed
-      document.body.style.pointerEvents = '';
-    }, 100);
+  const handleClose = () => {
+    // First close the dialog through state
     onOpenChange(false);
+    
+    // Then clean up any lingering effects to ensure UI remains interactive
+    setTimeout(() => {
+      document.body.classList.remove('overflow-hidden');
+      document.body.style.pointerEvents = '';
+      
+      // Remove any focus traps or aria-hidden attributes that might be lingering
+      const elements = document.querySelectorAll('[aria-hidden="true"]');
+      elements.forEach(el => {
+        el.setAttribute('aria-hidden', 'false');
+      });
+    }, 150);
   };
 
   return (
     <Dialog 
       open={open} 
-      onOpenChange={(isOpen) => {
-        // Make sure we only handle the closing properly
-        if (!isOpen) {
-          handleCloseDialog();
-        } else {
-          onOpenChange(true);
-        }
-      }}
+      onOpenChange={() => handleClose()}
     >
       <DialogContent 
         className="sm:max-w-[600px] max-h-[90vh]"
-        onInteractOutside={(e) => {
-          // Prevent outside clicks from causing issues
-          e.preventDefault();
-        }}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
@@ -180,7 +174,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
         
         <div className="flex justify-end gap-2 pt-4 border-t mt-4">
           <Button variant="outline">Edit Details</Button>
-          <Button variant="ghost" onClick={handleCloseDialog}>Close</Button>
+          <Button variant="ghost" onClick={handleClose}>Close</Button>
         </div>
       </DialogContent>
     </Dialog>
