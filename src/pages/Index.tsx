@@ -41,7 +41,7 @@ const Index = () => {
       {/* Sidebar */}
       <div className="hidden md:flex flex-col w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
         <div className="p-6">
-          <h1 className="text-2xl font-bold text-sidebar-foreground">BaranEX</h1>
+          <h1 className="text-2xl font-bold text-sidebar-foreground">Baranex</h1>
           <p className="text-sm text-sidebar-foreground/70">Barangay Census System</p>
         </div>
         <nav className="flex-1 p-4 space-y-2">
