@@ -51,6 +51,7 @@ import { getResidents } from '@/lib/api/residents';
 import { useQuery } from '@tanstack/react-query';
 import ResidentForm from './ResidentForm';
 import ResidentStatusCard from './ResidentStatusCard';
+import ClassificationStatusCard from './ClassificationStatusCard';
 import ResidentDetails from './ResidentDetails';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -109,6 +110,19 @@ const ResidentsList = () => {
   const deceasedCount = residents.filter(r => r.status === 'Deceased').length;
   const relocatedCount = residents.filter(r => r.status === 'Relocated').length;
 
+  // Calculate counts by classification
+  const getClassificationCount = (classification: string) => {
+    return residents.filter(resident => 
+      resident.classifications?.includes(classification)
+    ).length;
+  };
+
+  const indigentCount = getClassificationCount('indigent');
+  const studentCount = getClassificationCount('student');
+  const ofwCount = getClassificationCount('ofw');
+  const pwdCount = getClassificationCount('pwd');
+  const missingCount = getClassificationCount('missing');
+
   // Get unique classifications
   const allClassifications = useMemo(() => {
     const classifications = new Set<string>();
@@ -165,7 +179,13 @@ const ResidentsList = () => {
         (activeTab === 'permanent' && resident.status === 'Permanent') ||
         (activeTab === 'temporary' && resident.status === 'Temporary') ||
         (activeTab === 'deceased' && resident.status === 'Deceased') ||
-        (activeTab === 'relocated' && resident.status === 'Relocated');
+        (activeTab === 'relocated' && resident.status === 'Relocated') ||
+        // Add classification tabs
+        (activeTab === 'indigent' && resident.classifications?.includes('indigent')) ||
+        (activeTab === 'student' && resident.classifications?.includes('student')) ||
+        (activeTab === 'ofw' && resident.classifications?.includes('ofw')) ||
+        (activeTab === 'pwd' && resident.classifications?.includes('pwd')) ||
+        (activeTab === 'missing' && resident.classifications?.includes('missing'));
       
       // Classifications filter
       const matchesClassifications = 
@@ -257,6 +277,12 @@ const ResidentsList = () => {
     setCurrentPage(1); // Reset to first page on status card click
   };
 
+  const handleClassificationCardClick = (classification: string) => {
+    setActiveTab(classification.toLowerCase());
+    setSelectedClassifications([classification]);
+    setCurrentPage(1); // Reset to first page on classification card click
+  };
+
   const handleViewDetails = (resident: Resident) => {
     setSelectedResident(resident);
     setIsDetailsOpen(true);
@@ -316,6 +342,59 @@ const ResidentsList = () => {
         />
       </div>
       
+      {/* Classification Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 px-6">
+        <ClassificationStatusCard
+          label="Indigent Residents"
+          count={indigentCount}
+          bgColor="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/40 dark:to-amber-900/30"
+          textColor="text-amber-800 dark:text-amber-300"
+          iconBgColor="bg-amber-200 dark:bg-amber-800"
+          iconColor="text-amber-700 dark:text-amber-300"
+          onClick={() => handleClassificationCardClick('indigent')}
+        />
+        
+        <ClassificationStatusCard
+          label="Student Residents"
+          count={studentCount}
+          bgColor="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/40 dark:to-cyan-900/30"
+          textColor="text-cyan-800 dark:text-cyan-300"
+          iconBgColor="bg-cyan-200 dark:bg-cyan-800"
+          iconColor="text-cyan-700 dark:text-cyan-300"
+          onClick={() => handleClassificationCardClick('student')}
+        />
+        
+        <ClassificationStatusCard
+          label="OFW Residents"
+          count={ofwCount}
+          bgColor="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/40 dark:to-indigo-900/30"
+          textColor="text-indigo-800 dark:text-indigo-300"
+          iconBgColor="bg-indigo-200 dark:bg-indigo-800"
+          iconColor="text-indigo-700 dark:text-indigo-300"
+          onClick={() => handleClassificationCardClick('ofw')}
+        />
+        
+        <ClassificationStatusCard
+          label="PWD Residents"
+          count={pwdCount}
+          bgColor="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950/40 dark:to-pink-900/30"
+          textColor="text-pink-800 dark:text-pink-300"
+          iconBgColor="bg-pink-200 dark:bg-pink-800"
+          iconColor="text-pink-700 dark:text-pink-300"
+          onClick={() => handleClassificationCardClick('pwd')}
+        />
+        
+        <ClassificationStatusCard
+          label="Missing Residents"
+          count={missingCount}
+          bgColor="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/40 dark:to-orange-900/30"
+          textColor="text-orange-800 dark:text-orange-300"
+          iconBgColor="bg-orange-200 dark:bg-orange-800"
+          iconColor="text-orange-700 dark:text-orange-300"
+          onClick={() => handleClassificationCardClick('missing')}
+        />
+      </div>
+      
       <div className="bg-card text-card-foreground rounded-lg shadow-md">
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b bg-muted/50">
@@ -325,6 +404,12 @@ const ResidentsList = () => {
               <TabsTrigger value="temporary" className="rounded-md data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-900/30 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300">Temporary</TabsTrigger>
               <TabsTrigger value="deceased" className="rounded-md data-[state=active]:bg-red-50 dark:data-[state=active]:bg-red-900/30 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-300">Deceased</TabsTrigger>
               <TabsTrigger value="relocated" className="rounded-md data-[state=active]:bg-purple-50 dark:data-[state=active]:bg-purple-900/30 data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-300">Relocated</TabsTrigger>
+              {/* Add classification tabs */}
+              <TabsTrigger value="indigent" className="rounded-md data-[state=active]:bg-amber-50 dark:data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-300">Indigent</TabsTrigger>
+              <TabsTrigger value="student" className="rounded-md data-[state=active]:bg-cyan-50 dark:data-[state=active]:bg-cyan-900/30 data-[state=active]:text-cyan-700 dark:data-[state=active]:text-cyan-300">Student</TabsTrigger>
+              <TabsTrigger value="ofw" className="rounded-md data-[state=active]:bg-indigo-50 dark:data-[state=active]:bg-indigo-900/30 data-[state=active]:text-indigo-700 dark:data-[state=active]:text-indigo-300">OFW</TabsTrigger>
+              <TabsTrigger value="pwd" className="rounded-md data-[state=active]:bg-pink-50 dark:data-[state=active]:bg-pink-900/30 data-[state=active]:text-pink-700 dark:data-[state=active]:text-pink-300">PWD</TabsTrigger>
+              <TabsTrigger value="missing" className="rounded-md data-[state=active]:bg-orange-50 dark:data-[state=active]:bg-orange-900/30 data-[state=active]:text-orange-700 dark:data-[state=active]:text-orange-300">Missing</TabsTrigger>
             </TabsList>
             
             <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
@@ -470,8 +555,8 @@ const ResidentsList = () => {
             </div>
           </div>
           
-          {/* Tabs Content */}
-          {['all', 'permanent', 'temporary', 'deceased', 'relocated'].map(tab => (
+          {/* Tabs Content - Update to include classification tabs */}
+          {['all', 'permanent', 'temporary', 'deceased', 'relocated', 'indigent', 'student', 'ofw', 'pwd', 'missing'].map(tab => (
             <TabsContent key={tab} value={tab} className="m-0">
               {isLoading ? (
                 <div className="flex justify-center items-center py-12">
