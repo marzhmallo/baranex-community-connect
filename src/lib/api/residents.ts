@@ -226,25 +226,46 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       const newId = crypto.randomUUID();
       
       // Create a complete database record with required fields
+      // Fix: Ensure all required fields from the database schema are provided
       const completeRecord = {
-        ...databaseFields,
         id: newId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        // Ensure all required fields have values
-        barangaydb: databaseFields.barangaydb || "Unknown",
-        birthdate: databaseFields.birthdate || new Date().toISOString().split('T')[0],
-        civil_status: databaseFields.civil_status || "Single",
-        countryph: databaseFields.countryph || "Philippines",
         first_name: databaseFields.first_name || "Unknown",
-        gender: databaseFields.gender || "Not Specified",
         last_name: databaseFields.last_name || "Unknown",
+        birthdate: databaseFields.birthdate || new Date().toISOString().split('T')[0],
+        gender: databaseFields.gender || "Not Specified",
+        civil_status: databaseFields.civil_status || "Single",
+        barangaydb: databaseFields.barangaydb || "Unknown",
         municipalitycity: databaseFields.municipalitycity || "Unknown",
         provinze: databaseFields.provinze || "Unknown",
-        purok: databaseFields.purok || "Unknown",
         regional: databaseFields.regional || "Unknown",
-        status: databaseFields.status || "Temporary"
+        countryph: databaseFields.countryph || "Philippines",
+        purok: databaseFields.purok || "Unknown",
+        status: databaseFields.status || "Temporary",
+        nationality: databaseFields.nationality || "Filipino",  // Add missing required field
+        // Include all other fields from databaseFields
+        middle_name: databaseFields.middle_name,
+        suffix: databaseFields.suffix,
+        mobile_number: databaseFields.mobile_number,
+        email: databaseFields.email,
+        address: databaseFields.address,
+        occupation: databaseFields.occupation,
+        monthly_income: databaseFields.monthly_income,
+        years_in_barangay: databaseFields.years_in_barangay,
+        is_voter: databaseFields.is_voter || false,
+        has_philhealth: databaseFields.has_philhealth || false,
+        has_sss: databaseFields.has_sss || false,
+        has_pagibig: databaseFields.has_pagibig || false,
+        has_tin: databaseFields.has_tin || false,
+        classifications: databaseFields.classifications || [],
+        remarks: databaseFields.remarks,
+        emname: databaseFields.emname,
+        emrelation: databaseFields.emrelation,
+        emcontact: databaseFields.emcontact
       };
+      
+      console.log("Creating resident with data:", completeRecord);
       
       const { data, error } = await supabase
         .from('residents')
