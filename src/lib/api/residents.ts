@@ -27,15 +27,15 @@ export async function fetchResidents() {
       contactNumber: item.mobile_number || '',
       email: item.email || '',
       occupation: item.occupation || '',
-      educationLevel: item.education || '',
-      familySize: item.family_size || 0,
+      educationLevel: item.education_level || '', // Updated from education to education_level
+      familySize: item.household_size || 0, // Updated from family_size to household_size
       dateRegistered: item.created_at || '',
       status: mapStatusValue(item.status),
       classifications: item.classifications || [],
       emergencyContact: {
-        name: item.emergency_contact_name || '',
-        relationship: item.emergency_contact_relationship || '',
-        contactNumber: item.emergency_contact_number || ''
+        name: item.emergency_name || '', // Updated from emergency_contact_name
+        relationship: item.emergency_relationship || '', // Updated from emergency_contact_relationship
+        contactNumber: item.emergency_number || '' // Updated from emergency_contact_number
       }
     }));
 
@@ -92,15 +92,15 @@ export async function fetchResidentById(id: string) {
       contactNumber: data.mobile_number || '',
       email: data.email || '',
       occupation: data.occupation || '',
-      educationLevel: data.education || '',
-      familySize: data.family_size || 0,
+      educationLevel: data.education_level || '', // Updated from education to education_level
+      familySize: data.household_size || 0, // Updated from family_size to household_size
       dateRegistered: data.created_at || '',
       status: mapStatusValue(data.status),
       classifications: data.classifications || [],
       emergencyContact: {
-        name: data.emergency_contact_name || '',
-        relationship: data.emergency_contact_relationship || '',
-        contactNumber: data.emergency_contact_number || ''
+        name: data.emergency_name || '', // Updated from emergency_contact_name
+        relationship: data.emergency_relationship || '', // Updated from emergency_contact_relationship
+        contactNumber: data.emergency_number || '' // Updated from emergency_contact_number
       }
     };
 

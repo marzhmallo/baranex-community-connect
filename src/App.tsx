@@ -10,6 +10,7 @@ import Sidebar from "./components/layout/Sidebar";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import ResidentsPage from "./pages/ResidentsPage";
 
 // Initialize the query client
 const queryClient = new QueryClient({
@@ -35,6 +36,7 @@ const App = () => (
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/" element={<Index />} />
+                  <Route path="/residents" element={<ResidentsPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
