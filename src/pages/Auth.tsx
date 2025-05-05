@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import ReCAPTCHA from "react-google-recaptcha";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -15,11 +15,13 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const captchaRef = useRef<ReCAPTCHA>(null);
+  const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
   
-  // Use environment variable for the reCAPTCHA site key
-  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "a002bff6-3d98-4db2-8406-166e106c1958";
+  // Use environment variable for the hCaptcha site key
+  // For hCaptcha, you'll need to register at https://www.hcaptcha.com/ to get a site key
+  // Use the test key '10000000-ffff-ffff-ffff-000000000001' for development
+  const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "10000000-ffff-ffff-ffff-000000000001";
 
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
@@ -100,7 +102,7 @@ const Auth = () => {
       console.error("Authentication error:", error);
     } finally {
       setIsLoading(false);
-      captchaRef.current?.reset(); // Reset captcha after authentication attempt
+      captchaRef.current?.resetCaptcha(); // Reset captcha after authentication attempt
       setCaptchaToken(null);
     }
   };
@@ -144,10 +146,11 @@ const Auth = () => {
             </div>
             
             <div className="flex justify-center my-4">
-              <ReCAPTCHA
+              <HCaptcha
                 ref={captchaRef}
-                sitekey={recaptchaSiteKey}
-                onChange={handleCaptchaChange}
+                sitekey={hcaptchaSiteKey}
+                onVerify={handleCaptchaChange}
+                onExpire={() => setCaptchaToken(null)}
               />
             </div>
             
