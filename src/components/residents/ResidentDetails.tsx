@@ -25,6 +25,7 @@ type ResidentDetailsProps = {
 
 const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showFullPhoto, setShowFullPhoto] = useState(false);
   
   if (!resident) return null;
 
@@ -130,34 +131,50 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                     <div className="flex flex-col md:flex-row gap-6 items-start">
                       {/* Avatar/Photo using the Avatar component with click to enlarge */}
                       {resident.photoUrl ? (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <div className="relative cursor-pointer group">
-                              <Avatar className="w-24 h-24">
-                                <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
-                                <AvatarFallback className="text-2xl">
-                                  {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                <ZoomIn className="text-white h-8 w-8" />
-                              </div>
-                            </div>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-2 border-none bg-transparent shadow-none">
-                            <img 
-                              src={resident.photoUrl} 
-                              alt={`${resident.firstName} ${resident.lastName}`} 
-                              className="max-h-[70vh] max-w-[80vw] rounded-lg object-contain shadow-xl" 
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
+                          <Avatar className="w-24 h-24">
+                            <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
+                            <AvatarFallback className="text-2xl">
+                              {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <ZoomIn className="text-white h-8 w-8" />
+                          </div>
+                        </div>
                       ) : (
                         <Avatar className="w-24 h-24">
                           <AvatarFallback className="text-2xl">
                             {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
+                      )}
+                      
+                      {/* Full screen photo dialog */}
+                      {resident.photoUrl && (
+                        <Dialog open={showFullPhoto} onOpenChange={setShowFullPhoto}>
+                          <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center">
+                            <div 
+                              className="relative w-full h-full flex items-center justify-center bg-black/70 p-2 rounded-lg"
+                              onClick={() => setShowFullPhoto(false)}
+                            >
+                              <img 
+                                src={resident.photoUrl} 
+                                alt={`${resident.firstName} ${resident.lastName}`} 
+                                className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
+                              />
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="absolute top-2 right-2 bg-black/40 hover:bg-black/60 text-white"
+                                onClick={() => setShowFullPhoto(false)}
+                              >
+                                <span className="sr-only">Close</span>
+                                <ZoomIn className="h-4 w-4 rotate-45" />
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       )}
                       
                       <div className="space-y-2 flex-1">
