@@ -1,4 +1,3 @@
-
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -95,6 +94,7 @@ export const getResidents = async (): Promise<Resident[]> => {
       hasTin: resident.has_tin,
       classifications: resident.classifications || [], // Ensure classifications is an array
       remarks: resident.remarks || '',
+      photoUrl: resident.photo_url || '',
       emergencyContact,
       diedOn: resident.died_on || null, // Add died_on field
     };
@@ -150,6 +150,7 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     hasTin: data.has_tin,
     classifications: data.classifications || [], // Ensure classifications is an array
     remarks: data.remarks || '',
+    photoUrl: data.photo_url || '',
     emergencyContact,
     diedOn: data.died_on || null, // Add died_on field
   };
@@ -204,7 +205,8 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       suffix?: string | null;
       updated_at?: string;
       died_on?: string | null;
-      brgyid?: string | null; // Add brgyid field
+      brgyid?: string | null;
+      photo_url?: string | null;
     }
     
     // Map from our application model to database model
@@ -245,6 +247,8 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       died_on: residentData.diedOn || null,
       // Add the brgyid of the currently logged in user
       brgyid: brgyid,
+      // Add photo URL
+      photo_url: residentData.photoUrl || null,
     };
     
     // Convert emergency contact number to numeric format if provided
@@ -308,6 +312,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
         status: databaseFields.status || "Temporary",
         nationality: databaseFields.nationality || "Filipino",  // Add missing required field
         brgyid: brgyid, // Add the barangay ID of the currently logged in user
+        photo_url: databaseFields.photo_url || null, // Add photo URL
         // Include all other fields from databaseFields
         middle_name: databaseFields.middle_name,
         suffix: databaseFields.suffix,

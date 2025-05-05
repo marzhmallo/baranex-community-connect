@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -19,6 +18,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ResidentPhotoUpload from "./ResidentPhotoUpload";
 
 // Available resident classifications
 const residentClassifications = [
@@ -61,7 +61,8 @@ const formSchema = z.object({
   emergencyContactNumber: z.string().optional().or(z.literal('')),
   status: z.enum(["Active", "Inactive", "Deceased", "Transferred"]),
   diedOn: z.date().optional().nullable(),
-  remarks: z.string().optional()
+  remarks: z.string().optional(),
+  photoUrl: z.string().optional(),
 });
 
 // Define the type for form values based on the schema
@@ -100,6 +101,7 @@ const ResidentForm = ({
 }: ResidentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(resident?.photoUrl);
   
   // Transform resident data for the form
   const transformResidentForForm = (resident: Resident): ResidentFormValues => {
@@ -124,6 +126,9 @@ const ResidentForm = ({
       suffix: resident.suffix ?? "",
       gender: resident.gender as "Male" | "Female" | "Other",
       birthDate: resident.birthDate,
+      
+      // Photo
+      photoUrl: resident.photoUrl ?? "",
       
       // Address
       purok: resident.purok ?? "",
@@ -175,6 +180,7 @@ const ResidentForm = ({
     suffix: "",
     gender: "Male",
     birthDate: "",
+    photoUrl: "",
     purok: "",
     barangay: "",
     municipality: "",
@@ -226,6 +232,11 @@ const ResidentForm = ({
   // Watch for status changes to show/hide the death date picker
   const status = form.watch("status");
 
+  const handlePhotoUploaded = (url: string) => {
+    setPhotoUrl(url);
+    form.setValue("photoUrl", url);
+  };
+
   const handleSubmit = async (values: ResidentFormValues) => {
     console.log("Form submitted with values:", values);
     setIsSubmitting(true);
@@ -266,6 +277,7 @@ const ResidentForm = ({
         classifications: values.classifications,
         remarks: values.remarks,
         status: mapFormStatusToDB(values.status),
+        photoUrl: values.photoUrl,
         // Only include emergency contact if at least one field is filled
         emergencyContact: values.emergencyContactName || values.emergencyContactRelationship || values.emergencyContactNumber
           ? {
@@ -341,6 +353,16 @@ const ResidentForm = ({
         <ScrollArea className="pr-4 h-[calc(85vh-180px)]">
           <div className="pr-4 space-y-6">
             <h3 className="text-lg font-medium mb-4">Personal Information</h3>
+            
+            {/* Photo upload component */}
+            <div className="flex justify-center mb-4">
+              <ResidentPhotoUpload 
+                residentId={resident?.id} 
+                existingPhotoUrl={photoUrl}
+                onPhotoUploaded={handlePhotoUploaded} 
+              />
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField control={form.control} name="firstName" render={({
               field

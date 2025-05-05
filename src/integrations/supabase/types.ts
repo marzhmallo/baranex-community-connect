@@ -270,6 +270,13 @@ export type Database = {
             foreignKeyName: "issued_documents_resident_id_fkey"
             columns: ["resident_id"]
             isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issued_documents_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
             referencedRelation: "residents"
             referencedColumns: ["id"]
           },
@@ -473,7 +480,21 @@ export type Database = {
             foreignKeyName: "relationships_related_resident_id_fkey"
             columns: ["related_resident_id"]
             isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relationships_related_resident_id_fkey"
+            columns: ["related_resident_id"]
+            isOneToOne: false
             referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relationships_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "admin_residents_view"
             referencedColumns: ["id"]
           },
           {
@@ -735,7 +756,144 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_residents_view: {
+        Row: {
+          address: string | null
+          barangaydb: string | null
+          birthdate: string | null
+          brgyid: string | null
+          civil_status: string | null
+          classifications: string[] | null
+          countryph: string | null
+          created_at: string | null
+          died_on: string | null
+          email: string | null
+          emcontact: number | null
+          emname: string | null
+          emrelation: string | null
+          first_name: string | null
+          gender: string | null
+          has_pagibig: boolean | null
+          has_philhealth: boolean | null
+          has_sss: boolean | null
+          has_tin: boolean | null
+          household_id: string | null
+          id: string | null
+          is_voter: boolean | null
+          last_name: string | null
+          middle_name: string | null
+          mobile_number: string | null
+          monthly_income: number | null
+          municipalitycity: string | null
+          nationality: string | null
+          occupation: string | null
+          photo_url: string | null
+          provinze: string | null
+          purok: string | null
+          regional: string | null
+          remarks: string | null
+          status: string | null
+          suffix: string | null
+          updated_at: string | null
+          years_in_barangay: number | null
+        }
+        Insert: {
+          address?: string | null
+          barangaydb?: string | null
+          birthdate?: string | null
+          brgyid?: string | null
+          civil_status?: string | null
+          classifications?: string[] | null
+          countryph?: string | null
+          created_at?: string | null
+          died_on?: string | null
+          email?: string | null
+          emcontact?: number | null
+          emname?: string | null
+          emrelation?: string | null
+          first_name?: string | null
+          gender?: string | null
+          has_pagibig?: boolean | null
+          has_philhealth?: boolean | null
+          has_sss?: boolean | null
+          has_tin?: boolean | null
+          household_id?: string | null
+          id?: string | null
+          is_voter?: boolean | null
+          last_name?: string | null
+          middle_name?: string | null
+          mobile_number?: string | null
+          monthly_income?: number | null
+          municipalitycity?: string | null
+          nationality?: string | null
+          occupation?: string | null
+          photo_url?: string | null
+          provinze?: string | null
+          purok?: string | null
+          regional?: string | null
+          remarks?: string | null
+          status?: string | null
+          suffix?: string | null
+          updated_at?: string | null
+          years_in_barangay?: number | null
+        }
+        Update: {
+          address?: string | null
+          barangaydb?: string | null
+          birthdate?: string | null
+          brgyid?: string | null
+          civil_status?: string | null
+          classifications?: string[] | null
+          countryph?: string | null
+          created_at?: string | null
+          died_on?: string | null
+          email?: string | null
+          emcontact?: number | null
+          emname?: string | null
+          emrelation?: string | null
+          first_name?: string | null
+          gender?: string | null
+          has_pagibig?: boolean | null
+          has_philhealth?: boolean | null
+          has_sss?: boolean | null
+          has_tin?: boolean | null
+          household_id?: string | null
+          id?: string | null
+          is_voter?: boolean | null
+          last_name?: string | null
+          middle_name?: string | null
+          mobile_number?: string | null
+          monthly_income?: number | null
+          municipalitycity?: string | null
+          nationality?: string | null
+          occupation?: string | null
+          photo_url?: string | null
+          provinze?: string | null
+          purok?: string | null
+          regional?: string | null
+          remarks?: string | null
+          status?: string | null
+          suffix?: string | null
+          updated_at?: string | null
+          years_in_barangay?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "residents_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "residents_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_age_distribution: {
