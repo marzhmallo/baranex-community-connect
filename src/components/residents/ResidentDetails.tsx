@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ResidentForm from "./ResidentForm";
 
 type ResidentDetailsProps = {
   resident: Resident | null;
@@ -20,6 +21,8 @@ type ResidentDetailsProps = {
 };
 
 const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps) => {
+  const [isEditMode, setIsEditMode] = useState(false);
+  
   if (!resident) return null;
 
   // Calculate age
@@ -47,6 +50,9 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   };
 
   const handleClose = () => {
+    // Reset edit mode when closing
+    setIsEditMode(false);
+    
     // First close the dialog through state
     onOpenChange(false);
     
@@ -63,6 +69,11 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     }, 150);
   };
 
+  const handleFormSubmit = () => {
+    setIsEditMode(false);
+    handleClose();
+  };
+
   return (
     <Dialog 
       open={open} 
@@ -71,111 +82,125 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
       <DialogContent 
         className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col"
       >
-        <DialogHeader className="shrink-0">
-          <DialogTitle className="flex items-center justify-between">
-            <span>Resident Details</span>
-          </DialogTitle>
-          <DialogDescription>
-            Complete profile information for {resident.firstName} {resident.lastName}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <ScrollArea className="flex-1 overflow-y-auto">
-          <div className="grid gap-6 pr-4 pb-4">
-            {/* Personal Information */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col md:flex-row gap-6 items-start">
-                  {/* Avatar/Photo placeholder */}
-                  <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 text-2xl">
-                    {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
-                  </div>
-                  
-                  <div className="space-y-2 flex-1">
-                    <h3 className="text-xl font-semibold">
-                      {resident.firstName} {resident.lastName}
-                      <span className="ml-2">{getStatusBadge(resident.status)}</span>
-                    </h3>
-                    
+        {isEditMode ? (
+          <>
+            <DialogHeader className="shrink-0">
+              <DialogTitle>Edit Resident</DialogTitle>
+              <DialogDescription>
+                Update information for {resident.firstName} {resident.lastName}
+              </DialogDescription>
+            </DialogHeader>
+            <ResidentForm onSubmit={handleFormSubmit} resident={resident} />
+          </>
+        ) : (
+          <>
+            <DialogHeader className="shrink-0">
+              <DialogTitle className="flex items-center justify-between">
+                <span>Resident Details</span>
+              </DialogTitle>
+              <DialogDescription>
+                Complete profile information for {resident.firstName} {resident.lastName}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <ScrollArea className="flex-1 overflow-y-auto">
+              <div className="grid gap-6 pr-4 pb-4">
+                {/* Personal Information */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                      {/* Avatar/Photo placeholder */}
+                      <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 text-2xl">
+                        {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
+                      </div>
+                      
+                      <div className="space-y-2 flex-1">
+                        <h3 className="text-xl font-semibold">
+                          {resident.firstName} {resident.lastName}
+                          <span className="ml-2">{getStatusBadge(resident.status)}</span>
+                        </h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Age</p>
+                            <p>{age} years old</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Gender</p>
+                            <p>{resident.gender}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Birth Date</p>
+                            <p>{new Date(resident.birthDate).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Civil Status</p>
+                            <p>{resident.civilStatus || "Not specified"}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Contact Information */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <h3 className="text-lg font-medium mb-4">Contact Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-500">Age</p>
-                        <p>{age} years old</p>
+                        <p className="text-sm text-gray-500">Address</p>
+                        <p>{resident.address}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Gender</p>
-                        <p>{resident.gender}</p>
+                        <p className="text-sm text-gray-500">Contact Number</p>
+                        <p>{resident.contactNumber || "Not provided"}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Birth Date</p>
-                        <p>{new Date(resident.birthDate).toLocaleDateString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Civil Status</p>
-                        <p>{resident.civilStatus || "Not specified"}</p>
+                        <p className="text-sm text-gray-500">Email</p>
+                        <p>{resident.email || "Not provided"}</p>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Contact Information */}
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Contact Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Address</p>
-                    <p>{resident.address}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Contact Number</p>
-                    <p>{resident.contactNumber || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p>{resident.email || "Not provided"}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Additional Information */}
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Additional Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Occupation</p>
-                    <p>{resident.occupation || "Not specified"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Years in Barangay</p>
-                    <p>{resident.yearsInBarangay || "Not specified"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Classification</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {resident.classifications?.length ? 
-                        resident.classifications.map((classification, index) => (
-                          <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
-                            {classification}
-                          </Badge>
-                        )) 
-                        : "None specified"}
+                  </CardContent>
+                </Card>
+                
+                {/* Additional Information */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <h3 className="text-lg font-medium mb-4">Additional Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Occupation</p>
+                        <p>{resident.occupation || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Years in Barangay</p>
+                        <p>{resident.yearsInBarangay || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Classification</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {resident.classifications?.length ? 
+                            resident.classifications.map((classification, index) => (
+                              <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
+                                {classification}
+                              </Badge>
+                            )) 
+                            : "None specified"}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </ScrollArea>
-        
-        <div className="flex justify-end gap-2 pt-4 border-t mt-4 w-full shrink-0">
-          <Button variant="outline">Edit Details</Button>
-          <Button variant="ghost" onClick={handleClose}>Close</Button>
-        </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </ScrollArea>
+            
+            <div className="flex justify-end gap-2 pt-4 border-t mt-4 w-full shrink-0">
+              <Button variant="outline" onClick={() => setIsEditMode(true)}>Edit Details</Button>
+              <Button variant="ghost" onClick={handleClose}>Close</Button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
