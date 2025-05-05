@@ -8,10 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { createResident } from "@/lib/api/residents";
 
 // Available resident classifications
 const residentClassifications = [{
@@ -46,7 +46,7 @@ const formSchema = z.object({
   province: z.string().min(1, "Province is required"),
   region: z.string().min(1, "Region is required"),
   country: z.string().min(1, "Country is required"),
-  contactNumber: z.string().regex(/^09\d{9}$/, "Phone number must be in the format 09XXXXXXXXX"),
+  contactNumber: z.string().regex(/^09\d{9}$/, "Phone number must be in the format 09XXXXXXXXX").optional().or(z.literal('')),
   email: z.string().email("Invalid email format").optional().or(z.literal('')),
   occupation: z.string().optional(),
   civilStatus: z.enum(["Single", "Married", "Widowed", "Divorced", "Separated"]),
@@ -59,15 +59,17 @@ const formSchema = z.object({
   hasPagibig: z.boolean().default(false),
   hasTin: z.boolean().default(false),
   classifications: z.array(z.string()).default([]),
-  emergencyContactName: z.string().min(2, "Name must be at least 2 characters"),
-  emergencyContactRelationship: z.string().min(2, "Relationship must be at least 2 characters"),
-  emergencyContactNumber: z.string().regex(/^09\d{9}$/, "Phone number must be in the format 09XXXXXXXXX"),
+  emergencyContactName: z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal('')),
+  emergencyContactRelationship: z.string().min(2, "Relationship must be at least 2 characters").optional().or(z.literal('')),
+  emergencyContactNumber: z.string().regex(/^09\d{9}$/, "Phone number must be in the format 09XXXXXXXXX").optional().or(z.literal('')),
   status: z.enum(["Active", "Inactive", "Deceased", "Transferred"]),
   remarks: z.string().optional()
 });
+
 interface ResidentFormProps {
   onSubmit: () => void;
 }
+
 const ResidentForm = ({
   onSubmit
 }: ResidentFormProps) => {
@@ -101,7 +103,7 @@ const ResidentForm = ({
       hasSss: false,
       hasPagibig: false,
       hasTin: false,
-      classifications: ["resident"],
+      classifications: [],
       emergencyContactName: "",
       emergencyContactRelationship: "",
       emergencyContactNumber: "",
@@ -109,6 +111,7 @@ const ResidentForm = ({
       remarks: ""
     }
   });
+  
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
@@ -125,7 +128,7 @@ const ResidentForm = ({
         gender: values.gender,
         birthdate: values.birthDate,
         address: values.address,
-        mobile_number: values.contactNumber,
+        mobile_number: values.contactNumber || null,
         email: values.email || null,
         occupation: values.occupation || null,
         status: values.status === 'Active' ? 'Permanent' : values.status === 'Inactive' ? 'Temporary' : values.status === 'Deceased' ? 'Deceased' : 'Relocated',
@@ -144,16 +147,17 @@ const ResidentForm = ({
         has_sss: values.hasSss,
         has_pagibig: values.hasPagibig,
         has_tin: values.hasTin,
-        classifications: values.classifications,
+        classifications: values.classifications || [],
         remarks: values.remarks || null,
         emname: values.emergencyContactName || null,
         emrelation: values.emergencyContactRelationship || null,
         emcontact: values.emergencyContactNumber ? parseInt(values.emergencyContactNumber) : null
       };
-      const {
-        error
-      } = await supabase.from('residents').insert(residentData);
-      if (error) throw error;
+      
+      // Use the new createResident function to save the data
+      const { success, error } = await createResident(residentData);
+      
+      if (!success) throw error;
 
       // Show success toast
       toast({
@@ -179,6 +183,7 @@ const ResidentForm = ({
       setIsSubmitting(false);
     }
   };
+
   return <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <ScrollArea className="pr-4 h-[calc(85vh-180px)]">
@@ -505,7 +510,7 @@ const ResidentForm = ({
                 <FormField control={form.control} name="emergencyContactName" render={({
                 field
               }) => <FormItem>
-                      <FormLabel>Name *</FormLabel>
+                      <FormLabel>Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Maria Dela Cruz" {...field} />
                       </FormControl>
@@ -515,7 +520,7 @@ const ResidentForm = ({
                 <FormField control={form.control} name="emergencyContactRelationship" render={({
                 field
               }) => <FormItem>
-                      <FormLabel>Relationship *</FormLabel>
+                      <FormLabel>Relationship</FormLabel>
                       <FormControl>
                         <Input placeholder="Spouse" {...field} />
                       </FormControl>
@@ -525,7 +530,7 @@ const ResidentForm = ({
                 <FormField control={form.control} name="emergencyContactNumber" render={({
                 field
               }) => <FormItem>
-                      <FormLabel>Contact Number *</FormLabel>
+                      <FormLabel>Contact Number</FormLabel>
                       <FormControl>
                         <Input placeholder="09123456789" {...field} />
                       </FormControl>

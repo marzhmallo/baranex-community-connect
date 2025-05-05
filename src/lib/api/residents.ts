@@ -61,7 +61,7 @@ export const getResidents = async (): Promise<Resident[]> => {
       hasSss: resident.has_sss,
       hasPagibig: resident.has_pagibig,
       hasTin: resident.has_tin,
-      classifications: resident.classifications, // Use classifications from database or default
+      classifications: resident.classifications || [], // Ensure classifications is an array
       remarks: resident.remarks || '',
       emergencyContact
     };
@@ -115,11 +115,29 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     hasSss: data.has_sss,
     hasPagibig: data.has_pagibig,
     hasTin: data.has_tin,
-    classifications: data.classifications, // Use classifications from database or default
+    classifications: data.classifications || [], // Ensure classifications is an array
     remarks: data.remarks || '',
     emergencyContact
   };
 };
 
-// Add more functions for CRUD operations as needed
+// Add new function to create a resident
+export const createResident = async (residentData: any): Promise<{ success: boolean; error: any }> => {
+  try {
+    const { error } = await supabase
+      .from('residents')
+      .insert(residentData);
+    
+    if (error) {
+      console.error("Error creating resident:", error);
+      return { success: false, error };
+    }
+    
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Exception creating resident:", error);
+    return { success: false, error };
+  }
+};
 
+// Add more functions for CRUD operations as needed
