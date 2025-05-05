@@ -21,7 +21,7 @@ const Auth = () => {
   // Use environment variable for the hCaptcha site key
   // For hCaptcha, you'll need to register at https://www.hcaptcha.com/ to get a site key
   // Use the test key '10000000-ffff-ffff-ffff-000000000001' for development
-  const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "10000000-ffff-ffff-ffff-000000000001";
+  const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "a002bff6-3d98-4db2-8406-166e106c1958";
 
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
