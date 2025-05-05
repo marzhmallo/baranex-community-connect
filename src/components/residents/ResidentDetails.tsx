@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ResidentForm from "./ResidentForm";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 type ResidentDetailsProps = {
   resident: Resident | null;
@@ -125,10 +126,15 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex flex-col md:flex-row gap-6 items-start">
-                      {/* Avatar/Photo placeholder */}
-                      <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 text-2xl">
-                        {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
-                      </div>
+                      {/* Avatar/Photo using the Avatar component */}
+                      <Avatar className="w-24 h-24">
+                        {resident.photoUrl ? (
+                          <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
+                        ) : null}
+                        <AvatarFallback className="text-2xl">
+                          {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
                       
                       <div className="space-y-2 flex-1">
                         <h3 className="text-xl font-semibold">
