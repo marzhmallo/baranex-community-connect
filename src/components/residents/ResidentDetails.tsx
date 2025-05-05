@@ -1,5 +1,12 @@
+
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,17 +16,17 @@ import ResidentForm from "./ResidentForm";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ZoomIn } from "lucide-react";
+
 type ResidentDetailsProps = {
   resident: Resident | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
-const ResidentDetails = ({
-  resident,
-  open,
-  onOpenChange
-}: ResidentDetailsProps) => {
+
+const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showFullPhoto, setShowFullPhoto] = useState(false);
+  
   if (!resident) return null;
 
   // Calculate age
@@ -27,9 +34,10 @@ const ResidentDetails = ({
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const m = today.getMonth() - birthDate.getMonth();
-  if (m < 0 || m === 0 && today.getDate() < birthDate.getDate()) {
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Permanent':
@@ -44,20 +52,21 @@ const ResidentDetails = ({
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
   const handleClose = () => {
     console.log("ResidentDetails - handling close");
-
+    
     // Reset edit mode when closing
     setIsEditMode(false);
-
+    
     // First close the dialog through state
     onOpenChange(false);
-
+    
     // Then clean up any lingering effects to ensure UI remains interactive
     setTimeout(() => {
       document.body.classList.remove('overflow-hidden');
       document.body.style.pointerEvents = '';
-
+      
       // Remove any focus traps or aria-hidden attributes that might be lingering
       const elements = document.querySelectorAll('[aria-hidden="true"]');
       elements.forEach(el => {
@@ -65,6 +74,7 @@ const ResidentDetails = ({
       });
     }, 150);
   };
+
   const handleFormSubmit = () => {
     console.log("ResidentDetails - form submitted, resetting edit mode");
     setIsEditMode(false);
@@ -72,16 +82,28 @@ const ResidentDetails = ({
   };
 
   // Generate full address display
-  const fullAddress = resident.purok ? `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}, ${resident.region}` : resident.address || 'Address not provided';
-  return <Dialog open={open} onOpenChange={() => handleClose()}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col" onInteractOutside={e => {
-      console.log("Interaction outside dialog detected in ResidentDetails");
-      e.preventDefault();
-    }} onEscapeKeyDown={e => {
-      console.log("Escape key pressed in ResidentDetails");
-      e.preventDefault();
-    }}>
-        {isEditMode ? <>
+  const fullAddress = resident.purok ? 
+    `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}, ${resident.region}` : 
+    resident.address || 'Address not provided';
+
+  return (
+    <Dialog 
+      open={open} 
+      onOpenChange={() => handleClose()}
+    >
+      <DialogContent 
+        className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col"
+        onInteractOutside={(e) => {
+          console.log("Interaction outside dialog detected in ResidentDetails");
+          e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          console.log("Escape key pressed in ResidentDetails");
+          e.preventDefault();
+        }}
+      >
+        {isEditMode ? (
+          <>
             <DialogHeader className="shrink-0">
               <DialogTitle>Edit Resident</DialogTitle>
               <DialogDescription>
@@ -89,7 +111,9 @@ const ResidentDetails = ({
               </DialogDescription>
             </DialogHeader>
             <ResidentForm onSubmit={handleFormSubmit} resident={resident} />
-          </> : <>
+          </>
+        ) : (
+          <>
             <DialogHeader className="shrink-0">
               <DialogTitle className="flex items-center justify-between">
                 <span>Resident Details</span>
@@ -106,33 +130,57 @@ const ResidentDetails = ({
                   <CardContent className="pt-6">
                     <div className="flex flex-col md:flex-row gap-6 items-start">
                       {/* Avatar/Photo using the Avatar component with click to enlarge */}
-                      {resident.photoUrl ? <Popover>
-                          <PopoverTrigger asChild>
-                            <div className="relative cursor-pointer group">
-                              <Avatar className="w-24 h-24">
-                                <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
-                                <AvatarFallback className="text-2xl">
-                                  {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                <ZoomIn className="text-white h-8 w-8" />
-                              </div>
-                            </div>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-2 border-none bg-transparent shadow-none">
-                            <img src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} className="max-h-[70vh] max-w-[80vw] rounded-lg object-contain shadow-xl" />
-                          </PopoverContent>
-                        </Popover> : <Avatar className="w-24 h-24">
+                      {resident.photoUrl ? (
+                        <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
+                          <Avatar className="w-24 h-24">
+                            <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
+                            <AvatarFallback className="text-2xl">
+                              {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <ZoomIn className="text-white h-8 w-8" />
+                          </div>
+                        </div>
+                      ) : (
+                        <Avatar className="w-24 h-24">
                           <AvatarFallback className="text-2xl">
                             {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
                           </AvatarFallback>
-                        </Avatar>}
+                        </Avatar>
+                      )}
+                      
+                      {/* Full screen photo dialog */}
+                      {resident.photoUrl && (
+                        <Dialog open={showFullPhoto} onOpenChange={setShowFullPhoto}>
+                          <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center">
+                            <div 
+                              className="relative w-full h-full flex items-center justify-center bg-black/70 p-2 rounded-lg"
+                              onClick={() => setShowFullPhoto(false)}
+                            >
+                              <img 
+                                src={resident.photoUrl} 
+                                alt={`${resident.firstName} ${resident.lastName}`} 
+                                className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
+                              />
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="absolute top-2 right-2 bg-black/40 hover:bg-black/60 text-white"
+                                onClick={() => setShowFullPhoto(false)}
+                              >
+                                <span className="sr-only">Close</span>
+                                <ZoomIn className="h-4 w-4 rotate-45" />
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                       
                       <div className="space-y-2 flex-1">
                         <h3 className="text-xl font-semibold">
                           {resident.firstName} {resident.lastName}
-                          
+                          <span className="ml-2">{getStatusBadge(resident.status)}</span>
                         </h3>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -152,10 +200,12 @@ const ResidentDetails = ({
                             <p className="text-sm text-gray-500">Civil Status</p>
                             <p>{resident.civilStatus || "Not specified"}</p>
                           </div>
-                          {resident.status === "Deceased" && resident.diedOn && <div>
+                          {resident.status === "Deceased" && resident.diedOn && (
+                            <div>
                               <p className="text-sm text-gray-500">Date of Death</p>
                               <p>{new Date(resident.diedOn).toLocaleDateString()}</p>
-                            </div>}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -199,9 +249,13 @@ const ResidentDetails = ({
                       <div>
                         <p className="text-sm text-gray-500">Classification</p>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {resident.classifications?.length ? resident.classifications.map((classification, index) => <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
+                          {resident.classifications?.length ? 
+                            resident.classifications.map((classification, index) => (
+                              <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
                                 {classification}
-                              </Badge>) : "None specified"}
+                              </Badge>
+                            )) 
+                            : "None specified"}
                         </div>
                       </div>
                     </div>
@@ -214,8 +268,11 @@ const ResidentDetails = ({
               <Button variant="outline" onClick={() => setIsEditMode(true)}>Edit Details</Button>
               <Button variant="ghost" onClick={handleClose}>Close</Button>
             </div>
-          </>}
+          </>
+        )}
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
+
 export default ResidentDetails;
