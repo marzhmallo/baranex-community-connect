@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast"
 import { useQueryClient } from '@tanstack/react-query'
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Form schema using zod
 const formSchema = z.object({
@@ -177,444 +178,494 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <h3 className="text-lg font-medium mb-4">Personal Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Juan" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <ScrollArea className="pr-4 h-[calc(85vh-180px)]">
+          <div className="pr-4 space-y-6">
+            <h3 className="text-lg font-medium mb-4">Personal Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Juan" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Dela Cruz" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Dela Cruz" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="middleName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Middle Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Santos" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="middleName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Middle Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Santos" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="suffix"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Suffix</FormLabel>
-                <FormControl>
-                  <Input placeholder="Jr., Sr., III" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="suffix"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Suffix</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Jr., Sr., III" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="gender"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Gender *</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender *</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="birthDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Birth Date *</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="civilStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Civil Status *</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Single">Single</SelectItem>
+                        <SelectItem value="Married">Married</SelectItem>
+                        <SelectItem value="Widowed">Widowed</SelectItem>
+                        <SelectItem value="Divorced">Divorced</SelectItem>
+                        <SelectItem value="Separated">Separated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="nationality"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nationality *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Filipino" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <h3 className="text-lg font-medium mb-4 pt-4 border-t">Contact Information</h3>
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Street Address *</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
+                    <Textarea 
+                      placeholder="Complete street address" 
+                      className="resize-none" 
+                      {...field} 
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="birthDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Birth Date *</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <FormField
+                control={form.control}
+                name="purok"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Purok *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="1" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="civilStatus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Civil Status *</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Single">Single</SelectItem>
-                    <SelectItem value="Married">Married</SelectItem>
-                    <SelectItem value="Widowed">Widowed</SelectItem>
-                    <SelectItem value="Divorced">Divorced</SelectItem>
-                    <SelectItem value="Separated">Separated</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="barangay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Barangay *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="San Jose" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="nationality"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nationality *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Filipino" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+              <FormField
+                control={form.control}
+                name="municipality"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Municipality/City *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Manila" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <h3 className="text-lg font-medium mb-4 pt-4 border-t">Contact Information</h3>
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Street Address *</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Complete street address" 
-                  className="resize-none" 
-                  {...field} 
+              <FormField
+                control={form.control}
+                name="province"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Province *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Metro Manila" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="region"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Region *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="NCR" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Philippines" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="contactNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Number *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="09123456789" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Format: 09XXXXXXXXX
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="juan@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <h3 className="text-lg font-medium mb-4 pt-4 border-t">Other Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="occupation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Occupation</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Teacher" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="monthlyIncome"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monthly Income</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="20000" 
+                        onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                        value={field.value === undefined ? '' : field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="yearsInBarangay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Years in Barangay</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="5" 
+                        onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                        value={field.value === undefined ? '' : field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <h3 className="text-md font-medium mb-2 pt-2">Government IDs</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <FormField
+                control={form.control}
+                name="isVoter"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox 
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Voter</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="hasPhilhealth"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox 
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>PhilHealth</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="hasSss"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox 
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>SSS</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="hasPagibig"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox 
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Pag-IBIG</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="hasTin"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox 
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>TIN</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-medium mb-4">Emergency Contact Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="emergencyContactName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Maria Dela Cruz" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <FormField
-            control={form.control}
-            name="purok"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Purok *</FormLabel>
-                <FormControl>
-                  <Input placeholder="1" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <FormField
+                  control={form.control}
+                  name="emergencyContactRelationship"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Relationship *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Spouse" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <FormField
-            control={form.control}
-            name="barangay"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Barangay *</FormLabel>
-                <FormControl>
-                  <Input placeholder="San Jose" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <FormField
+                  control={form.control}
+                  name="emergencyContactNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Number *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="09123456789" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
 
-          <FormField
-            control={form.control}
-            name="municipality"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Municipality/City *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Manila" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="province"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Province *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Metro Manila" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="region"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Region *</FormLabel>
-                <FormControl>
-                  <Input placeholder="NCR" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Country *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Philippines" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="contactNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Contact Number *</FormLabel>
-                <FormControl>
-                  <Input placeholder="09123456789" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Format: 09XXXXXXXXX
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="juan@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <h3 className="text-lg font-medium mb-4 pt-4 border-t">Other Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="occupation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Occupation</FormLabel>
-                <FormControl>
-                  <Input placeholder="Teacher" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="monthlyIncome"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Monthly Income</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="20000" 
-                    onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                    value={field.value === undefined ? '' : field.value}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="yearsInBarangay"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Years in Barangay</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="5" 
-                    onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                    value={field.value === undefined ? '' : field.value}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <h3 className="text-md font-medium mb-2 pt-2">Government IDs</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <FormField
-            control={form.control}
-            name="isVoter"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox 
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Voter</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="hasPhilhealth"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox 
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>PhilHealth</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="hasSss"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox 
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>SSS</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="hasPagibig"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox 
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Pag-IBIG</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="hasTin"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox 
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>TIN</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="border-t pt-4">
-          <h3 className="text-lg font-medium mb-4">Emergency Contact Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
               control={form.control}
-              name="emergencyContactName"
+              name="remarks"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name *</FormLabel>
+                  <FormLabel>Remarks</FormLabel>
                   <FormControl>
-                    <Input placeholder="Maria Dela Cruz" {...field} />
+                    <Textarea 
+                      placeholder="Additional notes about this resident" 
+                      className="resize-none" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -623,80 +674,34 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
 
             <FormField
               control={form.control}
-              name="emergencyContactRelationship"
+              name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Relationship *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Spouse" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="emergencyContactNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Number *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="09123456789" {...field} />
-                  </FormControl>
+                  <FormLabel>Resident Status *</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                      <SelectItem value="Deceased">Deceased</SelectItem>
+                      <SelectItem value="Transferred">Transferred</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-        </div>
-
-        <FormField
-          control={form.control}
-          name="remarks"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Remarks</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Additional notes about this resident" 
-                  className="resize-none" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Resident Status *</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                  <SelectItem value="Deceased">Deceased</SelectItem>
-                  <SelectItem value="Transferred">Transferred</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end space-x-4">
+        </ScrollArea>
+        
+        <div className="flex justify-end space-x-4 pt-4 border-t mt-6">
           <Button variant="outline" type="button" onClick={onSubmit} disabled={isSubmitting}>
             Cancel
           </Button>
