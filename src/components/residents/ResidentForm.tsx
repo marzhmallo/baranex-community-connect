@@ -70,7 +70,7 @@ const formSchema = z.object({
   emergencyContactName: z.string().optional().or(z.literal('')),
   emergencyContactRelationship: z.string().optional().or(z.literal('')),
   emergencyContactNumber: z.string().optional().or(z.literal('')),
-  status: z.enum(["Active", "Inactive", "Deceased", "Transferred"]),
+  status: z.enum(["Permanent", "Temporary", "Deceased", "Transferred"]),
   diedOn: z.date().optional().nullable(),
   remarks: z.string().optional()
 });
@@ -84,23 +84,23 @@ interface ResidentFormProps {
 }
 
 // Map database status to form status
-const mapDBStatusToForm = (dbStatus: string): "Active" | "Inactive" | "Deceased" | "Transferred" => {
+const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
   switch (dbStatus) {
-    case 'Permanent': return 'Active';
-    case 'Temporary': return 'Inactive';
+    case 'Permanent': return 'Permanent';
+    case 'Temporary': return 'Temporary';
     case 'Deceased': return 'Deceased';
     case 'Relocated': return 'Transferred';
-    default: return 'Inactive'; // Default fallback
+    default: return 'Temporary'; // Default fallback
   }
 };
 
 // Map form status to database format
 const mapFormStatusToDB = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
   switch (formStatus) {
-    case 'Active': return 'Permanent';
-    case 'Inactive': return 'Temporary';
+    case 'Permanent': return 'Permanent';
+    case 'Temporary': return 'Temporary';
     case 'Deceased': return 'Deceased';
-    case 'Transferred': return 'Relocated';
+    case 'Relocated': return 'Relocated';
     default: return 'Temporary'; // Default fallback
   }
 };
@@ -180,14 +180,14 @@ const ResidentForm = ({
     municipality: "",
     province: "",
     region: "",
-    country: "Philippines",
+    country: "",
     contactNumber: "",
     email: "",
     occupation: "",
     civilStatus: "Single",
     monthlyIncome: 0,
     yearsInBarangay: 0,
-    nationality: "Filipino",
+    nationality: "",
     isVoter: false,
     hasPhilhealth: false,
     hasSss: false,
@@ -197,7 +197,7 @@ const ResidentForm = ({
     emergencyContactName: "",
     emergencyContactRelationship: "",
     emergencyContactNumber: "",
-    status: "Active", // Default status
+    status: "Temporary", // Default status
     diedOn: null,
     remarks: ""
   };
