@@ -50,6 +50,8 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   };
 
   const handleClose = () => {
+    console.log("ResidentDetails - handling close");
+    
     // Reset edit mode when closing
     setIsEditMode(false);
     
@@ -70,6 +72,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   };
 
   const handleFormSubmit = () => {
+    console.log("ResidentDetails - form submitted, resetting edit mode");
     setIsEditMode(false);
     handleClose();
   };
@@ -81,6 +84,14 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     >
       <DialogContent 
         className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col"
+        onInteractOutside={(e) => {
+          console.log("Interaction outside dialog detected in ResidentDetails");
+          e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          console.log("Escape key pressed in ResidentDetails");
+          e.preventDefault();
+        }}
       >
         {isEditMode ? (
           <>
@@ -137,6 +148,12 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                             <p className="text-sm text-gray-500">Civil Status</p>
                             <p>{resident.civilStatus || "Not specified"}</p>
                           </div>
+                          {resident.status === "Deceased" && resident.diedOn && (
+                            <div>
+                              <p className="text-sm text-gray-500">Date of Death</p>
+                              <p>{new Date(resident.diedOn).toLocaleDateString()}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

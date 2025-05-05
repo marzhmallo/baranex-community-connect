@@ -21,22 +21,11 @@ import { cn } from "@/lib/utils";
 
 // Available resident classifications
 const residentClassifications = [
-  {
-    id: "indigent",
-    label: "Indigent"
-  }, {
-    id: "student",
-    label: "Student"
-  }, {
-    id: "ofw",
-    label: "OFW"
-  }, {
-    id: "pwd",
-    label: "PWD"
-  }, {
-    id: "missing",
-    label: "Missing"
-  }
+  { id: "indigent", label: "Indigent" }, 
+  { id: "student", label: "Student" },
+  { id: "ofw", label: "OFW" },
+  { id: "pwd", label: "PWD" },
+  { id: "missing", label: "Missing" }
 ];
 
 // Form schema using zod
@@ -114,6 +103,19 @@ const ResidentForm = ({
   
   // Transform resident data for the form
   const transformResidentForForm = (resident: Resident): ResidentFormValues => {
+    console.log("Transforming resident for form:", resident);
+    
+    // Handle died_on date if present
+    let diedOnDate = null;
+    if (resident.diedOn) {
+      try {
+        diedOnDate = new Date(resident.diedOn);
+        console.log("Parsed diedOn date:", diedOnDate);
+      } catch (error) {
+        console.error("Error parsing diedOn date:", error);
+      }
+    }
+    
     return {
       // Personal Info
       firstName: resident.firstName,
@@ -163,7 +165,7 @@ const ResidentForm = ({
       emergencyContactNumber: resident.emergencyContact?.contactNumber ?? "",
       
       // Death date
-      diedOn: resident.diedOn ? new Date(resident.diedOn) : null,
+      diedOn: diedOnDate,
     };
   };
   
@@ -204,8 +206,24 @@ const ResidentForm = ({
   
   const form = useForm<ResidentFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues
+    defaultValues,
+    mode: "onChange"
   });
+  
+  // Log form validation state changes
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      if (form.formState.isSubmitSuccessful) {
+        console.log("Form was successfully submitted");
+      }
+      
+      if (Object.keys(form.formState.errors).length > 0) {
+        console.log("Form has validation errors:", form.formState.errors);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
   
   // Watch for status changes to show/hide the death date picker
   const status = form.watch("status");
@@ -296,13 +314,24 @@ const ResidentForm = ({
     }
   };
 
-  // Function to handle cancel button click - fixed the undefined onCancel error
+  // Function to handle cancel button click
   const handleCancel = () => {
     // Reset form values
     form.reset();
     // Close dialog by calling onSubmit (which executes handleCloseDialog from parent)
     onSubmit();
   };
+
+  // Log when the component is rendered with certain props
+  useEffect(() => {
+    if (resident) {
+      console.log("ResidentForm rendered with resident ID:", resident.id);
+      console.log("Resident status:", resident.status);
+      console.log("Resident died_on:", resident.diedOn);
+    } else {
+      console.log("ResidentForm rendered for new resident creation");
+    }
+  }, [resident]);
 
   return (
     <FormProvider {...form}>

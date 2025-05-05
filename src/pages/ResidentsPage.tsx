@@ -15,6 +15,8 @@ const ResidentsPage = () => {
   const queryClient = useQueryClient();
 
   const handleCloseDialog = () => {
+    console.log("Dialog close handler triggered");
+    
     // First close the dialog through state
     setIsAddResidentOpen(false);
     
@@ -33,6 +35,8 @@ const ResidentsPage = () => {
       queryClient.invalidateQueries({
         queryKey: ['residents']
       });
+      
+      console.log("Dialog cleanup completed");
     }, 150);
   };
 
@@ -65,6 +69,7 @@ const ResidentsPage = () => {
       <Dialog 
         open={isAddResidentOpen} 
         onOpenChange={(isOpen) => {
+          console.log("Dialog open state changed to:", isOpen);
           if (!isOpen) {
             handleCloseDialog();
           } else {
@@ -74,6 +79,14 @@ const ResidentsPage = () => {
       >
         <DialogContent 
           className="sm:max-w-[600px]"
+          onInteractOutside={(e) => {
+            console.log("Interaction outside dialog detected");
+            e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            console.log("Escape key pressed");
+            e.preventDefault();
+          }}
         >
           <DialogHeader>
             <DialogTitle>Add New Resident</DialogTitle>

@@ -1,3 +1,4 @@
+
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -51,7 +52,8 @@ export const getResidents = async (): Promise<Resident[]> => {
       hasTin: resident.has_tin,
       classifications: resident.classifications || [], // Ensure classifications is an array
       remarks: resident.remarks || '',
-      emergencyContact
+      emergencyContact,
+      diedOn: resident.died_on || null, // Add died_on field
     };
   });
 };
@@ -105,7 +107,8 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     hasTin: data.has_tin,
     classifications: data.classifications || [], // Ensure classifications is an array
     remarks: data.remarks || '',
-    emergencyContact
+    emergencyContact,
+    diedOn: data.died_on || null, // Add died_on field
   };
 };
 
@@ -148,6 +151,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       emcontact?: number | null;
       suffix?: string | null;
       updated_at?: string;
+      died_on?: string | null; // Add died_on field
     }
     
     // Map from our application model to database model
@@ -183,10 +187,13 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       // Emergency contact - handle each field individually
       emname: residentData.emergencyContact?.name?.trim() || null,
       emrelation: residentData.emergencyContact?.relationship?.trim() || null,
+      // Add died_on date
+      died_on: residentData.diedOn || null,
     };
     
     // Convert emergency contact number to numeric format if provided
     if (residentData.emergencyContact?.contactNumber) {
+      // Remove non-numeric characters
       const numericValue = residentData.emergencyContact.contactNumber.replace(/\D/g, '');
       databaseFields.emcontact = numericValue.length > 0 ? parseFloat(numericValue) : null;
     } else {
@@ -261,7 +268,8 @@ export const saveResident = async (residentData: Partial<Resident>) => {
         remarks: databaseFields.remarks,
         emname: databaseFields.emname,
         emrelation: databaseFields.emrelation,
-        emcontact: databaseFields.emcontact
+        emcontact: databaseFields.emcontact,
+        died_on: databaseFields.died_on,
       };
       
       console.log("Creating resident with data:", completeRecord);
