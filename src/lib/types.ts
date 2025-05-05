@@ -13,6 +13,7 @@ export interface Resident {
   occupation?: string;
   yearsInBarangay?: number;
   classifications?: string[];
+  educationLevel?: string; // Added this field
 }
 
 // Announcement types
