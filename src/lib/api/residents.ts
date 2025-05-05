@@ -224,16 +224,31 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       console.log("Creating new resident");
       // Add required fields for new residents
       const newId = crypto.randomUUID();
-      const newResidentData = {
+      
+      // Create a complete database record with required fields
+      const completeRecord = {
         ...databaseFields,
         id: newId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        // Ensure all required fields have values
+        barangaydb: databaseFields.barangaydb || "Unknown",
+        birthdate: databaseFields.birthdate || new Date().toISOString().split('T')[0],
+        civil_status: databaseFields.civil_status || "Single",
+        countryph: databaseFields.countryph || "Philippines",
+        first_name: databaseFields.first_name || "Unknown",
+        gender: databaseFields.gender || "Not Specified",
+        last_name: databaseFields.last_name || "Unknown",
+        municipalitycity: databaseFields.municipalitycity || "Unknown",
+        provinze: databaseFields.provinze || "Unknown",
+        purok: databaseFields.purok || "Unknown",
+        regional: databaseFields.regional || "Unknown",
+        status: databaseFields.status || "Temporary"
       };
       
       const { data, error } = await supabase
         .from('residents')
-        .insert(newResidentData)
+        .insert(completeRecord)
         .select()
         .single();
 

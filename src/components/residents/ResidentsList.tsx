@@ -332,9 +332,25 @@ const ResidentsList = () => {
     setIsDetailsOpen(true);
   };
   
+  const handleCloseDetails = () => {
+    // Add a small delay before fully closing to ensure proper cleanup
+    setTimeout(() => {
+      setSelectedResident(null);
+    }, 100);
+    setIsDetailsOpen(false);
+  };
+
   const handleEditResident = (resident: Resident) => {
     setResidentToEdit(resident);
     setIsEditResidentOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    // Add a small delay before fully closing to ensure proper cleanup
+    setTimeout(() => {
+      setResidentToEdit(null);
+    }, 100);
+    setIsEditResidentOpen(false);
   };
 
   const handlePageSizeChange = (value: string) => {
@@ -544,21 +560,38 @@ const ResidentsList = () => {
                 </DropdownMenu>
               )}
               
-              <Dialog open={isAddResidentOpen} onOpenChange={setIsAddResidentOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-baranex-primary hover:bg-baranex-primary/90 flex items-center">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Resident
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
+              <Dialog 
+                open={isAddResidentOpen} 
+                onOpenChange={(isOpen) => {
+                  if (!isOpen) {
+                    setTimeout(() => {
+                      // Clean up after dialog is fully closed
+                      document.body.style.pointerEvents = '';
+                    }, 100);
+                  }
+                  setIsAddResidentOpen(isOpen);
+                }}
+              >
+                <DialogContent 
+                  className="sm:max-w-[600px]" 
+                  onInteractOutside={(e) => {
+                    // Prevent issues with outside clicks
+                    e.preventDefault();
+                  }}
+                >
                   <DialogHeader>
                     <DialogTitle>Add New Resident</DialogTitle>
                     <DialogDescription>
                       Enter the resident's information below. Required fields are marked with an asterisk (*).
                     </DialogDescription>
                   </DialogHeader>
-                  <ResidentForm onSubmit={() => setIsAddResidentOpen(false)} />
+                  <ResidentForm onSubmit={() => {
+                    setIsAddResidentOpen(false);
+                    // Ensure pointer events are reset
+                    setTimeout(() => {
+                      document.body.style.pointerEvents = '';
+                    }, 100);
+                  }} />
                 </DialogContent>
               </Dialog>
             </div>
@@ -773,25 +806,63 @@ const ResidentsList = () => {
       <ResidentDetails
         resident={selectedResident}
         open={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) handleCloseDetails();
+          else setIsDetailsOpen(true);
+        }}
       />
       
       {/* Add Resident Dialog */}
-      <Dialog open={isAddResidentOpen} onOpenChange={setIsAddResidentOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+      <Dialog 
+        open={isAddResidentOpen} 
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setTimeout(() => {
+              // Clean up after dialog is fully closed
+              document.body.style.pointerEvents = '';
+            }, 100);
+          }
+          setIsAddResidentOpen(isOpen);
+        }}
+      >
+        <DialogContent 
+          className="sm:max-w-[600px]" 
+          onInteractOutside={(e) => {
+            // Prevent issues with outside clicks
+            e.preventDefault();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Add New Resident</DialogTitle>
             <DialogDescription>
               Enter the resident's information below. Required fields are marked with an asterisk (*).
             </DialogDescription>
           </DialogHeader>
-          <ResidentForm onSubmit={() => setIsAddResidentOpen(false)} />
+          <ResidentForm onSubmit={() => {
+            setIsAddResidentOpen(false);
+            // Ensure pointer events are reset
+            setTimeout(() => {
+              document.body.style.pointerEvents = '';
+            }, 100);
+          }} />
         </DialogContent>
       </Dialog>
       
       {/* Edit Resident Dialog */}
-      <Dialog open={isEditResidentOpen} onOpenChange={setIsEditResidentOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+      <Dialog 
+        open={isEditResidentOpen} 
+        onOpenChange={(isOpen) => {
+          if (!isOpen) handleCloseEditDialog();
+          else setIsEditResidentOpen(isOpen);
+        }}
+      >
+        <DialogContent 
+          className="sm:max-w-[600px]" 
+          onInteractOutside={(e) => {
+            // Prevent issues with outside clicks
+            e.preventDefault();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Edit Resident</DialogTitle>
             <DialogDescription>
@@ -800,7 +871,13 @@ const ResidentsList = () => {
           </DialogHeader>
           <ResidentForm 
             resident={residentToEdit} 
-            onSubmit={() => setIsEditResidentOpen(false)} 
+            onSubmit={() => {
+              handleCloseEditDialog();
+              // Ensure pointer events are reset
+              setTimeout(() => {
+                document.body.style.pointerEvents = '';
+              }, 100);
+            }} 
           />
         </DialogContent>
       </Dialog>

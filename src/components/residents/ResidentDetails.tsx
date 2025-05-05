@@ -47,9 +47,30 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     }
   };
 
+  // Safe close handler
+  const handleCloseDialog = () => {
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        // Make sure we only handle the closing properly
+        if (!isOpen) {
+          handleCloseDialog();
+        } else {
+          onOpenChange(true);
+        }
+      }}
+    >
+      <DialogContent 
+        className="sm:max-w-[600px] max-h-[90vh]"
+        onInteractOutside={(e) => {
+          // Prevent outside clicks from causing issues
+          e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Resident Details</span>
@@ -153,7 +174,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
         
         <div className="flex justify-end gap-2 pt-4 border-t mt-4">
           <Button variant="outline">Edit Details</Button>
-          <DialogClose asChild>
+          <DialogClose asChild onClick={handleCloseDialog}>
             <Button variant="ghost">Close</Button>
           </DialogClose>
         </div>
