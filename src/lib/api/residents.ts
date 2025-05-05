@@ -1,3 +1,4 @@
+
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -54,11 +55,11 @@ export const getResidents = async (): Promise<Resident[]> => {
     hasTin: resident.has_tin,
     classifications: ['Resident'], // Default classification
     remarks: resident.remarks || '',
-    // Emergency contact data (not currently in database table)
+    // Fixed emergencyContact to match the type in Resident interface
     emergencyContact: {
       name: 'Emergency contact not set',
       relationship: 'Not specified',
-      phone: 'Not specified'
+      contactNumber: 'Not specified'
     }
   }));
 };
@@ -105,11 +106,11 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     hasTin: data.has_tin,
     classifications: ['Resident'], // Default classification
     remarks: data.remarks || '',
-    // Emergency contact data (not currently in database table)
+    // Fixed emergencyContact to match the type in Resident interface
     emergencyContact: {
       name: 'Emergency contact not set',
       relationship: 'Not specified',
-      phone: 'Not specified'
+      contactNumber: 'Not specified'
     }
   };
 };

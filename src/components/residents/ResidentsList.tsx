@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -48,7 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Resident } from '@/lib/types';
-import { fetchResidents } from '@/lib/api/residents';
+import { getResidents } from '@/lib/api/residents';
 import { useQuery } from '@tanstack/react-query';
 import ResidentForm from './ResidentForm';
 import ResidentStatusCard from './ResidentStatusCard';
@@ -90,7 +89,7 @@ const ResidentsList = () => {
   // Fetch residents data from Supabase
   const { data: residents = [], isLoading, error } = useQuery({
     queryKey: ['residents'],
-    queryFn: fetchResidents,
+    queryFn: getResidents,
   });
   
   // Show error toast if there's an error fetching data
