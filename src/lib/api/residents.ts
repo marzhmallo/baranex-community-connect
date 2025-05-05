@@ -53,7 +53,7 @@ export const getResidents = async (): Promise<Resident[]> => {
     hasSss: resident.has_sss,
     hasPagibig: resident.has_pagibig,
     hasTin: resident.has_tin,
-    classifications: resident.classifications || ['resident'], // Use classifications from database or default
+    classifications: resident.classifications, // Use classifications from database or default
     remarks: resident.remarks || '',
     // Fixed emergencyContact to match the type in Resident interface
     emergencyContact: {
@@ -104,7 +104,7 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     hasSss: data.has_sss,
     hasPagibig: data.has_pagibig,
     hasTin: data.has_tin,
-    classifications: data.classifications || ['resident'], // Use classifications from database or default
+    classifications: data.classifications, // Use classifications from database or default
     remarks: data.remarks || '',
     // Fixed emergencyContact to match the type in Resident interface
     emergencyContact: {
