@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const captchaRef = useRef<ReCAPTCHA>(null);
   const navigate = useNavigate();
   
   // Use environment variable for the reCAPTCHA site key
@@ -23,23 +25,26 @@ const Auth = () => {
     setCaptchaToken(token);
     if (token) {
       console.log("Captcha verified successfully");
+      setError(null); // Clear any previous errors
     }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setIsLoading(true);
     
     if (!captchaToken) {
+      setError("Please complete the CAPTCHA challenge.");
       toast({
-        title: "Captcha Required",
+        title: "CAPTCHA Required",
         description: "Please complete the captcha verification",
         variant: "destructive",
       });
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    
     try {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
@@ -49,11 +54,19 @@ const Auth = () => {
             captchaToken,
           }
         });
-        if (error) throw error;
-        toast({
-          title: "Account created",
-          description: "Please check your email to verify your account",
-        });
+        if (error) {
+          setError(error.message);
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Account created",
+            description: "Please check your email to verify your account",
+          });
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -62,17 +75,33 @@ const Auth = () => {
             captchaToken,
           }
         });
-        if (error) throw error;
-        navigate("/");
+        if (error) {
+          setError(error.message);
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login successful",
+            description: "Welcome back!",
+          });
+          navigate("/"); // Navigate to the main page on successful login
+        }
       }
     } catch (error: any) {
+      setError("An unexpected error occurred");
       toast({
         title: "Error",
-        description: error.message,
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
+      console.error("Authentication error:", error);
     } finally {
       setIsLoading(false);
+      captchaRef.current?.reset(); // Reset captcha after authentication attempt
+      setCaptchaToken(null);
     }
   };
 
@@ -89,6 +118,12 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
+            {error && (
+              <div className="bg-destructive/15 text-destructive p-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Input
                 type="email"
@@ -110,6 +145,7 @@ const Auth = () => {
             
             <div className="flex justify-center my-4">
               <ReCAPTCHA
+                ref={captchaRef}
                 sitekey={recaptchaSiteKey}
                 onChange={handleCaptchaChange}
               />
