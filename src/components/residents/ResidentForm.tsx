@@ -89,7 +89,8 @@ const mapDBStatusToForm = (dbStatus: string): "Active" | "Inactive" | "Deceased"
 };
 
 // Map form status to database format
-const mapApplicationStatus = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
+const mapFormStatusToDB = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
+  console.log("Mapping form status:", formStatus);
   switch (formStatus) {
     case 'Active': return 'Permanent';
     case 'Inactive': return 'Temporary';
@@ -227,7 +228,7 @@ const ResidentForm = ({
         email: values.email?.trim() || undefined,
         
         // Status
-        status: mapApplicationStatus(values.status),
+        status: mapFormStatusToDB(values.status),
         civilStatus: values.civilStatus,
         
         // Economic

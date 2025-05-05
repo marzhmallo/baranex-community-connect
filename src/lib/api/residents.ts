@@ -218,7 +218,7 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
     }
     
     if (result.error) {
-      console.error("Error saving resident:", result.error);
+      console.error("Supabase error:", result.error);
       return { success: false, error: result.error };
     }
     
