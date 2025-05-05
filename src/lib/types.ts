@@ -1,3 +1,4 @@
+
 // Resident types
 export interface Resident {
   id: string;
@@ -13,7 +14,14 @@ export interface Resident {
   occupation?: string;
   yearsInBarangay?: number;
   classifications?: string[];
-  educationLevel?: string; // Added this field
+  educationLevel?: string;
+  familySize?: number;
+  dateRegistered?: string;
+  emergencyContact?: {
+    name: string;
+    relationship: string;
+    contactNumber: string;
+  };
 }
 
 // Announcement types
