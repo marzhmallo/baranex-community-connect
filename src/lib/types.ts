@@ -4,6 +4,8 @@ export interface Resident {
   id: string;
   firstName: string;
   lastName: string;
+  middleName?: string;
+  suffix?: string;
   gender: string;
   birthDate: string; // ISO format date string
   address: string;
@@ -17,6 +19,25 @@ export interface Resident {
   educationLevel?: string;
   familySize?: number;
   dateRegistered?: string;
+  nationality?: string;
+  monthlyIncome?: number;
+  purok?: string;
+  barangay?: string;
+  municipality?: string;
+  province?: string;
+  region?: string;
+  country?: string;
+  isVoter?: boolean;
+  hasPhilhealth?: boolean;
+  hasSss?: boolean;
+  hasPagibig?: boolean;
+  hasTin?: boolean;
+  remarks?: string;
+  photoUrl?: string;
+  diedOn?: string | null;
+  householdId?: string | null;
+  updatedAt?: string;
+  brgyId?: string;
   emergencyContact?: {
     name: string;
     relationship: string;
