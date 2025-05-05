@@ -47,8 +47,13 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     }
   };
 
-  // Safe close handler
+  // Safe close handler with timeout for cleanup
   const handleCloseDialog = () => {
+    // Add a small delay before fully closing to ensure proper cleanup
+    setTimeout(() => {
+      // Clean up after dialog is fully closed
+      document.body.style.pointerEvents = '';
+    }, 100);
     onOpenChange(false);
   };
 
@@ -174,9 +179,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
         
         <div className="flex justify-end gap-2 pt-4 border-t mt-4">
           <Button variant="outline">Edit Details</Button>
-          <DialogClose asChild onClick={handleCloseDialog}>
-            <Button variant="ghost">Close</Button>
-          </DialogClose>
+          <Button variant="ghost" onClick={handleCloseDialog}>Close</Button>
         </div>
       </DialogContent>
     </Dialog>
