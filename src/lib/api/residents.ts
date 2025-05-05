@@ -30,7 +30,7 @@ export async function fetchResidents() {
       educationLevel: '', // Field doesn't exist in DB schema
       familySize: 0, // Field doesn't exist in DB schema
       dateRegistered: item.created_at || '',
-      status: mapStatusValue(item.status),
+      status: item.status,
       classifications: item.classifications || [],
       emergencyContact: {
         name: '', // Field doesn't exist in DB schema
@@ -95,7 +95,7 @@ export async function fetchResidentById(id: string) {
       educationLevel: '', // Field doesn't exist in DB schema
       familySize: 0, // Field doesn't exist in DB schema
       dateRegistered: data.created_at || '',
-      status: mapStatusValue(data.status),
+      status:data.status,
       classifications: data.classifications || [],
       emergencyContact: {
         name: '', // Field doesn't exist in DB schema
