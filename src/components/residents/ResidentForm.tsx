@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast"
 import { useQueryClient } from '@tanstack/react-query'
@@ -30,18 +31,34 @@ import { useQueryClient } from '@tanstack/react-query'
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  middleName: z.string().optional(),
+  suffix: z.string().optional(),
   gender: z.enum(["Male", "Female", "Other"]),
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Please enter a valid date in YYYY-MM-DD format"),
   address: z.string().min(5, "Address must be at least 5 characters"),
+  purok: z.string().min(1, "Purok is required"),
+  barangay: z.string().min(1, "Barangay is required"),
+  municipality: z.string().min(1, "Municipality is required"),
+  province: z.string().min(1, "Province is required"),
+  region: z.string().min(1, "Region is required"),
+  country: z.string().min(1, "Country is required"),
   contactNumber: z.string().regex(/^09\d{9}$/, "Phone number must be in the format 09XXXXXXXXX"),
   email: z.string().email("Invalid email format").optional().or(z.literal('')),
   occupation: z.string().optional(),
-  educationLevel: z.string().optional(),
-  familySize: z.number().int().positive().optional(),
+  civilStatus: z.enum(["Single", "Married", "Widowed", "Divorced", "Separated"]),
+  monthlyIncome: z.number().nonnegative().optional(),
+  yearsInBarangay: z.number().int().nonnegative().optional(),
+  nationality: z.string().default("Filipino"),
+  isVoter: z.boolean().default(false),
+  hasPhilhealth: z.boolean().default(false),
+  hasSss: z.boolean().default(false),
+  hasPagibig: z.boolean().default(false),
+  hasTin: z.boolean().default(false),
   emergencyContactName: z.string().min(2, "Name must be at least 2 characters"),
   emergencyContactRelationship: z.string().min(2, "Relationship must be at least 2 characters"),
   emergencyContactNumber: z.string().regex(/^09\d{9}$/, "Phone number must be in the format 09XXXXXXXXX"),
   status: z.enum(["Active", "Inactive", "Deceased", "Transferred"]),
+  remarks: z.string().optional(),
 });
 
 interface ResidentFormProps {
@@ -57,17 +74,34 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
     defaultValues: {
       firstName: "",
       lastName: "",
-      gender: "",
+      middleName: "",
+      suffix: "",
+      gender: "Male", // Set a default value to fix TS error
       birthDate: "",
       address: "",
+      purok: "1",
+      barangay: "San Jose", // Default values to match schema requirements
+      municipality: "Manila",
+      province: "Metro Manila",
+      region: "NCR",
+      country: "Philippines",
       contactNumber: "",
       email: "",
       occupation: "",
-      educationLevel: "",
+      civilStatus: "Single",
+      monthlyIncome: 0,
+      yearsInBarangay: 0,
+      nationality: "Filipino",
+      isVoter: false,
+      hasPhilhealth: false,
+      hasSss: false,
+      hasPagibig: false,
+      hasTin: false,
       emergencyContactName: "",
       emergencyContactRelationship: "",
       emergencyContactNumber: "",
       status: "Active",
+      remarks: "",
     },
   });
 
@@ -79,29 +113,37 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
       const residentData = {
         first_name: values.firstName,
         last_name: values.lastName,
+        middle_name: values.middleName || null,
+        suffix: values.suffix || null,
         gender: values.gender,
         birthdate: values.birthDate,
         address: values.address,
         mobile_number: values.contactNumber,
         email: values.email || null,
         occupation: values.occupation || null,
-        education: values.educationLevel || null,
-        status: values.status,
+        status: values.status === 'Active' ? 'Temporary' : values.status === 'Inactive' ? 'Temporary' : values.status === 'Deceased' ? 'Deceased' : 'Relocated',
+        civil_status: values.civilStatus,
+        purok: values.purok, 
+        barangaydb: values.barangay,
+        municipalitycity: values.municipality,
+        provinze: values.province,
+        regional: values.region,
+        countryph: values.country,
+        nationality: values.nationality,
+        monthly_income: values.monthlyIncome || null,
+        years_in_barangay: values.yearsInBarangay || null,
+        is_voter: values.isVoter,
+        has_philhealth: values.hasPhilhealth,
+        has_sss: values.hasSss,
+        has_pagibig: values.hasPagibig,
+        has_tin: values.hasTin,
+        remarks: values.remarks || null,
         emergency_contact_name: values.emergencyContactName,
         emergency_contact_relationship: values.emergencyContactRelationship,
-        emergency_contact_number: values.emergencyContactNumber,
-        // Set other required fields for the table
-        civil_status: 'Single', // Default value, update as needed
-        purok: '1', // Default value, update as needed
-        barangaydb: 'San Jose', // Default value, update as needed
-        countryph: 'Philippines', // Default value
-        nationality: 'Filipino', // Default value
-        municipalitycity: 'Manila', // Default value, update as needed
-        provinze: 'Metro Manila', // Default value, update as needed
-        regional: 'NCR' // Default value, update as needed
+        emergency_contact_number: values.emergencyContactNumber
       };
       
-      const { error } = await supabase.from('residents').insert([residentData]);
+      const { error } = await supabase.from('residents').insert(residentData);
       
       if (error) throw error;
       
@@ -131,6 +173,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <h3 className="text-lg font-medium mb-4">Personal Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -154,6 +197,34 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
                 <FormLabel>Last Name *</FormLabel>
                 <FormControl>
                   <Input placeholder="Dela Cruz" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="middleName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Middle Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Santos" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="suffix"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Suffix</FormLabel>
+                <FormControl>
+                  <Input placeholder="Jr., Sr., III" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -202,6 +273,155 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
 
           <FormField
             control={form.control}
+            name="civilStatus"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Civil Status *</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Single">Single</SelectItem>
+                    <SelectItem value="Married">Married</SelectItem>
+                    <SelectItem value="Widowed">Widowed</SelectItem>
+                    <SelectItem value="Divorced">Divorced</SelectItem>
+                    <SelectItem value="Separated">Separated</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="nationality"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nationality *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Filipino" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <h3 className="text-lg font-medium mb-4 pt-4 border-t">Contact Information</h3>
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Street Address *</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Complete street address" 
+                  className="resize-none" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <FormField
+            control={form.control}
+            name="purok"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Purok *</FormLabel>
+                <FormControl>
+                  <Input placeholder="1" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="barangay"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Barangay *</FormLabel>
+                <FormControl>
+                  <Input placeholder="San Jose" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="municipality"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Municipality/City *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Manila" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="province"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Province *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Metro Manila" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="region"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Region *</FormLabel>
+                <FormControl>
+                  <Input placeholder="NCR" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Philippines" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
             name="contactNumber"
             render={({ field }) => (
               <FormItem>
@@ -230,7 +450,10 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
               </FormItem>
             )}
           />
+        </div>
 
+        <h3 className="text-lg font-medium mb-4 pt-4 border-t">Other Information</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="occupation"
@@ -247,54 +470,138 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
 
           <FormField
             control={form.control}
-            name="educationLevel"
+            name="monthlyIncome"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Education Level</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select education level" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Elementary">Elementary</SelectItem>
-                    <SelectItem value="High School">High School</SelectItem>
-                    <SelectItem value="Vocational">Vocational</SelectItem>
-                    <SelectItem value="College">College</SelectItem>
-                    <SelectItem value="Post-Graduate">Post-Graduate</SelectItem>
-                    <SelectItem value="None">None</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormLabel>Monthly Income</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="20000" 
+                    onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                    value={field.value === undefined ? '' : field.value}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="yearsInBarangay"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Years in Barangay</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="5" 
+                    onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                    value={field.value === undefined ? '' : field.value}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Complete Address *</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Complete street address" 
-                  className="resize-none" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <h3 className="text-md font-medium mb-2 pt-2">Government IDs</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <FormField
+            control={form.control}
+            name="isVoter"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox 
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Voter</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="hasPhilhealth"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox 
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>PhilHealth</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="hasSss"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox 
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>SSS</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="hasPagibig"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox 
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Pag-IBIG</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="hasTin"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox 
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>TIN</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="border-t pt-4">
-          <h3 className="text-sm font-medium mb-4">Emergency Contact Information</h3>
+          <h3 className="text-lg font-medium mb-4">Emergency Contact Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
               control={form.control}
@@ -339,6 +646,24 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
             />
           </div>
         </div>
+
+        <FormField
+          control={form.control}
+          name="remarks"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Remarks</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Additional notes about this resident" 
+                  className="resize-none" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
