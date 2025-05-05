@@ -154,7 +154,7 @@ export const createResident = async (residentData: any): Promise<{ success: bool
 // Add new function to save (create or update) a resident
 export const saveResident = async (resident: Resident): Promise<{ success: boolean; error: any }> => {
   try {
-    // Map application model back to database fields
+    // Map application model back to database fields, using exact database column names
     const residentData = {
       id: resident.id,
       first_name: resident.firstName,
@@ -163,7 +163,7 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       suffix: resident.suffix || null,
       gender: resident.gender,
       birthdate: resident.birthDate,
-      address: resident.address,
+      address: resident.address || null,
       mobile_number: resident.contactNumber || null,
       email: resident.email || null,
       occupation: resident.occupation || null,
@@ -174,7 +174,7 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       purok: resident.purok,
       barangaydb: resident.barangay,
       municipalitycity: resident.municipality,
-      provinze: resident.province,
+      provinze: resident.province, // Note the "z" in provinze (actual database column name)
       regional: resident.region,
       countryph: resident.country || null,
       nationality: resident.nationality || null,
@@ -187,7 +187,7 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       remarks: resident.remarks || null,
       emname: resident.emergencyContact?.name || null,
       emrelation: resident.emergencyContact?.relationship || null,
-      // Convert string to number or null
+      // Convert string to number or null if needed
       emcontact: resident.emergencyContact?.contactNumber ? 
         parseInt(resident.emergencyContact.contactNumber.replace(/\D/g, '')) || null : null
     };
@@ -206,12 +206,14 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       }
     } else {
       // Create new resident with generated UUID
-      delete residentData.id; // Remove id field for insert
+      // Remove id field for insert since it will be auto-generated
+      const { id, ...dataWithoutId } = residentData;
+      
       const { error } = await supabase
         .from('residents')
         .insert({
-          ...residentData,
-          id: crypto.randomUUID(),
+          ...dataWithoutId,
+          id: crypto.randomUUID(), // Generate a new UUID for the resident
         });
       
       if (error) {
