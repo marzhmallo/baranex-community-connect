@@ -48,7 +48,10 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" 
+        // Remove any event trapping that might be causing issues
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Resident Details</span>
