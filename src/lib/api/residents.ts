@@ -1,3 +1,4 @@
+
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -115,7 +116,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
     console.log("saveResident called with:", residentData);
     
     // Prepare the base data
-    const baseData = {
+    const baseData: any = {
       first_name: residentData.firstName?.trim(),
       middle_name: residentData.middleName?.trim() || null,
       last_name: residentData.lastName?.trim(),
@@ -139,53 +140,70 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       status: residentData.status,
       classifications: residentData.classifications,
       // Address fields with special names
-      barangaydb: residentData.barangay?.trim() || null,
-      municipalitycity: residentData.municipality?.trim() || null,
-      regional: residentData.region?.trim() || null,
-      provinze: residentData.province?.trim() || null,
-      countryph: residentData.country?.trim() || null,
-      // Emergency contact
+      barangaydb: residentData.barangay?.trim() || "Unknown",
+      municipalitycity: residentData.municipality?.trim() || "Unknown",
+      regional: residentData.region?.trim() || "Unknown",
+      provinze: residentData.province?.trim() || "Unknown",
+      countryph: residentData.country?.trim() || "Philippines",
+      // Emergency contact - convert contactNumber to number if provided
       emname: residentData.emergencyContact?.name?.trim() || null,
       emrelation: residentData.emergencyContact?.relationship?.trim() || null,
-      emcontact: residentData.emergencyContact?.contactNumber?.trim() || null,
+      emcontact: residentData.emergencyContact?.contactNumber ? 
+        parseFloat(residentData.emergencyContact.contactNumber.replace(/\D/g, '')) || null : null,
       // Timestamps
-      updated_at: new Date().toISOString(),
-      ...(!residentData.id && { created_at: new Date().toISOString() }) // Only for new records
+      updated_at: new Date().toISOString()
     };
 
-    console.log("Processed resident data for Supabase:", baseData);
+    // For existing residents, use the ID
+    if (residentData.id) {
+      console.log("Updating existing resident:", residentData.id);
+      const { data, error } = await supabase
+        .from('residents')
+        .update(baseData)
+        .eq('id', residentData.id)
+        .select()
+        .single();
 
-    // For new residents, generate UUID
-    if (!residentData.id) {
-      baseData.id = crypto.randomUUID();
+      if (error) {
+        console.error('Supabase error updating resident:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        return { success: false, error: error.message };
+      }
+
+      console.log("Resident updated successfully:", data);
+      return { success: true, data };
+    } 
+    // For new residents, generate UUID and add required fields
+    else {
+      console.log("Creating new resident");
+      // Generate a new UUID for the resident
+      const newId = crypto.randomUUID();
+      baseData.id = newId;
+      baseData.created_at = new Date().toISOString();
+      
+      const { data, error } = await supabase
+        .from('residents')
+        .insert(baseData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error creating resident:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        return { success: false, error: error.message };
+      }
+
+      console.log("Resident created successfully:", data);
+      return { success: true, data };
     }
-
-    // Conditional insert/update
-    const { data, error } = residentData.id
-      ? await supabase
-          .from('residents')
-          .update(baseData)
-          .eq('id', residentData.id)
-          .select()
-          .single()
-      : await supabase
-          .from('residents')
-          .insert(baseData)
-          .select()
-          .single();
-
-    if (error) {
-      console.error('Supabase error:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
-      return { success: false, error: error.message };
-    }
-
-    console.log("Resident saved successfully:", data);
-    return { success: true, data };
   } catch (error) {
     console.error('Unexpected error:', error);
     return { success: false, error: 'An unexpected error occurred' };
