@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -22,6 +22,9 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast"
+import { useQueryClient } from '@tanstack/react-query'
 
 // Form schema using zod
 const formSchema = z.object({
@@ -46,6 +49,9 @@ interface ResidentFormProps {
 }
 
 const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -65,9 +71,61 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
-    onSubmit();
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Map form values to match Supabase table structure
+      const residentData = {
+        first_name: values.firstName,
+        last_name: values.lastName,
+        gender: values.gender,
+        birthdate: values.birthDate,
+        address: values.address,
+        mobile_number: values.contactNumber,
+        email: values.email || null,
+        occupation: values.occupation || null,
+        education: values.educationLevel || null,
+        status: values.status,
+        emergency_contact_name: values.emergencyContactName,
+        emergency_contact_relationship: values.emergencyContactRelationship,
+        emergency_contact_number: values.emergencyContactNumber,
+        // Set other required fields for the table
+        civil_status: 'Single', // Default value, update as needed
+        purok: '1', // Default value, update as needed
+        barangaydb: 'San Jose', // Default value, update as needed
+        countryph: 'Philippines', // Default value
+        nationality: 'Filipino', // Default value
+        municipalitycity: 'Manila', // Default value, update as needed
+        provinze: 'Metro Manila', // Default value, update as needed
+        regional: 'NCR' // Default value, update as needed
+      };
+      
+      const { error } = await supabase.from('residents').insert([residentData]);
+      
+      if (error) throw error;
+      
+      // Show success toast
+      toast({
+        title: "Resident added successfully",
+        description: `${values.firstName} ${values.lastName} has been added to the database.`,
+      });
+      
+      // Invalidate residents query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      
+      // Close the dialog
+      onSubmit();
+    } catch (error: any) {
+      console.error('Error adding resident:', error);
+      toast({
+        title: "Error adding resident",
+        description: error.message || "There was a problem adding the resident.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -310,10 +368,12 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
         />
 
         <div className="flex justify-end space-x-4">
-          <Button variant="outline" type="button" onClick={onSubmit}>
+          <Button variant="outline" type="button" onClick={onSubmit} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit">Save Resident</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Resident"}
+          </Button>
         </div>
       </form>
     </Form>

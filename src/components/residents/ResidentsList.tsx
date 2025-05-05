@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -42,12 +42,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import { Resident } from '@/lib/types';
-import { residents } from '@/lib/data';
+import { fetchResidents } from '@/lib/api/residents';
+import { useQuery } from '@tanstack/react-query';
 import ResidentForm from './ResidentForm';
 import ResidentStatusCard from './ResidentStatusCard';
 import ResidentDetails from './ResidentDetails';
+import { toast } from '@/hooks/use-toast';
 
 const ResidentsList = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,7 +58,24 @@ const ResidentsList = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  // Fetch residents data from Supabase
+  const { data: residents = [], isLoading, error } = useQuery({
+    queryKey: ['residents'],
+    queryFn: fetchResidents,
+  });
   
+  // Show error toast if there's an error fetching data
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error fetching residents",
+        description: "There was a problem loading the resident data.",
+        variant: "destructive",
+      });
+    }
+  }, [error]);
+
   // Calculate counts by status
   const activeCount = residents.filter(r => r.status === 'Active').length;
   const inactiveCount = residents.filter(r => r.status === 'Inactive').length;
@@ -71,7 +89,7 @@ const ResidentsList = () => {
       resident.classifications?.forEach(c => classifications.add(c));
     });
     return Array.from(classifications);
-  }, []);
+  }, [residents]);
   
   const filteredResidents = useMemo(() => {
     return residents.filter(resident => {
@@ -100,7 +118,7 @@ const ResidentsList = () => {
       
       return matchesSearch && matchesStatus && matchesTab && matchesClassifications;
     });
-  }, [searchQuery, selectedStatus, activeTab, selectedClassifications]);
+  }, [searchQuery, selectedStatus, activeTab, selectedClassifications, residents]);
   
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -173,7 +191,7 @@ const ResidentsList = () => {
         />
       </div>
       
-      <Card>
+      <div className="bg-white rounded-lg shadow">
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b">
             <TabsList className="h-10">
@@ -300,28 +318,31 @@ const ResidentsList = () => {
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium">{filteredResidents.length}</span> of{" "}
-              <span className="font-medium">{residents.length}</span> residents
+              {isLoading ? (
+                "Loading residents..."
+              ) : (
+                <>
+                  Showing <span className="font-medium">{filteredResidents.length}</span> of{" "}
+                  <span className="font-medium">{residents.length}</span> residents
+                </>
+              )}
             </p>
           </div>
           
-          <TabsContent value="all" className="m-0">
-            {renderResidentsTable(filteredResidents, handleViewDetails)}
-          </TabsContent>
-          <TabsContent value="active" className="m-0">
-            {renderResidentsTable(filteredResidents, handleViewDetails)}
-          </TabsContent>
-          <TabsContent value="inactive" className="m-0">
-            {renderResidentsTable(filteredResidents, handleViewDetails)}
-          </TabsContent>
-          <TabsContent value="deceased" className="m-0">
-            {renderResidentsTable(filteredResidents, handleViewDetails)}
-          </TabsContent>
-          <TabsContent value="transferred" className="m-0">
-            {renderResidentsTable(filteredResidents, handleViewDetails)}
-          </TabsContent>
+          {/* Tabs Content */}
+          {['all', 'active', 'inactive', 'deceased', 'transferred'].map(tab => (
+            <TabsContent key={tab} value={tab} className="m-0">
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                renderResidentsTable(filteredResidents, handleViewDetails)
+              )}
+            </TabsContent>
+          ))}
         </Tabs>
-      </Card>
+      </div>
       
       {/* Pagination */}
       <div className="flex justify-between items-center text-sm text-gray-500">
