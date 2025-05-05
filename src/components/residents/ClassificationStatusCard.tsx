@@ -10,6 +10,7 @@ interface ClassificationStatusCardProps {
   iconBgColor: string;
   iconColor: string;
   onClick: () => void;
+  isActive?: boolean;
 }
 
 const ClassificationStatusCard: React.FC<ClassificationStatusCardProps> = ({
@@ -20,10 +21,13 @@ const ClassificationStatusCard: React.FC<ClassificationStatusCardProps> = ({
   iconBgColor,
   iconColor,
   onClick,
+  isActive = false,
 }) => {
   return (
     <div
-      className={`${bgColor} ${textColor} rounded-lg shadow-sm p-4 cursor-pointer transition-all hover:shadow-md`}
+      className={`${bgColor} ${textColor} rounded-lg shadow-sm p-4 cursor-pointer transition-all hover:shadow-md ${
+        isActive ? 'ring-2 ring-primary ring-offset-2' : ''
+      }`}
       onClick={onClick}
     >
       <div className="flex items-center">

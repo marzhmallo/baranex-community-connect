@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -88,6 +87,10 @@ const ResidentsList = () => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
+  // Active sorting cards state
+  const [activeStatusCard, setActiveStatusCard] = useState<string | null>(null);
+  const [activeClassificationCard, setActiveClassificationCard] = useState<string | null>(null);
+  
   // Fetch residents data from Supabase
   const { data: residents = [], isLoading, error } = useQuery({
     queryKey: ['residents'],
@@ -111,10 +114,11 @@ const ResidentsList = () => {
   const deceasedCount = residents.filter(r => r.status === 'Deceased').length;
   const relocatedCount = residents.filter(r => r.status === 'Relocated').length;
 
-  // Calculate counts by classification
+  // Calculate counts by classification - fixed to correctly check classifications
   const getClassificationCount = (classification: string) => {
     return residents.filter(resident => 
-      resident.classifications?.includes(classification)
+      resident.classifications && Array.isArray(resident.classifications) && 
+      resident.classifications.includes(classification)
     ).length;
   };
 
@@ -128,7 +132,9 @@ const ResidentsList = () => {
   const allClassifications = useMemo(() => {
     const classifications = new Set<string>();
     residents.forEach(resident => {
-      resident.classifications?.forEach(c => classifications.add(c));
+      if (resident.classifications && Array.isArray(resident.classifications)) {
+        resident.classifications.forEach(c => classifications.add(c));
+      }
     });
     return Array.from(classifications);
   }, [residents]);
@@ -169,10 +175,12 @@ const ResidentsList = () => {
       const matchesSearch = 
         searchQuery === '' || 
         `${resident.firstName} ${resident.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        resident.address.toLowerCase().includes(searchQuery.toLowerCase());
+        (resident.address && resident.address.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      // Status filter
-      const matchesStatus = selectedStatus === null || resident.status === selectedStatus;
+      // Status filter - now also considers activeStatusCard
+      const matchesStatus = 
+        (selectedStatus === null || resident.status === selectedStatus) && 
+        (activeStatusCard === null || resident.status === activeStatusCard);
       
       // Tab filter - Only status tabs now
       const matchesTab = 
@@ -182,13 +190,23 @@ const ResidentsList = () => {
         (activeTab === 'deceased' && resident.status === 'Deceased') ||
         (activeTab === 'relocated' && resident.status === 'Relocated');
       
-      // Classifications filter
-      const matchesClassifications = 
-        selectedClassifications.length === 0 || 
-        (resident.classifications && 
-          selectedClassifications.every(c => resident.classifications?.includes(c)));
+      // Classifications filter - now also considers activeClassificationCard
+      const hasClassificationsArray = resident.classifications && Array.isArray(resident.classifications);
       
-      return matchesSearch && matchesStatus && matchesTab && matchesClassifications;
+      let matchesClassifications = selectedClassifications.length === 0;
+      if (!matchesClassifications && hasClassificationsArray) {
+        matchesClassifications = selectedClassifications.every(c => 
+          resident.classifications!.includes(c)
+        );
+      }
+
+      // Additional check for activeClassificationCard
+      let matchesActiveClassification = activeClassificationCard === null;
+      if (!matchesActiveClassification && hasClassificationsArray && activeClassificationCard) {
+        matchesActiveClassification = resident.classifications!.includes(activeClassificationCard);
+      }
+      
+      return matchesSearch && matchesStatus && matchesTab && matchesClassifications && matchesActiveClassification;
     });
     
     // Apply sorting
@@ -198,6 +216,7 @@ const ResidentsList = () => {
       const dateB = new Date(b.birthDate);
       const today = new Date();
       
+      // Age calculation code is kept here
       let ageA = today.getFullYear() - dateA.getFullYear();
       const mA = today.getMonth() - dateA.getMonth();
       if (mA < 0 || (mA === 0 && today.getDate() < dateA.getDate())) {
@@ -223,9 +242,22 @@ const ResidentsList = () => {
         case 'status':
           return (a.status.localeCompare(b.status)) * directionModifier;
         case 'age':
+          // Age calculation code is kept here
           return (ageA - ageB) * directionModifier;
         case 'ageGroup':
-          // Order by age group: Child, Teen, Young Adult, Adult, Elderly
+          // Calculate ages first
+          let ageA = today.getFullYear() - dateA.getFullYear();
+          const mA = today.getMonth() - dateA.getMonth();
+          if (mA < 0 || (mA === 0 && today.getDate() < dateA.getDate())) {
+            ageA--;
+          }
+          
+          let ageB = today.getFullYear() - dateB.getFullYear();
+          const mB = today.getMonth() - dateB.getMonth();
+          if (mB < 0 || (mB === 0 && today.getDate() < dateB.getDate())) {
+            ageB--;
+          }
+          
           const ageGroupOrder = { 'Child': 1, 'Teen': 2, 'Young Adult': 3, 'Adult': 4, 'Elderly': 5 };
           return (ageGroupOrder[ageGroupA] - ageGroupOrder[ageGroupB]) * directionModifier;
         case 'purok':
@@ -239,7 +271,17 @@ const ResidentsList = () => {
           return 0;
       }
     });
-  }, [searchQuery, selectedStatus, activeTab, selectedClassifications, residents, sortField, sortDirection]);
+  }, [
+    searchQuery, 
+    selectedStatus, 
+    activeTab, 
+    selectedClassifications, 
+    residents, 
+    sortField, 
+    sortDirection, 
+    activeStatusCard, 
+    activeClassificationCard
+  ]);
 
   // Calculate pagination
   const pageCount = Math.ceil(filteredResidents.length / pageSize);
@@ -267,14 +309,31 @@ const ResidentsList = () => {
   };
 
   const handleStatusCardClick = (status: string) => {
+    // If clicking on the already active card, toggle it off
+    if (activeStatusCard === status) {
+      setActiveStatusCard(null);
+    } else {
+      setActiveStatusCard(status);
+      // Reset any active classification card when selecting a status
+      setActiveClassificationCard(null);
+    }
+    
     setActiveTab(status.toLowerCase());
-    setSelectedStatus(status);
     setCurrentPage(1); // Reset to first page on status card click
   };
 
   const handleClassificationCardClick = (classification: string) => {
-    // Instead of changing tab, just set the classification filter
-    setSelectedClassifications([classification]);
+    // If clicking on the already active card, toggle it off
+    if (activeClassificationCard === classification) {
+      setActiveClassificationCard(null);
+      setSelectedClassifications([]);
+    } else {
+      setActiveClassificationCard(classification);
+      setSelectedClassifications([classification]);
+      // Reset any active status card when selecting a classification
+      setActiveStatusCard(null);
+    }
+    
     setCurrentPage(1); // Reset to first page on classification card click
   };
 
@@ -304,6 +363,7 @@ const ResidentsList = () => {
           iconBgColor="bg-green-200 dark:bg-green-800"
           iconColor="text-green-700 dark:text-green-300"
           onClick={() => handleStatusCardClick('Permanent')}
+          isActive={activeStatusCard === 'Permanent'}
         />
         
         <ResidentStatusCard
@@ -314,6 +374,7 @@ const ResidentsList = () => {
           iconBgColor="bg-blue-200 dark:bg-blue-800"
           iconColor="text-blue-700 dark:text-blue-300"
           onClick={() => handleStatusCardClick('Temporary')}
+          isActive={activeStatusCard === 'Temporary'}
         />
         
         <ResidentStatusCard
@@ -324,6 +385,7 @@ const ResidentsList = () => {
           iconBgColor="bg-red-200 dark:bg-red-800"
           iconColor="text-red-700 dark:text-red-300"
           onClick={() => handleStatusCardClick('Deceased')}
+          isActive={activeStatusCard === 'Deceased'}
         />
         
         <ResidentStatusCard
@@ -334,6 +396,7 @@ const ResidentsList = () => {
           iconBgColor="bg-purple-200 dark:bg-purple-800"
           iconColor="text-purple-700 dark:text-purple-300"
           onClick={() => handleStatusCardClick('Relocated')}
+          isActive={activeStatusCard === 'Relocated'}
         />
       </div>
       
@@ -347,6 +410,7 @@ const ResidentsList = () => {
           iconBgColor="bg-amber-200 dark:bg-amber-800"
           iconColor="text-amber-700 dark:text-amber-300"
           onClick={() => handleClassificationCardClick('indigent')}
+          isActive={activeClassificationCard === 'indigent'}
         />
         
         <ClassificationStatusCard
@@ -357,6 +421,7 @@ const ResidentsList = () => {
           iconBgColor="bg-cyan-200 dark:bg-cyan-800"
           iconColor="text-cyan-700 dark:text-cyan-300"
           onClick={() => handleClassificationCardClick('student')}
+          isActive={activeClassificationCard === 'student'}
         />
         
         <ClassificationStatusCard
@@ -367,6 +432,7 @@ const ResidentsList = () => {
           iconBgColor="bg-indigo-200 dark:bg-indigo-800"
           iconColor="text-indigo-700 dark:text-indigo-300"
           onClick={() => handleClassificationCardClick('ofw')}
+          isActive={activeClassificationCard === 'ofw'}
         />
         
         <ClassificationStatusCard
@@ -377,6 +443,7 @@ const ResidentsList = () => {
           iconBgColor="bg-pink-200 dark:bg-pink-800"
           iconColor="text-pink-700 dark:text-pink-300"
           onClick={() => handleClassificationCardClick('pwd')}
+          isActive={activeClassificationCard === 'pwd'}
         />
         
         <ClassificationStatusCard
@@ -387,6 +454,7 @@ const ResidentsList = () => {
           iconBgColor="bg-orange-200 dark:bg-orange-800"
           iconColor="text-orange-700 dark:text-orange-300"
           onClick={() => handleClassificationCardClick('missing')}
+          isActive={activeClassificationCard === 'missing'}
         />
       </div>
       
