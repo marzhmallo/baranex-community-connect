@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -109,8 +108,12 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
     setIsSubmitting(true);
     
     try {
+      // Generate a UUID for the new resident
+      const uuid = crypto.randomUUID();
+      
       // Map form values to match Supabase table structure
       const residentData = {
+        id: uuid, // Add the id field to fix the TypeScript error
         first_name: values.firstName,
         last_name: values.lastName,
         middle_name: values.middleName || null,
@@ -138,9 +141,10 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
         has_pagibig: values.hasPagibig,
         has_tin: values.hasTin,
         remarks: values.remarks || null,
-        emergency_contact_name: values.emergencyContactName,
-        emergency_contact_relationship: values.emergencyContactRelationship,
-        emergency_contact_number: values.emergencyContactNumber
+        // These fields are in types.ts but not in the form and not required by Supabase
+        // emergency_contact_name: values.emergencyContactName,
+        // emergency_contact_relationship: values.emergencyContactRelationship,
+        // emergency_contact_number: values.emergencyContactNumber
       };
       
       const { error } = await supabase.from('residents').insert(residentData);
