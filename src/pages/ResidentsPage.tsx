@@ -2,6 +2,7 @@
 import React from 'react';
 import ResidentsList from '@/components/residents/ResidentsList';
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ResidentsPage = () => {
   return (
@@ -13,7 +14,9 @@ const ResidentsPage = () => {
       
       <Card className="shadow-lg border-t-4 border-t-baranex-primary bg-card text-card-foreground">
         <CardContent className="p-0">
-          <ResidentsList />
+          <ScrollArea className="h-[calc(100vh-200px)]">
+            <ResidentsList />
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>
