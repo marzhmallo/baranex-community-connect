@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -11,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { createResident, saveResident } from "@/lib/api/residents";
+import { saveResident } from "@/lib/api/residents";
 import { Resident } from "@/lib/types";
 
 // Available resident classifications
@@ -81,7 +82,55 @@ const ResidentForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   
-  const defaultValues = resident || {
+  // Map resident status from database to form status
+  const mapResidentStatus = (databaseStatus: string): string => {
+    switch (databaseStatus) {
+      case 'Permanent': return 'Active';
+      case 'Temporary': return 'Inactive';
+      case 'Deceased': return 'Deceased';
+      case 'Relocated': return 'Transferred';
+      default: return 'Active'; // Default fallback
+    }
+  };
+  
+  // Transform resident data for the form
+  const transformResidentForForm = (resident: Resident) => {
+    return {
+      firstName: resident.firstName,
+      lastName: resident.lastName,
+      middleName: resident.middleName || "",
+      suffix: resident.suffix || "",
+      gender: resident.gender,
+      birthDate: resident.birthDate,
+      address: resident.address,
+      purok: resident.purok || "",
+      barangay: resident.barangay || "",
+      municipality: resident.municipality || "",
+      province: resident.province || "",
+      region: resident.region || "",
+      country: resident.country || "",
+      contactNumber: resident.contactNumber || "",
+      email: resident.email || "",
+      occupation: resident.occupation || "",
+      civilStatus: resident.civilStatus,
+      monthlyIncome: resident.monthlyIncome || 0,
+      yearsInBarangay: resident.yearsInBarangay || 0,
+      nationality: resident.nationality || "",
+      isVoter: resident.isVoter || false,
+      hasPhilhealth: resident.hasPhilhealth || false,
+      hasSss: resident.hasSss || false,
+      hasPagibig: resident.hasPagibig || false,
+      hasTin: resident.hasTin || false,
+      classifications: resident.classifications || [],
+      emergencyContactName: resident.emergencyContact?.name || "",
+      emergencyContactRelationship: resident.emergencyContact?.relationship || "",
+      emergencyContactNumber: resident.emergencyContact?.contactNumber || "",
+      status: mapResidentStatus(resident.status),
+      remarks: resident.remarks || ""
+    };
+  };
+  
+  const defaultValues = resident ? transformResidentForForm(resident) : {
     firstName: "",
     lastName: "",
     middleName: "",
@@ -163,7 +212,7 @@ const ResidentForm = ({
         }
       };
       
-      // Use the new saveResident function
+      // Use the saveResident function
       const { success, error } = await saveResident(residentToSave);
       
       if (!success) throw error;

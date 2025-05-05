@@ -15,6 +15,17 @@ const mapDatabaseStatus = (status: string): ResidentStatus => {
   }
 };
 
+// Function to map application status to database status
+const mapApplicationStatus = (status: string): string => {
+  switch (status) {
+    case 'Active': return 'Permanent';
+    case 'Inactive': return 'Temporary';
+    case 'Deceased': return 'Deceased';
+    case 'Transferred': return 'Relocated';
+    default: return status; // If it's already using db naming
+  }
+};
+
 // Function to fetch all residents
 export const getResidents = async (): Promise<Resident[]> => {
   const { data, error } = await supabase
@@ -156,7 +167,7 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       mobile_number: resident.contactNumber || null,
       email: resident.email || null,
       occupation: resident.occupation || null,
-      status: resident.status,
+      status: mapApplicationStatus(resident.status),
       civil_status: resident.civilStatus,
       monthly_income: resident.monthlyIncome || null,
       years_in_barangay: resident.yearsInBarangay || null,
@@ -176,8 +187,9 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       remarks: resident.remarks || null,
       emname: resident.emergencyContact?.name || null,
       emrelation: resident.emergencyContact?.relationship || null,
+      // Convert string to number or null
       emcontact: resident.emergencyContact?.contactNumber ? 
-        resident.emergencyContact.contactNumber.replace(/\D/g, '') : null
+        parseInt(resident.emergencyContact.contactNumber.replace(/\D/g, '')) || null : null
     };
     
     // Check if this is an update or create operation
@@ -194,6 +206,7 @@ export const saveResident = async (resident: Resident): Promise<{ success: boole
       }
     } else {
       // Create new resident with generated UUID
+      delete residentData.id; // Remove id field for insert
       const { error } = await supabase
         .from('residents')
         .insert({
