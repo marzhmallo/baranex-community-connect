@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,14 +16,14 @@ const Auth = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Replace this test key with your real reCAPTCHA site key
-  const recaptchaSiteKey = "6Le5Ry4rAAAAAGBbjeqCdSCmx4bHnNcbKjTXwQJX";
-   
-  // Replace this test key with your real reCAPTCHA site key
-  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6Le5Ry4rAAAAAGBbjeqCdSCmx4bHnNcbKjTXwQJX";
+  // Use environment variable for the reCAPTCHA site key
+  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "";
 
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
+    if (token) {
+      console.log("Captcha verified successfully");
+    }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
