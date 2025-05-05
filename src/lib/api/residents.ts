@@ -27,15 +27,15 @@ export async function fetchResidents() {
       contactNumber: item.mobile_number || '',
       email: item.email || '',
       occupation: item.occupation || '',
-      educationLevel: item.education_level || '', // Updated from education to education_level
-      familySize: item.household_size || 0, // Updated from family_size to household_size
+      educationLevel: '', // Field doesn't exist in DB schema
+      familySize: 0, // Field doesn't exist in DB schema
       dateRegistered: item.created_at || '',
       status: mapStatusValue(item.status),
       classifications: item.classifications || [],
       emergencyContact: {
-        name: item.emergency_name || '', // Updated from emergency_contact_name
-        relationship: item.emergency_relationship || '', // Updated from emergency_contact_relationship
-        contactNumber: item.emergency_number || '' // Updated from emergency_contact_number
+        name: '', // Field doesn't exist in DB schema
+        relationship: '', // Field doesn't exist in DB schema
+        contactNumber: '' // Field doesn't exist in DB schema
       }
     }));
 
@@ -92,15 +92,15 @@ export async function fetchResidentById(id: string) {
       contactNumber: data.mobile_number || '',
       email: data.email || '',
       occupation: data.occupation || '',
-      educationLevel: data.education_level || '', // Updated from education to education_level
-      familySize: data.household_size || 0, // Updated from family_size to household_size
+      educationLevel: '', // Field doesn't exist in DB schema
+      familySize: 0, // Field doesn't exist in DB schema
       dateRegistered: data.created_at || '',
       status: mapStatusValue(data.status),
       classifications: data.classifications || [],
       emergencyContact: {
-        name: data.emergency_name || '', // Updated from emergency_contact_name
-        relationship: data.emergency_relationship || '', // Updated from emergency_contact_relationship
-        contactNumber: data.emergency_number || '' // Updated from emergency_contact_number
+        name: '', // Field doesn't exist in DB schema
+        relationship: '', // Field doesn't exist in DB schema
+        contactNumber: '' // Field doesn't exist in DB schema
       }
     };
 

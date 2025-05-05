@@ -24,6 +24,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import {
   Table,
@@ -49,6 +51,16 @@ import ResidentForm from './ResidentForm';
 import ResidentStatusCard from './ResidentStatusCard';
 import ResidentDetails from './ResidentDetails';
 import { toast } from '@/hooks/use-toast';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ResidentsList = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,6 +70,8 @@ const ResidentsList = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Fetch residents data from Supabase
   const { data: residents = [], isLoading, error } = useQuery({
@@ -119,13 +133,21 @@ const ResidentsList = () => {
       return matchesSearch && matchesStatus && matchesTab && matchesClassifications;
     });
   }, [searchQuery, selectedStatus, activeTab, selectedClassifications, residents]);
+
+  // Calculate pagination
+  const pageCount = Math.ceil(filteredResidents.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredResidents.length);
+  const paginatedResidents = filteredResidents.slice(startIndex, endIndex);
   
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
   };
   
   const handleStatusFilter = (status: string | null) => {
     setSelectedStatus(status);
+    setCurrentPage(1); // Reset to first page on filter change
   };
 
   const handleClassificationToggle = (classification: string) => {
@@ -134,11 +156,13 @@ const ResidentsList = () => {
     } else {
       setSelectedClassifications(prev => [...prev, classification]);
     }
+    setCurrentPage(1); // Reset to first page on filter change
   };
 
   const handleStatusCardClick = (status: string) => {
     setActiveTab(status.toLowerCase());
     setSelectedStatus(status);
+    setCurrentPage(1); // Reset to first page on status card click
   };
 
   const handleViewDetails = (resident: Resident) => {
@@ -146,10 +170,19 @@ const ResidentsList = () => {
     setIsDetailsOpen(true);
   };
 
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(Number(value));
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-6">
       {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6">
         <ResidentStatusCard
           label="Active Residents"
           count={activeCount}
@@ -191,15 +224,15 @@ const ResidentsList = () => {
         />
       </div>
       
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-lg shadow-md">
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b">
-            <TabsList className="h-10">
-              <TabsTrigger value="all" className="rounded-md">All Residents</TabsTrigger>
-              <TabsTrigger value="active" className="rounded-md">Active</TabsTrigger>
-              <TabsTrigger value="inactive" className="rounded-md">Inactive</TabsTrigger>
-              <TabsTrigger value="deceased" className="rounded-md">Deceased</TabsTrigger>
-              <TabsTrigger value="transferred" className="rounded-md">Transferred</TabsTrigger>
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b bg-slate-50">
+            <TabsList className="h-10 bg-slate-100/80">
+              <TabsTrigger value="all" className="rounded-md data-[state=active]:bg-white">All Residents</TabsTrigger>
+              <TabsTrigger value="active" className="rounded-md data-[state=active]:bg-green-50 data-[state=active]:text-green-700">Active</TabsTrigger>
+              <TabsTrigger value="inactive" className="rounded-md data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Inactive</TabsTrigger>
+              <TabsTrigger value="deceased" className="rounded-md data-[state=active]:bg-red-50 data-[state=active]:text-red-700">Deceased</TabsTrigger>
+              <TabsTrigger value="transferred" className="rounded-md data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">Transferred</TabsTrigger>
             </TabsList>
             
             <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
@@ -284,7 +317,7 @@ const ResidentsList = () => {
               
               <Dialog open={isAddResidentOpen} onOpenChange={setIsAddResidentOpen}>
                 <DialogTrigger asChild>
-                  <Button className="flex items-center">
+                  <Button className="bg-baranex-primary hover:bg-baranex-primary/90 flex items-center">
                     <UserPlus className="h-4 w-4 mr-2" />
                     Add Resident
                   </Button>
@@ -302,7 +335,7 @@ const ResidentsList = () => {
             </div>
           </div>
           
-          <div className="flex justify-between items-center p-4">
+          <div className="flex justify-between items-center p-4 bg-white border-b">
             <div className="flex space-x-2">
               <Button variant="outline" size="sm" className="flex items-center">
                 <Printer className="h-4 w-4 mr-2" />
@@ -317,16 +350,32 @@ const ResidentsList = () => {
                 Report
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {isLoading ? (
-                "Loading residents..."
-              ) : (
-                <>
-                  Showing <span className="font-medium">{filteredResidents.length}</span> of{" "}
-                  <span className="font-medium">{residents.length}</span> residents
-                </>
-              )}
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-muted-foreground">
+                {isLoading ? (
+                  "Loading residents..."
+                ) : (
+                  <>
+                    Showing <span className="font-medium">{startIndex + 1}</span>-<span className="font-medium">{endIndex}</span> of{" "}
+                    <span className="font-medium">{filteredResidents.length}</span> residents
+                  </>
+                )}
+              </p>
+              
+              <div className="flex items-center">
+                <span className="text-sm text-muted-foreground mr-2">Show:</span>
+                <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+                  <SelectTrigger className="w-[70px]">
+                    <SelectValue placeholder={pageSize.toString()} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           
           {/* Tabs Content */}
@@ -334,24 +383,74 @@ const ResidentsList = () => {
             <TabsContent key={tab} value={tab} className="m-0">
               {isLoading ? (
                 <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-baranex-primary"></div>
                 </div>
               ) : (
-                renderResidentsTable(filteredResidents, handleViewDetails)
+                renderResidentsTable(paginatedResidents, handleViewDetails)
               )}
             </TabsContent>
           ))}
+          
+          {/* Pagination */}
+          {filteredResidents.length > 0 && (
+            <div className="flex justify-between items-center p-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to {endIndex} of {filteredResidents.length} residents
+              </div>
+              
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: pageCount }).map((_, i) => {
+                    const pageNum = i + 1;
+                    
+                    // Show first page, last page, and pages around current page
+                    if (
+                      pageNum === 1 || 
+                      pageNum === pageCount || 
+                      (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            isActive={pageNum === currentPage}
+                            onClick={() => handlePageChange(pageNum)}
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    
+                    // Show ellipsis for gaps
+                    if (pageNum === 2 || pageNum === pageCount - 1) {
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    
+                    return null;
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => handlePageChange(Math.min(pageCount, currentPage + 1))}
+                      className={currentPage === pageCount ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </Tabs>
-      </div>
-      
-      {/* Pagination */}
-      <div className="flex justify-between items-center text-sm text-gray-500">
-        <div>Total: {residents.length} residents</div>
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" size="sm" disabled>Previous</Button>
-          <span>Page 1 of 1</span>
-          <Button variant="outline" size="sm" disabled>Next</Button>
-        </div>
       </div>
 
       {/* Resident Details Dialog */}
@@ -367,16 +466,22 @@ const ResidentsList = () => {
 const renderResidentsTable = (residents: Resident[], onViewDetails: (resident: Resident) => void) => {
   if (residents.length === 0) {
     return (
-      <div className="py-8 text-center text-gray-500">
-        No residents found matching your search criteria.
+      <div className="py-12 text-center text-gray-500 bg-gray-50/30">
+        <div className="flex flex-col items-center justify-center">
+          <svg className="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-lg font-medium">No residents found</p>
+          <p className="text-sm mt-1">Try adjusting your search or filter criteria.</p>
+        </div>
       </div>
     );
   }
   
   return (
-    <div className="rounded-md border">
+    <div className="overflow-x-auto">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-slate-50">
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Gender</TableHead>
@@ -419,7 +524,7 @@ const ResidentRow = ({
   }
   
   return (
-    <TableRow>
+    <TableRow className="hover:bg-slate-50/70">
       <TableCell className="font-medium">
         {resident.firstName} {resident.lastName}
       </TableCell>
@@ -430,25 +535,26 @@ const ResidentRow = ({
       </TableCell>
       <TableCell>{resident.contactNumber}</TableCell>
       <TableCell>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+        <Badge className={`px-2 py-1 rounded-full text-xs font-medium ${
           resident.status === 'Active' 
-            ? 'bg-green-100 text-green-800' 
+            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
             : resident.status === 'Inactive'
-            ? 'bg-gray-100 text-gray-800'
+            ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
             : resident.status === 'Deceased'
-            ? 'bg-red-100 text-red-800'
-            : 'bg-blue-100 text-blue-800'
+            ? 'bg-red-100 text-red-800 hover:bg-red-200'
+            : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
         }`}>
           {resident.status}
-        </span>
+        </Badge>
       </TableCell>
       <TableCell>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1 max-w-[150px]">
           {resident.classifications?.map((classification, index) => (
             <Badge 
               key={index} 
               variant="outline" 
-              className="bg-blue-50 text-xs text-blue-800 border-blue-100"
+              className="bg-blue-50 text-xs text-blue-800 border-blue-100 truncate max-w-full"
+              title={classification}
             >
               {classification}
             </Badge>
@@ -458,21 +564,21 @@ const ResidentRow = ({
       <TableCell>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="h-8 w-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem className="flex items-center" onClick={() => onViewDetails(resident)}>
+            <DropdownMenuItem className="flex items-center cursor-pointer" onClick={() => onViewDetails(resident)}>
               <Eye className="h-4 w-4 mr-2" />
               View Details
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center">
+            <DropdownMenuItem className="flex items-center cursor-pointer">
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center text-red-600">
+            <DropdownMenuItem className="flex items-center text-red-600 cursor-pointer focus:text-red-700">
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </DropdownMenuItem>
