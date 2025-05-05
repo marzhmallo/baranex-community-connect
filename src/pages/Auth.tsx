@@ -17,7 +17,7 @@ const Auth = () => {
   const navigate = useNavigate();
   
   // Replace this test key with your real reCAPTCHA site key
-  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "a002bff6-3d98-4db2-8406-166e106c1958";
+  const recaptchaSiteKey = "a002bff6-3d98-4db2-8406-166e106c1958";
 
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
