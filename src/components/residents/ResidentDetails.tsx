@@ -14,6 +14,8 @@ import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ResidentForm from "./ResidentForm";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ZoomIn } from "lucide-react";
 
 type ResidentDetailsProps = {
   resident: Resident | null;
@@ -126,15 +128,37 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex flex-col md:flex-row gap-6 items-start">
-                      {/* Avatar/Photo using the Avatar component */}
-                      <Avatar className="w-24 h-24">
-                        {resident.photoUrl ? (
-                          <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
-                        ) : null}
-                        <AvatarFallback className="text-2xl">
-                          {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
+                      {/* Avatar/Photo using the Avatar component with click to enlarge */}
+                      {resident.photoUrl ? (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <div className="relative cursor-pointer group">
+                              <Avatar className="w-24 h-24">
+                                <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
+                                <AvatarFallback className="text-2xl">
+                                  {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <ZoomIn className="text-white h-8 w-8" />
+                              </div>
+                            </div>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-2 border-none bg-transparent shadow-none">
+                            <img 
+                              src={resident.photoUrl} 
+                              alt={`${resident.firstName} ${resident.lastName}`} 
+                              className="max-h-[70vh] max-w-[80vw] rounded-lg object-contain shadow-xl" 
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      ) : (
+                        <Avatar className="w-24 h-24">
+                          <AvatarFallback className="text-2xl">
+                            {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                       
                       <div className="space-y-2 flex-1">
                         <h3 className="text-xl font-semibold">
