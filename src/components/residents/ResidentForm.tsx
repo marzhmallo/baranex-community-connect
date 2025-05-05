@@ -70,7 +70,7 @@ const formSchema = z.object({
   emergencyContactName: z.string().optional().or(z.literal('')),
   emergencyContactRelationship: z.string().optional().or(z.literal('')),
   emergencyContactNumber: z.string().optional().or(z.literal('')),
-  status: z.enum(["Permanent", "Temporary", "Deceased", "Transferred"]),
+  status: z.enum(["Active", "Inactive", "Deceased", "Transferred"]),
   diedOn: z.date().optional().nullable(),
   remarks: z.string().optional()
 });
@@ -84,23 +84,23 @@ interface ResidentFormProps {
 }
 
 // Map database status to form status
-const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
+const mapDBStatusToForm = (dbStatus: string): "Active" | "Inactive" | "Deceased" | "Transferred" => {
   switch (dbStatus) {
-    case 'Permanent': return 'Permanent';
-    case 'Temporary': return 'Temporary';
+    case 'Permanent': return 'Active';
+    case 'Temporary': return 'Inactive';
     case 'Deceased': return 'Deceased';
     case 'Relocated': return 'Transferred';
-    default: return 'Temporary'; // Default fallback
+    default: return 'Inactive'; // Default fallback
   }
 };
 
 // Map form status to database format
 const mapFormStatusToDB = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
   switch (formStatus) {
-    case 'Permanent': return 'Permanent';
-    case 'Temporary': return 'Temporary';
+    case 'Active': return 'Permanent';
+    case 'Inactive': return 'Temporary';
     case 'Deceased': return 'Deceased';
-    case 'Relocated': return 'Relocated';
+    case 'Transferred': return 'Relocated';
     default: return 'Temporary'; // Default fallback
   }
 };
@@ -180,14 +180,14 @@ const ResidentForm = ({
     municipality: "",
     province: "",
     region: "",
-    country: "",
+    country: "Philippines",
     contactNumber: "",
     email: "",
     occupation: "",
     civilStatus: "Single",
     monthlyIncome: 0,
     yearsInBarangay: 0,
-    nationality: "",
+    nationality: "Filipino",
     isVoter: false,
     hasPhilhealth: false,
     hasSss: false,
@@ -197,7 +197,7 @@ const ResidentForm = ({
     emergencyContactName: "",
     emergencyContactRelationship: "",
     emergencyContactNumber: "",
-    status: "Temporary", // Default status
+    status: "Active", // Default status
     diedOn: null,
     remarks: ""
   };
@@ -666,8 +666,8 @@ const ResidentForm = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Inactive">Inactive</SelectItem>
+                          <SelectItem value="Active">Permanent</SelectItem>
+                          <SelectItem value="Inactive">Temporary</SelectItem>
                           <SelectItem value="Deceased">Deceased</SelectItem>
                           <SelectItem value="Transferred">Transferred</SelectItem>
                         </SelectContent>
@@ -740,16 +740,22 @@ const ResidentForm = ({
           </div>
         </ScrollArea>
         
-        <div className="flex justify-end space-x-4 pt-4 border-t mt-6">
-          <Button variant="outline" type="button" onClick={onSubmit} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : resident ? "Update Resident" : "Save Resident"}
-          </Button>
-        </div>
-      </form>
-    </FormProvider>
+    
+    <div className="flex justify-end space-x-4 pt-4 border-t mt-6">
+      <Button
+        variant="outline"
+        type="button"
+        onClick={onCancel} // replace with your actual cancel handler
+        disabled={isSubmitting}
+      >
+        Cancel
+      </Button>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Saving..." : resident ? "Update Resident" : "Save Resident"}
+      </Button>
+    </div>
+  </form>
+</FormProvider>
   );
 };
 
