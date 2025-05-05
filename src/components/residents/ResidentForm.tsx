@@ -27,6 +27,16 @@ import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+// Available resident classifications
+const residentClassifications = [
+  { id: "resident", label: "Resident" },
+  { id: "indigent", label: "Indigent" },
+  { id: "student", label: "Student" },
+  { id: "ofw", label: "OFW" },
+  { id: "pwd", label: "PWD" },
+  { id: "missing", label: "Missing" }
+];
+
 // Form schema using zod
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -54,6 +64,7 @@ const formSchema = z.object({
   hasSss: z.boolean().default(false),
   hasPagibig: z.boolean().default(false),
   hasTin: z.boolean().default(false),
+  classifications: z.array(z.string()).default([]),
   emergencyContactName: z.string().min(2, "Name must be at least 2 characters"),
   emergencyContactRelationship: z.string().min(2, "Relationship must be at least 2 characters"),
   emergencyContactNumber: z.string().regex(/^09\d{9}$/, "Phone number must be in the format 09XXXXXXXXX"),
@@ -76,11 +87,11 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
       lastName: "",
       middleName: "",
       suffix: "",
-      gender: "Male", // Set a default value to fix TS error
+      gender: "Male", 
       birthDate: "",
       address: "",
       purok: "",
-      barangay: "", // Default values to match schema requirements
+      barangay: "",
       municipality: "",
       province: "",
       region: "",
@@ -88,7 +99,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
       contactNumber: "",
       email: "",
       occupation: "",
-      civilStatus: "Single", // Set default to fix TS error
+      civilStatus: "Single",
       monthlyIncome: 0,
       yearsInBarangay: 0,
       nationality: "",
@@ -97,6 +108,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
       hasSss: false,
       hasPagibig: false,
       hasTin: false,
+      classifications: ["resident"],
       emergencyContactName: "",
       emergencyContactRelationship: "",
       emergencyContactNumber: "",
@@ -114,7 +126,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
       
       // Map form values to match Supabase table structure
       const residentData = {
-        id: uuid, // Add the id field to fix the TypeScript error
+        id: uuid,
         first_name: values.firstName,
         last_name: values.lastName,
         middle_name: values.middleName || null,
@@ -125,7 +137,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
         mobile_number: values.contactNumber,
         email: values.email || null,
         occupation: values.occupation || null,
-        status: values.status === 'Active' ? 'Temporary' : values.status === 'Inactive' ? 'Temporary' : values.status === 'Deceased' ? 'Deceased' : 'Relocated',
+        status: values.status === 'Active' ? 'Permanent' : values.status === 'Inactive' ? 'Temporary' : values.status === 'Deceased' ? 'Deceased' : 'Relocated',
         civil_status: values.civilStatus,
         purok: values.purok, 
         barangaydb: values.barangay,
@@ -141,11 +153,8 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
         has_sss: values.hasSss,
         has_pagibig: values.hasPagibig,
         has_tin: values.hasTin,
+        classifications: values.classifications,
         remarks: values.remarks || null,
-        // These fields are in types.ts but not in the form and not required by Supabase
-        // emergency_contact_name: values.emergencyContactName,
-        // emergency_contact_relationship: values.emergencyContactRelationship,
-        // emergency_contact_number: values.emergencyContactNumber
       };
       
       const { error } = await supabase.from('residents').insert(residentData);
@@ -454,6 +463,61 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
                     <FormControl>
                       <Input placeholder="juan@example.com" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <h3 className="text-lg font-medium mb-4 pt-4 border-t">Resident Classifications</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="classifications"
+                render={() => (
+                  <FormItem>
+                    <div className="mb-2">
+                      <FormLabel>Classifications</FormLabel>
+                      <FormDescription>
+                        Select all that apply to this resident
+                      </FormDescription>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2">
+                      {residentClassifications.map((classification) => (
+                        <FormField
+                          key={classification.id}
+                          control={form.control}
+                          name="classifications"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={classification.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(classification.id)}
+                                    onCheckedChange={(checked) => {
+                                      const currentValues = [...field.value || []];
+                                      if (checked) {
+                                        field.onChange([...currentValues, classification.id]);
+                                      } else {
+                                        field.onChange(
+                                          currentValues.filter((value) => value !== classification.id)
+                                        );
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm font-normal cursor-pointer">
+                                  {classification.label}
+                                </FormLabel>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
