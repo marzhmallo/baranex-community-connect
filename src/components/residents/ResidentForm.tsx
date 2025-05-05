@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,6 +13,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { saveResident } from "@/lib/api/residents";
 import { Resident } from "@/lib/types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Available resident classifications
 const residentClassifications = [
@@ -62,10 +67,11 @@ const formSchema = z.object({
   hasPagibig: z.boolean().default(false),
   hasTin: z.boolean().default(false),
   classifications: z.array(z.string()).default([]),
-  emergencyContactName: z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal('')),
-  emergencyContactRelationship: z.string().min(2, "Relationship must be at least 2 characters").optional().or(z.literal('')),
-  emergencyContactNumber: z.string().regex(/^09\d{9}$/, "Phone number must be in the format 09XXXXXXXXX").optional().or(z.literal('')),
+  emergencyContactName: z.string().optional().or(z.literal('')),
+  emergencyContactRelationship: z.string().optional().or(z.literal('')),
+  emergencyContactNumber: z.string().optional().or(z.literal('')),
   status: z.enum(["Active", "Inactive", "Deceased", "Transferred"]),
+  diedOn: z.date().optional().nullable(),
   remarks: z.string().optional()
 });
 
@@ -154,7 +160,10 @@ const ResidentForm = ({
       // Emergency Contact
       emergencyContactName: resident.emergencyContact?.name ?? "",
       emergencyContactRelationship: resident.emergencyContact?.relationship ?? "",
-      emergencyContactNumber: resident.emergencyContact?.contactNumber ?? ""
+      emergencyContactNumber: resident.emergencyContact?.contactNumber ?? "",
+      
+      // Death date
+      diedOn: resident.diedOn ? new Date(resident.diedOn) : null,
     };
   };
   
@@ -189,6 +198,7 @@ const ResidentForm = ({
     emergencyContactRelationship: "",
     emergencyContactNumber: "",
     status: "Active", // Default status
+    diedOn: null,
     remarks: ""
   };
   
@@ -197,6 +207,9 @@ const ResidentForm = ({
     defaultValues
   });
   
+  // Watch for status changes to show/hide the death date picker
+  const status = form.watch("status");
+
   const handleSubmit = async (values: ResidentFormValues) => {
     console.log("Form submitted with values:", values);
     setIsSubmitting(true);
@@ -233,11 +246,17 @@ const ResidentForm = ({
         classifications: values.classifications,
         remarks: values.remarks,
         status: mapFormStatusToDB(values.status),
-        emergencyContact: {
-          name: values.emergencyContactName,
-          relationship: values.emergencyContactRelationship,
-          contactNumber: values.emergencyContactNumber
-        }
+        // Only include emergency contact if at least one field is filled
+        emergencyContact: values.emergencyContactName || values.emergencyContactRelationship || values.emergencyContactNumber
+          ? {
+              name: values.emergencyContactName || "",
+              relationship: values.emergencyContactRelationship || "",
+              contactNumber: values.emergencyContactNumber || ""
+            }
+          : undefined,
+        // Add died_on date if status is Deceased
+        diedOn: values.status === "Deceased" && values.diedOn ? 
+          format(values.diedOn, 'yyyy-MM-dd') : null,
       };
       
       console.log("Sending to saveResident:", residentToSave);
@@ -599,7 +618,7 @@ const ResidentForm = ({
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="text-lg font-medium mb-4">Emergency Contact Information</h3>
+              <h3 className="text-lg font-medium mb-4">Emergency Contact Information <span className="text-sm font-normal text-muted-foreground">(Optional)</span></h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField control={form.control} name="emergencyContactName" render={({
                 field
@@ -655,6 +674,52 @@ const ResidentForm = ({
                       </Select>
                       <FormMessage />
                     </FormItem>} />
+                
+                {status === "Deceased" && (
+                  <FormField
+                    control={form.control}
+                    name="diedOn"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date of Death</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "MMMM d, yyyy")
+                                ) : (
+                                  <span>Select date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value || undefined}
+                              onSelect={field.onChange}
+                              disabled={(date) => date > new Date()}
+                              initialFocus
+                              className="p-3 pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormDescription>
+                          Select the date when the resident passed away
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
             </div>
 
