@@ -146,11 +146,9 @@ const ResidentForm = ({
         has_tin: values.hasTin,
         classifications: values.classifications,
         remarks: values.remarks || null,
-        emergency_contact: JSON.stringify({
-          name: values.emergencyContactName,
-          relationship: values.emergencyContactRelationship,
-          contactNumber: values.emergencyContactNumber
-        })
+        emname: values.emergencyContactName || null,
+        emrelation: values.emergencyContactRelationship || null,
+        emcontact: values.emergencyContactNumber ? parseInt(values.emergencyContactNumber) : null
       };
       const {
         error

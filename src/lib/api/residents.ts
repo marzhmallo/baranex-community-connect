@@ -26,25 +26,12 @@ export const getResidents = async (): Promise<Resident[]> => {
 
   // Map database fields to our application model
   return data.map(resident => {
-    // Parse emergency contact if available
-    let emergencyContact = {
-      name: 'Emergency contact not set',
-      relationship: 'Not specified',
-      contactNumber: 'Not specified'
+    // Create emergency contact from individual fields
+    const emergencyContact = {
+      name: resident.emname || 'Emergency contact not set',
+      relationship: resident.emrelation || 'Not specified',
+      contactNumber: resident.emcontact ? resident.emcontact.toString() : 'Not specified'
     };
-    
-    if (resident.emergency_contact) {
-      try {
-        const parsedContact = JSON.parse(resident.emergency_contact);
-        emergencyContact = {
-          name: parsedContact.name || emergencyContact.name,
-          relationship: parsedContact.relationship || emergencyContact.relationship,
-          contactNumber: parsedContact.contactNumber || emergencyContact.contactNumber
-        };
-      } catch (e) {
-        console.error('Failed to parse emergency contact:', e);
-      }
-    }
 
     return {
       id: resident.id,
@@ -92,25 +79,12 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
   if (error) throw error;
   if (!data) return null;
 
-  // Parse emergency contact if available
-  let emergencyContact = {
-    name: 'Emergency contact not set',
-    relationship: 'Not specified',
-    contactNumber: 'Not specified'
+  // Create emergency contact from individual fields
+  const emergencyContact = {
+    name: data.emname || 'Emergency contact not set',
+    relationship: data.emrelation || 'Not specified',
+    contactNumber: data.emcontact ? data.emcontact.toString() : 'Not specified'
   };
-  
-  if (data.emergency_contact) {
-    try {
-      const parsedContact = JSON.parse(data.emergency_contact);
-      emergencyContact = {
-        name: parsedContact.name || emergencyContact.name,
-        relationship: parsedContact.relationship || emergencyContact.relationship,
-        contactNumber: parsedContact.contactNumber || emergencyContact.contactNumber
-      };
-    } catch (e) {
-      console.error('Failed to parse emergency contact:', e);
-    }
-  }
 
   // Map database fields to our application model
   return {
@@ -148,3 +122,4 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
 };
 
 // Add more functions for CRUD operations as needed
+

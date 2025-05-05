@@ -530,6 +530,9 @@ export type Database = {
           created_at: string | null
           died_on: string | null
           email: string | null
+          emcontact: number | null
+          emname: string | null
+          emrelation: string | null
           first_name: string
           gender: string
           has_pagibig: boolean | null
@@ -567,6 +570,9 @@ export type Database = {
           created_at?: string | null
           died_on?: string | null
           email?: string | null
+          emcontact?: number | null
+          emname?: string | null
+          emrelation?: string | null
           first_name: string
           gender: string
           has_pagibig?: boolean | null
@@ -604,6 +610,9 @@ export type Database = {
           created_at?: string | null
           died_on?: string | null
           email?: string | null
+          emcontact?: number | null
+          emname?: string | null
+          emrelation?: string | null
           first_name?: string
           gender?: string
           has_pagibig?: boolean | null
