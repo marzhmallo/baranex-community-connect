@@ -4,6 +4,49 @@ import { supabase } from '@/integrations/supabase/client';
 
 export type ResidentStatus = "Permanent" | "Temporary" | "Deceased" | "Relocated";
 
+// Function to get the current user's barangay ID
+export const getCurrentUserBarangayId = async (): Promise<string | null> => {
+  try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return null;
+    
+    // Get user profile to find brgyid
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('brgyid')
+      .eq('id', user.id)
+      .maybeSingle();
+      
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      return null;
+    }
+    
+    if (!profileData?.brgyid) {
+      // If user profile doesn't have brgyid, try to get it from adminid relationship
+      const { data: adminProfile, error: adminError } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('adminid', user.id)
+        .maybeSingle();
+        
+      if (adminError) {
+        console.error('Error fetching admin profile:', adminError);
+        return null;
+      }
+      
+      return adminProfile?.brgyid || null;
+    }
+    
+    return profileData.brgyid;
+  } catch (error) {
+    console.error('Error getting current user barangay ID:', error);
+    return null;
+  }
+};
+
 // Function to fetch all residents
 export const getResidents = async (): Promise<Resident[]> => {
   const { data, error } = await supabase
@@ -117,6 +160,15 @@ export const saveResident = async (residentData: Partial<Resident>) => {
   try {
     console.log("saveResident called with:", residentData);
     
+    // Get the brgyid of the currently logged in user
+    const brgyid = await getCurrentUserBarangayId();
+    console.log("Current user's brgyid:", brgyid);
+    
+    if (!brgyid) {
+      console.error("Failed to get current user's barangay ID");
+      return { success: false, error: "User's barangay ID not found" };
+    }
+    
     // Define the expected database schema fields for Supabase
     interface ResidentDatabaseFields {
       first_name?: string;
@@ -151,7 +203,8 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       emcontact?: number | null;
       suffix?: string | null;
       updated_at?: string;
-      died_on?: string | null; // Add died_on field
+      died_on?: string | null;
+      brgyid?: string | null; // Add brgyid field
     }
     
     // Map from our application model to database model
@@ -190,6 +243,8 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       emrelation: residentData.emergencyContact?.relationship?.trim() || null,
       // Add died_on date
       died_on: residentData.diedOn || null,
+      // Add the brgyid of the currently logged in user
+      brgyid: brgyid,
     };
     
     // Convert emergency contact number to numeric format if provided
@@ -252,6 +307,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
         address: databaseFields.address || "No address provided", // Ensure address is never null
         status: databaseFields.status || "Temporary",
         nationality: databaseFields.nationality || "Filipino",  // Add missing required field
+        brgyid: brgyid, // Add the barangay ID of the currently logged in user
         // Include all other fields from databaseFields
         middle_name: databaseFields.middle_name,
         suffix: databaseFields.suffix,
