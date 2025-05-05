@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -11,6 +10,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  Form as FormProvider
 } from "@/components/ui/form";
 import {
   Select,
@@ -26,7 +26,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Form as FormProvider } from "@/components/ui/form";
 
 // Form schema using zod
 const formSchema = z.object({
@@ -89,7 +88,7 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
       contactNumber: "",
       email: "",
       occupation: "",
-      civilStatus: "",
+      civilStatus: "Single", // Set default to fix TS error
       monthlyIncome: 0,
       yearsInBarangay: 0,
       nationality: "",
@@ -638,26 +637,8 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
             </div>
     
             <div className="border-t pt-4">
-              <h3 className="text-lg font-medium mb-4">Additional Information</h3>
+              <h3 className="text-lg font-medium mb-4">Resident Status</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="remarks"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Remarks</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Additional notes about this resident" 
-                          className="resize-none" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <FormField
                   control={form.control}
                   name="status"
@@ -680,6 +661,29 @@ const ResidentForm = ({ onSubmit }: ResidentFormProps) => {
                           <SelectItem value="Transferred">Transferred</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-medium mb-4">Additional Notes</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="remarks"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Remarks</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Additional notes about this resident" 
+                          className="resize-none min-h-[150px]" 
+                          {...field} 
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

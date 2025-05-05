@@ -88,7 +88,7 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     contactNumber: data.mobile_number,
     email: data.email || '',
     occupation: data.occupation || '',
-    status: data.status,
+    status: mapDatabaseStatus(data.status),
     civilStatus: data.civil_status,
     monthlyIncome: data.monthly_income || 0,
     yearsInBarangay: data.years_in_barangay || 0,
