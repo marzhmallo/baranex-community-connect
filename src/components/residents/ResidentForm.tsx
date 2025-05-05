@@ -80,22 +80,21 @@ interface ResidentFormProps {
 // Map database status to form status
 const mapDBStatusToForm = (dbStatus: string): "Active" | "Inactive" | "Deceased" | "Transferred" => {
   switch (dbStatus) {
-    case 'Permanent': return 'Active';
-    case 'Temporary': return 'Inactive';
+    case 'Permanent': return 'Permanent';
+    case 'Temporary': return 'Temporary';
     case 'Deceased': return 'Deceased';
-    case 'Relocated': return 'Transferred';
+    case 'Relocated': return 'Relocated';
     default: return 'Inactive'; // Default fallback
   }
 };
 
 // Map form status to database format
-const mapFormStatusToDB = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
-  console.log("Mapping form status:", formStatus);
+const mapApplicationStatus = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
   switch (formStatus) {
-    case 'Active': return 'Permanent';
-    case 'Inactive': return 'Temporary';
+    case 'Permanent': return 'Permanent';
+    case 'Temporary': return 'Temporary';
     case 'Deceased': return 'Deceased';
-    case 'Transferred': return 'Relocated';
+    case 'Relocated': return 'Relocated';
     default: return 'Temporary'; // Default fallback
   }
 };
@@ -207,41 +206,43 @@ const ResidentForm = ({
         id: resident?.id, // Undefined for new residents
         
         // Personal Info
-        firstName: values.firstName.trim(),
-        lastName: values.lastName.trim(),
-        middleName: values.middleName?.trim() || undefined,
-        suffix: values.suffix?.trim() || undefined,
-        gender: values.gender,
-        birthDate: values.birthDate,
+        id: resident?.id,
+  first_name: values.firstName.trim(),
+  middle_name: values.middleName?.trim() || null, // Use null instead of undefined
+  last_name: values.lastName.trim(),
+  suffix: values.suffix?.trim() || null,
+  gender: values.gender,
+  birthdate: values.birthDate,
         
         // Address
         address: values.address.trim(),
         purok: values.purok.trim() || undefined,
-        barangay: values.barangay.trim() || undefined,
-        municipality: values.municipality.trim() || undefined,
-        province: values.province.trim() || undefined,
-        region: values.region.trim() || undefined,
-        country: values.country.trim() || undefined,
+       barangaydb: values.barangay?.trim() || null, // ← Different name
+  municipalitycity: values.municipality?.trim() || null, // ← Combined field
+  regional: values.region?.trim() || null, // ← Different name
+  provinze: values.province?.trim() || null, // ← Note spelling
+  countryph: values.country?.trim() || null, // ← Different name
+
         
         // Contact
-        contactNumber: values.contactNumber?.trim() || undefined,
+        mobile_number: values.contactNumber?.trim() || undefined,
         email: values.email?.trim() || undefined,
         
         // Status
-        status: mapFormStatusToDB(values.status),
-        civilStatus: values.civilStatus,
+        status: mapApplicationStatus(values.status),
+        civil_status: values.civilStatus,
         
         // Economic
         occupation: values.occupation?.trim() || undefined,
-        monthlyIncome: values.monthlyIncome,
-        yearsInBarangay: values.yearsInBarangay,
+        monthly_income: values.monthlyIncome,
+        years_in_barangay: values.yearsInBarangay,
         
         // Documents
-        isVoter: values.isVoter,
-        hasPhilhealth: values.hasPhilhealth,
-        hasSss: values.hasSss,
-        hasPagibig: values.hasPagibig,
-        hasTin: values.hasTin,
+        is_Voter: values.isVoter,
+        has_Philhealth: values.hasPhilhealth,
+        has_Sss: values.hasSss,
+        has_Pagibig: values.hasPagibig,
+        has_Tin: values.hasTin,
         
         // Other
         nationality: values.nationality?.trim() || undefined,
@@ -250,9 +251,9 @@ const ResidentForm = ({
         
         // Emergency Contact
         emergencyContact: {
-          name: values.emergencyContactName?.trim() || '',
-          relationship: values.emergencyContactRelationship?.trim() || '',
-          contactNumber: values.emergencyContactNumber?.trim() || ''
+          emname: values.emergencyContactName?.trim() || '',
+          emrelation: values.emergencyContactRelationship?.trim() || '',
+          emcontact: values.emergencyContactNumber?.trim() || ''
         }
       };
       
