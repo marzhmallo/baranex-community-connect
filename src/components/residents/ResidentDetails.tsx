@@ -11,7 +11,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
 import { Resident } from "@/lib/types";
 
 type ResidentDetailsProps = {
@@ -55,11 +54,6 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Resident Details</span>
-            <DialogClose asChild>
-              <Button variant="ghost" size="icon" className="focus:ring-0 focus-visible:ring-0">
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogClose>
           </DialogTitle>
           <DialogDescription>
             Complete profile information for {resident.firstName} {resident.lastName}
