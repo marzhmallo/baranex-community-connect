@@ -3,6 +3,7 @@ import React from 'react';
 import ResidentsList from '@/components/residents/ResidentsList';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Toaster } from "@/components/ui/toaster";
 
 const ResidentsPage = () => {
   return (
@@ -19,6 +20,9 @@ const ResidentsPage = () => {
           </ScrollArea>
         </CardContent>
       </Card>
+      
+      {/* Make sure Toaster is included on the page */}
+      <Toaster />
     </div>
   );
 };

@@ -115,8 +115,8 @@ export const saveResident = async (residentData: Partial<Resident>) => {
   try {
     console.log("saveResident called with:", residentData);
     
-    // Prepare the base data
-    const baseData: any = {
+    // Prepare the base data - using explicit typing to avoid TypeScript errors
+    const baseData: Record<string, any> = {
       first_name: residentData.firstName?.trim(),
       middle_name: residentData.middleName?.trim() || null,
       last_name: residentData.lastName?.trim(),
@@ -139,24 +139,30 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       remarks: residentData.remarks?.trim() || null,
       status: residentData.status,
       classifications: residentData.classifications,
-      // Address fields with special names
+      // Address fields with special names - provide required defaults
       barangaydb: residentData.barangay?.trim() || "Unknown",
       municipalitycity: residentData.municipality?.trim() || "Unknown",
       regional: residentData.region?.trim() || "Unknown",
       provinze: residentData.province?.trim() || "Unknown",
       countryph: residentData.country?.trim() || "Philippines",
-      // Emergency contact - convert contactNumber to number if provided
+      // Emergency contact - handle conversion properly
       emname: residentData.emergencyContact?.name?.trim() || null,
       emrelation: residentData.emergencyContact?.relationship?.trim() || null,
-      emcontact: residentData.emergencyContact?.contactNumber ? 
-        parseFloat(residentData.emergencyContact.contactNumber.replace(/\D/g, '')) || null : null,
-      // Timestamps
-      updated_at: new Date().toISOString()
     };
+    
+    // Convert emergency contact number to numeric format if provided
+    if (residentData.emergencyContact?.contactNumber) {
+      const numericValue = residentData.emergencyContact.contactNumber.replace(/\D/g, '');
+      baseData.emcontact = numericValue.length > 0 ? parseFloat(numericValue) : null;
+    } else {
+      baseData.emcontact = null;
+    }
 
-    // For existing residents, use the ID
+    // For existing residents, update
     if (residentData.id) {
       console.log("Updating existing resident:", residentData.id);
+      baseData.updated_at = new Date().toISOString();
+      
       const { data, error } = await supabase
         .from('residents')
         .update(baseData)
@@ -177,13 +183,13 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       console.log("Resident updated successfully:", data);
       return { success: true, data };
     } 
-    // For new residents, generate UUID and add required fields
+    // For new residents, create
     else {
       console.log("Creating new resident");
-      // Generate a new UUID for the resident
-      const newId = crypto.randomUUID();
-      baseData.id = newId;
+      // Add required fields for new residents
+      baseData.id = crypto.randomUUID();
       baseData.created_at = new Date().toISOString();
+      baseData.updated_at = new Date().toISOString();
       
       const { data, error } = await supabase
         .from('residents')
