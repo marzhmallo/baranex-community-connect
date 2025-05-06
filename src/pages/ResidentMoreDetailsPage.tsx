@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -285,7 +286,7 @@ const ResidentMoreDetailsPage = () => {
               </CardContent>
             </Card>
             
-            {/* Address Information - New Card */}
+            {/* Address Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
@@ -342,7 +343,7 @@ const ResidentMoreDetailsPage = () => {
             </Card>
           </div>
           
-          {/* Contact Information, Emergency Contact Information & Socioeconomic Information */}
+          {/* Contact Information, Emergency Contact & Socioeconomic Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Contact Information */}
             <Card>
@@ -366,7 +367,7 @@ const ResidentMoreDetailsPage = () => {
               </CardContent>
             </Card>
             
-            {/* Emergency Contact - New Separate Card */}
+            {/* Emergency Contact */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
@@ -416,6 +417,21 @@ const ResidentMoreDetailsPage = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Remarks - New separate card */}
+          {resident.remarks && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Remarks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{resident.remarks}</p>
+              </CardContent>
+            </Card>
+          )}
           
           {/* Government Information */}
           <Card>
@@ -453,13 +469,6 @@ const ResidentMoreDetailsPage = () => {
                   <p className="text-sm text-gray-500">TIN</p>
                   <p className="font-medium">{resident.hasTin ? "Has TIN" : "No TIN"}</p>
                 </div>
-                
-                {resident.remarks && (
-                  <div>
-                    <p className="text-sm text-gray-500">Remarks</p>
-                    <p className="font-medium">{resident.remarks}</p>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
