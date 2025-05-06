@@ -292,6 +292,7 @@ const ResidentForm = ({
       };
       
       console.log("Sending to saveResident:", residentToSave);
+      console.log("Death date being saved:", residentToSave.diedOn);
       
       // Use the saveResident function
       const result = await saveResident(residentToSave);

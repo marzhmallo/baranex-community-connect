@@ -1,4 +1,3 @@
-
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -248,10 +247,13 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       // Emergency contact - handle each field individually
       emname: residentData.emergencyContact?.name?.trim() || null,
       emrelation: residentData.emergencyContact?.relationship?.trim() || null,
-      // Add died_on date
-      died_on: residentData.diedOn || null,
+      
+      // Handle died_on date properly - ensure it's in the correct format
+      died_on: residentData.diedOn ? residentData.diedOn : null,
+      
       // Add the brgyid of the currently logged in user
       brgyid: brgyid,
+      
       // Add photo URL
       photo_url: residentData.photoUrl || null,
     };
@@ -269,6 +271,9 @@ export const saveResident = async (residentData: Partial<Resident>) => {
     if (residentData.id) {
       console.log("Updating existing resident:", residentData.id);
       databaseFields.updated_at = new Date().toISOString();
+      
+      // Log the died_on value before sending to Supabase
+      console.log("died_on value being sent to Supabase:", databaseFields.died_on);
       
       const { data, error } = await supabase
         .from('residents')
