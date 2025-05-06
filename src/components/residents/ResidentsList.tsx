@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -192,7 +193,7 @@ const ResidentsList = () => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  // Active sorting cards state
+  // Active sorting cards state - modified to allow both to be active simultaneously
   const [activeStatusCard, setActiveStatusCard] = useState<string | null>(null);
   const [activeClassificationCard, setActiveClassificationCard] = useState<string | null>(null);
   
@@ -219,7 +220,7 @@ const ResidentsList = () => {
   const deceasedCount = residents.filter(r => r.status === 'Deceased').length;
   const relocatedCount = residents.filter(r => r.status === 'Relocated').length;
 
-  // Calculate counts by classification - updated to handle capitalized classifications
+  // Calculate counts by classification
   const getClassificationCount = (classification: string) => {
     return residents.filter(resident => 
       resident.classifications && Array.isArray(resident.classifications) && 
@@ -282,36 +283,19 @@ const ResidentsList = () => {
         `${resident.firstName} ${resident.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (resident.address && resident.address.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      // Status filter - now also considers activeStatusCard
+      // Status filter - Modified to work with activeStatusCard
       const matchesStatus = 
-        (selectedStatus === null || resident.status === selectedStatus) && 
-        (activeStatusCard === null || resident.status === activeStatusCard);
+        activeStatusCard === null || resident.status === activeStatusCard;
       
-      // Tab filter - Only status tabs now
-      const matchesTab = 
-        activeTab === 'all' || 
-        (activeTab === 'permanent' && resident.status === 'Permanent') ||
-        (activeTab === 'temporary' && resident.status === 'Temporary') ||
-        (activeTab === 'deceased' && resident.status === 'Deceased') ||
-        (activeTab === 'relocated' && resident.status === 'Relocated');
-      
-      // Classifications filter - now also considers activeClassificationCard
+      // Classifications filter - Modified to work with activeClassificationCard
       const hasClassificationsArray = resident.classifications && Array.isArray(resident.classifications);
       
-      let matchesClassifications = selectedClassifications.length === 0;
-      if (!matchesClassifications && hasClassificationsArray) {
-        matchesClassifications = selectedClassifications.every(c => 
-          resident.classifications!.includes(c)
-        );
-      }
-
-      // Additional check for activeClassificationCard
-      let matchesActiveClassification = activeClassificationCard === null;
-      if (!matchesActiveClassification && hasClassificationsArray && activeClassificationCard) {
-        matchesActiveClassification = resident.classifications!.includes(activeClassificationCard);
+      let matchesClassifications = true;
+      if (activeClassificationCard !== null && hasClassificationsArray) {
+        matchesClassifications = resident.classifications!.includes(activeClassificationCard);
       }
       
-      return matchesSearch && matchesStatus && matchesTab && matchesClassifications && matchesActiveClassification;
+      return matchesSearch && matchesStatus && matchesClassifications;
     });
     
     // Apply sorting
@@ -364,9 +348,6 @@ const ResidentsList = () => {
     });
   }, [
     searchQuery, 
-    selectedStatus, 
-    activeTab, 
-    selectedClassifications, 
     residents, 
     sortField, 
     sortDirection, 
@@ -399,38 +380,40 @@ const ResidentsList = () => {
     setCurrentPage(1); // Reset to first page on filter change
   };
 
+  // Updated to allow both status and classification to be active together
   const handleStatusCardClick = (status: string) => {
-    // If clicking on the already active card, toggle it off and reset to show all
+    // If clicking on the already active card, toggle it off
     if (activeStatusCard === status) {
       setActiveStatusCard(null);
-      setActiveTab('all'); // Reset to 'all' tab
-      setSelectedStatus(null); // Clear any status filter
     } else {
       setActiveStatusCard(status);
-      // Reset any active classification card when selecting a status
-      setActiveClassificationCard(null);
-      setSelectedClassifications([]);
-      setActiveTab(status.toLowerCase());
     }
     
     setCurrentPage(1); // Reset to first page on status card click
   };
 
+  // Updated to allow both status and classification to be active together
   const handleClassificationCardClick = (classification: string) => {
-    // If clicking on the already active card, toggle it off and reset to show all
+    // If clicking on the already active card, toggle it off
     if (activeClassificationCard === classification) {
       setActiveClassificationCard(null);
-      setSelectedClassifications([]);
-      setActiveTab('all'); // Reset to 'all' tab when deselecting
     } else {
       setActiveClassificationCard(classification);
-      setSelectedClassifications([classification]);
-      // Reset any active status card when selecting a classification
-      setActiveStatusCard(null);
-      setSelectedStatus(null);
     }
     
     setCurrentPage(1); // Reset to first page on classification card click
+  };
+
+  // Generate title based on active cards
+  const getFilterTitle = () => {
+    if (activeStatusCard && activeClassificationCard) {
+      return `${activeStatusCard} ${activeClassificationCard} Residents`;
+    } else if (activeStatusCard) {
+      return `${activeStatusCard} Residents`;
+    } else if (activeClassificationCard) {
+      return `${activeClassificationCard} Residents`;
+    }
+    return 'All Residents';
   };
 
   const handleViewDetails = (resident: Resident) => {
@@ -587,11 +570,30 @@ const ResidentsList = () => {
         />
       </div>
       
+      {/* Show active filter title */}
+      {(activeStatusCard || activeClassificationCard) && (
+        <div className="px-6">
+          <h3 className="text-xl font-semibold text-foreground flex items-center">
+            {getFilterTitle()}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-2 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setActiveStatusCard(null);
+                setActiveClassificationCard(null);
+                setCurrentPage(1);
+              }}
+            >
+              Clear filters
+            </Button>
+          </h3>
+        </div>
+      )}
+      
       <div className="bg-card text-card-foreground rounded-lg shadow-md">
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b bg-muted/50">
-            
-            
             <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
