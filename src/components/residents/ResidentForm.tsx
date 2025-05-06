@@ -20,13 +20,13 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ResidentPhotoUpload from "./ResidentPhotoUpload";
 
-// Available resident classifications
+// Available resident classifications with capitalized labels
 const residentClassifications = [
-  { id: "indigent", label: "Indigent" }, 
-  { id: "student", label: "Student" },
-  { id: "ofw", label: "OFW" },
-  { id: "pwd", label: "PWD" },
-  { id: "missing", label: "Missing" }
+  { id: "Indigent", label: "Indigent" }, 
+  { id: "Student", label: "Student" },
+  { id: "OFW", label: "OFW" },
+  { id: "PWD", label: "PWD" },
+  { id: "Missing", label: "Missing" }
 ];
 
 // Form schema using zod

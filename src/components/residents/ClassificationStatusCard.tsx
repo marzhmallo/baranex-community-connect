@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UserIcon } from 'lucide-react';
 
@@ -11,16 +12,6 @@ interface ClassificationStatusCardProps {
   onClick: () => void;
   isActive?: boolean;
 }
-
-// Helper function to capitalize the label if it's a direct classification name
-const getDisplayLabel = (label: string): string => {
-  // Check if the label contains "Residents" - if so, it's a display name not a direct classification
-  if (label.includes("Residents")) {
-    return label;
-  }
-  // Otherwise, capitalize the first letter
-  return label.charAt(0).toUpperCase() + label.slice(1);
-};
 
 const ClassificationStatusCard: React.FC<ClassificationStatusCardProps> = ({
   label,
