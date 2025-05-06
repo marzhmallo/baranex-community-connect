@@ -286,7 +286,8 @@ const ResidentForm = ({
               contactNumber: values.emergencyContactNumber || ""
             }
           : undefined,
-        // Add died_on date if status is Deceased
+        // Add died_on date if status is Deceased and a date was selected
+        // Otherwise explicitly set to null
         diedOn: values.status === "Deceased" && values.diedOn ? 
           format(values.diedOn, 'yyyy-MM-dd') : null,
       };

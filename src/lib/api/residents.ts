@@ -248,8 +248,9 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       emname: residentData.emergencyContact?.name?.trim() || null,
       emrelation: residentData.emergencyContact?.relationship?.trim() || null,
       
-      // Handle died_on date properly - ensure it's in the correct format
-      died_on: residentData.diedOn ? residentData.diedOn : null,
+      // Handle died_on date properly - ensure it's in the correct format or null
+      // This will explicitly set to null if residentData.diedOn is null (rather than undefined or empty string)
+      died_on: residentData.diedOn || null,
       
       // Add the brgyid of the currently logged in user
       brgyid: brgyid,
