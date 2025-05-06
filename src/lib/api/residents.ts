@@ -1,3 +1,4 @@
+
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -66,34 +67,6 @@ export const getResidents = async (): Promise<Resident[]> => {
         }
       : null;
 
-    // Map legacy status values to standardized ones
-    let standardizedStatus: ResidentStatus = "Temporary";
-    switch (resident.status) {
-      case 'Permanent':
-        standardizedStatus = 'Permanent';
-        break;
-      case 'Temporary':
-        standardizedStatus = 'Temporary';
-        break;
-      case 'Deceased':
-        standardizedStatus = 'Deceased';
-        break;
-      case 'Relocated':
-        standardizedStatus = 'Relocated';
-        break;
-      case 'Active':
-        standardizedStatus = 'Permanent';
-        break;
-      case 'Inactive':
-        standardizedStatus = 'Temporary';
-        break;
-      case 'Transferred':
-        standardizedStatus = 'Relocated';
-        break;
-      default:
-        standardizedStatus = 'Temporary';
-    }
-
     return {
       id: resident.id,
       firstName: resident.first_name,
@@ -106,7 +79,7 @@ export const getResidents = async (): Promise<Resident[]> => {
       contactNumber: resident.mobile_number,
       email: resident.email || '',
       occupation: resident.occupation || '',
-      status: standardizedStatus,
+      status: resident.status as ResidentStatus,
       civilStatus: resident.civil_status,
       monthlyIncome: resident.monthly_income || 0,
       yearsInBarangay: resident.years_in_barangay || 0,
@@ -153,34 +126,6 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
       }
     : null;
 
-  // Map legacy status values to standardized ones
-  let standardizedStatus: ResidentStatus = "Temporary";
-  switch (data.status) {
-    case 'Permanent':
-      standardizedStatus = 'Permanent';
-      break;
-    case 'Temporary':
-      standardizedStatus = 'Temporary';
-      break;
-    case 'Deceased':
-      standardizedStatus = 'Deceased';
-      break;
-    case 'Relocated':
-      standardizedStatus = 'Relocated';
-      break;
-    case 'Active':
-      standardizedStatus = 'Permanent';
-      break;
-    case 'Inactive':
-      standardizedStatus = 'Temporary';
-      break;
-    case 'Transferred':
-      standardizedStatus = 'Relocated';
-      break;
-    default:
-      standardizedStatus = 'Temporary';
-  }
-
   // Map database fields to our application model
   return {
     id: data.id,
@@ -194,7 +139,7 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     contactNumber: data.mobile_number,
     email: data.email || '',
     occupation: data.occupation || '',
-    status: standardizedStatus,
+    status: data.status as ResidentStatus,
     civilStatus: data.civil_status,
     monthlyIncome: data.monthly_income || 0,
     yearsInBarangay: data.years_in_barangay || 0,
@@ -312,6 +257,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       emcontact: null, // Will be set below if there's valid contact info
       
       // Handle died_on date properly - ensure it's explicitly set to null if not provided
+      // This will set died_on to null in the database if residentData.diedOn is null
       died_on: residentData.diedOn || null,
       
       // Add the brgyid of the currently logged in user
