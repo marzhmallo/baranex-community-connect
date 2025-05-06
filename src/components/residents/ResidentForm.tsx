@@ -73,7 +73,7 @@ interface ResidentFormProps {
   resident?: Resident;
 }
 
-// Map database status to form status
+// Map database status to form status - ensuring we convert legacy statuses
 const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
   switch (dbStatus) {
     case 'Permanent': return 'Permanent';
@@ -735,7 +735,7 @@ const ResidentForm = ({
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
+                            <SelectValue placeholder="Select resident status" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
