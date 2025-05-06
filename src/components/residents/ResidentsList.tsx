@@ -72,6 +72,11 @@ type AgeGroup = 'Child' | 'Teen' | 'Young Adult' | 'Adult' | 'Elderly';
 type SortField = 'name' | 'gender' | 'status' | 'age' | 'ageGroup' | 'purok' | 'contact';
 type SortDirection = 'asc' | 'desc';
 
+// Helper function to capitalize the first letter of a string
+const capitalizeFirstLetter = (string: string): string => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 const ResidentsList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
@@ -555,7 +560,7 @@ const ResidentsList = () => {
                             <Check className="h-4 w-4 mr-2 text-primary" />
                           )}
                           <span className={selectedClassifications.includes(classification) ? "ml-6" : ""}>
-                            {classification}
+                            {capitalizeFirstLetter(classification)}
                           </span>
                         </div>
                       </DropdownMenuItem>
@@ -934,7 +939,7 @@ const ResidentsList = () => {
   );
 };
 
-// Update ResidentRow component to include the edit functionality
+// Update ResidentRow component to include the edit functionality and capitalize classifications
 const ResidentRow = ({ 
   resident, 
   onViewDetails,
@@ -1010,7 +1015,7 @@ const ResidentRow = ({
                 : ''
               }`}
             >
-              {classification}
+              {capitalizeFirstLetter(classification)}
             </Badge>
           ))}
         </div>
