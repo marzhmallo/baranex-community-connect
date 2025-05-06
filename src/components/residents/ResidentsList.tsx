@@ -431,7 +431,7 @@ const ResidentsList = () => {
       {/* Classification Cards - Updated to use capitalized classification values */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 px-6">
         <ClassificationStatusCard
-          label="Indigent Residents"
+          label="Indigent"
           count={indigentCount}
           bgColor="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/40 dark:to-amber-900/30"
           textColor="text-amber-800 dark:text-amber-300"
@@ -442,7 +442,7 @@ const ResidentsList = () => {
         />
         
         <ClassificationStatusCard
-          label="Student Residents"
+          label="Student"
           count={studentCount}
           bgColor="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/40 dark:to-cyan-900/30"
           textColor="text-cyan-800 dark:text-cyan-300"
@@ -453,7 +453,7 @@ const ResidentsList = () => {
         />
         
         <ClassificationStatusCard
-          label="OFW Residents"
+          label="OFW"
           count={ofwCount}
           bgColor="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/40 dark:to-indigo-900/30"
           textColor="text-indigo-800 dark:text-indigo-300"
@@ -464,7 +464,7 @@ const ResidentsList = () => {
         />
         
         <ClassificationStatusCard
-          label="PWD Residents"
+          label="PWD"
           count={pwdCount}
           bgColor="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950/40 dark:to-pink-900/30"
           textColor="text-pink-800 dark:text-pink-300"
@@ -475,7 +475,7 @@ const ResidentsList = () => {
         />
         
         <ClassificationStatusCard
-          label="Missing Residents"
+          label="Missing"
           count={missingCount}
           bgColor="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/40 dark:to-orange-900/30"
           textColor="text-orange-800 dark:text-orange-300"
@@ -489,13 +489,7 @@ const ResidentsList = () => {
       <div className="bg-card text-card-foreground rounded-lg shadow-md">
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b bg-muted/50">
-            <TabsList className="h-10 bg-background/80">
-              <TabsTrigger value="all" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-accent">All Residents</TabsTrigger>
-              <TabsTrigger value="permanent" className="rounded-md data-[state=active]:bg-green-50 dark:data-[state=active]:bg-green-900/30 data-[state=active]:text-green-700 dark:data-[state=active]:text-green-300">Permanent</TabsTrigger>
-              <TabsTrigger value="temporary" className="rounded-md data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-900/30 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300">Temporary</TabsTrigger>
-              <TabsTrigger value="deceased" className="rounded-md data-[state=active]:bg-red-50 dark:data-[state=active]:bg-red-900/30 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-300">Deceased</TabsTrigger>
-              <TabsTrigger value="relocated" className="rounded-md data-[state=active]:bg-purple-50 dark:data-[state=active]:bg-purple-900/30 data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-300">Relocated</TabsTrigger>
-            </TabsList>
+            
             
             <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
               <div className="relative">
@@ -815,237 +809,4 @@ const ResidentsList = () => {
                     }
                     
                     // Show ellipsis for gaps
-                    if (pageNum === 2 || pageNum === pageCount - 1) {
-                      return (
-                        <PaginationItem key={pageNum}>
-                          <PaginationEllipsis />
-                        </PaginationItem>
-                      );
-                    }
-                    
-                    return null;
-                  })}
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => handlePageChange(Math.min(pageCount, currentPage + 1))}
-                      className={currentPage === pageCount ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
-        </Tabs>
-      </div>
-
-      {/* Resident Details Dialog */}
-      <ResidentDetails
-        resident={selectedResident}
-        open={isDetailsOpen}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) handleCloseDetails();
-          else setIsDetailsOpen(true);
-        }}
-      />
-      
-      {/* Add Resident Dialog */}
-      <Dialog 
-        open={isAddResidentOpen} 
-        onOpenChange={(isOpen) => {
-          if (!isOpen) {
-            // First close the dialog through state
-            setIsAddResidentOpen(false);
-            
-            // Then clean up any lingering effects to ensure UI remains interactive
-            setTimeout(() => {
-              document.body.classList.remove('overflow-hidden');
-              document.body.style.pointerEvents = '';
-              
-              // Remove any focus traps or aria-hidden attributes that might be lingering
-              const elements = document.querySelectorAll('[aria-hidden="true"]');
-              elements.forEach(el => {
-                el.setAttribute('aria-hidden', 'false');
-              });
-            }, 150);
-          } else {
-            setIsAddResidentOpen(true);
-          }
-        }}
-      >
-        <DialogContent 
-          className="sm:max-w-[600px]" 
-          onInteractOutside={(e) => {
-            // Prevent issues with outside clicks
-            e.preventDefault();
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Add New Resident</DialogTitle>
-            <DialogDescription>
-              Enter the resident's information below. Required fields are marked with an asterisk (*).
-            </DialogDescription>
-          </DialogHeader>
-          <ResidentForm onSubmit={() => {
-            // First close the dialog through state
-            setIsAddResidentOpen(false);
-            
-            // Then clean up any lingering effects to ensure UI remains interactive
-            setTimeout(() => {
-              document.body.classList.remove('overflow-hidden');
-              document.body.style.pointerEvents = '';
-              
-              // Remove any focus traps or aria-hidden attributes that might be lingering
-              const elements = document.querySelectorAll('[aria-hidden="true"]');
-              elements.forEach(el => {
-                el.setAttribute('aria-hidden', 'false');
-              });
-            }, 150);
-          }} />
-        </DialogContent>
-      </Dialog>
-      
-      {/* Edit Resident Dialog */}
-      <Dialog 
-        open={isEditResidentOpen} 
-        onOpenChange={(isOpen) => {
-          if (!isOpen) {
-            handleCloseEditDialog();
-          } else {
-            setIsEditResidentOpen(true);
-          }
-        }}
-      >
-        <DialogContent 
-          className="sm:max-w-[600px]" 
-          onInteractOutside={(e) => {
-            // Prevent issues with outside clicks
-            e.preventDefault();
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Edit Resident</DialogTitle>
-            <DialogDescription>
-              Update the resident's information below. Required fields are marked with an asterisk (*).
-            </DialogDescription>
-          </DialogHeader>
-          <ResidentForm 
-            resident={residentToEdit} 
-            onSubmit={handleCloseEditDialog} 
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-// Update ResidentRow component to display capitalized classifications
-const ResidentRow = ({ 
-  resident, 
-  onViewDetails,
-  onEditResident
-}: { 
-  resident: Resident;
-  onViewDetails: (resident: Resident) => void;
-  onEditResident: (resident: Resident) => void;
-}) => {
-  // Calculate age
-  const birthDate = new Date(resident.birthDate);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const m = today.getMonth() - birthDate.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  
-  // Determine age group
-  const getAgeGroup = (age: number): string => {
-    if (age <= 12) return 'Child';
-    if (age <= 19) return 'Teen';
-    if (age <= 29) return 'Young Adult';
-    if (age <= 59) return 'Adult';
-    return 'Elderly';
-  };
-  
-  const ageGroup = getAgeGroup(age);
-  
-  // Get purok if available (from database or as a property)
-  const purok = (resident as any).purok || 'Not specified';
-  
-  return (
-    <TableRow className="hover:bg-muted/50">
-      <TableCell className="font-medium">
-        {resident.firstName} {resident.lastName}
-      </TableCell>
-      <TableCell>{resident.gender}</TableCell>
-      <TableCell>
-        <Badge className={`px-2 py-1 rounded-full text-xs font-medium ${
-          resident.status === 'Permanent' 
-            ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800' 
-            : resident.status === 'Temporary'
-            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800'
-            : resident.status === 'Deceased'
-            ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800'
-            : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800'
-        }`}>
-          {resident.status}
-        </Badge>
-      </TableCell>
-      <TableCell>{age}</TableCell>
-      <TableCell>{ageGroup}</TableCell>
-      <TableCell>{purok}</TableCell>
-      <TableCell>{resident.contactNumber || 'N/A'}</TableCell>
-      <TableCell>
-        <div className="flex flex-wrap gap-1">
-          {resident.classifications?.map((classification, index) => (
-            <Badge 
-              key={index}
-              variant="outline" 
-              className={`text-xs ${
-                classification === 'Indigent' 
-                  ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800'
-                : classification === 'Student'
-                  ? 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-800'
-                : classification === 'OFW'
-                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800'
-                : classification === 'PWD'
-                  ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800'
-                : classification === 'Missing'
-                  ? 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800'
-                : ''
-              }`}
-            >
-              {classification}
-            </Badge>
-          ))}
-        </div>
-      </TableCell>
-      <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onViewDetails(resident)}>
-              <Eye className="h-4 w-4 mr-2" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEditResident(resident)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
-    </TableRow>
-  );
-};
-
-export default ResidentsList;
+                    if (pageNum === 2 ||
