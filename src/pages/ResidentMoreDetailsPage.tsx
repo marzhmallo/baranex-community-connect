@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -247,6 +246,19 @@ const ResidentMoreDetailsPage = () => {
                     <p className="font-medium">{resident.nationality || "Filipino"}</p>
                   </div>
                   
+                  <div>
+                    <p className="text-sm text-gray-500">Classifications</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {resident.classifications?.length 
+                        ? resident.classifications.map((classification, index) => (
+                            <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
+                              {classification}
+                            </Badge>
+                          )) 
+                        : <p className="text-muted-foreground">None specified</p>}
+                    </div>
+                  </div>
+                  
                   {resident.status === "Deceased" && resident.diedOn && (
                     <div>
                       <p className="text-sm text-gray-500">Date of Death</p>
@@ -366,19 +378,6 @@ const ResidentMoreDetailsPage = () => {
                   <div>
                     <p className="text-sm text-gray-500">Years in Barangay</p>
                     <p className="font-medium">{resident.yearsInBarangay || "Not specified"}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-gray-500">Classifications</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {resident.classifications?.length 
-                        ? resident.classifications.map((classification, index) => (
-                            <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
-                              {classification}
-                            </Badge>
-                          )) 
-                        : <p className="text-muted-foreground">None specified</p>}
-                    </div>
                   </div>
                 </div>
               </CardContent>
