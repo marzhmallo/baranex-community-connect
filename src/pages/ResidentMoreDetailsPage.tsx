@@ -499,7 +499,7 @@ const ResidentMoreDetailsPage = () => {
                   <p className="text-sm text-gray-500">Created At</p>
                   <p className="font-medium flex items-center">
                     <Clock className="mr-2 h-4 w-4 text-gray-400" />
-                    {formatDate(resident.dateRegistered || resident.createdAt || resident.updatedAt)}
+                    {formatDate(resident.dateRegistered || resident.updatedAt)}
                   </p>
                 </div>
                 {resident.updatedAt && (
