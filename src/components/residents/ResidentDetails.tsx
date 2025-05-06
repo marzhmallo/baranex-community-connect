@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -230,12 +229,9 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                             <p>{resident.civilStatus || "Not specified"}</p>
                           </div>
                           {resident.status === "Deceased" && (resident.diedOn || resident.died_on) && (
-                            <div className="md:col-span-2 flex items-start">
-                              <Skull className="h-4 w-4 text-red-500 mt-0.5 mr-2" />
-                              <div>
-                                <p className="text-sm text-gray-500">Date of Death</p>
-                                <p>{formatDate(resident.diedOn || resident.died_on)}</p>
-                              </div>
+                            <div className="md:col-span-2">
+                              <p className="text-sm text-gray-500">Date of Death <Skull className="inline h-4 w-4 text-red-500 ml-1" /></p>
+                              <p>{formatDate(resident.diedOn || resident.died_on)}</p>
                             </div>
                           )}
                         </div>
@@ -306,18 +302,15 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                         <p className="text-sm text-gray-500">Created</p>
                         <p className="flex items-center">
                           <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                          {resident.created_at ? formatDate(resident.created_at) :
-                           resident.dateRegistered ? formatDate(resident.dateRegistered) :
-                           "Not available"}
+                          {resident.created_at ? formatDate(resident.created_at) : "Not available"}
                         </p>
                       </div>
-                      {(resident.updated_at || resident.updatedAt) && (
+                      {resident.updated_at && (
                         <div>
                           <p className="text-sm text-gray-500">Last Updated</p>
                           <p className="flex items-center">
                             <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                            {resident.updated_at ? formatDate(resident.updated_at) :
-                             formatDate(resident.updatedAt)}
+                            {formatDate(resident.updated_at)}
                           </p>
                         </div>
                       )}

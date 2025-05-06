@@ -11,6 +11,47 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 
+// Helper function to calculate age
+const calculateAge = (birthDate: string) => {
+  const today = new Date();
+  const dob = new Date(birthDate);
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age;
+};
+
+// Helper function to generate status badge
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'Permanent':
+      return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Permanent</Badge>;
+    case 'Temporary':
+      return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Temporary</Badge>;
+    case 'Deceased':
+      return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Deceased</Badge>;
+    case 'Relocated':
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Relocated</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+};
+
+// Helper function to format dates for display
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "Not available";
+  const date = new Date(dateString);
+  return date.toLocaleString('en-US', {
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 const ResidentMoreDetailsPage = () => {
   const { residentId } = useParams<{ residentId: string }>();
   const navigate = useNavigate();
@@ -21,46 +62,7 @@ const ResidentMoreDetailsPage = () => {
     enabled: !!residentId,
   });
   
-  // Calculate age if resident data is available
-  const calculateAge = (birthDate: string) => {
-    const today = new Date();
-    const dob = new Date(birthDate);
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Permanent':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Permanent</Badge>;
-      case 'Temporary':
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Temporary</Badge>;
-      case 'Deceased':
-        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Deceased</Badge>;
-      case 'Relocated':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Relocated</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  // Format dates for display
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Not available";
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
+  
   if (isLoading) {
     return (
       <div className="p-6 max-w-[1600px] mx-auto">
@@ -293,16 +295,13 @@ const ResidentMoreDetailsPage = () => {
                     </div>
                   </div>
                   
-                  {/* Display date of death if resident is deceased */}
+                  {/* Display date of death if resident is deceased - repositioned */}
                   {resident.status === 'Deceased' && (
-                    <div className="border-t pt-3 mt-2">
-                      <p className="text-sm text-gray-500 flex items-center">
-                        <Skull className="mr-2 h-4 w-4 text-red-500" />
-                        Date of Death
-                      </p>
+                    <div>
+                      <p className="text-sm text-gray-500">Date of Death <Skull className="inline h-4 w-4 text-red-500 ml-1" /></p>
                       <p className="font-medium">
-                        {resident.diedOn 
-                          ? new Date(resident.diedOn).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) 
+                        {resident.diedOn || resident.died_on
+                          ? new Date(resident.diedOn || resident.died_on).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) 
                           : "Date not recorded"}
                       </p>
                     </div>
@@ -516,13 +515,12 @@ const ResidentMoreDetailsPage = () => {
                      "Not available"}
                   </p>
                 </div>
-                {(resident.updated_at || resident.updatedAt) && (
+                {resident.updated_at && (
                   <div>
                     <p className="text-sm text-gray-500">Last Updated</p>
                     <p className="font-medium flex items-center">
                       <Clock className="mr-2 h-4 w-4 text-gray-400" />
-                      {resident.updated_at ? formatDate(resident.updated_at) : 
-                       formatDate(resident.updatedAt)}
+                      {formatDate(resident.updated_at)}
                     </p>
                   </div>
                 )}
