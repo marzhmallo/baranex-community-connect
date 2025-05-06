@@ -1,4 +1,3 @@
-
 // Resident types
 export interface Resident {
   id: string;
@@ -19,6 +18,7 @@ export interface Resident {
   educationLevel?: string;
   familySize?: number;
   dateRegistered?: string;
+  created_at?: string; // Added created_at to match the database column name
   nationality?: string;
   monthlyIncome?: number;
   purok?: string;
@@ -37,6 +37,7 @@ export interface Resident {
   diedOn?: string | null;
   householdId?: string | null;
   updatedAt?: string;
+  updated_at?: string; // Added updated_at to match the database column name
   brgyId?: string;
   emergencyContact?: {
     name: string;

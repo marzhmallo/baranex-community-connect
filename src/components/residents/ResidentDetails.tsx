@@ -297,15 +297,15 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                         <p className="text-sm text-gray-500">Created</p>
                         <p className="flex items-center">
                           <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                          {formatDate(resident.dateRegistered || resident.updatedAt)}
+                          {formatDate(resident.created_at || resident.dateRegistered || resident.updatedAt)}
                         </p>
                       </div>
-                      {resident.updatedAt && (
+                      {(resident.updated_at || resident.updatedAt) && (
                         <div>
                           <p className="text-sm text-gray-500">Last Updated</p>
                           <p className="flex items-center">
                             <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                            {formatDate(resident.updatedAt)}
+                            {formatDate(resident.updated_at || resident.updatedAt)}
                           </p>
                         </div>
                       )}
