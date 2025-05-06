@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -6,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, FileText, UserCheck, MapPin, Mail, Phone, Briefcase, Calendar, Home } from "lucide-react";
+import { ArrowLeft, FileText, UserCheck, MapPin, Mail, Phone, Briefcase, Calendar, Home, Skull } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -140,7 +141,12 @@ const ResidentMoreDetailsPage = () => {
                     <h2 className="text-2xl font-bold">
                       {resident.firstName} {resident.middleName ? `${resident.middleName.charAt(0)}. ` : ''}{resident.lastName} {resident.suffix || ''}
                     </h2>
-                    <div>{getStatusBadge(resident.status)}</div>
+                    <div className="flex items-center">
+                      {getStatusBadge(resident.status)}
+                      {resident.status === 'Deceased' && (
+                        <Skull className="ml-2 h-4 w-4 text-red-500" />
+                      )}
+                    </div>
                   </div>
                   
                   <div className="flex flex-col md:flex-row gap-4 text-muted-foreground">
@@ -241,9 +247,20 @@ const ResidentMoreDetailsPage = () => {
                     </div>
                   </div>
                   
-                  <div>
-                    <p className="text-sm text-gray-500">Nationality</p>
-                    <p className="font-medium">{resident.nationality || "Filipino"}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Nationality</p>
+                      <p className="font-medium">{resident.nationality || "Filipino"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <div className="flex items-center">
+                        <p className="font-medium">{resident.status}</p>
+                        {resident.status === 'Deceased' && (
+                          <Skull className="ml-2 h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                    </div>
                   </div>
                   
                   <div>
