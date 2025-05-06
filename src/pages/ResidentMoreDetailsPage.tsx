@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -343,9 +342,9 @@ const ResidentMoreDetailsPage = () => {
             </Card>
           </div>
           
-          {/* Contact Information & Socioeconomic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Contact Information - Updated */}
+          {/* Contact Information, Emergency Contact Information & Socioeconomic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Contact Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
@@ -355,39 +354,45 @@ const ResidentMoreDetailsPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Contact Number</p>
-                      <p className="font-medium">{resident.contactNumber || "Not provided"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{resident.email || "Not provided"}</p>
-                    </div>
-                  </div>
-                  
                   <div>
-                    <p className="text-sm text-gray-500 font-medium mt-2">Emergency Contact</p>
-                    <Separator className="my-2" />
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <div>
-                        <p className="text-sm text-gray-500">Name</p>
-                        <p className="font-medium">{resident.emergencyContact?.name || "Not provided"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Relationship</p>
-                        <p className="font-medium">{resident.emergencyContact?.relationship || "Not provided"}</p>
-                      </div>
-                    </div>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">Contact Number</p>
-                      <p className="font-medium">{resident.emergencyContact?.contactNumber || "Not provided"}</p>
-                    </div>
+                    <p className="text-sm text-gray-500">Contact Number</p>
+                    <p className="font-medium">{resident.contactNumber || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="font-medium">{resident.email || "Not provided"}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
+            {/* Emergency Contact - New Separate Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center">
+                  <Phone className="mr-2 h-5 w-5" />
+                  Emergency Contact
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Name</p>
+                    <p className="font-medium">{resident.emergencyContact?.name || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Relationship</p>
+                    <p className="font-medium">{resident.emergencyContact?.relationship || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Contact Number</p>
+                    <p className="font-medium">{resident.emergencyContact?.contactNumber || "Not provided"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Socioeconomic Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
@@ -397,17 +402,15 @@ const ResidentMoreDetailsPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Occupation</p>
-                      <p className="font-medium">{resident.occupation || "Not specified"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Monthly Income</p>
-                      <p className="font-medium">{resident.monthlyIncome 
-                        ? `₱${resident.monthlyIncome.toLocaleString()}`
-                        : "Not specified"}</p>
-                    </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Occupation</p>
+                    <p className="font-medium">{resident.occupation || "Not specified"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Monthly Income</p>
+                    <p className="font-medium">{resident.monthlyIncome 
+                      ? `₱${resident.monthlyIncome.toLocaleString()}`
+                      : "Not specified"}</p>
                   </div>
                 </div>
               </CardContent>
