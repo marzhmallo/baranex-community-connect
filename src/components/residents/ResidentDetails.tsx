@@ -83,7 +83,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
 
   // Generate full address display
   const fullAddress = resident.purok ? 
-    `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}, ${resident.region}` : 
+    `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}` : 
     resident.address || 'Address not provided';
     
   // Navigate to the resident details page
