@@ -147,9 +147,9 @@ const ResidentMoreDetailsPage = () => {
     );
   }
 
-  // Generate full address display
+  // Generate full address display - removing region from this string
   const fullAddress = resident.purok 
-    ? `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}, ${resident.region}` 
+    ? `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}` 
     : resident.address || 'Address not provided';
 
   return (
