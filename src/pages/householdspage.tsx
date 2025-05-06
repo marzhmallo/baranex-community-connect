@@ -1,149 +1,99 @@
-"use client"
+[⚠️ Suspicious Content] import React from 'react';
+import HouseholdList from '@/components/households/HouseholdList';
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import HouseholdForm from '@/components/households/HouseholdForm';
+import { useQueryClient } from '@tanstack/react-query';
 
-import { l } from "@lovable/react"
-import { useSupabase } from "@lovable/supabase"
-import { 
-  Button, Input, Select, Card 
-} from "@lovable/ui"
-import { 
-  ArrowLeft, Search, CheckCircle2, Clock, 
-  MapPin, Building, Users, HomeIcon, BarChart3, PlusCircle 
-} from "lucide-react"
+const HouseholdPage = () => {
+  const [isAddHouseholdOpen, setIsAddHouseholdOpen] = React.useState(false);
+  const queryClient = useQueryClient();
 
-const StatusBadge = l.StatusBadge.extend({
-  variants: {
-    status: {
-      Permanent: { icon: CheckCircle2, color: 'green' },
-      Temporary: { icon: Clock, color: 'yellow' },
-      Relocated: { icon: MapPin, color: 'indigo' },
-      Abandoned: { icon: Building, color: 'rose' },
-      Unknown: { icon: AlertTriangle, color: 'gray' }
-    }
-  }
-})
+  const handleCloseDialog = () => {
+    console.log("Dialog close handler triggered");
+    setIsAddHouseholdOpen(false);
 
-export default function HouseholdsPage() {
-  const supabase = useSupabase()
-  const [searchQuery, setSearchQuery] = l.useState("")
-  const [filters, setFilters] = l.useState({
-    purok: "all",
-    status: "all"
-  })
+    setTimeout(() => {
+      document.body.classList.remove('overflow-hidden');
+      document.body.style.pointerEvents = '';
 
-  // Optimized data fetching
-  const { data: households, loading } = l.useQuery('households', async () => {
-    const { data } = await supabase
-      .from('households')
-      .select('*')
-      .order('created_at', { ascending: false })
-    return data || []
-  })
+      const elements = document.querySelectorAll('[aria-hidden="true"]');
+      elements.forEach(el => {
+        el.setAttribute('aria-hidden', 'false');
+      });
 
-  // Memoized filtered data
-  const filteredHouseholds = l.useMemo(() => {
-    return households.filter(h => {
-      const matchesSearch = searchQuery ? 
-        `${h.name} ${h.address}`.toLowerCase().includes(searchQuery.toLowerCase()) : true
-      const matchesPurok = filters.purok === 'all' || h.purok === filters.purok
-      const matchesStatus = filters.status === 'all' || h.status === filters.status
-      return matchesSearch && matchesPurok && matchesStatus
-    })
-  }, [households, searchQuery, filters])
+      queryClient.invalidateQueries({
+        queryKey: ['households']
+      });
 
-  // Statistics calculation
-  const stats = l.useMemo(() => ({
-    total: households.length,
-    permanent: households.filter(h => h.status === 'Permanent').length,
-    // ... other stats
-  }), [households])
+      console.log("Dialog cleanup completed");
+    }, 150);
+  };
 
   return (
-    <l.Page title="Households Registry" description="Manage barangay households">
-      <l.Toolbar>
-        <l.SearchInput 
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search households..."
-        />
-        <l.Flex gap="2">
-          <Select
-            value={filters.purok}
-            onValueChange={v => setFilters(f => ({...f, purok: v}))}
-            options={['all', ...new Set(households.map(h => h.purok))]}
-          />
-          <Select
-            value={filters.status}
-            onValueChange={v => setFilters(f => ({...f, status: v}))}
-            options={['all', 'Permanent', 'Temporary', 'Relocated', 'Abandoned']}
-          />
-        </l.Flex>
-        <Button asChild>
-          <l.Link href="/households/new">
-            <PlusCircle className="mr-2" />
-            Add Household
-          </l.Link>
-        </Button>
-      </l.Toolbar>
-
-      <l.Grid cols={{ sm: 2, lg: 3, xl: 6 }} gap="4">
-        <StatCard 
-          icon={HomeIcon} 
-          value={stats.total} 
-          label="Total Households" 
-          color="primary"
-        />
-        {/* Other stat cards */}
-      </l.Grid>
-
-      <l.Card>
-        <l.Table
-          data={filteredHouseholds}
-          columns={[
-            {
-              header: 'Household',
-              accessor: 'name',
-              cell: row => row.name || "Unnamed Household"
-            },
-            {
-              header: 'Status',
-              cell: row => <StatusBadge status={row.status} />
-            },
-            {
-              header: 'Actions',
-              cell: row => (
-                <Button asChild size="sm" variant="outline">
-                  <l.Link href={`/households/${row.id}`}>View</l.Link>
-                </Button>
-              )
-            }
-          ]}
-          loading={loading}
-          emptyState={
-            <l.EmptyState 
-              icon={HomeIcon}
-              title="No households found"
-              description="Try adjusting your search filters"
-            />
-          }
-        />
-      </l.Card>
-    </l.Page>
-  )
-}
-
-// Reusable StatCard component
-function StatCard({ icon: Icon, value, label, color }) {
-  return (
-    <l.Card borderLeft={`4px solid var(--${color}-500)`}>
-      <l.Flex align="center" gap="3">
-        <l.IconContainer color={color}>
-          <Icon />
-        </l.IconContainer>
+    <div className="p-6 max-w-[1600px] mx-auto">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <l.Text size="xl" weight="bold">{value}</l.Text>
-          <l.Text size="xs" color="muted">{label}</l.Text>
+          <h1 className="text-3xl font-bold text-foreground">Household Registry</h1>
+          <p className="text-muted-foreground mt-2">Track and manage households within the barangay</p>
         </div>
-      </l.Flex>
-    </l.Card>
-  )
-}
+
+        <Button
+          onClick={() => setIsAddHouseholdOpen(true)}
+          className="bg-baranex-primary hover:bg-baranex-primary/90"
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Add Household
+        </Button>
+      </div>
+
+      <Card className="shadow-lg border-t-4 border-t-baranex-primary bg-card text-card-foreground">
+        <CardContent className="p-0">
+          <ScrollArea className="h-[calc(100vh-200px)]">
+            <HouseholdList />
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      <Dialog
+        open={isAddHouseholdOpen}
+        onOpenChange={(isOpen) => {
+          console.log("Dialog open state changed to:", isOpen);
+          if (!isOpen) {
+            handleCloseDialog();
+          } else {
+            setIsAddHouseholdOpen(true);
+          }
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-[600px]"
+          onInteractOutside={(e) => {
+            console.log("Interaction outside dialog detected");
+            e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            console.log("Escape key pressed");
+            e.preventDefault();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Add New Household</DialogTitle>
+            <DialogDescription>
+              Enter the household information below. Required fields are marked with an asterisk (*).
+            </DialogDescription>
+          </DialogHeader>
+          <HouseholdForm onSubmit={handleCloseDialog} />
+        </DialogContent>
+      </Dialog>
+
+      <Toaster />
+    </div>
+  );
+};
+
+export default HouseholdPage;
