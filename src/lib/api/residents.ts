@@ -244,12 +244,15 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       regional: residentData.region?.trim() || "Unknown",
       provinze: residentData.province?.trim() || "Unknown",
       countryph: residentData.country?.trim() || "Philippines",
-      // Emergency contact - handle each field individually
-      emname: residentData.emergencyContact?.name?.trim() || null,
-      emrelation: residentData.emergencyContact?.relationship?.trim() || null,
       
-      // Handle died_on date properly - ensure it's in the correct format or null
-      // This will explicitly set to null if residentData.diedOn is null (rather than undefined or empty string)
+      // Handle emergency contact - if emergencyContact is null, set all fields to null
+      // This ensures we properly send null to the database when all fields are empty
+      emname: residentData.emergencyContact ? residentData.emergencyContact.name?.trim() || null : null,
+      emrelation: residentData.emergencyContact ? residentData.emergencyContact.relationship?.trim() || null : null,
+      emcontact: null, // Will be set below if there's valid contact info
+      
+      // Handle died_on date properly - ensure it's explicitly set to null if not provided
+      // This will set died_on to null in the database if residentData.diedOn is null
       died_on: residentData.diedOn || null,
       
       // Add the brgyid of the currently logged in user
@@ -259,8 +262,15 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       photo_url: residentData.photoUrl || null,
     };
     
+    // Log emergency contact handling
+    console.log("Emergency contact from form:", residentData.emergencyContact);
+    console.log("Emergency contact fields for database:", {
+      emname: databaseFields.emname,
+      emrelation: databaseFields.emrelation
+    });
+    
     // Convert emergency contact number to numeric format if provided
-    if (residentData.emergencyContact?.contactNumber) {
+    if (residentData.emergencyContact && residentData.emergencyContact.contactNumber) {
       // Remove non-numeric characters
       const numericValue = residentData.emergencyContact.contactNumber.replace(/\D/g, '');
       databaseFields.emcontact = numericValue.length > 0 ? parseFloat(numericValue) : null;
@@ -275,6 +285,11 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       
       // Log the died_on value before sending to Supabase
       console.log("died_on value being sent to Supabase:", databaseFields.died_on);
+      console.log("Emergency contact fields being sent to Supabase:", {
+        emname: databaseFields.emname,
+        emrelation: databaseFields.emrelation,
+        emcontact: databaseFields.emcontact
+      });
       
       const { data, error } = await supabase
         .from('residents')

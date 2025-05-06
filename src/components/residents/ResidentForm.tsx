@@ -49,7 +49,7 @@ const formSchema = z.object({
   civilStatus: z.enum(["Single", "Married", "Widowed", "Divorced", "Separated"]),
   monthlyIncome: z.number().nonnegative().optional(),
   yearsInBarangay: z.number().int().nonnegative().optional(),
-  nationality: z.string().default(false),
+  nationality: z.string().default(""),
   isVoter: z.boolean().default(false),
   hasPhilhealth: z.boolean().default(false),
   hasSss: z.boolean().default(false),
@@ -74,13 +74,13 @@ interface ResidentFormProps {
 }
 
 // Map database status to form status
-const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Deceased" | "Transferred" => {
+const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
   switch (dbStatus) {
     case 'Permanent': return 'Permanent';
     case 'Temporary': return 'Temporary';
     case 'Deceased': return 'Deceased';
     case 'Relocated': return 'Relocated';
-    default: return 'Inactive'; // Default fallback
+    default: return 'Temporary'; // Default fallback
   }
 };
 
@@ -278,14 +278,19 @@ const ResidentForm = ({
         remarks: values.remarks,
         status: mapFormStatusToDB(values.status),
         photoUrl: values.photoUrl,
-        // Only include emergency contact if at least one field is filled
-        emergencyContact: values.emergencyContactName || values.emergencyContactRelationship || values.emergencyContactNumber
-          ? {
-              name: values.emergencyContactName || "",
-              relationship: values.emergencyContactRelationship || "",
-              contactNumber: values.emergencyContactNumber || ""
-            }
-          : undefined,
+        
+        // Emergency contact handling:
+        // Only include if any of the fields have content, otherwise set to null
+        // This ensures we send null to the database when all fields are empty
+        emergencyContact: 
+          values.emergencyContactName || values.emergencyContactRelationship || values.emergencyContactNumber
+            ? {
+                name: values.emergencyContactName || "",
+                relationship: values.emergencyContactRelationship || "",
+                contactNumber: values.emergencyContactNumber || ""
+              }
+            : null,
+            
         // Add died_on date if status is Deceased and a date was selected
         // Otherwise explicitly set to null
         diedOn: values.status === "Deceased" && values.diedOn ? 
@@ -293,6 +298,7 @@ const ResidentForm = ({
       };
       
       console.log("Sending to saveResident:", residentToSave);
+      console.log("Emergency contact being saved:", residentToSave.emergencyContact);
       console.log("Death date being saved:", residentToSave.diedOn);
       
       // Use the saveResident function
