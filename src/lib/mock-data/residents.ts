@@ -15,7 +15,6 @@ export const residents: Resident[] = [
     occupation: 'Teacher',
     educationLevel: 'College Graduate',
     familySize: 4,
-    dateRegistered: '2023-01-15',
     status: 'Permanent', // Fixed to use valid status
     emergencyContact: {
       name: 'Maria Dela Cruz',
@@ -35,7 +34,6 @@ export const residents: Resident[] = [
     occupation: 'Nurse',
     educationLevel: 'College Graduate',
     familySize: 2,
-    dateRegistered: '2023-02-10',
     status: 'Permanent', // Fixed to use valid status
     emergencyContact: {
       name: 'Pedro Santos',
@@ -54,7 +52,6 @@ export const residents: Resident[] = [
     occupation: 'Carpenter',
     educationLevel: 'High School Graduate',
     familySize: 5,
-    dateRegistered: '2023-01-20',
     status: 'Permanent', // Fixed to use valid status
     emergencyContact: {
       name: 'Ana Reyes',
@@ -74,7 +71,6 @@ export const residents: Resident[] = [
     occupation: 'Accountant',
     educationLevel: 'College Graduate',
     familySize: 3,
-    dateRegistered: '2023-03-05',
     status: 'Permanent', // Fixed to use valid status
     emergencyContact: {
       name: 'Carlos Diaz',
@@ -93,7 +89,6 @@ export const residents: Resident[] = [
     occupation: 'Farmer',
     educationLevel: 'Elementary Graduate',
     familySize: 6,
-    dateRegistered: '2023-02-18',
     status: 'Permanent', // Fixed to use valid status
     emergencyContact: {
       name: 'Elena Gonzales',

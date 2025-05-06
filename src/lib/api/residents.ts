@@ -1,3 +1,4 @@
+
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -97,6 +98,8 @@ export const getResidents = async (): Promise<Resident[]> => {
       photoUrl: resident.photo_url || '',
       emergencyContact,
       diedOn: resident.died_on || null, // Add died_on field
+      created_at: resident.created_at || null, // Add created_at field
+      updated_at: resident.updated_at || null // Add updated_at field
     };
   });
 };
@@ -153,6 +156,8 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     photoUrl: data.photo_url || '',
     emergencyContact,
     diedOn: data.died_on || null, // Add died_on field
+    created_at: data.created_at || null, // Add created_at field
+    updated_at: data.updated_at || null // Add updated_at field
   };
 };
 
