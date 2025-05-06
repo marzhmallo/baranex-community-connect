@@ -286,18 +286,18 @@ const ResidentMoreDetailsPage = () => {
               </CardContent>
             </Card>
             
-            {/* Contact Information */}
+            {/* Address Information - New Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
-                  <Phone className="mr-2 h-5 w-5" />
-                  Contact Information
+                  <MapPin className="mr-2 h-5 w-5" />
+                  Address Information
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <p className="text-sm text-gray-500">Address</p>
+                    <p className="text-sm text-gray-500">Complete Address</p>
                     <p className="font-medium">{fullAddress}</p>
                   </div>
                   
@@ -334,6 +334,27 @@ const ResidentMoreDetailsPage = () => {
                     </div>
                   </div>
                   
+                  <div>
+                    <p className="text-sm text-gray-500">Years in Barangay</p>
+                    <p className="font-medium">{resident.yearsInBarangay || "Not specified"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Contact Information & Socioeconomic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Contact Information - Updated */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center">
+                  <Phone className="mr-2 h-5 w-5" />
+                  Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Contact Number</p>
@@ -366,10 +387,7 @@ const ResidentMoreDetailsPage = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-          
-          {/* Additional Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
@@ -391,61 +409,57 @@ const ResidentMoreDetailsPage = () => {
                         : "Not specified"}</p>
                     </div>
                   </div>
-                  
-                  <div>
-                    <p className="text-sm text-gray-500">Years in Barangay</p>
-                    <p className="font-medium">{resident.yearsInBarangay || "Not specified"}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
-                  Government Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Voter Status</p>
-                      <p className="font-medium">{resident.isVoter ? "Registered Voter" : "Non-Voter"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">PhilHealth</p>
-                      <p className="font-medium">{resident.hasPhilhealth ? "Member" : "Non-Member"}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">SSS</p>
-                      <p className="font-medium">{resident.hasSss ? "Member" : "Non-Member"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Pag-IBIG</p>
-                      <p className="font-medium">{resident.hasPagibig ? "Member" : "Non-Member"}</p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-gray-500">TIN</p>
-                    <p className="font-medium">{resident.hasTin ? "Has TIN" : "No TIN"}</p>
-                  </div>
-                  
-                  {resident.remarks && (
-                    <div>
-                      <p className="text-sm text-gray-500">Remarks</p>
-                      <p className="font-medium">{resident.remarks}</p>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
+          
+          {/* Government Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <FileText className="mr-2 h-5 w-5" />
+                Government Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Voter Status</p>
+                    <p className="font-medium">{resident.isVoter ? "Registered Voter" : "Non-Voter"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">PhilHealth</p>
+                    <p className="font-medium">{resident.hasPhilhealth ? "Member" : "Non-Member"}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">SSS</p>
+                    <p className="font-medium">{resident.hasSss ? "Member" : "Non-Member"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Pag-IBIG</p>
+                    <p className="font-medium">{resident.hasPagibig ? "Member" : "Non-Member"}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-gray-500">TIN</p>
+                  <p className="font-medium">{resident.hasTin ? "Has TIN" : "No TIN"}</p>
+                </div>
+                
+                {resident.remarks && (
+                  <div>
+                    <p className="text-sm text-gray-500">Remarks</p>
+                    <p className="font-medium">{resident.remarks}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </ScrollArea>
     </div>
