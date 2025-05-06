@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -75,6 +76,102 @@ type SortDirection = 'asc' | 'desc';
 // Helper function to capitalize the first letter of a string
 const capitalizeFirstLetter = (string: string): string => {
   return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
+// Define the ResidentRow component to display each resident
+const ResidentRow = ({ 
+  resident, 
+  onViewDetails, 
+  onEditResident 
+}: { 
+  resident: Resident; 
+  onViewDetails: (resident: Resident) => void; 
+  onEditResident: (resident: Resident) => void; 
+}) => {
+  // Calculate age from birthDate
+  const calculateAge = (birthDate: string): number => {
+    const today = new Date();
+    const birthDateObj = new Date(birthDate);
+    let age = today.getFullYear() - birthDateObj.getFullYear();
+    const m = today.getMonth() - birthDateObj.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const age = calculateAge(resident.birthDate);
+  const ageGroup = (age: number): AgeGroup => {
+    if (age <= 12) return 'Child';
+    if (age <= 19) return 'Teen';
+    if (age <= 29) return 'Young Adult';
+    if (age <= 59) return 'Adult';
+    return 'Elderly';
+  };
+
+  // Map status to badge colors
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Permanent':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Permanent</Badge>;
+      case 'Temporary':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Temporary</Badge>;
+      case 'Deceased':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Deceased</Badge>;
+      case 'Relocated':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Relocated</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{resident.firstName} {resident.lastName}</TableCell>
+      <TableCell>{resident.gender}</TableCell>
+      <TableCell>{getStatusBadge(resident.status)}</TableCell>
+      <TableCell>{age}</TableCell>
+      <TableCell>{ageGroup(age)}</TableCell>
+      <TableCell>{resident.purok || 'N/A'}</TableCell>
+      <TableCell>{resident.contactNumber || 'N/A'}</TableCell>
+      <TableCell>
+        <div className="flex flex-wrap gap-1">
+          {resident.classifications && resident.classifications.map((classification, index) => (
+            <Badge key={index} variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+              {classification}
+            </Badge>
+          ))}
+          {(!resident.classifications || resident.classifications.length === 0) && 'None'}
+        </div>
+      </TableCell>
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onViewDetails(resident)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEditResident(resident)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
 };
 
 const ResidentsList = () => {
@@ -809,4 +906,62 @@ const ResidentsList = () => {
                     }
                     
                     // Show ellipsis for gaps
-                    if (pageNum === 2 ||
+                    if (pageNum === 2 || pageNum === pageCount - 1) {
+                      return (
+                        <PaginationItem key={`ellipsis-${pageNum}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    
+                    return null;
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => handlePageChange(Math.min(pageCount, currentPage + 1))}
+                      className={currentPage === pageCount ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </Tabs>
+      </div>
+      
+      {/* Resident Details Dialog */}
+      <Dialog open={isDetailsOpen} onOpenChange={(open) => !open && handleCloseDetails()}>
+        <DialogContent className="sm:max-w-[850px]">
+          {selectedResident && (
+            <ResidentDetails resident={selectedResident} onClose={handleCloseDetails} />
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Resident Dialog */}
+      <Dialog 
+        open={isEditResidentOpen} 
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            handleCloseEditDialog();
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Resident</DialogTitle>
+            <DialogDescription>
+              Update the resident's information below.
+            </DialogDescription>
+          </DialogHeader>
+          {residentToEdit && (
+            <ResidentForm resident={residentToEdit} onSubmit={handleCloseEditDialog} />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default ResidentsList;
