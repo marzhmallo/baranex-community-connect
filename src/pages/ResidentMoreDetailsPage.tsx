@@ -504,7 +504,6 @@ const ResidentMoreDetailsPage = () => {
                   <p className="font-medium flex items-center">
                     <Clock className="mr-2 h-4 w-4 text-gray-400" />
                     {resident.created_at ? formatDate(resident.created_at) : 
-                     resident.dateRegistered ? formatDate(resident.dateRegistered) : 
                      "Not available"}
                   </p>
                 </div>
