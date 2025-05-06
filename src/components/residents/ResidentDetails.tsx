@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -152,7 +151,10 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                       {/* Full screen photo dialog */}
                       {resident.photoUrl && (
                         <Dialog open={showFullPhoto} onOpenChange={setShowFullPhoto}>
-                          <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center">
+                          <DialogContent 
+                            className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center"
+                            hideCloseButton={true}
+                          >
                             <div 
                               className="relative w-full h-full flex items-center justify-center bg-black/70 p-2 rounded-lg"
                               onClick={() => setShowFullPhoto(false)}
