@@ -123,7 +123,7 @@ const ResidentsList = () => {
   const deceasedCount = residents.filter(r => r.status === 'Deceased').length;
   const relocatedCount = residents.filter(r => r.status === 'Relocated').length;
 
-  // Calculate counts by classification - fixed to correctly check classifications
+  // Calculate counts by classification - updated to handle capitalized classifications
   const getClassificationCount = (classification: string) => {
     return residents.filter(resident => 
       resident.classifications && Array.isArray(resident.classifications) && 
@@ -131,11 +131,11 @@ const ResidentsList = () => {
     ).length;
   };
 
-  const indigentCount = getClassificationCount('indigent');
-  const studentCount = getClassificationCount('student');
-  const ofwCount = getClassificationCount('ofw');
-  const pwdCount = getClassificationCount('pwd');
-  const missingCount = getClassificationCount('missing');
+  const indigentCount = getClassificationCount('Indigent');
+  const studentCount = getClassificationCount('Student');
+  const ofwCount = getClassificationCount('OFW');
+  const pwdCount = getClassificationCount('PWD');
+  const missingCount = getClassificationCount('Missing');
 
   // Get unique classifications
   const allClassifications = useMemo(() => {
@@ -428,7 +428,7 @@ const ResidentsList = () => {
         />
       </div>
       
-      {/* Classification Cards */}
+      {/* Classification Cards - Updated to use capitalized classification values */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 px-6">
         <ClassificationStatusCard
           label="Indigent Residents"
@@ -437,8 +437,8 @@ const ResidentsList = () => {
           textColor="text-amber-800 dark:text-amber-300"
           iconBgColor="bg-amber-200 dark:bg-amber-800"
           iconColor="text-amber-700 dark:text-amber-300"
-          onClick={() => handleClassificationCardClick('indigent')}
-          isActive={activeClassificationCard === 'indigent'}
+          onClick={() => handleClassificationCardClick('Indigent')}
+          isActive={activeClassificationCard === 'Indigent'}
         />
         
         <ClassificationStatusCard
@@ -448,8 +448,8 @@ const ResidentsList = () => {
           textColor="text-cyan-800 dark:text-cyan-300"
           iconBgColor="bg-cyan-200 dark:bg-cyan-800"
           iconColor="text-cyan-700 dark:text-cyan-300"
-          onClick={() => handleClassificationCardClick('student')}
-          isActive={activeClassificationCard === 'student'}
+          onClick={() => handleClassificationCardClick('Student')}
+          isActive={activeClassificationCard === 'Student'}
         />
         
         <ClassificationStatusCard
@@ -459,8 +459,8 @@ const ResidentsList = () => {
           textColor="text-indigo-800 dark:text-indigo-300"
           iconBgColor="bg-indigo-200 dark:bg-indigo-800"
           iconColor="text-indigo-700 dark:text-indigo-300"
-          onClick={() => handleClassificationCardClick('ofw')}
-          isActive={activeClassificationCard === 'ofw'}
+          onClick={() => handleClassificationCardClick('OFW')}
+          isActive={activeClassificationCard === 'OFW'}
         />
         
         <ClassificationStatusCard
@@ -470,8 +470,8 @@ const ResidentsList = () => {
           textColor="text-pink-800 dark:text-pink-300"
           iconBgColor="bg-pink-200 dark:bg-pink-800"
           iconColor="text-pink-700 dark:text-pink-300"
-          onClick={() => handleClassificationCardClick('pwd')}
-          isActive={activeClassificationCard === 'pwd'}
+          onClick={() => handleClassificationCardClick('PWD')}
+          isActive={activeClassificationCard === 'PWD'}
         />
         
         <ClassificationStatusCard
@@ -481,8 +481,8 @@ const ResidentsList = () => {
           textColor="text-orange-800 dark:text-orange-300"
           iconBgColor="bg-orange-200 dark:bg-orange-800"
           iconColor="text-orange-700 dark:text-orange-300"
-          onClick={() => handleClassificationCardClick('missing')}
-          isActive={activeClassificationCard === 'missing'}
+          onClick={() => handleClassificationCardClick('Missing')}
+          isActive={activeClassificationCard === 'Missing'}
         />
       </div>
       
@@ -560,7 +560,7 @@ const ResidentsList = () => {
                             <Check className="h-4 w-4 mr-2 text-primary" />
                           )}
                           <span className={selectedClassifications.includes(classification) ? "ml-6" : ""}>
-                            {capitalizeFirstLetter(classification)}
+                            {classification}
                           </span>
                         </div>
                       </DropdownMenuItem>
@@ -939,7 +939,7 @@ const ResidentsList = () => {
   );
 };
 
-// Update ResidentRow component to include the edit functionality and capitalize classifications
+// Update ResidentRow component to display capitalized classifications
 const ResidentRow = ({ 
   resident, 
   onViewDetails,
@@ -1002,20 +1002,20 @@ const ResidentRow = ({
               key={index}
               variant="outline" 
               className={`text-xs ${
-                classification === 'indigent' 
+                classification === 'Indigent' 
                   ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800'
-                : classification === 'student'
+                : classification === 'Student'
                   ? 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-800'
-                : classification === 'ofw'
+                : classification === 'OFW'
                   ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800'
-                : classification === 'pwd'
+                : classification === 'PWD'
                   ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800'
-                : classification === 'missing'
+                : classification === 'Missing'
                   ? 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800'
                 : ''
               }`}
             >
-              {capitalizeFirstLetter(classification)}
+              {classification}
             </Badge>
           ))}
         </div>
