@@ -23,7 +23,7 @@ import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { formatResidentName } from "@/lib/format-names"
 
-// Define types
+// Define typesz
 interface Household {
   id: string
   name: string
