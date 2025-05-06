@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -401,29 +400,34 @@ const ResidentsList = () => {
   };
 
   const handleStatusCardClick = (status: string) => {
-    // If clicking on the already active card, toggle it off
+    // If clicking on the already active card, toggle it off and reset to show all
     if (activeStatusCard === status) {
       setActiveStatusCard(null);
+      setActiveTab('all'); // Reset to 'all' tab
+      setSelectedStatus(null); // Clear any status filter
     } else {
       setActiveStatusCard(status);
       // Reset any active classification card when selecting a status
       setActiveClassificationCard(null);
+      setSelectedClassifications([]);
+      setActiveTab(status.toLowerCase());
     }
     
-    setActiveTab(status.toLowerCase());
     setCurrentPage(1); // Reset to first page on status card click
   };
 
   const handleClassificationCardClick = (classification: string) => {
-    // If clicking on the already active card, toggle it off
+    // If clicking on the already active card, toggle it off and reset to show all
     if (activeClassificationCard === classification) {
       setActiveClassificationCard(null);
       setSelectedClassifications([]);
+      setActiveTab('all'); // Reset to 'all' tab when deselecting
     } else {
       setActiveClassificationCard(classification);
       setSelectedClassifications([classification]);
       // Reset any active status card when selecting a classification
       setActiveStatusCard(null);
+      setSelectedStatus(null);
     }
     
     setCurrentPage(1); // Reset to first page on classification card click
@@ -525,7 +529,7 @@ const ResidentsList = () => {
         />
       </div>
       
-      {/* Classification Cards - Updated to use capitalized classification values */}
+      {/* Classification Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 px-6">
         <ClassificationStatusCard
           label="Indigent"
@@ -934,7 +938,7 @@ const ResidentsList = () => {
       <Dialog open={isDetailsOpen} onOpenChange={(open) => !open && handleCloseDetails()}>
         <DialogContent className="sm:max-w-[850px]">
           {selectedResident && (
-            <ResidentDetails resident={selectedResident} onClose={handleCloseDetails} />
+            <ResidentDetails resident={selectedResident} />
           )}
         </DialogContent>
       </Dialog>
