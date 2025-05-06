@@ -14,7 +14,7 @@ import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ResidentForm from "./ResidentForm";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ZoomIn } from "lucide-react";
+import { ZoomIn, X } from "lucide-react";
 
 type ResidentDetailsProps = {
   resident: Resident | null;
@@ -172,7 +172,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                                 }}
                               >
                                 <span className="sr-only">Close</span>
-                                <ZoomIn className="h-4 w-4 rotate-45" />
+                                <X className="h-4 w-4" />
                               </Button>
                             </div>
                           </DialogContent>
