@@ -107,6 +107,7 @@ const ResidentMoreDetailsPage = () => {
   // Log to debug what we're receiving from the API
   console.log("Resident data:", resident);
   console.log("Created at value:", resident.created_at);
+  console.log("Died on value:", resident.diedOn);
 
   // Generate full address display
   const fullAddress = resident.purok 
@@ -292,10 +293,18 @@ const ResidentMoreDetailsPage = () => {
                     </div>
                   </div>
                   
-                  {resident.status === "Deceased" && resident.diedOn && (
-                    <div>
-                      <p className="text-sm text-gray-500">Date of Death</p>
-                      <p className="font-medium">{new Date(resident.diedOn).toLocaleDateString()}</p>
+                  {/* Display date of death if resident is deceased */}
+                  {resident.status === 'Deceased' && (
+                    <div className="border-t pt-3 mt-2">
+                      <p className="text-sm text-gray-500 flex items-center">
+                        <Skull className="mr-2 h-4 w-4 text-red-500" />
+                        Date of Death
+                      </p>
+                      <p className="font-medium">
+                        {resident.diedOn 
+                          ? new Date(resident.diedOn).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) 
+                          : "Date not recorded"}
+                      </p>
                     </div>
                   )}
                 </div>

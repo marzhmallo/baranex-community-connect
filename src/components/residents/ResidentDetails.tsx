@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -13,7 +14,7 @@ import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ResidentForm from "./ResidentForm";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ZoomIn, X, Clock, History } from "lucide-react";
+import { ZoomIn, X, Clock, History, Skull } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 
 type ResidentDetailsProps = {
@@ -106,6 +107,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   // Log to debug the resident data
   console.log("ResidentDetails - resident data:", resident);
   console.log("ResidentDetails - creation date:", resident?.created_at);
+  console.log("ResidentDetails - death date:", resident?.diedOn || resident?.died_on);
 
   return (
     <Dialog 
@@ -227,10 +229,13 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                             <p className="text-sm text-gray-500">Civil Status</p>
                             <p>{resident.civilStatus || "Not specified"}</p>
                           </div>
-                          {resident.status === "Deceased" && resident.diedOn && (
-                            <div>
-                              <p className="text-sm text-gray-500">Date of Death</p>
-                              <p>{new Date(resident.diedOn).toLocaleDateString()}</p>
+                          {resident.status === "Deceased" && (resident.diedOn || resident.died_on) && (
+                            <div className="md:col-span-2 flex items-start">
+                              <Skull className="h-4 w-4 text-red-500 mt-0.5 mr-2" />
+                              <div>
+                                <p className="text-sm text-gray-500">Date of Death</p>
+                                <p>{formatDate(resident.diedOn || resident.died_on)}</p>
+                              </div>
                             </div>
                           )}
                         </div>

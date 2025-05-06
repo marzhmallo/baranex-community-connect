@@ -1,3 +1,4 @@
+
 // Resident types
 export interface Resident {
   id: string;
@@ -33,7 +34,8 @@ export interface Resident {
   hasTin?: boolean;
   remarks?: string;
   photoUrl?: string;
-  died_on?: string | null;
+  diedOn?: string | null; // Date of death for deceased residents
+  died_on?: string | null; // Database field name for date of death
   householdId?: string | null;
   updated_at?: string; // Added updated_at to match the database column name
   brgyId?: string;
