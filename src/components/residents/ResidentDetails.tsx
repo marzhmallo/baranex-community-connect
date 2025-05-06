@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -14,7 +13,7 @@ import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ResidentForm from "./ResidentForm";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ZoomIn, X } from "lucide-react";
+import { ZoomIn, X, Clock, History } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 
 type ResidentDetailsProps = {
@@ -91,6 +90,17 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   const handleViewMoreDetails = () => {
     handleClose();
     navigate(`/residents/${resident.id}`);
+  };
+
+  // Format dates for display
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Not available";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric'
+    });
   };
 
   return (
@@ -271,6 +281,34 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                             : "None specified"}
                         </div>
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Record Information - New card for created/updated dates */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <h3 className="text-lg font-medium mb-4 flex items-center">
+                      <History className="mr-2 h-4 w-4" />
+                      Record Information
+                    </h3>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div>
+                        <p className="text-sm text-gray-500">Created</p>
+                        <p className="flex items-center">
+                          <Clock className="mr-2 h-3 w-3 text-gray-400" />
+                          {formatDate(resident.dateRegistered || resident.updatedAt)}
+                        </p>
+                      </div>
+                      {resident.updatedAt && (
+                        <div>
+                          <p className="text-sm text-gray-500">Last Updated</p>
+                          <p className="flex items-center">
+                            <Clock className="mr-2 h-3 w-3 text-gray-400" />
+                            {formatDate(resident.updatedAt)}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

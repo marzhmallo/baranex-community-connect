@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -7,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, FileText, UserCheck, MapPin, Mail, Phone, Briefcase, Calendar, Home, Skull } from "lucide-react";
+import { ArrowLeft, FileText, UserCheck, MapPin, Mail, Phone, Briefcase, Calendar, Home, Skull, Clock, History } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -47,6 +46,19 @@ const ResidentMoreDetailsPage = () => {
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  // Format dates for display
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Not available";
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (isLoading) {
@@ -469,6 +481,36 @@ const ResidentMoreDetailsPage = () => {
                   <p className="text-sm text-gray-500">TIN</p>
                   <p className="font-medium">{resident.hasTin ? "Has TIN" : "No TIN"}</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Record Information - New card for created and updated dates */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <History className="mr-2 h-5 w-5" />
+                Record Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Created At</p>
+                  <p className="font-medium flex items-center">
+                    <Clock className="mr-2 h-4 w-4 text-gray-400" />
+                    {formatDate(resident.dateRegistered || resident.createdAt || resident.updatedAt)}
+                  </p>
+                </div>
+                {resident.updatedAt && (
+                  <div>
+                    <p className="text-sm text-gray-500">Last Updated</p>
+                    <p className="font-medium flex items-center">
+                      <Clock className="mr-2 h-4 w-4 text-gray-400" />
+                      {formatDate(resident.updatedAt)}
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
