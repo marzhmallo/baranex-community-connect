@@ -278,7 +278,6 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
             </ScrollArea>
             
             <div className="flex justify-end gap-2 pt-4 border-t mt-4 w-full shrink-0">
-              <Button variant="outline" onClick={() => setIsEditMode(true)}>Edit Details</Button>
               <Button onClick={handleViewMoreDetails}>More Details</Button>
               <Button variant="ghost" onClick={handleClose}>Close</Button>
             </div>
