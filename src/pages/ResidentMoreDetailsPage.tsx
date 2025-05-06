@@ -536,9 +536,14 @@ const ResidentMoreDetailsPage = () => {
           </Card>
 
           {/* Record Information - New card for created and updated dates */}
-                   <div>
-            <h2 className="text-xl font-semibold mb-4">Record Information</h2>
-            <div className="bg-card rounded-lg border p-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <History className="mr-2 h-5 w-5" />
+                Record Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-start gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
@@ -555,8 +560,11 @@ const ResidentMoreDetailsPage = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
+    </div>
   );
 };
 
