@@ -10,6 +10,8 @@ import { ArrowLeft, FileText, UserCheck, MapPin, Mail, Phone, Briefcase, Calenda
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import {RefreshCw } from "lucide-react";
+
 
 // Helper function to calculate age
 const calculateAge = (birthDate: string) => {
@@ -534,38 +536,27 @@ const ResidentMoreDetailsPage = () => {
           </Card>
 
           {/* Record Information - New card for created and updated dates */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center">
-                <History className="mr-2 h-5 w-5" />
-                Record Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Created At</p>
-                  <p className="font-medium flex items-center">
-                    <Clock className="mr-2 h-4 w-4 text-gray-400" />
-                    {resident.created_at ? formatDate(resident.created_at) : 
-                     "Not available"}
-                  </p>
-                </div>
-                {resident.updated_at && (
+                   <div>
+            <h2 className="text-xl font-semibold mb-4">Record Information</h2>
+            <div className="bg-card rounded-lg border p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-sm text-gray-500">Last Updated</p>
-                    <p className="font-medium flex items-center">
-                      <Clock className="mr-2 h-4 w-4 text-gray-400" />
-                      {formatDate(resident.updated_at)}
-                    </p>
+                    <p className="text-sm font-medium text-muted-foreground">Created</p>
+                    <p className="mt-1">{formatDate(resident.created_at)}</p>
                   </div>
-                )}
+                </div>
+                <div className="flex items-start gap-2">
+                  <RefreshCw className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
+                    <p className="mt-1">{formatDate(resident.updated_at)}</p>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </ScrollArea>
-    </div>
+            </div>
+          </div>
   );
 };
 
