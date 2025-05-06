@@ -19,7 +19,6 @@ import {
   BarChart3,
   PlusCircle,
 } from "lucide-react"
-import Link from "next/link"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { formatResidentName } from "@/lib/format-names"
