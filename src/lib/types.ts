@@ -17,7 +17,6 @@ export interface Resident {
   classifications?: string[];
   educationLevel?: string;
   familySize?: number;
-  dateRegistered?: string;
   created_at?: string; // Added created_at to match the database column name
   nationality?: string;
   monthlyIncome?: number;
@@ -34,9 +33,8 @@ export interface Resident {
   hasTin?: boolean;
   remarks?: string;
   photoUrl?: string;
-  diedOn?: string | null;
+  died_on?: string | null;
   householdId?: string | null;
-  updatedAt?: string;
   updated_at?: string; // Added updated_at to match the database column name
   brgyId?: string;
   emergencyContact?: {
