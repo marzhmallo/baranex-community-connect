@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -95,12 +96,24 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   // Format dates for display
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Not available";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
-    });
+    
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.error("Invalid date in ResidentDetails:", dateString);
+        return "Invalid date";
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error("Error formatting date in ResidentDetails:", error, "Date string:", dateString);
+      return "Date error";
+    }
   };
 
   // Log to debug the resident data
@@ -222,14 +235,26 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Birth Date</p>
-                            <p>{new Date(resident.birthDate).toLocaleDateString()}</p>
+                            <p>{formatDate(resident.birthDate)}</p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Civil Status</p>
                             <p>{resident.civilStatus || "Not specified"}</p>
                           </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Classifications</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {resident.classifications?.length ? 
+                                resident.classifications.map((classification, index) => (
+                                  <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
+                                    {classification}
+                                  </Badge>
+                                )) 
+                                : "None specified"}
+                            </div>
+                          </div>
                           {resident.status === "Deceased" && (resident.diedOn || resident.died_on) && (
-                            <div className="md:col-span-2">
+                            <div>
                               <p className="text-sm text-gray-500">Date of Death <Skull className="inline h-4 w-4 text-red-500 ml-1" /></p>
                               <p>{formatDate(resident.diedOn || resident.died_on)}</p>
                             </div>
@@ -273,18 +298,6 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                       <div>
                         <p className="text-sm text-gray-500">Years in Barangay</p>
                         <p>{resident.yearsInBarangay || "Not specified"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Classification</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {resident.classifications?.length ? 
-                            resident.classifications.map((classification, index) => (
-                              <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
-                                {classification}
-                              </Badge>
-                            )) 
-                            : "None specified"}
-                        </div>
                       </div>
                     </div>
                   </CardContent>
