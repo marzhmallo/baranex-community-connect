@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -329,19 +330,19 @@ const ResidentMoreDetailsPage = () => {
                           )) 
                         : <p className="text-muted-foreground">None specified</p>}
                     </div>
-                    
-                    {/* Display date of death if resident is deceased */}
-                    {resident.status === 'Deceased' && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-500">Date of Death <Skull className="inline h-4 w-4 text-red-500 ml-1" /></p>
-                        <p className="font-medium">
-                          {(resident.diedOn || resident.died_on)
-                            ? formatSimpleDate(resident.diedOn || resident.died_on) 
-                            : "Date not recorded"}
-                        </p>
-                      </div>
-                    )}
                   </div>
+
+                  {/* Display date of death if resident is deceased */}
+                  {resident.status === 'Deceased' && (
+                    <div>
+                      <p className="text-sm text-gray-500">Date of Death <Skull className="inline h-4 w-4 text-red-500 ml-1" /></p>
+                      <p className="font-medium">
+                        {(resident.diedOn || resident.died_on)
+                          ? formatSimpleDate(resident.diedOn || resident.died_on) 
+                          : "Date not recorded"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
