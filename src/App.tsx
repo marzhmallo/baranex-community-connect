@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ResidentsPage from "./pages/ResidentsPage";
+import ResidentMoreDetailsPage from "./pages/ResidentMoreDetailsPage";
 
 // Initialize the query client
 const queryClient = new QueryClient({
@@ -58,6 +59,7 @@ const AppContent = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Index />} />
             <Route path="/residents" element={<ResidentsPage />} />
+            <Route path="/residents/:residentId" element={<ResidentMoreDetailsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

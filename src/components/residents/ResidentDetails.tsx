@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -14,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ResidentForm from "./ResidentForm";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ZoomIn, X } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 type ResidentDetailsProps = {
   resident: Resident | null;
@@ -24,6 +26,7 @@ type ResidentDetailsProps = {
 const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showFullPhoto, setShowFullPhoto] = useState(false);
+  const navigate = useNavigate();
   
   if (!resident) return null;
 
@@ -83,6 +86,12 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   const fullAddress = resident.purok ? 
     `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}, ${resident.region}` : 
     resident.address || 'Address not provided';
+    
+  // Navigate to the resident details page
+  const handleViewMoreDetails = () => {
+    handleClose();
+    navigate(`/residents/${resident.id}`);
+  };
 
   return (
     <Dialog 
@@ -270,6 +279,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
             
             <div className="flex justify-end gap-2 pt-4 border-t mt-4 w-full shrink-0">
               <Button variant="outline" onClick={() => setIsEditMode(true)}>Edit Details</Button>
+              <Button onClick={handleViewMoreDetails}>More Details</Button>
               <Button variant="ghost" onClick={handleClose}>Close</Button>
             </div>
           </>
