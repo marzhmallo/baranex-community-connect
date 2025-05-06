@@ -118,6 +118,7 @@ const ResidentForm = ({
       }
     }
     
+    // Modified to use empty strings instead of placeholder text for emergency contact fields
     return {
       // Personal Info
       firstName: resident.firstName,
@@ -163,10 +164,10 @@ const ResidentForm = ({
       classifications: resident.classifications ?? [],
       remarks: resident.remarks ?? "",
       
-      // Emergency Contact
-      emergencyContactName: resident.emergencyContact?.name ?? "",
-      emergencyContactRelationship: resident.emergencyContact?.relationship ?? "",
-      emergencyContactNumber: resident.emergencyContact?.contactNumber ?? "",
+      // Emergency Contact - Changed to use empty strings instead of placeholder text
+      emergencyContactName: resident.emergencyContact?.name === "Emergency contact not set" ? "" : resident.emergencyContact?.name ?? "",
+      emergencyContactRelationship: resident.emergencyContact?.relationship === "Not specified" ? "" : resident.emergencyContact?.relationship ?? "",
+      emergencyContactNumber: resident.emergencyContact?.contactNumber === "Not specified" ? "" : resident.emergencyContact?.contactNumber ?? "",
       
       // Death date
       diedOn: diedOnDate,

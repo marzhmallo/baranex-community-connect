@@ -1,3 +1,4 @@
+
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -57,12 +58,14 @@ export const getResidents = async (): Promise<Resident[]> => {
 
   // Map database fields to our application model
   return data.map(resident => {
-    // Create emergency contact from individual fields
-    const emergencyContact = {
-      name: resident.emname || 'Emergency contact not set',
-      relationship: resident.emrelation || 'Not specified',
-      contactNumber: resident.emcontact ? resident.emcontact.toString() : 'Not specified'
-    };
+    // Create emergency contact object without default placeholder texts
+    const emergencyContact = resident.emname || resident.emrelation || resident.emcontact
+      ? {
+          name: resident.emname || '',
+          relationship: resident.emrelation || '',
+          contactNumber: resident.emcontact ? resident.emcontact.toString() : ''
+        }
+      : null;
 
     return {
       id: resident.id,
@@ -114,12 +117,14 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
   if (error) throw error;
   if (!data) return null;
 
-  // Create emergency contact from individual fields
-  const emergencyContact = {
-    name: data.emname || 'Emergency contact not set',
-    relationship: data.emrelation || 'Not specified',
-    contactNumber: data.emcontact ? data.emcontact.toString() : 'Not specified'
-  };
+  // Create emergency contact without default placeholder texts
+  const emergencyContact = data.emname || data.emrelation || data.emcontact
+    ? {
+        name: data.emname || '',
+        relationship: data.emrelation || '',
+        contactNumber: data.emcontact ? data.emcontact.toString() : ''
+      }
+    : null;
 
   // Map database fields to our application model
   return {
