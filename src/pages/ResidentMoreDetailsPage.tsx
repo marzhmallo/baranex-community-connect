@@ -42,14 +42,49 @@ const getStatusBadge = (status: string) => {
 // Helper function to format dates for display
 const formatDate = (dateString?: string) => {
   if (!dateString) return "Not available";
-  const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  
+  try {
+    const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error("Invalid date:", dateString);
+      return "Invalid date";
+    }
+    
+    return date.toLocaleString('en-US', {
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    console.error("Error formatting date:", error, "Date string:", dateString);
+    return "Date error";
+  }
+};
+
+// Simpler date format without time for birthdate and death date
+const formatSimpleDate = (dateString?: string) => {
+  if (!dateString) return "Not available";
+  
+  try {
+    const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error("Invalid date for simple format:", dateString);
+      return "Invalid date";
+    }
+    
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric'
+    });
+  } catch (error) {
+    console.error("Error formatting simple date:", error, "Date string:", dateString);
+    return "Date error";
+  }
 };
 
 const ResidentMoreDetailsPage = () => {
@@ -62,6 +97,12 @@ const ResidentMoreDetailsPage = () => {
     enabled: !!residentId,
   });
   
+  // Log to debug what we're receiving from the API
+  console.log("Resident data:", resident);
+  console.log("Birth date:", resident?.birthDate);
+  console.log("Created at value:", resident?.created_at);
+  console.log("Updated at value:", resident?.updated_at);
+  console.log("Died on value:", resident?.diedOn || resident?.died_on);
   
   if (isLoading) {
     return (
@@ -105,11 +146,6 @@ const ResidentMoreDetailsPage = () => {
       </div>
     );
   }
-
-  // Log to debug what we're receiving from the API
-  console.log("Resident data:", resident);
-  console.log("Created at value:", resident.created_at);
-  console.log("Died on value:", resident.diedOn);
 
   // Generate full address display
   const fullAddress = resident.purok 
@@ -258,7 +294,7 @@ const ResidentMoreDetailsPage = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Birth Date</p>
-                      <p className="font-medium">{new Date(resident.birthDate).toLocaleDateString()}</p>
+                      <p className="font-medium">{formatSimpleDate(resident.birthDate)}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Age</p>
@@ -294,14 +330,14 @@ const ResidentMoreDetailsPage = () => {
                         : <p className="text-muted-foreground">None specified</p>}
                     </div>
                   </div>
-                  
-                  {/* Display date of death if resident is deceased - repositioned */}
+
+                  {/* Display date of death if resident is deceased - moved back to original position */}
                   {resident.status === 'Deceased' && (
                     <div>
                       <p className="text-sm text-gray-500">Date of Death <Skull className="inline h-4 w-4 text-red-500 ml-1" /></p>
                       <p className="font-medium">
-                        {resident.diedOn || resident.died_on
-                          ? new Date(resident.diedOn || resident.died_on).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) 
+                        {(resident.diedOn || resident.died_on)
+                          ? formatSimpleDate(resident.diedOn || resident.died_on) 
                           : "Date not recorded"}
                       </p>
                     </div>
