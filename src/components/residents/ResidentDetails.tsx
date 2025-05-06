@@ -103,6 +103,10 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     });
   };
 
+  // Log to debug the resident data
+  console.log("ResidentDetails - resident data:", resident);
+  console.log("ResidentDetails - creation date:", resident?.created_at);
+
   return (
     <Dialog 
       open={open} 
@@ -297,7 +301,9 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                         <p className="text-sm text-gray-500">Created</p>
                         <p className="flex items-center">
                           <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                          {formatDate(resident.created_at || resident.dateRegistered || resident.updatedAt)}
+                          {resident.created_at ? formatDate(resident.created_at) :
+                           resident.dateRegistered ? formatDate(resident.dateRegistered) :
+                           "Not available"}
                         </p>
                       </div>
                       {(resident.updated_at || resident.updatedAt) && (
@@ -305,7 +311,8 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                           <p className="text-sm text-gray-500">Last Updated</p>
                           <p className="flex items-center">
                             <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                            {formatDate(resident.updated_at || resident.updatedAt)}
+                            {resident.updated_at ? formatDate(resident.updated_at) :
+                             formatDate(resident.updatedAt)}
                           </p>
                         </div>
                       )}

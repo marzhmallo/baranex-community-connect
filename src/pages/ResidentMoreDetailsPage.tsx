@@ -104,6 +104,10 @@ const ResidentMoreDetailsPage = () => {
     );
   }
 
+  // Log to debug what we're receiving from the API
+  console.log("Resident data:", resident);
+  console.log("Created at value:", resident.created_at);
+
   // Generate full address display
   const fullAddress = resident.purok 
     ? `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}, ${resident.region}` 
@@ -499,7 +503,9 @@ const ResidentMoreDetailsPage = () => {
                   <p className="text-sm text-gray-500">Created At</p>
                   <p className="font-medium flex items-center">
                     <Clock className="mr-2 h-4 w-4 text-gray-400" />
-                    {formatDate(resident.created_at || resident.dateRegistered || resident.updatedAt)}
+                    {resident.created_at ? formatDate(resident.created_at) : 
+                     resident.dateRegistered ? formatDate(resident.dateRegistered) : 
+                     "Not available"}
                   </p>
                 </div>
                 {(resident.updated_at || resident.updatedAt) && (
@@ -507,7 +513,8 @@ const ResidentMoreDetailsPage = () => {
                     <p className="text-sm text-gray-500">Last Updated</p>
                     <p className="font-medium flex items-center">
                       <Clock className="mr-2 h-4 w-4 text-gray-400" />
-                      {formatDate(resident.updated_at || resident.updatedAt)}
+                      {resident.updated_at ? formatDate(resident.updated_at) : 
+                       formatDate(resident.updatedAt)}
                     </p>
                   </div>
                 )}
