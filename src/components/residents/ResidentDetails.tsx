@@ -14,7 +14,6 @@ import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ResidentForm from "./ResidentForm";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ZoomIn } from "lucide-react";
 
 type ResidentDetailsProps = {
@@ -167,7 +166,10 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                                 variant="ghost" 
                                 size="icon" 
                                 className="absolute top-2 right-2 bg-black/40 hover:bg-black/60 text-white"
-                                onClick={() => setShowFullPhoto(false)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowFullPhoto(false);
+                                }}
                               >
                                 <span className="sr-only">Close</span>
                                 <ZoomIn className="h-4 w-4 rotate-45" />
