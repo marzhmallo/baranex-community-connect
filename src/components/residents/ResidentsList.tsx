@@ -227,6 +227,13 @@ const ResidentsList: React.FC = () => {
     ).length;
   };
 
+  // Define classification count variables
+  const indigentCount = getClassificationCount('Indigent');
+  const studentCount = getClassificationCount('Student');
+  const ofwCount = getClassificationCount('OFW');
+  const pwdCount = getClassificationCount('PWD');
+  const missingCount = getClassificationCount('Missing');
+
   // Get unique classifications - with null safety
   const allClassifications = useMemo(() => {
     const classifications = new Set<string>();
