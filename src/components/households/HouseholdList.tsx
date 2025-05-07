@@ -90,12 +90,14 @@ const HouseholdList: React.FC = () => {
   // Helper function to get status badge
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'active':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
-      case 'inactive':
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Inactive</Badge>;
+      case 'permanent':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Permanent</Badge>;
+      case 'temporary':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Temporary</Badge>;
       case 'relocated':
         return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Relocated</Badge>;
+           case 'abandoned':
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Abandoned</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
