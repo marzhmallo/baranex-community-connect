@@ -10,16 +10,11 @@ import {
   MessageSquare,
   AlertTriangle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
   Home,
   Award,
-  FileText,
   Briefcase,
   BellRing,
-  MessageSquare,
-  Calendar,
-  AlertTriangle,
-  BarChart3,
   Settings,
   Sun,
   Moon,
@@ -98,7 +93,7 @@ const Sidebar = () => {
             {!isCollapsed && <span className="ml-2">Residents</span>}
           </Link>
 
-              <Link to="/households" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link to="/households" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
             <Home className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Households</span>}
           </Link>
