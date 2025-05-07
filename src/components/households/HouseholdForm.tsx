@@ -334,11 +334,22 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                 control={form.control}
                 name="house_type"
                 render={({ field }) => (
-                  <FormItem>
+                   <FormItem>
                     <FormLabel>House Type</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Concrete" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Property Type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Concrete">Concrete</SelectItem>
+                        <SelectItem value="Semi-Concrete">Semi-Concrete</SelectItem>
+                        <SelectItem value="Wood">Wood</SelectItem>
+                        <SelectItem value="Nipa">Nipa</SelectItem>
+                        <SelectItem value="Makeshift">Makeshift</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
