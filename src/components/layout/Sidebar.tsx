@@ -104,7 +104,7 @@ const Sidebar = () => {
           </Link>
 
           <Link to="/announcements" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
-            <Calendar className="h-5 w-5" />
+            <BellRing className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Announcements</span>}
           </Link>
 
