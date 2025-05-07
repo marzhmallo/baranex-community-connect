@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       barangays: {
         Row: {
           barangayname: string
@@ -47,6 +71,122 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      blotters: {
+        Row: {
+          complainant_id: string | null
+          complaint_details: string
+          created_at: string | null
+          id: string
+          incident_date: string
+          incident_location: string
+          resolution: string | null
+          respondent_id: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          complainant_id?: string | null
+          complaint_details: string
+          created_at?: string | null
+          id?: string
+          incident_date: string
+          incident_location: string
+          resolution?: string | null
+          respondent_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          complainant_id?: string | null
+          complaint_details?: string
+          created_at?: string | null
+          id?: string
+          incident_date?: string
+          incident_location?: string
+          resolution?: string | null
+          respondent_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blotters_complainant_id_fkey"
+            columns: ["complainant_id"]
+            isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blotters_complainant_id_fkey"
+            columns: ["complainant_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blotters_respondent_id_fkey"
+            columns: ["respondent_id"]
+            isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blotters_respondent_id_fkey"
+            columns: ["respondent_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certificates: {
+        Row: {
+          created_at: string | null
+          id: string
+          issued_at: string | null
+          purpose: string
+          resident_id: string | null
+          status: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          issued_at?: string | null
+          purpose: string
+          resident_id?: string | null
+          status?: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          issued_at?: string | null
+          purpose?: string
+          resident_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       document_logs: {
         Row: {
@@ -662,6 +802,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_household"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "residents_brgyid_fkey"
             columns: ["brgyid"]
             isOneToOne: false
@@ -878,6 +1025,13 @@ export type Database = {
           years_in_barangay?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_household"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "residents_brgyid_fkey"
             columns: ["brgyid"]

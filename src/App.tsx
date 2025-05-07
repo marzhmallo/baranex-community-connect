@@ -13,7 +13,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ResidentsPage from "./pages/ResidentsPage";
 import ResidentMoreDetailsPage from "./pages/ResidentMoreDetailsPage";
-import HouseholdPage from "./pages/householdspage";
+import HouseholdPage from "./pages/HouseholdsPage";
 import HouseholdMoreDetailsPage from "./pages/HouseholdMoreDetailsPage";
 
 // Initialize the query client
