@@ -188,23 +188,24 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                 control={form.control}
                 name="status"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Active">Permanent</SelectItem>
-                        <SelectItem value="Inactive">Temporary</SelectItem>
-                        <SelectItem value="Relocated">Relocated</SelectItem>
-                        <SelectItem value="Relocated">Abandoned</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                 <FormItem>
+  <FormLabel>Status *</FormLabel>
+  <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <FormControl>
+      <SelectTrigger>
+        <SelectValue placeholder="Select status" />
+      </SelectTrigger>
+    </FormControl>
+    <SelectContent>
+      <SelectItem value="">None</SelectItem> {/* Allows deselection */}
+      <SelectItem value="permanent">Permanent</SelectItem>
+      <SelectItem value="temporary">Temporary</SelectItem>
+      <SelectItem value="relocated">Relocated</SelectItem>
+      <SelectItem value="abandoned">Abandoned</SelectItem>
+    </SelectContent>
+  </Select>
+  <FormMessage />
+</FormItem>
                 )}
               />
             </div>
