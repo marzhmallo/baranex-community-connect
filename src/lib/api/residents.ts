@@ -1,4 +1,3 @@
-
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -257,7 +256,6 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       emcontact: null, // Will be set below if there's valid contact info
       
       // Handle died_on date properly - ensure it's explicitly set to null if not provided
-      // This will set died_on to null in the database if residentData.diedOn is null
       died_on: residentData.diedOn || null,
       
       // Add the brgyid of the currently logged in user
@@ -409,5 +407,25 @@ export const createResident = async (residentData: any): Promise<{ success: bool
   } catch (error) {
     console.error("Exception creating resident:", error);
     return { success: false, error };
+  }
+};
+
+// Function to delete a resident by ID
+export const deleteResident = async (id: string): Promise<{success: boolean, error?: string}> => {
+  try {
+    const { error } = await supabase
+      .from('residents')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting resident:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error deleting resident:', error);
+    return { success: false, error: 'An unexpected error occurred' };
   }
 };

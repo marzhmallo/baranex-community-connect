@@ -81,26 +81,26 @@ export const saveHousehold = async (household: Partial<Household>) => {
       if (error) throw new Error(error.message);
       result = data;
     } else {
-      // Create new household
+      // Create new household - ensure each required field is specified
       const { data, error } = await supabase
         .from('households')
-        .insert([{
+        .insert({
           name: household.name,
           address: household.address,
           purok: household.purok,
-          head_of_family: household.head_of_family,
-          contact_number: household.contact_number,
-          year_established: household.year_established,
           status: household.status,
-          monthly_income: household.monthly_income,
-          property_type: household.property_type,
-          house_type: household.house_type,
-          water_source: household.water_source,
-          electricity_source: household.electricity_source,
-          toilet_type: household.toilet_type,
-          garbage_disposal: household.garbage_disposal,
-          remarks: household.remarks,
-        }])
+          head_of_family: household.head_of_family || null,
+          contact_number: household.contact_number || null,
+          year_established: household.year_established || null,
+          monthly_income: household.monthly_income || null,
+          property_type: household.property_type || null,
+          house_type: household.house_type || null,
+          water_source: household.water_source || null,
+          electricity_source: household.electricity_source || null,
+          toilet_type: household.toilet_type || null,
+          garbage_disposal: household.garbage_disposal || null,
+          remarks: household.remarks || null,
+        })
         .select();
       
       if (error) throw new Error(error.message);

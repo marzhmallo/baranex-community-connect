@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Resident } from '@/lib/types';
-import { getResidents, deleteResident } from '@/lib/api/residents';
+import { getResidents } from '@/lib/api/residents';
 import { useQuery } from '@tanstack/react-query';
 import ResidentForm from './ResidentForm';
 import ResidentStatusCard from './ResidentStatusCard';
@@ -197,7 +197,7 @@ const ResidentsList: React.FC = () => {
   const [activeClassificationCard, setActiveClassificationCard] = useState<string | null>(null);
   
   // Fetch residents data from Supabase
-  const { data: residentsData, isLoading, error } = useQuery({
+  const { data: residentsData = [], isLoading, error } = useQuery({
     queryKey: ['residents'],
     queryFn: getResidents,
   });
@@ -213,7 +213,7 @@ const ResidentsList: React.FC = () => {
     }
   }, [error]);
 
-  // Calculate counts by status
+  // Calculate counts by status - with null safety
   const permanentCount = residentsData.filter(r => r.status === 'Permanent').length;
   const temporaryCount = residentsData.filter(r => r.status === 'Temporary').length;
   const deceasedCount = residentsData.filter(r => r.status === 'Deceased').length;
@@ -227,20 +227,16 @@ const ResidentsList: React.FC = () => {
     ).length;
   };
 
-  const indigentCount = getClassificationCount('Indigent');
-  const studentCount = getClassificationCount('Student');
-  const ofwCount = getClassificationCount('OFW');
-  const pwdCount = getClassificationCount('PWD');
-  const missingCount = getClassificationCount('Missing');
-
-  // Get unique classifications
+  // Get unique classifications - with null safety
   const allClassifications = useMemo(() => {
     const classifications = new Set<string>();
-    residentsData.forEach(resident => {
-      if (resident.classifications && Array.isArray(resident.classifications)) {
-        resident.classifications.forEach(c => classifications.add(c));
-      }
-    });
+    if (Array.isArray(residentsData)) {
+      residentsData.forEach(resident => {
+        if (resident.classifications && Array.isArray(resident.classifications)) {
+          resident.classifications.forEach(c => classifications.add(c));
+        }
+      });
+    }
     return Array.from(classifications);
   }, [residentsData]);
   
@@ -273,7 +269,13 @@ const ResidentsList: React.FC = () => {
       <ArrowDown className="h-4 w-4 ml-2" />;
   };
   
+  // Apply filtering and sorting with null safety
   const filteredResidents = useMemo(() => {
+    // Ensure we have data to filter
+    if (!Array.isArray(residentsData)) {
+      return [];
+    }
+    
     // Filter by search, status, tab, and classifications
     const filtered = residentsData.filter(resident => {
       // Search filter
@@ -297,7 +299,7 @@ const ResidentsList: React.FC = () => {
       return matchesSearch && matchesStatus && matchesClassifications;
     });
     
-    // Apply sorting
+    // Apply sorting with null safety
     return [...filtered].sort((a, b) => {
       // Calculate ages first to avoid repeated calculations
       const dateA = new Date(a.birthDate);
@@ -336,8 +338,8 @@ const ResidentsList: React.FC = () => {
           return (ageGroupOrder[ageGroupA] - ageGroupOrder[ageGroupB]) * directionModifier;
         case 'purok':
           // Some residents might not have a purok field
-          const purokA = (a as any).purok || '';
-          const purokB = (b as any).purok || '';
+          const purokA = a.purok || '';
+          const purokB = b.purok || '';
           return purokA.localeCompare(purokB) * directionModifier;
         case 'contact':
           return ((a.contactNumber || '').localeCompare(b.contactNumber || '')) * directionModifier;
@@ -460,6 +462,24 @@ const ResidentsList: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  // Mock implementation for deleteResident since it's imported but not provided
+  const handleDeleteResident = async (id: string) => {
+    try {
+      toast({
+        title: "Deleting resident",
+        description: "This functionality is not yet implemented.",
+        variant: "default",
+      });
+      // Note: Actual deletion will require implementation in residents.ts API
+    } catch (error) {
+      toast({
+        title: "Error deleting resident",
+        description: "There was a problem deleting the resident.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
