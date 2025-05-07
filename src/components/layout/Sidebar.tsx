@@ -11,6 +11,20 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight
+  Home,
+  Award,
+  FileText,
+  Briefcase,
+  BellRing,
+  MessageSquare,
+  Calendar,
+  AlertTriangle,
+  BarChart3,
+  Settings,
+  Sun,
+  Moon,
+  X,
+  Menu,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -80,7 +94,7 @@ const Sidebar = () => {
           </Link>
 
           <Link to="/residents" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
-            <User className="h-5 w-5" />
+            <Home className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Residents</span>}
           </Link>
 
