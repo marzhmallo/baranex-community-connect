@@ -188,24 +188,23 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                 control={form.control}
                 name="status"
                 render={({ field }) => (
-                 <FormItem>
-  <FormLabel>Status *</FormLabel>
-  <Select onValueChange={field.onChange} defaultValue={field.value}>
-    <FormControl>
-      <SelectTrigger>
-        <SelectValue placeholder="Select status" />
-      </SelectTrigger>
-    </FormControl>
-    <SelectContent>
-      <SelectItem value="">None</SelectItem> {/* Allows deselection */}
-      <SelectItem value="permanent">Permanent</SelectItem>
-      <SelectItem value="temporary">Temporary</SelectItem>
-      <SelectItem value="relocated">Relocated</SelectItem>
-      <SelectItem value="abandoned">Abandoned</SelectItem>
-    </SelectContent>
-  </Select>
-  <FormMessage />
-</FormItem>
+                  <FormItem>
+                    <FormLabel>Status *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Active">Permanent</SelectItem>
+                        <SelectItem value="Inactive">Temporary</SelectItem>
+                        <SelectItem value="Relocated">Relocated</SelectItem>
+                        <SelectItem value="Relocated">Abandoned</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
             </div>
@@ -360,13 +359,24 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="water_source"
+                name="house_type"
                 render={({ field }) => (
-                  <FormItem>
+                   <FormItem>
                     <FormLabel>Water Source</FormLabel>
-                    <FormControl>
-                      <Input placeholder="City Water" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Water Source" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Pump">Water Pump</SelectItem>
+                        <SelectItem value="Well">Well</SelectItem>
+                        <SelectItem value="Barangay">Barangay Water System</SelectItem>
+                        <SelectItem value="Natural">Natural Source</SelectItem>
+                        <SelectItem value="Delivered">Delivered</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
