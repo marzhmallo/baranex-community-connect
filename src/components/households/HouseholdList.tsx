@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -7,30 +6,16 @@ import { Pencil, Trash2, Eye } from "lucide-react";
 import { getHouseholds, deleteHousehold } from "@/lib/api/households";
 import { Household } from "@/lib/types";
 import HouseholdDetails from './HouseholdDetails';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 const HouseholdList: React.FC = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,12 +25,14 @@ const HouseholdList: React.FC = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [householdToDelete, setHouseholdToDelete] = useState<string | null>(null);
-  
-  const { data: householdsData, isLoading, error } = useQuery({
+  const {
+    data: householdsData,
+    isLoading,
+    error
+  } = useQuery({
     queryKey: ['households'],
-    queryFn: getHouseholds,
+    queryFn: getHouseholds
   });
-  
   const deleteHouseholdMutation = useMutation({
     mutationFn: (id: string) => deleteHousehold(id),
     onSuccess: () => {
@@ -54,7 +41,7 @@ const HouseholdList: React.FC = () => {
       });
       toast({
         title: "Household Deleted",
-        description: "The household has been successfully deleted.",
+        description: "The household has been successfully deleted."
       });
       setIsDeleteDialogOpen(false);
     },
@@ -62,25 +49,21 @@ const HouseholdList: React.FC = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to delete the household.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   });
-
   const handleViewDetails = (household: Household) => {
     setSelectedHousehold(household);
     setIsDetailsOpen(true);
   };
-
   const handleViewMore = (household: Household) => {
     navigate(`/households/${household.id}`);
   };
-
   const confirmDelete = (id: string) => {
     setHouseholdToDelete(id);
     setIsDeleteDialogOpen(true);
   };
-
   const handleDelete = () => {
     if (householdToDelete) {
       deleteHouseholdMutation.mutate(householdToDelete);
@@ -96,13 +79,13 @@ const HouseholdList: React.FC = () => {
         return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Temporary</Badge>;
       case 'relocated':
         return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Relocated</Badge>;
-           case 'abandoned':
+      case 'abandoned':
         return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Abandoned</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-  
+
   // Calculate unique puroks for filtering
   const uniquePuroks = useMemo(() => {
     if (!householdsData?.data) return [];
@@ -136,7 +119,6 @@ const HouseholdList: React.FC = () => {
       relocated: 0,
       abandoned: 0
     };
-
     const stats = {
       total: householdsData.data.length,
       permanent: 0,
@@ -144,51 +126,27 @@ const HouseholdList: React.FC = () => {
       relocated: 0,
       abandoned: 0
     };
-
     householdsData.data.forEach((household: Household) => {
-      if (household.status?.toLowerCase() === 'permanent') stats.permanent++;
-      else if (household.status?.toLowerCase() === 'temporary') stats.temporary++;
-      else if (household.status?.toLowerCase() === 'relocated') stats.relocated++;
-      else if (household.status?.toLowerCase() === 'abandoned') stats.abandoned++;
+      if (household.status?.toLowerCase() === 'permanent') stats.permanent++;else if (household.status?.toLowerCase() === 'temporary') stats.temporary++;else if (household.status?.toLowerCase() === 'relocated') stats.relocated++;else if (household.status?.toLowerCase() === 'abandoned') stats.abandoned++;
     });
-
     return stats;
   }, [householdsData?.data]);
-  
   const filteredHouseholds = useMemo(() => {
     if (!householdsData?.data) return [];
-    
     return householdsData.data.filter((household: Household) => {
       const query = searchQuery.toLowerCase();
-      const matchesSearch = 
-        (household.name?.toLowerCase().includes(query) || false) ||
-        (household.address?.toLowerCase().includes(query) || false) ||
-        (household.head_of_family?.toLowerCase().includes(query) || false) ||
-        (household.purok?.toLowerCase().includes(query) || false) ||
-        (household.contact_number?.toLowerCase().includes(query) || false);
-      
- const matchesStatus = 
-  !statusFilter || statusFilter.toLowerCase() === "all statuses"
-    ? true
-    : household.status?.toLowerCase() === statusFilter.toLowerCase();
-
-const matchesPurok = 
-  !purokFilter || purokFilter.toLowerCase() === "all puroks"
-    ? true
-    : household.purok?.toLowerCase() === purokFilter.toLowerCase();
-      
+      const matchesSearch = household.name?.toLowerCase().includes(query) || false || household.address?.toLowerCase().includes(query) || false || household.head_of_family?.toLowerCase().includes(query) || false || household.purok?.toLowerCase().includes(query) || false || household.contact_number?.toLowerCase().includes(query) || false;
+      const matchesStatus = !statusFilter || statusFilter.toLowerCase() === "all statuses" ? true : household.status?.toLowerCase() === statusFilter.toLowerCase();
+      const matchesPurok = !purokFilter || purokFilter.toLowerCase() === "all puroks" ? true : household.purok?.toLowerCase() === purokFilter.toLowerCase();
       return matchesSearch && matchesStatus && matchesPurok;
     });
   }, [householdsData?.data, searchQuery, statusFilter, purokFilter]);
-
   if (isLoading) return <div className="p-4 text-center">Loading households...</div>;
   if (error) return <div className="p-4 text-center text-red-500">Error loading households: {error.toString()}</div>;
-
-  return (
-    <>
+  return <>
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-4 shadow my-[15px] mx-[15px] rounded-lg px-[15px] py-[15px]">
           <div className="flex items-center">
             <div className="rounded-full p-3 bg-blue-100">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-blue-600">
@@ -248,12 +206,7 @@ const matchesPurok =
       {/* Filters and Search */}
       <div className="flex flex-col md:flex-row gap-4 mb-4">
         <div className="flex-1">
-          <Input
-            placeholder="Search households by name, address, head of family, etc."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
+          <Input placeholder="Search households by name, address, head of family, etc." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full" />
         </div>
         
         <div className="flex gap-2">
@@ -263,9 +216,7 @@ const matchesPurok =
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all-puroks">All Puroks</SelectItem>
-              {uniquePuroks.map(purok => (
-                <SelectItem key={purok} value={purok}>{purok}</SelectItem>
-              ))}
+              {uniquePuroks.map(purok => <SelectItem key={purok} value={purok}>{purok}</SelectItem>)}
             </SelectContent>
           </Select>
           
@@ -275,9 +226,7 @@ const matchesPurok =
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all-statuses">All Statuses</SelectItem>
-              {uniqueStatuses.map(status => (
-                <SelectItem key={status} value={status}>{status}</SelectItem>
-              ))}
+              {uniqueStatuses.map(status => <SelectItem key={status} value={status}>{status}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -295,9 +244,7 @@ const matchesPurok =
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredHouseholds.length > 0 ? (
-            filteredHouseholds.map((household: Household) => (
-              <TableRow key={household.id}>
+          {filteredHouseholds.length > 0 ? filteredHouseholds.map((household: Household) => <TableRow key={household.id}>
                 <TableCell className="font-medium">{household.name}</TableCell>
                 <TableCell>{household.address}</TableCell>
                 <TableCell>{household.head_of_family || "Not specified"}</TableCell>
@@ -305,52 +252,30 @@ const matchesPurok =
                 <TableCell>{getStatusBadge(household.status)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleViewMore(household)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleViewMore(household)}>
                       <Eye className="h-4 w-4" />
                       <span className="sr-only">View</span>
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleViewDetails(household)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleViewDetails(household)}>
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => confirmDelete(household.id)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => confirmDelete(household.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                       <span className="sr-only">Delete</span>
                     </Button>
                   </div>
                 </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
+              </TableRow>) : <TableRow>
               <TableCell colSpan={6} className="text-center py-4">
-                {searchQuery || statusFilter || purokFilter
-                  ? "No households found matching your search criteria."
-                  : "No households available. Add a household to get started."}
+                {searchQuery || statusFilter || purokFilter ? "No households found matching your search criteria." : "No households available. Add a household to get started."}
               </TableCell>
-            </TableRow>
-          )}
+            </TableRow>}
         </TableBody>
       </Table>
       
       {/* Household Details Dialog */}
-      <HouseholdDetails 
-        household={selectedHousehold} 
-        open={isDetailsOpen} 
-        onOpenChange={setIsDetailsOpen}
-      />
+      <HouseholdDetails household={selectedHousehold} open={isDetailsOpen} onOpenChange={setIsDetailsOpen} />
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -364,17 +289,12 @@ const matchesPurok =
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>;
 };
-
 export default HouseholdList;
