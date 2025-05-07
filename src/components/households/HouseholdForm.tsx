@@ -319,10 +319,9 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                          <SelectItem value="Owned">Owned</SelectItem>
-              <SelectItem value="Rented">Rented</SelectItem>
-              <SelectItem value="Shared">Shared</SelectItem>
-              <SelectItem value="Informal Settler">Informal Settler</SelectItem>
+                        <SelectItem value="residential">Residential</SelectItem>
+                        <SelectItem value="commercial">Commercial</SelectItem>
+                        <SelectItem value="industrial">Industrial</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
