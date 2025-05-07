@@ -80,9 +80,6 @@ const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Decea
     case 'Temporary': return 'Temporary';
     case 'Deceased': return 'Deceased';
     case 'Relocated': return 'Relocated';
-    case 'Active': return 'Permanent'; // Map Active to Permanent
-    case 'Inactive': return 'Temporary'; // Map Inactive to Temporary
-    case 'Transferred': return 'Relocated'; // Map Transferred to Relocated
     default: return 'Temporary'; // Default fallback
   }
 };
@@ -739,10 +736,10 @@ const ResidentForm = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Permanent">Permanent</SelectItem>
-                          <SelectItem value="Temporary">Temporary</SelectItem>
+                          <SelectItem value="Active">Permanent</SelectItem>
+                          <SelectItem value="Inactive">Temporary</SelectItem>
                           <SelectItem value="Deceased">Deceased</SelectItem>
-                          <SelectItem value="Relocated">Relocated</SelectItem>
+                          <SelectItem value="Transferred">Transferred</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
