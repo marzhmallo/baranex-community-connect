@@ -98,6 +98,12 @@ const Sidebar = () => {
             <Home className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Households</span>}
           </Link>
+          
+          {/* Added new Officials link */}
+          <Link to="/officials" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+            <Award className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Officials</span>}
+          </Link>
 
           <Link to="/calendar" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
             <Calendar className="h-5 w-5" />

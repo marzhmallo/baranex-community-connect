@@ -15,6 +15,7 @@ import ResidentsPage from "./pages/ResidentsPage";
 import ResidentMoreDetailsPage from "./pages/ResidentMoreDetailsPage";
 import HouseholdPage from "./pages/HouseholdsPage"; // Corrected casing
 import HouseholdMoreDetailsPage from "./pages/HouseholdMoreDetailsPage";
+import OfficialsPage from "./pages/OfficialsPage"; // Added import
 
 // Initialize the query client
 const queryClient = new QueryClient({
@@ -64,6 +65,7 @@ const AppContent = () => {
             <Route path="/households" element={<HouseholdPage />} />
             <Route path="/residents/:residentId" element={<ResidentMoreDetailsPage />} />
             <Route path="/households/:householdId" element={<HouseholdMoreDetailsPage />} />
+            <Route path="/officials" element={<OfficialsPage />} /> {/* Added new route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
