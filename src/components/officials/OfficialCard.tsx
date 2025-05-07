@@ -25,13 +25,13 @@ interface Official {
   address?: string;
   birthdate?: string;
   education?: string;
-  achievements?: string[];
-  committees?: string[];
+  achievements?: string[] | null;
+  committees?: string[] | null | any; // Accept different types to handle JSON
   created_at: string;
   updated_at: string;
   term_start: string;
   term_end?: string;
-  is_sk: boolean;
+  is_sk: boolean | boolean[]; // Handle both potential types
   brgyid: string;
 }
 
@@ -48,6 +48,37 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  // Handle committees properly, ensuring it's always an array before mapping
+  const getCommittees = (): string[] => {
+    if (!official.committees) return [];
+    
+    // If it's already an array, return it
+    if (Array.isArray(official.committees)) return official.committees;
+    
+    // If it's a JSON string, try to parse it
+    if (typeof official.committees === 'string') {
+      try {
+        const parsed = JSON.parse(official.committees);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    
+    // If it's an object with values that can be converted to an array
+    if (typeof official.committees === 'object') {
+      try {
+        // Try to get values from the object
+        const values = Object.values(official.committees);
+        return Array.isArray(values) ? values : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    
+    return [];
   };
 
   const fallbackInitials = official.name
@@ -153,9 +184,10 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
         <p className="text-muted-foreground">{official.position}</p>
       </CardContent>
       
-      {official.committees && official.committees.length > 0 && (
+      {/* Use the getCommittees helper function to safely map over committees */}
+      {getCommittees().length > 0 && (
         <CardFooter className="px-4 pb-4 pt-0 flex gap-2 flex-wrap">
-          {official.committees.map((committee, i) => (
+          {getCommittees().map((committee, i) => (
             <span key={i} className="text-xs bg-muted px-2 py-1 rounded-full">
               {committee}
             </span>

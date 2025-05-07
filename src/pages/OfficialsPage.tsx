@@ -20,13 +20,13 @@ interface Official {
   address?: string;
   birthdate?: string;
   education?: string;
-  achievements?: string[];
-  committees?: string[];
+  achievements?: string[] | null;
+  committees?: string[] | null | any; // Make flexible to handle JSON
   created_at: string;
   updated_at: string;
   term_start: string;
   term_end?: string;
-  is_sk: boolean;
+  is_sk: boolean | boolean[]; // Handle both potential types
   brgyid: string;
 }
 
@@ -34,7 +34,7 @@ const OfficialsPage = () => {
   const [activeTab, setActiveTab] = useState('current');
 
   // Fetch officials data from Supabase
-  const { data: officials, isLoading, error } = useQuery({
+  const { data: officialsData, isLoading, error } = useQuery({
     queryKey: ['officials'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -42,18 +42,31 @@ const OfficialsPage = () => {
         .select('*');
       
       if (error) throw error;
-      return data as Official[];
+      
+      // Transform the data to match our Official interface
+      const transformedData: Official[] = data.map(official => ({
+        ...official,
+        // Ensure is_sk is a boolean
+        is_sk: Array.isArray(official.is_sk) 
+          ? official.is_sk.length > 0 && official.is_sk[0] === true 
+          : Boolean(official.is_sk)
+      }));
+      
+      return transformedData;
     },
   });
 
   // Filter officials based on the active tab
-  const filteredOfficials = officials ? officials.filter(official => {
+  const filteredOfficials = officialsData ? officialsData.filter(official => {
     const now = new Date();
+    const isSk = Array.isArray(official.is_sk) 
+      ? official.is_sk.length > 0 && official.is_sk[0] === true
+      : Boolean(official.is_sk);
     
     if (activeTab === 'current') {
       return !official.term_end || new Date(official.term_end) > now;
     } else if (activeTab === 'sk') {
-      return official.is_sk && (!official.term_end || new Date(official.term_end) > now);
+      return isSk && (!official.term_end || new Date(official.term_end) > now);
     } else if (activeTab === 'previous') {
       return official.term_end && new Date(official.term_end) < now;
     }
