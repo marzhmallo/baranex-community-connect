@@ -240,7 +240,7 @@ const HouseholdList: React.FC = () => {
             <TableHead>Head of Family</TableHead>
             <TableHead>Contact Number</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right px-[60px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
