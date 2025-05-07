@@ -1,4 +1,3 @@
-
 // Resident types
 export interface Resident {
   id: string;
@@ -133,4 +132,27 @@ export interface DashboardStats {
     month: string;
     count: number;
   }[];
+}
+
+// Household types
+export interface Household {
+  id: string;
+  name: string;
+  address: string;
+  purok: string;
+  head_of_family?: string;
+  contact_number?: string;
+  year_established?: number;
+  status: string;
+  monthly_income?: string;
+  property_type?: string;
+  house_type?: string;
+  water_source?: string;
+  electricity_source?: string;
+  toilet_type?: string;
+  garbage_disposal?: string;
+  remarks?: string;
+  created_at?: string;
+  updated_at?: string;
+  brgyid?: string;
 }

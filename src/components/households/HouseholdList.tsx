@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -71,7 +70,7 @@ const HouseholdList: React.FC = () => {
     }
   };
   
-  const filteredHouseholds = householdsData?.data?.filter(household => {
+  const filteredHouseholds = householdsData?.data?.filter((household: Household) => {
     const query = searchQuery.toLowerCase();
     return (
       household.name.toLowerCase().includes(query) ||
@@ -110,7 +109,7 @@ const HouseholdList: React.FC = () => {
         </TableHeader>
         <TableBody>
           {filteredHouseholds && filteredHouseholds.length > 0 ? (
-            filteredHouseholds.map((household) => (
+            filteredHouseholds.map((household: Household) => (
               <TableRow key={household.id}>
                 <TableCell>{household.name}</TableCell>
                 <TableCell>{household.address}</TableCell>

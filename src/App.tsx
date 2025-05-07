@@ -13,7 +13,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ResidentsPage from "./pages/ResidentsPage";
 import ResidentMoreDetailsPage from "./pages/ResidentMoreDetailsPage";
-import HouseholdPage from "./pages/HouseholdsPage";
+import HouseholdPage from "./pages/HouseholdsPage"; // Corrected casing
 import HouseholdMoreDetailsPage from "./pages/HouseholdMoreDetailsPage";
 
 // Initialize the query client

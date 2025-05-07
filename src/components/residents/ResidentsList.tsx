@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
@@ -48,7 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Resident } from '@/lib/types';
-import { getResidents } from '@/lib/api/residents';
+import { getResidents, deleteResident } from '@/lib/api/residents';
 import { useQuery } from '@tanstack/react-query';
 import ResidentForm from './ResidentForm';
 import ResidentStatusCard from './ResidentStatusCard';
@@ -174,7 +173,7 @@ const ResidentRow = ({
   );
 };
 
-const ResidentsList = () => {
+const ResidentsList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [selectedClassifications, setSelectedClassifications] = useState<string[]>([]);
@@ -198,7 +197,7 @@ const ResidentsList = () => {
   const [activeClassificationCard, setActiveClassificationCard] = useState<string | null>(null);
   
   // Fetch residents data from Supabase
-  const { data: residents = [], isLoading, error } = useQuery({
+  const { data: residentsData, isLoading, error } = useQuery({
     queryKey: ['residents'],
     queryFn: getResidents,
   });
@@ -215,14 +214,14 @@ const ResidentsList = () => {
   }, [error]);
 
   // Calculate counts by status
-  const permanentCount = residents.filter(r => r.status === 'Permanent').length;
-  const temporaryCount = residents.filter(r => r.status === 'Temporary').length;
-  const deceasedCount = residents.filter(r => r.status === 'Deceased').length;
-  const relocatedCount = residents.filter(r => r.status === 'Relocated').length;
+  const permanentCount = residentsData.filter(r => r.status === 'Permanent').length;
+  const temporaryCount = residentsData.filter(r => r.status === 'Temporary').length;
+  const deceasedCount = residentsData.filter(r => r.status === 'Deceased').length;
+  const relocatedCount = residentsData.filter(r => r.status === 'Relocated').length;
 
   // Calculate counts by classification
   const getClassificationCount = (classification: string) => {
-    return residents.filter(resident => 
+    return residentsData.filter(resident => 
       resident.classifications && Array.isArray(resident.classifications) && 
       resident.classifications.includes(classification)
     ).length;
@@ -237,13 +236,13 @@ const ResidentsList = () => {
   // Get unique classifications
   const allClassifications = useMemo(() => {
     const classifications = new Set<string>();
-    residents.forEach(resident => {
+    residentsData.forEach(resident => {
       if (resident.classifications && Array.isArray(resident.classifications)) {
         resident.classifications.forEach(c => classifications.add(c));
       }
     });
     return Array.from(classifications);
-  }, [residents]);
+  }, [residentsData]);
   
   // Function to determine age group
   const getAgeGroup = (age: number): AgeGroup => {
@@ -276,7 +275,7 @@ const ResidentsList = () => {
   
   const filteredResidents = useMemo(() => {
     // Filter by search, status, tab, and classifications
-    const filtered = residents.filter(resident => {
+    const filtered = residentsData.filter(resident => {
       // Search filter
       const matchesSearch = 
         searchQuery === '' || 
@@ -348,7 +347,7 @@ const ResidentsList = () => {
     });
   }, [
     searchQuery, 
-    residents, 
+    residentsData, 
     sortField, 
     sortDirection, 
     activeStatusCard, 
@@ -937,13 +936,13 @@ const ResidentsList = () => {
       </div>
       
       {/* Resident Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={(open) => !open && handleCloseDetails()}>
-        <DialogContent className="sm:max-w-[850px]">
-          {selectedResident && (
-            <ResidentDetails resident={selectedResident} />
-          )}
-        </DialogContent>
-      </Dialog>
+      {selectedResident && (
+        <ResidentDetails 
+          resident={selectedResident} 
+          open={isDetailsOpen}
+          onOpenChange={setIsDetailsOpen}
+        />
+      )}
       
       {/* Edit Resident Dialog */}
       <Dialog 

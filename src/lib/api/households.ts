@@ -21,6 +21,9 @@ export const getHouseholds = async () => {
   }
 };
 
+// Alias for getHouseholds for consistency with existing code
+export const fetchHouseholds = getHouseholds;
+
 // Get a single household by ID
 export const getHouseholdById = async (id: string) => {
   try {
@@ -81,7 +84,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
       // Create new household
       const { data, error } = await supabase
         .from('households')
-        .insert({
+        .insert([{
           name: household.name,
           address: household.address,
           purok: household.purok,
@@ -97,7 +100,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
           toilet_type: household.toilet_type,
           garbage_disposal: household.garbage_disposal,
           remarks: household.remarks,
-        })
+        }])
         .select();
       
       if (error) throw new Error(error.message);
