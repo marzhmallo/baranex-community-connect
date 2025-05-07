@@ -81,7 +81,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
       if (error) throw new Error(error.message);
       result = data;
     } else {
-      // Create new household - ensure each required field is specified
+      // Create new household - use .insert() without id field rather than upsert
       const { data, error } = await supabase
         .from('households')
         .insert({
