@@ -160,7 +160,7 @@ const HouseholdList: React.FC = () => {
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mx-[15px] my-[15px] px-[15px] py-[15px]">
           <div className="flex items-center">
             <div className="rounded-full p-3 bg-green-100">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-green-600">
