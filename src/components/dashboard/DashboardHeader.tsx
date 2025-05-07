@@ -22,40 +22,39 @@ const DashboardHeader = () => {
   };
 
   return (
-      
-      <Card className="bg-gradient-to-r from-baranex-primary to-baranex-secondary border-none overflow-hidden">
-        <CardContent className="p-6 text-white">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Welcome to Baranex</h2>
-              <p className="text-white/80 max-w-md">
-                Your partner in digital barangay management. Access and manage resident data, documents, and community events all in one place.
-              </p>
-              <div className="pt-2 flex gap-2">
-                <Button variant="secondary" size="sm" className="bg-white text-baranex-primary hover:bg-white/90" asChild>
-                  <Link to="/guide">
-                    <span>View Guide</span>
-                  </Link>
-                </Button>
-                <Button variant="outline" size="sm" className="bg-transparent border-white text-white hover:bg-white/20" asChild>
-                  <Link to="/announcements/new">
-                    <span>Post Announcement</span>
-                  </Link>
-                </Button>
-              </div>
-            </div>
-            <div className="hidden md:block">
-              <img 
-                src="/lovable-uploads/9f4d6606-b6fe-4613-8188-8b1b5b4cdbd4.png" 
-                alt="Dashboard Illustration" 
-                className="w-32 h-32 object-contain opacity-75" 
-              />
+  <div className="space-y-6">
+    <Card className="bg-gradient-to-r from-baranex-primary to-baranex-secondary border-none overflow-hidden">
+      <CardContent className="p-6 text-white">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold">Welcome to Baranex</h2>
+            <p className="text-white/80 max-w-md">
+              Your partner in digital barangay management. Access and manage resident data, documents, and community events all in one place.
+            </p>
+            <div className="pt-2 flex gap-2">
+              <Button variant="secondary" size="sm" className="bg-white text-baranex-primary hover:bg-white/90" asChild>
+                <Link to="/guide">
+                  <span>View Guide</span>
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" className="bg-transparent border-white text-white hover:bg-white/20" asChild>
+                <Link to="/announcements/new">
+                  <span>Post Announcement</span>
+                </Link>
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+          <div className="hidden md:block">
+            <img 
+              src="/lovable-uploads/9f4d6606-b6fe-4613-8188-8b1b5b4cdbd4.png" 
+              alt="Dashboard Illustration" 
+              className="w-32 h-32 object-contain opacity-75" 
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
 
 export default DashboardHeader;
