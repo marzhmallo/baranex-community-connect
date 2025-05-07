@@ -1,75 +1,50 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase'; // adjust path as needed
-import {
-  Card, CardContent, CardHeader, CardTitle, CardDescription,
-} from '@/components/ui/card';
-import {
-  Tabs, TabsContent, TabsList, TabsTrigger,
-} from '@/components/ui/tabs';
-import { LineChart, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, Bar } from 'recharts';
-import { ChartContainer } from '@/components/chart-container';
-import { ChartTooltipContent } from '@/components/chart-tooltip';
-import { Users, FileText, Home, ChevronRight } from 'lucide-react';
+
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'react-router-dom';
+import { FileText, Users, Home, TrendingUp, ChevronRight } from 'lucide-react';
+
+// Sample data
+const populationData = [
+  { month: 'Jan', residents: 2400 },
+  { month: 'Feb', residents: 2500 },
+  { month: 'Mar', residents: 2600 },
+  { month: 'Apr', residents: 2680 },
+  { month: 'May', residents: 2750 },
+  { month: 'Jun', residents: 2800 },
+  { month: 'Jul', residents: 2840 },
+  { month: 'Aug', residents: 2780 },
+  { month: 'Sep', residents: 2860 },
+  { month: 'Oct', residents: 2920 },
+  { month: 'Nov', residents: 2980 },
+  { month: 'Dec', residents: 3050 },
+];
+
+const demographicData = [
+  { age: '0-10', male: 120, female: 132 },
+  { age: '11-20', male: 245, female: 231 },
+  { age: '21-30', male: 320, female: 332 },
+  { age: '31-40', male: 290, female: 301 },
+  { age: '41-50', male: 245, female: 230 },
+  { age: '51-60', male: 178, female: 191 },
+  { age: '61-70', male: 122, female: 129 },
+  { age: '71+', male: 78, female: 86 },
+];
 
 const DashboardCharts = () => {
-  const [populationData, setPopulationData] = useState([]);
-  const [demographicData, setDemographicData] = useState([]);
-  const [recentActivities, setRecentActivities] = useState([]);
-
-  useEffect(() => {
-    fetchPopulation();
-    fetchDemographics();
-    fetchActivities();
-  }, []);
-
-  const fetchPopulation = async () => {
-    const { data, error } = await supabase
-      .from('population_stats')
-      .select('month, residents')
-      .order('id', { ascending: true });
-
-    if (!error) setPopulationData(data);
-  };
-
-  const fetchDemographics = async () => {
-    const { data, error } = await supabase
-      .from('demographics')
-      .select('age_group, male, female')
-      .order('id', { ascending: true });
-
-    if (!error) {
-      const formatted = data.map(d => ({
-        age: d.age_group,
-        male: d.male,
-        female: d.female,
-      }));
-      setDemographicData(formatted);
-    }
-  };
-
-  const fetchActivities = async () => {
-    const { data, error } = await supabase
-      .from('activity_log')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(4);
-
-    if (!error) setRecentActivities(data);
-  };
-
-  const totalPopulation = populationData.at(-1)?.residents || 0;
-  const lastMonth = populationData[populationData.length - 1];
-  const secondLastMonth = populationData[populationData.length - 2];
-  const growthRate = secondLastMonth
-    ? (((lastMonth.residents - secondLastMonth.residents) / secondLastMonth.residents) * 100).toFixed(1)
-    : '0.0';
-  const newThisMonth = secondLastMonth
-    ? lastMonth.residents - secondLastMonth.residents
-    : lastMonth?.residents;
+  const recentActivities = [
+    { id: 1, type: 'resident', name: 'Maria Santos', action: 'registered', date: '2 hours ago' },
+    { id: 2, type: 'document', name: 'Barangay Clearance', action: 'issued to Juan Dela Cruz', date: '5 hours ago' },
+    { id: 3, type: 'household', name: 'Garcia Family', action: 'updated information', date: '1 day ago' },
+    { id: 4, type: 'resident', name: 'Pedro Reyes', action: 'updated contact details', date: '2 days ago' },
+  ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Main chart area - takes up 2 columns on md screens */}
       <Card className="md:col-span-2">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -83,26 +58,30 @@ const DashboardCharts = () => {
                 <TabsTrigger value="bar">Bar</TabsTrigger>
               </TabsList>
               <TabsContent value="line" className="p-0">
-                <ChartContainer config={{ residents: { theme: { dark: '#3b82f6', light: '#3b82f6' } } }}>
+                <ChartContainer config={{
+                  residents: { theme: { dark: '#3b82f6', light: '#3b82f6' } },
+                }} className="aspect-auto h-[300px]">
                   <LineChart data={populationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip content={<ChartTooltipContent nameKey="month" />} />
                     <Legend />
-                    <Line type="monotone" dataKey="residents" stroke="var(--color-residents, #3b82f6)" strokeWidth={2} activeDot={{ r: 8 }} />
+                    <Line type="monotone" dataKey="residents" name="Residents" stroke="var(--color-residents, #3b82f6)" strokeWidth={2} activeDot={{ r: 8 }} />
                   </LineChart>
                 </ChartContainer>
               </TabsContent>
               <TabsContent value="bar" className="p-0">
-                <ChartContainer config={{ residents: { theme: { dark: '#3b82f6', light: '#3b82f6' } } }}>
+                <ChartContainer config={{
+                  residents: { theme: { dark: '#3b82f6', light: '#3b82f6' } },
+                }} className="aspect-auto h-[300px]">
                   <BarChart data={populationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip content={<ChartTooltipContent nameKey="month" />} />
                     <Legend />
-                    <Bar dataKey="residents" fill="var(--color-residents, #3b82f6)" />
+                    <Bar dataKey="residents" name="Residents" fill="var(--color-residents, #3b82f6)" />
                   </BarChart>
                 </ChartContainer>
               </TabsContent>
@@ -110,29 +89,32 @@ const DashboardCharts = () => {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="p-6 pt-0 grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-            <Card>
-              <CardContent className="p-4 flex flex-col items-center">
-                <div className="text-xs uppercase text-muted-foreground mb-1">Total Population</div>
-                <div className="text-2xl font-bold text-center">{totalPopulation.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 flex flex-col items-center">
-                <div className="text-xs uppercase text-muted-foreground mb-1">Growth Rate</div>
-                <div className="text-2xl font-bold text-center text-baranex-success">+{growthRate}%</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 flex flex-col items-center">
-                <div className="text-xs uppercase text-muted-foreground mb-1">New this Month</div>
-                <div className="text-2xl font-bold text-center">{newThisMonth}</div>
-              </CardContent>
-            </Card>
+          <div className="p-6 pt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+              <Card>
+                <CardContent className="p-4 flex flex-col items-center">
+                  <div className="text-xs uppercase text-muted-foreground mb-1">Total Population</div>
+                  <div className="text-2xl font-bold text-center">3,050</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 flex flex-col items-center">
+                  <div className="text-xs uppercase text-muted-foreground mb-1">Growth Rate</div>
+                  <div className="text-2xl font-bold text-center text-baranex-success">+2.1%</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 flex flex-col items-center">
+                  <div className="text-xs uppercase text-muted-foreground mb-1">New this Month</div>
+                  <div className="text-2xl font-bold text-center">48</div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Sidebar area - takes 1 column */}
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -148,14 +130,22 @@ const DashboardCharts = () => {
                     {activity.type === 'household' && <Home className="h-4 w-4 text-primary" />}
                   </div>
                   <div className="space-y-1 flex-1">
-                    <p className="text-sm font-medium leading-none">{activity.name}</p>
-                    <p className="text-xs text-muted-foreground">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(activity.created_at).toLocaleString()}</p>
+                    <p className="text-sm font-medium leading-none">
+                      {activity.name} 
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {activity.action}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {activity.date}
+                    </p>
                   </div>
                 </div>
               ))}
+
               <Link to="/activity" className="flex items-center justify-center text-sm text-primary hover:underline mt-2 py-2">
-                View all activity <ChevronRight className="h-4 w-4 ml-1" />
+                View all activity
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Link>
             </div>
           </CardContent>
@@ -170,15 +160,19 @@ const DashboardCharts = () => {
             <ChartContainer config={{
               male: { theme: { dark: '#3b82f6', light: '#3b82f6' } },
               female: { theme: { dark: '#ec4899', light: '#ec4899' } },
-            }}>
-              <BarChart layout="vertical" data={demographicData} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+            }} className="aspect-auto">
+              <BarChart
+                layout="vertical"
+                data={demographicData}
+                margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
                 <YAxis dataKey="age" type="category" />
                 <Tooltip content={<ChartTooltipContent nameKey="age" />} />
                 <Legend />
-                <Bar dataKey="male" fill="var(--color-male, #3b82f6)" />
-                <Bar dataKey="female" fill="var(--color-female, #ec4899)" />
+                <Bar dataKey="male" name="Male" fill="var(--color-male, #3b82f6)" />
+                <Bar dataKey="female" name="Female" fill="var(--color-female, #ec4899)" />
               </BarChart>
             </ChartContainer>
           </CardContent>
