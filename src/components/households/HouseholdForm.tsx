@@ -303,20 +303,30 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
             
             <h3 className="text-lg font-medium mb-4 pt-4 border-t">Property Information</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="property_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Property Type</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Residential" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <FormField
+    control={form.control}
+    name="property_type"
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Property Type</FormLabel>
+        <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <FormControl>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Property Type" />
+            </SelectTrigger>
+          </FormControl>
+          <SelectContent>
+            <SelectItem value="residential">Residential</SelectItem>
+            <SelectItem value="commercial">Commercial</SelectItem>
+            <SelectItem value="industrial">Industrial</SelectItem>
+          </SelectContent>
+        </Select>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+</div>
               
               <FormField
                 control={form.control}
