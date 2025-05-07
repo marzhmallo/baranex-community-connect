@@ -250,7 +250,7 @@ const HouseholdList: React.FC = () => {
               <SelectValue placeholder="Filter by Purok" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Puroks</SelectItem>
+              <SelectItem value="all-puroks">All Puroks</SelectItem>
               {uniquePuroks.map(purok => (
                 <SelectItem key={purok} value={purok}>{purok}</SelectItem>
               ))}
@@ -262,7 +262,7 @@ const HouseholdList: React.FC = () => {
               <SelectValue placeholder="Filter by Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all-statuses">All Statuses</SelectItem>
               {uniqueStatuses.map(status => (
                 <SelectItem key={status} value={status}>{status}</SelectItem>
               ))}

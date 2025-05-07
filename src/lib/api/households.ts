@@ -81,10 +81,12 @@ export const saveHousehold = async (household: Partial<Household>) => {
       if (error) throw new Error(error.message);
       result = data;
     } else {
-      // Create new household - use .insert() without id field rather than upsert
+      // Create new household with UUID generated on the client side
+      const newHouseholdId = crypto.randomUUID();
       const { data, error } = await supabase
         .from('households')
         .insert({
+          id: newHouseholdId,
           name: household.name,
           address: household.address,
           purok: household.purok,
