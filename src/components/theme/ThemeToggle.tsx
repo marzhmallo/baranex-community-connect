@@ -15,7 +15,7 @@ export function ThemeToggle({ isCollapsed }: ThemeToggleProps) {
   return (
     <Button
       variant="sidebar"
-      className={`w-full justify-start ${isCollapsed ? "p-2 justify-center" : "px-4"}`}
+      className={`w-full justify-start ${isCollapsed ? "px-2" : "px-4"}`}
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
     >
       {icon}
