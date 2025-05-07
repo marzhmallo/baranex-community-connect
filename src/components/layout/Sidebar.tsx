@@ -68,8 +68,8 @@ const Sidebar = () => {
         <div className="flex items-center justify-between p-4">
           {!isCollapsed && (
             <Link to="/" className="text-xl font-bold tracking-tight flex items-center">
-              <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Baran</span>
-              <span className="text-baranex-accent">EX</span>
+              <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Bara</span>
+              <span className="text-baranex-accent">NEX</span>
             </Link>
           )}
           <Button
