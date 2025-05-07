@@ -323,6 +323,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                         <SelectItem value="Rented">Rented</SelectItem>
                         <SelectItem value="Shared">Shared</SelectItem>
                         <SelectItem value="Informal Settler">Informal Settler</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -348,6 +349,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                         <SelectItem value="Wood">Wood</SelectItem>
                         <SelectItem value="Nipa">Nipa</SelectItem>
                         <SelectItem value="Makeshift">Makeshift</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -375,6 +377,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                         <SelectItem value="Barangay">Barangay Water System</SelectItem>
                         <SelectItem value="Natural">Natural Source</SelectItem>
                         <SelectItem value="Delivered">Delivered</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -386,11 +389,22 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                 control={form.control}
                 name="electricity_source"
                 render={({ field }) => (
-                  <FormItem>
+                   <FormItem>
                     <FormLabel>Electricity Source</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Meralco" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Electricity Source" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Grid">Main Electric Grid</SelectItem>
+                        <SelectItem value="Generator">Generator</SelectItem>
+                        <SelectItem value="Shared">Shared</SelectItem>
+                        <SelectItem value="Solar">Solar</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -404,9 +418,20 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Toilet Type</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Water-sealed" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Toilet Type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Water Sealed">Water Sealed</SelectItem>
+                        <SelectItem value="Shared">Shared</SelectItem>
+                        <SelectItem value="Antipolo">Antipolo</SelectItem>
+                        <SelectItem value="Portable">Portable Toilet</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -416,11 +441,23 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                 control={form.control}
                 name="garbage_disposal"
                 render={({ field }) => (
-                  <FormItem>
+                   <FormItem>
                     <FormLabel>Garbage Disposal</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Collected weekly" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Garbage Disposal Method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Collected">Collected</SelectItem>
+                        <SelectItem value="Burned">Burned</SelectItem>
+                        <SelectItem value="Composted">Composted</SelectItem>
+                        <SelectItem value="Buried">Buried</SelectItem>
+                        <SelectItem value="Dumped">Dumped</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
