@@ -95,7 +95,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
       throw new Error('Missing required fields for household');
     }
 
-       // Get the brgyid of the currently logged in user
+    // Get the brgyid of the currently logged in user
     const brgyid = await getCurrentUserBarangayId();
     console.log("Current user's brgyid:", brgyid);
     
@@ -154,7 +154,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
           toilet_type: household.toilet_type || null,
           garbage_disposal: household.garbage_disposal || null,
           remarks: household.remarks || null,
-          brgyid?: brgyid | null;
+          brgyid: brgyid
         })
         .select();
       
