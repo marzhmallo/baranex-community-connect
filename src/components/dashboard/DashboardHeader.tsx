@@ -22,28 +22,6 @@ const DashboardHeader = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">{greeting()}, Alan • {formattedDate}</p>
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" className="gap-1" asChild>
-            <Link to="/residents/add">
-              <UserPlus className="h-4 w-4 mr-1" />
-              <span>Add Resident</span>
-            </Link>
-          </Button>
-          <Button size="sm" variant="outline" className="gap-1" asChild>
-            <Link to="/reports/generate">
-              <FileText className="h-4 w-4 mr-1" />
-              <span>Generate Report</span>
-            </Link>
-          </Button>
-        </div>
-      </div>
       
       <Card className="bg-gradient-to-r from-baranex-primary to-baranex-secondary border-none overflow-hidden">
         <CardContent className="p-6 text-white">
