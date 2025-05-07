@@ -1,4 +1,5 @@
-[⚠️ Suspicious Content] import React from 'react';
+
+import React from 'react';
 import HouseholdList from '@/components/households/HouseholdList';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
