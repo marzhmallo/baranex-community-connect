@@ -211,7 +211,7 @@ const matchesPurok =
             </div>
             <div className="ml-4">
               <h3 className="text-sm text-gray-500 font-medium">Permanent</h3>
-              <span className="text-2xl font-bold">{householdStats.active}</span>
+              <span className="text-2xl font-bold">{householdStats.permanent}</span>
             </div>
           </div>
         </div>
@@ -225,7 +225,7 @@ const matchesPurok =
             </div>
             <div className="ml-4">
               <h3 className="text-sm text-gray-500 font-medium">Temporary</h3>
-              <span className="text-2xl font-bold">{householdStats.inactive}</span>
+              <span className="text-2xl font-bold">{householdStats.temporary}</span>
             </div>
           </div>
         </div>
