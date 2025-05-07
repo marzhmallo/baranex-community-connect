@@ -1,4 +1,3 @@
-
 // Resident types
 export interface Resident {
   id: string;
@@ -133,4 +132,27 @@ export interface DashboardStats {
     month: string;
     count: number;
   }[];
+}
+
+// Add new Household type to match the Supabase households table
+export interface Household {
+  id: string;
+  name: string;
+  address: string;
+  purok: string;
+  head_of_family: string | null;
+  contact_number: string | null;
+  year_established: number | null;
+  status: string;
+  monthly_income: string | null;
+  property_type: string | null;
+  house_type: string | null;
+  water_source: string | null;
+  electricity_source: string | null;
+  toilet_type: string | null;
+  garbage_disposal: string | null;
+  remarks: string | null;
+  created_at?: string;
+  updated_at?: string;
+  brgyid?: string;
 }
