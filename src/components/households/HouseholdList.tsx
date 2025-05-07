@@ -205,11 +205,11 @@ const HouseholdList: React.FC = () => {
       
       {/* Filters and Search */}
       <div className="flex flex-col md:flex-row gap-4 mb-4">
-        <div className="flex-1">
-          <Input placeholder="Search households by name, address, head of family, etc." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full" />
+        <div className="flex-1 px-[12px]">
+          <Input placeholder="Search households by name, address, head of family, etc." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full px-[15px]" />
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 px-[15px]">
           <Select value={purokFilter} onValueChange={setPurokFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by Purok" />
