@@ -5,6 +5,7 @@ import {
   LogOut, 
   User, 
   Calendar, 
+  Dock,
   FileText, 
   BarChart3, 
   MessageSquare,
@@ -84,7 +85,7 @@ const Sidebar = () => {
 
         <nav className="flex-1 space-y-1 p-2">
           <Link to="/" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
-            <User className="h-5 w-5" />
+            <Dock className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Dashboard</span>}
           </Link>
 
