@@ -197,9 +197,10 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="Active">Permanent</SelectItem>
+                        <SelectItem value="Inactive">Temporary</SelectItem>
                         <SelectItem value="Relocated">Relocated</SelectItem>
+                        <SelectItem value="Relocated">Abandoned</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -213,9 +214,9 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address *</FormLabel>
+                  <FormLabel>Full Address *</FormLabel>
                   <FormControl>
-                    <Input placeholder="123 Main Street" {...field} />
+                    <Input placeholder="Mabuhay, Liloy, Zamboanga del Norte" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -266,7 +267,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                   <FormItem>
                     <FormLabel>Head of Family</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} />
+                      <Input placeholder="Alexander Tabano Desierto" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
