@@ -21,6 +21,49 @@ export const getHouseholds = async () => {
   }
 };
 
+// Function to get the current user's barangay ID
+export const getCurrentUserBarangayId = async (): Promise<string | null> => {
+  try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return null;
+    
+    // Get user profile to find brgyid
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('brgyid')
+      .eq('id', user.id)
+      .maybeSingle();
+      
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      return null;
+    }
+    
+    if (!profileData?.brgyid) {
+      // If user profile doesn't have brgyid, try to get it from adminid relationship
+      const { data: adminProfile, error: adminError } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('adminid', user.id)
+        .maybeSingle();
+        
+      if (adminError) {
+        console.error('Error fetching admin profile:', adminError);
+        return null;
+      }
+      
+      return adminProfile?.brgyid || null;
+    }
+    
+    return profileData.brgyid;
+  } catch (error) {
+    console.error('Error getting current user barangay ID:', error);
+    return null;
+  }
+};
+
 // Alias for getHouseholds for consistency with existing code
 export const fetchHouseholds = getHouseholds;
 
@@ -50,6 +93,15 @@ export const saveHousehold = async (household: Partial<Household>) => {
     // Ensure required fields are present
     if (!household.name || !household.address || !household.purok || !household.status) {
       throw new Error('Missing required fields for household');
+    }
+
+       // Get the brgyid of the currently logged in user
+    const brgyid = await getCurrentUserBarangayId();
+    console.log("Current user's brgyid:", brgyid);
+    
+    if (!brgyid) {
+      console.error("Failed to get current user's barangay ID");
+      return { success: false, error: "User's barangay ID not found" };
     }
 
     let result;
@@ -102,6 +154,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
           toilet_type: household.toilet_type || null,
           garbage_disposal: household.garbage_disposal || null,
           remarks: household.remarks || null,
+          brgyid?: brgyid | null;
         })
         .select();
       
