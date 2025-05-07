@@ -54,28 +54,35 @@ export const saveHousehold = async (household: Partial<Household>) => {
   try {
     let result;
     
+    // Fix: Creating a properly typed object that meets Supabase requirements
+    // The issue was that 'address' is required but was optional in our data
+    const householdData = {
+      name: household.name || '',
+      // Ensure address is always provided (required by Supabase schema)
+      address: household.address || '',
+      purok: household.purok || '',
+      head_of_family: household.head_of_family,
+      contact_number: household.contact_number,
+      year_established: household.year_established,
+      status: household.status || 'Active',
+      monthly_income: household.monthly_income,
+      property_type: household.property_type,
+      house_type: household.house_type,
+      water_source: household.water_source,
+      electricity_source: household.electricity_source,
+      toilet_type: household.toilet_type,
+      garbage_disposal: household.garbage_disposal,
+      remarks: household.remarks,
+      updated_at: new Date().toISOString(),
+      // Only include brgyid if it exists
+      ...(household.brgyid ? { brgyid: household.brgyid } : {})
+    };
+    
     if (household.id) {
       // Update existing household
       result = await supabase
         .from('households')
-        .update({
-          name: household.name,
-          address: household.address,
-          purok: household.purok,
-          head_of_family: household.head_of_family,
-          contact_number: household.contact_number,
-          year_established: household.year_established,
-          status: household.status,
-          monthly_income: household.monthly_income,
-          property_type: household.property_type,
-          house_type: household.house_type,
-          water_source: household.water_source,
-          electricity_source: household.electricity_source,
-          toilet_type: household.toilet_type,
-          garbage_disposal: household.garbage_disposal,
-          remarks: household.remarks,
-          updated_at: new Date().toISOString()
-        })
+        .update(householdData)
         .eq('id', household.id)
         .select()
         .single();
@@ -84,8 +91,10 @@ export const saveHousehold = async (household: Partial<Household>) => {
       result = await supabase
         .from('households')
         .insert({
-          ...household,
-          created_at: new Date().toISOString()
+          ...householdData,
+          created_at: new Date().toISOString(),
+          // Generate a UUID for the new household
+          id: crypto.randomUUID()
         })
         .select()
         .single();

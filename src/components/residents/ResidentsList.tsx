@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchResidents, deleteResident } from '@/lib/api/residents';
+import { getResidents } from '@/lib/api/residents';
 import { Resident } from '@/lib/types';
 import { Eye, Trash2 } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
@@ -37,13 +37,26 @@ const ResidentsList = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [residentToDelete, setResidentToDelete] = useState<string | null>(null);
   
-  const { data: residentsData, isLoading, error } = useQuery({
+  // Fixed: Using getResidents instead of fetchResidents
+  const { data: residentsResponse, isLoading, error } = useQuery({
     queryKey: ['residents'],
-    queryFn: fetchResidents,
+    queryFn: getResidents,
   });
   
+  // Fixed: Creating a proper deleteResident function since it doesn't exist
+  const deleteResidentFn = async (id: string) => {
+    // We'll implement this based on the existing residents.ts API
+    const response = await fetch(`/api/residents/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete resident');
+    }
+    return true;
+  };
+  
   const deleteResidentMutation = useMutation({
-    mutationFn: (id: string) => deleteResident(id),
+    mutationFn: deleteResidentFn,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['residents']
@@ -79,7 +92,10 @@ const ResidentsList = () => {
     }
   };
   
-  const filteredResidents = residentsData?.data?.filter(resident => {
+  // Fixed: Safely accessing residents data
+  const residents = residentsResponse || [];
+  
+  const filteredResidents = residents.filter(resident => {
     const query = searchQuery.toLowerCase();
     const matchesSearch = 
       resident.firstName.toLowerCase().includes(query) ||
