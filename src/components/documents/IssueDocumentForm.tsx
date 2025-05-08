@@ -30,6 +30,7 @@ import { FileCog, Save, UserCheck } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { addDays } from "date-fns";
+import { v4 as uuidv4 } from 'uuid';
 
 const issueDocumentSchema = z.object({
   document_type_id: z.string().uuid({ message: "Please select a document type" }),
