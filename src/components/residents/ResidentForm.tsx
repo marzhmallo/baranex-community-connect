@@ -378,7 +378,7 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>First Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Juan" {...field} />
+                      <Input placeholder="Alan" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -388,7 +388,7 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Last Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Dela Cruz" {...field} />
+                      <Input placeholder="Cenas" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -398,7 +398,7 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Middle Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Santos" {...field} />
+                      <Input placeholder="Cabalan" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -736,10 +736,10 @@ const ResidentForm = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Active">Permanent</SelectItem>
-                          <SelectItem value="Inactive">Temporary</SelectItem>
+                          <SelectItem value="Permanent">Permanent</SelectItem>
+                          <SelectItem value="Temporary">Temporary</SelectItem>
                           <SelectItem value="Deceased">Deceased</SelectItem>
-                          <SelectItem value="Transferred">Transferred</SelectItem>
+                          <SelectItem value="Relocated">Relocated</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
