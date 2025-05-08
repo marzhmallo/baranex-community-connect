@@ -29,12 +29,14 @@ const HouseholdDetails = ({ household, open, onOpenChange }: HouseholdDetailsPro
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Active':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
-      case 'Inactive':
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Inactive</Badge>;
+      case 'Permanent':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Permanent</Badge>;
+      case 'Temporary':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Temporary</Badge>;
       case 'Relocated':
         return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Relocated</Badge>;
+      case 'Abandoned':
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Abandoned</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
