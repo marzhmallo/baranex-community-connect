@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ResidentsList from "@/components/residents/ResidentsList";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import AnnouncementsList from "@/components/announcements/AnnouncementsList";
@@ -18,8 +17,6 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
-  
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -28,15 +25,6 @@ const Index = () => {
         description: error.message,
         variant: "destructive",
       });
-    }
-  };
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    // Scroll to the tab content
-    const element = document.getElementById(value);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -81,75 +69,12 @@ const Index = () => {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-0 overflow-auto">
-          <Tabs value={activeTab} className="w-full" onValueChange={handleTabChange}>
-            <div className="px-1 bg-muted/20 border-b sticky top-16 z-10">
-              <TabsList className="h-12 w-full bg-transparent justify-start overflow-x-auto overflow-y-hidden scrollbar-none">
-                <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
-                <TabsTrigger value="residents" className="text-sm">Residents</TabsTrigger>
-                <TabsTrigger value="documents" className="text-sm">Documents</TabsTrigger>
-                <TabsTrigger value="announcements" className="text-sm">Announcements</TabsTrigger>
-                <TabsTrigger value="calendar" className="text-sm">Calendar</TabsTrigger>
-                <TabsTrigger value="statistics" className="text-sm">Statistics</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <div className="p-6">
-              <TabsContent value="dashboard" className="space-y-6 mt-2" id="dashboard">
-                <DashboardHeader />
-                <DashboardStats />
-                <DashboardCharts />
-              </TabsContent>
-
-              <TabsContent value="residents" className="space-y-6 mt-2" id="residents">
-                <h2 className="text-2xl font-bold">Resident Registry</h2>
-                <ResidentsList />
-              </TabsContent>
-
-              <TabsContent value="documents" className="space-y-6 mt-2" id="documents">
-                <h2 className="text-2xl font-bold">Document Management</h2>
-                <DocumentsPage />
-              </TabsContent>
-
-              <TabsContent value="announcements" className="space-y-6 mt-2" id="announcements">
-                <h2 className="text-2xl font-bold">Announcements</h2>
-                <AnnouncementsList />
-              </TabsContent>
-
-              <TabsContent value="calendar" className="space-y-6 mt-2" id="calendar">
-                <h2 className="text-2xl font-bold">Calendar</h2>
-                <CalendarView />
-              </TabsContent>
-
-              <TabsContent value="statistics" className="space-y-6 mt-2" id="statistics">
-                <h2 className="text-2xl font-bold">Statistics</h2>
-                <div className="grid gap-6 md:grid-cols-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Demographic Breakdown</CardTitle>
-                      <CardDescription>Distribution of residents by age and gender</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-80 flex items-center justify-center text-muted-foreground">
-                        Charts will be displayed here
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Population Trends</CardTitle>
-                      <CardDescription>Population growth over time</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-80 flex items-center justify-center text-muted-foreground">
-                        Charts will be displayed here
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            </div>
-          </Tabs>
+        <main className="flex-1 p-6 overflow-auto">
+          <div className="space-y-6">
+            <DashboardHeader />
+            <DashboardStats />
+            <DashboardCharts />
+          </div>
         </main>
       </div>
     </div>
