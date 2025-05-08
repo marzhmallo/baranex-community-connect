@@ -58,16 +58,11 @@ const DocumentsPage = () => {
         </p>
       </div>
       
-<div className="flex items-center gap-2">
-  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-  <Input
-    type="search"
-    placeholder="Search documents..."
-    value={searchQuery}
-    onChange={e => setSearchQuery(e.target.value)}
-    className="w-full max-w-sm pl-8"
-  />
-</div>
+      <div className="px-[15px]">
+        <div className="">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-1 text-muted-foreground" />
+          <Input type="search" placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="" />
+        </div>
         
         <div className="flex gap-2">
           <Button variant="outline" onClick={refreshTemplates} disabled={isLoading}>
