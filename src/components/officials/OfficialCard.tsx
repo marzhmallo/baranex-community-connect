@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card } from '@/components/ui/card';
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog,
@@ -11,7 +11,7 @@ import {
   DialogTrigger,
   DialogClose
 } from '@/components/ui/dialog';
-import { Mail, Phone, Calendar, GraduationCap, MapPin } from 'lucide-react';
+import { Mail, Phone, Eye, Search } from 'lucide-react';
 
 // Official interface to match the data structure
 interface Official {
@@ -41,81 +41,63 @@ interface OfficialCardProps {
 
 const OfficialCard = ({ official }: OfficialCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Present';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'short',
+      month: 'numeric',
       day: 'numeric'
     });
   };
 
-  // Handle committees properly, ensuring it's always an array before mapping
-  const getCommittees = (): string[] => {
-    if (!official.committees) return [];
-    
-    // If it's already an array, return it
-    if (Array.isArray(official.committees)) return official.committees;
-    
-    // If it's a JSON string, try to parse it
-    if (typeof official.committees === 'string') {
-      try {
-        const parsed = JSON.parse(official.committees);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        return [];
-      }
+  // Extract short description from bio or generate a default one
+  const getShortDescription = () => {
+    if (official.bio) {
+      return official.bio.length > 120 ? official.bio.substring(0, 120) + '...' : official.bio;
     }
-    
-    // If it's an object with values that can be converted to an array
-    if (typeof official.committees === 'object') {
-      try {
-        // Try to get values from the object
-        const values = Object.values(official.committees);
-        return Array.isArray(values) ? values : [];
-      } catch (e) {
-        return [];
-      }
-    }
-    
-    return [];
+    return `${official.name} serves as ${official.position} in the barangay administration. They work to ensure the best service for the community.`;
   };
 
-  const fallbackInitials = official.name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-
   return (
-    <Card 
-      className="overflow-hidden transition-all duration-200 hover:shadow-md"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="relative overflow-hidden">
+    <Card className="overflow-hidden bg-[#1e2637] text-white border-none">
+      <div className="relative">
+        {/* Photo section with hover effect */}
         <Dialog>
           <DialogTrigger asChild>
-            <div className="cursor-pointer">
+            <div 
+              className="relative cursor-pointer h-64 overflow-hidden"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
               {official.photo_url ? (
                 <img 
                   src={official.photo_url} 
                   alt={`${official.name} - ${official.position}`}
-                  className="w-full h-64 object-cover object-center transition-transform duration-300 hover:scale-105"
+                  className="w-full h-full object-cover object-center transition-transform duration-300"
                 />
               ) : (
-                <div className="w-full h-64 bg-muted flex items-center justify-center">
-                  <Avatar className="h-24 w-24">
-                    <AvatarFallback>{fallbackInitials}</AvatarFallback>
+                <div className="w-full h-full bg-[#202a3c] flex items-center justify-center">
+                  <Avatar className="h-24 w-24 bg-[#2a3649] text-white">
+                    <span className="text-2xl font-medium">
+                      {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    </span>
                   </Avatar>
+                </div>
+              )}
+              
+              {/* Magnify icon overlay on hover */}
+              {isHovered && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <Search className="w-8 h-8 text-white" />
                 </div>
               )}
             </div>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          
+          <DialogContent className="sm:max-w-md bg-[#1e2637] border-[#2a3649] text-white">
             <DialogHeader>
-              <DialogTitle>{official.name}</DialogTitle>
+              <DialogTitle className="text-white">{official.name}</DialogTitle>
             </DialogHeader>
             <div className="flex justify-center">
               {official.photo_url ? (
@@ -125,9 +107,11 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
                   className="max-h-[70vh] object-contain"
                 />
               ) : (
-                <div className="w-full h-64 bg-muted flex items-center justify-center">
-                  <Avatar className="h-24 w-24">
-                    <AvatarFallback>{fallbackInitials}</AvatarFallback>
+                <div className="w-full h-64 bg-[#202a3c] flex items-center justify-center">
+                  <Avatar className="h-24 w-24 bg-[#2a3649] text-white">
+                    <span className="text-2xl font-medium">
+                      {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    </span>
                   </Avatar>
                 </div>
               )}
@@ -139,61 +123,91 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
             </DialogClose>
           </DialogContent>
         </Dialog>
-
-        {/* Information overlay on hover */}
-        <div 
-          className={`absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-end p-4 transition-opacity duration-300 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          {official.email && (
-            <div className="flex items-center text-white mb-2">
-              <Mail className="w-4 h-4 mr-2" />
-              <span className="text-sm">{official.email}</span>
-            </div>
-          )}
-          {official.phone && (
-            <div className="flex items-center text-white mb-2">
-              <Phone className="w-4 h-4 mr-2" />
-              <span className="text-sm">{official.phone}</span>
-            </div>
-          )}
-          {official.education && (
-            <div className="flex items-center text-white mb-2">
-              <GraduationCap className="w-4 h-4 mr-2" />
-              <span className="text-sm">{official.education}</span>
-            </div>
-          )}
-          {official.address && (
-            <div className="flex items-center text-white mb-2">
-              <MapPin className="w-4 h-4 mr-2" />
-              <span className="text-sm">{official.address}</span>
-            </div>
-          )}
-          <div className="flex items-center text-white">
-            <Calendar className="w-4 h-4 mr-2" />
-            <span className="text-sm">
-              {formatDate(official.term_start)} - {formatDate(official.term_end)}
-            </span>
-          </div>
-        </div>
       </div>
 
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-lg truncate">{official.name}</h3>
-        <p className="text-muted-foreground">{official.position}</p>
-      </CardContent>
-      
-      {/* Use the getCommittees helper function to safely map over committees */}
-      {getCommittees().length > 0 && (
-        <CardFooter className="px-4 pb-4 pt-0 flex gap-2 flex-wrap">
-          {getCommittees().map((committee, i) => (
-            <span key={i} className="text-xs bg-muted px-2 py-1 rounded-full">
-              {committee}
-            </span>
-          ))}
-        </CardFooter>
-      )}
+      <div className="p-5">
+        {/* Official name and position */}
+        <h3 className="font-bold text-xl text-white">{official.name}</h3>
+        <p className="text-blue-400 mb-4">{official.position}</p>
+        
+        {/* Description */}
+        <p className="text-gray-300 text-sm mb-4">
+          {getShortDescription()}
+        </p>
+        
+        {/* Contact information */}
+        {official.email && (
+          <div className="flex items-center gap-2 text-gray-300 mb-2">
+            <Mail className="w-4 h-4" />
+            <span className="text-sm">{official.email}</span>
+          </div>
+        )}
+        
+        {official.phone && (
+          <div className="flex items-center gap-2 text-gray-300 mb-4">
+            <Phone className="w-4 h-4" />
+            <span className="text-sm">{official.phone}</span>
+          </div>
+        )}
+        
+        {/* Term duration */}
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-gray-400 text-sm">
+            Term: {formatDate(official.term_start)} - {formatDate(official.term_end)}
+          </div>
+          
+          {/* View button */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="bg-transparent border-[#2a3649] text-white hover:bg-[#2a3649]">
+                <Eye className="w-4 h-4 mr-1" /> View
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white">
+              <DialogHeader>
+                <DialogTitle className="text-white">{official.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <img 
+                  src={official.photo_url || '/placeholder.svg'} 
+                  alt={official.name}
+                  className="w-full max-h-64 object-cover object-center rounded-md"
+                />
+                <div>
+                  <h4 className="font-bold">{official.position}</h4>
+                  <p className="text-gray-300 mt-2">{official.bio || getShortDescription()}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  {official.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      <span>{official.email}</span>
+                    </div>
+                  )}
+                  
+                  {official.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      <span>{official.phone}</span>
+                    </div>
+                  )}
+                  
+                  {official.education && (
+                    <div>
+                      <span className="font-medium">Education:</span> {official.education}
+                    </div>
+                  )}
+                  
+                  <div>
+                    <span className="font-medium">Term:</span> {formatDate(official.term_start)} - {formatDate(official.term_end)}
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
     </Card>
   );
 };

@@ -1,12 +1,11 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import OfficialCard from '@/components/officials/OfficialCard';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, Plus, ArrowLeft } from 'lucide-react';
 
 // Officials interface based on the required data structure
 interface Official {
@@ -34,7 +33,7 @@ const OfficialsPage = () => {
   const [activeTab, setActiveTab] = useState('current');
 
   // Fetch officials data from Supabase
-  const { data: officialsData, isLoading, error } = useQuery({
+  const { data: officialsData, isLoading, error, refetch } = useQuery({
     queryKey: ['officials'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -74,107 +73,109 @@ const OfficialsPage = () => {
     return false;
   }) : [];
 
+  // Count for each category
+  const currentCount = officialsData ? officialsData.filter(o => !o.term_end || new Date(o.term_end) > new Date()).length : 0;
+  const skCount = officialsData ? officialsData.filter(o => {
+    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
+    return isSk && (!o.term_end || new Date(o.term_end) > new Date());
+  }).length : 0;
+  const previousCount = officialsData ? officialsData.filter(o => o.term_end && new Date(o.term_end) < new Date()).length : 0;
+
+  const handleRefreshTerms = () => {
+    refetch();
+  };
+
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Barangay Officials</h1>
-        <p className="text-muted-foreground">
-          View and manage the elected and appointed officials of the barangay.
-        </p>
+    <div className="min-h-screen bg-[#0f172a] p-6">
+      {/* Header with title, subtitle, and action buttons */}
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Button variant="ghost" className="p-0 hover:bg-transparent">
+              <ArrowLeft className="h-5 w-5 text-gray-400" />
+            </Button>
+            <h1 className="text-3xl font-bold text-white">Barangay Officials</h1>
+          </div>
+          <p className="text-gray-400">Meet the elected officials serving our barangay</p>
+        </div>
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            className="border-gray-700 text-white hover:bg-gray-800"
+            onClick={handleRefreshTerms}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" /> Refresh Terms
+          </Button>
+          <Button className="bg-blue-500 hover:bg-blue-600">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="current" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="current">Current Officials</TabsTrigger>
-          <TabsTrigger value="sk">SK Officials</TabsTrigger>
-          <TabsTrigger value="previous">Previous Officials</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="current" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {isLoading ? (
-              // Show skeleton loaders while loading
-              Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="w-full h-64" />
-                  <CardContent className="p-4">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </CardContent>
-                </Card>
-              ))
-            ) : error ? (
-              <div className="col-span-4 p-6 text-red-500">
-                Error loading officials: {error.message}
-              </div>
-            ) : filteredOfficials.length === 0 ? (
-              <div className="col-span-4 p-6 text-center text-muted-foreground">
-                No current officials found.
-              </div>
-            ) : (
-              filteredOfficials.map(official => (
-                <OfficialCard key={official.id} official={official} />
-              ))
-            )}
+      {/* Tabbed navigation */}
+      <div className="mx-auto max-w-3xl mb-8 bg-[#1e2637] rounded-full p-1">
+        <div className="flex justify-center">
+          <div 
+            className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${
+              activeTab === 'current' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'
+            }`}
+            onClick={() => setActiveTab('current')}
+          >
+            Current Officials ({currentCount})
           </div>
-        </TabsContent>
-
-        <TabsContent value="sk" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {isLoading ? (
-              Array.from({ length: 2 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="w-full h-64" />
-                  <CardContent className="p-4">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </CardContent>
-                </Card>
-              ))
-            ) : error ? (
-              <div className="col-span-4 p-6 text-red-500">
-                Error loading SK officials: {error.message}
-              </div>
-            ) : filteredOfficials.length === 0 ? (
-              <div className="col-span-4 p-6 text-center text-muted-foreground">
-                No SK officials found.
-              </div>
-            ) : (
-              filteredOfficials.map(official => (
-                <OfficialCard key={official.id} official={official} />
-              ))
-            )}
+          <div 
+            className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${
+              activeTab === 'sk' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'
+            }`}
+            onClick={() => setActiveTab('sk')}
+          >
+            SK Officials ({skCount})
           </div>
-        </TabsContent>
-
-        <TabsContent value="previous" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {isLoading ? (
-              Array.from({ length: 2 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="w-full h-64" />
-                  <CardContent className="p-4">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </CardContent>
-                </Card>
-              ))
-            ) : error ? (
-              <div className="col-span-4 p-6 text-red-500">
-                Error loading previous officials: {error.message}
-              </div>
-            ) : filteredOfficials.length === 0 ? (
-              <div className="col-span-4 p-6 text-center text-muted-foreground">
-                No previous officials found.
-              </div>
-            ) : (
-              filteredOfficials.map(official => (
-                <OfficialCard key={official.id} official={official} />
-              ))
-            )}
+          <div 
+            className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${
+              activeTab === 'previous' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'
+            }`}
+            onClick={() => setActiveTab('previous')}
+          >
+            Previous Officials ({previousCount})
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
+
+      {/* Officials cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {isLoading ? (
+          // Show skeleton loaders while loading
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-[#1e2637] rounded-lg overflow-hidden">
+              <Skeleton className="w-full h-64 bg-[#2a3649]" />
+              <div className="p-5">
+                <Skeleton className="h-6 w-3/4 mb-2 bg-[#2a3649]" />
+                <Skeleton className="h-4 w-1/2 mb-4 bg-[#2a3649]" />
+                <Skeleton className="h-16 w-full mb-4 bg-[#2a3649]" />
+                <Skeleton className="h-4 w-full mb-2 bg-[#2a3649]" />
+                <Skeleton className="h-4 w-full mb-4 bg-[#2a3649]" />
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-1/3 bg-[#2a3649]" />
+                  <Skeleton className="h-8 w-20 bg-[#2a3649]" />
+                </div>
+              </div>
+            </div>
+          ))
+        ) : error ? (
+          <div className="col-span-full p-6 text-red-500 bg-[#1e2637] rounded-lg">
+            Error loading officials: {error.message}
+          </div>
+        ) : filteredOfficials.length === 0 ? (
+          <div className="col-span-full p-6 text-center text-gray-400 bg-[#1e2637] rounded-lg">
+            No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? 'SK' : 'previous'} officials found.
+          </div>
+        ) : (
+          filteredOfficials.map(official => (
+            <OfficialCard key={official.id} official={official} />
+          ))
+        )}
+      </div>
     </div>
   );
 };
