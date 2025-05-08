@@ -123,7 +123,7 @@ const DocumentsPage = () => {
         </TabsContent>
         
         <TabsContent value="issue" className="mt-0">
-          <IssueDocumentForm searchQuery={searchQuery} />
+          <IssueDocumentForm />
         </TabsContent>
         
         <TabsContent value="logs" className="mt-0">

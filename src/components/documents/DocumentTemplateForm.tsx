@@ -185,7 +185,7 @@ const DocumentTemplateForm = ({ template, onClose }) => {
               <FormItem>
                 <FormLabel>Template Content</FormLabel>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Use placeholders like {{resident_name}}, {{purpose}} that will be filled when issuing the document.
+                  Use placeholders like {"{{resident_name}}"}, {"{{purpose}}"} that will be filled when issuing the document.
                 </p>
                 <FormControl>
                   <Textarea 

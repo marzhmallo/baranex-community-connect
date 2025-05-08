@@ -26,21 +26,20 @@ interface Official {
   education?: string;
   achievements?: string[] | null;
   committees?: string[] | null | any; // Accept different types to handle JSON
-   created_at: string;
-     updated_at: string;
-   official_positions?: {
-    name: string;
   created_at: string;
   updated_at: string;
-  term_start: string;
-  term_end?: string;
-   position?: string;
-     created_at: string;
-     updated_at: string;
-        description: string;
+  official_positions?: {
+    name: string;
+    term_start: string;
+    term_end?: string;
+    position?: string;
+    description: string;
   };
   is_sk: boolean | boolean[]; // Handle both potential types
   brgyid: string;
+  position?: string; // Added position property from the database
+  term_start?: string; // Added term_start property
+  term_end?: string; // Added term_end property
 }
 
 interface OfficialCardProps {
@@ -64,7 +63,22 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
     if (official.bio) {
       return official.bio.length > 120 ? official.bio.substring(0, 120) + '...' : official.bio;
     }
-    return `${official.name} serves as ${official.position} in the barangay administration. They work to ensure the best service for the community.`;
+    return `${official.name} serves as ${official.position || official.official_positions?.name || 'an official'} in the barangay administration. They work to ensure the best service for the community.`;
+  };
+
+  // Get the position from either direct property or nested object
+  const getPosition = () => {
+    return official.position || official.official_positions?.name || '';
+  };
+
+  // Get the term start date
+  const getTermStart = () => {
+    return official.term_start || official.official_positions?.term_start;
+  };
+
+  // Get the term end date
+  const getTermEnd = () => {
+    return official.term_end || official.official_positions?.term_end;
   };
 
   return (
@@ -81,7 +95,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
               {official.photo_url ? (
                 <img 
                   src={official.photo_url} 
-                  alt={`${official.name} - ${official.position}`}
+                  alt={`${official.name} - ${getPosition()}`}
                   className="w-full h-full object-cover object-center transition-transform duration-300"
                 />
               ) : (
@@ -111,7 +125,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
               {official.photo_url ? (
                 <img 
                   src={official.photo_url} 
-                  alt={`${official.name} - ${official.position}`}
+                  alt={`${official.name} - ${getPosition()}`}
                   className="max-h-[70vh] object-contain"
                 />
               ) : (
@@ -136,7 +150,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
       <div className="p-5">
         {/* Official name and position */}
         <h3 className="font-bold text-xl text-white">{official.name}</h3>
-        <p className="text-blue-400 mb-4">{official.official_positions?.name}</p>
+        <p className="text-blue-400 mb-4">{official.official_positions?.name || getPosition()}</p>
         
         {/* Description */}
         <p className="text-gray-300 text-sm mb-4">
@@ -161,7 +175,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
         {/* Term duration */}
         <div className="flex justify-between items-center mt-4">
           <div className="text-gray-400 text-sm">
-            Term: {formatDate(official.term_start)} - {formatDate(official.term_end)}
+            Term: {formatDate(getTermStart())} - {formatDate(getTermEnd())}
           </div>
           
           {/* View button */}
@@ -182,7 +196,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
                   className="w-full max-h-64 object-cover object-center rounded-md"
                 />
                 <div>
-                  <h4 className="font-bold">{official.position}</h4>
+                  <h4 className="font-bold">{getPosition()}</h4>
                   <p className="text-gray-300 mt-2">{official.bio || getShortDescription()}</p>
                 </div>
                 
@@ -208,7 +222,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
                   )}
                   
                   <div>
-                    <span className="font-medium">Term:</span> {formatDate(official.term_start)} - {formatDate(official.term_end)}
+                    <span className="font-medium">Term:</span> {formatDate(getTermStart())} - {formatDate(getTermEnd())}
                   </div>
                 </div>
               </div>
