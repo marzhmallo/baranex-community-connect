@@ -107,9 +107,9 @@ const DashboardCharts = () => {
       {/* Main chart area - takes up 2 columns on md screens */}
       <Card className="md:col-span-2">
         <CardHeader>
+          <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="mb-1">Population Overview</CardTitle>
-              <CardDescription>Monthly resident registration trends</CardDescription>
+
             </div>
             <Tabs defaultValue="line" className="w-[1500px]">
               <TabsList className="grid w-full grid-cols-2">
