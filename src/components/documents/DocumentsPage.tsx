@@ -51,7 +51,7 @@ const DocumentsPage = () => {
     }
   };
   return <div className="space-y-6">
-      <div className="flex flex-col space-y-2">
+      <div className="flex flex-col space-y-2 my-[20px]">
         <h1 className="text-3xl font-bold tracking-tight px-[15px]">Documents</h1>
         <p className="text-muted-foreground px-[15px]">
           Manage document templates, issue documents, and view document logs.
