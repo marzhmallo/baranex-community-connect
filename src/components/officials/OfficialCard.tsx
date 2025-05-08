@@ -136,7 +136,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
       <div className="p-5">
         {/* Official name and position */}
         <h3 className="font-bold text-xl text-white">{official.name}</h3>
-        <p className="text-blue-400 mb-4">{official.position}</p>
+        <p className="text-blue-400 mb-4">{official.official_positions?.name}</p>
         
         {/* Description */}
         <p className="text-gray-300 text-sm mb-4">
