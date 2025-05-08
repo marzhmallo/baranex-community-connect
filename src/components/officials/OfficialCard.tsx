@@ -35,22 +35,22 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
     if (official.bio) {
       return official.bio.length > 120 ? official.bio.substring(0, 120) + '...' : official.bio;
     }
-    return `${official.name} serves as ${official.position || official.official_positions?.name || 'an official'} in the barangay administration. They work to ensure the best service for the community.`;
+    return `${official.name} serves as ${official.position || 'an official'} in the barangay administration. They work to ensure the best service for the community.`;
   };
 
-  // Get the position from either direct property or nested object
+  // Get the position
   const getPosition = () => {
-    return official.position || official.official_positions?.name || '';
+    return official.position || '';
   };
 
   // Get the term start date
   const getTermStart = () => {
-    return official.term_start || official.official_positions?.term_start;
+    return official.term_start;
   };
 
   // Get the term end date
   const getTermEnd = () => {
-    return official.term_end || official.official_positions?.term_end;
+    return official.term_end;
   };
 
   return (
@@ -122,7 +122,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
       <div className="p-5">
         {/* Official name and position */}
         <h3 className="font-bold text-xl text-white">{official.name}</h3>
-        <p className="text-blue-400 mb-4">{official.official_positions?.name || getPosition()}</p>
+        <p className="text-blue-400 mb-4">{getPosition()}</p>
         
         {/* Description */}
         <p className="text-gray-300 text-sm mb-4">

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,9 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import OfficialCard from '@/components/officials/OfficialCard';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Plus, ArrowLeft } from 'lucide-react';
-import { Official } from '@/lib/types';
+import { Official, OfficialPosition } from '@/lib/types';
 
-// Officials interface based on the required data structure
 const OfficialsPage = () => {
   const [activeTab, setActiveTab] = useState('current');
 
@@ -18,27 +18,55 @@ const OfficialsPage = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['officials'],
+    queryKey: ['officials-with-positions'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('officials').select('*');
-      if (error) throw error;
-
-      // Transform the data to match our Official interface
-      const transformedData: Official[] = data.map(official => ({
-        ...official,
-        // Handle JSON and boolean conversions
-        is_sk: Array.isArray(official.is_sk) ? 
-          official.is_sk.length > 0 && official.is_sk[0] === true : 
-          Boolean(official.is_sk),
-        // Keep achievements and committees as they are since we've updated the type
-        achievements: official.achievements,
-        committees: official.committees
-      }));
+      // First, fetch all officials
+      const { data: officials, error: officialsError } = await supabase
+        .from('officials')
+        .select('*');
       
-      return transformedData;
+      if (officialsError) throw officialsError;
+      
+      // Then fetch all positions
+      const { data: positions, error: positionsError } = await supabase
+        .from('official_positions')
+        .select('*')
+        .order('term_start', { ascending: false });
+        
+      if (positionsError) throw positionsError;
+
+      // Group positions by official
+      const officialsWithPositions: Official[] = officials.map(official => {
+        const officialPositions = positions.filter(
+          position => position.official_id === official.id
+        );
+        
+        // Use the most recent position (latest term_end date)
+        let latestPosition = officialPositions[0];
+        if (officialPositions.length > 1) {
+          latestPosition = officialPositions.reduce((latest, current) => {
+            if (!latest.term_end) return current;
+            if (!current.term_end) return latest;
+            return new Date(current.term_end) > new Date(latest.term_end) ? current : latest;
+          }, officialPositions[0]);
+        }
+        
+        return {
+          ...official,
+          // Handle boolean conversion for is_sk field
+          is_sk: Array.isArray(official.is_sk) ? 
+            official.is_sk.length > 0 && official.is_sk[0] === true : 
+            Boolean(official.is_sk),
+          // Update with position data if we have it
+          position: latestPosition?.position || official.position,
+          term_start: latestPosition?.term_start || official.term_start,
+          term_end: latestPosition?.term_end || official.term_end,
+          // Store the positions for potential use in components
+          officialPositions: officialPositions
+        };
+      });
+      
+      return officialsWithPositions;
     }
   });
 

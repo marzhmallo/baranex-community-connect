@@ -1,4 +1,3 @@
-
 // Resident types
 export interface Resident {
   id: string;
@@ -211,12 +210,26 @@ export interface Official {
   address?: string;
   birthdate?: string;
   education?: string;
-  achievements?: any; // Updated to support JSON format from database
-  committees?: any; // Updated to support JSON format from database
+  achievements?: any; // Support JSON format from database
+  committees?: any; // Support JSON format from database
   created_at: string;
   updated_at: string;
   term_start: string;
   term_end?: string;
   is_sk: boolean | boolean[]; // Handle both potential types
   brgyid: string;
+}
+
+// New interface for official positions
+export interface OfficialPosition {
+  id: string;
+  official_id: string;
+  position: string;
+  committee?: string;
+  term_start: string;
+  term_end?: string;
+  is_current?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  description?: string;
 }
