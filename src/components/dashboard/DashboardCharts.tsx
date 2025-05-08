@@ -112,7 +112,7 @@ const DashboardCharts = () => {
               <CardTitle className="mb-1">Population Overview</CardTitle>
               <CardDescription>Monthly resident registration trends</CardDescription>
             </div>
-            <Tabs defaultValue="line" className="w-[180px]">
+            <Tabs defaultValue="line" className="w-[1500px]">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="line">Line</TabsTrigger>
                 <TabsTrigger value="bar">Bar</TabsTrigger>
