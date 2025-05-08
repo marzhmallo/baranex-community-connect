@@ -90,7 +90,7 @@ const DocumentTemplatesList = ({
   if (templates.length === 0) {
     return <Card className="mx-0">
         <CardContent className="">
-          <h3 className="text-xl font-semibold mb-2">No templates found</h3>
+          <h3 className="text-xl font-semibold mb-2 my-[15px]">No templates found</h3>
           <p className="text-muted-foreground mb-4">
             {searchQuery ? "Try a different search query" : "Click the 'Add Template' button to create your first document template"}
           </p>
