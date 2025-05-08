@@ -88,8 +88,8 @@ const DocumentTemplatesList = ({
       </div>;
   }
   if (templates.length === 0) {
-    return <Card className="w-full mx-[15px] px-0 py-0">
-        <CardContent className="flex flex-col items-center justify-center py-12 mx-0">
+    return <Card className="mx-0">
+        <CardContent className="">
           <h3 className="text-xl font-semibold mb-2">No templates found</h3>
           <p className="text-muted-foreground mb-4">
             {searchQuery ? "Try a different search query" : "Click the 'Add Template' button to create your first document template"}
