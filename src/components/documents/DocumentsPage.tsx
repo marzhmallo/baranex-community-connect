@@ -78,7 +78,7 @@ const DocumentsPage = () => {
       </div>
       
       <Tabs defaultValue="templates" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 mb-8">
+        <TabsList className="grid grid-cols-3 mb-8 mx-[15px]">
           <TabsTrigger value="templates">Document Templates</TabsTrigger>
           <TabsTrigger value="issue">Issue Document</TabsTrigger>
           <TabsTrigger value="logs">Document Logs</TabsTrigger>
