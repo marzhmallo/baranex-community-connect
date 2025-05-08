@@ -17,7 +17,6 @@ import { Mail, Phone, Eye, Search } from 'lucide-react';
 interface Official {
   id: string;
   name: string;
-  position: string;
   email?: string;
   phone?: string;
   photo_url: string;
@@ -27,10 +26,19 @@ interface Official {
   education?: string;
   achievements?: string[] | null;
   committees?: string[] | null | any; // Accept different types to handle JSON
+   created_at: string;
+     updated_at: string;
+   official_positions?: {
+    name: string;
   created_at: string;
   updated_at: string;
   term_start: string;
   term_end?: string;
+   position?: string;
+     created_at: string;
+     updated_at: string;
+        description: string;
+  };
   is_sk: boolean | boolean[]; // Handle both potential types
   brgyid: string;
 }
