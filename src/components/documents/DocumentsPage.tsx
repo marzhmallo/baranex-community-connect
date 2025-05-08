@@ -84,7 +84,7 @@ const DocumentsPage = () => {
           <TabsTrigger value="logs">Document Logs</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="templates" className="mt-0">
+        <TabsContent value="templates" className="mt-0 mx-[15px]">
           {showTemplateForm ? <Card className="mt-6 border-2 border-primary/20 animate-fade-in">
               <CardContent className="pt-6">
                 <DocumentTemplateForm template={selectedTemplate} onClose={handleCloseTemplateForm} />
