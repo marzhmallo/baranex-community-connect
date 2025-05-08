@@ -2,8 +2,11 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, Home, FileText, BarChart3 } from "lucide-react";
+import { UserPlus, Home, FileText, BarChart3, Bell, User } from "lucide-react";
 import { Link } from 'react-router-dom';
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const DashboardHeader = () => {
   const today = new Date();
@@ -21,6 +24,17 @@ const DashboardHeader = () => {
     return "Good evening";
   };
 
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -30,17 +44,13 @@ const DashboardHeader = () => {
         </div>
         
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" className="gap-1" asChild>
-            <Link to="/residents/add">
-              <UserPlus className="h-4 w-4 mr-1" />
-              <span>Add Resident</span>
-            </Link>
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="h-5 w-5" />
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-baranex-danger text-white">3</Badge>
           </Button>
-          <Button size="sm" variant="outline" className="gap-1" asChild>
-            <Link to="/reports/generate">
-              <FileText className="h-4 w-4 mr-1" />
-              <span>Generate Report</span>
-            </Link>
+          <Button variant="outline" onClick={handleSignOut} size="sm" className="gap-1">
+            <User className="h-4 w-4" />
+            <span className="md:inline">Admin</span>
           </Button>
         </div>
       </div>
