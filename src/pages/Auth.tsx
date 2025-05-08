@@ -381,7 +381,7 @@ const Auth = () => {
       
       {/* Right side - Auth Form */}
       <div className="lg:w-1/2 w-full h-full p-6 flex justify-center items-center overflow-hidden">
-        <Card className="w-full max-w-md shadow-lg border-0 flex flex-col h-[600px]">
+        <Card className="w-full max-w-md shadow-lg border-0 flex flex-col h-[650px]">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold">
               {activeTab === "login" ? "Welcome Back" : "Create Account"}
@@ -478,7 +478,7 @@ const Auth = () => {
               </TabsContent>
               
               <TabsContent value="signup" className="mt-0 flex-grow">
-                <ScrollArea className="h-[450px] pr-4">
+                <ScrollArea className="h-[500px] pr-4">
                   <Form {...signupForm}>
                     <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
