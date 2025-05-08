@@ -156,3 +156,44 @@ export interface Household {
   updated_at?: string;
   brgyid?: string;
 }
+
+// Document types
+export interface DocumentType {
+  id: string;
+  name: string;
+  description?: string;
+  template: string;
+  required_fields: Record<string, string>;
+  fee: number;
+  validity_days?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface IssuedDocument {
+  id: string;
+  document_type_id: string;
+  resident_id?: string;
+  household_id?: string;
+  document_number: string;
+  purpose?: string;
+  data: Record<string, any>;
+  issued_date: string;
+  issued_by?: string;
+  expiry_date?: string;
+  status: 'issued' | 'pending' | 'cancelled';
+  payment_status: 'pending' | 'paid' | 'waived';
+  payment_amount?: number;
+  payment_date?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DocumentLog {
+  id: string;
+  document_id: string;
+  action: 'issued' | 'updated' | 'cancelled' | 'reprinted';
+  performed_by?: string;
+  details?: Record<string, any>;
+  created_at: string;
+}
