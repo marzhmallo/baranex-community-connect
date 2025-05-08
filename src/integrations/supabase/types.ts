@@ -142,6 +142,7 @@ export type Database = {
       }
       certificates: {
         Row: {
+          brgyid: string
           created_at: string | null
           id: string
           issued_at: string | null
@@ -152,6 +153,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          brgyid?: string
           created_at?: string | null
           id?: string
           issued_at?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          brgyid?: string
           created_at?: string | null
           id?: string
           issued_at?: string | null
@@ -172,6 +175,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "certificates_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "certificates_resident_id_fkey"
             columns: ["resident_id"]
@@ -191,6 +201,7 @@ export type Database = {
       document_logs: {
         Row: {
           action: string
+          brgyid: string
           created_at: string | null
           details: Json | null
           document_id: string
@@ -199,6 +210,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          brgyid?: string
           created_at?: string | null
           details?: Json | null
           document_id: string
@@ -207,6 +219,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          brgyid?: string
           created_at?: string | null
           details?: Json | null
           document_id?: string
@@ -225,6 +238,7 @@ export type Database = {
       }
       document_types: {
         Row: {
+          brgyid: string | null
           created_at: string | null
           description: string | null
           fee: number | null
@@ -236,6 +250,7 @@ export type Database = {
           validity_days: number | null
         }
         Insert: {
+          brgyid?: string | null
           created_at?: string | null
           description?: string | null
           fee?: number | null
@@ -247,6 +262,7 @@ export type Database = {
           validity_days?: number | null
         }
         Update: {
+          brgyid?: string | null
           created_at?: string | null
           description?: string | null
           fee?: number | null

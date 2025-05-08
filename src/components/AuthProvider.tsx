@@ -3,32 +3,43 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 interface UserProfile {
   id: string;
   brgyid?: string;
   email?: string;
   role?: string;
-  // Add other profile fields as needed
+  username?: string;
+  firstname?: string;
+  lastname?: string;
+  middlename?: string;
+  phone?: string;
+  status?: string;
+  adminid?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   userProfile: UserProfile | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ 
-  user: null, 
-  session: null, 
-  userProfile: null 
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  userProfile: null,
+  loading: true,
+  signOut: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -50,32 +61,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserProfile(data as UserProfile);
         console.log('User profile loaded:', data);
       } else {
-        // Try to fetch profile where adminid is the user's ID
-        const { data: adminData, error: adminError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('adminid', userId)
-          .maybeSingle();
-
-        if (adminError) {
-          console.error('Error fetching admin profile:', adminError);
-          return;
-        }
-
-        if (adminData) {
-          setUserProfile(adminData as UserProfile);
-          console.log('Admin profile loaded:', adminData);
-        } else {
-          console.log('No user profile found');
-        }
+        console.log('No user profile found');
       }
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
     }
   };
 
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully",
+      });
+      navigate("/auth");
+    } catch (error) {
+      console.error("Sign out error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
-    // Check active session
+    // Set up auth state listener FIRST to avoid race conditions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Use setTimeout to avoid potential circular supabase client calls
+        setTimeout(() => {
+          fetchUserProfile(session.user.id);
+        }, 0);
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -84,52 +114,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         fetchUserProfile(session.user.id);
       }
       
-      setIsLoading(false);
-      
-      // Handle redirects based on auth status and current route
-      handleAuthRedirects(session, location.pathname);
+      setLoading(false);
+    }).catch(error => {
+      console.error("Error getting session:", error);
+      setLoading(false);
     });
 
-    // Listen for changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setUserProfile(null);
-      }
-      
-      // Handle redirects when auth state changes
-      handleAuthRedirects(session, location.pathname);
-    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
-    return () => subscription.unsubscribe();
-  }, [navigate, location.pathname]);
+  // Handle redirects based on auth status
+  useEffect(() => {
+    if (loading) return; // Don't redirect while still loading
 
-  // Helper function to handle auth-based redirects
-  const handleAuthRedirects = (session: Session | null, pathname: string) => {
-    if (session) {
-      // User is logged in
-      if (pathname === "/auth") {
-        // Redirect away from auth page if already logged in
-        navigate("/");
-      }
-    } else {
-      // User is not logged in
-      if (pathname !== "/auth") {
-        // Redirect to auth page if not logged in and trying to access protected routes
-        navigate("/auth");
-      }
+    if (!session && !location.pathname.includes("/auth")) {
+      // User is not logged in and trying to access a protected route
+      navigate("/auth");
+    } else if (session && location.pathname === "/auth") {
+      // User is logged in and trying to access auth page
+      navigate("/");
     }
-  };
+  }, [session, loading, location.pathname, navigate]);
 
   return (
-    <AuthContext.Provider value={{ user, session, userProfile }}>
-      {!isLoading && children}
+    <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
