@@ -17,6 +17,8 @@ import HouseholdPage from "./pages/HouseholdsPage";
 import HouseholdMoreDetailsPage from "./pages/HouseholdMoreDetailsPage";
 import OfficialsPage from "./pages/OfficialsPage"; 
 import DocumentsPage from "./components/documents/DocumentsPage";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 
 // Initialize the query client
 const queryClient = new QueryClient({
@@ -68,6 +70,8 @@ const AppContent = () => {
             <Route path="/households/:householdId" element={<HouseholdMoreDetailsPage />} />
             <Route path="/officials" element={<OfficialsPage />} /> 
             <Route path="/documents" element={<DocumentsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

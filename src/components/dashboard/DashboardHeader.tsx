@@ -1,14 +1,22 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, Home, FileText, BarChart3, Bell, User } from "lucide-react";
+import { UserPlus, Home, FileText, BarChart3, Bell, User, Settings } from "lucide-react";
 import { Link } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/components/AuthProvider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const DashboardHeader = () => {
+  const { user, userProfile, signOut } = useAuth();
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -24,23 +32,18 @@ const DashboardHeader = () => {
     return "Good evening";
   };
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
+  // Get display name for the header greeting
+  const displayName = userProfile?.firstname || user?.email?.split('@')[0] || 'User';
+
+  // Get username for the dropdown button
+  const username = userProfile?.username || userProfile?.firstname || user?.email?.split('@')[0] || 'User';
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">{greeting()}, Alan • {formattedDate}</p>
+          <p className="text-muted-foreground">{greeting()}, {displayName} • {formattedDate}</p>
         </div>
         
         <div className="flex flex-wrap gap-2">
@@ -48,10 +51,32 @@ const DashboardHeader = () => {
             <Bell className="h-5 w-5" />
             <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-baranex-danger text-white">3</Badge>
           </Button>
-          <Button variant="outline" onClick={handleSignOut} size="sm" className="gap-1">
-            <User className="h-4 w-4" />
-            <span className="md:inline">Admin</span>
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <User className="h-4 w-4" />
+                <span className="md:inline">{username}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem asChild>
+                <Link to="/profile" className="flex items-center w-full">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="flex items-center w-full">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={signOut} className="text-red-500 cursor-pointer">
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       
