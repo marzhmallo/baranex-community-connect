@@ -197,10 +197,10 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Active">Permanent</SelectItem>
-                        <SelectItem value="Inactive">Temporary</SelectItem>
+                        <SelectItem value="Permanent">Permanent</SelectItem>
+                        <SelectItem value="Temporary">Temporary</SelectItem>
                         <SelectItem value="Relocated">Relocated</SelectItem>
-                        <SelectItem value="Relocated">Abandoned</SelectItem>
+                        <SelectItem value="Abandoned">Abandoned</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
