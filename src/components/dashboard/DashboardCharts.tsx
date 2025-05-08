@@ -109,18 +109,20 @@ const DashboardCharts = () => {
   <CardHeader>
     <CardTitle className="mb-1">Population Overview</CardTitle>
     <CardDescription className="mb-4">Monthly resident registration trends</CardDescription>
-    
-            <Tabs defaultValue="line" className="w-[1500px]">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="line">Line</TabsTrigger>
-                <TabsTrigger value="bar">Bar</TabsTrigger>
-              </TabsList>
-              <TabsContent value="line" className="p-0">
-                <ChartContainer config={{
-                residents: {
-                  theme: {
-                    dark: '#3b82f6',
-                    light: '#3b82f6'
+
+    <Tabs defaultValue="line" className="w-full">
+      <TabsList className="grid w-full grid-cols-2 mb-2">
+        <TabsTrigger value="line">Line</TabsTrigger>
+        <TabsTrigger value="bar">Bar</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="line" className="p-0">
+        <ChartContainer
+          config={{
+            residents: {
+              theme: {
+                dark: '#3b82f6',
+                light: '#3b82f6',
                   }
                 }
               }} className="aspect-auto h-[300px]">
