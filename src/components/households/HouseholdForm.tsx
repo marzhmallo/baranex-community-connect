@@ -21,6 +21,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { saveHousehold } from "@/lib/api/households";
 import { Household } from "@/lib/types";
 
+// Define status values as a constant for reuse
+const HOUSEHOLD_STATUSES = ["Permanent", "Temporary", "Relocated", "Abandoned"] as const;
+type HouseholdStatus = typeof HOUSEHOLD_STATUSES[number];
+
 // Define form schema
 const householdFormSchema = z.object({
   name: z.string().min(1, { message: "Household name is required" }),
@@ -29,7 +33,7 @@ const householdFormSchema = z.object({
   head_of_family: z.string().optional(),
   contact_number: z.string().optional(),
   year_established: z.coerce.number().int().optional(),
-  status: z.enum(["Permanent", "Temporary", "Relocated", "Abandoned"]),
+  status: z.enum(HOUSEHOLD_STATUSES),
   monthly_income: z.string().optional(),
   property_type: z.string().optional(),
   house_type: z.string().optional(),
@@ -60,7 +64,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     head_of_family: household.head_of_family || "",
     contact_number: household.contact_number || "",
     year_established: household.year_established || undefined,
-    status: household.status as "Permanent" | "Temporary" | "Relocated" | "Abandoned",
+    status: household.status as HouseholdStatus, // Cast to our enum type
     monthly_income: household.monthly_income || "",
     property_type: household.property_type || "",
     house_type: household.house_type || "",
@@ -76,7 +80,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     head_of_family: "",
     contact_number: "",
     year_established: undefined,
-    status: "",
+    status: "Temporary" as HouseholdStatus, // Set a default value
     monthly_income: "",
     property_type: "",
     house_type: "",
@@ -361,7 +365,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="house_type"
+                name="water_source"
                 render={({ field }) => (
                    <FormItem>
                     <FormLabel>Water Source</FormLabel>

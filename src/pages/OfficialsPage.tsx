@@ -5,28 +5,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import OfficialCard from '@/components/officials/OfficialCard';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Plus, ArrowLeft } from 'lucide-react';
+import { Official } from '@/lib/types';
 
 // Officials interface based on the required data structure
-interface Official {
-  id: string;
-  name: string;
-  position: string;
-  email?: string;
-  phone?: string;
-  photo_url: string;
-  bio?: string;
-  address?: string;
-  birthdate?: string;
-  education?: string;
-  achievements?: string[] | null;
-  committees?: string[] | null | any; // Make flexible to handle JSON
-  created_at: string;
-  updated_at: string;
-  term_start: string;
-  term_end?: string;
-  is_sk: boolean | boolean[]; // Handle both potential types
-  brgyid: string;
-}
 const OfficialsPage = () => {
   const [activeTab, setActiveTab] = useState('current');
 
@@ -48,9 +29,15 @@ const OfficialsPage = () => {
       // Transform the data to match our Official interface
       const transformedData: Official[] = data.map(official => ({
         ...official,
-        // Ensure is_sk is a boolean
-        is_sk: Array.isArray(official.is_sk) ? official.is_sk.length > 0 && official.is_sk[0] === true : Boolean(official.is_sk)
+        // Handle JSON and boolean conversions
+        is_sk: Array.isArray(official.is_sk) ? 
+          official.is_sk.length > 0 && official.is_sk[0] === true : 
+          Boolean(official.is_sk),
+        // Keep achievements and committees as they are since we've updated the type
+        achievements: official.achievements,
+        committees: official.committees
       }));
+      
       return transformedData;
     }
   });
@@ -58,7 +45,10 @@ const OfficialsPage = () => {
   // Filter officials based on the active tab
   const filteredOfficials = officialsData ? officialsData.filter(official => {
     const now = new Date();
-    const isSk = Array.isArray(official.is_sk) ? official.is_sk.length > 0 && official.is_sk[0] === true : Boolean(official.is_sk);
+    const isSk = Array.isArray(official.is_sk) ? 
+      official.is_sk.length > 0 && official.is_sk[0] === true : 
+      Boolean(official.is_sk);
+      
     if (activeTab === 'current') {
       return !official.term_end || new Date(official.term_end) > now;
     } else if (activeTab === 'sk') {
@@ -76,9 +66,11 @@ const OfficialsPage = () => {
     return isSk && (!o.term_end || new Date(o.term_end) > new Date());
   }).length : 0;
   const previousCount = officialsData ? officialsData.filter(o => o.term_end && new Date(o.term_end) < new Date()).length : 0;
+  
   const handleRefreshTerms = () => {
     refetch();
   };
+
   return <div className="min-h-screen bg-[#0f172a] p-6">
       {/* Header with title, subtitle, and action buttons */}
       <div className="flex justify-between items-start mb-8">
@@ -143,4 +135,5 @@ const OfficialsPage = () => {
       </div>
     </div>;
 };
+
 export default OfficialsPage;

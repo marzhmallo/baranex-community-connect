@@ -12,35 +12,7 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import { Mail, Phone, Eye, Search } from 'lucide-react';
-
-// Official interface to match the data structure
-interface Official {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  photo_url: string;
-  bio?: string;
-  address?: string;
-  birthdate?: string;
-  education?: string;
-  achievements?: string[] | null;
-  committees?: string[] | null | any; // Accept different types to handle JSON
-  created_at: string;
-  updated_at: string;
-  official_positions?: {
-    name: string;
-    term_start: string;
-    term_end?: string;
-    position?: string;
-    description: string;
-  };
-  is_sk: boolean | boolean[]; // Handle both potential types
-  brgyid: string;
-  position?: string; // Added position property from the database
-  term_start?: string; // Added term_start property
-  term_end?: string; // Added term_end property
-}
+import { Official } from '@/lib/types';
 
 interface OfficialCardProps {
   official: Official;

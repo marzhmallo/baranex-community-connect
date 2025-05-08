@@ -1,3 +1,4 @@
+
 // Resident types
 export interface Resident {
   id: string;
@@ -196,4 +197,26 @@ export interface DocumentLog {
   performed_by?: string;
   details?: Record<string, any>;
   created_at: string;
+}
+
+// Updated Official interface to match the database structure
+export interface Official {
+  id: string;
+  name: string;
+  position: string;
+  email?: string;
+  phone?: string;
+  photo_url: string;
+  bio?: string;
+  address?: string;
+  birthdate?: string;
+  education?: string;
+  achievements?: any; // Updated to support JSON format from database
+  committees?: any; // Updated to support JSON format from database
+  created_at: string;
+  updated_at: string;
+  term_start: string;
+  term_end?: string;
+  is_sk: boolean | boolean[]; // Handle both potential types
+  brgyid: string;
 }
