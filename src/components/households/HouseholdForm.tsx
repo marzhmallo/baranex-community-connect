@@ -29,7 +29,7 @@ const householdFormSchema = z.object({
   head_of_family: z.string().optional(),
   contact_number: z.string().optional(),
   year_established: z.coerce.number().int().optional(),
-  status: z.enum(["Active", "Inactive", "Relocated"]),
+  status: z.enum(["Permanent", "Temporary", "Relocated", "Abandoned"]),
   monthly_income: z.string().optional(),
   property_type: z.string().optional(),
   house_type: z.string().optional(),
