@@ -96,7 +96,7 @@ const DocumentsPage = () => {
           <IssueDocumentForm />
         </TabsContent>
         
-        <TabsContent value="logs" className="mt-0">
+        <TabsContent value="logs" className="mt-0 mx-[15px]">
           <DocumentLogsList searchQuery={searchQuery} />
         </TabsContent>
       </Tabs>
