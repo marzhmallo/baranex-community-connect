@@ -58,6 +58,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (data) {
+        // Check if user status is pending
+        if (data.status === "pending") {
+          // Sign out the user if status is pending
+          await supabase.auth.signOut();
+          setUser(null);
+          setSession(null);
+          setUserProfile(null);
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account is pending approval from your barangay administrator.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+
         setUserProfile(data as UserProfile);
         console.log('User profile loaded:', data);
       } else {

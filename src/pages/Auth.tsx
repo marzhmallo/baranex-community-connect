@@ -12,8 +12,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Mail, User, Lock } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Eye, EyeOff, Mail, User, Lock, Building, MapPin } from "lucide-react";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { Separator } from "@/components/ui/separator";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -29,7 +31,27 @@ const signupSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters long"),
   phone: z.string().min(10, "Please enter a valid phone number").optional(),
   role: z.enum(["admin", "staff", "user"]),
-  status: z.enum(["active", "inactive", "pending"]),
+  // Remove status field as it will be set automatically
+  brgySelection: z.enum(["existing", "new"]),
+  barangayId: z.string().optional(),
+  barangayname: z.string().optional(),
+  municipality: z.string().optional(),
+  province: z.string().optional(),
+  region: z.string().optional(),
+  country: z.string().default("Philippines").optional(),
+}).refine(data => {
+  // If selecting an existing barangay, barangayId is required
+  if (data.brgySelection === "existing") {
+    return !!data.barangayId;
+  }
+  // If registering a new barangay and user is admin/staff, these fields are required
+  if (data.brgySelection === "new" && (data.role === "admin" || data.role === "staff")) {
+    return !!data.barangayname && !!data.municipality && !!data.province;
+  }
+  return true;
+}, {
+  message: "Required barangay information is missing",
+  path: ["brgySelection"],
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -40,11 +62,40 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [barangays, setBarangays] = useState<{id: string, name: string, municipality: string, province: string}[]>([]);
   const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
   
   // Use environment variable for the hCaptcha site key
   const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "a002bff6-3d98-4db2-8406-166e106c1958";
+
+  // Fetch available barangays
+  useEffect(() => {
+    const fetchBarangays = async () => {
+      const { data, error } = await supabase
+        .from('barangays')
+        .select('id, barangayname, municipality, province')
+        .order('province')
+        .order('municipality')
+        .order('barangayname');
+      
+      if (error) {
+        console.error('Error fetching barangays:', error);
+        return;
+      }
+
+      if (data) {
+        setBarangays(data.map(b => ({
+          id: b.id,
+          name: b.barangayname,
+          municipality: b.municipality,
+          province: b.province
+        })));
+      }
+    };
+
+    fetchBarangays();
+  }, []);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -65,9 +116,19 @@ const Auth = () => {
       username: "",
       phone: "",
       role: "user",
-      status: "pending",
+      brgySelection: "existing",
+      barangayId: "",
+      barangayname: "",
+      municipality: "",
+      province: "",
+      region: "",
+      country: "Philippines",
     },
   });
+
+  // Watch for role and brgySelection changes to show/hide fields
+  const selectedRole = signupForm.watch("role");
+  const selectedBrgySelection = signupForm.watch("brgySelection");
 
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
@@ -90,7 +151,7 @@ const Auth = () => {
     }
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
         options: {
@@ -104,12 +165,33 @@ const Auth = () => {
           description: error.message,
           variant: "destructive",
         });
-      } else {
-        toast({
-          title: "Login successful",
-          description: "Welcome back!",
-        });
-        navigate("/"); // Navigate to the main page on successful login
+      } else if (user) {
+        // Check if user status is pending
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching profile status:", profileError);
+        }
+
+        if (profileData && profileData.status === "pending") {
+          // Sign out the user if status is pending
+          await supabase.auth.signOut();
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account is pending approval from your barangay administrator.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login successful",
+            description: "Welcome back!",
+          });
+          navigate("/"); // Navigate to the main page on successful login
+        }
       }
     } catch (error: any) {
       toast({
@@ -139,7 +221,49 @@ const Auth = () => {
     }
 
     try {
-      // First, create the user in Supabase Auth
+      let brgyId: string | null = null;
+      
+      // Process barangay selection or creation
+      if (values.brgySelection === "existing") {
+        // Using existing barangay
+        brgyId = values.barangayId || null;
+      } else if (values.brgySelection === "new" && (values.role === "admin" || values.role === "staff")) {
+        // Create new barangay
+        const { data: brgyData, error: brgyError } = await supabase
+          .from('barangays')
+          .insert({
+            barangayname: values.barangayname || '',
+            municipality: values.municipality || '',
+            province: values.province || '',
+            region: values.region || '',
+            country: values.country || 'Philippines',
+            created_at: new Date().toISOString(),
+            is_custom: true
+          })
+          .select('id')
+          .single();
+          
+        if (brgyError) {
+          toast({
+            title: "Barangay Creation Error",
+            description: brgyError.message,
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        if (brgyData) {
+          brgyId = brgyData.id;
+        }
+      }
+      
+      // Determine user status based on role and barangay registration
+      const userStatus = (values.role === "admin" || values.role === "staff") && values.brgySelection === "new" 
+        ? "active" 
+        : "pending";
+      
+      // Create user auth account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -163,36 +287,6 @@ const Auth = () => {
       }
       
       if (authData.user) {
-        // Create a default barangay entry if needed
-        let brgyId = null;
-        
-        const { data: brgyData, error: brgyError } = await supabase
-          .from('barangays')
-          .insert({
-            barangayname: 'Default Barangay',
-            municipality: 'Default Municipality',
-            province: 'Default Province',
-            created_at: new Date().toISOString()
-          })
-          .select('id')
-          .single();
-          
-        if (!brgyError && brgyData) {
-          brgyId = brgyData.id;
-        } else {
-          console.error('Error creating barangay:', brgyError);
-          // Get a default barangay if creation fails
-          const { data: defaultBrgy } = await supabase
-            .from('barangays')
-            .select('id')
-            .limit(1)
-            .single();
-            
-          if (defaultBrgy) {
-            brgyId = defaultBrgy.id;
-          }
-        }
-        
         // Insert into profiles table
         const { error: profileError } = await supabase
           .from('profiles')
@@ -207,7 +301,7 @@ const Auth = () => {
             email: values.email,
             phone: values.phone || null,
             role: values.role,
-            status: values.status,
+            status: userStatus,
             created_at: new Date().toISOString()
           });
         
@@ -219,9 +313,13 @@ const Auth = () => {
           });
           console.error("Profile creation error:", profileError);
         } else {
+          const successMessage = userStatus === "active"
+            ? "Account created successfully! You can now log in."
+            : "Account created and pending approval from the barangay administrator.";
+
           toast({
             title: "Account created",
-            description: "Please check your email to verify your account",
+            description: successMessage,
           });
           setActiveTab("login");
           signupForm.reset();
@@ -474,53 +572,193 @@ const Auth = () => {
                       )}
                     />
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={signupForm.control}
-                        name="role"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Role</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select role" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="staff">Staff</SelectItem>
-                                <SelectItem value="user">User</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={signupForm.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="inactive">Inactive</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <FormField
+                      control={signupForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Role</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="staff">Staff</SelectItem>
+                              <SelectItem value="user">User</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Separator className="my-4" />
+                    
+                    <div className="rounded-md bg-blue-50 p-4 mb-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <Building className="h-5 w-5 text-blue-400" aria-hidden="true" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-blue-800">Barangay Information</h3>
+                        </div>
+                      </div>
                     </div>
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="brgySelection"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Barangay Selection</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select option" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="existing">Select Existing Barangay</SelectItem>
+                              {(selectedRole === "admin" || selectedRole === "staff") && (
+                                <SelectItem value="new">Register New Barangay</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {selectedBrgySelection === "existing" && (
+                      <FormField
+                        control={signupForm.control}
+                        name="barangayId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Select Barangay</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || undefined}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select your barangay" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="max-h-[200px]">
+                                {barangays.map(barangay => (
+                                  <SelectItem key={barangay.id} value={barangay.id}>
+                                    {`${barangay.name}, ${barangay.municipality}, ${barangay.province}`}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    
+                    {selectedBrgySelection === "new" && (selectedRole === "admin" || selectedRole === "staff") && (
+                      <>
+                        <FormField
+                          control={signupForm.control}
+                          name="barangayname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Barangay Name</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Input 
+                                    placeholder="Barangay Name" 
+                                    className="pl-9" 
+                                    {...field} 
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={signupForm.control}
+                            name="municipality"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Municipality/City</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Municipality or City" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={signupForm.control}
+                            name="province"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Province</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Province" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={signupForm.control}
+                            name="region"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Region (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Region" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={signupForm.control}
+                            name="country"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Country</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Country" 
+                                    defaultValue="Philippines"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        {(selectedRole === "admin" || selectedRole === "staff") && selectedBrgySelection === "new" && (
+                          <div className="rounded-md bg-green-50 p-4 mt-2">
+                            <div className="flex">
+                              <div className="ml-3">
+                                <p className="text-sm text-green-700">
+                                  As you're registering a new barangay, your account will be automatically activated as the administrator.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                     
                     <FormField
                       control={signupForm.control}
@@ -554,6 +792,26 @@ const Auth = () => {
                         </FormItem>
                       )}
                     />
+                    
+                    {selectedBrgySelection === "existing" && selectedRole !== "admin" && (
+                      <div className="rounded-md bg-yellow-50 p-4">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-yellow-800">Account Approval Required</h3>
+                            <div className="mt-2 text-sm text-yellow-700">
+                              <p>
+                                Your account will require approval from a barangay administrator before you can log in.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="flex justify-center my-4">
                       <HCaptcha
