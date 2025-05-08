@@ -106,23 +106,23 @@ const DashboardCharts = () => {
   return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Main chart area - takes up 2 columns on md screens */}
       <Card className="md:col-span-2">
-  <CardHeader>
-    <CardTitle className="mb-1">Population Overview</CardTitle>
-    <CardDescription className="mb-4">Monthly resident registration trends</CardDescription>
-
-    <Tabs defaultValue="line" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 mb-2">
-        <TabsTrigger value="line">Line</TabsTrigger>
-        <TabsTrigger value="bar">Bar</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="line" className="p-0">
-        <ChartContainer
-          config={{
-            residents: {
-              theme: {
-                dark: '#3b82f6',
-                light: '#3b82f6',
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="mb-1">Population Overview</CardTitle>
+              <CardDescription>Monthly resident registration trends</CardDescription>
+            </div>
+            <Tabs defaultValue="line" className="w-[1500px]">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="line">Line</TabsTrigger>
+                <TabsTrigger value="bar">Bar</TabsTrigger>
+              </TabsList>
+              <TabsContent value="line" className="p-0">
+                <ChartContainer config={{
+                residents: {
+                  theme: {
+                    dark: '#3b82f6',
+                    light: '#3b82f6'
                   }
                 }
               }} className="aspect-auto h-[300px]">
