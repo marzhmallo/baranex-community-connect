@@ -47,15 +47,6 @@ interface OfficialCardProps {
   official: Official;
 }
 
-const { data, error } = await supabase
-  .from('officials')
-  .select(`
-    *,
-    official_positions (
-      name
-    )
-  `);
-
 const OfficialCard = ({ official }: OfficialCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   
