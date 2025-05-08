@@ -58,9 +58,9 @@ const DocumentsPage = () => {
         </p>
       </div>
       
-      <div className="px-[15px]">
-        <div className="className=\"w-full max-w-sm pl-8\"">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-1 text-muted-foreground" />
+       <div className="">
+        <div className="">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input type="search" placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="" />
         </div>
         
