@@ -61,7 +61,7 @@ const DocumentsPage = () => {
       <div className="px-[15px]">
         <div className="mx-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input type="search" placeholder="Search documents..." className="w-full pl-8" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+          <Input type="search" placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="" />
         </div>
         
         <div className="flex gap-2">
