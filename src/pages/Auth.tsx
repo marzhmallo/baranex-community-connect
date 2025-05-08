@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, User, Lock, Building, MapPin } from "lucide-react";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -340,9 +340,9 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex lg:flex-row flex-col bg-gradient-to-br from-blue-100 via-white to-blue-50">
+    <div className="h-screen w-full flex lg:flex-row flex-col bg-gradient-to-br from-blue-100 via-white to-blue-50 overflow-hidden">
       {/* Left side - Brand/Info */}
-      <div className="lg:w-1/2 w-full p-6 flex flex-col justify-center items-center bg-gradient-to-br from-blue-600 to-blue-800 text-white">
+      <div className="lg:w-1/2 w-full h-full p-6 flex flex-col justify-center items-center bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden">
         <div className="max-w-md mx-auto text-center">
           <h1 className="text-3xl font-bold mb-6">Baranex Management System</h1>
           <h2 className="text-2xl font-semibold mb-8">Create your account today</h2>
@@ -380,8 +380,8 @@ const Auth = () => {
       </div>
       
       {/* Right side - Auth Form */}
-      <div className="lg:w-1/2 w-full p-6 flex justify-center items-center">
-        <Card className="w-full max-w-md shadow-lg border-0">
+      <div className="lg:w-1/2 w-full h-full p-6 flex justify-center items-center overflow-hidden">
+        <Card className="w-full max-w-md shadow-lg border-0 flex flex-col h-[600px]">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold">
               {activeTab === "login" ? "Welcome Back" : "Create Account"}
@@ -393,18 +393,18 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           
-          <CardContent>
+          <CardContent className="flex-grow flex flex-col">
             <Tabs 
               value={activeTab} 
               onValueChange={(value) => setActiveTab(value as "login" | "signup")}
-              className="w-full"
+              className="w-full flex-grow flex flex-col"
             >
               <TabsList className="grid grid-cols-2 mb-6">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="login" className="mt-0">
+              <TabsContent value="login" className="mt-0 flex-grow">
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                     <FormField
@@ -477,18 +477,48 @@ const Auth = () => {
                 </Form>
               </TabsContent>
               
-              <TabsContent value="signup" className="mt-0">
-                <Form {...signupForm}>
-                  <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+              <TabsContent value="signup" className="mt-0 flex-grow">
+                <ScrollArea className="h-[450px] pr-4">
+                  <Form {...signupForm}>
+                    <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={signupForm.control}
+                          name="firstname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>First Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="John" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={signupForm.control}
+                          name="lastname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Last Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Doe" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
                       <FormField
                         control={signupForm.control}
-                        name="firstname"
+                        name="middlename"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>First Name</FormLabel>
+                            <FormLabel>Middle Name (Optional)</FormLabel>
                             <FormControl>
-                              <Input placeholder="John" {...field} />
+                              <Input placeholder="Middle Name" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -497,342 +527,314 @@ const Auth = () => {
                       
                       <FormField
                         control={signupForm.control}
-                        name="lastname"
+                        name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Last Name</FormLabel>
+                            <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <Input placeholder="Doe" {...field} />
+                              <div className="relative">
+                                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <Input placeholder="johndoe" className="pl-9" {...field} />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="middlename"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Middle Name (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Middle Name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input placeholder="johndoe" className="pl-9" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input placeholder="you@example.com" className="pl-9" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number (Optional)</FormLabel>
-                          <FormControl>
-                            <Input type="tel" placeholder="+63 XXX XXX XXXX" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="staff">Staff</SelectItem>
-                              <SelectItem value="user">User</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <Separator className="my-4" />
-                    
-                    <div className="rounded-md bg-blue-50 p-4 mb-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <Building className="h-5 w-5 text-blue-400" aria-hidden="true" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-blue-800">Barangay Information</h3>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="brgySelection"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Barangay Selection</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select option" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="existing">Select Existing Barangay</SelectItem>
-                              {(selectedRole === "admin" || selectedRole === "staff") && (
-                                <SelectItem value="new">Register New Barangay</SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {selectedBrgySelection === "existing" && (
+                      
                       <FormField
                         control={signupForm.control}
-                        name="barangayId"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Select Barangay</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || undefined}>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <Input placeholder="you@example.com" className="pl-9" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number (Optional)</FormLabel>
+                            <FormControl>
+                              <Input type="tel" placeholder="+63 XXX XXX XXXX" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="role"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Role</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select your barangay" />
+                                  <SelectValue placeholder="Select role" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="max-h-[200px]">
-                                {barangays.map(barangay => (
-                                  <SelectItem key={barangay.id} value={barangay.id}>
-                                    {`${barangay.name}, ${barangay.municipality}, ${barangay.province}`}
-                                  </SelectItem>
-                                ))}
+                              <SelectContent>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="staff">Staff</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    )}
-                    
-                    {selectedBrgySelection === "new" && (selectedRole === "admin" || selectedRole === "staff") && (
-                      <>
+                      
+                      <Separator className="my-4" />
+                      
+                      <div className="rounded-md bg-blue-50 p-4 mb-4">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <Building className="h-5 w-5 text-blue-400" aria-hidden="true" />
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-blue-800">Barangay Information</h3>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="brgySelection"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Barangay Selection</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select option" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="existing">Select Existing Barangay</SelectItem>
+                                {(selectedRole === "admin" || selectedRole === "staff") && (
+                                  <SelectItem value="new">Register New Barangay</SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {selectedBrgySelection === "existing" && (
                         <FormField
                           control={signupForm.control}
-                          name="barangayname"
+                          name="barangayId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Barangay Name</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                  <Input 
-                                    placeholder="Barangay Name" 
-                                    className="pl-9" 
-                                    {...field} 
-                                  />
-                                </div>
-                              </FormControl>
+                              <FormLabel>Select Barangay</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || undefined}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select your barangay" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="max-h-[200px]">
+                                  {barangays.map(barangay => (
+                                    <SelectItem key={barangay.id} value={barangay.id}>
+                                      {`${barangay.name}, ${barangay.municipality}, ${barangay.province}`}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
-                        <div className="grid grid-cols-2 gap-4">
+                      )}
+                      
+                      {selectedBrgySelection === "new" && (selectedRole === "admin" || selectedRole === "staff") && (
+                        <>
                           <FormField
                             control={signupForm.control}
-                            name="municipality"
+                            name="barangayname"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Municipality/City</FormLabel>
+                                <FormLabel>Barangay Name</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Municipality or City" {...field} />
+                                  <div className="relative">
+                                    <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                    <Input 
+                                      placeholder="Barangay Name" 
+                                      className="pl-9" 
+                                      {...field} 
+                                    />
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                           
-                          <FormField
-                            control={signupForm.control}
-                            name="province"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Province</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Province" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={signupForm.control}
-                            name="region"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Region (Optional)</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Region" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={signupForm.control}
+                              name="municipality"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Municipality/City</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Municipality or City" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={signupForm.control}
+                              name="province"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Province</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Province" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                           
-                          <FormField
-                            control={signupForm.control}
-                            name="country"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Country</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Country" 
-                                    defaultValue="Philippines"
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        {(selectedRole === "admin" || selectedRole === "staff") && selectedBrgySelection === "new" && (
-                          <div className="rounded-md bg-green-50 p-4 mt-2">
-                            <div className="flex">
-                              <div className="ml-3">
-                                <p className="text-sm text-green-700">
-                                  As you're registering a new barangay, your account will be automatically activated as the administrator.
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={signupForm.control}
+                              name="region"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Region (Optional)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Region" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={signupForm.control}
+                              name="country"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Country</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="Country" 
+                                      defaultValue="Philippines"
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          {(selectedRole === "admin" || selectedRole === "staff") && selectedBrgySelection === "new" && (
+                            <div className="rounded-md bg-green-50 p-4 mt-2">
+                              <div className="flex">
+                                <div className="ml-3">
+                                  <p className="text-sm text-green-700">
+                                    As you're registering a new barangay, your account will be automatically activated as the administrator.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <Input 
+                                  type={showPassword ? "text" : "password"} 
+                                  placeholder="••••••••" 
+                                  className="pl-9"
+                                  {...field} 
+                                />
+                                <button 
+                                  type="button"
+                                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  {showPassword ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {selectedBrgySelection === "existing" && selectedRole !== "admin" && (
+                        <div className="rounded-md bg-yellow-50 p-4">
+                          <div className="flex">
+                            <div className="flex-shrink-0">
+                              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="ml-3">
+                              <h3 className="text-sm font-medium text-yellow-800">Account Approval Required</h3>
+                              <div className="mt-2 text-sm text-yellow-700">
+                                <p>
+                                  Your account will require approval from a barangay administrator before you can log in.
                                 </p>
                               </div>
                             </div>
                           </div>
-                        )}
-                      </>
-                    )}
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input 
-                                type={showPassword ? "text" : "password"} 
-                                placeholder="••••••••" 
-                                className="pl-9"
-                                {...field} 
-                              />
-                              <button 
-                                type="button"
-                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                onClick={() => setShowPassword(!showPassword)}
-                              >
-                                {showPassword ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
-                              </button>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {selectedBrgySelection === "existing" && selectedRole !== "admin" && (
-                      <div className="rounded-md bg-yellow-50 p-4">
-                        <div className="flex">
-                          <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-yellow-800">Account Approval Required</h3>
-                            <div className="mt-2 text-sm text-yellow-700">
-                              <p>
-                                Your account will require approval from a barangay administrator before you can log in.
-                              </p>
-                            </div>
-                          </div>
                         </div>
+                      )}
+                      
+                      <div className="flex justify-center my-4">
+                        <HCaptcha
+                          ref={captchaRef}
+                          sitekey={hcaptchaSiteKey}
+                          onVerify={handleCaptchaChange}
+                          onExpire={() => setCaptchaToken(null)}
+                        />
                       </div>
-                    )}
-                    
-                    <div className="flex justify-center my-4">
-                      <HCaptcha
-                        ref={captchaRef}
-                        sitekey={hcaptchaSiteKey}
-                        onVerify={handleCaptchaChange}
-                        onExpire={() => setCaptchaToken(null)}
-                      />
-                    </div>
-                    
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading || !captchaToken}>
-                      {isLoading ? "Creating Account..." : "Create Account"}
-                    </Button>
-                    
-                    <p className="text-xs text-center text-gray-500 mt-4">
-                      By clicking "Create Account", you agree to our{" "}
-                      <a href="#" className="underline text-blue-600">Terms of Service</a> and{" "}
-                      <a href="#" className="underline text-blue-600">Privacy Policy</a>.
-                    </p>
-                  </form>
-                </Form>
+                      
+                      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading || !captchaToken}>
+                        {isLoading ? "Creating Account..." : "Create Account"}
+                      </Button>
+                      
+                      <p className="text-xs text-center text-gray-500 mt-4">
+                        By clicking "Create Account", you agree to our{" "}
+                        <a href="#" className="underline text-blue-600">Terms of Service</a> and{" "}
+                        <a href="#" className="underline text-blue-600">Privacy Policy</a>.
+                      </p>
+                    </form>
+                  </Form>
+                </ScrollArea>
               </TabsContent>
             </Tabs>
           </CardContent>
