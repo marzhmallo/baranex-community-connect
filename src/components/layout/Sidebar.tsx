@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LogOut, 
   User, 
@@ -32,6 +32,7 @@ import { toast } from "@/hooks/use-toast";
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Dispatch a custom event when sidebar state changes
   useEffect(() => {
@@ -56,6 +57,10 @@ const Sidebar = () => {
       });
       navigate("/auth");
     }
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
   
   return (
@@ -84,57 +89,145 @@ const Sidebar = () => {
         </div>
 
         <nav className="flex-1 space-y-1 p-2">
-          <Link to="/" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <Dock className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Dashboard</span>}
           </Link>
 
-          <Link to="/residents" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/residents" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/residents") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <User className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Residents</span>}
           </Link>
 
-          <Link to="/households" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/households" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/households") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <Home className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Households</span>}
           </Link>
           
-          <Link to="/officials" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/officials" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/officials") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <Award className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Officials</span>}
           </Link>
 
-          <Link to="/documents" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/documents" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/documents") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <FileText className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Documents</span>}
           </Link>
 
-          <Link to="/calendar" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/calendar" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/calendar") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <Calendar className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Calendar</span>}
           </Link>
 
-          <Link to="/announcements" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/announcements" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/announcements") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <BellRing className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Announcements</span>}
           </Link>
 
-          <Link to="/forum" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/forum" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/forum") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <MessageSquare className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Forum</span>}
           </Link>
 
-          <Link to="/crime-reports" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/crime-reports" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/crime-reports") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <FileText className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Crime Reports</span>}
           </Link>
 
-          <Link to="/statistics" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/statistics" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/statistics") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <BarChart3 className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Statistics</span>}
           </Link>
 
-          <Link to="/emergencies" className="flex items-center py-2 px-3 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
+          <Link 
+            to="/emergencies" 
+            className={cn(
+              "flex items-center py-2 px-3 rounded-md",
+              isActive("/emergencies") 
+                ? "bg-sidebar-accent text-white" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
             <AlertTriangle className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Emergency Response</span>}
           </Link>

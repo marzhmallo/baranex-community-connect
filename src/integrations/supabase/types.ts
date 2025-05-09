@@ -33,6 +33,62 @@ export type Database = {
         }
         Relationships: []
       }
+      announcements: {
+        Row: {
+          attachment_url: string | null
+          audience: string
+          brgyid: string
+          category: string
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          is_pinned: boolean | null
+          is_public: boolean | null
+          photo_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          audience?: string
+          brgyid: string
+          category: string
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_pinned?: boolean | null
+          is_public?: boolean | null
+          photo_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_url?: string | null
+          audience?: string
+          brgyid?: string
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_pinned?: boolean | null
+          is_public?: boolean | null
+          photo_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       barangays: {
         Row: {
           barangayname: string
