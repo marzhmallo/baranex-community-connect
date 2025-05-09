@@ -21,6 +21,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import CalendarPage from "./pages/CalendarPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
+import ForumPage from "./pages/ForumPage";
 
 // Initialize the query client
 const queryClient = new QueryClient({
@@ -74,6 +75,7 @@ const AppContent = () => {
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/announcements" element={<AnnouncementsPage />} />
+            <Route path="/forum" element={<ForumPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />

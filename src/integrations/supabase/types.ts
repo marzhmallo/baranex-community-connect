@@ -254,6 +254,51 @@ export type Database = {
           },
         ]
       }
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          parent_id: string | null
+          thread_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          parent_id?: string | null
+          thread_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          parent_id?: string | null
+          thread_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_logs: {
         Row: {
           action: string
@@ -335,7 +380,7 @@ export type Database = {
         Row: {
           brgyid: string | null
           created_at: string | null
-          created_by: string | null
+          created_by: string
           description: string | null
           end_time: string
           event_type: string | null
@@ -350,7 +395,7 @@ export type Database = {
         Insert: {
           brgyid?: string | null
           created_at?: string | null
-          created_by?: string | null
+          created_by: string
           description?: string | null
           end_time: string
           event_type?: string | null
@@ -365,7 +410,7 @@ export type Database = {
         Update: {
           brgyid?: string | null
           created_at?: string | null
-          created_by?: string | null
+          created_by?: string
           description?: string | null
           end_time?: string
           event_type?: string | null
@@ -386,6 +431,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      forums: {
+        Row: {
+          brgyid: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brgyid: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brgyid?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       households: {
         Row: {
@@ -721,6 +799,48 @@ export type Database = {
           },
         ]
       }
+      reactions: {
+        Row: {
+          comment_id: string | null
+          created_at: string
+          emoji: string
+          id: string
+          thread_id: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string
+          emoji: string
+          id?: string
+          thread_id?: string | null
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string
+          emoji?: string
+          id?: string
+          thread_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       relationships: {
         Row: {
           created_at: string | null
@@ -975,6 +1095,53 @@ export type Database = {
           value?: string
         }
         Relationships: []
+      }
+      threads: {
+        Row: {
+          brgyid: string
+          content: string
+          created_at: string
+          created_by: string
+          forum_id: string
+          id: string
+          pinned: boolean | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brgyid: string
+          content: string
+          created_at?: string
+          created_by: string
+          forum_id: string
+          id?: string
+          pinned?: boolean | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brgyid?: string
+          content?: string
+          created_at?: string
+          created_by?: string
+          forum_id?: string
+          id?: string
+          pinned?: boolean | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "threads_forum_id_fkey"
+            columns: ["forum_id"]
+            isOneToOne: false
+            referencedRelation: "forums"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
