@@ -83,6 +83,13 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
     setIsLoading(true);
     
     try {
+      // Get the user session to get the user ID
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      
+      // If there's no user ID, use a placeholder value or handle accordingly
+      const createdBy = userId || "00000000-0000-0000-0000-000000000000";
+      
       const eventData = {
         title,
         description,
@@ -91,7 +98,8 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         end_time: endDate.toISOString(),
         event_type: eventType,
         target_audience: targetAudience,
-        is_public: isPublic
+        is_public: isPublic,
+        created_by: createdBy  // Add the created_by field
       };
       
       let response;
