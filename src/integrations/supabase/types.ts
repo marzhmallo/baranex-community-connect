@@ -275,6 +275,62 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          brgyid: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_time: string
+          event_type: string | null
+          id: string
+          is_public: boolean | null
+          location: string | null
+          start_time: string
+          target_audience: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          brgyid?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time: string
+          event_type?: string | null
+          id?: string
+          is_public?: boolean | null
+          location?: string | null
+          start_time: string
+          target_audience?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          brgyid?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string
+          event_type?: string | null
+          id?: string
+          is_public?: boolean | null
+          location?: string | null
+          start_time?: string
+          target_audience?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       households: {
         Row: {
           address: string
