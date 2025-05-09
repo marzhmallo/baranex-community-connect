@@ -11,8 +11,9 @@ import {
   DialogTrigger,
   DialogClose
 } from '@/components/ui/dialog';
-import { Mail, Phone, Eye, Search } from 'lucide-react';
+import { Mail, Phone, Eye, Search, Info } from 'lucide-react';
 import { Official } from '@/lib/types';
+import { OfficialDetailsDialog } from './OfficialDetailsDialog';
 
 interface OfficialCardProps {
   official: Official;
@@ -20,6 +21,7 @@ interface OfficialCardProps {
 
 const OfficialCard = ({ official }: OfficialCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Present';
@@ -150,58 +152,71 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
             Term: {formatDate(getTermStart())} - {formatDate(getTermEnd())}
           </div>
           
-          {/* View button */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="bg-transparent border-[#2a3649] text-white hover:bg-[#2a3649]">
-                <Eye className="w-4 h-4 mr-1" /> View
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white">
-              <DialogHeader>
-                <DialogTitle className="text-white">{official.name}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <img 
-                  src={official.photo_url || '/placeholder.svg'} 
-                  alt={official.name}
-                  className="w-full max-h-64 object-cover object-center rounded-md"
-                />
-                <div>
-                  <h4 className="font-bold">{getPosition()}</h4>
-                  <p className="text-gray-300 mt-2">{official.bio || getShortDescription()}</p>
-                </div>
-                
-                <div className="space-y-2">
-                  {official.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      <span>{official.email}</span>
-                    </div>
-                  )}
-                  
-                  {official.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      <span>{official.phone}</span>
-                    </div>
-                  )}
-                  
-                  {official.education && (
-                    <div>
-                      <span className="font-medium">Education:</span> {official.education}
-                    </div>
-                  )}
-                  
+          {/* View and More Details buttons */}
+          <div className="flex gap-2">
+            <Button variant="outline" className="bg-transparent border-[#2a3649] text-white hover:bg-[#2a3649]" onClick={() => setDetailsDialogOpen(true)}>
+              <Info className="w-4 h-4 mr-1" /> More Details
+            </Button>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="bg-transparent border-[#2a3649] text-white hover:bg-[#2a3649]">
+                  <Eye className="w-4 h-4 mr-1" /> View
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-white">{official.name}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <img 
+                    src={official.photo_url || '/placeholder.svg'} 
+                    alt={official.name}
+                    className="w-full max-h-64 object-cover object-center rounded-md"
+                  />
                   <div>
-                    <span className="font-medium">Term:</span> {formatDate(getTermStart())} - {formatDate(getTermEnd())}
+                    <h4 className="font-bold">{getPosition()}</h4>
+                    <p className="text-gray-300 mt-2">{official.bio || getShortDescription()}</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {official.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        <span>{official.email}</span>
+                      </div>
+                    )}
+                    
+                    {official.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        <span>{official.phone}</span>
+                      </div>
+                    )}
+                    
+                    {official.education && (
+                      <div>
+                        <span className="font-medium">Education:</span> {official.education}
+                      </div>
+                    )}
+                    
+                    <div>
+                      <span className="font-medium">Term:</span> {formatDate(getTermStart())} - {formatDate(getTermEnd())}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
+
+      {/* Details Dialog */}
+      <OfficialDetailsDialog
+        officialId={official.id}
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+      />
     </Card>
   );
 };

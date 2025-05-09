@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -107,7 +106,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         // Create new event
         response = await supabase
           .from('events')
-          .insert([eventData]);
+          .insert(eventData);
       }
       
       const { error } = response;

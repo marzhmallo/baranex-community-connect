@@ -5,13 +5,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import OfficialCard from '@/components/officials/OfficialCard';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { RefreshCw, Plus, ArrowLeft } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 
 const OfficialsPage = () => {
   const [activeTab, setActiveTab] = useState('current');
+  const [activeSKTab, setActiveSKTab] = useState('current');
 
-  // Fetch officials data from Supabase
+  // Fetch officials data from Supabase with positions
   const {
     data: officialsData,
     isLoading,
@@ -80,7 +82,12 @@ const OfficialsPage = () => {
     if (activeTab === 'current') {
       return !official.term_end || new Date(official.term_end) > now;
     } else if (activeTab === 'sk') {
-      return isSk && (!official.term_end || new Date(official.term_end) > now);
+      if (activeSKTab === 'current') {
+        return isSk && (!official.term_end || new Date(official.term_end) > now);
+      } else if (activeSKTab === 'previous') {
+        return isSk && official.term_end && new Date(official.term_end) < now;
+      }
+      return isSk;
     } else if (activeTab === 'previous') {
       return official.term_end && new Date(official.term_end) < now;
     }
@@ -89,10 +96,18 @@ const OfficialsPage = () => {
 
   // Count for each category
   const currentCount = officialsData ? officialsData.filter(o => !o.term_end || new Date(o.term_end) > new Date()).length : 0;
-  const skCount = officialsData ? officialsData.filter(o => {
+  
+  const skCurrentCount = officialsData ? officialsData.filter(o => {
     const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
     return isSk && (!o.term_end || new Date(o.term_end) > new Date());
   }).length : 0;
+  
+  const skPreviousCount = officialsData ? officialsData.filter(o => {
+    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
+    return isSk && o.term_end && new Date(o.term_end) < new Date();
+  }).length : 0;
+  
+  const skCount = skCurrentCount + skPreviousCount;
   const previousCount = officialsData ? officialsData.filter(o => o.term_end && new Date(o.term_end) < new Date()).length : 0;
   
   const handleRefreshTerms = () => {
@@ -121,7 +136,7 @@ const OfficialsPage = () => {
         </div>
       </div>
 
-      {/* Tabbed navigation */}
+      {/* Main tabbed navigation */}
       <div className="mx-auto max-w-3xl mb-8 bg-[#1e2637] rounded-full p-1">
         <div className="flex justify-center">
           <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'current' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'}`} onClick={() => setActiveTab('current')}>
@@ -136,13 +151,32 @@ const OfficialsPage = () => {
         </div>
       </div>
 
+      {/* SK Tab sub-navigation */}
+      {activeTab === 'sk' && (
+        <div className="mx-auto max-w-xl mb-8 bg-[#1e2637] rounded-full p-1">
+          <div className="flex justify-center">
+            <div 
+              className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-gray-200'}`} 
+              onClick={() => setActiveSKTab('current')}
+            >
+              Current SK ({skCurrentCount})
+            </div>
+            <div 
+              className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'previous' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-gray-200'}`} 
+              onClick={() => setActiveSKTab('previous')}
+            >
+              Previous SK ({skPreviousCount})
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Officials cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {isLoading ?
-      // Show skeleton loaders while loading
-      Array.from({
-        length: 4
-      }).map((_, i) => <div key={i} className="bg-[#1e2637] rounded-lg overflow-hidden">
+          // Show skeleton loaders while loading
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-[#1e2637] rounded-lg overflow-hidden">
               <Skeleton className="w-full h-64 bg-[#2a3649]" />
               <div className="p-5">
                 <Skeleton className="h-6 w-3/4 mb-2 bg-[#2a3649]" />
@@ -155,11 +189,19 @@ const OfficialsPage = () => {
                   <Skeleton className="h-8 w-20 bg-[#2a3649]" />
                 </div>
               </div>
-            </div>) : error ? <div className="col-span-full p-6 text-red-500 bg-[#1e2637] rounded-lg">
+            </div>
+          )) 
+        : error ? 
+          <div className="col-span-full p-6 text-red-500 bg-[#1e2637] rounded-lg">
             Error loading officials: {error.message}
-          </div> : filteredOfficials.length === 0 ? <div className="col-span-full p-6 text-center text-gray-400 bg-[#1e2637] rounded-lg">
-            No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? 'SK' : 'previous'} officials found.
-          </div> : filteredOfficials.map(official => <OfficialCard key={official.id} official={official} />)}
+          </div> 
+        : filteredOfficials.length === 0 ? 
+          <div className="col-span-full p-6 text-center text-gray-400 bg-[#1e2637] rounded-lg">
+            No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? (activeSKTab === 'current' ? 'current SK' : 'previous SK') : 'previous'} officials found.
+          </div> 
+        : filteredOfficials.map(official => 
+          <OfficialCard key={official.id} official={official} />
+        )}
       </div>
     </div>;
 };
