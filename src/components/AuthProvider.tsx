@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +16,7 @@ interface UserProfile {
   phone?: string;
   status?: string;
   adminid?: string;
+  created_at?: string; // Added the created_at property that was missing
 }
 
 interface AuthContextType {
