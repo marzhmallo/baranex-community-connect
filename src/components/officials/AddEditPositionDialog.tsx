@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -84,7 +83,8 @@ export function AddEditPositionDialog({
         ...data,
         official_id: officialId,
         is_current: !!data.is_current,
-        term_end: data.is_current ? null : data.term_end || null
+        term_end: data.is_current ? null : data.term_end || null,
+        position: data.position
       };
       
       let result;

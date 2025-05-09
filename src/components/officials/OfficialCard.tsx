@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import {
   DialogTrigger,
   DialogClose
 } from '@/components/ui/dialog';
-import { Mail, Phone, Eye, Search, Info } from 'lucide-react';
+import { Mail, Phone, Eye, Search, Info, ExternalLink } from 'lucide-react';
 import { Official } from '@/lib/types';
 import { OfficialDetailsDialog } from './OfficialDetailsDialog';
 
@@ -20,6 +21,7 @@ interface OfficialCardProps {
 }
 
 const OfficialCard = ({ official }: OfficialCardProps) => {
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
@@ -53,6 +55,10 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
   // Get the term end date
   const getTermEnd = () => {
     return official.term_end;
+  };
+
+  const handleViewFullDetails = () => {
+    navigate(`/officials/${official.id}`);
   };
 
   return (
@@ -155,7 +161,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
           {/* View and More Details buttons */}
           <div className="flex gap-2">
             <Button variant="outline" className="bg-transparent border-[#2a3649] text-white hover:bg-[#2a3649]" onClick={() => setDetailsDialogOpen(true)}>
-              <Info className="w-4 h-4 mr-1" /> More Details
+              <Info className="w-4 h-4 mr-1" /> Quick Info
             </Button>
             
             <Dialog>
@@ -203,6 +209,15 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
                     <div>
                       <span className="font-medium">Term:</span> {formatDate(getTermStart())} - {formatDate(getTermEnd())}
                     </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={handleViewFullDetails} 
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-1" /> More Details
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
