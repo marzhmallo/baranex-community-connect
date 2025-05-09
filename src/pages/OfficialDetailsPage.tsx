@@ -151,7 +151,7 @@ const OfficialDetailsPage = () => {
               <div className="p-4 space-y-4">
                 <div>
                   <h2 className="text-xl font-bold text-white">{official.name}</h2>
-                  <p className="text-blue-400">{position.position || 'Barangay Official'}</p>
+                  <p className="text-blue-400">{official.position || 'Barangay Official'}</p>
                 </div>
                 
                 <div className="space-y-2 text-gray-300">
