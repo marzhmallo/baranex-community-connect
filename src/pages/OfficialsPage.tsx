@@ -80,7 +80,8 @@ const OfficialsPage = () => {
       Boolean(official.is_sk);
       
     if (activeTab === 'current') {
-      return !official.term_end || new Date(official.term_end) > now;
+      // Exclude SK officials from the current tab
+      return !isSk && (!official.term_end || new Date(official.term_end) > now);
     } else if (activeTab === 'sk') {
       if (activeSKTab === 'current') {
         return isSk && (!official.term_end || new Date(official.term_end) > now);
@@ -89,13 +90,17 @@ const OfficialsPage = () => {
       }
       return isSk;
     } else if (activeTab === 'previous') {
-      return official.term_end && new Date(official.term_end) < now;
+      // Exclude SK officials from the previous tab
+      return !isSk && official.term_end && new Date(official.term_end) < now;
     }
     return false;
   }) : [];
 
-  // Count for each category
-  const currentCount = officialsData ? officialsData.filter(o => !o.term_end || new Date(o.term_end) > new Date()).length : 0;
+  // Count for each category (excluding SK from current/previous)
+  const currentCount = officialsData ? officialsData.filter(o => {
+    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
+    return !isSk && (!o.term_end || new Date(o.term_end) > new Date());
+  }).length : 0;
   
   const skCurrentCount = officialsData ? officialsData.filter(o => {
     const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
@@ -108,7 +113,11 @@ const OfficialsPage = () => {
   }).length : 0;
   
   const skCount = skCurrentCount + skPreviousCount;
-  const previousCount = officialsData ? officialsData.filter(o => o.term_end && new Date(o.term_end) < new Date()).length : 0;
+  
+  const previousCount = officialsData ? officialsData.filter(o => {
+    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
+    return !isSk && o.term_end && new Date(o.term_end) < new Date();
+  }).length : 0;
   
   const handleRefreshTerms = () => {
     refetch();

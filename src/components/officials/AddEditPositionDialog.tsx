@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -58,14 +59,45 @@ export function AddEditPositionDialog({
   const form = useForm<PositionFormValues>({
     resolver: zodResolver(positionSchema),
     defaultValues: {
-      position: position?.position || '',
-      committee: position?.committee || '',
-      term_start: position?.term_start ? new Date(position.term_start).toISOString().split('T')[0] : '',
-      term_end: position?.term_end ? new Date(position.term_end).toISOString().split('T')[0] : '',
-      is_current: position?.is_current || false,
-      description: position?.description || ''
+      position: '',
+      committee: '',
+      term_start: '',
+      term_end: '',
+      is_current: false,
+      description: ''
     }
   });
+  
+  // Update form values when position changes or dialog opens
+  useEffect(() => {
+    if (position && open) {
+      // Format dates for input fields (YYYY-MM-DD)
+      const formatDateForInput = (dateString?: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+      };
+      
+      form.reset({
+        position: position.position || '',
+        committee: position.committee || '',
+        term_start: formatDateForInput(position.term_start),
+        term_end: formatDateForInput(position.term_end),
+        is_current: position.is_current || !position.term_end,
+        description: position.description || ''
+      });
+    } else if (!position && open) {
+      // Clear form when adding a new position
+      form.reset({
+        position: '',
+        committee: '',
+        term_start: '',
+        term_end: '',
+        is_current: false,
+        description: ''
+      });
+    }
+  }, [position, open, form]);
   
   const handleIsCurrentChange = (checked: boolean) => {
     if (checked) {

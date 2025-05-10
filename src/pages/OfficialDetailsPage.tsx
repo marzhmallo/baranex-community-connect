@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -63,6 +62,40 @@ const OfficialDetailsPage = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+  
+  // Format achievements into bullet points
+  const formatAchievements = (achievements: any) => {
+    if (!achievements) return null;
+    
+    // Handle different formats of the achievements field
+    if (Array.isArray(achievements)) {
+      return (
+        <ul className="list-disc pl-5 space-y-1">
+          {achievements.map((achievement, i) => (
+            <li key={i}>{achievement}</li>
+          ))}
+        </ul>
+      );
+    } else if (typeof achievements === 'object') {
+      // If it's a JSON object, try to extract values
+      const items = Object.values(achievements);
+      if (Array.isArray(items) && items.length > 0) {
+        return (
+          <ul className="list-disc pl-5 space-y-1">
+            {items.map((item, i) => (
+              <li key={i}>{String(item)}</li>
+            ))}
+          </ul>
+        );
+      } else {
+        // If we can't extract values, just stringify the object
+        return <pre className="whitespace-pre-wrap">{JSON.stringify(achievements, null, 2)}</pre>;
+      }
+    } else {
+      // If it's a string or other type, just display it directly
+      return <p>{String(achievements)}</p>;
+    }
   };
   
   // Filter positions into current and past
@@ -216,17 +249,7 @@ const OfficialDetailsPage = () => {
                   Achievements
                 </h2>
                 <div className="text-gray-300">
-                  {Array.isArray(official.achievements) ? (
-                    <ul className="list-disc pl-5 space-y-1">
-                      {official.achievements.map((achievement, i) => (
-                        <li key={i}>{achievement}</li>
-                      ))}
-                    </ul>
-                  ) : typeof official.achievements === 'object' ? (
-                    <pre className="whitespace-pre-wrap">{JSON.stringify(official.achievements, null, 2)}</pre>
-                  ) : (
-                    <p>{String(official.achievements)}</p>
-                  )}
+                  {formatAchievements(official.achievements)}
                 </div>
               </Card>
             )}

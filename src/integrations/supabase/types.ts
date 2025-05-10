@@ -637,8 +637,8 @@ export type Database = {
           is_current: boolean | null
           official_id: string | null
           position: string
-          term_end: string | null
-          term_start: string | null
+          term_end: string
+          term_start: string
           updated_at: string | null
         }
         Insert: {
@@ -649,8 +649,8 @@ export type Database = {
           is_current?: boolean | null
           official_id?: string | null
           position: string
-          term_end?: string | null
-          term_start?: string | null
+          term_end: string
+          term_start: string
           updated_at?: string | null
         }
         Update: {
@@ -661,8 +661,8 @@ export type Database = {
           is_current?: boolean | null
           official_id?: string | null
           position?: string
-          term_end?: string | null
-          term_start?: string | null
+          term_end?: string
+          term_start?: string
           updated_at?: string | null
         }
         Relationships: [
