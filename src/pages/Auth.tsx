@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -31,7 +30,7 @@ const signupSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters long"),
   phone: z.string().min(10, "Please enter a valid phone number").optional(),
   role: z.enum(["admin", "staff", "user"]),
-  barangayId: z.string().refine(val => val !== "new-barangay" || val !== "", {
+  barangayId: z.string().refine(val => val !== "", {
     message: "Please select a barangay or choose to register a new one"
   }),
   barangayname: z.string().optional(),
