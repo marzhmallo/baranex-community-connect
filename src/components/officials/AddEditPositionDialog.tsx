@@ -111,12 +111,14 @@ export function AddEditPositionDialog({
     try {
       setIsSubmitting(true);
       
+      // Ensure term_start is always provided (required by the database)
       const formattedData = {
         ...data,
         official_id: officialId,
         is_current: !!data.is_current,
         term_end: data.is_current ? null : data.term_end || null,
-        position: data.position
+        position: data.position,
+        term_start: data.term_start // Ensure this field is included
       };
       
       let result;
