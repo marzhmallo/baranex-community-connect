@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { RefreshCw, Plus, ArrowLeft } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
+import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
 
 const OfficialsPage = () => {
   const [activeTab, setActiveTab] = useState('current');
   const [activeSKTab, setActiveSKTab] = useState('current');
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   // Fetch officials data from Supabase with positions
   const {
@@ -123,6 +125,10 @@ const OfficialsPage = () => {
     refetch();
   };
 
+  const handleAddSuccess = () => {
+    refetch();
+  };
+
   return <div className="min-h-screen bg-[#0f172a] p-6">
       {/* Header with title, subtitle, and action buttons */}
       <div className="flex justify-between items-start mb-8">
@@ -139,8 +145,8 @@ const OfficialsPage = () => {
           <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800" onClick={handleRefreshTerms}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh Terms
           </Button>
-          <Button className="bg-blue-500 hover:bg-blue-600">
-            <Plus className="h-4 w-4" />
+          <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => setShowAddDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Add Official
           </Button>
         </div>
       </div>
@@ -212,6 +218,13 @@ const OfficialsPage = () => {
           <OfficialCard key={official.id} official={official} />
         )}
       </div>
+
+      {/* Add Official Dialog */}
+      <AddOfficialDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+        onSuccess={handleAddSuccess}
+      />
     </div>;
 };
 

@@ -1,0 +1,457 @@
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+
+const officialSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
+  phone: z.string().optional().or(z.literal('')),
+  bio: z.string().optional().or(z.literal('')),
+  address: z.string().optional().or(z.literal('')),
+  birthdate: z.string().optional().or(z.literal('')),
+  education: z.string().optional().or(z.literal('')),
+  achievements: z.string().optional().or(z.literal('')),
+  is_sk: z.boolean().optional(),
+  position: z.string().min(1, 'Position is required'),
+  committee: z.string().optional().or(z.literal('')),
+  term_start: z.string().min(1, 'Start date is required'),
+  term_end: z.string().optional().or(z.literal('')),
+  is_current: z.boolean().optional(),
+});
+
+type OfficialFormValues = z.infer<typeof officialSchema>;
+
+interface AddOfficialDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+}
+
+export function AddOfficialDialog({ 
+  open, 
+  onOpenChange, 
+  onSuccess 
+}: AddOfficialDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  
+  const form = useForm<OfficialFormValues>({
+    resolver: zodResolver(officialSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      bio: '',
+      address: '',
+      birthdate: '',
+      education: '',
+      achievements: '',
+      is_sk: false,
+      position: '',
+      committee: '',
+      term_start: '',
+      term_end: '',
+      is_current: false,
+    }
+  });
+  
+  const handleIsCurrentChange = (checked: boolean) => {
+    if (checked) {
+      form.setValue('term_end', '');
+    }
+  };
+  
+  const onSubmit = async (data: OfficialFormValues) => {
+    try {
+      setIsSubmitting(true);
+      
+      // 1. Insert the official first
+      const officialData = {
+        name: data.name,
+        email: data.email || null,
+        phone: data.phone || null,
+        bio: data.bio || null,
+        address: data.address || null,
+        birthdate: data.birthdate || null,
+        education: data.education || null,
+        achievements: data.achievements ? JSON.stringify([data.achievements]) : null,
+        is_sk: data.is_sk ? [true] : [false], // Database expects an array
+      };
+      
+      const { data: newOfficial, error: officialError } = await supabase
+        .from('officials')
+        .insert(officialData)
+        .select()
+        .single();
+      
+      if (officialError) throw officialError;
+      
+      // 2. Insert the position with the new official ID
+      const positionData = {
+        official_id: newOfficial.id,
+        position: data.position,
+        committee: data.committee || null,
+        term_start: data.term_start,
+        term_end: data.is_current ? null : data.term_end || null,
+        is_current: !!data.is_current,
+        description: null
+      };
+      
+      const { error: positionError } = await supabase
+        .from('official_positions')
+        .insert(positionData);
+      
+      if (positionError) throw positionError;
+      
+      // Success! 
+      toast({
+        title: 'Official added',
+        description: `${data.name} has been added successfully.`
+      });
+      
+      onSuccess();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error adding official:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add official. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add New Official</DialogTitle>
+        </DialogHeader>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Personal Information</h3>
+              
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter full name"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="email@example.com"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Contact number"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="birthdate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Birthdate (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Official's address"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="education"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Education (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Educational background"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bio (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Brief biography"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659] min-h-[100px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="achievements"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Achievements (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="List notable accomplishments"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs">
+                      Enter achievements separated by commas or new lines
+                    </FormMessage>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="is_sk"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649]">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>SK Official</FormLabel>
+                      <p className="text-xs text-gray-400">
+                        Check if this person is an SK official
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="border-t border-[#3a4659] pt-4 mt-6">
+              <h3 className="text-lg font-medium mb-4">Position Information</h3>
+              
+              <FormField
+                control={form.control}
+                name="position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Barangay Captain"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="committee"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Committee (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Peace & Order"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="term_start"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Term Start Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="term_end"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Term End Date (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          disabled={form.watch('is_current')}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="is_current"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649] mt-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          handleIsCurrentChange(!!checked);
+                        }}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Current Position</FormLabel>
+                      <p className="text-xs text-gray-400">
+                        Check if this is a current position (no end date)
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <DialogFooter>
+              <Button
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                className="border-[#3a4659]"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isSubmitting ? 'Adding...' : 'Add Official'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
