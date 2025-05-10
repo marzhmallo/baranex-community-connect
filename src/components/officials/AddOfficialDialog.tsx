@@ -99,6 +99,7 @@ export function AddOfficialDialog({
         education: data.education || null,
         achievements: data.achievements ? JSON.stringify([data.achievements]) : null,
         is_sk: data.is_sk ? [true] : [false], // Database expects an array
+        position: data.position, // Including the position field from the form
       };
       
       const { data: newOfficial, error: officialError } = await supabase
