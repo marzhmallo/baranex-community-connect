@@ -381,7 +381,7 @@ const Auth = () => {
       
       {/* Right side - Auth Form */}
       <div className="lg:w-1/2 w-full h-full p-6 flex justify-center items-center overflow-hidden">
-        <Card className="w-full max-w-md shadow-lg border-0 flex flex-col h-[650px]">
+        <Card className="w-full max-w-md shadow-lg border-0">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold">
               {activeTab === "login" ? "Welcome Back" : "Create Account"}
@@ -393,18 +393,18 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           
-          <CardContent className="flex-grow flex flex-col">
+          <CardContent>
             <Tabs 
               value={activeTab} 
               onValueChange={(value) => setActiveTab(value as "login" | "signup")}
-              className="w-full flex-grow flex flex-col"
+              className="w-full"
             >
               <TabsList className="grid grid-cols-2 mb-6">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="login" className="mt-0 flex-grow">
+              <TabsContent value="login" className="mt-0">
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                     <FormField
@@ -477,8 +477,8 @@ const Auth = () => {
                 </Form>
               </TabsContent>
               
-              <TabsContent value="signup" className="mt-0 flex-grow">
-                <ScrollArea className="h-[500px] pr-4">
+              <TabsContent value="signup" className="mt-0">
+                <ScrollArea className="h-[400px] pr-4">
                   <Form {...signupForm}>
                     <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
