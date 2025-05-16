@@ -31,7 +31,7 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 80%;
+    --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221 83% 41%;
 
@@ -44,14 +44,14 @@
     --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 224.3 76.3% 82%;
+    --sidebar-ring: 224.3 76.3% 48%;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 217.2 32.6% 17.5%;
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
@@ -72,11 +72,11 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 35%;
+    --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
 
-    --sidebar-background: 222.2 47.4% 11.2%;
+    --sidebar-background: 222 33% 7%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 217.2 91.2% 59.8%;
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;
@@ -92,102 +92,9 @@
     @apply border-border;
   }
 
-  html, body {
-    @apply antialiased;
-    font-size: 16px;
-  }
-
   body {
-    @apply bg-background text-foreground font-sans min-h-screen;
-    margin: 0;
-  }
-  
-  /* Ensure proper scaling on different viewports */
-  @media (max-width: 1366px) {
-    html {
-      font-size: 14px; /* Scale down slightly for smaller screens */
-    }
-  }
-  
-  /* Base size at 1920x1080 viewport */
-  @media (min-width: 1920px) {
-    html {
-      font-size: 16px;
-    }
-  }
-
-  /* Better table and form display on smaller screens */
-  table {
-    @apply w-full;
-  }
-
-  /* Improve form fields responsiveness */
-  input, textarea, select {
-    @apply max-w-full;
-  }
-
-  /* Ensure better contrast for table borders in both modes */
-  table {
-    @apply border-border;
-  }
-  
-  tr, th, td {
-    @apply border-border;
-  }
-  
-  hr {
-    @apply border-border;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
-/* Responsive layout utilities */
-@layer components {
-  .responsive-layout {
-    @apply w-full max-w-full overflow-x-hidden;
-  }
-  
-  .responsive-card {
-    @apply w-full overflow-hidden;
-  }
-  
-  .responsive-table-container {
-    @apply w-full overflow-x-auto;
-  }
-  
-  .responsive-panel {
-    @apply w-full md:w-auto;
-  }
-  
-  /* Dark mode specific components */
-  .dark .card-ui {
-    @apply bg-card border-border;
-  }
-  
-  .dark .input-ui {
-    @apply bg-input text-foreground border-border;
-  }
-  
-  .dark .dropdown-ui {
-    @apply bg-popover text-popover-foreground border-border;
-  }
-
-  /* Table row styling with proper contrast in both modes */
-  tr {
-    @apply border-b border-border transition-colors;
-  }
-  
-  .dark tr:hover {
-    @apply bg-muted/40;
-  }
-  
-  tr:hover {
-    @apply bg-muted/50;
-  }
-  
-  /* Better separation for cards/sections */
-  .section-divider {
-    @apply border-t border-border my-4;
-  }
-}
-
-/* ... keep existing code */
+/* ... keep existing code (component classes) */

@@ -1,12 +1,10 @@
+import { useTheme } from "next-themes"
+import { Toaster as Sonner } from "sonner"
 
-import { Toaster as Sonner } from "sonner";
-import { useTheme } from "@/components/theme/ThemeProvider";
-
-type ToasterProps = React.ComponentProps<typeof Sonner>;
+type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Use our custom theme hook instead of next-themes
-  const { theme } = useTheme();
+  const { theme = "system" } = useTheme()
 
   return (
     <Sonner
@@ -21,12 +19,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-          // Border styles are now applied directly to the toast class instead
         },
       }}
       {...props}
     />
-  );
-};
+  )
+}
 
-export { Toaster };
+export { Toaster }

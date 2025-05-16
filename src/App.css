@@ -1,8 +1,7 @@
-
 #root {
-  max-width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0;
+  padding: 2rem;
   text-align: center;
 }
 
@@ -40,83 +39,4 @@
 
 .read-the-docs {
   color: #888;
-}
-
-/* Responsive scaling utilities */
-.scale-content {
-  transform-origin: top left;
-}
-
-@media screen and (max-width: 1366px) {
-  html {
-    font-size: 14px;
-  }
-}
-
-@media screen and (min-width: 1920px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-/* Ensure elements don't overflow on small screens */
-.responsive-container {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-/* Dark mode transitions */
-body {
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Theme-sensitive borders and elements */
-.border, .border-t, .border-b, .border-l, .border-r,
-hr, tbody tr, table, th, td {
-  @apply border-border;
-  transition: border-color 0.3s ease;
-}
-
-/* Enhanced table styles for better contrast in both themes */
-tbody tr {
-  border-bottom-width: 1px;
-  border-style: solid;
-}
-
-.dark tbody tr:nth-child(odd) {
-  @apply bg-muted/20;
-}
-
-tbody tr:nth-child(odd) {
-  @apply bg-muted/10;
-}
-
-/* Ensure separator visibility in both themes */
-.separator, hr {
-  @apply bg-border;
-  transition: background-color 0.3s ease;
-}
-
-/* Improve dark mode contrast for form elements */
-.dark input, 
-.dark textarea, 
-.dark select {
-  @apply bg-input border-border text-foreground;
-}
-
-/* Ensure table visibility in dark mode */
-.dark table {
-  @apply border-border;
-}
-
-/* Ensure popover/dropdown visibility in dark mode */
-.dark [data-radix-popper-content-wrapper] {
-  @apply bg-popover border-border; 
-  z-index: 50;
-}
-
-/* Enhanced card borders */
-.card, .border-card {
-  @apply border border-border;
-  transition: border-color 0.3s ease;
 }

@@ -32,7 +32,7 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = React.useState<Theme>(
     () => {
-      if (typeof window !== 'undefined') {
+      if (typeof localStorage !== 'undefined') {
         return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
       }
       return defaultTheme;
@@ -42,30 +42,13 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
     
-    // Remove both theme classes first
     root.classList.remove("light", "dark");
-    
-    // Apply the current theme
     root.classList.add(theme);
     
-    // Set the color-scheme CSS property for system-level integration
-    document.documentElement.style.setProperty('color-scheme', theme);
-    
-    // Store the theme in localStorage
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(storageKey, theme);
     }
   }, [theme, storageKey]);
-
-  // Check system preference on first load
-  useEffect(() => {
-    // Only run if no preference is stored yet
-    const storedTheme = localStorage.getItem(storageKey);
-    if (!storedTheme && window.matchMedia) {
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setTheme(systemPrefersDark ? 'dark' : 'light');
-    }
-  }, [storageKey]);
 
   const value = {
     theme,
