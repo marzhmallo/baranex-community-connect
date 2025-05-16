@@ -21,8 +21,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-          // Add enhanced border styles for better visibility in both themes
-          outer: "border border-border",
+          // Border styles are now applied directly to the toast class instead
         },
       }}
       {...props}
