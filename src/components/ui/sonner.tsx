@@ -1,5 +1,4 @@
 
-import { useTheme as useNextThemes } from "next-themes";
 import { Toaster as Sonner } from "sonner";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -22,6 +21,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+          // Add enhanced border styles for better visibility in both themes
+          outer: "border border-border",
         },
       }}
       {...props}

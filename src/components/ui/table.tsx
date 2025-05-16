@@ -1,27 +1,45 @@
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { useThemeStyles } from "@/hooks/use-theme-styles"
 
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
-    <table
-      ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
-      {...props}
-    />
-  </div>
-))
+>(({ className, ...props }, ref) => {
+  const borderStyles = useThemeStyles({
+    light: "border border-border",
+    dark: "border border-border",
+    base: "w-full caption-bottom text-sm"
+  });
+
+  return (
+    <div className="relative w-full overflow-auto">
+      <table
+        ref={ref}
+        className={cn(borderStyles, className)}
+        {...props}
+      />
+    </div>
+  );
+})
 Table.displayName = "Table"
 
 const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
-))
+>(({ className, ...props }, ref) => {
+  const headerStyles = useThemeStyles({
+    light: "[&_tr]:border-b [&_tr]:border-border",
+    dark: "[&_tr]:border-b [&_tr]:border-border",
+    base: ""
+  });
+
+  return (
+    <thead ref={ref} className={cn(headerStyles, className)} {...props} />
+  );
+})
 TableHeader.displayName = "TableHeader"
 
 const TableBody = React.forwardRef<
@@ -39,31 +57,41 @@ TableBody.displayName = "TableBody"
 const TableFooter = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
-  <tfoot
-    ref={ref}
-    className={cn(
-      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const footerStyles = useThemeStyles({
+    light: "border-t border-border bg-muted/50 font-medium",
+    dark: "border-t border-border bg-muted/30 font-medium",
+    base: "[&>tr]:last:border-b-0"
+  });
+
+  return (
+    <tfoot
+      ref={ref}
+      className={cn(footerStyles, className)}
+      {...props}
+    />
+  );
+})
 TableFooter.displayName = "TableFooter"
 
 const TableRow = React.forwardRef<
   HTMLTableRowElement,
   React.HTMLAttributes<HTMLTableRowElement>
->(({ className, ...props }, ref) => (
-  <tr
-    ref={ref}
-    className={cn(
-      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const rowStyles = useThemeStyles({
+    light: "border-b border-border hover:bg-muted/50",
+    dark: "border-b border-border hover:bg-muted/30",
+    base: "transition-colors data-[state=selected]:bg-muted"
+  });
+
+  return (
+    <tr
+      ref={ref}
+      className={cn(rowStyles, className)}
+      {...props}
+    />
+  );
+})
 TableRow.displayName = "TableRow"
 
 const TableHead = React.forwardRef<

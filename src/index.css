@@ -31,7 +31,7 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
+    --border: 214.3 31.8% 80%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221 83% 41%;
 
@@ -72,7 +72,7 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
+    --border: 217.2 32.6% 35%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
 
@@ -125,6 +125,19 @@
   input, textarea, select {
     @apply max-w-full;
   }
+
+  /* Ensure better contrast for table borders in both modes */
+  table {
+    @apply border-border;
+  }
+  
+  tr, th, td {
+    @apply border-border;
+  }
+  
+  hr {
+    @apply border-border;
+  }
 }
 
 /* Responsive layout utilities */
@@ -156,6 +169,24 @@
   
   .dark .dropdown-ui {
     @apply bg-popover text-popover-foreground border-border;
+  }
+
+  /* Table row styling with proper contrast in both modes */
+  tr {
+    @apply border-b border-border transition-colors;
+  }
+  
+  .dark tr:hover {
+    @apply bg-muted/40;
+  }
+  
+  tr:hover {
+    @apply bg-muted/50;
+  }
+  
+  /* Better separation for cards/sections */
+  .section-divider {
+    @apply border-t border-border my-4;
   }
 }
 

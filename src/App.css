@@ -70,24 +70,53 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Improve dark mode contrast */
-.dark input, 
-.dark textarea, 
-.dark select {
-  @apply bg-input border-border text-foreground;
+/* Theme-sensitive borders and elements */
+.border, .border-t, .border-b, .border-l, .border-r,
+hr, tbody tr, table, th, td {
+  @apply border-border;
+  transition: border-color 0.3s ease;
 }
 
-/* Enforce contrast in tables for dark mode */
-.dark table {
-  @apply border-border;
+/* Enhanced table styles for better contrast in both themes */
+tbody tr {
+  border-bottom-width: 1px;
+  border-style: solid;
 }
 
 .dark tbody tr:nth-child(odd) {
   @apply bg-muted/20;
 }
 
+tbody tr:nth-child(odd) {
+  @apply bg-muted/10;
+}
+
+/* Ensure separator visibility in both themes */
+.separator, hr {
+  @apply bg-border;
+  transition: background-color 0.3s ease;
+}
+
+/* Improve dark mode contrast for form elements */
+.dark input, 
+.dark textarea, 
+.dark select {
+  @apply bg-input border-border text-foreground;
+}
+
+/* Ensure table visibility in dark mode */
+.dark table {
+  @apply border-border;
+}
+
 /* Ensure popover/dropdown visibility in dark mode */
 .dark [data-radix-popper-content-wrapper] {
   @apply bg-popover border-border; 
   z-index: 50;
+}
+
+/* Enhanced card borders */
+.card, .border-card {
+  @apply border border-border;
+  transition: border-color 0.3s ease;
 }

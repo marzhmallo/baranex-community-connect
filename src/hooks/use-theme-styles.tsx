@@ -32,3 +32,44 @@ export function useThemeStyles(options: StyleOptions): string {
 export function themeClasses(lightClasses: string, darkClasses: string) {
   return (theme: "light" | "dark") => theme === "dark" ? darkClasses : lightClasses;
 }
+
+/**
+ * Hook that returns border styles appropriate for the current theme
+ * For components that need distinct border appearance in dark/light modes
+ */
+export function useBorderStyles(additionalClasses: string = "") {
+  return useThemeStyles({
+    light: `border-border ${additionalClasses}`,
+    dark: `border-border ${additionalClasses}`,
+    base: "border"
+  });
+}
+
+/**
+ * Hook that returns background styles appropriate for the current theme
+ * For components that need distinct background appearance in dark/light modes
+ */
+export function useBackgroundStyles(intensity: "default" | "subtle" | "strong" = "default") {
+  const intensityMap = {
+    default: {
+      light: "bg-background",
+      dark: "bg-background"
+    },
+    subtle: {
+      light: "bg-muted/30",
+      dark: "bg-muted/20"
+    },
+    strong: {
+      light: "bg-muted",
+      dark: "bg-muted/50"
+    }
+  };
+
+  const { light, dark } = intensityMap[intensity];
+  
+  return useThemeStyles({
+    light,
+    dark,
+    base: ""
+  });
+}
