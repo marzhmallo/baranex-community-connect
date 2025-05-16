@@ -64,3 +64,30 @@
   max-width: 100%;
   overflow-x: auto;
 }
+
+/* Dark mode transitions */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Improve dark mode contrast */
+.dark input, 
+.dark textarea, 
+.dark select {
+  @apply bg-input border-border text-foreground;
+}
+
+/* Enforce contrast in tables for dark mode */
+.dark table {
+  @apply border-border;
+}
+
+.dark tbody tr:nth-child(odd) {
+  @apply bg-muted/20;
+}
+
+/* Ensure popover/dropdown visibility in dark mode */
+.dark [data-radix-popper-content-wrapper] {
+  @apply bg-popover border-border; 
+  z-index: 50;
+}
