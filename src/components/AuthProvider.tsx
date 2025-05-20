@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +17,7 @@ interface UserProfile {
   phone?: string;
   status?: string;
   adminid?: string;
-  created_at?: string; // Added the created_at property that was missing
+  created_at?: string;
 }
 
 interface AuthContextType {
@@ -40,11 +41,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Track if profile has been fetched to prevent repeated fetches
+  const [profileFetched, setProfileFetched] = useState(false);
 
   // Fetch user profile data from Supabase
   const fetchUserProfile = async (userId: string) => {
+    // Skip if profile has already been fetched for this user session
+    if (profileFetched) return;
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -75,6 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setUserProfile(data as UserProfile);
+        setProfileFetched(true);
         console.log('User profile loaded:', data);
       } else {
         console.log('No user profile found');
@@ -90,6 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setProfileFetched(false);
       toast({
         title: "Signed out",
         description: "You have been signed out successfully",
@@ -106,40 +116,64 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    // Debounce flag to prevent multiple simultaneous profile fetches
+    let isFetchingProfile = false;
+    
     // Set up auth state listener FIRST to avoid race conditions
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Use setTimeout to avoid potential circular supabase client calls
-        setTimeout(() => {
-          fetchUserProfile(session.user.id);
-        }, 0);
-      } else {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      if (_event === 'SIGNED_OUT') {
+        setUser(null);
+        setSession(null);
         setUserProfile(null);
+        setProfileFetched(false);
+        return;
+      }
+      
+      // Don't update state needlessly if session hasn't changed
+      if (currentSession?.access_token === session?.access_token) {
+        return;
+      }
+      
+      // Update session state
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      // Fetch profile using setTimeout to avoid circular Supabase client calls
+      if (currentSession?.user && !isFetchingProfile) {
+        isFetchingProfile = true;
+        setTimeout(() => {
+          fetchUserProfile(currentSession.user.id).finally(() => {
+            isFetchingProfile = false;
+          });
+        }, 100);
       }
     });
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      }
-      
-      setLoading(false);
-    }).catch(error => {
-      console.error("Error getting session:", error);
-      setLoading(false);
-    });
+    if (!authInitialized) {
+      supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        
+        if (initialSession?.user) {
+          setTimeout(() => {
+            fetchUserProfile(initialSession.user.id);
+          }, 100);
+        }
+        
+        setLoading(false);
+        setAuthInitialized(true);
+      }).catch(error => {
+        console.error("Error getting session:", error);
+        setLoading(false);
+        setAuthInitialized(true);
+      });
+    }
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [authInitialized]);
 
   // Handle redirects based on auth status
   useEffect(() => {
