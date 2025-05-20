@@ -146,6 +146,7 @@ const Auth = () => {
     }
 
     try {
+      console.log("Attempting login with email:", values.email);
       const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
@@ -155,6 +156,7 @@ const Auth = () => {
       });
       
       if (error) {
+        console.error("Login error:", error);
         toast({
           title: "Error",
           description: error.message,
@@ -162,6 +164,7 @@ const Auth = () => {
         });
       } else if (user) {
         // Check if user status is pending
+        console.log("Login successful, checking profile status");
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('status')
@@ -174,6 +177,7 @@ const Auth = () => {
 
         if (profileData && profileData.status === "pending") {
           // Sign out the user if status is pending
+          console.log("User status is pending, signing out");
           await supabase.auth.signOut();
           toast({
             title: "Account Pending Approval",
@@ -181,6 +185,7 @@ const Auth = () => {
             variant: "destructive",
           });
         } else {
+          console.log("Login complete, user authenticated");
           toast({
             title: "Login successful",
             description: "Welcome back!",

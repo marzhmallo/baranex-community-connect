@@ -36,6 +36,7 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchBarangayData = async () => {
       if (userProfile?.brgyid) {
+        console.log("Fetching barangay data for profile page:", userProfile.brgyid);
         try {
           const { data, error } = await supabase
             .from("barangays")
@@ -44,7 +45,10 @@ const ProfilePage = () => {
             .single();
 
           if (error) throw error;
-          if (data) setBarangay(data);
+          if (data) {
+            console.log("Barangay data loaded:", data);
+            setBarangay(data);
+          }
         } catch (error) {
           console.error("Error fetching barangay data:", error);
           toast({
@@ -53,6 +57,8 @@ const ProfilePage = () => {
             variant: "destructive",
           });
         }
+      } else {
+        console.log("No barangay ID available in user profile");
       }
       setLoading(false);
     };
@@ -76,8 +82,31 @@ const ProfilePage = () => {
       }
     };
 
-    fetchBarangayData();
-    checkEditRestriction();
+    if (userProfile) {
+      console.log("User profile is available, setting edit data:", userProfile);
+      setEditData({
+        firstname: userProfile.firstname || "",
+        middlename: userProfile.middlename || "",
+        lastname: userProfile.lastname || "",
+      });
+      
+      fetchBarangayData();
+      checkEditRestriction();
+    } else {
+      console.log("No user profile available yet");
+      setLoading(false);
+    }
+  }, [userProfile]);
+
+  // Update edit data when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+      setEditData({
+        firstname: userProfile.firstname || "",
+        middlename: userProfile.middlename || "",
+        lastname: userProfile.lastname || "",
+      });
+    }
   }, [userProfile]);
 
   const handleEditToggle = () => {
@@ -156,6 +185,10 @@ const ProfilePage = () => {
       </div>
     );
   }
+
+  console.log("Rendering profile page with user:", user?.id);
+  console.log("User profile data:", userProfile);
+  console.log("Barangay data:", barangay);
 
   return (
     <div className="container mx-auto py-6 px-4">
