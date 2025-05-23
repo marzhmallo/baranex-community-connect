@@ -46,9 +46,10 @@ const officialSchema = z.object({
     value: z.string().min(1, 'Committee entry is required')
   })),
   is_sk: z.boolean().optional(),
-  position: z.string().min(1, 'Position is required'),
+  // Only required for creating new officials
+  position: z.string().min(1, 'Position is required').optional(),
   committee: z.string().optional().or(z.literal('')),
-  term_start: z.string().min(1, 'Start date is required'),
+  term_start: z.string().min(1, 'Start date is required').optional(),
   term_end: z.string().optional().or(z.literal('')),
   is_current: z.boolean().optional(),
 });
@@ -111,21 +112,58 @@ export function AddOfficialDialog({
     name: "committees"
   });
   
+  // Helper function to parse JSONB data from the database
+  const parseJsonField = (field: any, defaultValue = [{ value: '' }]) => {
+    if (!field) return defaultValue;
+    
+    // If it's already an array, format it for our form
+    if (Array.isArray(field)) {
+      return field.map(item => ({ value: String(item) }));
+    }
+    
+    // If it's an object, try to extract values
+    if (typeof field === 'object') {
+      return Object.values(field).map(item => ({ value: String(item) }));
+    }
+    
+    // If it's a string, try to parse it as JSON
+    if (typeof field === 'string') {
+      try {
+        const parsed = JSON.parse(field);
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => ({ value: String(item) }));
+        } else if (typeof parsed === 'object') {
+          return Object.values(parsed).map(item => ({ value: String(item) }));
+        }
+      } catch {
+        // If parsing fails, just use the string itself
+        return [{ value: field }];
+      }
+    }
+    
+    return defaultValue;
+  };
+  
   // Effect to populate form when editing
   useEffect(() => {
     if (official && open) {
-      // Format arrays from JSONB data
-      const educArray = official.educ && Array.isArray(official.educ) 
-        ? official.educ.map(item => ({ value: item.toString() })) 
+      console.log("Official data:", official); // Debug log
+      
+      // Parse arrays from JSONB data
+      const educArray = official.educ 
+        ? parseJsonField(official.educ) 
         : [{ value: '' }];
         
-      const achievementsArray = official.achievements && Array.isArray(official.achievements) 
-        ? official.achievements.map(item => ({ value: item.toString() })) 
+      const achievementsArray = official.achievements 
+        ? parseJsonField(official.achievements) 
         : [{ value: '' }];
         
-      const committeesArray = official.committees && Array.isArray(official.committees) 
-        ? official.committees.map(item => ({ value: item.toString() })) 
+      const committeesArray = official.committees 
+        ? parseJsonField(official.committees) 
         : [{ value: '' }];
+
+      console.log("Parsed achievements:", achievementsArray); // Debug log
+      console.log("Parsed committees:", committeesArray); // Debug log
 
       // Reset form with official data
       form.reset({
@@ -139,11 +177,14 @@ export function AddOfficialDialog({
         achievements: achievementsArray,
         committees: committeesArray,
         is_sk: official.is_sk?.[0] || false,
-        position: position?.position || '',
-        committee: position?.committee || '',
-        term_start: position?.term_start ? new Date(position.term_start).toISOString().split('T')[0] : '',
-        term_end: position?.term_end ? new Date(position.term_end).toISOString().split('T')[0] : '',
-        is_current: position?.is_current || false,
+        // Only include position fields if position is provided and we're not editing
+        ...(position && {
+          position: position.position || '',
+          committee: position.committee || '',
+          term_start: position.term_start ? new Date(position.term_start).toISOString().split('T')[0] : '',
+          term_end: position.term_end ? new Date(position.term_end).toISOString().split('T')[0] : '',
+          is_current: position.is_current || false,
+        })
       });
     }
   }, [official, position, open, form]);
@@ -159,9 +200,9 @@ export function AddOfficialDialog({
       setIsSubmitting(true);
       
       // Format the arrays for JSONB storage
-      const educArray = data.educ.map(item => item.value);
-      const achievementsArray = data.achievements.map(item => item.value);
-      const committeesArray = data.committees.map(item => item.value);
+      const educArray = data.educ.map(item => item.value).filter(Boolean);
+      const achievementsArray = data.achievements.map(item => item.value).filter(Boolean);
+      const committeesArray = data.committees.map(item => item.value).filter(Boolean);
       
       if (isEditing && official) {
         // Update existing official
@@ -185,30 +226,23 @@ export function AddOfficialDialog({
         
         if (officialError) throw officialError;
         
-        // Update or create position
-        const positionData = {
-          official_id: official.id,
-          position: data.position,
-          committee: data.committee || null,
-          term_start: data.term_start,
-          term_end: data.is_current ? null : data.term_end || null,
-          is_current: !!data.is_current,
-          description: null
-        };
-        
-        if (position && position.id) {
+        // Update position only if we're also handling position data
+        if (position && position.id && data.position) {
           // Update existing position
+          const positionData = {
+            official_id: official.id,
+            position: data.position,
+            committee: data.committee || null,
+            term_start: data.term_start,
+            term_end: data.is_current ? null : data.term_end || null,
+            is_current: !!data.is_current,
+            description: null
+          };
+          
           const { error: positionError } = await supabase
             .from('official_positions')
             .update(positionData)
             .eq('id', position.id);
-          
-          if (positionError) throw positionError;
-        } else {
-          // Create new position
-          const { error: positionError } = await supabase
-            .from('official_positions')
-            .insert(positionData);
           
           if (positionError) throw positionError;
         }
@@ -562,55 +596,20 @@ export function AddOfficialDialog({
               />
             </div>
             
-            <div className="border-t border-[#3a4659] pt-4 mt-6">
-              <h3 className="text-lg font-medium mb-4">Position Information</h3>
-              
-              <FormField
-                control={form.control}
-                name="position"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Position</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Barangay Captain"
-                        {...field}
-                        className="bg-[#2a3649] border-[#3a4659]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="committee"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Committee (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Peace & Order"
-                        {...field}
-                        className="bg-[#2a3649] border-[#3a4659]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-2 gap-4">
+            {/* Only show position fields when creating a new official, not when editing */}
+            {!isEditing && (
+              <div className="border-t border-[#3a4659] pt-4 mt-6">
+                <h3 className="text-lg font-medium mb-4">Position Information</h3>
+                
                 <FormField
                   control={form.control}
-                  name="term_start"
+                  name="position"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Term Start Date</FormLabel>
+                      <FormLabel>Position</FormLabel>
                       <FormControl>
                         <Input
-                          type="date"
+                          placeholder="e.g., Barangay Captain"
                           {...field}
                           className="bg-[#2a3649] border-[#3a4659]"
                         />
@@ -622,15 +621,14 @@ export function AddOfficialDialog({
                 
                 <FormField
                   control={form.control}
-                  name="term_end"
+                  name="committee"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Term End Date (Optional)</FormLabel>
+                      <FormLabel>Committee (Optional)</FormLabel>
                       <FormControl>
                         <Input
-                          type="date"
+                          placeholder="e.g., Peace & Order"
                           {...field}
-                          disabled={form.watch('is_current')}
                           className="bg-[#2a3649] border-[#3a4659]"
                         />
                       </FormControl>
@@ -638,32 +636,71 @@ export function AddOfficialDialog({
                     </FormItem>
                   )}
                 />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="term_start"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Term Start Date</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            className="bg-[#2a3649] border-[#3a4659]"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="term_end"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Term End Date (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            disabled={form.watch('is_current')}
+                            className="bg-[#2a3649] border-[#3a4659]"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="is_current"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649] mt-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            handleIsCurrentChange(!!checked);
+                          }}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Current Position</FormLabel>
+                        <p className="text-xs text-gray-400">
+                          Check if this is a current position (no end date)
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
               </div>
-              
-              <FormField
-                control={form.control}
-                name="is_current"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649] mt-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) => {
-                          field.onChange(checked);
-                          handleIsCurrentChange(!!checked);
-                        }}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Current Position</FormLabel>
-                      <p className="text-xs text-gray-400">
-                        Check if this is a current position (no end date)
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
+            )}
             
             <DialogFooter>
               <Button
