@@ -177,14 +177,6 @@ export function AddOfficialDialog({
         achievements: achievementsArray,
         committees: committeesArray,
         is_sk: official.is_sk?.[0] || false,
-        // Only include position fields if position is provided and we're not editing
-        ...(position && {
-          position: position.position || '',
-          committee: position.committee || '',
-          term_start: position.term_start ? new Date(position.term_start).toISOString().split('T')[0] : '',
-          term_end: position.term_end ? new Date(position.term_end).toISOString().split('T')[0] : '',
-          is_current: position.is_current || false,
-        })
       });
     }
   }, [official, position, open, form]);
@@ -226,27 +218,6 @@ export function AddOfficialDialog({
         
         if (officialError) throw officialError;
         
-        // Update position only if we're also handling position data
-        if (position && position.id && data.position) {
-          // Update existing position
-          const positionData = {
-            official_id: official.id,
-            position: data.position,
-            committee: data.committee || null,
-            term_start: data.term_start,
-            term_end: data.is_current ? null : data.term_end || null,
-            is_current: !!data.is_current,
-            description: null
-          };
-          
-          const { error: positionError } = await supabase
-            .from('official_positions')
-            .update(positionData)
-            .eq('id', position.id);
-          
-          if (positionError) throw positionError;
-        }
-        
         toast({
           title: 'Official updated',
           description: `${data.name} has been updated successfully.`
@@ -277,12 +248,14 @@ export function AddOfficialDialog({
         if (officialError) throw officialError;
         
         // 2. Insert the position with the new official ID
+        // Make sure to provide a valid term_end or set is_current to false to avoid null constraint violation
         const positionData = {
           official_id: newOfficial.id,
           position: data.position,
           committee: data.committee || null,
           term_start: data.term_start,
-          term_end: data.is_current ? null : data.term_end || null,
+          // If is_current is true, we still need to provide a default term_end to satisfy the not-null constraint
+          term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : (data.term_end || new Date().toISOString().split('T')[0]),
           is_current: !!data.is_current,
           description: null
         };

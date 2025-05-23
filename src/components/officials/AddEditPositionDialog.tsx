@@ -116,7 +116,8 @@ export function AddEditPositionDialog({
         ...data,
         official_id: officialId,
         is_current: !!data.is_current,
-        term_end: data.is_current ? null : data.term_end || null,
+        // Set a far future date for term_end if is_current is true
+        term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : (data.term_end || new Date().toISOString().split('T')[0]),
         position: data.position,
         term_start: data.term_start // Ensure this field is included
       };
