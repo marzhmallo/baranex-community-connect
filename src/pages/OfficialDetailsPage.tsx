@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -7,9 +8,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar } from '@/components/ui/avatar';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddEditPositionDialog } from '@/components/officials/AddEditPositionDialog';
+import { Badge } from '@/components/ui/badge';
 
 const OfficialDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -68,34 +70,76 @@ const OfficialDetailsPage = () => {
   const formatAchievements = (achievements: any) => {
     if (!achievements) return null;
     
+    let achievementItems: string[] = [];
+    
     // Handle different formats of the achievements field
     if (Array.isArray(achievements)) {
-      return (
-        <ul className="list-disc pl-5 space-y-1">
-          {achievements.map((achievement, i) => (
-            <li key={i}>{achievement}</li>
-          ))}
-        </ul>
-      );
+      achievementItems = achievements;
     } else if (typeof achievements === 'object') {
       // If it's a JSON object, try to extract values
-      const items = Object.values(achievements);
-      if (Array.isArray(items) && items.length > 0) {
-        return (
-          <ul className="list-disc pl-5 space-y-1">
-            {items.map((item, i) => (
-              <li key={i}>{String(item)}</li>
-            ))}
-          </ul>
-        );
-      } else {
-        // If we can't extract values, just stringify the object
-        return <pre className="whitespace-pre-wrap">{JSON.stringify(achievements, null, 2)}</pre>;
+      achievementItems = Object.values(achievements).map(item => String(item));
+    } else if (typeof achievements === 'string') {
+      // If it's a string, try to parse it as JSON
+      try {
+        const parsed = JSON.parse(achievements);
+        if (Array.isArray(parsed)) {
+          achievementItems = parsed;
+        } else if (typeof parsed === 'object') {
+          achievementItems = Object.values(parsed).map(item => String(item));
+        }
+      } catch {
+        // If parsing fails, just use the string itself
+        achievementItems = [achievements];
       }
-    } else {
-      // If it's a string or other type, just display it directly
-      return <p>{String(achievements)}</p>;
     }
+    
+    if (achievementItems.length === 0) return null;
+    
+    return (
+      <ul className="list-disc pl-5 space-y-2">
+        {achievementItems.map((achievement, i) => (
+          <li key={i} className="text-gray-300">{achievement}</li>
+        ))}
+      </ul>
+    );
+  };
+  
+  // Format committees into bullet points
+  const formatCommittees = (committees: any) => {
+    if (!committees) return null;
+    
+    let committeeItems: string[] = [];
+    
+    // Handle different formats of the committees field
+    if (Array.isArray(committees)) {
+      committeeItems = committees;
+    } else if (typeof committees === 'object') {
+      // If it's a JSON object, try to extract values
+      committeeItems = Object.values(committees).map(item => String(item));
+    } else if (typeof committees === 'string') {
+      // If it's a string, try to parse it as JSON
+      try {
+        const parsed = JSON.parse(committees);
+        if (Array.isArray(parsed)) {
+          committeeItems = parsed;
+        } else if (typeof parsed === 'object') {
+          committeeItems = Object.values(parsed).map(item => String(item));
+        }
+      } catch {
+        // If parsing fails, just use the string itself
+        committeeItems = [committees];
+      }
+    }
+    
+    if (committeeItems.length === 0) return null;
+    
+    return (
+      <ul className="list-disc pl-5 space-y-2">
+        {committeeItems.map((committee, i) => (
+          <li key={i} className="text-gray-300">{committee}</li>
+        ))}
+      </ul>
+    );
   };
   
   // Filter positions into current and past
@@ -168,7 +212,7 @@ const OfficialDetailsPage = () => {
           <div className="space-y-6">
             <Card className="overflow-hidden bg-[#1e2637] border-none">
               <div className="h-80 relative">
-                {official.photo_url ? (
+                {official?.photo_url ? (
                   <img
                     src={official.photo_url}
                     alt={official.name}
@@ -183,33 +227,33 @@ const OfficialDetailsPage = () => {
               
               <div className="p-4 space-y-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white">{official.name}</h2>
-                  <p className="text-blue-400">{official.position || 'Barangay Official'}</p>
+                  <h2 className="text-xl font-bold text-white">{official?.name}</h2>
+                  <p className="text-blue-400">{official?.position || 'Barangay Official'}</p>
                 </div>
                 
                 <div className="space-y-2 text-gray-300">
-                  {official.email && (
+                  {official?.email && (
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       <span>{official.email}</span>
                     </div>
                   )}
                   
-                  {official.phone && (
+                  {official?.phone && (
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
                       <span>{official.phone}</span>
                     </div>
                   )}
                   
-                  {official.address && (
+                  {official?.address && (
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
                       <span>{official.address}</span>
                     </div>
                   )}
                   
-                  {official.birthdate && (
+                  {official?.birthdate && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       <span>Born: {formatDate(official.birthdate)}</span>
@@ -226,12 +270,25 @@ const OfficialDetailsPage = () => {
             <Card className="bg-[#1e2637] border-none p-6">
               <h2 className="text-xl font-bold text-white mb-4">Biography</h2>
               <p className="text-gray-300 whitespace-pre-line">
-                {official.bio || `${official.name} is a dedicated public servant working for the betterment of the community.`}
+                {official?.bio || `${official?.name || 'This official'} is a dedicated public servant working for the betterment of the community.`}
               </p>
             </Card>
             
+            {/* Committees Section */}
+            {official?.committees && (
+              <Card className="bg-[#1e2637] border-none p-6">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Committees
+                </h2>
+                <div className="text-gray-300">
+                  {formatCommittees(official.committees)}
+                </div>
+              </Card>
+            )}
+            
             {/* Education Section */}
-            {official.education && (
+            {official?.education && (
               <Card className="bg-[#1e2637] border-none p-6">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <GraduationCap className="h-5 w-5" />
@@ -242,7 +299,7 @@ const OfficialDetailsPage = () => {
             )}
             
             {/* Achievements Section */}
-            {official.achievements && (
+            {official?.achievements && (
               <Card className="bg-[#1e2637] border-none p-6">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <Award className="h-5 w-5" />
