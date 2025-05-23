@@ -684,6 +684,7 @@ export type Database = {
           brgyid: string | null
           committees: Json | null
           created_at: string | null
+          educ: Json | null
           education: string | null
           email: string | null
           id: string
@@ -704,6 +705,7 @@ export type Database = {
           brgyid?: string | null
           committees?: Json | null
           created_at?: string | null
+          educ?: Json | null
           education?: string | null
           email?: string | null
           id?: string
@@ -724,6 +726,7 @@ export type Database = {
           brgyid?: string | null
           committees?: Json | null
           created_at?: string | null
+          educ?: Json | null
           education?: string | null
           email?: string | null
           id?: string

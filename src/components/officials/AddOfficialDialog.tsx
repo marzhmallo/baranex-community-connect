@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { Plus, Minus } from 'lucide-react';
 
 const officialSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -32,8 +33,15 @@ const officialSchema = z.object({
   bio: z.string().optional().or(z.literal('')),
   address: z.string().optional().or(z.literal('')),
   birthdate: z.string().optional().or(z.literal('')),
-  education: z.string().optional().or(z.literal('')),
-  achievements: z.string().optional().or(z.literal('')),
+  educ: z.array(z.object({
+    value: z.string().min(1, 'Education entry is required')
+  })),
+  achievements: z.array(z.object({
+    value: z.string().min(1, 'Achievement entry is required')
+  })),
+  committees: z.array(z.object({
+    value: z.string().min(1, 'Committee entry is required')
+  })),
   is_sk: z.boolean().optional(),
   position: z.string().min(1, 'Position is required'),
   committee: z.string().optional().or(z.literal('')),
@@ -67,8 +75,9 @@ export function AddOfficialDialog({
       bio: '',
       address: '',
       birthdate: '',
-      education: '',
-      achievements: '',
+      educ: [{ value: '' }],
+      achievements: [{ value: '' }],
+      committees: [{ value: '' }],
       is_sk: false,
       position: '',
       committee: '',
@@ -76,6 +85,22 @@ export function AddOfficialDialog({
       term_end: '',
       is_current: false,
     }
+  });
+  
+  // Create field arrays for the dynamic fields
+  const { fields: educFields, append: appendEduc, remove: removeEduc } = useFieldArray({
+    control: form.control,
+    name: "educ"
+  });
+  
+  const { fields: achievementFields, append: appendAchievement, remove: removeAchievement } = useFieldArray({
+    control: form.control,
+    name: "achievements"
+  });
+  
+  const { fields: committeeFields, append: appendCommittee, remove: removeCommittee } = useFieldArray({
+    control: form.control,
+    name: "committees"
   });
   
   const handleIsCurrentChange = (checked: boolean) => {
@@ -88,6 +113,11 @@ export function AddOfficialDialog({
     try {
       setIsSubmitting(true);
       
+      // Format the arrays for JSONB storage
+      const educArray = data.educ.map(item => item.value);
+      const achievementsArray = data.achievements.map(item => item.value);
+      const committeesArray = data.committees.map(item => item.value);
+      
       // 1. Insert the official first
       const officialData = {
         name: data.name,
@@ -96,10 +126,10 @@ export function AddOfficialDialog({
         bio: data.bio || null,
         address: data.address || null,
         birthdate: data.birthdate || null,
-        education: data.education || null,
-        achievements: data.achievements ? JSON.stringify([data.achievements]) : null,
+        educ: educArray.length > 0 ? educArray : null,
+        achievements: achievementsArray.length > 0 ? achievementsArray : null,
+        committees: committeesArray.length > 0 ? committeesArray : null,
         is_sk: data.is_sk ? [true] : [false], // Database expects an array
-        position: data.position, // Including the position field from the form
       };
       
       const { data: newOfficial, error: officialError } = await supabase
@@ -252,23 +282,51 @@ export function AddOfficialDialog({
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="education"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Education (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Educational background"
-                        {...field}
-                        className="bg-[#2a3649] border-[#3a4659]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <FormLabel>Education</FormLabel>
+                  <Button 
+                    type="button" 
+                    onClick={() => appendEduc({ value: "" })}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {educFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`educ.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Educational background"
+                              className="bg-[#2a3649] border-[#3a4659]"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {educFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50"
+                        onClick={() => removeEduc(index)}
+                      >
+                        <Minus className="h-4 w-4 text-red-400" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
               
               <FormField
                 control={form.control}
@@ -288,25 +346,97 @@ export function AddOfficialDialog({
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="achievements"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Achievements (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="List notable accomplishments"
-                        {...field}
-                        className="bg-[#2a3649] border-[#3a4659]"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs">
-                      Enter achievements separated by commas or new lines
-                    </FormMessage>
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <FormLabel>Achievements</FormLabel>
+                  <Button 
+                    type="button" 
+                    onClick={() => appendAchievement({ value: "" })}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {achievementFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`achievements.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Notable achievement"
+                              className="bg-[#2a3649] border-[#3a4659]"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {achievementFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50"
+                        onClick={() => removeAchievement(index)}
+                      >
+                        <Minus className="h-4 w-4 text-red-400" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <FormLabel>Committees</FormLabel>
+                  <Button 
+                    type="button" 
+                    onClick={() => appendCommittee({ value: "" })}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {committeeFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`committees.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Committee name"
+                              className="bg-[#2a3649] border-[#3a4659]"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {committeeFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50"
+                        onClick={() => removeCommittee(index)}
+                      >
+                        <Minus className="h-4 w-4 text-red-400" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
               
               <FormField
                 control={form.control}
