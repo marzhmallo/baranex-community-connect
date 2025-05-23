@@ -142,6 +142,44 @@ const OfficialDetailsPage = () => {
     );
   };
   
+  // Format education into bullet points
+  const formatEducation = (educ: any) => {
+    if (!educ) return null;
+    
+    let educItems: string[] = [];
+    
+    // Handle different formats of the educ field
+    if (Array.isArray(educ)) {
+      educItems = educ;
+    } else if (typeof educ === 'object') {
+      // If it's a JSON object, try to extract values
+      educItems = Object.values(educ).map(item => String(item));
+    } else if (typeof educ === 'string') {
+      // If it's a string, try to parse it as JSON
+      try {
+        const parsed = JSON.parse(educ);
+        if (Array.isArray(parsed)) {
+          educItems = parsed;
+        } else if (typeof parsed === 'object') {
+          educItems = Object.values(parsed).map(item => String(item));
+        }
+      } catch {
+        // If parsing fails, just use the string itself
+        educItems = [educ];
+      }
+    }
+    
+    if (educItems.length === 0) return null;
+    
+    return (
+      <ul className="list-disc pl-5 space-y-2">
+        {educItems.map((education, i) => (
+          <li key={i} className="text-gray-300">{education}</li>
+        ))}
+      </ul>
+    );
+  };
+  
   // Filter positions into current and past
   const currentPositions = positions?.filter(position => 
     !position.term_end || new Date(position.term_end) >= new Date()
@@ -319,28 +357,15 @@ const OfficialDetailsPage = () => {
             )}
             
             {/* Education Section */}
-            {official?.education && (
+            {official?.educ && (
               <Card className="bg-[#1e2637] border-none p-6">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <GraduationCap className="h-5 w-5" />
                   Education
                 </h2>
-                <p className="text-gray-300">{official.education}</p>
-              </Card>
-            )}
-            
-            {/* Education from educ field */}
-            {official?.educ && Array.isArray(official.educ) && official.educ.length > 0 && (
-              <Card className="bg-[#1e2637] border-none p-6">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  Education
-                </h2>
-                <ul className="list-disc pl-5 space-y-1 text-gray-300">
-                  {official.educ.map((edu, idx) => (
-                    <li key={idx}>{edu}</li>
-                  ))}
-                </ul>
+                <div className="text-gray-300">
+                  {formatEducation(official.educ)}
+                </div>
               </Card>
             )}
             
