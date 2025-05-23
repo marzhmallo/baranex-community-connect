@@ -231,6 +231,7 @@ export function AddOfficialDialog({
           achievements: achievementsArray.length > 0 ? achievementsArray : null,
           committees: committeesArray.length > 0 ? committeesArray : null,
           is_sk: data.is_sk ? [true] : [false], // Database expects an array
+          position: data.position // Add position to satisfy type requirements
         };
         
         const { data: newOfficial, error: officialError } = await supabase

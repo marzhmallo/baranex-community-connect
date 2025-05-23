@@ -210,6 +210,7 @@ export interface Official {
   address?: string;
   birthdate?: string;
   education?: string;
+  educ?: any; // Add the educ field that exists in the database
   achievements?: any; // Support JSON format from database
   committees?: any; // Support JSON format from database
   created_at: string;
