@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,16 +40,21 @@ const OfficialsPage = () => {
 
       // Group positions by official
       const officialsWithPositions: Official[] = officials.map(official => {
+        // Get all positions for this official
         const officialPositions = positions.filter(
           position => position.official_id === official.id
         );
         
-        // Use the most recent position (latest term_end date)
-        let latestPosition = officialPositions[0];
+        // Use the most recent position (latest term_start date)
+        let latestPosition = officialPositions.length > 0 ? officialPositions[0] : null;
+        
         if (officialPositions.length > 1) {
           latestPosition = officialPositions.reduce((latest, current) => {
-            if (!latest.term_end) return current;
-            if (!current.term_end) return latest;
+            // If either position has no term_end, compare carefully
+            if (!latest.term_end) return latest; // Latest has no end date, keep it
+            if (!current.term_end) return current; // Current has no end date, it's ongoing
+            
+            // Otherwise compare end dates
             return new Date(current.term_end) > new Date(latest.term_end) ? current : latest;
           }, officialPositions[0]);
         }
@@ -62,7 +66,7 @@ const OfficialsPage = () => {
             official.is_sk.length > 0 && official.is_sk[0] === true : 
             Boolean(official.is_sk),
           // Update with position data if we have it
-          position: latestPosition?.position || official.position,
+          position: latestPosition?.position || '',
           term_start: latestPosition?.term_start || official.term_start,
           term_end: latestPosition?.term_end || official.term_end,
           // Store the positions for potential use in components

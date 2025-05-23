@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -8,8 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Mail, Phone, Eye, Search, Info, ExternalLink } from 'lucide-react';
 import { Official } from '@/lib/types';
 import { OfficialDetailsDialog } from './OfficialDetailsDialog';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 
 interface OfficialCardProps {
   official: Official;
@@ -21,23 +18,7 @@ const OfficialCard = ({
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-
-  // Fetch official position data from official_positions table
-  const { data: positionData } = useQuery({
-    queryKey: ['official-position', official.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('official_positions')
-        .select('position, term_start, term_end')
-        .eq('official_id', official.id)
-        .order('term_start', { ascending: false })
-        .limit(1);
-      
-      if (error) throw error;
-      return data && data.length > 0 ? data[0] : null;
-    }
-  });
-
+  
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Present';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -52,28 +33,51 @@ const OfficialCard = ({
     if (official.bio) {
       return official.bio.length > 120 ? official.bio.substring(0, 120) + '...' : official.bio;
     }
-    return `${official.name} serves as ${getPosition()} in the barangay administration. They work to ensure the best service for the community.`;
+    return `${official.name} serves as ${official.position || 'an official'} in the barangay administration. They work to ensure the best service for the community.`;
   };
 
-  // Get the position from official_positions table
+  // Get the position from official_positions
   const getPosition = () => {
-    return positionData?.position || official.position || '';
+    if (official.officialPositions && official.officialPositions.length > 0) {
+      // Find the current position (no term_end or term_end in future)
+      const currentPositions = official.officialPositions.filter(pos => 
+        !pos.term_end || new Date(pos.term_end) >= new Date()
+      );
+      
+      if (currentPositions.length > 0) {
+        return currentPositions[0].position || '';
+      }
+      
+      // If no current position, return the most recent one
+      return official.officialPositions[0].position || '';
+    }
+    
+    // Fallback to official.position for backwards compatibility
+    return official.position || '';
   };
 
-  // Get the term start date from official_positions table
+  // Get the term start date
   const getTermStart = () => {
-    return positionData?.term_start || official.term_start;
+    if (official.officialPositions && official.officialPositions.length > 0) {
+      const currentPosition = official.officialPositions[0];
+      return currentPosition.term_start;
+    }
+    return official.term_start;
   };
 
-  // Get the term end date from official_positions table
+  // Get the term end date
   const getTermEnd = () => {
-    return positionData?.term_end || official.term_end;
+    if (official.officialPositions && official.officialPositions.length > 0) {
+      const currentPosition = official.officialPositions[0];
+      return currentPosition.term_end;
+    }
+    return official.term_end;
   };
-
+  
   const handleViewFullDetails = () => {
     navigate(`/officials/${official.id}`);
   };
-
+  
   return <Card className="overflow-hidden bg-[#1e2637] text-white border-none">
       <div className="relative">
         {/* Photo section with hover effect */}

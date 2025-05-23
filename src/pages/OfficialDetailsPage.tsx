@@ -196,6 +196,17 @@ const OfficialDetailsPage = () => {
       </div>
     );
   }
+
+  // Get the current position from positions
+  const getCurrentPosition = () => {
+    if (currentPositions.length > 0) {
+      return currentPositions[0].position;
+    } else if (pastPositions.length > 0) {
+      return pastPositions[0].position;
+    } else {
+      return official?.position || 'Barangay Official';
+    }
+  };
   
   return (
     <div className="p-6 min-h-screen bg-[#0f172a]">
@@ -228,7 +239,7 @@ const OfficialDetailsPage = () => {
               <div className="p-4 space-y-4">
                 <div>
                   <h2 className="text-xl font-bold text-white">{official?.name}</h2>
-                  <p className="text-blue-400">{official?.position || 'Barangay Official'}</p>
+                  <p className="text-blue-400">{getCurrentPosition()}</p>
                 </div>
                 
                 <div className="space-y-2 text-gray-300">
