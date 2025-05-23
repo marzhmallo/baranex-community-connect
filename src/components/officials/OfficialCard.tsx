@@ -1,30 +1,21 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Mail, Phone, Eye, Search, Info, ExternalLink } from 'lucide-react';
 import { Official } from '@/lib/types';
 import { OfficialDetailsDialog } from './OfficialDetailsDialog';
-
 interface OfficialCardProps {
   official: Official;
 }
-
-const OfficialCard = ({ official }: OfficialCardProps) => {
+const OfficialCard = ({
+  official
+}: OfficialCardProps) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Present';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -56,44 +47,27 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
   const getTermEnd = () => {
     return official.term_end;
   };
-
   const handleViewFullDetails = () => {
     navigate(`/officials/${official.id}`);
   };
-
-  return (
-    <Card className="overflow-hidden bg-[#1e2637] text-white border-none">
+  return <Card className="overflow-hidden bg-[#1e2637] text-white border-none">
       <div className="relative">
         {/* Photo section with hover effect */}
         <Dialog>
           <DialogTrigger asChild>
-            <div 
-              className="relative cursor-pointer h-64 overflow-hidden"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              {official.photo_url ? (
-                <img 
-                  src={official.photo_url} 
-                  alt={`${official.name} - ${getPosition()}`}
-                  className="w-full h-full object-cover object-center transition-transform duration-300"
-                />
-              ) : (
-                <div className="w-full h-full bg-[#202a3c] flex items-center justify-center">
+            <div className="relative cursor-pointer h-64 overflow-hidden" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+              {official.photo_url ? <img src={official.photo_url} alt={`${official.name} - ${getPosition()}`} className="w-full h-full object-cover object-center transition-transform duration-300" /> : <div className="w-full h-full bg-[#202a3c] flex items-center justify-center">
                   <Avatar className="h-24 w-24 bg-[#2a3649] text-white">
                     <span className="text-2xl font-medium">
                       {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                     </span>
                   </Avatar>
-                </div>
-              )}
+                </div>}
               
               {/* Magnify icon overlay on hover */}
-              {isHovered && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              {isHovered && <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                   <Search className="w-8 h-8 text-white" />
-                </div>
-              )}
+                </div>}
             </div>
           </DialogTrigger>
           
@@ -102,21 +76,13 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
               <DialogTitle className="text-white">{official.name}</DialogTitle>
             </DialogHeader>
             <div className="flex justify-center">
-              {official.photo_url ? (
-                <img 
-                  src={official.photo_url} 
-                  alt={`${official.name} - ${getPosition()}`}
-                  className="max-h-[70vh] object-contain"
-                />
-              ) : (
-                <div className="w-full h-64 bg-[#202a3c] flex items-center justify-center">
+              {official.photo_url ? <img src={official.photo_url} alt={`${official.name} - ${getPosition()}`} className="max-h-[70vh] object-contain" /> : <div className="w-full h-64 bg-[#202a3c] flex items-center justify-center">
                   <Avatar className="h-24 w-24 bg-[#2a3649] text-white">
                     <span className="text-2xl font-medium">
                       {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                     </span>
                   </Avatar>
-                </div>
-              )}
+                </div>}
             </div>
             <DialogClose asChild>
               <Button type="button" variant="secondary" className="mt-2">
@@ -138,19 +104,15 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
         </p>
         
         {/* Contact information */}
-        {official.email && (
-          <div className="flex items-center gap-2 text-gray-300 mb-2">
+        {official.email && <div className="flex items-center gap-2 text-gray-300 mb-2">
             <Mail className="w-4 h-4" />
             <span className="text-sm">{official.email}</span>
-          </div>
-        )}
+          </div>}
         
-        {official.phone && (
-          <div className="flex items-center gap-2 text-gray-300 mb-4">
+        {official.phone && <div className="flex items-center gap-2 text-gray-300 mb-4">
             <Phone className="w-4 h-4" />
             <span className="text-sm">{official.phone}</span>
-          </div>
-        )}
+          </div>}
         
         {/* Term duration */}
         <div className="flex justify-between items-center mt-4">
@@ -160,9 +122,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
           
           {/* View and More Details buttons */}
           <div className="flex gap-2">
-            <Button variant="outline" className="bg-transparent border-[#2a3649] text-white hover:bg-[#2a3649]" onClick={() => setDetailsDialogOpen(true)}>
-              <Info className="w-4 h-4 mr-1" /> Quick Info
-            </Button>
+            
             
             <Dialog>
               <DialogTrigger asChild>
@@ -175,36 +135,26 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
                   <DialogTitle className="text-white">{official.name}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <img 
-                    src={official.photo_url || '/placeholder.svg'} 
-                    alt={official.name}
-                    className="w-full max-h-64 object-cover object-center rounded-md"
-                  />
+                  <img src={official.photo_url || '/placeholder.svg'} alt={official.name} className="w-full max-h-64 object-cover object-center rounded-md" />
                   <div>
                     <h4 className="font-bold">{getPosition()}</h4>
                     <p className="text-gray-300 mt-2">{official.bio || getShortDescription()}</p>
                   </div>
                   
                   <div className="space-y-2">
-                    {official.email && (
-                      <div className="flex items-center gap-2">
+                    {official.email && <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4" />
                         <span>{official.email}</span>
-                      </div>
-                    )}
+                      </div>}
                     
-                    {official.phone && (
-                      <div className="flex items-center gap-2">
+                    {official.phone && <div className="flex items-center gap-2">
                         <Phone className="w-4 h-4" />
                         <span>{official.phone}</span>
-                      </div>
-                    )}
+                      </div>}
                     
-                    {official.education && (
-                      <div>
+                    {official.education && <div>
                         <span className="font-medium">Education:</span> {official.education}
-                      </div>
-                    )}
+                      </div>}
                     
                     <div>
                       <span className="font-medium">Term:</span> {formatDate(getTermStart())} - {formatDate(getTermEnd())}
@@ -212,10 +162,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
                   </div>
                   
                   <div className="flex justify-end">
-                    <Button 
-                      onClick={handleViewFullDetails} 
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
+                    <Button onClick={handleViewFullDetails} className="bg-blue-600 hover:bg-blue-700">
                       <ExternalLink className="w-4 h-4 mr-1" /> More Details
                     </Button>
                   </div>
@@ -227,13 +174,7 @@ const OfficialCard = ({ official }: OfficialCardProps) => {
       </div>
 
       {/* Details Dialog */}
-      <OfficialDetailsDialog
-        officialId={official.id}
-        open={detailsDialogOpen}
-        onOpenChange={setDetailsDialogOpen}
-      />
-    </Card>
-  );
+      <OfficialDetailsDialog officialId={official.id} open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} />
+    </Card>;
 };
-
 export default OfficialCard;
