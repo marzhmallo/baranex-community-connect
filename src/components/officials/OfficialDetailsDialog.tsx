@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +20,7 @@ import {
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
-import { Mail, Phone, GraduationCap, Calendar, MapPin, Award, User, Briefcase, Users } from 'lucide-react';
+import { Mail, Phone, GraduationCap, Calendar, MapPin, Award, User, Briefcase } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddEditPositionDialog } from './AddEditPositionDialog';
 
@@ -115,40 +114,6 @@ export const OfficialDetailsDialog = ({ officialId, open, onOpenChange }: Offici
     }
   };
   
-  // Format committees into bullet points
-  const formatCommittees = (committees: any) => {
-    if (!committees) return null;
-    
-    // Handle different formats of the committees field
-    if (Array.isArray(committees)) {
-      return (
-        <ul className="list-disc pl-5 space-y-1">
-          {committees.map((committee, i) => (
-            <li key={i}>{committee}</li>
-          ))}
-        </ul>
-      );
-    } else if (typeof committees === 'object') {
-      // If it's a JSON object, try to extract values
-      const items = Object.values(committees);
-      if (Array.isArray(items) && items.length > 0) {
-        return (
-          <ul className="list-disc pl-5 space-y-1">
-            {items.map((item, i) => (
-              <li key={i}>{String(item)}</li>
-            ))}
-          </ul>
-        );
-      } else {
-        // If we can't extract values, just stringify the object
-        return <pre className="whitespace-pre-wrap">{JSON.stringify(committees, null, 2)}</pre>;
-      }
-    } else {
-      // If it's a string or other type, just display it directly
-      return <p>{String(committees)}</p>;
-    }
-  };
-  
   // Filter positions into current and past
   const currentPositions = positions?.filter(position => 
     !position.term_end || new Date(position.term_end) >= new Date()
@@ -166,16 +131,6 @@ export const OfficialDetailsDialog = ({ officialId, open, onOpenChange }: Offici
   const handleEditPosition = (position: OfficialPosition) => {
     setSelectedPosition(position);
     setIsPositionDialogOpen(true);
-  };
-  
-  // Get the current position
-  const getCurrentPosition = () => {
-    if (currentPositions.length > 0) {
-      return currentPositions[0].position;
-    } else if (pastPositions.length > 0) {
-      return pastPositions[0].position;
-    }
-    return official?.position || 'Barangay Official';
   };
   
   return (
@@ -213,11 +168,6 @@ export const OfficialDetailsDialog = ({ officialId, open, onOpenChange }: Offici
                 </div>
                 
                 <div className="space-y-2">
-                  <div className="mb-2">
-                    <h3 className="text-lg font-semibold">{official.name}</h3>
-                    <p className="text-blue-400">{getCurrentPosition()}</p>
-                  </div>
-                  
                   <h3 className="text-lg font-semibold">Contact Information</h3>
                   
                   {official.email && (
@@ -256,18 +206,6 @@ export const OfficialDetailsDialog = ({ officialId, open, onOpenChange }: Offici
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Biography</h3>
                     <p className="text-gray-300 whitespace-pre-line">{official.bio}</p>
-                  </div>
-                )}
-                
-                {official.committees && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      Committees
-                    </h3>
-                    <div className="text-gray-300">
-                      {formatCommittees(official.committees)}
-                    </div>
                   </div>
                 )}
                 

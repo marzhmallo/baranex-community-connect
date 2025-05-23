@@ -202,7 +202,7 @@ export interface DocumentLog {
 export interface Official {
   id: string;
   name: string;
-  position?: string; // Now may be optional since we get it from official_positions
+  position: string;
   email?: string;
   phone?: string;
   photo_url: string;
@@ -214,12 +214,10 @@ export interface Official {
   committees?: any; // Support JSON format from database
   created_at: string;
   updated_at: string;
-  term_start?: string; // Now may be optional since we get it from official_positions
-  term_end?: string; // Now may be optional since we get it from official_positions
+  term_start: string;
+  term_end?: string;
   is_sk: boolean | boolean[]; // Handle both potential types
   brgyid: string;
-  // Added field to store the positions when fetched
-  officialPositions?: OfficialPosition[];
 }
 
 // New interface for official positions
