@@ -7,21 +7,22 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar } from '@/components/ui/avatar';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Edit } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddEditPositionDialog } from '@/components/officials/AddEditPositionDialog';
 import { Badge } from '@/components/ui/badge';
+import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
 
 const OfficialDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
   const [isPositionDialogOpen, setIsPositionDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<OfficialPosition | null>(null);
   
   // Fetch official details
-  const { data: official, isLoading: officialLoading } = useQuery({
+  const { data: official, isLoading: officialLoading, refetch: refetchOfficial } = useQuery({
     queryKey: ['official-details-page', id],
     queryFn: async () => {
       if (!id) return null;
@@ -161,6 +162,15 @@ const OfficialDetailsPage = () => {
     setIsPositionDialogOpen(true);
   };
   
+  const handleEditOfficial = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    refetchOfficial();
+    refetchPositions();
+  };
+  
   const goBack = () => {
     navigate(-1);
   };
@@ -200,22 +210,33 @@ const OfficialDetailsPage = () => {
   // Get the current position from positions
   const getCurrentPosition = () => {
     if (currentPositions.length > 0) {
-      return currentPositions[0].position;
+      return currentPositions[0];
     } else if (pastPositions.length > 0) {
-      return pastPositions[0].position;
+      return pastPositions[0];
     } else {
-      return official?.position || 'Barangay Official';
+      return null;
     }
   };
+
+  const currentPosition = getCurrentPosition();
   
   return (
     <div className="p-6 min-h-screen bg-[#0f172a]">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-2 mb-8">
-          <Button onClick={goBack} variant="ghost" className="p-1 text-white hover:bg-[#1e2637]">
-            <ArrowLeft className="h-5 w-5" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-2">
+            <Button onClick={goBack} variant="ghost" className="p-1 text-white hover:bg-[#1e2637]">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold text-white">Official Details</h1>
+          </div>
+          <Button 
+            onClick={handleEditOfficial} 
+            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+          >
+            <Edit className="h-4 w-4" />
+            Edit Official
           </Button>
-          <h1 className="text-2xl font-bold text-white">Official Details</h1>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -239,7 +260,7 @@ const OfficialDetailsPage = () => {
               <div className="p-4 space-y-4">
                 <div>
                   <h2 className="text-xl font-bold text-white">{official?.name}</h2>
-                  <p className="text-blue-400">{getCurrentPosition()}</p>
+                  <p className="text-blue-400">{currentPosition?.position || 'Barangay Official'}</p>
                 </div>
                 
                 <div className="space-y-2 text-gray-300">
@@ -306,6 +327,21 @@ const OfficialDetailsPage = () => {
                   Education
                 </h2>
                 <p className="text-gray-300">{official.education}</p>
+              </Card>
+            )}
+            
+            {/* Education from educ field */}
+            {official?.educ && Array.isArray(official.educ) && official.educ.length > 0 && (
+              <Card className="bg-[#1e2637] border-none p-6">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Education
+                </h2>
+                <ul className="list-disc pl-5 space-y-1 text-gray-300">
+                  {official.educ.map((edu, idx) => (
+                    <li key={idx}>{edu}</li>
+                  ))}
+                </ul>
               </Card>
             )}
             
@@ -429,6 +465,15 @@ const OfficialDetailsPage = () => {
         onSuccess={() => {
           refetchPositions();
         }}
+      />
+
+      {/* Edit Official Dialog */}
+      <AddOfficialDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSuccess={handleEditSuccess}
+        official={official}
+        position={currentPosition}
       />
     </div>
   );

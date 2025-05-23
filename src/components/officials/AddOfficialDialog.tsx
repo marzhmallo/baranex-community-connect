@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -20,11 +20,14 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import {
+  Input
+} from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Minus } from 'lucide-react';
+import { Official, OfficialPosition } from '@/lib/types';
 
 const officialSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -56,15 +59,20 @@ interface AddOfficialDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  official?: Official;
+  position?: OfficialPosition | null;
 }
 
 export function AddOfficialDialog({ 
   open, 
   onOpenChange, 
-  onSuccess 
+  onSuccess,
+  official,
+  position
 }: AddOfficialDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const isEditing = !!official;
   
   const form = useForm<OfficialFormValues>({
     resolver: zodResolver(officialSchema),
@@ -103,6 +111,43 @@ export function AddOfficialDialog({
     name: "committees"
   });
   
+  // Effect to populate form when editing
+  useEffect(() => {
+    if (official && open) {
+      // Format arrays from JSONB data
+      const educArray = official.educ && Array.isArray(official.educ) 
+        ? official.educ.map(item => ({ value: item.toString() })) 
+        : [{ value: '' }];
+        
+      const achievementsArray = official.achievements && Array.isArray(official.achievements) 
+        ? official.achievements.map(item => ({ value: item.toString() })) 
+        : [{ value: '' }];
+        
+      const committeesArray = official.committees && Array.isArray(official.committees) 
+        ? official.committees.map(item => ({ value: item.toString() })) 
+        : [{ value: '' }];
+
+      // Reset form with official data
+      form.reset({
+        name: official.name || '',
+        email: official.email || '',
+        phone: official.phone || '',
+        bio: official.bio || '',
+        address: official.address || '',
+        birthdate: official.birthdate || '',
+        educ: educArray,
+        achievements: achievementsArray,
+        committees: committeesArray,
+        is_sk: official.is_sk?.[0] || false,
+        position: position?.position || '',
+        committee: position?.committee || '',
+        term_start: position?.term_start ? new Date(position.term_start).toISOString().split('T')[0] : '',
+        term_end: position?.term_end ? new Date(position.term_end).toISOString().split('T')[0] : '',
+        is_current: position?.is_current || false,
+      });
+    }
+  }, [official, position, open, form]);
+  
   const handleIsCurrentChange = (checked: boolean) => {
     if (checked) {
       form.setValue('term_end', '');
@@ -118,58 +163,114 @@ export function AddOfficialDialog({
       const achievementsArray = data.achievements.map(item => item.value);
       const committeesArray = data.committees.map(item => item.value);
       
-      // 1. Insert the official first
-      const officialData = {
-        name: data.name,
-        email: data.email || null,
-        phone: data.phone || null,
-        bio: data.bio || null,
-        address: data.address || null,
-        birthdate: data.birthdate || null,
-        educ: educArray.length > 0 ? educArray : null,
-        achievements: achievementsArray.length > 0 ? achievementsArray : null,
-        committees: committeesArray.length > 0 ? committeesArray : null,
-        is_sk: data.is_sk ? [true] : [false], // Database expects an array
-      };
-      
-      const { data: newOfficial, error: officialError } = await supabase
-        .from('officials')
-        .insert(officialData)
-        .select()
-        .single();
-      
-      if (officialError) throw officialError;
-      
-      // 2. Insert the position with the new official ID
-      const positionData = {
-        official_id: newOfficial.id,
-        position: data.position,
-        committee: data.committee || null,
-        term_start: data.term_start,
-        term_end: data.is_current ? null : data.term_end || null,
-        is_current: !!data.is_current,
-        description: null
-      };
-      
-      const { error: positionError } = await supabase
-        .from('official_positions')
-        .insert(positionData);
-      
-      if (positionError) throw positionError;
-      
-      // Success! 
-      toast({
-        title: 'Official added',
-        description: `${data.name} has been added successfully.`
-      });
+      if (isEditing && official) {
+        // Update existing official
+        const officialData = {
+          name: data.name,
+          email: data.email || null,
+          phone: data.phone || null,
+          bio: data.bio || null,
+          address: data.address || null,
+          birthdate: data.birthdate || null,
+          educ: educArray.length > 0 ? educArray : null,
+          achievements: achievementsArray.length > 0 ? achievementsArray : null,
+          committees: committeesArray.length > 0 ? committeesArray : null,
+          is_sk: data.is_sk ? [true] : [false], // Database expects an array
+        };
+        
+        const { error: officialError } = await supabase
+          .from('officials')
+          .update(officialData)
+          .eq('id', official.id);
+        
+        if (officialError) throw officialError;
+        
+        // Update or create position
+        const positionData = {
+          official_id: official.id,
+          position: data.position,
+          committee: data.committee || null,
+          term_start: data.term_start,
+          term_end: data.is_current ? null : data.term_end || null,
+          is_current: !!data.is_current,
+          description: null
+        };
+        
+        if (position && position.id) {
+          // Update existing position
+          const { error: positionError } = await supabase
+            .from('official_positions')
+            .update(positionData)
+            .eq('id', position.id);
+          
+          if (positionError) throw positionError;
+        } else {
+          // Create new position
+          const { error: positionError } = await supabase
+            .from('official_positions')
+            .insert(positionData);
+          
+          if (positionError) throw positionError;
+        }
+        
+        toast({
+          title: 'Official updated',
+          description: `${data.name} has been updated successfully.`
+        });
+      } else {
+        // Add new official
+        // 1. Insert the official first
+        const officialData = {
+          name: data.name,
+          email: data.email || null,
+          phone: data.phone || null,
+          bio: data.bio || null,
+          address: data.address || null,
+          birthdate: data.birthdate || null,
+          educ: educArray.length > 0 ? educArray : null,
+          achievements: achievementsArray.length > 0 ? achievementsArray : null,
+          committees: committeesArray.length > 0 ? committeesArray : null,
+          is_sk: data.is_sk ? [true] : [false], // Database expects an array
+        };
+        
+        const { data: newOfficial, error: officialError } = await supabase
+          .from('officials')
+          .insert(officialData)
+          .select()
+          .single();
+        
+        if (officialError) throw officialError;
+        
+        // 2. Insert the position with the new official ID
+        const positionData = {
+          official_id: newOfficial.id,
+          position: data.position,
+          committee: data.committee || null,
+          term_start: data.term_start,
+          term_end: data.is_current ? null : data.term_end || null,
+          is_current: !!data.is_current,
+          description: null
+        };
+        
+        const { error: positionError } = await supabase
+          .from('official_positions')
+          .insert(positionData);
+        
+        if (positionError) throw positionError;
+        
+        toast({
+          title: 'Official added',
+          description: `${data.name} has been added successfully.`
+        });
+      }
       
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error adding official:', error);
+      console.error('Error saving official:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to add official. Please try again.',
+        description: error.message || 'Failed to save official. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -181,7 +282,7 @@ export function AddOfficialDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Official</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Official' : 'Add New Official'}</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
@@ -577,7 +678,7 @@ export function AddOfficialDialog({
                 disabled={isSubmitting}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {isSubmitting ? 'Adding...' : 'Add Official'}
+                {isSubmitting ? (isEditing ? 'Updating...' : 'Adding...') : (isEditing ? 'Update Official' : 'Add Official')}
               </Button>
             </DialogFooter>
           </form>
