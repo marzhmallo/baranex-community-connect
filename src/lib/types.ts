@@ -140,21 +140,23 @@ export interface Household {
   name: string;
   address: string;
   purok: string;
-  head_of_family?: string;
-  contact_number?: string;
-  year_established?: number;
+  head_of_family?: string | null; // UUID reference to resident
+  headname?: string | null; // Plain text name
+  head_of_family_name?: string | null; // Computed field for display
+  contact_number?: string | null;
+  year_established?: number | null;
   status: string;
-  monthly_income?: string;
-  property_type?: string;
-  house_type?: string;
-  water_source?: string;
-  electricity_source?: string;
-  toilet_type?: string;
-  garbage_disposal?: string;
-  remarks?: string;
-  created_at?: string;
-  updated_at?: string;
-  brgyid?: string;
+  monthly_income?: string | null;
+  property_type?: string | null;
+  house_type?: string | null;
+  water_source?: string | null;
+  electricity_source?: string | null;
+  toilet_type?: string | null;
+  garbage_disposal?: string | null;
+  remarks?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  brgyid?: string | null;
 }
 
 // Document types

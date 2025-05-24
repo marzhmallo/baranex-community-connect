@@ -2,21 +2,68 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Household } from '@/lib/types';
 
-// Get all households
+// Get all households with head of family names
 export const getHouseholds = async () => {
   try {
     const { data, error } = await supabase
       .from('households')
-      .select('*')
+      .select(`
+        *,
+        head_of_family_resident:residents!households_head_of_family_fkey(
+          id,
+          first_name,
+          middle_name,
+          last_name,
+          suffix
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
       throw new Error(error.message);
     }
 
-    return { success: true, data };
+    // Transform the data to include the head of family name
+    const transformedData = data.map(household => ({
+      ...household,
+      head_of_family_name: household.head_of_family_resident 
+        ? `${household.head_of_family_resident.first_name} ${household.head_of_family_resident.middle_name ? household.head_of_family_resident.middle_name + ' ' : ''}${household.head_of_family_resident.last_name}${household.head_of_family_resident.suffix ? ' ' + household.head_of_family_resident.suffix : ''}`
+        : household.headname || null
+    }));
+
+    return { success: true, data: transformedData };
   } catch (error: any) {
     console.error('Error fetching households:', error);
+    return { success: false, error: error.message, data: [] };
+  }
+};
+
+// Search residents for head of family selection
+export const searchResidents = async (searchTerm: string) => {
+  try {
+    if (!searchTerm || searchTerm.length < 2) {
+      return { success: true, data: [] };
+    }
+
+    const { data, error } = await supabase
+      .from('residents')
+      .select('id, first_name, middle_name, last_name, suffix, purok')
+      .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,middle_name.ilike.%${searchTerm}%`)
+      .limit(10);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Transform data to include full name
+    const transformedData = data.map(resident => ({
+      ...resident,
+      full_name: `${resident.first_name} ${resident.middle_name ? resident.middle_name + ' ' : ''}${resident.last_name}${resident.suffix ? ' ' + resident.suffix : ''}`
+    }));
+
+    return { success: true, data: transformedData };
+  } catch (error: any) {
+    console.error('Error searching residents:', error);
     return { success: false, error: error.message, data: [] };
   }
 };
@@ -115,6 +162,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
           address: household.address,
           purok: household.purok,
           head_of_family: household.head_of_family,
+          headname: household.headname,
           contact_number: household.contact_number,
           year_established: household.year_established,
           status: household.status,
@@ -144,6 +192,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
           purok: household.purok,
           status: household.status,
           head_of_family: household.head_of_family || null,
+          headname: household.headname || null,
           contact_number: household.contact_number || null,
           year_established: household.year_established || null,
           monthly_income: household.monthly_income || null,

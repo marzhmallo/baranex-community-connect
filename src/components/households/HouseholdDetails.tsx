@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -150,7 +151,10 @@ const HouseholdDetails = ({ household, open, onOpenChange }: HouseholdDetailsPro
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-gray-500">Head of Family</p>
-                          <p>{household.head_of_family || "Not specified"}</p>
+                          <p>{household.head_of_family_name || household.headname || "Not specified"}</p>
+                          {household.head_of_family && (
+                            <p className="text-xs text-green-600">✓ Registered resident</p>
+                          )}
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Contact Number</p>

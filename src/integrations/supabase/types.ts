@@ -474,6 +474,7 @@ export type Database = {
           electricity_source: string | null
           garbage_disposal: string | null
           head_of_family: string | null
+          headname: string | null
           house_type: string | null
           id: string
           monthly_income: string | null
@@ -496,6 +497,7 @@ export type Database = {
           electricity_source?: string | null
           garbage_disposal?: string | null
           head_of_family?: string | null
+          headname?: string | null
           house_type?: string | null
           id: string
           monthly_income?: string | null
@@ -518,6 +520,7 @@ export type Database = {
           electricity_source?: string | null
           garbage_disposal?: string | null
           head_of_family?: string | null
+          headname?: string | null
           house_type?: string | null
           id?: string
           monthly_income?: string | null
@@ -538,6 +541,20 @@ export type Database = {
             columns: ["brgyid"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "households_head_of_family_fkey"
+            columns: ["head_of_family"]
+            isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "households_head_of_family_fkey"
+            columns: ["head_of_family"]
+            isOneToOne: false
+            referencedRelation: "residents"
             referencedColumns: ["id"]
           },
         ]

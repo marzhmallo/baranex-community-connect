@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { saveHousehold } from "@/lib/api/households";
 import { Household } from "@/lib/types";
+import HeadOfFamilyInput from "./HeadOfFamilyInput";
 
 // Define status values as a constant for reuse
 const HOUSEHOLD_STATUSES = ["Permanent", "Temporary", "Relocated", "Abandoned"] as const;
@@ -30,7 +31,7 @@ const householdFormSchema = z.object({
   name: z.string().min(1, { message: "Household name is required" }),
   address: z.string().min(1, { message: "Address is required" }),
   purok: z.string().min(1, { message: "Purok is required" }),
-  head_of_family: z.string().optional(),
+  head_of_family_input: z.string().optional(),
   contact_number: z.string().optional(),
   year_established: z.coerce.number().int().optional(),
   status: z.enum(HOUSEHOLD_STATUSES),
@@ -54,6 +55,9 @@ interface HouseholdFormProps {
 const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedResidentId, setSelectedResidentId] = useState<string | null>(
+    household?.head_of_family || null
+  );
   const queryClient = useQueryClient();
   
   // Transform household data for the form
@@ -61,10 +65,10 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     name: household.name,
     address: household.address,
     purok: household.purok,
-    head_of_family: household.head_of_family || "",
+    head_of_family_input: household.head_of_family_name || household.headname || "",
     contact_number: household.contact_number || "",
     year_established: household.year_established || undefined,
-    status: household.status as HouseholdStatus, // Cast to our enum type
+    status: household.status as HouseholdStatus,
     monthly_income: household.monthly_income || "",
     property_type: household.property_type || "",
     house_type: household.house_type || "",
@@ -77,10 +81,10 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     name: "",
     address: "",
     purok: "",
-    head_of_family: "",
+    head_of_family_input: "",
     contact_number: "",
     year_established: undefined,
-    status: "Temporary" as HouseholdStatus, // Set a default value
+    status: "Temporary" as HouseholdStatus,
     monthly_income: "",
     property_type: "",
     house_type: "",
@@ -98,6 +102,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
 
   const handleSubmit = async (values: HouseholdFormValues) => {
     console.log("Form submitted with values:", values);
+    console.log("Selected resident ID:", selectedResidentId);
     setIsSubmitting(true);
     
     try {
@@ -107,7 +112,8 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
         name: values.name,
         address: values.address,
         purok: values.purok,
-        head_of_family: values.head_of_family || null,
+        head_of_family: selectedResidentId,
+        headname: selectedResidentId ? null : (values.head_of_family_input || null),
         contact_number: values.contact_number || null,
         year_established: values.year_established || null,
         status: values.status,
@@ -266,14 +272,26 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="head_of_family"
+                name="head_of_family_input"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Head of Family</FormLabel>
                     <FormControl>
-                      <Input placeholder="Alexander Tabano Desierto" {...field} />
+                      <HeadOfFamilyInput
+                        value={field.value || ""}
+                        onValueChange={field.onChange}
+                        onResidentSelect={setSelectedResidentId}
+                        selectedResidentId={selectedResidentId}
+                        placeholder="Search residents or enter name"
+                      />
                     </FormControl>
                     <FormMessage />
+                    {selectedResidentId && (
+                      <p className="text-xs text-green-600">✓ Registered resident selected</p>
+                    )}
+                    {!selectedResidentId && field.value && (
+                      <p className="text-xs text-gray-500">Will be saved as text</p>
+                    )}
                   </FormItem>
                 )}
               />
