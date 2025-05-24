@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -11,7 +12,8 @@ const DashboardCharts = () => {
   const { 
     totalResidents, 
     monthlyResidents, 
-    genderDistribution, 
+    genderDistribution,
+    residentGrowthRate,
     isLoading, 
     error 
   } = useDashboardData();
@@ -42,6 +44,11 @@ const DashboardCharts = () => {
     action: 'updated',
     date: '2 days ago'
   }];
+
+  const formatGrowthRate = (rate: number) => {
+    const sign = rate >= 0 ? '+' : '';
+    return `${sign}${rate.toFixed(1)}%`;
+  };
 
   if (error) {
     return (
@@ -155,8 +162,8 @@ const DashboardCharts = () => {
             <Card>
               <CardContent className="p-4 flex flex-col items-center">
                 <div className="text-xs uppercase text-muted-foreground mb-1">Growth Rate</div>
-                <div className="text-2xl font-bold text-center text-baranex-success">
-                  {isLoading ? '...' : 'Live'}
+                <div className={`text-2xl font-bold text-center ${residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
+                  {isLoading ? '...' : formatGrowthRate(residentGrowthRate)}
                 </div>
               </CardContent>
             </Card>

@@ -9,6 +9,12 @@ interface DashboardData {
   upcomingEvents: number;
   monthlyResidents: Array<{ month: string; residents: number }>;
   genderDistribution: Array<{ age: string; male: number; female: number }>;
+  residentGrowthRate: number;
+  householdGrowthRate: number;
+  newResidentsThisMonth: number;
+  newHouseholdsThisMonth: number;
+  newAnnouncementsThisWeek: number;
+  nextEventDays: number | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -21,6 +27,12 @@ export const useDashboardData = () => {
     upcomingEvents: 0,
     monthlyResidents: [],
     genderDistribution: [],
+    residentGrowthRate: 0,
+    householdGrowthRate: 0,
+    newResidentsThisMonth: 0,
+    newHouseholdsThisMonth: 0,
+    newAnnouncementsThisWeek: 0,
+    nextEventDays: null,
     isLoading: true,
     error: null,
   });
@@ -57,6 +69,80 @@ export const useDashboardData = () => {
 
         if (eventsError) throw eventsError;
 
+        // Calculate growth rates and monthly additions
+        const now = new Date();
+        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const startOfThisWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+
+        // Fetch residents added this month
+        const { count: newResidentsThisMonth, error: newResidentsError } = await supabase
+          .from('residents')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startOfThisMonth.toISOString());
+
+        if (newResidentsError) throw newResidentsError;
+
+        // Fetch residents added last month
+        const { count: newResidentsLastMonth, error: lastMonthResidentsError } = await supabase
+          .from('residents')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startOfLastMonth.toISOString())
+          .lt('created_at', startOfThisMonth.toISOString());
+
+        if (lastMonthResidentsError) throw lastMonthResidentsError;
+
+        // Fetch households added this month
+        const { count: newHouseholdsThisMonth, error: newHouseholdsError } = await supabase
+          .from('households')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startOfThisMonth.toISOString());
+
+        if (newHouseholdsError) throw newHouseholdsError;
+
+        // Fetch households added last month
+        const { count: newHouseholdsLastMonth, error: lastMonthHouseholdsError } = await supabase
+          .from('households')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startOfLastMonth.toISOString())
+          .lt('created_at', startOfThisMonth.toISOString());
+
+        if (lastMonthHouseholdsError) throw lastMonthHouseholdsError;
+
+        // Fetch announcements added this week
+        const { count: newAnnouncementsThisWeek, error: weekAnnouncementsError } = await supabase
+          .from('announcements')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startOfThisWeek.toISOString());
+
+        if (weekAnnouncementsError) throw weekAnnouncementsError;
+
+        // Find next upcoming event
+        const { data: nextEvent, error: nextEventError } = await supabase
+          .from('events')
+          .select('start_time')
+          .gte('start_time', new Date().toISOString())
+          .order('start_time', { ascending: true })
+          .limit(1)
+          .single();
+
+        let nextEventDays = null;
+        if (!nextEventError && nextEvent) {
+          const eventDate = new Date(nextEvent.start_time);
+          const today = new Date();
+          const diffTime = eventDate.getTime() - today.getTime();
+          nextEventDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        // Calculate growth rates
+        const residentGrowthRate = newResidentsLastMonth > 0 
+          ? ((newResidentsThisMonth || 0) - (newResidentsLastMonth || 0)) / (newResidentsLastMonth || 1) * 100
+          : newResidentsThisMonth > 0 ? 100 : 0;
+
+        const householdGrowthRate = newHouseholdsLastMonth > 0 
+          ? ((newHouseholdsThisMonth || 0) - (newHouseholdsLastMonth || 0)) / (newHouseholdsLastMonth || 1) * 100
+          : newHouseholdsThisMonth > 0 ? 100 : 0;
+
         // Fetch monthly residents data (last 12 months)
         const { data: monthlyData, error: monthlyError } = await supabase
           .from('residents')
@@ -84,6 +170,12 @@ export const useDashboardData = () => {
           upcomingEvents: eventsCount || 0,
           monthlyResidents,
           genderDistribution,
+          residentGrowthRate,
+          householdGrowthRate,
+          newResidentsThisMonth: newResidentsThisMonth || 0,
+          newHouseholdsThisMonth: newHouseholdsThisMonth || 0,
+          newAnnouncementsThisWeek: newAnnouncementsThisWeek || 0,
+          nextEventDays,
           isLoading: false,
           error: null,
         });

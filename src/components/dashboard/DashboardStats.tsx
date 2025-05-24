@@ -2,17 +2,57 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useState, useEffect } from "react";
-import { Users, Home, Calendar, TrendingUp } from "lucide-react";
+import { Users, Home, Calendar, TrendingUp, TrendingDown, Megaphone } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardStats = () => {
-  const { totalResidents, totalHouseholds, activeAnnouncements, upcomingEvents, isLoading } = useDashboardData();
+  const { 
+    totalResidents, 
+    totalHouseholds, 
+    activeAnnouncements, 
+    upcomingEvents,
+    residentGrowthRate,
+    householdGrowthRate,
+    newResidentsThisMonth,
+    newHouseholdsThisMonth,
+    newAnnouncementsThisWeek,
+    nextEventDays,
+    isLoading 
+  } = useDashboardData();
+  
   const [progress, setProgress] = useState(13);
 
   useEffect(() => {
     const timer = setTimeout(() => setProgress(66), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  const formatGrowthRate = (rate: number) => {
+    const sign = rate >= 0 ? '+' : '';
+    return `${sign}${rate.toFixed(1)}%`;
+  };
+
+  const formatAnnouncementText = () => {
+    if (newAnnouncementsThisWeek === 0) {
+      return "No new announcements this week";
+    } else if (newAnnouncementsThisWeek === 1) {
+      return "1 new this week";
+    } else {
+      return `${newAnnouncementsThisWeek} new this week`;
+    }
+  };
+
+  const formatEventText = () => {
+    if (nextEventDays === null || upcomingEvents === 0) {
+      return "No upcoming events";
+    } else if (nextEventDays === 0) {
+      return "Event today";
+    } else if (nextEventDays === 1) {
+      return "Next event tomorrow";
+    } else {
+      return `Next event in ${nextEventDays} days`;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -44,9 +84,13 @@ const DashboardStats = () => {
             <CardContent className="pt-0">
               <div className="text-2xl font-bold">{totalResidents.toLocaleString()}</div>
               <div className="flex items-center mt-1">
-                <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
-                <p className="text-xs text-baranex-success">
-                  Live data from database
+                {residentGrowthRate >= 0 ? (
+                  <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
+                ) : (
+                  <TrendingDown className="text-red-500 h-3 w-3 mr-1" />
+                )}
+                <p className={`text-xs ${residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
+                  {formatGrowthRate(residentGrowthRate)} ({newResidentsThisMonth} this month)
                 </p>
               </div>
               <Progress value={progress} className="mt-3 h-1.5" />
@@ -67,9 +111,13 @@ const DashboardStats = () => {
             <CardContent className="pt-0">
               <div className="text-2xl font-bold">{totalHouseholds.toLocaleString()}</div>
               <div className="flex items-center mt-1">
-                <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
-                <p className="text-xs text-baranex-success">
-                  Live data from database
+                {householdGrowthRate >= 0 ? (
+                  <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
+                ) : (
+                  <TrendingDown className="text-red-500 h-3 w-3 mr-1" />
+                )}
+                <p className={`text-xs ${householdGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
+                  {formatGrowthRate(householdGrowthRate)} ({newHouseholdsThisMonth} this month)
                 </p>
               </div>
               <Progress value={35} className="mt-3 h-1.5" />
@@ -90,16 +138,16 @@ const DashboardStats = () => {
             <CardContent className="pt-0">
               <div className="text-2xl font-bold">{activeAnnouncements}</div>
               <div className="flex items-center mt-1">
-                <TrendingUp className="text-baranex-warning h-3 w-3 mr-1" />
+                <Megaphone className="text-baranex-warning h-3 w-3 mr-1" />
                 <p className="text-xs text-baranex-warning">
-                  Live data from database
+                  {formatAnnouncementText()}
                 </p>
               </div>
               <Progress value={78} className="mt-3 h-1.5" />
             </CardContent>
           </div>
           <div className="bg-gradient-to-br from-baranex-warning/10 to-baranex-warning/5 p-4 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-megaphone text-baranex-warning"><path d="m3 11 18-5v12L3 13"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+            <Megaphone className="h-8 w-8 text-baranex-warning" />
           </div>
         </div>
       </Card>
@@ -115,7 +163,7 @@ const DashboardStats = () => {
               <div className="flex items-center mt-1">
                 <Calendar className="text-baranex-accent h-3 w-3 mr-1" />
                 <p className="text-xs text-accent-foreground">
-                  Live data from database
+                  {formatEventText()}
                 </p>
               </div>
               <Progress value={45} className="mt-3 h-1.5" />
