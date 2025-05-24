@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -279,68 +280,6 @@ const ResidentMoreDetailsPage = () => {
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          
-          {/* Household Information - New section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center justify-between">
-                <div className="flex items-center">
-                  <Home className="mr-2 h-5 w-5" />
-                  Family/Household Information
-                </div>
-                <HouseholdSelector
-                  residentId={resident.id}
-                  residentName={residentFullName}
-                  currentHouseholdId={resident.householdId}
-                  onHouseholdUpdate={handleHouseholdUpdate}
-                />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {household ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Household Name</p>
-                      <p className="font-medium">{household.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Status</p>
-                      <Badge variant="outline">{household.status}</Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Address</p>
-                      <p className="font-medium">{household.address}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Purok</p>
-                      <p className="font-medium">{household.purok}</p>
-                    </div>
-                    {household.headname && (
-                      <div>
-                        <p className="text-sm text-gray-500">Head of Family</p>
-                        <p className="font-medium">{household.headname}</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex justify-end">
-                    <Button onClick={handleViewHousehold} variant="outline">
-                      View Household Details
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground mb-4">
-                    This resident is not currently assigned to any household.
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Use the "Assign to Household" button above to add this resident to a household.
-                  </p>
-                </div>
-              )}
             </CardContent>
           </Card>
           
@@ -635,6 +574,68 @@ const ResidentMoreDetailsPage = () => {
             residentId={resident.id} 
             residentName={residentFullName}
           />
+
+          {/* Household Information - Moved here after family relationships */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center justify-between">
+                <div className="flex items-center">
+                  <Home className="mr-2 h-5 w-5" />
+                  Family/Household Information
+                </div>
+                <HouseholdSelector
+                  residentId={resident.id}
+                  residentName={residentFullName}
+                  currentHouseholdId={resident.householdId}
+                  onHouseholdUpdate={handleHouseholdUpdate}
+                />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {household ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Household Name</p>
+                      <p className="font-medium">{household.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <Badge variant="outline">{household.status}</Badge>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Address</p>
+                      <p className="font-medium">{household.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Purok</p>
+                      <p className="font-medium">{household.purok}</p>
+                    </div>
+                    {household.headname && (
+                      <div>
+                        <p className="text-sm text-gray-500">Head of Family</p>
+                        <p className="font-medium">{household.headname}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={handleViewHousehold} variant="outline">
+                      View Household Details
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground mb-4">
+                    This resident is not currently assigned to any household.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Use the "Assign to Household" button above to add this resident to a household.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Record Information - New card for created and updated dates */}
           <Card>
