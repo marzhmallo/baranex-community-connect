@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import HouseholdForm from '@/components/households/HouseholdForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import HouseholdMembersManager from '@/components/households/HouseholdMembersManager';
 
 const HouseholdMoreDetailsPage = () => {
   const { householdId } = useParams<{ householdId: string }>();
@@ -291,18 +292,10 @@ const HouseholdMoreDetailsPage = () => {
         </TabsContent>
         
         <TabsContent value="members">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Household Members</h2>
-                <Button variant="outline">View All Members</Button>
-              </div>
-              
-              <p className="text-muted-foreground text-center py-10">
-                No resident data is associated with this household yet
-              </p>
-            </CardContent>
-          </Card>
+          <HouseholdMembersManager 
+            householdId={householdId || ''} 
+            householdName={household.name}
+          />
         </TabsContent>
         
         <TabsContent value="history">

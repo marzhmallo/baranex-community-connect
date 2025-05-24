@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -13,8 +14,10 @@ import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ResidentForm from "./ResidentForm";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ZoomIn, X, Clock, History, Skull } from "lucide-react";
+import { ZoomIn, X, Clock, History, Skull, Home } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 type ResidentDetailsProps = {
   resident: Resident | null;
@@ -26,6 +29,24 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   const [isEditMode, setIsEditMode] = useState(false);
   const [showFullPhoto, setShowFullPhoto] = useState(false);
   const navigate = useNavigate();
+  
+  // Fetch household information
+  const { data: household } = useQuery({
+    queryKey: ['resident-household', resident?.household_id],
+    queryFn: async () => {
+      if (!resident?.household_id) return null;
+      
+      const { data, error } = await supabase
+        .from('households')
+        .select('id, name, address, purok, status')
+        .eq('id', resident.household_id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!resident?.household_id,
+  });
   
   if (!resident) return null;
 
@@ -90,6 +111,14 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   const handleViewMoreDetails = () => {
     handleClose();
     navigate(`/residents/${resident.id}`);
+  };
+
+  // Navigate to household details page
+  const handleViewHousehold = () => {
+    if (household) {
+      handleClose();
+      navigate(`/households/${household.id}`);
+    }
   };
 
   // Format dates for display
@@ -284,6 +313,43 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Household Information */}
+                {household && (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center mb-4">
+                        <div className="bg-purple-100 p-2 rounded-full">
+                          <Home className="h-5 w-5 text-purple-700" />
+                        </div>
+                        <h3 className="text-lg font-medium ml-2">Household Information</h3>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-500">Household Name</p>
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium">{household.name}</p>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={handleViewHousehold}
+                            >
+                              View Household
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Household Address</p>
+                          <p>{household.address}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Household Status</p>
+                          <Badge variant="outline">{household.status}</Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
                 
                 {/* Additional Information */}
                 <Card>
