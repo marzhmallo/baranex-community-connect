@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/components/AuthProvider';
 import {
   Dialog,
   DialogContent,
@@ -34,16 +34,16 @@ const officialSchema = z.object({
   email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
   bio: z.string().optional().or(z.literal('')),
-  address: z.string().optional().or(z.literal('')),
+  address: z.string().min(1, 'Address is required'), // Made required
   birthdate: z.string().optional().or(z.literal('')),
   educ: z.array(z.object({
-    value: z.string().min(1, 'Education entry is required')
+    value: z.string().optional().or(z.literal('')) // Made optional
   })),
   achievements: z.array(z.object({
-    value: z.string().min(1, 'Achievement entry is required')
+    value: z.string().optional().or(z.literal('')) // Made optional
   })),
   committees: z.array(z.object({
-    value: z.string().min(1, 'Committee entry is required')
+    value: z.string().optional().or(z.literal('')) // Made optional
   })),
   is_sk: z.boolean().optional(),
   // Only required for creating new officials
@@ -73,6 +73,7 @@ export function AddOfficialDialog({
 }: AddOfficialDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
   const isEditing = !!official;
   
   const form = useForm<OfficialFormValues>({
@@ -191,7 +192,17 @@ export function AddOfficialDialog({
     try {
       setIsSubmitting(true);
       
-      // Format the arrays for JSONB storage
+      // Check if user has brgyid
+      if (!userProfile?.brgyid) {
+        toast({
+          title: 'Error',
+          description: 'Unable to determine your barangay. Please contact an administrator.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // Format the arrays for JSONB storage - filter out empty values
       const educArray = data.educ.map(item => item.value).filter(Boolean);
       const achievementsArray = data.achievements.map(item => item.value).filter(Boolean);
       const committeesArray = data.committees.map(item => item.value).filter(Boolean);
@@ -203,7 +214,7 @@ export function AddOfficialDialog({
           email: data.email || null,
           phone: data.phone || null,
           bio: data.bio || null,
-          address: data.address || null,
+          address: data.address,
           birthdate: data.birthdate || null,
           educ: educArray.length > 0 ? educArray : null,
           achievements: achievementsArray.length > 0 ? achievementsArray : null,
@@ -223,20 +234,20 @@ export function AddOfficialDialog({
           description: `${data.name} has been updated successfully.`
         });
       } else {
-        // Add new official
-        // 1. Insert the official first
+        // Add new official with current user's brgyid
         const officialData = {
           name: data.name,
           email: data.email || null,
           phone: data.phone || null,
           bio: data.bio || null,
-          address: data.address || null,
+          address: data.address,
           birthdate: data.birthdate || null,
           educ: educArray.length > 0 ? educArray : null,
           achievements: achievementsArray.length > 0 ? achievementsArray : null,
           committees: committeesArray.length > 0 ? committeesArray : null,
           is_sk: data.is_sk ? [true] : [false], // Database expects an array
-          position: data.position // Add position to satisfy type requirements
+          position: data.position, // Add position to satisfy type requirements
+          brgyid: userProfile.brgyid // Use current user's brgyid
         };
         
         const { data: newOfficial, error: officialError } = await supabase
@@ -378,7 +389,7 @@ export function AddOfficialDialog({
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address (Optional)</FormLabel>
+                    <FormLabel>Address</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Official's address"
@@ -393,7 +404,7 @@ export function AddOfficialDialog({
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <FormLabel>Education</FormLabel>
+                  <FormLabel>Education (Optional)</FormLabel>
                   <Button 
                     type="button" 
                     onClick={() => appendEduc({ value: "" })}
@@ -457,7 +468,7 @@ export function AddOfficialDialog({
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <FormLabel>Achievements</FormLabel>
+                  <FormLabel>Achievements (Optional)</FormLabel>
                   <Button 
                     type="button" 
                     onClick={() => appendAchievement({ value: "" })}
@@ -503,7 +514,7 @@ export function AddOfficialDialog({
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <FormLabel>Committees</FormLabel>
+                  <FormLabel>Committees (Optional)</FormLabel>
                   <Button 
                     type="button" 
                     onClick={() => appendCommittee({ value: "" })}
