@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -62,7 +63,7 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
     // Keep focus on input after selection
     setTimeout(() => {
       inputRef.current?.focus();
-    }, 100);
+    }, 50);
   };
 
   const handleInputChange = (newValue: string) => {
@@ -98,9 +99,20 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
     }
   };
 
+  // Prevent popover from closing input focus
+  const handlePopoverOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen) {
+      // Ensure input stays focused when popover opens
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 10);
+    }
+  };
+
   return (
     <div className="relative">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handlePopoverOpenChange}>
         <PopoverTrigger asChild>
           <div className="relative">
             <Input
@@ -151,6 +163,7 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
                       value={resident.full_name}
                       onSelect={() => handleResidentSelect(resident)}
                       className="flex items-center justify-between cursor-pointer"
+                      onMouseDown={(e) => e.preventDefault()} // Prevent input blur
                     >
                       <div>
                         <div className="font-medium">{resident.full_name}</div>

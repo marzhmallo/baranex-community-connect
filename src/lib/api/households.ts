@@ -45,21 +45,33 @@ export const searchResidents = async (searchTerm: string) => {
       return { success: true, data: [] };
     }
 
+    // Make search case-insensitive and search across all name parts
+    const searchQuery = searchTerm.toLowerCase().trim();
+    
     const { data, error } = await supabase
       .from('residents')
       .select('id, first_name, middle_name, last_name, suffix, purok')
-      .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,middle_name.ilike.%${searchTerm}%`)
+      .or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,middle_name.ilike.%${searchQuery}%`)
       .limit(10);
 
     if (error) {
       throw new Error(error.message);
     }
 
-    // Transform data to include full name
-    const transformedData = data.map(resident => ({
-      ...resident,
-      full_name: `${resident.first_name} ${resident.middle_name ? resident.middle_name + ' ' : ''}${resident.last_name}${resident.suffix ? ' ' + resident.suffix : ''}`
-    }));
+    // Transform data to include full name and filter results that match any part of the search
+    const transformedData = data
+      .map(resident => ({
+        ...resident,
+        full_name: `${resident.first_name} ${resident.middle_name ? resident.middle_name + ' ' : ''}${resident.last_name}${resident.suffix ? ' ' + resident.suffix : ''}`
+      }))
+      .filter(resident => {
+        // Additional client-side filtering to match any word in the search term
+        const fullNameLower = resident.full_name.toLowerCase();
+        const searchWords = searchQuery.split(' ').filter(word => word.length > 0);
+        
+        // Check if all search words are found in the full name
+        return searchWords.every(word => fullNameLower.includes(word));
+      });
 
     return { success: true, data: transformedData };
   } catch (error: any) {
