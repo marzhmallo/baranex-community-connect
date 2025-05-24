@@ -2,15 +2,36 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useState, useEffect } from "react";
-import { Users, Home, Calendar, FileText, TrendingUp } from "lucide-react";
+import { Users, Home, Calendar, TrendingUp } from "lucide-react";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardStats = () => {
+  const { totalResidents, totalHouseholds, activeAnnouncements, upcomingEvents, isLoading } = useDashboardData();
   const [progress, setProgress] = useState(13);
 
   useEffect(() => {
     const timer = setTimeout(() => setProgress(66), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="overflow-hidden border shadow-sm animate-pulse">
+            <div className="flex">
+              <div className="flex-grow p-6">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded"></div>
+              </div>
+              <div className="w-16 bg-gray-200"></div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -21,11 +42,11 @@ const DashboardStats = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Residents</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">2,853</div>
+              <div className="text-2xl font-bold">{totalResidents.toLocaleString()}</div>
               <div className="flex items-center mt-1">
                 <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
                 <p className="text-xs text-baranex-success">
-                  +34 from last month
+                  Live data from database
                 </p>
               </div>
               <Progress value={progress} className="mt-3 h-1.5" />
@@ -44,11 +65,11 @@ const DashboardStats = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Registered Households</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">642</div>
+              <div className="text-2xl font-bold">{totalHouseholds.toLocaleString()}</div>
               <div className="flex items-center mt-1">
                 <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
                 <p className="text-xs text-baranex-success">
-                  +18 from last month
+                  Live data from database
                 </p>
               </div>
               <Progress value={35} className="mt-3 h-1.5" />
@@ -67,11 +88,11 @@ const DashboardStats = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Announcements</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">{activeAnnouncements}</div>
               <div className="flex items-center mt-1">
                 <TrendingUp className="text-baranex-warning h-3 w-3 mr-1" />
                 <p className="text-xs text-baranex-warning">
-                  5 new this week
+                  Live data from database
                 </p>
               </div>
               <Progress value={78} className="mt-3 h-1.5" />
@@ -90,11 +111,11 @@ const DashboardStats = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Events</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">7</div>
+              <div className="text-2xl font-bold">{upcomingEvents}</div>
               <div className="flex items-center mt-1">
                 <Calendar className="text-baranex-accent h-3 w-3 mr-1" />
                 <p className="text-xs text-accent-foreground">
-                  Next event in 3 days
+                  Live data from database
                 </p>
               </div>
               <Progress value={45} className="mt-3 h-1.5" />
