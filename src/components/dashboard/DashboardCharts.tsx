@@ -5,7 +5,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'react-router-dom';
-import { FileText, Users, Home, ChevronRight } from 'lucide-react';
+import { FileText, Users, Home, ChevronRight, UserX, MapPin } from 'lucide-react';
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardCharts = () => {
@@ -14,6 +14,8 @@ const DashboardCharts = () => {
     monthlyResidents, 
     genderDistribution,
     residentGrowthRate,
+    totalDeceased,
+    totalRelocated,
     isLoading, 
     error 
   } = useDashboardData();
@@ -71,92 +73,90 @@ const DashboardCharts = () => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Main chart area - takes up 2 columns on md screens */}
       <Card className="md:col-span-2">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col space-y-4">
-            <div>
-              <CardTitle className="text-lg">Population Growth</CardTitle>
-              <CardDescription>Monthly resident registration trends</CardDescription>
-            </div>
-            <Tabs defaultValue="line" className="w-full">
-              <TabsList className="grid w-[200px] grid-cols-2">
-                <TabsTrigger value="line">Line Chart</TabsTrigger>
-                <TabsTrigger value="bar">Bar Chart</TabsTrigger>
-              </TabsList>
-              <TabsContent value="line" className="mt-4">
-                <ChartContainer config={{
-                  residents: {
-                    theme: {
-                      dark: '#3b82f6',
-                      light: '#3b82f6'
-                    }
-                  }
-                }} className="h-[350px] w-full">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : (
-                    <LineChart data={monthlyResidents} margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 20
-                    }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip content={<ChartTooltipContent nameKey="month" />} />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="residents" 
-                        name="Residents" 
-                        stroke="var(--color-residents, #3b82f6)" 
-                        strokeWidth={2} 
-                        activeDot={{ r: 8 }} 
-                      />
-                    </LineChart>
-                  )}
-                </ChartContainer>
-              </TabsContent>
-              <TabsContent value="bar" className="mt-4">
-                <ChartContainer config={{
-                  residents: {
-                    theme: {
-                      dark: '#3b82f6',
-                      light: '#3b82f6'
-                    }
-                  }
-                }} className="h-[350px] w-full">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : (
-                    <BarChart data={monthlyResidents} margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 20
-                    }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip content={<ChartTooltipContent nameKey="month" />} />
-                      <Legend />
-                      <Bar dataKey="residents" name="Residents" fill="var(--color-residents, #3b82f6)" />
-                    </BarChart>
-                  )}
-                </ChartContainer>
-              </TabsContent>
-            </Tabs>
+        <CardHeader>
+          <div>
+            <CardTitle className="text-lg">Population Growth</CardTitle>
+            <CardDescription>Active resident registration trends (up to current month)</CardDescription>
           </div>
+          <Tabs defaultValue="line" className="w-full">
+            <TabsList className="grid w-[200px] grid-cols-2">
+              <TabsTrigger value="line">Line Chart</TabsTrigger>
+              <TabsTrigger value="bar">Bar Chart</TabsTrigger>
+            </TabsList>
+            <TabsContent value="line" className="mt-4">
+              <ChartContainer config={{
+                residents: {
+                  theme: {
+                    dark: '#3b82f6',
+                    light: '#3b82f6'
+                  }
+                }
+              }} className="h-[350px] w-full">
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  <LineChart data={monthlyResidents} margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 20
+                  }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip content={<ChartTooltipContent nameKey="month" />} />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="residents" 
+                      name="Active Residents" 
+                      stroke="var(--color-residents, #3b82f6)" 
+                      strokeWidth={2} 
+                      activeDot={{ r: 8 }} 
+                    />
+                  </LineChart>
+                )}
+              </ChartContainer>
+            </TabsContent>
+            <TabsContent value="bar" className="mt-4">
+              <ChartContainer config={{
+                residents: {
+                  theme: {
+                    dark: '#3b82f6',
+                    light: '#3b82f6'
+                  }
+                }
+              }} className="h-[350px] w-full">
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  <BarChart data={monthlyResidents} margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 20
+                  }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip content={<ChartTooltipContent nameKey="month" />} />
+                    <Legend />
+                    <Bar dataKey="residents" name="Active Residents" fill="var(--color-residents, #3b82f6)" />
+                  </BarChart>
+                )}
+              </ChartContainer>
+            </TabsContent>
+          </Tabs>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card>
               <CardContent className="p-4 flex flex-col items-center">
-                <div className="text-xs uppercase text-muted-foreground mb-1">Total Population</div>
+                <div className="text-xs uppercase text-muted-foreground mb-1">Active Population</div>
                 <div className="text-2xl font-bold text-center">
                   {isLoading ? '...' : totalResidents.toLocaleString()}
                 </div>
@@ -175,6 +175,28 @@ const DashboardCharts = () => {
                 <div className="text-xs uppercase text-muted-foreground mb-1">New this Month</div>
                 <div className="text-2xl font-bold text-center">
                   {isLoading ? '...' : monthlyResidents[monthlyResidents.length - 1]?.residents || 0}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex flex-col items-center">
+                <div className="text-xs uppercase text-muted-foreground mb-1 flex items-center">
+                  <UserX className="h-3 w-3 mr-1" />
+                  Deceased
+                </div>
+                <div className="text-2xl font-bold text-center text-red-500">
+                  {isLoading ? '...' : totalDeceased.toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex flex-col items-center">
+                <div className="text-xs uppercase text-muted-foreground mb-1 flex items-center">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  Relocated
+                </div>
+                <div className="text-2xl font-bold text-center text-orange-500">
+                  {isLoading ? '...' : totalRelocated.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
@@ -223,7 +245,7 @@ const DashboardCharts = () => {
           <CardHeader>
             <CardTitle>Gender Distribution</CardTitle>
             <CardDescription>
-              {isLoading ? "Loading..." : `${genderDistribution.length} gender categories found`}
+              {isLoading ? "Loading..." : `${genderDistribution.length} gender categories found (active residents only)`}
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] pt-0">

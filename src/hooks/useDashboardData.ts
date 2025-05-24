@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,6 +14,8 @@ interface DashboardData {
   newHouseholdsThisMonth: number;
   newAnnouncementsThisWeek: number;
   nextEventDays: number | null;
+  totalDeceased: number;
+  totalRelocated: number;
   isLoading: boolean;
   error: string | null;
 }
@@ -33,6 +34,8 @@ export const useDashboardData = () => {
     newHouseholdsThisMonth: 0,
     newAnnouncementsThisWeek: 0,
     nextEventDays: null,
+    totalDeceased: 0,
+    totalRelocated: 0,
     isLoading: true,
     error: null,
   });
@@ -40,12 +43,29 @@ export const useDashboardData = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch total residents
+        // Fetch total active residents (excluding deceased and relocated)
         const { count: residentsCount, error: residentsError } = await supabase
           .from('residents')
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true })
+          .not('status', 'in', '("Deceased","Relocated")');
 
         if (residentsError) throw residentsError;
+
+        // Fetch deceased residents count
+        const { count: deceasedCount, error: deceasedError } = await supabase
+          .from('residents')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'Deceased');
+
+        if (deceasedError) throw deceasedError;
+
+        // Fetch relocated residents count
+        const { count: relocatedCount, error: relocatedError } = await supabase
+          .from('residents')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'Relocated');
+
+        if (relocatedError) throw relocatedError;
 
         // Fetch total households
         const { count: householdsCount, error: householdsError } = await supabase
@@ -75,20 +95,22 @@ export const useDashboardData = () => {
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const startOfThisWeek = new Date(now.setDate(now.getDate() - now.getDay()));
 
-        // Fetch residents added this month
+        // Fetch active residents added this month (excluding deceased and relocated)
         const { count: newResidentsThisMonth, error: newResidentsError } = await supabase
           .from('residents')
           .select('*', { count: 'exact', head: true })
-          .gte('created_at', startOfThisMonth.toISOString());
+          .gte('created_at', startOfThisMonth.toISOString())
+          .not('status', 'in', '("Deceased","Relocated")');
 
         if (newResidentsError) throw newResidentsError;
 
-        // Fetch residents added last month
+        // Fetch active residents added last month (excluding deceased and relocated)
         const { count: newResidentsLastMonth, error: lastMonthResidentsError } = await supabase
           .from('residents')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', startOfLastMonth.toISOString())
-          .lt('created_at', startOfThisMonth.toISOString());
+          .lt('created_at', startOfThisMonth.toISOString())
+          .not('status', 'in', '("Deceased","Relocated")');
 
         if (lastMonthResidentsError) throw lastMonthResidentsError;
 
@@ -143,21 +165,23 @@ export const useDashboardData = () => {
           ? ((newHouseholdsThisMonth || 0) - (newHouseholdsLastMonth || 0)) / (newHouseholdsLastMonth || 1) * 100
           : newHouseholdsThisMonth > 0 ? 100 : 0;
 
-        // Fetch monthly residents data (last 12 months)
+        // Fetch monthly active residents data (excluding deceased and relocated, up to current month only)
         const { data: monthlyData, error: monthlyError } = await supabase
           .from('residents')
           .select('created_at')
-          .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString());
+          .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
+          .not('status', 'in', '("Deceased","Relocated")');
 
         if (monthlyError) throw monthlyError;
 
-        // Process monthly data
+        // Process monthly data (only up to current month)
         const monthlyResidents = processMonthlyData(monthlyData || []);
 
-        // Fetch gender distribution from residents table
+        // Fetch gender distribution from active residents table (excluding deceased and relocated)
         const { data: genderData, error: genderError } = await supabase
           .from('residents')
-          .select('gender');
+          .select('gender')
+          .not('status', 'in', '("Deceased","Relocated")');
 
         if (genderError) throw genderError;
 
@@ -176,6 +200,8 @@ export const useDashboardData = () => {
           newHouseholdsThisMonth: newHouseholdsThisMonth || 0,
           newAnnouncementsThisWeek: newAnnouncementsThisWeek || 0,
           nextEventDays,
+          totalDeceased: deceasedCount || 0,
+          totalRelocated: relocatedCount || 0,
           isLoading: false,
           error: null,
         });
@@ -195,26 +221,38 @@ export const useDashboardData = () => {
   return data;
 };
 
-// Helper function to process monthly data
+// Helper function to process monthly data (only up to current month)
 const processMonthlyData = (data: Array<{ created_at: string }>) => {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthlyCount: Record<string, number> = {};
   
-  // Initialize all months to 0
-  months.forEach(month => {
-    monthlyCount[month] = 0;
-  });
+  // Initialize months up to current month only
+  for (let i = 0; i <= currentMonth; i++) {
+    monthlyCount[months[i]] = 0;
+  }
 
-  // Count residents by month
+  // Count residents by month (only up to current month)
   data.forEach(resident => {
     const date = new Date(resident.created_at);
-    const monthName = months[date.getMonth()];
-    monthlyCount[monthName]++;
+    const residentYear = date.getFullYear();
+    const residentMonth = date.getMonth();
+    
+    // Only include data from current year and up to current month
+    if (residentYear === currentYear && residentMonth <= currentMonth) {
+      const monthName = months[residentMonth];
+      if (monthlyCount.hasOwnProperty(monthName)) {
+        monthlyCount[monthName]++;
+      }
+    }
   });
 
-  // Convert to array format and calculate cumulative
+  // Convert to array format and calculate cumulative (only up to current month)
   let cumulative = 0;
-  return months.map(month => {
+  return months.slice(0, currentMonth + 1).map(month => {
     cumulative += monthlyCount[month];
     return {
       month,
