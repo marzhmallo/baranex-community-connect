@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -62,18 +61,18 @@ const DashboardCharts = () => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Main chart area - takes up 2 columns on md screens */}
       <Card className="md:col-span-2">
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col space-y-4">
             <div>
-              <CardTitle>Population Growth</CardTitle>
+              <CardTitle className="text-lg">Population Growth</CardTitle>
               <CardDescription>Monthly resident registration trends</CardDescription>
             </div>
-            <Tabs defaultValue="line" className="w-[150px]">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="line">Line</TabsTrigger>
-                <TabsTrigger value="bar">Bar</TabsTrigger>
+            <Tabs defaultValue="line" className="w-full">
+              <TabsList className="grid w-[200px] grid-cols-2">
+                <TabsTrigger value="line">Line Chart</TabsTrigger>
+                <TabsTrigger value="bar">Bar Chart</TabsTrigger>
               </TabsList>
-              <TabsContent value="line" className="p-0">
+              <TabsContent value="line" className="mt-4">
                 <ChartContainer config={{
                   residents: {
                     theme: {
@@ -81,7 +80,7 @@ const DashboardCharts = () => {
                       light: '#3b82f6'
                     }
                   }
-                }} className="aspect-auto h-[300px]">
+                }} className="h-[350px] w-full">
                   {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -91,7 +90,7 @@ const DashboardCharts = () => {
                       top: 20,
                       right: 30,
                       left: 20,
-                      bottom: 5
+                      bottom: 20
                     }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
@@ -110,7 +109,7 @@ const DashboardCharts = () => {
                   )}
                 </ChartContainer>
               </TabsContent>
-              <TabsContent value="bar" className="p-0">
+              <TabsContent value="bar" className="mt-4">
                 <ChartContainer config={{
                   residents: {
                     theme: {
@@ -118,7 +117,7 @@ const DashboardCharts = () => {
                       light: '#3b82f6'
                     }
                   }
-                }} className="aspect-auto h-[300px]">
+                }} className="h-[350px] w-full">
                   {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -128,7 +127,7 @@ const DashboardCharts = () => {
                       top: 20,
                       right: 30,
                       left: 20,
-                      bottom: 5
+                      bottom: 20
                     }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
@@ -143,34 +142,32 @@ const DashboardCharts = () => {
             </Tabs>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="p-6 pt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-              <Card>
-                <CardContent className="p-4 flex flex-col items-center">
-                  <div className="text-xs uppercase text-muted-foreground mb-1">Total Population</div>
-                  <div className="text-2xl font-bold text-center">
-                    {isLoading ? '...' : totalResidents.toLocaleString()}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 flex flex-col items-center">
-                  <div className="text-xs uppercase text-muted-foreground mb-1">Growth Rate</div>
-                  <div className="text-2xl font-bold text-center text-baranex-success">
-                    {isLoading ? '...' : 'Live'}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 flex flex-col items-center">
-                  <div className="text-xs uppercase text-muted-foreground mb-1">New this Month</div>
-                  <div className="text-2xl font-bold text-center">
-                    {isLoading ? '...' : monthlyResidents[monthlyResidents.length - 1]?.residents || 0}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-4 flex flex-col items-center">
+                <div className="text-xs uppercase text-muted-foreground mb-1">Total Population</div>
+                <div className="text-2xl font-bold text-center">
+                  {isLoading ? '...' : totalResidents.toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex flex-col items-center">
+                <div className="text-xs uppercase text-muted-foreground mb-1">Growth Rate</div>
+                <div className="text-2xl font-bold text-center text-baranex-success">
+                  {isLoading ? '...' : 'Live'}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex flex-col items-center">
+                <div className="text-xs uppercase text-muted-foreground mb-1">New this Month</div>
+                <div className="text-2xl font-bold text-center">
+                  {isLoading ? '...' : monthlyResidents[monthlyResidents.length - 1]?.residents || 0}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </CardContent>
       </Card>
