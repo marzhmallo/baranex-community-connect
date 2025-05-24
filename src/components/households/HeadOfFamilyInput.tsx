@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -99,16 +98,27 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
     }
   };
 
-  // Prevent popover from closing input focus
+  // Ensure input stays focused when popover opens
   const handlePopoverOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
     if (newOpen) {
-      // Ensure input stays focused when popover opens
+      // Use a longer timeout to ensure the popover is fully rendered
       setTimeout(() => {
         inputRef.current?.focus();
-      }, 10);
+      }, 100);
     }
   };
+
+  // Handle focus restoration when popover content is mounted
+  useEffect(() => {
+    if (open) {
+      // Ensure focus is maintained when popover opens
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   return (
     <div className="relative">
@@ -146,7 +156,20 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
             </div>
           </div>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start" side="bottom" sideOffset={4}>
+        <PopoverContent 
+          className="w-full p-0" 
+          align="start" 
+          side="bottom" 
+          sideOffset={4}
+          onOpenAutoFocus={(e) => {
+            // Prevent the popover from stealing focus
+            e.preventDefault();
+            // Ensure input keeps focus
+            setTimeout(() => {
+              inputRef.current?.focus();
+            }, 0);
+          }}
+        >
           <Command shouldFilter={false}>
             <CommandList>
               {isLoading ? (
