@@ -163,8 +163,8 @@ const getReverseRelationshipType = (relationshipType: string): string | null => 
     'child': 'parent',
     'son': 'parent',
     'daughter': 'parent',
-    'brother': 'sister', // Fixed: brother's reverse should be sister for opposite gender, but sibling for same
-    'sister': 'brother', // Fixed: sister's reverse should be brother for opposite gender, but sibling for same
+    'brother': 'sibling',
+    'sister': 'sibling',
     'sibling': 'sibling',
     'husband': 'wife',
     'wife': 'husband',
@@ -180,11 +180,6 @@ const getReverseRelationshipType = (relationshipType: string): string | null => 
     'niece': 'uncle/aunt',
     'cousin': 'cousin'
   };
-
-  // For sibling relationships, let's use 'sibling' as the reverse for simplicity
-  if (['brother', 'sister'].includes(relationshipType.toLowerCase())) {
-    return 'sibling';
-  }
 
   return reverseMap[relationshipType.toLowerCase()] || null;
 };
@@ -244,7 +239,7 @@ const inferSiblingRelationships = async (resident1Id: string, resident2Id: strin
   console.log('Resident1 parents:', resident1Parents);
   console.log('Resident2 parents:', resident2Parents);
 
-  // Add any missing parent relationships
+  // Add any missing parent relationships to resident2
   for (const parent1 of resident1Parents) {
     const hasRelationship = resident2Parents.some(parent2 => 
       parent2.related_resident_id === parent1.related_resident_id
@@ -252,48 +247,11 @@ const inferSiblingRelationships = async (resident1Id: string, resident2Id: strin
 
     if (!hasRelationship) {
       console.log('Adding parent relationship to resident2:', parent1.related_resident_id);
-      
-      // Check if relationship already exists before adding
-      const { data: existing } = await supabase
-        .from('relationships')
-        .select('*')
-        .eq('resident_id', resident2Id)
-        .eq('related_resident_id', parent1.related_resident_id)
-        .eq('relationship_type', parent1.relationship_type)
-        .single();
-
-      if (!existing) {
-        // Add parent relationship to resident2
-        await supabase.from('relationships').insert({
-          resident_id: resident2Id,
-          related_resident_id: parent1.related_resident_id,
-          relationship_type: parent1.relationship_type
-        });
-
-        // Add child relationship from parent to resident2
-        const reverseType = getReverseRelationshipType(parent1.relationship_type);
-        if (reverseType) {
-          const { data: existingReverse } = await supabase
-            .from('relationships')
-            .select('*')
-            .eq('resident_id', parent1.related_resident_id)
-            .eq('related_resident_id', resident2Id)
-            .eq('relationship_type', reverseType)
-            .single();
-
-          if (!existingReverse) {
-            await supabase.from('relationships').insert({
-              resident_id: parent1.related_resident_id,
-              related_resident_id: resident2Id,
-              relationship_type: reverseType
-            });
-          }
-        }
-      }
+      await addParentChildRelationshipPair(resident2Id, parent1.related_resident_id, parent1.relationship_type);
     }
   }
 
-  // Do the same for resident2's parents to resident1
+  // Add any missing parent relationships to resident1
   for (const parent2 of resident2Parents) {
     const hasRelationship = resident1Parents.some(parent1 => 
       parent1.related_resident_id === parent2.related_resident_id
@@ -301,51 +259,14 @@ const inferSiblingRelationships = async (resident1Id: string, resident2Id: strin
 
     if (!hasRelationship) {
       console.log('Adding parent relationship to resident1:', parent2.related_resident_id);
-      
-      // Check if relationship already exists before adding
-      const { data: existing } = await supabase
-        .from('relationships')
-        .select('*')
-        .eq('resident_id', resident1Id)
-        .eq('related_resident_id', parent2.related_resident_id)
-        .eq('relationship_type', parent2.relationship_type)
-        .single();
-
-      if (!existing) {
-        // Add parent relationship to resident1
-        await supabase.from('relationships').insert({
-          resident_id: resident1Id,
-          related_resident_id: parent2.related_resident_id,
-          relationship_type: parent2.relationship_type
-        });
-
-        // Add child relationship from parent to resident1
-        const reverseType = getReverseRelationshipType(parent2.relationship_type);
-        if (reverseType) {
-          const { data: existingReverse } = await supabase
-            .from('relationships')
-            .select('*')
-            .eq('resident_id', parent2.related_resident_id)
-            .eq('related_resident_id', resident1Id)
-            .eq('relationship_type', reverseType)
-            .single();
-
-          if (!existingReverse) {
-            await supabase.from('relationships').insert({
-              resident_id: parent2.related_resident_id,
-              related_resident_id: resident1Id,
-              relationship_type: reverseType
-            });
-          }
-        }
-      }
+      await addParentChildRelationshipPair(resident1Id, parent2.related_resident_id, parent2.relationship_type);
     }
   }
 };
 
 // Infer relationships when parent-child connection is made
 const inferParentChildRelationships = async (parentId: string, childId: string, parentRels: any[], childRels: any[]) => {
-  console.log('Inferring parent-child relationships');
+  console.log('Inferring parent-child relationships - parent:', parentId, 'child:', childId);
   
   // Find other children of the parent
   const otherChildren = parentRels.filter(rel => 
@@ -353,35 +274,37 @@ const inferParentChildRelationships = async (parentId: string, childId: string, 
     rel.related_resident_id !== childId
   );
 
-  console.log('Other children:', otherChildren);
+  console.log('Other children of parent:', otherChildren);
 
   // Make all other children siblings of the new child
   for (const sibling of otherChildren) {
-    // Check if sibling relationship already exists
-    const { data: existingSibling } = await supabase
+    await addSiblingRelationshipPair(childId, sibling.related_resident_id);
+  }
+
+  // Now find siblings of the child and add the parent as their parent too
+  const childSiblings = childRels.filter(rel => 
+    ['brother', 'sister', 'sibling'].includes(rel.relationship_type.toLowerCase())
+  );
+
+  console.log('Child siblings:', childSiblings);
+
+  // Add parent relationship to all siblings of the child
+  for (const sibling of childSiblings) {
+    // Check if this sibling already has this parent
+    const { data: existingParentRel } = await supabase
       .from('relationships')
       .select('*')
-      .eq('resident_id', childId)
-      .eq('related_resident_id', sibling.related_resident_id)
-      .or('relationship_type.eq.sibling,relationship_type.eq.brother,relationship_type.eq.sister')
+      .eq('resident_id', sibling.related_resident_id)
+      .eq('related_resident_id', parentId)
+      .or('relationship_type.eq.father,relationship_type.eq.mother,relationship_type.eq.parent')
       .single();
 
-    if (!existingSibling) {
-      console.log('Adding sibling relationships between:', childId, 'and', sibling.related_resident_id);
+    if (!existingParentRel) {
+      console.log('Adding parent relationship to sibling:', sibling.related_resident_id, 'parent:', parentId);
       
-      // Add sibling relationships both ways
-      await supabase.from('relationships').insert([
-        {
-          resident_id: childId,
-          related_resident_id: sibling.related_resident_id,
-          relationship_type: 'sibling'
-        },
-        {
-          resident_id: sibling.related_resident_id,
-          related_resident_id: childId,
-          relationship_type: 'sibling'
-        }
-      ]);
+      // Get the original relationship type from the parent to determine the type
+      const parentType = parentRels.find(rel => rel.related_resident_id === childId)?.relationship_type || 'parent';
+      await addParentChildRelationshipPair(sibling.related_resident_id, parentId, parentType);
     }
   }
 };
@@ -390,6 +313,85 @@ const inferParentChildRelationships = async (parentId: string, childId: string, 
 const inferChildParentRelationships = async (childId: string, parentId: string, childRels: any[], parentRels: any[]) => {
   // This is essentially the same as parent-child but with roles reversed
   await inferParentChildRelationships(parentId, childId, parentRels, childRels);
+};
+
+// Helper function to add parent-child relationship pair
+const addParentChildRelationshipPair = async (childId: string, parentId: string, parentType: string) => {
+  try {
+    // Check if relationship already exists
+    const { data: existing } = await supabase
+      .from('relationships')
+      .select('*')
+      .eq('resident_id', childId)
+      .eq('related_resident_id', parentId)
+      .eq('relationship_type', parentType)
+      .single();
+
+    if (!existing) {
+      // Add parent relationship to child
+      await supabase.from('relationships').insert({
+        resident_id: childId,
+        related_resident_id: parentId,
+        relationship_type: parentType
+      });
+
+      // Add child relationship from parent to child
+      const reverseType = getReverseRelationshipType(parentType);
+      if (reverseType) {
+        const { data: existingReverse } = await supabase
+          .from('relationships')
+          .select('*')
+          .eq('resident_id', parentId)
+          .eq('related_resident_id', childId)
+          .eq('relationship_type', reverseType)
+          .single();
+
+        if (!existingReverse) {
+          await supabase.from('relationships').insert({
+            resident_id: parentId,
+            related_resident_id: childId,
+            relationship_type: reverseType
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error adding parent-child relationship pair:', error);
+  }
+};
+
+// Helper function to add sibling relationship pair
+const addSiblingRelationshipPair = async (resident1Id: string, resident2Id: string) => {
+  try {
+    // Check if sibling relationship already exists
+    const { data: existingSibling } = await supabase
+      .from('relationships')
+      .select('*')
+      .eq('resident_id', resident1Id)
+      .eq('related_resident_id', resident2Id)
+      .or('relationship_type.eq.sibling,relationship_type.eq.brother,relationship_type.eq.sister')
+      .single();
+
+    if (!existingSibling) {
+      console.log('Adding sibling relationships between:', resident1Id, 'and', resident2Id);
+      
+      // Add sibling relationships both ways
+      await supabase.from('relationships').insert([
+        {
+          resident_id: resident1Id,
+          related_resident_id: resident2Id,
+          relationship_type: 'sibling'
+        },
+        {
+          resident_id: resident2Id,
+          related_resident_id: resident1Id,
+          relationship_type: 'sibling'
+        }
+      ]);
+    }
+  } catch (error) {
+    console.error('Error adding sibling relationship pair:', error);
+  }
 };
 
 // Search residents for relationship selection
