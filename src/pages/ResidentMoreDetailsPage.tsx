@@ -12,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import {RefreshCw } from "lucide-react";
 import RelationshipManager from '@/components/residents/RelationshipManager';
+import HouseholdSelector from '@/components/residents/HouseholdSelector';
+import { supabase } from '@/integrations/supabase/client';
 
 // Helper function to calculate age
 const calculateAge = (birthDate: string) => {
@@ -93,10 +95,28 @@ const ResidentMoreDetailsPage = () => {
   const { residentId } = useParams<{ residentId: string }>();
   const navigate = useNavigate();
   
-  const { data: resident, isLoading, error } = useQuery({
+  const { data: resident, isLoading, error, refetch } = useQuery({
     queryKey: ['resident', residentId],
     queryFn: () => getResidentById(residentId as string),
     enabled: !!residentId,
+  });
+
+  // Fetch household information if resident has a household_id
+  const { data: household } = useQuery({
+    queryKey: ['resident-household', resident?.householdId],
+    queryFn: async () => {
+      if (!resident?.householdId) return null;
+      
+      const { data, error } = await supabase
+        .from('households')
+        .select('id, name, address, purok, status, head_of_family, headname')
+        .eq('id', resident.householdId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!resident?.householdId,
   });
   
   // Log to debug what we're receiving from the API
@@ -155,6 +175,17 @@ const ResidentMoreDetailsPage = () => {
     : resident.address || 'Address not provided';
 
   const residentFullName = `${resident.firstName} ${resident.middleName ? `${resident.middleName} ` : ''}${resident.lastName}${resident.suffix ? ` ${resident.suffix}` : ''}`;
+
+  // Navigate to household details page
+  const handleViewHousehold = () => {
+    if (household) {
+      navigate(`/households/${household.id}`);
+    }
+  };
+
+  const handleHouseholdUpdate = () => {
+    refetch();
+  };
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
@@ -248,6 +279,68 @@ const ResidentMoreDetailsPage = () => {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+          
+          {/* Household Information - New section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center justify-between">
+                <div className="flex items-center">
+                  <Home className="mr-2 h-5 w-5" />
+                  Family/Household Information
+                </div>
+                <HouseholdSelector
+                  residentId={resident.id}
+                  residentName={residentFullName}
+                  currentHouseholdId={resident.householdId}
+                  onHouseholdUpdate={handleHouseholdUpdate}
+                />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {household ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Household Name</p>
+                      <p className="font-medium">{household.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <Badge variant="outline">{household.status}</Badge>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Address</p>
+                      <p className="font-medium">{household.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Purok</p>
+                      <p className="font-medium">{household.purok}</p>
+                    </div>
+                    {household.headname && (
+                      <div>
+                        <p className="text-sm text-gray-500">Head of Family</p>
+                        <p className="font-medium">{household.headname}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={handleViewHousehold} variant="outline">
+                      View Household Details
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground mb-4">
+                    This resident is not currently assigned to any household.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Use the "Assign to Household" button above to add this resident to a household.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
           

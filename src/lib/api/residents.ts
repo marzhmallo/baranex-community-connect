@@ -160,7 +160,8 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
     emergencyContact,
     diedOn: data.died_on || null, // Add died_on field
     created_at: data.created_at || null, // Add created_at field
-    updated_at: data.updated_at || null // Add updated_at field
+    updated_at: data.updated_at || null, // Add updated_at field
+    householdId: data.household_id || null // Add household_id field mapping
   };
 };
 
