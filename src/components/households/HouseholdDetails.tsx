@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,11 +20,19 @@ type HouseholdDetailsProps = {
   household: Household | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialEditMode?: boolean;
 };
 
-const HouseholdDetails = ({ household, open, onOpenChange }: HouseholdDetailsProps) => {
+const HouseholdDetails = ({ household, open, onOpenChange, initialEditMode = false }: HouseholdDetailsProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
+  
+  // Set edit mode when dialog opens based on initialEditMode prop
+  useEffect(() => {
+    if (open) {
+      setIsEditMode(initialEditMode);
+    }
+  }, [open, initialEditMode]);
   
   if (!household) return null;
 

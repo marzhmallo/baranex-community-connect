@@ -24,6 +24,7 @@ const HouseholdList: React.FC = () => {
   const [purokFilter, setPurokFilter] = useState<string>('');
   const [selectedHousehold, setSelectedHousehold] = useState<Household | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [householdToDelete, setHouseholdToDelete] = useState<string | null>(null);
   const {
@@ -57,11 +58,13 @@ const HouseholdList: React.FC = () => {
   
   const handleViewDetails = (household: Household) => {
     setSelectedHousehold(household);
+    setIsEditMode(false);
     setIsDetailsOpen(true);
   };
   
   const handleEditHousehold = (household: Household) => {
     setSelectedHousehold(household);
+    setIsEditMode(true);
     setIsDetailsOpen(true);
   };
   
@@ -308,7 +311,12 @@ const HouseholdList: React.FC = () => {
       </Table>
       
       {/* Household Details Dialog */}
-      <HouseholdDetails household={selectedHousehold} open={isDetailsOpen} onOpenChange={setIsDetailsOpen} />
+      <HouseholdDetails 
+        household={selectedHousehold} 
+        open={isDetailsOpen} 
+        onOpenChange={setIsDetailsOpen}
+        initialEditMode={isEditMode}
+      />
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
