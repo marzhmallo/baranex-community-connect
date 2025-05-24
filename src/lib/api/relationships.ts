@@ -1,0 +1,330 @@
+
+import { supabase } from '@/integrations/supabase/client';
+
+export interface Relationship {
+  id: string;
+  resident_id: string;
+  related_resident_id: string;
+  relationship_type: string;
+  created_at: string;
+  related_resident?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    middle_name?: string;
+    suffix?: string;
+  };
+}
+
+// Get all relationships for a specific resident
+export const getResidentRelationships = async (residentId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('relationships')
+      .select(`
+        *,
+        related_resident:residents!relationships_related_resident_id_fkey(
+          id,
+          first_name,
+          last_name,
+          middle_name,
+          suffix
+        )
+      `)
+      .eq('resident_id', residentId);
+
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch (error: any) {
+    console.error('Error fetching relationships:', error);
+    return { success: false, error: error.message, data: [] };
+  }
+};
+
+// Add a new relationship
+export const addRelationship = async (residentId: string, relatedResidentId: string, relationshipType: string) => {
+  try {
+    // First, add the direct relationship
+    const { data: directRelationship, error: directError } = await supabase
+      .from('relationships')
+      .insert({
+        resident_id: residentId,
+        related_resident_id: relatedResidentId,
+        relationship_type: relationshipType
+      })
+      .select()
+      .single();
+
+    if (directError) throw directError;
+
+    // Add the reverse relationship
+    const reverseRelationshipType = getReverseRelationshipType(relationshipType);
+    if (reverseRelationshipType) {
+      const { error: reverseError } = await supabase
+        .from('relationships')
+        .insert({
+          resident_id: relatedResidentId,
+          related_resident_id: residentId,
+          relationship_type: reverseRelationshipType
+        });
+
+      if (reverseError) {
+        console.error('Error adding reverse relationship:', reverseError);
+      }
+    }
+
+    // Handle automatic relationship inference
+    await inferAutomaticRelationships(residentId, relatedResidentId, relationshipType);
+
+    return { success: true, data: directRelationship };
+  } catch (error: any) {
+    console.error('Error adding relationship:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Delete a relationship
+export const deleteRelationship = async (relationshipId: string) => {
+  try {
+    // Get the relationship details first
+    const { data: relationship, error: getError } = await supabase
+      .from('relationships')
+      .select('*')
+      .eq('id', relationshipId)
+      .single();
+
+    if (getError) throw getError;
+
+    // Delete the main relationship
+    const { error: deleteError } = await supabase
+      .from('relationships')
+      .delete()
+      .eq('id', relationshipId);
+
+    if (deleteError) throw deleteError;
+
+    // Delete the reverse relationship
+    const reverseRelationshipType = getReverseRelationshipType(relationship.relationship_type);
+    if (reverseRelationshipType) {
+      await supabase
+        .from('relationships')
+        .delete()
+        .eq('resident_id', relationship.related_resident_id)
+        .eq('related_resident_id', relationship.resident_id)
+        .eq('relationship_type', reverseRelationshipType);
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error deleting relationship:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Get reverse relationship type
+const getReverseRelationshipType = (relationshipType: string): string | null => {
+  const reverseMap: { [key: string]: string } = {
+    'father': 'child',
+    'mother': 'child',
+    'child': 'parent',
+    'son': 'parent',
+    'daughter': 'parent',
+    'brother': 'sibling',
+    'sister': 'sibling',
+    'sibling': 'sibling',
+    'husband': 'wife',
+    'wife': 'husband',
+    'spouse': 'spouse',
+    'grandfather': 'grandchild',
+    'grandmother': 'grandchild',
+    'grandchild': 'grandparent',
+    'grandson': 'grandparent',
+    'granddaughter': 'grandparent',
+    'uncle': 'nephew/niece',
+    'aunt': 'nephew/niece',
+    'nephew': 'uncle/aunt',
+    'niece': 'uncle/aunt',
+    'cousin': 'cousin'
+  };
+
+  return reverseMap[relationshipType.toLowerCase()] || null;
+};
+
+// Infer automatic relationships based on existing ones
+const inferAutomaticRelationships = async (residentId: string, relatedResidentId: string, relationshipType: string) => {
+  try {
+    // Get existing relationships for both residents
+    const { data: resident1Relationships } = await supabase
+      .from('relationships')
+      .select('*')
+      .eq('resident_id', residentId);
+
+    const { data: resident2Relationships } = await supabase
+      .from('relationships')
+      .select('*')
+      .eq('resident_id', relatedResidentId);
+
+    if (!resident1Relationships || !resident2Relationships) return;
+
+    // Handle sibling relationships
+    if (['brother', 'sister', 'sibling'].includes(relationshipType.toLowerCase())) {
+      await inferSiblingRelationships(residentId, relatedResidentId, resident1Relationships, resident2Relationships);
+    }
+
+    // Handle parent-child relationships
+    if (['father', 'mother', 'parent'].includes(relationshipType.toLowerCase())) {
+      await inferParentChildRelationships(residentId, relatedResidentId, resident1Relationships, resident2Relationships);
+    }
+
+    // Handle child-parent relationships
+    if (['child', 'son', 'daughter'].includes(relationshipType.toLowerCase())) {
+      await inferChildParentRelationships(residentId, relatedResidentId, resident1Relationships, resident2Relationships);
+    }
+
+  } catch (error) {
+    console.error('Error inferring automatic relationships:', error);
+  }
+};
+
+// Infer relationships when siblings are connected
+const inferSiblingRelationships = async (resident1Id: string, resident2Id: string, resident1Rels: any[], resident2Rels: any[]) => {
+  // Find parents of resident1
+  const resident1Parents = resident1Rels.filter(rel => 
+    ['father', 'mother', 'parent'].includes(rel.relationship_type.toLowerCase())
+  );
+
+  // Find parents of resident2
+  const resident2Parents = resident2Rels.filter(rel => 
+    ['father', 'mother', 'parent'].includes(rel.relationship_type.toLowerCase())
+  );
+
+  // Add any missing parent relationships
+  for (const parent1 of resident1Parents) {
+    const hasRelationship = resident2Parents.some(parent2 => 
+      parent2.related_resident_id === parent1.related_resident_id
+    );
+
+    if (!hasRelationship) {
+      // Add parent relationship to resident2
+      await supabase.from('relationships').insert({
+        resident_id: resident2Id,
+        related_resident_id: parent1.related_resident_id,
+        relationship_type: parent1.relationship_type
+      });
+
+      // Add child relationship from parent to resident2
+      const reverseType = getReverseRelationshipType(parent1.relationship_type);
+      if (reverseType) {
+        await supabase.from('relationships').insert({
+          resident_id: parent1.related_resident_id,
+          related_resident_id: resident2Id,
+          relationship_type: reverseType
+        });
+      }
+    }
+  }
+
+  // Do the same for resident2's parents to resident1
+  for (const parent2 of resident2Parents) {
+    const hasRelationship = resident1Parents.some(parent1 => 
+      parent1.related_resident_id === parent2.related_resident_id
+    );
+
+    if (!hasRelationship) {
+      // Add parent relationship to resident1
+      await supabase.from('relationships').insert({
+        resident_id: resident1Id,
+        related_resident_id: parent2.related_resident_id,
+        relationship_type: parent2.relationship_type
+      });
+
+      // Add child relationship from parent to resident1
+      const reverseType = getReverseRelationshipType(parent2.relationship_type);
+      if (reverseType) {
+        await supabase.from('relationships').insert({
+          resident_id: parent2.related_resident_id,
+          related_resident_id: resident1Id,
+          relationship_type: reverseType
+        });
+      }
+    }
+  }
+};
+
+// Infer relationships when parent-child connection is made
+const inferParentChildRelationships = async (parentId: string, childId: string, parentRels: any[], childRels: any[]) => {
+  // Find other children of the parent
+  const otherChildren = parentRels.filter(rel => 
+    ['child', 'son', 'daughter'].includes(rel.relationship_type.toLowerCase()) &&
+    rel.related_resident_id !== childId
+  );
+
+  // Make all other children siblings of the new child
+  for (const sibling of otherChildren) {
+    // Check if sibling relationship already exists
+    const existingSibling = await supabase
+      .from('relationships')
+      .select('*')
+      .eq('resident_id', childId)
+      .eq('related_resident_id', sibling.related_resident_id)
+      .eq('relationship_type', 'sibling');
+
+    if (!existingSibling.data || existingSibling.data.length === 0) {
+      // Add sibling relationships
+      await supabase.from('relationships').insert([
+        {
+          resident_id: childId,
+          related_resident_id: sibling.related_resident_id,
+          relationship_type: 'sibling'
+        },
+        {
+          resident_id: sibling.related_resident_id,
+          related_resident_id: childId,
+          relationship_type: 'sibling'
+        }
+      ]);
+    }
+  }
+};
+
+// Infer relationships when child-parent connection is made
+const inferChildParentRelationships = async (childId: string, parentId: string, childRels: any[], parentRels: any[]) => {
+  // This is essentially the same as parent-child but with roles reversed
+  await inferParentChildRelationships(parentId, childId, parentRels, childRels);
+};
+
+// Search residents for relationship selection
+export const searchResidentsForRelationship = async (searchTerm: string, excludeId: string) => {
+  try {
+    if (!searchTerm || searchTerm.length < 2) {
+      return { success: true, data: [] };
+    }
+
+    const searchQuery = searchTerm.toLowerCase().trim();
+    
+    const { data, error } = await supabase
+      .from('residents')
+      .select('id, first_name, middle_name, last_name, suffix, purok')
+      .or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,middle_name.ilike.%${searchQuery}%`)
+      .neq('id', excludeId)
+      .limit(10);
+
+    if (error) throw error;
+
+    const transformedData = data
+      .map(resident => ({
+        ...resident,
+        full_name: `${resident.first_name} ${resident.middle_name ? resident.middle_name + ' ' : ''}${resident.last_name}${resident.suffix ? ' ' + resident.suffix : ''}`
+      }))
+      .filter(resident => {
+        const fullNameLower = resident.full_name.toLowerCase();
+        const searchWords = searchQuery.split(' ').filter(word => word.length > 0);
+        return searchWords.every(word => fullNameLower.includes(word));
+      });
+
+    return { success: true, data: transformedData };
+  } catch (error: any) {
+    console.error('Error searching residents for relationship:', error);
+    return { success: false, error: error.message, data: [] };
+  }
+};

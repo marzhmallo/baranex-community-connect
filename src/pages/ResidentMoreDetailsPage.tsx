@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import {RefreshCw } from "lucide-react";
-
+import RelationshipManager from '@/components/residents/RelationshipManager';
 
 // Helper function to calculate age
 const calculateAge = (birthDate: string) => {
@@ -153,6 +153,8 @@ const ResidentMoreDetailsPage = () => {
   const fullAddress = resident.purok 
     ? `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}` 
     : resident.address || 'Address not provided';
+
+  const residentFullName = `${resident.firstName} ${resident.middleName ? `${resident.middleName} ` : ''}${resident.lastName}${resident.suffix ? ` ${resident.suffix}` : ''}`;
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
@@ -534,6 +536,12 @@ const ResidentMoreDetailsPage = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Family Relationships - New section */}
+          <RelationshipManager 
+            residentId={resident.id} 
+            residentName={residentFullName}
+          />
 
           {/* Record Information - New card for created and updated dates */}
           <Card>
