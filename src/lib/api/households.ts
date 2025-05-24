@@ -203,6 +203,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
           toilet_type: household.toilet_type,
           garbage_disposal: household.garbage_disposal,
           remarks: household.remarks,
+          updated_at: household.updated_at,
         })
         .eq('id', household.id)
         .select();
