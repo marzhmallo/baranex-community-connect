@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'react-router-dom';
@@ -49,6 +49,9 @@ const DashboardCharts = () => {
     const sign = rate >= 0 ? '+' : '';
     return `${sign}${rate.toFixed(1)}%`;
   };
+
+  // Colors for pie chart
+  const pieColors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   if (error) {
     return (
@@ -219,44 +222,55 @@ const DashboardCharts = () => {
         <Card>
           <CardHeader>
             <CardTitle>Gender Distribution</CardTitle>
-            <CardDescription>Demographic breakdown by gender and age</CardDescription>
+            <CardDescription>
+              {isLoading ? "Loading..." : `${genderDistribution.length} gender categories found`}
+            </CardDescription>
           </CardHeader>
-          <CardContent className="aspect-auto h-[200px] pt-0">
-            <ChartContainer config={{
-              male: {
-                theme: {
-                  dark: '#3b82f6',
-                  light: '#3b82f6'
-                }
-              },
-              female: {
-                theme: {
-                  dark: '#ec4899',
-                  light: '#ec4899'
-                }
-              }
-            }} className="aspect-auto">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <CardContent className="h-[300px] pt-0">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : genderDistribution.length > 0 ? (
+              <div className="space-y-4">
+                <ChartContainer config={{}} className="h-[200px] w-full">
+                  <PieChart>
+                    <Pie
+                      data={genderDistribution}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="count"
+                      label={({ gender, percentage }) => `${gender}: ${percentage}%`}
+                    >
+                      {genderDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [value, 'Count']} />
+                  </PieChart>
+                </ChartContainer>
+                <div className="space-y-2">
+                  {genderDistribution.map((item, index) => (
+                    <div key={item.gender} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: pieColors[index % pieColors.length] }}
+                        />
+                        <span>{item.gender}</span>
+                      </div>
+                      <span className="font-medium">{item.count} ({item.percentage}%)</span>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <BarChart layout="vertical" data={genderDistribution} margin={{
-                  top: 5,
-                  right: 30,
-                  left: 40,
-                  bottom: 5
-                }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="age" type="category" />
-                  <Tooltip content={<ChartTooltipContent nameKey="age" />} />
-                  <Legend />
-                  <Bar dataKey="male" name="Male" fill="var(--color-male, #3b82f6)" />
-                  <Bar dataKey="female" name="Female" fill="var(--color-female, #ec4899)" />
-                </BarChart>
-              )}
-            </ChartContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                No gender data available
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

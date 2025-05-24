@@ -8,7 +8,7 @@ interface DashboardData {
   activeAnnouncements: number;
   upcomingEvents: number;
   monthlyResidents: Array<{ month: string; residents: number }>;
-  genderDistribution: Array<{ age: string; male: number; female: number }>;
+  genderDistribution: Array<{ gender: string; count: number; percentage: number }>;
   residentGrowthRate: number;
   householdGrowthRate: number;
   newResidentsThisMonth: number;
@@ -154,14 +154,14 @@ export const useDashboardData = () => {
         // Process monthly data
         const monthlyResidents = processMonthlyData(monthlyData || []);
 
-        // Fetch gender distribution by age groups
-        const { data: residentsData, error: genderError } = await supabase
+        // Fetch gender distribution from residents table
+        const { data: genderData, error: genderError } = await supabase
           .from('residents')
-          .select('gender, birthdate');
+          .select('gender');
 
         if (genderError) throw genderError;
 
-        const genderDistribution = processGenderData(residentsData || []);
+        const genderDistribution = processGenderDistribution(genderData || [], residentsCount || 0);
 
         setData({
           totalResidents: residentsCount || 0,
@@ -223,53 +223,20 @@ const processMonthlyData = (data: Array<{ created_at: string }>) => {
   });
 };
 
-// Helper function to process gender distribution by age groups
-const processGenderData = (data: Array<{ gender: string; birthdate: string }>) => {
-  const ageGroups = [
-    { age: '0-10', male: 0, female: 0 },
-    { age: '11-20', male: 0, female: 0 },
-    { age: '21-30', male: 0, female: 0 },
-    { age: '31-40', male: 0, female: 0 },
-    { age: '41-50', male: 0, female: 0 },
-    { age: '51-60', male: 0, female: 0 },
-    { age: '61-70', male: 0, female: 0 },
-    { age: '71+', male: 0, female: 0 }
-  ];
-
+// Helper function to process gender distribution
+const processGenderDistribution = (data: Array<{ gender: string }>, totalResidents: number) => {
+  const genderCount: Record<string, number> = {};
+  
+  // Count each gender
   data.forEach(resident => {
-    const age = calculateAge(resident.birthdate);
-    const gender = resident.gender?.toLowerCase();
-    
-    let ageGroupIndex = 0;
-    if (age <= 10) ageGroupIndex = 0;
-    else if (age <= 20) ageGroupIndex = 1;
-    else if (age <= 30) ageGroupIndex = 2;
-    else if (age <= 40) ageGroupIndex = 3;
-    else if (age <= 50) ageGroupIndex = 4;
-    else if (age <= 60) ageGroupIndex = 5;
-    else if (age <= 70) ageGroupIndex = 6;
-    else ageGroupIndex = 7;
-
-    if (gender === 'male') {
-      ageGroups[ageGroupIndex].male++;
-    } else if (gender === 'female') {
-      ageGroups[ageGroupIndex].female++;
-    }
+    const gender = resident.gender || 'Unknown';
+    genderCount[gender] = (genderCount[gender] || 0) + 1;
   });
 
-  return ageGroups;
-};
-
-// Helper function to calculate age
-const calculateAge = (birthdate: string): number => {
-  const today = new Date();
-  const birth = new Date(birthdate);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  
-  return age;
+  // Convert to array format with percentages
+  return Object.entries(genderCount).map(([gender, count]) => ({
+    gender: gender.charAt(0).toUpperCase() + gender.slice(1),
+    count,
+    percentage: totalResidents > 0 ? Math.round((count / totalResidents) * 100) : 0
+  }));
 };
