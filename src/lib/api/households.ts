@@ -131,7 +131,16 @@ export const getHouseholdById = async (id: string) => {
   try {
     const { data, error } = await supabase
       .from('households')
-      .select('*')
+      .select(`
+        *,
+        head_of_family_resident:residents!households_head_of_family_fkey(
+          id,
+          first_name,
+          middle_name,
+          last_name,
+          suffix
+        )
+      `)
       .eq('id', id)
       .single();
 
@@ -139,7 +148,15 @@ export const getHouseholdById = async (id: string) => {
       throw new Error(error.message);
     }
 
-    return { success: true, data };
+    // Transform the data to include the head of family name
+    const transformedData = {
+      ...data,
+      head_of_family_name: data.head_of_family_resident 
+        ? `${data.head_of_family_resident.first_name} ${data.head_of_family_resident.middle_name ? data.head_of_family_resident.middle_name + ' ' : ''}${data.head_of_family_resident.last_name}${data.head_of_family_resident.suffix ? ' ' + data.head_of_family_resident.suffix : ''}`
+        : data.headname || null
+    };
+
+    return { success: true, data: transformedData };
   } catch (error: any) {
     console.error(`Error fetching household with ID ${id}:`, error);
     return { success: false, error: error.message, data: null };

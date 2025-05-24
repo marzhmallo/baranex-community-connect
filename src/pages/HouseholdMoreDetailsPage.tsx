@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -167,7 +166,7 @@ const HouseholdMoreDetailsPage = () => {
                 
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Head of Family</p>
-                  <p className="font-medium">{household.head_of_family || "Not specified"}</p>
+                  <p className="font-medium">{household.head_of_family_name || "Not specified"}</p>
                 </div>
                 
                 <div>
