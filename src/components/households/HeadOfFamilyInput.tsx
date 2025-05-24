@@ -1,10 +1,9 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, User } from "lucide-react";
+import { Check, ChevronsUpDown, User, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { searchResidents } from "@/lib/api/households";
 
@@ -36,6 +35,7 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
   const [open, setOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Resident[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const searchForResidents = async () => {
@@ -59,6 +59,10 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
     onValueChange(resident.full_name);
     onResidentSelect(resident.id);
     setOpen(false);
+    // Keep focus on input after selection
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   const handleInputChange = (newValue: string) => {
@@ -69,63 +73,104 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
     }
     if (newValue.length >= 2) {
       setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  };
+
+  const handleClearSelection = () => {
+    onValueChange("");
+    onResidentSelect(null);
+    setOpen(false);
+    inputRef.current?.focus();
+  };
+
+  const handleInputFocus = () => {
+    if (value.length >= 2) {
+      setOpen(true);
+    }
+  };
+
+  const handleInputClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (value.length >= 2) {
+      setOpen(true);
     }
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <div className="relative">
-          <Input
-            value={value}
-            onChange={(e) => handleInputChange(e.target.value)}
-            placeholder={placeholder}
-            className={cn(
-              "w-full",
-              selectedResidentId && "border-green-500 bg-green-50"
-            )}
-          />
-          {selectedResidentId && (
-            <User className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-          )}
-        </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command>
-          <CommandList>
-            {isLoading ? (
-              <CommandEmpty>Searching residents...</CommandEmpty>
-            ) : searchResults.length === 0 ? (
-              <CommandEmpty>
-                {value.length >= 2 ? "No residents found. Text will be saved as entered." : "Type to search residents..."}
-              </CommandEmpty>
-            ) : (
-              <CommandGroup heading="Registered Residents">
-                {searchResults.map((resident) => (
-                  <CommandItem
-                    key={resident.id}
-                    value={resident.full_name}
-                    onSelect={() => handleResidentSelect(resident)}
-                    className="flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="font-medium">{resident.full_name}</div>
-                      <div className="text-sm text-gray-500">Purok {resident.purok}</div>
-                    </div>
-                    <Check
-                      className={cn(
-                        "ml-auto h-4 w-4",
-                        selectedResidentId === resident.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className="relative">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <div className="relative">
+            <Input
+              ref={inputRef}
+              value={value}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onFocus={handleInputFocus}
+              onClick={handleInputClick}
+              placeholder={placeholder}
+              className={cn(
+                "w-full pr-20",
+                selectedResidentId && "border-green-500 bg-green-50"
+              )}
+            />
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+              {selectedResidentId && (
+                <User className="h-4 w-4 text-green-600" />
+              )}
+              {value && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearSelection}
+                  className="h-6 w-6 p-0 hover:bg-gray-200"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+              <ChevronsUpDown className="h-4 w-4 text-gray-400" />
+            </div>
+          </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0" align="start" side="bottom" sideOffset={4}>
+          <Command shouldFilter={false}>
+            <CommandList>
+              {isLoading ? (
+                <CommandEmpty>Searching residents...</CommandEmpty>
+              ) : searchResults.length === 0 ? (
+                <CommandEmpty>
+                  {value.length >= 2 ? "No residents found. Text will be saved as entered." : "Type to search residents..."}
+                </CommandEmpty>
+              ) : (
+                <CommandGroup heading="Registered Residents">
+                  {searchResults.map((resident) => (
+                    <CommandItem
+                      key={resident.id}
+                      value={resident.full_name}
+                      onSelect={() => handleResidentSelect(resident)}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
+                      <div>
+                        <div className="font-medium">{resident.full_name}</div>
+                        <div className="text-sm text-gray-500">Purok {resident.purok}</div>
+                      </div>
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          selectedResidentId === resident.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 };
 
