@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -55,17 +54,26 @@ const HouseholdList: React.FC = () => {
       });
     }
   });
+  
   const handleViewDetails = (household: Household) => {
     setSelectedHousehold(household);
     setIsDetailsOpen(true);
   };
+  
+  const handleEditHousehold = (household: Household) => {
+    setSelectedHousehold(household);
+    setIsDetailsOpen(true);
+  };
+  
   const handleViewMore = (household: Household) => {
     navigate(`/households/${household.id}`);
   };
+  
   const confirmDelete = (id: string) => {
     setHouseholdToDelete(id);
     setIsDeleteDialogOpen(true);
   };
+  
   const handleDelete = () => {
     if (householdToDelete) {
       deleteHouseholdMutation.mutate(householdToDelete);
@@ -270,11 +278,11 @@ const HouseholdList: React.FC = () => {
                 <TableCell>{getStatusBadge(household.status)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleViewMore(household)}>
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">View</span>
-                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleViewDetails(household)}>
+                      <Eye className="h-4 w-4" />
+                      <span className="sr-only">View Details</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditHousehold(household)}>
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
