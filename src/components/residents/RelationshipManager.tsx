@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, Trash2, Users, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, Trash2, Users, Check, ChevronsUpDown, ExternalLink } from "lucide-react";
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from "sonner";
+import { useNavigate } from 'react-router-dom';
 import { 
   getResidentRelationships, 
   addRelationship, 
@@ -41,6 +41,7 @@ const RelationshipManager = ({ residentId, residentName }: RelationshipManagerPr
   const [isLoading, setIsLoading] = useState(false);
   
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch relationships
   const { data: relationshipsResult, isLoading: relationshipsLoading } = useQuery({
@@ -99,6 +100,10 @@ const RelationshipManager = ({ residentId, residentName }: RelationshipManagerPr
     } catch (error) {
       toast.error('An error occurred while deleting the relationship');
     }
+  };
+
+  const handleNavigateToResident = (relatedResidentId: string) => {
+    navigate(`/residents/${relatedResidentId}`);
   };
 
   const getRelationshipColor = (type: string) => {
@@ -228,9 +233,15 @@ const RelationshipManager = ({ residentId, residentName }: RelationshipManagerPr
                   <Badge variant="outline" className={getRelationshipColor(relationship.relationship_type)}>
                     {relationship.relationship_type}
                   </Badge>
-                  <div>
-                    <div className="font-medium">
-                      {relationship.related_resident?.first_name} {relationship.related_resident?.middle_name && `${relationship.related_resident.middle_name} `}{relationship.related_resident?.last_name} {relationship.related_resident?.suffix || ''}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleNavigateToResident(relationship.related_resident_id)}
+                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors flex items-center gap-1"
+                      >
+                        {relationship.related_resident?.first_name} {relationship.related_resident?.middle_name && `${relationship.related_resident.middle_name} `}{relationship.related_resident?.last_name} {relationship.related_resident?.suffix || ''}
+                        <ExternalLink className="h-3 w-3" />
+                      </button>
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {residentName} is {relationship.related_resident?.first_name}'s {relationship.relationship_type}
