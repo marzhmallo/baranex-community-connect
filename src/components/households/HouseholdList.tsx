@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 const HouseholdList: React.FC = () => {
   const {
     toast
@@ -131,19 +132,33 @@ const HouseholdList: React.FC = () => {
     });
     return stats;
   }, [householdsData?.data]);
+
   const filteredHouseholds = useMemo(() => {
     if (!householdsData?.data) return [];
+    
     return householdsData.data.filter((household: Household) => {
       const query = searchQuery.toLowerCase();
-      const matchesSearch = household.name?.toLowerCase().includes(query) || false || household.address?.toLowerCase().includes(query) || false || household.head_of_family?.toLowerCase().includes(query) || false || household.purok?.toLowerCase().includes(query) || false || household.contact_number?.toLowerCase().includes(query) || false;
-      const matchesStatus = !statusFilter || statusFilter.toLowerCase() === "all statuses" ? true : household.status?.toLowerCase() === statusFilter.toLowerCase();
-      const matchesPurok = !purokFilter || purokFilter.toLowerCase() === "all puroks" ? true : household.purok?.toLowerCase() === purokFilter.toLowerCase();
+      const matchesSearch = 
+        household.name?.toLowerCase().includes(query) || false ||
+        household.address?.toLowerCase().includes(query) || false ||
+        household.head_of_family_name?.toLowerCase().includes(query) || false ||
+        household.purok?.toLowerCase().includes(query) || false ||
+        household.contact_number?.toLowerCase().includes(query) || false;
+      
+      const matchesStatus = !statusFilter || statusFilter.toLowerCase() === "all statuses" ? 
+        true : household.status?.toLowerCase() === statusFilter.toLowerCase();
+      
+      const matchesPurok = !purokFilter || purokFilter.toLowerCase() === "all puroks" ? 
+        true : household.purok?.toLowerCase() === purokFilter.toLowerCase();
+      
       return matchesSearch && matchesStatus && matchesPurok;
     });
   }, [householdsData?.data, searchQuery, statusFilter, purokFilter]);
+
   if (isLoading) return <div className="p-4 text-center">Loading households...</div>;
   if (error) return <div className="p-4 text-center text-red-500">Error loading households: {error.toString()}</div>;
-  return <>
+  return (
+    <>
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-gray-800 p-4 shadow my-[15px] mx-[15px] rounded-lg px-[15px] py-[15px]">
@@ -244,10 +259,12 @@ const HouseholdList: React.FC = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredHouseholds.length > 0 ? filteredHouseholds.map((household: Household) => <TableRow key={household.id}>
+          {filteredHouseholds.length > 0 ? (
+            filteredHouseholds.map((household: Household) => (
+              <TableRow key={household.id}>
                 <TableCell className="font-medium">{household.name}</TableCell>
                 <TableCell>{household.address}</TableCell>
-                <TableCell>{household.head_of_family || "Not specified"}</TableCell>
+                <TableCell>{household.head_of_family_name || "Not specified"}</TableCell>
                 <TableCell>{household.contact_number || "Not available"}</TableCell>
                 <TableCell>{getStatusBadge(household.status)}</TableCell>
                 <TableCell className="text-right">
@@ -266,11 +283,18 @@ const HouseholdList: React.FC = () => {
                     </Button>
                   </div>
                 </TableCell>
-              </TableRow>) : <TableRow>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
               <TableCell colSpan={6} className="text-center py-4">
-                {searchQuery || statusFilter || purokFilter ? "No households found matching your search criteria." : "No households available. Add a household to get started."}
+                {searchQuery || statusFilter || purokFilter ? 
+                  "No households found matching your search criteria." : 
+                  "No households available. Add a household to get started."
+                }
               </TableCell>
-            </TableRow>}
+            </TableRow>
+          )}
         </TableBody>
       </Table>
       
@@ -295,6 +319,8 @@ const HouseholdList: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>;
+    </>
+  );
 };
+
 export default HouseholdList;
