@@ -32,20 +32,20 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   
   // Fetch household information
   const { data: household } = useQuery({
-    queryKey: ['resident-household', resident?.household_id],
+    queryKey: ['resident-household', resident?.householdId],
     queryFn: async () => {
-      if (!resident?.household_id) return null;
+      if (!resident?.householdId) return null;
       
       const { data, error } = await supabase
         .from('households')
         .select('id, name, address, purok, status')
-        .eq('id', resident.household_id)
+        .eq('id', resident.householdId)
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!resident?.household_id,
+    enabled: !!resident?.householdId,
   });
   
   if (!resident) return null;
