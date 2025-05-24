@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -25,6 +25,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch current household members
   const { data: members, isLoading: isMembersLoading } = useQuery({
@@ -265,7 +266,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => window.open(`/residents/${member.id}`, '_blank')}
+                    onClick={() => navigate(`/residents/${member.id}`)}
                   >
                     View Profile
                   </Button>
