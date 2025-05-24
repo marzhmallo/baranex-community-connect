@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -145,10 +146,10 @@ const HouseholdList: React.FC = () => {
         household.purok?.toLowerCase().includes(query) || false ||
         household.contact_number?.toLowerCase().includes(query) || false;
       
-      const matchesStatus = !statusFilter || statusFilter.toLowerCase() === "all statuses" ? 
+      const matchesStatus = !statusFilter || statusFilter === "all-statuses" ? 
         true : household.status?.toLowerCase() === statusFilter.toLowerCase();
       
-      const matchesPurok = !purokFilter || purokFilter.toLowerCase() === "all puroks" ? 
+      const matchesPurok = !purokFilter || purokFilter === "all-puroks" ? 
         true : household.purok?.toLowerCase() === purokFilter.toLowerCase();
       
       return matchesSearch && matchesStatus && matchesPurok;
