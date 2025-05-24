@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,6 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Minus } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
+import OfficialPhotoUpload from './OfficialPhotoUpload';
 
 const officialSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -52,6 +54,7 @@ const officialSchema = z.object({
   term_start: z.string().min(1, 'Start date is required').optional(),
   term_end: z.string().optional().or(z.literal('')),
   is_current: z.boolean().optional(),
+  photo_url: z.string().optional().or(z.literal('')),
 });
 
 type OfficialFormValues = z.infer<typeof officialSchema>;
@@ -94,6 +97,7 @@ export function AddOfficialDialog({
       term_start: '',
       term_end: '',
       is_current: false,
+      photo_url: '',
     }
   });
   
@@ -178,6 +182,7 @@ export function AddOfficialDialog({
         achievements: achievementsArray,
         committees: committeesArray,
         is_sk: official.is_sk?.[0] || false,
+        photo_url: official.photo_url || '',
       });
     }
   }, [official, position, open, form]);
@@ -186,6 +191,10 @@ export function AddOfficialDialog({
     if (checked) {
       form.setValue('term_end', '');
     }
+  };
+
+  const handlePhotoUploaded = (url: string) => {
+    form.setValue('photo_url', url);
   };
   
   const onSubmit = async (data: OfficialFormValues) => {
@@ -220,6 +229,7 @@ export function AddOfficialDialog({
           achievements: achievementsArray.length > 0 ? achievementsArray : null,
           committees: committeesArray.length > 0 ? committeesArray : null,
           is_sk: data.is_sk ? [true] : [false], // Database expects an array
+          photo_url: data.photo_url || null,
         };
         
         const { error: officialError } = await supabase
@@ -247,7 +257,8 @@ export function AddOfficialDialog({
           committees: committeesArray.length > 0 ? committeesArray : null,
           is_sk: data.is_sk ? [true] : [false], // Database expects an array
           position: data.position, // Add position to satisfy type requirements
-          brgyid: userProfile.brgyid // Use current user's brgyid
+          brgyid: userProfile.brgyid, // Use current user's brgyid
+          photo_url: data.photo_url || null,
         };
         
         const { data: newOfficial, error: officialError } = await supabase
@@ -259,13 +270,11 @@ export function AddOfficialDialog({
         if (officialError) throw officialError;
         
         // 2. Insert the position with the new official ID
-        // Make sure to provide a valid term_end or set is_current to false to avoid null constraint violation
         const positionData = {
           official_id: newOfficial.id,
           position: data.position,
           committee: data.committee || null,
           term_start: data.term_start,
-          // If is_current is true, we still need to provide a default term_end to satisfy the not-null constraint
           term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : (data.term_end || new Date().toISOString().split('T')[0]),
           is_current: !!data.is_current,
           description: null
@@ -308,6 +317,13 @@ export function AddOfficialDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Personal Information</h3>
+              
+              {/* Photo Upload Section */}
+              <OfficialPhotoUpload
+                officialId={official?.id}
+                existingPhotoUrl={form.watch('photo_url')}
+                onPhotoUploaded={handlePhotoUploaded}
+              />
               
               <FormField
                 control={form.control}
