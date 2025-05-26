@@ -93,7 +93,7 @@ const Sidebar = () => {
             to="/" 
             className={cn(
               "flex items-center py-2 px-3 rounded-md",
-              isActive("/") 
+              isActive("/dashboard") 
                 ? "bg-sidebar-accent text-white" 
                 : "text-sidebar-foreground hover:bg-sidebar-accent"
             )}
