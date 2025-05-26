@@ -369,7 +369,7 @@ const Auth = () => {
               middlename: values.middlename || null,
               lastname: values.lastname,
               email: values.email,
-              phone: values.phone ? parseFloat(values.phone) : null,
+              phone: values.phone || null, // Keep as string, not parseFloat
               role: values.role,
               status: userStatus,
               created_at: new Date().toISOString()
