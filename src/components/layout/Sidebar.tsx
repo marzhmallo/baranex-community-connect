@@ -90,7 +90,7 @@ const Sidebar = () => {
 
         <nav className="flex-1 space-y-1 p-2">
           <Link 
-            to="/" 
+            to="/dashboard" 
             className={cn(
               "flex items-center py-2 px-3 rounded-md",
               isActive("/dashboard") 
