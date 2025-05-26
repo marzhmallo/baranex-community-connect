@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,18 +41,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authInitialized, setAuthInitialized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Clear profile fetched flag when user changes
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Fetch user profile data from Supabase
   const fetchUserProfile = async (userId: string) => {
-    // Skip if we're trying to fetch the same user repeatedly
-    if (currentUserId === userId && userProfile !== null) return;
-    
     console.log('Fetching user profile for:', userId);
     try {
       const { data, error } = await supabase
@@ -73,7 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(null);
           setSession(null);
           setUserProfile(null);
-          setCurrentUserId(null);
           toast({
             title: "Account Pending Approval",
             description: "Your account is pending approval from your barangay administrator.",
@@ -84,7 +77,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setUserProfile(data as UserProfile);
-        setCurrentUserId(userId);
         console.log('User profile loaded:', data);
         
         // Also fetch the barangay data if brgyid is available
@@ -133,7 +125,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
-      setCurrentUserId(null);
       toast({
         title: "Signed out",
         description: "You have been signed out successfully",
@@ -152,56 +143,65 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("Auth provider initialized");
     
-    // Set up auth state listener FIRST to avoid race conditions
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      console.log("Auth state change:", _event, currentSession?.user?.id);
+    let mounted = true;
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log("Auth state change:", event, currentSession?.user?.id);
       
-      if (_event === 'SIGNED_OUT') {
+      if (!mounted) return;
+      
+      if (event === 'SIGNED_OUT') {
         setUser(null);
         setSession(null);
         setUserProfile(null);
-        setCurrentUserId(null);
+        setLoading(false);
         return;
       }
       
-      // Update session state
+      // Update session and user state
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
-      // Fetch profile if we have a user and session
-      if (currentSession?.user) {
-        // Wait a moment before fetching profile to avoid race conditions
-        setTimeout(() => {
-          fetchUserProfile(currentSession.user.id);
-        }, 100);
+      // Fetch profile if we have a user
+      if (currentSession?.user && userProfile?.id !== currentSession.user.id) {
+        await fetchUserProfile(currentSession.user.id);
       }
+      
+      setLoading(false);
     });
 
-    // THEN check for existing session
-    if (!authInitialized) {
-      supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
         console.log("Got initial session:", initialSession?.user?.id);
+        
+        if (!mounted) return;
+        
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
         
         if (initialSession?.user) {
-          // Explicitly fetch profile for existing session
-          fetchUserProfile(initialSession.user.id);
+          await fetchUserProfile(initialSession.user.id);
         }
         
         setLoading(false);
-        setAuthInitialized(true);
-      }).catch(error => {
+      } catch (error) {
         console.error("Error getting session:", error);
-        setLoading(false);
-        setAuthInitialized(true);
-      });
-    }
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    getInitialSession();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [authInitialized]);
+  }, []); // Remove authInitialized dependency
 
   // Handle redirects based on auth status
   useEffect(() => {
