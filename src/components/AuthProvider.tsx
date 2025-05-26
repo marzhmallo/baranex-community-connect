@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -265,7 +266,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         navigate("/");
       }
       // Prevent regular users from accessing admin dashboard
-      else if (userProfile.role === 'user' && location.pathname === "/" && location.pathname !== "/home") {
+      else if (userProfile.role === 'user' && location.pathname === "/") {
         navigate("/home");
       }
     }
