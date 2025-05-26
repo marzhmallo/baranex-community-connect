@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  emailOrUsername: z.string().min(1, "Please enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters long"),
 });
 
@@ -95,7 +95,7 @@ const Auth = () => {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      emailOrUsername: "",
       password: "",
     },
   });
@@ -116,7 +116,7 @@ const Auth = () => {
       municipality: "",
       province: "",
       region: "",
-      country: "Philippines",
+      country: "",
     },
   });
 
@@ -124,6 +124,44 @@ const Auth = () => {
   const selectedRole = signupForm.watch("role");
   const selectedBarangayId = signupForm.watch("barangayId");
   const isNewBarangay = selectedBarangayId === "new-barangay";
+
+  // Helper function to get email from username
+  const getEmailFromUsername = async (emailOrUsername: string) => {
+    // If it's already an email, return it
+    if (emailOrUsername.includes('@')) {
+      return emailOrUsername;
+    }
+
+    // Search in both profiles and users tables for the username
+    try {
+      // First check profiles table
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('username', emailOrUsername)
+        .maybeSingle();
+
+      if (profileData?.email) {
+        return profileData.email;
+      }
+
+      // Then check users table
+      const { data: userData } = await supabase
+        .from('users')
+        .select('email')
+        .eq('username', emailOrUsername)
+        .maybeSingle();
+
+      if (userData?.email) {
+        return userData.email;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error looking up username:', error);
+      return null;
+    }
+  };
 
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
@@ -146,9 +184,22 @@ const Auth = () => {
     }
 
     try {
-      console.log("Attempting login with email:", values.email);
+      // Get the actual email if username was provided
+      const email = await getEmailFromUsername(values.emailOrUsername);
+      
+      if (!email) {
+        toast({
+          title: "User Not Found",
+          description: "No account found with that email or username.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("Attempting login with email:", email);
       const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
-        email: values.email,
+        email: email,
         password: values.password,
         options: {
           captchaToken,
@@ -163,20 +214,34 @@ const Auth = () => {
           variant: "destructive",
         });
       } else if (user) {
-        // Check if user status is pending
         console.log("Login successful, checking profile status");
-        const { data: profileData, error: profileError } = await supabase
+        
+        // Check status in both tables
+        let profileData = null;
+        
+        // First check profiles table
+        const { data: adminProfileData } = await supabase
           .from('profiles')
-          .select('status')
+          .select('status, role')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileError) {
-          console.error("Error fetching profile status:", profileError);
+        if (adminProfileData) {
+          profileData = adminProfileData;
+        } else {
+          // Then check users table
+          const { data: userProfileData } = await supabase
+            .from('users')
+            .select('status, role')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          if (userProfileData) {
+            profileData = userProfileData;
+          }
         }
 
         if (profileData && profileData.status === "pending") {
-          // Sign out the user if status is pending
           console.log("User status is pending, signing out");
           await supabase.auth.signOut();
           toast({
@@ -190,7 +255,7 @@ const Auth = () => {
             title: "Login successful",
             description: "Welcome back!",
           });
-          navigate("/"); // Navigate to the main page on successful login
+          // AuthProvider will handle the redirect based on role
         }
       }
     } catch (error: any) {
@@ -316,42 +381,82 @@ const Auth = () => {
       }
       
       if (authData.user) {
-        // Insert into profiles table
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            adminid: authData.user.id,
-            brgyid: brgyId,
-            username: values.username,
-            firstname: values.firstname,
-            middlename: values.middlename || null,
-            lastname: values.lastname,
-            email: values.email,
-            phone: values.phone || null,
-            role: values.role,
-            status: userStatus,
-            created_at: new Date().toISOString()
-          });
-        
-        if (profileError) {
-          toast({
-            title: "Profile Error",
-            description: profileError.message,
-            variant: "destructive",
-          });
-          console.error("Profile creation error:", profileError);
-        } else {
-          const successMessage = userStatus === "active"
-            ? "Account created successfully! You can now log in."
-            : "Account created and pending approval from the barangay administrator.";
+        // Insert into appropriate table based on role
+        if (values.role === "user") {
+          // Insert user role data into users table
+          const { error: userError } = await supabase
+            .from('users')
+            .insert({
+              id: authData.user.id,
+              brgyid: brgyId,
+              username: values.username,
+              firstname: values.firstname,
+              middlename: values.middlename || null,
+              lastname: values.lastname,
+              email: values.email,
+              phone: values.phone ? parseFloat(values.phone) : null,
+              role: values.role,
+              status: userStatus,
+              created_at: new Date().toISOString()
+            });
+          
+          if (userError) {
+            toast({
+              title: "User Profile Error",
+              description: userError.message,
+              variant: "destructive",
+            });
+            console.error("User creation error:", userError);
+          } else {
+            const successMessage = userStatus === "active"
+              ? "Account created successfully! You can now log in."
+              : "Account created and pending approval from the barangay administrator.";
 
-          toast({
-            title: "Account created",
-            description: successMessage,
-          });
-          setActiveTab("login");
-          signupForm.reset();
+            toast({
+              title: "Account created",
+              description: successMessage,
+            });
+            setActiveTab("login");
+            signupForm.reset();
+          }
+        } else {
+          // Insert admin/staff role data into profiles table
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              adminid: authData.user.id,
+              brgyid: brgyId,
+              username: values.username,
+              firstname: values.firstname,
+              middlename: values.middlename || null,
+              lastname: values.lastname,
+              email: values.email,
+              phone: values.phone || null,
+              role: values.role,
+              status: userStatus,
+              created_at: new Date().toISOString()
+            });
+          
+          if (profileError) {
+            toast({
+              title: "Profile Error",
+              description: profileError.message,
+              variant: "destructive",
+            });
+            console.error("Profile creation error:", profileError);
+          } else {
+            const successMessage = userStatus === "active"
+              ? "Account created successfully! You can now log in."
+              : "Account created and pending approval from the barangay administrator.";
+
+            toast({
+              title: "Account created",
+              description: successMessage,
+            });
+            setActiveTab("login");
+            signupForm.reset();
+          }
         }
       }
     } catch (error: any) {
@@ -438,15 +543,15 @@ const Auth = () => {
                   <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                     <FormField
                       control={loginForm.control}
-                      name="email"
+                      name="emailOrUsername"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>Email or Username</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                               <Input 
-                                placeholder="you@example.com" 
+                                placeholder="you@example.com or username" 
                                 className="pl-9" 
                                 {...field} 
                               />
