@@ -256,17 +256,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else if (session && location.pathname === "/auth") {
       // Redirect based on user role
       if (userProfile?.role === 'admin' || userProfile?.role === 'staff') {
-        navigate("/");
+        navigate("/dashboard");
       } else {
         navigate("/home");
       }
     } else if (session && userProfile) {
       // Prevent admin/staff from accessing /home
       if ((userProfile.role === 'admin' || userProfile.role === 'staff') && location.pathname === "/home") {
-        navigate("/");
+        navigate("/dashboard");
       }
       // Prevent regular users from accessing admin dashboard
-      else if (userProfile.role === 'user' && location.pathname === "/") {
+      else if (userProfile.role === 'user' && location.pathname === "/dashboard") {
         navigate("/home");
       }
     }
