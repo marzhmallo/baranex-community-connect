@@ -60,6 +60,7 @@ const AppContent = () => {
   const location = useLocation();
   const { userProfile } = useAuth();
   const isAuthPage = location.pathname === "/login";
+  const isUserRoute = location.pathname === "/hub";
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
   useEffect(() => {
@@ -75,17 +76,17 @@ const AppContent = () => {
     };
   }, []);
 
-  // Don't show sidebar for regular users or on login page
-  const showSidebar = !isAuthPage && userProfile?.role !== "user";
+  // Only show admin sidebar for admin/staff users and not on auth/user pages
+  const showAdminSidebar = !isAuthPage && !isUserRoute && userProfile?.role !== "user";
   
   return (
     <AuthProvider>
       <div className="flex">
-        {showSidebar && <Sidebar />}
+        {showAdminSidebar && <Sidebar />}
         
         <div 
           className={`flex-1 transition-all duration-300 ease-in-out ${
-            showSidebar ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
+            showAdminSidebar ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
           }`}
         > 
           <Routes>
