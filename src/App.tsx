@@ -3,9 +3,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { AuthProvider } from "@/components/AuthProvider";
+import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import Sidebar from "./components/layout/Sidebar";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
@@ -34,6 +34,27 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Component to handle root route redirect
+const RootRedirect = () => {
+  const { userProfile, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  if (userProfile?.role === 'admin' || userProfile?.role === 'staff') {
+    return <Navigate to="/dashboard" replace />;
+  } else if (userProfile?.role === 'user') {
+    return <Navigate to="/home" replace />;
+  }
+  
+  return <Navigate to="/auth" replace />;
+};
 
 // AppContent component to handle sidebar conditional rendering
 const AppContent = () => {
@@ -68,6 +89,7 @@ const AppContent = () => {
           }`}
         > 
           <Routes>
+            <Route path="/" element={<RootRedirect />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/dashboard" element={<Index />} />
