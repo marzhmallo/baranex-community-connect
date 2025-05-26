@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -89,7 +88,6 @@ const AppContent = () => {
           }`}
         > 
           <Routes>
-            <Route path="/" element={<RootRedirect />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/dashboard" element={<Index />} />
