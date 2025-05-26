@@ -362,14 +362,15 @@ const Auth = () => {
           const { error: userError } = await supabase
             .from('users')
             .insert({
-              id: authData.user.id,
+              id: authData.user.id,        // Link to auth.users.id
+              authid: authData.user.id,    // Also link to auth.users.id
               brgyid: brgyId,
               username: values.username,
               firstname: values.firstname,
               middlename: values.middlename || null,
               lastname: values.lastname,
               email: values.email,
-              phone: values.phone || null, // Keep as string, not parseFloat
+              phone: values.phone || null,
               role: values.role,
               status: userStatus,
               created_at: new Date().toISOString()
