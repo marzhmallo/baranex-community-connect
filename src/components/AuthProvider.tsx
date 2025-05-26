@@ -156,9 +156,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setCurrentUserId(userId);
         console.log('Regular user profile loaded:', transformedUserData);
         
-        // Redirect regular users to home
+        // Redirect regular users to hub
         if (location.pathname === "/login") {
-          navigate("/home");
+          navigate("/hub");
         }
         
         // Also fetch the barangay data if brgyid is available
@@ -295,7 +295,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else if (session && location.pathname === "/login") {
       // Redirect based on user role
       if (userProfile?.role === "user") {
-        navigate("/home");
+        navigate("/hub");
       } else {
         navigate("/dashboard");
       }

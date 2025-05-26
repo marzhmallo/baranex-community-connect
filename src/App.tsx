@@ -39,7 +39,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { userProfile } = useAuth();
   
   if (userProfile?.role === "user") {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/hub" replace />;
   }
   
   return <>{children}</>;
@@ -90,7 +90,6 @@ const AppContent = () => {
         > 
           <Routes>
             <Route path="/login" element={<Auth />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
             {/* Admin/Staff Routes */}
             <Route path="/dashboard" element={<AdminRoute><Index /></AdminRoute>} />
@@ -107,11 +106,13 @@ const AppContent = () => {
             <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
             
             {/* User Routes */}
-            <Route path="/home" element={<UserRoute><HomePage /></UserRoute>} />
+            <Route path="/hub" element={<UserRoute><HomePage /></UserRoute>} />
             
             {/* Shared Routes */}
             <Route path="/profile" element={<ProfilePage />} />
             
+            {/* Default redirects */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
