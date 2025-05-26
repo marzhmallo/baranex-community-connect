@@ -1,4 +1,5 @@
 
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialRedirectDone, setInitialRedirectDone] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -56,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         console.error('Error fetching user profile:', error);
-        return;
+        return null;
       }
 
       if (data) {
@@ -73,7 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             variant: "destructive",
           });
           navigate("/auth");
-          return;
+          return null;
         }
 
         setUserProfile(data as UserProfile);
@@ -83,6 +85,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (data.brgyid) {
           fetchBarangayData(data.brgyid);
         }
+        
+        return data as UserProfile;
       } else {
         console.log('No user profile found');
         toast({
@@ -90,9 +94,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           description: "Could not find your user profile. Please contact an administrator.",
           variant: "destructive",
         });
+        return null;
       }
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
+      return null;
     }
   };
   
@@ -125,6 +131,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setInitialRedirectDone(false);
       toast({
         title: "Signed out",
         description: "You have been signed out successfully",
@@ -155,6 +162,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setSession(null);
         setUserProfile(null);
+        setInitialRedirectDone(false);
         setLoading(false);
         return;
       }
@@ -164,8 +172,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(currentSession?.user ?? null);
       
       // Fetch profile if we have a user
-      if (currentSession?.user && userProfile?.id !== currentSession.user.id) {
-        await fetchUserProfile(currentSession.user.id);
+      if (currentSession?.user) {
+        const profile = await fetchUserProfile(currentSession.user.id);
+        
+        // Handle initial redirect after profile is loaded
+        if (profile && !initialRedirectDone && !location.pathname.includes("/auth")) {
+          setInitialRedirectDone(true);
+          if (profile.role === 'admin') {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/home", { replace: true });
+          }
+        }
       }
       
       setLoading(false);
@@ -183,7 +201,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(initialSession?.user ?? null);
         
         if (initialSession?.user) {
-          await fetchUserProfile(initialSession.user.id);
+          const profile = await fetchUserProfile(initialSession.user.id);
+          
+          // Handle initial redirect for existing session
+          if (profile && !initialRedirectDone && !location.pathname.includes("/auth")) {
+            setInitialRedirectDone(true);
+            if (profile.role === 'admin') {
+              navigate("/dashboard", { replace: true });
+            } else {
+              navigate("/home", { replace: true });
+            }
+          }
         }
         
         setLoading(false);
@@ -203,23 +231,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []); // Remove authInitialized dependency
 
-  // Handle redirects based on auth status
+  // Handle redirects based on auth status (for users trying to access protected routes)
   useEffect(() => {
-    if (loading) return; // Don't redirect while still loading
+    if (loading || initialRedirectDone) return; // Don't redirect while still loading or if initial redirect is done
 
     if (!session && !location.pathname.includes("/auth")) {
       // User is not logged in and trying to access a protected route
       navigate("/auth");
-    } else if (session && location.pathname === "/auth") {
-      // User is logged in and trying to access auth page
-      // Redirect based on user role
-      if (userProfile?.role === 'admin') {
-        navigate("/dashboard");
-      } else {
-        navigate("/home");
-      }
     }
-  }, [session, loading, location.pathname, navigate, userProfile?.role]);
+  }, [session, loading, location.pathname, navigate, initialRedirectDone]);
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
@@ -231,3 +251,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 export const useAuth = () => {
   return useContext(AuthContext);
 };
+
