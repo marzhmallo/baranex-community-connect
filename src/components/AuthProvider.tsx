@@ -213,7 +213,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       navigate("/auth");
     } else if (session && location.pathname === "/auth") {
       // User is logged in and trying to access auth page
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [session, loading, location.pathname, navigate]);
 

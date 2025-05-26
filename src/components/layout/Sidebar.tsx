@@ -5,7 +5,7 @@ import {
   LogOut, 
   User, 
   Calendar, 
-  Dock,
+  LayoutDashboard,
   FileText, 
   BarChart3, 
   MessageSquare,
@@ -73,7 +73,7 @@ const Sidebar = () => {
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between p-4">
           {!isCollapsed && (
-            <Link to="/" className="text-xl font-bold tracking-tight flex items-center">
+            <Link to="/dashboard" className="text-xl font-bold tracking-tight flex items-center">
               <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Bara</span>
               <span className="text-baranex-accent">NEX</span>
             </Link>
@@ -90,15 +90,15 @@ const Sidebar = () => {
 
         <nav className="flex-1 space-y-1 p-2">
           <Link 
-            to="/" 
+            to="/dashboard" 
             className={cn(
               "flex items-center py-2 px-3 rounded-md",
-              isActive("/") 
+              isActive("/dashboard") 
                 ? "bg-sidebar-accent text-white" 
                 : "text-sidebar-foreground hover:bg-sidebar-accent"
             )}
           >
-            <Dock className="h-5 w-5" />
+            <LayoutDashboard className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Dashboard</span>}
           </Link>
 
