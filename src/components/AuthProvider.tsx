@@ -214,7 +214,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // User is logged in and trying to access auth page
       // Redirect based on user role
       if (userProfile?.role === 'admin') {
-        navigate("/");
+        navigate("/dashboard");
       } else {
         navigate("/home");
       }
