@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -150,12 +149,11 @@ const Auth = () => {
       const isEmail = values.emailOrUsername.includes('@');
       let email = values.emailOrUsername;
       
-      // If it's not an email, look up the email from username
+      // If it's not an email, look up the email from username in profiles table
       if (!isEmail) {
         console.log("Looking up email for username:", values.emailOrUsername);
         
-        // Check profiles table first
-        let { data: profileData } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('email')
           .eq('username', values.emailOrUsername)
@@ -164,26 +162,15 @@ const Auth = () => {
         if (profileData?.email) {
           email = profileData.email;
         } else {
-          // Check users table
-          let { data: userData } = await supabase
-            .from('users')
-            .select('email')
-            .eq('username', values.emailOrUsername)
-            .maybeSingle();
-          
-          if (userData?.email) {
-            email = userData.email;
-          } else {
-            toast({
-              title: "User Not Found",
-              description: "No user found with that username",
-              variant: "destructive",
-            });
-            setIsLoading(false);
-            captchaRef.current?.resetCaptcha();
-            setCaptchaToken(null);
-            return;
-          }
+          toast({
+            title: "User Not Found",
+            description: "No user found with that username",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          captchaRef.current?.resetCaptcha();
+          setCaptchaToken(null);
+          return;
         }
       }
       
@@ -329,73 +316,43 @@ const Auth = () => {
       }
       
       if (authData.user) {
-        // Insert into appropriate table based on role
-        if (values.role === "admin" || values.role === "staff") {
-          // Insert into profiles table for admin/staff
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: authData.user.id,
-              adminid: authData.user.id,
-              brgyid: brgyId,
-              username: values.username,
-              firstname: values.firstname,
-              middlename: values.middlename || null,
-              lastname: values.lastname,
-              email: values.email,
-              phone: values.phone || null,
-              role: values.role,
-              status: userStatus,
-              created_at: new Date().toISOString()
-            });
-          
-          if (profileError) {
-            toast({
-              title: "Profile Error",
-              description: profileError.message,
-              variant: "destructive",
-            });
-            console.error("Profile creation error:", profileError);
-          }
-        } else {
-          // Insert into users table for regular users
-          const { error: userError } = await supabase
-            .from('users')
-            .insert({
-              id: authData.user.id,        // Link to auth.users.id
-              authid: authData.user.id,    // Also link to auth.users.id
-              brgyid: brgyId,
-              username: values.username,
-              firstname: values.firstname,
-              middlename: values.middlename || null,
-              lastname: values.lastname,
-              email: values.email,
-              phone: values.phone || null,
-              role: values.role,
-              status: userStatus,
-              created_at: new Date().toISOString()
-            });
-          
-          if (userError) {
-            toast({
-              title: "User Error",
-              description: userError.message,
-              variant: "destructive",
-            });
-            console.error("User creation error:", userError);
-          }
-        }
+        // Insert into profiles table for all user types
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            adminid: authData.user.id,
+            brgyid: brgyId,
+            username: values.username,
+            firstname: values.firstname,
+            middlename: values.middlename || null,
+            lastname: values.lastname,
+            email: values.email,
+            phone: values.phone || null,
+            role: values.role,
+            status: userStatus,
+            created_at: new Date().toISOString()
+          });
         
-        const successMessage = userStatus === "active"
-          ? "Account created successfully! You can now log in."
-          : "Account created and pending approval from the barangay administrator.";
+        if (profileError) {
+          toast({
+            title: "Profile Error",
+            description: profileError.message,
+            variant: "destructive",
+          });
+          console.error("Profile creation error:", profileError);
+        } else {
+          const successMessage = userStatus === "active"
+            ? "Account created successfully! You can now log in."
+            : "Account created and pending approval from the barangay administrator.";
 
-        toast({
-          title: "Account created",
-          description: successMessage,
-        });
-        setActiveTab("login");
-        signupForm.reset();
+          toast({
+            title: "Account created",
+            description: successMessage,
+          });
+          setActiveTab("login");
+          signupForm.reset();
+        }
       }
     } catch (error: any) {
       toast({
