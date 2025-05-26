@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -213,9 +212,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       navigate("/auth");
     } else if (session && location.pathname === "/auth") {
       // User is logged in and trying to access auth page
-      navigate("/");
+      // Redirect based on user role
+      if (userProfile?.role === 'admin') {
+        navigate("/");
+      } else {
+        navigate("/home");
+      }
     }
-  }, [session, loading, location.pathname, navigate]);
+  }, [session, loading, location.pathname, navigate, userProfile?.role]);
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
