@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,6 +110,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (userError) {
         console.error('Error fetching from users table:', userError);
+        toast({
+          title: "Database Error",
+          description: "Could not fetch user profile. Please try again.",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -143,7 +147,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           firstname: userData.firstname,
           lastname: userData.lastname,
           middlename: userData.middlename,
-          phone: userData.phone?.toString(), // Convert numeric to string
+          phone: userData.phone?.toString(), // Convert numeric to string if needed
           status: userData.status,
           created_at: userData.created_at,
         };
@@ -165,14 +169,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       // If not found in either table
-      console.log('No user profile found in either table');
+      console.log('No user profile found in either table for user ID:', userId);
       toast({
         title: "Profile Not Found",
         description: "Could not find your user profile. Please contact an administrator.",
         variant: "destructive",
       });
+      
+      // Sign out the user since they don't have a profile
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+      setCurrentUserId(null);
+      navigate("/login");
+      
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while fetching your profile.",
+        variant: "destructive",
+      });
     }
   };
   
