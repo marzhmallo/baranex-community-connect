@@ -13,8 +13,34 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
+import { useAuth } from "@/components/AuthProvider";
+import { Navigate } from "react-router-dom";
 
 const Index = () => {
+  const { user, userProfile, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Redirect regular users to the home page
+  if (userProfile?.role === 'user') {
+    return <Navigate to="/home" replace />;
+  }
+
+  // Only allow admin/staff to access this page
+  if (userProfile?.role !== 'admin' && userProfile?.role !== 'staff') {
+    return <Navigate to="/auth" replace />;
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Main content */}

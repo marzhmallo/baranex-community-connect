@@ -44,31 +44,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Clear profile fetched flag when user changes
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Fetch user profile data from Supabase
+  // Fetch user profile data from appropriate table based on role
   const fetchUserProfile = async (userId: string) => {
-    // Skip if we're trying to fetch the same user repeatedly
     if (currentUserId === userId && userProfile !== null) return;
     
     console.log('Fetching user profile for:', userId);
     try {
-      const { data, error } = await supabase
+      // First try profiles table (for admin/staff)
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-
-      if (data) {
-        // Check if user status is pending
-        if (data.status === "pending") {
-          // Sign out the user if status is pending
+      if (profileData) {
+        // Found in profiles table
+        if (profileData.status === "pending") {
           await supabase.auth.signOut();
           setUser(null);
           setSession(null);
@@ -83,22 +76,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        setUserProfile(data as UserProfile);
+        setUserProfile(profileData as UserProfile);
         setCurrentUserId(userId);
-        console.log('User profile loaded:', data);
+        console.log('Profile loaded from profiles table:', profileData);
         
-        // Also fetch the barangay data if brgyid is available
-        if (data.brgyid) {
-          fetchBarangayData(data.brgyid);
+        if (profileData.brgyid) {
+          fetchBarangayData(profileData.brgyid);
         }
-      } else {
-        console.log('No user profile found');
-        toast({
-          title: "Profile Not Found",
-          description: "Could not find your user profile. Please contact an administrator.",
-          variant: "destructive",
-        });
+        return;
       }
+
+      // If not found in profiles, try users table (for regular users)
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (userData) {
+        // Found in users table
+        if (userData.status === "pending") {
+          await supabase.auth.signOut();
+          setUser(null);
+          setSession(null);
+          setUserProfile(null);
+          setCurrentUserId(null);
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account is pending approval from your barangay administrator.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+
+        // Convert users table data to UserProfile format
+        const userProfileData: UserProfile = {
+          id: userData.id,
+          brgyid: userData.brgyid,
+          email: userData.email,
+          role: userData.role,
+          username: userData.username,
+          firstname: userData.firstname,
+          lastname: userData.lastname,
+          middlename: userData.middlename,
+          phone: userData.phone?.toString(),
+          status: userData.status,
+          created_at: userData.created_at,
+        };
+
+        setUserProfile(userProfileData);
+        setCurrentUserId(userId);
+        console.log('Profile loaded from users table:', userProfileData);
+        
+        if (userData.brgyid) {
+          fetchBarangayData(userData.brgyid);
+        }
+        return;
+      }
+
+      // No profile found in either table
+      console.log('No user profile found in either table');
+      toast({
+        title: "Profile Not Found",
+        description: "Could not find your user profile. Please contact an administrator.",
+        variant: "destructive",
+      });
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
     }
@@ -203,19 +246,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [authInitialized]);
 
-  // Handle redirects based on auth status
+  // Handle redirects based on auth status and user role
   useEffect(() => {
     if (loading) return; // Don't redirect while still loading
 
     if (!session && !location.pathname.includes("/auth")) {
-      // User is not logged in and trying to access a protected route
       navigate("/auth");
     } else if (session && location.pathname === "/auth") {
-      // User is logged in and trying to access auth page
       // Redirect based on user role
-      if (userProfile?.role === 'admin') {
+      if (userProfile?.role === 'admin' || userProfile?.role === 'staff') {
         navigate("/");
       } else {
+        navigate("/home");
+      }
+    } else if (session && userProfile) {
+      // Prevent admin/staff from accessing /home
+      if ((userProfile.role === 'admin' || userProfile.role === 'staff') && location.pathname === "/home") {
+        navigate("/");
+      }
+      // Prevent regular users from accessing admin dashboard
+      else if (userProfile.role === 'user' && location.pathname === "/" && location.pathname !== "/home") {
         navigate("/home");
       }
     }

@@ -22,9 +22,14 @@ const HomePage = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Redirect admin users to the main dashboard
-  if (userProfile?.role === 'admin') {
+  // Redirect admin/staff users to the main dashboard
+  if (userProfile?.role === 'admin' || userProfile?.role === 'staff') {
     return <Navigate to="/" replace />;
+  }
+
+  // Only allow 'user' role to access this page
+  if (userProfile?.role !== 'user') {
+    return <Navigate to="/auth" replace />;
   }
 
   return (
