@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,106 +41,67 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialRedirectDone, setInitialRedirectDone] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Clear profile fetched flag when user changes
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Fetch user profile data from both profiles and users tables
+  // Fetch user profile data from Supabase
   const fetchUserProfile = async (userId: string) => {
+    // Skip if we're trying to fetch the same user repeatedly
+    if (currentUserId === userId && userProfile !== null) return;
+    
     console.log('Fetching user profile for:', userId);
     try {
-      // First try to fetch from profiles table (for admin/staff)
-      const { data: profileData, error: profileError } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error fetching from profiles table:', profileError);
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
       }
 
-      // If not found in profiles, try users table (for regular users)
-      if (!profileData) {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle();
-
-        if (userError && userError.code !== 'PGRST116') {
-          console.error('Error fetching from users table:', userError);
-          return null;
-        }
-
-        if (userData) {
-          // Check if user status is pending
-          if (userData.status === "pending") {
-            await supabase.auth.signOut();
-            setUser(null);
-            setSession(null);
-            setUserProfile(null);
-            toast({
-              title: "Account Pending Approval",
-              description: "Your account is pending approval from your barangay administrator.",
-              variant: "destructive",
-            });
-            navigate("/auth");
-            return null;
-          }
-
-          // Convert phone from number to string to match UserProfile interface
-          const userProfileData: UserProfile = {
-            ...userData,
-            phone: userData.phone ? userData.phone.toString() : undefined
-          };
-
-          setUserProfile(userProfileData);
-          console.log('User profile loaded from users table:', userProfileData);
-          
-          if (userData.brgyid) {
-            fetchBarangayData(userData.brgyid);
-          }
-          
-          return userProfileData;
-        }
-      } else {
-        // Check if admin/staff status is pending
-        if (profileData.status === "pending") {
+      if (data) {
+        // Check if user status is pending
+        if (data.status === "pending") {
+          // Sign out the user if status is pending
           await supabase.auth.signOut();
           setUser(null);
           setSession(null);
           setUserProfile(null);
+          setCurrentUserId(null);
           toast({
             title: "Account Pending Approval",
             description: "Your account is pending approval from your barangay administrator.",
             variant: "destructive",
           });
           navigate("/auth");
-          return null;
+          return;
         }
 
-        setUserProfile(profileData as UserProfile);
-        console.log('User profile loaded from profiles table:', profileData);
+        setUserProfile(data as UserProfile);
+        setCurrentUserId(userId);
+        console.log('User profile loaded:', data);
         
-        if (profileData.brgyid) {
-          fetchBarangayData(profileData.brgyid);
+        // Also fetch the barangay data if brgyid is available
+        if (data.brgyid) {
+          fetchBarangayData(data.brgyid);
         }
-        
-        return profileData as UserProfile;
+      } else {
+        console.log('No user profile found');
+        toast({
+          title: "Profile Not Found",
+          description: "Could not find your user profile. Please contact an administrator.",
+          variant: "destructive",
+        });
       }
-
-      // If not found in either table
-      console.log('No user profile found in either table');
-      toast({
-        title: "Profile Not Found",
-        description: "Could not find your user profile. Please contact an administrator.",
-        variant: "destructive",
-      });
-      return null;
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
-      return null;
     }
   };
   
@@ -159,6 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (data) {
         console.log('Barangay data loaded:', data);
+        // Store barangay data in context if needed
       }
     } catch (err) {
       console.error('Error in fetchBarangayData:', err);
@@ -171,7 +134,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
-      setInitialRedirectDone(false);
+      setCurrentUserId(null);
       toast({
         title: "Signed out",
         description: "You have been signed out successfully",
@@ -190,103 +153,69 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("Auth provider initialized");
     
-    let mounted = true;
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log("Auth state change:", event, currentSession?.user?.id);
+    // Set up auth state listener FIRST to avoid race conditions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      console.log("Auth state change:", _event, currentSession?.user?.id);
       
-      if (!mounted) return;
-      
-      if (event === 'SIGNED_OUT') {
+      if (_event === 'SIGNED_OUT') {
         setUser(null);
         setSession(null);
         setUserProfile(null);
-        setInitialRedirectDone(false);
-        setLoading(false);
+        setCurrentUserId(null);
         return;
       }
       
-      // Update session and user state
+      // Update session state
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
-      // Fetch profile if we have a user
+      // Fetch profile if we have a user and session
       if (currentSession?.user) {
-        const profile = await fetchUserProfile(currentSession.user.id);
-        
-        // Handle initial redirect after profile is loaded
-        if (profile && !initialRedirectDone && !location.pathname.includes("/auth")) {
-          setInitialRedirectDone(true);
-          console.log('Redirecting based on role:', profile.role);
-          
-          if (profile.role === 'admin' || profile.role === 'staff') {
-            console.log('Redirecting admin/staff to dashboard');
-            navigate("/dashboard", { replace: true });
-          } else if (profile.role === 'user') {
-            console.log('Redirecting user to home');
-            navigate("/home", { replace: true });
-          }
-        }
+        // Wait a moment before fetching profile to avoid race conditions
+        setTimeout(() => {
+          fetchUserProfile(currentSession.user.id);
+        }, 100);
       }
-      
-      setLoading(false);
     });
 
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+    // THEN check for existing session
+    if (!authInitialized) {
+      supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
         console.log("Got initial session:", initialSession?.user?.id);
-        
-        if (!mounted) return;
-        
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
         
         if (initialSession?.user) {
-          const profile = await fetchUserProfile(initialSession.user.id);
-          
-          // Handle initial redirect for existing session
-          if (profile && !initialRedirectDone && !location.pathname.includes("/auth")) {
-            setInitialRedirectDone(true);
-            console.log('Initial redirect based on role:', profile.role);
-            
-            if (profile.role === 'admin' || profile.role === 'staff') {
-              console.log('Initial redirect admin/staff to dashboard');
-              navigate("/dashboard", { replace: true });
-            } else if (profile.role === 'user') {
-              console.log('Initial redirect user to home');
-              navigate("/home", { replace: true });
-            }
-          }
+          // Explicitly fetch profile for existing session
+          fetchUserProfile(initialSession.user.id);
         }
         
         setLoading(false);
-      } catch (error) {
+        setAuthInitialized(true);
+      }).catch(error => {
         console.error("Error getting session:", error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    getInitialSession();
+        setLoading(false);
+        setAuthInitialized(true);
+      });
+    }
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [authInitialized]);
 
-  // Handle redirects based on auth status (for users trying to access protected routes)
+  // Handle redirects based on auth status
   useEffect(() => {
-    if (loading || initialRedirectDone) return;
+    if (loading) return; // Don't redirect while still loading
 
     if (!session && !location.pathname.includes("/auth")) {
+      // User is not logged in and trying to access a protected route
       navigate("/auth");
+    } else if (session && location.pathname === "/auth") {
+      // User is logged in and trying to access auth page
+      navigate("/");
     }
-  }, [session, loading, location.pathname, navigate, initialRedirectDone]);
+  }, [session, loading, location.pathname, navigate]);
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
