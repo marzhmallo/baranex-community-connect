@@ -116,7 +116,7 @@ const Auth = () => {
       municipality: "",
       province: "",
       region: "",
-      country: "Philippines",
+      country: "",
     },
   });
 
