@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             description: "Your account is pending approval from your barangay administrator.",
             variant: "destructive",
           });
-          navigate("/auth");
+          navigate("/login");
           return;
         }
 
@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Signed out",
         description: "You have been signed out successfully",
       });
-      navigate("/auth");
+      navigate("/login");
     } catch (error) {
       console.error("Sign out error:", error);
       toast({
@@ -208,11 +208,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (loading) return; // Don't redirect while still loading
 
-    if (!session && !location.pathname.includes("/auth")) {
+    if (!session && !location.pathname.includes("/login")) {
       // User is not logged in and trying to access a protected route
-      navigate("/auth");
-    } else if (session && location.pathname === "/auth") {
-      // User is logged in and trying to access auth page
+      navigate("/login");
+    } else if (session && location.pathname === "/login") {
+      // User is logged in and trying to access login page
       navigate("/dashboard");
     }
   }, [session, loading, location.pathname, navigate]);

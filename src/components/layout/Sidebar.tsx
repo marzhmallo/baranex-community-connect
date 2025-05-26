@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -55,7 +54,7 @@ const Sidebar = () => {
         title: "Signed out successfully",
         description: "You have been signed out",
       });
-      navigate("/auth");
+      navigate("/login");
     }
   };
 

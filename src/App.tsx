@@ -37,7 +37,7 @@ const queryClient = new QueryClient({
 // AppContent component to handle sidebar conditional rendering
 const AppContent = () => {
   const location = useLocation();
-  const isAuthPage = location.pathname === "/auth";
+  const isAuthPage = location.pathname === "/login";
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
   // Listen for custom sidebar state change events
@@ -57,7 +57,7 @@ const AppContent = () => {
   return (
     <AuthProvider>
       <div className="flex">
-        {/* Only render sidebar when NOT on auth page */}
+        {/* Only render sidebar when NOT on login page */}
         {!isAuthPage && <Sidebar />}
         
         <div 
@@ -66,7 +66,7 @@ const AppContent = () => {
           }`}
         > 
           <Routes>
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/login" element={<Auth />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Index />} />
             <Route path="/residents" element={<ResidentsPage />} />
