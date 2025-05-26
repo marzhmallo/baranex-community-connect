@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,14 +88,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             return null;
           }
 
-          setUserProfile(userData as UserProfile);
-          console.log('User profile loaded from users table:', userData);
+          // Convert phone from number to string to match UserProfile interface
+          const userProfileData: UserProfile = {
+            ...userData,
+            phone: userData.phone ? userData.phone.toString() : undefined
+          };
+
+          setUserProfile(userProfileData);
+          console.log('User profile loaded from users table:', userProfileData);
           
           if (userData.brgyid) {
             fetchBarangayData(userData.brgyid);
           }
           
-          return userData as UserProfile;
+          return userProfileData;
         }
       } else {
         // Check if admin/staff status is pending
