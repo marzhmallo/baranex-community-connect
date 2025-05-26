@@ -23,7 +23,6 @@ import CalendarPage from "./pages/CalendarPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import ForumPage from "./pages/ForumPage";
 import OfficialDetailsPage from './pages/OfficialDetailsPage';
-import HomePage from "./pages/HomePage";
 
 // Initialize the query client
 const queryClient = new QueryClient({
@@ -39,7 +38,6 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === "/auth";
-  const isHomePage = location.pathname === "/home";
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
   // Listen for custom sidebar state change events
@@ -59,18 +57,17 @@ const AppContent = () => {
   return (
     <AuthProvider>
       <div className="flex">
-        {/* Only render sidebar when NOT on auth page and NOT on home page */}
-        {!isAuthPage && !isHomePage && <Sidebar />}
+        {/* Only render sidebar when NOT on auth page */}
+        {!isAuthPage && <Sidebar />}
         
         <div 
           className={`flex-1 transition-all duration-300 ease-in-out ${
-            !isAuthPage && !isHomePage ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
+            !isAuthPage ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
           }`}
         > 
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/dashboard" element={<Index />} />
+            <Route path="/" element={<Index />} />
             <Route path="/residents" element={<ResidentsPage />} />
             <Route path="/households" element={<HouseholdPage />} />
             <Route path="/residents/:residentId" element={<ResidentMoreDetailsPage />} />
