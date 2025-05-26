@@ -22,32 +22,49 @@ const HomePage = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Redirect admin users to the main dashboard
-  if (userProfile?.role === 'admin') {
-    return <Navigate to="/" replace />;
+  // Redirect admin/staff users to the dashboard
+  if (userProfile?.role === 'admin' || userProfile?.role === 'staff') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Only allow users with 'user' role on this page
+  if (userProfile?.role !== 'user') {
+    return <Navigate to="/auth" replace />;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="flex-1 p-6 overflow-auto">
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col items-start space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Welcome, {userProfile?.firstname || 'Resident'}!
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Stay updated with your barangay community
-            </p>
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Welcome, {userProfile?.firstname || 'Resident'}!
+              </h1>
+              <p className="text-lg text-gray-600 mt-1">
+                Stay updated with your barangay community
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => window.location.href = '/profile'}
+                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+              >
+                My Profile
+              </button>
+            </div>
           </div>
+        </div>
+      </header>
 
-          {/* Dashboard Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-            <UpcomingEvents />
-            <LatestAnnouncements />
-            <DocumentRequestsStatus />
-            <BarangayOfficials />
-          </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+          <UpcomingEvents />
+          <LatestAnnouncements />
+          <DocumentRequestsStatus />
+          <BarangayOfficials />
         </div>
       </main>
     </div>

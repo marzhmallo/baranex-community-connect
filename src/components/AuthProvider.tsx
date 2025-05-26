@@ -218,9 +218,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Handle initial redirect after profile is loaded
         if (profile && !initialRedirectDone && !location.pathname.includes("/auth")) {
           setInitialRedirectDone(true);
+          console.log('Redirecting based on role:', profile.role);
+          
           if (profile.role === 'admin' || profile.role === 'staff') {
+            console.log('Redirecting admin/staff to dashboard');
             navigate("/dashboard", { replace: true });
           } else if (profile.role === 'user') {
+            console.log('Redirecting user to home');
             navigate("/home", { replace: true });
           }
         }
@@ -246,9 +250,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Handle initial redirect for existing session
           if (profile && !initialRedirectDone && !location.pathname.includes("/auth")) {
             setInitialRedirectDone(true);
+            console.log('Initial redirect based on role:', profile.role);
+            
             if (profile.role === 'admin' || profile.role === 'staff') {
+              console.log('Initial redirect admin/staff to dashboard');
               navigate("/dashboard", { replace: true });
             } else if (profile.role === 'user') {
+              console.log('Initial redirect user to home');
               navigate("/home", { replace: true });
             }
           }

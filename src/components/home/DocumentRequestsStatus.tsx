@@ -15,16 +15,46 @@ const DocumentRequestsStatus = () => {
     queryFn: async () => {
       if (!user?.id) return [];
       
-      // First, get the resident record for the current user
+      console.log('Fetching documents for user:', user.id, 'email:', user.email);
+      
+      // First try to find documents by user_id directly
+      let { data: directDocuments, error: directError } = await supabase
+        .from('issued_documents')
+        .select(`
+          *,
+          document_type:document_types(name)
+        `)
+        .eq('resident_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (directError) {
+        console.error('Error fetching direct documents:', directError);
+      }
+
+      if (directDocuments && directDocuments.length > 0) {
+        console.log('Found direct documents:', directDocuments);
+        return directDocuments;
+      }
+
+      // If no direct documents found, try to find by email in residents table
       const { data: resident, error: residentError } = await supabase
         .from('residents')
         .select('id')
         .eq('email', user.email)
-        .single();
+        .maybeSingle();
 
-      if (residentError || !resident) return [];
+      if (residentError) {
+        console.error('Error fetching resident:', residentError);
+        return [];
+      }
 
-      const { data, error } = await supabase
+      if (!resident) {
+        console.log('No resident found for email:', user.email);
+        return [];
+      }
+
+      const { data: residentDocuments, error: documentsError } = await supabase
         .from('issued_documents')
         .select(`
           *,
@@ -34,8 +64,13 @@ const DocumentRequestsStatus = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
-      return data;
+      if (documentsError) {
+        console.error('Error fetching resident documents:', documentsError);
+        return [];
+      }
+
+      console.log('Found resident documents:', residentDocuments);
+      return residentDocuments || [];
     },
     enabled: !!user?.id,
   });
@@ -107,7 +142,13 @@ const DocumentRequestsStatus = () => {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">No document requests found.</p>
+          <div className="text-center py-6">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-muted-foreground text-sm">No document requests found.</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Contact your barangay office to request documents.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>
