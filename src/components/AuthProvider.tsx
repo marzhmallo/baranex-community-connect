@@ -48,28 +48,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Clear profile fetched flag when user changes
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Fetch user profile data from Supabase
+  // Fetch user profile data from both profiles and users tables
   const fetchUserProfile = async (userId: string) => {
     // Skip if we're trying to fetch the same user repeatedly
     if (currentUserId === userId && userProfile !== null) return;
     
     console.log('Fetching user profile for:', userId);
     try {
-      const { data, error } = await supabase
+      // First try to fetch from profiles table (for admin/staff)
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
+      if (profileError) {
+        console.error('Error fetching from profiles table:', profileError);
       }
 
-      if (data) {
+      // If found in profiles table
+      if (profileData) {
+        console.log('User found in profiles table:', profileData);
+        
         // Check if user status is pending
-        if (data.status === "pending") {
-          // Sign out the user if status is pending
+        if (profileData.status === "pending") {
           await supabase.auth.signOut();
           setUser(null);
           setSession(null);
@@ -84,22 +86,91 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        setUserProfile(data as UserProfile);
+        setUserProfile(profileData as UserProfile);
         setCurrentUserId(userId);
-        console.log('User profile loaded:', data);
+        console.log('Admin/Staff profile loaded:', profileData);
+        
+        // Redirect admin/staff to dashboard
+        if (location.pathname === "/login") {
+          navigate("/dashboard");
+        }
         
         // Also fetch the barangay data if brgyid is available
-        if (data.brgyid) {
-          fetchBarangayData(data.brgyid);
+        if (profileData.brgyid) {
+          fetchBarangayData(profileData.brgyid);
         }
-      } else {
-        console.log('No user profile found');
-        toast({
-          title: "Profile Not Found",
-          description: "Could not find your user profile. Please contact an administrator.",
-          variant: "destructive",
-        });
+        return;
       }
+
+      // If not found in profiles, try users table (for regular users)
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (userError) {
+        console.error('Error fetching from users table:', userError);
+        return;
+      }
+
+      if (userData) {
+        console.log('User found in users table:', userData);
+        
+        // Check if user status is pending
+        if (userData.status === "pending") {
+          await supabase.auth.signOut();
+          setUser(null);
+          setSession(null);
+          setUserProfile(null);
+          setCurrentUserId(null);
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account is pending approval from your barangay administrator.",
+            variant: "destructive",
+          });
+          navigate("/login");
+          return;
+        }
+
+        // Transform users table data to match UserProfile interface
+        const transformedUserData: UserProfile = {
+          id: userData.id,
+          brgyid: userData.brgyid,
+          email: userData.email,
+          role: userData.role,
+          username: userData.username,
+          firstname: userData.firstname,
+          lastname: userData.lastname,
+          middlename: userData.middlename,
+          phone: userData.phone?.toString(), // Convert numeric to string
+          status: userData.status,
+          created_at: userData.created_at,
+        };
+
+        setUserProfile(transformedUserData);
+        setCurrentUserId(userId);
+        console.log('Regular user profile loaded:', transformedUserData);
+        
+        // Redirect regular users to home
+        if (location.pathname === "/login") {
+          navigate("/home");
+        }
+        
+        // Also fetch the barangay data if brgyid is available
+        if (userData.brgyid) {
+          fetchBarangayData(userData.brgyid);
+        }
+        return;
+      }
+
+      // If not found in either table
+      console.log('No user profile found in either table');
+      toast({
+        title: "Profile Not Found",
+        description: "Could not find your user profile. Please contact an administrator.",
+        variant: "destructive",
+      });
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
     }
@@ -121,7 +192,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (data) {
         console.log('Barangay data loaded:', data);
-        // Store barangay data in context if needed
       }
     } catch (err) {
       console.error('Error in fetchBarangayData:', err);
@@ -153,7 +223,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("Auth provider initialized");
     
-    // Set up auth state listener FIRST to avoid race conditions
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
       console.log("Auth state change:", _event, currentSession?.user?.id);
       
@@ -165,20 +234,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      // Update session state
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
-      // Fetch profile if we have a user and session
       if (currentSession?.user) {
-        // Wait a moment before fetching profile to avoid race conditions
         setTimeout(() => {
           fetchUserProfile(currentSession.user.id);
         }, 100);
       }
     });
 
-    // THEN check for existing session
     if (!authInitialized) {
       supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
         console.log("Got initial session:", initialSession?.user?.id);
@@ -186,7 +251,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(initialSession?.user ?? null);
         
         if (initialSession?.user) {
-          // Explicitly fetch profile for existing session
           fetchUserProfile(initialSession.user.id);
         }
         
@@ -204,18 +268,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [authInitialized]);
 
-  // Handle redirects based on auth status
+  // Handle redirects based on auth status and role
   useEffect(() => {
-    if (loading) return; // Don't redirect while still loading
+    if (loading) return;
 
     if (!session && !location.pathname.includes("/login")) {
-      // User is not logged in and trying to access a protected route
       navigate("/login");
     } else if (session && location.pathname === "/login") {
-      // User is logged in and trying to access login page
-      navigate("/dashboard");
+      // Redirect based on user role
+      if (userProfile?.role === "user") {
+        navigate("/home");
+      } else {
+        navigate("/dashboard");
+      }
     }
-  }, [session, loading, location.pathname, navigate]);
+  }, [session, loading, location.pathname, navigate, userProfile]);
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>

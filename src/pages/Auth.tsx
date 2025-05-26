@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  emailOrUsername: z.string().min(1, "Please enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters long"),
 });
 
@@ -39,7 +40,6 @@ const signupSchema = z.object({
   region: z.string().optional(),
   country: z.string().default("Philippines").optional(),
 }).refine(data => {
-  // If registering a new barangay and user is admin/staff, these fields are required
   if (data.barangayId === "new-barangay" && (data.role === "admin" || data.role === "staff")) {
     return !!data.barangayname && !!data.municipality && !!data.province;
   }
@@ -61,7 +61,6 @@ const Auth = () => {
   const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
   
-  // Use environment variable for the hCaptcha site key
   const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "a002bff6-3d98-4db2-8406-166e106c1958";
 
   // Fetch available barangays
@@ -95,7 +94,7 @@ const Auth = () => {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      emailOrUsername: "",
       password: "",
     },
   });
@@ -120,7 +119,6 @@ const Auth = () => {
     },
   });
 
-  // Watch for role and barangayId changes to show/hide fields
   const selectedRole = signupForm.watch("role");
   const selectedBarangayId = signupForm.watch("barangayId");
   const isNewBarangay = selectedBarangayId === "new-barangay";
@@ -146,9 +144,51 @@ const Auth = () => {
     }
 
     try {
-      console.log("Attempting login with email:", values.email);
+      console.log("Attempting login with:", values.emailOrUsername);
+      
+      // First check if it's an email or username
+      const isEmail = values.emailOrUsername.includes('@');
+      let email = values.emailOrUsername;
+      
+      // If it's not an email, look up the email from username
+      if (!isEmail) {
+        console.log("Looking up email for username:", values.emailOrUsername);
+        
+        // Check profiles table first
+        let { data: profileData } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('username', values.emailOrUsername)
+          .maybeSingle();
+        
+        if (profileData?.email) {
+          email = profileData.email;
+        } else {
+          // Check users table
+          let { data: userData } = await supabase
+            .from('users')
+            .select('email')
+            .eq('username', values.emailOrUsername)
+            .maybeSingle();
+          
+          if (userData?.email) {
+            email = userData.email;
+          } else {
+            toast({
+              title: "User Not Found",
+              description: "No user found with that username",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            captchaRef.current?.resetCaptcha();
+            setCaptchaToken(null);
+            return;
+          }
+        }
+      }
+      
       const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
-        email: values.email,
+        email: email,
         password: values.password,
         options: {
           captchaToken,
@@ -163,35 +203,12 @@ const Auth = () => {
           variant: "destructive",
         });
       } else if (user) {
-        // Check if user status is pending
-        console.log("Login successful, checking profile status");
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('status')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.error("Error fetching profile status:", profileError);
-        }
-
-        if (profileData && profileData.status === "pending") {
-          // Sign out the user if status is pending
-          console.log("User status is pending, signing out");
-          await supabase.auth.signOut();
-          toast({
-            title: "Account Pending Approval",
-            description: "Your account is pending approval from your barangay administrator.",
-            variant: "destructive",
-          });
-        } else {
-          console.log("Login complete, user authenticated");
-          toast({
-            title: "Login successful",
-            description: "Welcome back!",
-          });
-          navigate("/"); // Navigate to the main page on successful login
-        }
+        console.log("Login successful, user authenticated");
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+        // AuthProvider will handle the redirect based on user role
       }
     } catch (error: any) {
       toast({
@@ -202,7 +219,7 @@ const Auth = () => {
       console.error("Authentication error:", error);
     } finally {
       setIsLoading(false);
-      captchaRef.current?.resetCaptcha(); // Reset captcha after authentication attempt
+      captchaRef.current?.resetCaptcha();
       setCaptchaToken(null);
     }
   };
@@ -225,7 +242,6 @@ const Auth = () => {
       
       // Process barangay selection or creation
       if (values.barangayId === "new-barangay") {
-        // Check if the barangay already exists (case-insensitive check)
         const { data: existingBarangay, error: brgyCheckError } = await supabase
           .from('barangays')
           .select('id')
@@ -234,7 +250,7 @@ const Auth = () => {
           .eq('province', values.province?.trim() || '')
           .single();
         
-        if (brgyCheckError && brgyCheckError.code !== 'PGRST116') { // PGRST116 means no rows returned
+        if (brgyCheckError && brgyCheckError.code !== 'PGRST116') {
           toast({
             title: "Database Error",
             description: brgyCheckError.message,
@@ -254,7 +270,6 @@ const Auth = () => {
           return;
         }
 
-        // Create new barangay if doesn't exist
         const { data: brgyData, error: brgyError } = await supabase
           .from('barangays')
           .insert({
@@ -283,11 +298,9 @@ const Auth = () => {
           brgyId = brgyData.id;
         }
       } else {
-        // Using existing barangay
         brgyId = values.barangayId || null;
       }
       
-      // Determine user status based on role and barangay registration
       const userStatus = (values.role === "admin" || values.role === "staff") && values.barangayId === "new-barangay" 
         ? "active" 
         : "pending";
@@ -316,43 +329,72 @@ const Auth = () => {
       }
       
       if (authData.user) {
-        // Insert into profiles table
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            adminid: authData.user.id,
-            brgyid: brgyId,
-            username: values.username,
-            firstname: values.firstname,
-            middlename: values.middlename || null,
-            lastname: values.lastname,
-            email: values.email,
-            phone: values.phone || null,
-            role: values.role,
-            status: userStatus,
-            created_at: new Date().toISOString()
-          });
-        
-        if (profileError) {
-          toast({
-            title: "Profile Error",
-            description: profileError.message,
-            variant: "destructive",
-          });
-          console.error("Profile creation error:", profileError);
+        // Insert into appropriate table based on role
+        if (values.role === "admin" || values.role === "staff") {
+          // Insert into profiles table for admin/staff
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              adminid: authData.user.id,
+              brgyid: brgyId,
+              username: values.username,
+              firstname: values.firstname,
+              middlename: values.middlename || null,
+              lastname: values.lastname,
+              email: values.email,
+              phone: values.phone || null,
+              role: values.role,
+              status: userStatus,
+              created_at: new Date().toISOString()
+            });
+          
+          if (profileError) {
+            toast({
+              title: "Profile Error",
+              description: profileError.message,
+              variant: "destructive",
+            });
+            console.error("Profile creation error:", profileError);
+          }
         } else {
-          const successMessage = userStatus === "active"
-            ? "Account created successfully! You can now log in."
-            : "Account created and pending approval from the barangay administrator.";
-
-          toast({
-            title: "Account created",
-            description: successMessage,
-          });
-          setActiveTab("login");
-          signupForm.reset();
+          // Insert into users table for regular users
+          const { error: userError } = await supabase
+            .from('users')
+            .insert({
+              id: authData.user.id,
+              brgyid: brgyId,
+              username: values.username,
+              firstname: values.firstname,
+              middlename: values.middlename || null,
+              lastname: values.lastname,
+              email: values.email,
+              phone: values.phone ? parseFloat(values.phone) : null,
+              role: values.role,
+              status: userStatus,
+              created_at: new Date().toISOString()
+            });
+          
+          if (userError) {
+            toast({
+              title: "User Error",
+              description: userError.message,
+              variant: "destructive",
+            });
+            console.error("User creation error:", userError);
+          }
         }
+        
+        const successMessage = userStatus === "active"
+          ? "Account created successfully! You can now log in."
+          : "Account created and pending approval from the barangay administrator.";
+
+        toast({
+          title: "Account created",
+          description: successMessage,
+        });
+        setActiveTab("login");
+        signupForm.reset();
       }
     } catch (error: any) {
       toast({
@@ -438,15 +480,15 @@ const Auth = () => {
                   <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                     <FormField
                       control={loginForm.control}
-                      name="email"
+                      name="emailOrUsername"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>Email or Username</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                               <Input 
-                                placeholder="you@example.com" 
+                                placeholder="you@example.com or username" 
                                 className="pl-9" 
                                 {...field} 
                               />
