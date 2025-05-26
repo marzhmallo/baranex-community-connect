@@ -167,7 +167,7 @@ const Auth = () => {
         console.log("Login successful, checking profile status");
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('status')
+          .select('status, role')
           .eq('id', user.id)
           .single();
 
@@ -190,7 +190,7 @@ const Auth = () => {
             title: "Login successful",
             description: "Welcome back!",
           });
-          navigate("/"); // Navigate to the main page on successful login
+          // AuthProvider will handle the redirect based on role
         }
       }
     } catch (error: any) {
