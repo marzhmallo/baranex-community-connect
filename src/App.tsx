@@ -34,23 +34,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// Loading screen component
-const AuthLoadingScreen = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-      <p className="text-muted-foreground">Loading...</p>
-    </div>
-  </div>
-);
-
 // Component to protect admin-only routes
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, loading } = useAuth();
-  
-  if (loading) {
-    return <AuthLoadingScreen />;
-  }
+  const { userProfile } = useAuth();
   
   if (userProfile?.role === "user") {
     return <Navigate to="/hub" replace />;
@@ -61,11 +47,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Component to protect user-only routes
 const UserRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, loading } = useAuth();
-  
-  if (loading) {
-    return <AuthLoadingScreen />;
-  }
+  const { userProfile } = useAuth();
   
   if (userProfile?.role === "admin" || userProfile?.role === "staff") {
     return <Navigate to="/dashboard" replace />;
@@ -76,7 +58,7 @@ const UserRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppContent = () => {
   const location = useLocation();
-  const { userProfile, loading } = useAuth();
+  const { userProfile } = useAuth();
   const isAuthPage = location.pathname === "/login";
   const isUserRoute = location.pathname === "/hub";
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -94,63 +76,49 @@ const AppContent = () => {
     };
   }, []);
 
-  // Show loading screen while auth is initializing
-  if (loading) {
-    return <AuthLoadingScreen />;
-  }
-
-  // Prevent any admin UI from showing to users
-  const isUserRole = userProfile?.role === "user";
-  const showAdminSidebar = !isAuthPage && !isUserRoute && !isUserRole && userProfile?.role !== "user";
+  // Only show admin sidebar for admin/staff users and not on auth/user pages
+  const showAdminSidebar = !isAuthPage && !isUserRoute && userProfile?.role !== "user";
   
   return (
-    <div className="flex">
-      {showAdminSidebar && <Sidebar />}
-      
-      <div 
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          showAdminSidebar ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
-        }`}
-      > 
-        <Routes>
-          <Route path="/login" element={<Auth />} />
-          
-          {/* Admin/Staff Routes - completely hidden from users */}
-          {!isUserRole && (
-            <>
-              <Route path="/dashboard" element={<AdminRoute><Index /></AdminRoute>} />
-              <Route path="/residents" element={<AdminRoute><ResidentsPage /></AdminRoute>} />
-              <Route path="/households" element={<AdminRoute><HouseholdPage /></AdminRoute>} />
-              <Route path="/residents/:residentId" element={<AdminRoute><ResidentMoreDetailsPage /></AdminRoute>} />
-              <Route path="/households/:householdId" element={<AdminRoute><HouseholdMoreDetailsPage /></AdminRoute>} />
-              <Route path="/officials" element={<AdminRoute><OfficialsPage /></AdminRoute>} />
-              <Route path="/officials/:id" element={<AdminRoute><OfficialDetailsPage /></AdminRoute>} /> 
-              <Route path="/documents" element={<AdminRoute><DocumentsPage /></AdminRoute>} />
-              <Route path="/calendar" element={<AdminRoute><CalendarPage /></AdminRoute>} />
-              <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
-              <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
-              <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
-            </>
-          )}
-          
-          {/* User Routes */}
-          <Route path="/hub" element={<UserRoute><HomePage /></UserRoute>} />
-          
-          {/* Shared Routes */}
-          <Route path="/profile" element={<ProfilePage />} />
-          
-          {/* Default redirects based on role */}
-          <Route path="/" element={
-            isUserRole ? <Navigate to="/hub" replace /> : <Navigate to="/login" replace />
-          } />
-          
-          {/* Catch all - redirect users away from admin routes */}
-          <Route path="*" element={
-            isUserRole ? <Navigate to="/hub" replace /> : <NotFound />
-          } />
-        </Routes>
+    <AuthProvider>
+      <div className="flex">
+        {showAdminSidebar && <Sidebar />}
+        
+        <div 
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            showAdminSidebar ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
+          }`}
+        > 
+          <Routes>
+            <Route path="/login" element={<Auth />} />
+            
+            {/* Admin/Staff Routes */}
+            <Route path="/dashboard" element={<AdminRoute><Index /></AdminRoute>} />
+            <Route path="/residents" element={<AdminRoute><ResidentsPage /></AdminRoute>} />
+            <Route path="/households" element={<AdminRoute><HouseholdPage /></AdminRoute>} />
+            <Route path="/residents/:residentId" element={<AdminRoute><ResidentMoreDetailsPage /></AdminRoute>} />
+            <Route path="/households/:householdId" element={<AdminRoute><HouseholdMoreDetailsPage /></AdminRoute>} />
+            <Route path="/officials" element={<AdminRoute><OfficialsPage /></AdminRoute>} />
+            <Route path="/officials/:id" element={<AdminRoute><OfficialDetailsPage /></AdminRoute>} /> 
+            <Route path="/documents" element={<AdminRoute><DocumentsPage /></AdminRoute>} />
+            <Route path="/calendar" element={<AdminRoute><CalendarPage /></AdminRoute>} />
+            <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
+            <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
+            <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+            
+            {/* User Routes */}
+            <Route path="/hub" element={<UserRoute><HomePage /></UserRoute>} />
+            
+            {/* Shared Routes */}
+            <Route path="/profile" element={<ProfilePage />} />
+            
+            {/* Default redirects */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </div>
-    </div>
+    </AuthProvider>
   );
 };
 
@@ -161,9 +129,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
+          <AppContent />
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
