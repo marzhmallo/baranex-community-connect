@@ -99,8 +99,9 @@ const AppContent = () => {
     return <AuthLoadingScreen />;
   }
 
-  // Only show admin sidebar for admin/staff users and not on auth/user pages
-  const showAdminSidebar = !isAuthPage && !isUserRoute && userProfile?.role !== "user";
+  // Prevent any admin UI from showing to users
+  const isUserRole = userProfile?.role === "user";
+  const showAdminSidebar = !isAuthPage && !isUserRoute && !isUserRole && userProfile?.role !== "user";
   
   return (
     <div className="flex">
@@ -114,19 +115,23 @@ const AppContent = () => {
         <Routes>
           <Route path="/login" element={<Auth />} />
           
-          {/* Admin/Staff Routes */}
-          <Route path="/dashboard" element={<AdminRoute><Index /></AdminRoute>} />
-          <Route path="/residents" element={<AdminRoute><ResidentsPage /></AdminRoute>} />
-          <Route path="/households" element={<AdminRoute><HouseholdPage /></AdminRoute>} />
-          <Route path="/residents/:residentId" element={<AdminRoute><ResidentMoreDetailsPage /></AdminRoute>} />
-          <Route path="/households/:householdId" element={<AdminRoute><HouseholdMoreDetailsPage /></AdminRoute>} />
-          <Route path="/officials" element={<AdminRoute><OfficialsPage /></AdminRoute>} />
-          <Route path="/officials/:id" element={<AdminRoute><OfficialDetailsPage /></AdminRoute>} /> 
-          <Route path="/documents" element={<AdminRoute><DocumentsPage /></AdminRoute>} />
-          <Route path="/calendar" element={<AdminRoute><CalendarPage /></AdminRoute>} />
-          <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
-          <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
-          <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+          {/* Admin/Staff Routes - completely hidden from users */}
+          {!isUserRole && (
+            <>
+              <Route path="/dashboard" element={<AdminRoute><Index /></AdminRoute>} />
+              <Route path="/residents" element={<AdminRoute><ResidentsPage /></AdminRoute>} />
+              <Route path="/households" element={<AdminRoute><HouseholdPage /></AdminRoute>} />
+              <Route path="/residents/:residentId" element={<AdminRoute><ResidentMoreDetailsPage /></AdminRoute>} />
+              <Route path="/households/:householdId" element={<AdminRoute><HouseholdMoreDetailsPage /></AdminRoute>} />
+              <Route path="/officials" element={<AdminRoute><OfficialsPage /></AdminRoute>} />
+              <Route path="/officials/:id" element={<AdminRoute><OfficialDetailsPage /></AdminRoute>} /> 
+              <Route path="/documents" element={<AdminRoute><DocumentsPage /></AdminRoute>} />
+              <Route path="/calendar" element={<AdminRoute><CalendarPage /></AdminRoute>} />
+              <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
+              <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
+              <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+            </>
+          )}
           
           {/* User Routes */}
           <Route path="/hub" element={<UserRoute><HomePage /></UserRoute>} />
@@ -134,9 +139,15 @@ const AppContent = () => {
           {/* Shared Routes */}
           <Route path="/profile" element={<ProfilePage />} />
           
-          {/* Default redirects */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<NotFound />} />
+          {/* Default redirects based on role */}
+          <Route path="/" element={
+            isUserRole ? <Navigate to="/hub" replace /> : <Navigate to="/login" replace />
+          } />
+          
+          {/* Catch all - redirect users away from admin routes */}
+          <Route path="*" element={
+            isUserRole ? <Navigate to="/hub" replace /> : <NotFound />
+          } />
         </Routes>
       </div>
     </div>
