@@ -96,8 +96,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setCurrentUserId(userId);
         console.log('Profile loaded:', profileData);
         
-        // Redirect based on user role ONLY if we're on the login page
-        if (location.pathname === "/login") {
+        // Redirect based on user role after profile is loaded and if we're on login page or dashboard
+        if (location.pathname === "/login" || location.pathname === "/dashboard" || location.pathname === "/") {
           if (profileData.role === "user") {
             console.log('Redirecting user to /hub');
             navigate("/hub");
@@ -241,18 +241,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       navigate("/login");
       return;
     }
-
-    // If there's a session but we're on login page and have user profile, redirect based on role
-    if (session && location.pathname === "/login" && userProfile) {
-      if (userProfile.role === "user") {
-        console.log('Redirecting authenticated user to /hub');
-        navigate("/hub");
-      } else if (userProfile.role === "admin" || userProfile.role === "staff") {
-        console.log('Redirecting authenticated admin/staff to /dashboard');
-        navigate("/dashboard");
-      }
-    }
-  }, [session, loading, location.pathname, navigate, userProfile]);
+  }, [session, loading, location.pathname, navigate]);
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
