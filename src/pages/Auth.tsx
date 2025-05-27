@@ -331,6 +331,7 @@ const Auth = () => {
             phone: values.phone || null,
             role: values.role,
             status: userStatus,
+            bday: new Date().toISOString().split('T')[0], // Add default birthday
             created_at: new Date().toISOString()
           });
         
