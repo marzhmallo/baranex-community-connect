@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -20,6 +21,7 @@ import {
   Moon,
   X,
   Menu,
+  Shield,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -193,16 +195,16 @@ const Sidebar = () => {
           </Link>
 
           <Link 
-            to="/crime-reports" 
+            to="/blotter" 
             className={cn(
               "flex items-center py-2 px-3 rounded-md",
-              isActive("/crime-reports") 
+              isActive("/blotter") 
                 ? "bg-sidebar-accent text-white" 
                 : "text-sidebar-foreground hover:bg-sidebar-accent"
             )}
           >
-            <FileText className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Crime Reports</span>}
+            <Shield className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Blotter</span>}
           </Link>
 
           <Link 
