@@ -96,8 +96,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setCurrentUserId(userId);
         console.log('Profile loaded:', profileData);
         
-        // Redirect based on user role after profile is loaded and if we're on login page or dashboard
-        if (location.pathname === "/login" || location.pathname === "/dashboard" || location.pathname === "/") {
+        // Redirect based on user role after profile is loaded
+        if (location.pathname === "/login" || location.pathname === "/") {
           if (profileData.role === "user") {
             console.log('Redirecting user to /hub');
             navigate("/hub");

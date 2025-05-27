@@ -769,6 +769,7 @@ export type Database = {
       profiles: {
         Row: {
           adminid: string | null
+          bday: string
           brgyid: string | null
           created_at: string | null
           email: string | null
@@ -783,6 +784,7 @@ export type Database = {
         }
         Insert: {
           adminid?: string | null
+          bday: string
           brgyid?: string | null
           created_at?: string | null
           email?: string | null
@@ -797,6 +799,7 @@ export type Database = {
         }
         Update: {
           adminid?: string | null
+          bday?: string
           brgyid?: string | null
           created_at?: string | null
           email?: string | null
