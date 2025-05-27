@@ -41,18 +41,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileFetched, setProfileFetched] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Clear profile fetched flag when user changes
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Fetch user profile data from profiles table only
   const fetchUserProfile = async (userId: string) => {
-    if (profileFetched) return;
+    // Skip if we're trying to fetch the same user repeatedly
+    if (currentUserId === userId && userProfile !== null) return;
     
     console.log('Fetching user profile for:', userId);
-    setProfileFetched(true);
-    
     try {
+      // Fetch from profiles table for all user types
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -66,32 +69,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           description: "Could not fetch user profile. Please try again.",
           variant: "destructive",
         });
-        setLoading(false);
         return;
       }
 
+      // If found in profiles table
       if (profileData) {
         console.log('User found in profiles table:', profileData);
         
+        // Check if user status is pending
         if (profileData.status === "pending") {
           await supabase.auth.signOut();
           setUser(null);
           setSession(null);
           setUserProfile(null);
-          setProfileFetched(false);
+          setCurrentUserId(null);
           toast({
             title: "Account Pending Approval",
             description: "Your account is pending approval from your barangay administrator.",
             variant: "destructive",
           });
           navigate("/login");
-          setLoading(false);
           return;
         }
 
         setUserProfile(profileData as UserProfile);
+        setCurrentUserId(userId);
         console.log('Profile loaded:', profileData);
         
+        // Redirect based on user role
         if (location.pathname === "/login") {
           if (profileData.role === "user") {
             navigate("/hub");
@@ -100,26 +105,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         }
         
+        // Also fetch the barangay data if brgyid is available
         if (profileData.brgyid) {
           fetchBarangayData(profileData.brgyid);
         }
-      } else {
-        console.log('No user profile found in profiles table for user ID:', userId);
-        toast({
-          title: "Profile Not Found",
-          description: "Could not find your user profile. Please contact an administrator.",
-          variant: "destructive",
-        });
-        
-        await supabase.auth.signOut();
-        setUser(null);
-        setSession(null);
-        setUserProfile(null);
-        setProfileFetched(false);
-        navigate("/login");
+        return;
       }
+
+      // If not found in profiles table
+      console.log('No user profile found in profiles table for user ID:', userId);
+      toast({
+        title: "Profile Not Found",
+        description: "Could not find your user profile. Please contact an administrator.",
+        variant: "destructive",
+      });
       
-      setLoading(false);
+      // Sign out the user since they don't have a profile
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+      setCurrentUserId(null);
+      navigate("/login");
+      
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
       toast({
@@ -127,10 +135,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "An unexpected error occurred while fetching your profile.",
         variant: "destructive",
       });
-      setLoading(false);
     }
   };
   
+  // Fetch barangay information if needed
   const fetchBarangayData = async (brgyId: string) => {
     try {
       const { data, error } = await supabase
@@ -158,7 +166,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
-      setProfileFetched(false);
+      setCurrentUserId(null);
       toast({
         title: "Signed out",
         description: "You have been signed out successfully",
@@ -177,48 +185,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("Auth provider initialized");
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log("Auth state change:", event, currentSession?.user?.id);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      console.log("Auth state change:", _event, currentSession?.user?.id);
       
-      if (event === 'SIGNED_OUT') {
+      if (_event === 'SIGNED_OUT') {
         setUser(null);
         setSession(null);
         setUserProfile(null);
-        setProfileFetched(false);
-        setLoading(false);
+        setCurrentUserId(null);
         return;
       }
       
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
-      if (currentSession?.user && !profileFetched) {
-        fetchUserProfile(currentSession.user.id);
-      } else if (!currentSession?.user) {
-        setLoading(false);
+      if (currentSession?.user) {
+        setTimeout(() => {
+          fetchUserProfile(currentSession.user.id);
+        }, 100);
       }
     });
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      console.log("Got initial session:", initialSession?.user?.id);
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      
-      if (initialSession?.user && !profileFetched) {
-        fetchUserProfile(initialSession.user.id);
-      } else {
+    if (!authInitialized) {
+      supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+        console.log("Got initial session:", initialSession?.user?.id);
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        
+        if (initialSession?.user) {
+          fetchUserProfile(initialSession.user.id);
+        }
+        
         setLoading(false);
-      }
-    }).catch(error => {
-      console.error("Error getting session:", error);
-      setLoading(false);
-    });
+        setAuthInitialized(true);
+      }).catch(error => {
+        console.error("Error getting session:", error);
+        setLoading(false);
+        setAuthInitialized(true);
+      });
+    }
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [authInitialized]);
 
   // Handle redirects based on auth status and role
   useEffect(() => {
@@ -226,12 +236,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!session && !location.pathname.includes("/login")) {
       navigate("/login");
+    } else if (session && location.pathname === "/login") {
+      // Redirect based on user role
+      if (userProfile?.role === "user") {
+        navigate("/hub");
+      } else {
+        navigate("/dashboard");
+      }
     }
-  }, [session, loading, location.pathname, navigate]);
+  }, [session, loading, location.pathname, navigate, userProfile]);
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
