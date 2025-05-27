@@ -151,7 +151,7 @@ const AppContent = () => {
           {/* Shared Routes */}
           <Route path="/profile" element={<ProfilePage />} />
           
-          {/* Default redirects */}
+          {/* Default redirects - redirect to login instead of dashboard */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

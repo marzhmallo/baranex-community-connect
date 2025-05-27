@@ -96,11 +96,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setCurrentUserId(userId);
         console.log('Profile loaded:', profileData);
         
-        // Redirect based on user role
+        // Redirect based on user role ONLY if we're on the login page
         if (location.pathname === "/login") {
           if (profileData.role === "user") {
+            console.log('Redirecting user to /hub');
             navigate("/hub");
-          } else {
+          } else if (profileData.role === "admin" || profileData.role === "staff") {
+            console.log('Redirecting admin/staff to /dashboard');
             navigate("/dashboard");
           }
         }
@@ -234,13 +236,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (loading) return;
 
+    // If no session and not on login page, redirect to login
     if (!session && !location.pathname.includes("/login")) {
       navigate("/login");
-    } else if (session && location.pathname === "/login") {
-      // Redirect based on user role
-      if (userProfile?.role === "user") {
+      return;
+    }
+
+    // If there's a session but we're on login page and have user profile, redirect based on role
+    if (session && location.pathname === "/login" && userProfile) {
+      if (userProfile.role === "user") {
+        console.log('Redirecting authenticated user to /hub');
         navigate("/hub");
-      } else {
+      } else if (userProfile.role === "admin" || userProfile.role === "staff") {
+        console.log('Redirecting authenticated admin/staff to /dashboard');
         navigate("/dashboard");
       }
     }
