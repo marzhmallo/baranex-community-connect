@@ -192,7 +192,7 @@ const HomePage = () => {
                       <p className="text-xs text-gray-500">Requested May 10, 2023</p>
                     </div>
                   </div>
-                  <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Ready for Pickup</span>
+                  <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Ready</span>
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
