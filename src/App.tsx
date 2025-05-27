@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,9 +13,9 @@ import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
 import ResidentsPage from "./pages/ResidentsPage";
 import ResidentMoreDetailsPage from "./pages/ResidentMoreDetailsPage";
-import HouseholdPage from "./pages/HouseholdsPage"; 
+import HouseholdPage from "./pages/HouseholdsPage";
 import HouseholdMoreDetailsPage from "./pages/HouseholdMoreDetailsPage";
-import OfficialsPage from "./pages/OfficialsPage"; 
+import OfficialsPage from "./pages/OfficialsPage";
 import DocumentsPage from "./components/documents/DocumentsPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
@@ -25,20 +24,18 @@ import AnnouncementsPage from "./pages/AnnouncementsPage";
 import ForumPage from "./pages/ForumPage";
 import OfficialDetailsPage from './pages/OfficialDetailsPage';
 import { Skeleton } from "@/components/ui/skeleton";
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60 * 1000,
-      retry: 1,
-    },
-  },
+      retry: 1
+    }
+  }
 });
 
 // Loading component for authentication state
 const AuthLoadingScreen = () => {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+  return <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center space-x-2">
           <span className="text-2xl font-bold text-white bg-baranex-accent px-3 py-2 rounded">Bara</span>
@@ -48,58 +45,65 @@ const AuthLoadingScreen = () => {
           <Skeleton className="h-4 w-48 mx-auto" />
           <Skeleton className="h-4 w-32 mx-auto" />
         </div>
-        <p className="text-muted-foreground">Loading your dashboard...</p>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
-    </div>
-  );
+    </div>;
 };
 
 // Component to protect admin-only routes
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, loading } = useAuth();
-  
+const AdminRoute = ({
+  children
+}: {
+  children: React.ReactNode;
+}) => {
+  const {
+    userProfile,
+    loading
+  } = useAuth();
   if (loading) {
     return <AuthLoadingScreen />;
   }
-  
   if (userProfile?.role === "user") {
     return <Navigate to="/hub" replace />;
   }
-  
   return <>{children}</>;
 };
 
 // Component to protect user-only routes
-const UserRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, loading } = useAuth();
-  
+const UserRoute = ({
+  children
+}: {
+  children: React.ReactNode;
+}) => {
+  const {
+    userProfile,
+    loading
+  } = useAuth();
   if (loading) {
     return <AuthLoadingScreen />;
   }
-  
   if (userProfile?.role === "admin" || userProfile?.role === "staff") {
     return <Navigate to="/dashboard" replace />;
   }
-  
   return <>{children}</>;
 };
-
 const AppContent = () => {
   const location = useLocation();
-  const { userProfile, loading } = useAuth();
+  const {
+    userProfile,
+    loading
+  } = useAuth();
   const isAuthPage = location.pathname === "/login";
   const isUserRoute = location.pathname === "/hub";
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  
+
   // Move all hooks to the top before any conditional returns
   useEffect(() => {
     const handleSidebarChange = (event: Event) => {
       const customEvent = event as CustomEvent;
       setIsSidebarCollapsed(customEvent.detail.isCollapsed);
     };
-    
     window.addEventListener('sidebarStateChange', handleSidebarChange);
-    
     return () => {
       window.removeEventListener('sidebarStateChange', handleSidebarChange);
     };
@@ -112,17 +116,11 @@ const AppContent = () => {
 
   // Only show admin sidebar for admin/staff users and not on auth/user pages
   const showAdminSidebar = !isAuthPage && !isUserRoute && userProfile?.role !== "user";
-  
-  return (
-    <AuthProvider>
+  return <AuthProvider>
       <div className="flex">
         {showAdminSidebar && <Sidebar />}
         
-        <div 
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            showAdminSidebar ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
-          }`}
-        > 
+        <div className={`flex-1 transition-all duration-300 ease-in-out ${showAdminSidebar ? isSidebarCollapsed ? "ml-16" : "md:ml-64" : ""}`}> 
           <Routes>
             <Route path="/login" element={<Auth />} />
             
@@ -152,12 +150,9 @@ const AppContent = () => {
           </Routes>
         </div>
       </div>
-    </AuthProvider>
-  );
+    </AuthProvider>;
 };
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="light" storageKey="baranex-ui-theme">
       <TooltipProvider>
         <Toaster />
@@ -167,7 +162,5 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
-  </QueryClientProvider>
-);
-
+  </QueryClientProvider>;
 export default App;
