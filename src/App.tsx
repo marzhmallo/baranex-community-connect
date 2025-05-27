@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-route
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import Sidebar from "./components/layout/Sidebar";
+import PublicSidebar from "./components/layout/PublicSidebar";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -19,6 +20,7 @@ import HouseholdMoreDetailsPage from "./pages/HouseholdMoreDetailsPage";
 import OfficialsPage from "./pages/OfficialsPage"; 
 import DocumentsPage from "./components/documents/DocumentsPage";
 import ProfilePage from "./pages/ProfilePage";
+import UserProfilePage from "./pages/UserProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import CalendarPage from "./pages/CalendarPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
@@ -84,8 +86,9 @@ const AppContent = () => {
   const location = useLocation();
   const { userProfile, loading } = useAuth();
   const isAuthPage = location.pathname === "/login";
-  const isUserRoute = location.pathname === "/hub";
+  const isUserRoute = location.pathname.startsWith("/hub") || (location.pathname === "/profile" && userProfile?.role === "user");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isPublicSidebarCollapsed, setIsPublicSidebarCollapsed] = useState(false);
   
   useEffect(() => {
     const handleSidebarChange = (event: Event) => {
@@ -93,17 +96,29 @@ const AppContent = () => {
       setIsSidebarCollapsed(customEvent.detail.isCollapsed);
     };
     
+    const handlePublicSidebarChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      setIsPublicSidebarCollapsed(customEvent.detail.isCollapsed);
+    };
+    
     window.addEventListener('sidebarStateChange', handleSidebarChange);
+    window.addEventListener('publicSidebarStateChange', handlePublicSidebarChange);
     
     return () => {
       window.removeEventListener('sidebarStateChange', handleSidebarChange);
+      window.removeEventListener('publicSidebarStateChange', handlePublicSidebarChange);
     };
   }, []);
 
-  // Only show admin sidebar for admin/staff users and not on auth/user pages
+  // Show admin sidebar for admin/staff users and not on auth/user pages
   const showAdminSidebar = !isAuthPage && !isUserRoute && 
     userProfile?.role !== "user" && 
     (userProfile?.role === "admin" || userProfile?.role === "staff") &&
+    !loading;
+
+  // Show user sidebar for user role and on user pages
+  const showUserSidebar = !isAuthPage && isUserRoute && 
+    userProfile?.role === "user" && 
     !loading;
   
   // Show loading screen while auth is being determined
@@ -118,10 +133,12 @@ const AppContent = () => {
   return (
     <div className="flex">
       {showAdminSidebar && <Sidebar />}
+      {showUserSidebar && <PublicSidebar />}
       
       <div 
         className={`flex-1 transition-all duration-300 ease-in-out ${
-          showAdminSidebar ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
+          showAdminSidebar ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : 
+          showUserSidebar ? (isPublicSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
         }`}
       > 
         <Routes>
@@ -142,14 +159,13 @@ const AppContent = () => {
               <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
               <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
               <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+              <Route path="/profile" element={<AdminRoute><ProfilePage /></AdminRoute>} />
             </>
           )}
           
           {/* User Routes */}
           <Route path="/hub" element={<UserRoute><HomePage /></UserRoute>} />
-          
-          {/* Shared Routes */}
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<UserRoute><UserProfilePage /></UserRoute>} />
           
           {/* Default redirects - redirect to login instead of dashboard */}
           <Route path="/" element={<Navigate to="/login" replace />} />
