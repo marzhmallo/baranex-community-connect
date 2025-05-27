@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
@@ -64,11 +63,11 @@ const IncidentReportsList = () => {
         .order('date_reported', { ascending: false });
 
       if (filterStatus !== "all") {
-        query = query.eq('status', filterStatus);
+        query = query.eq('status', filterStatus as "open" | "under_investigation" | "resolved" | "dismissed");
       }
 
       if (filterType !== "all") {
-        query = query.eq('report_type', filterType);
+        query = query.eq('report_type', filterType as "theft" | "dispute" | "vandalism" | "curfew" | "others");
       }
 
       if (searchTerm) {

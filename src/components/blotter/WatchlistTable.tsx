@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
@@ -55,7 +54,7 @@ const WatchlistTable = () => {
         .order('created_at', { ascending: false });
 
       if (filterRisk !== "all") {
-        query = query.eq('risk_level', filterRisk);
+        query = query.eq('risk_level', filterRisk as "low" | "moderate" | "high");
       }
 
       if (searchTerm) {
