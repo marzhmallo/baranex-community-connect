@@ -1,38 +1,34 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import PublicSidebar from '@/components/layout/PublicSidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-
 const HomePage = () => {
-  const { userProfile } = useAuth();
+  const {
+    userProfile
+  } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [barangayName, setBarangayName] = useState<string>('your barangay');
   const [currentDate, setCurrentDate] = useState('');
-  
   useEffect(() => {
     const handleSidebarChange = (event: Event) => {
       const customEvent = event as CustomEvent;
       setIsSidebarCollapsed(customEvent.detail.isCollapsed);
     };
-    
     window.addEventListener('publicSidebarStateChange', handleSidebarChange);
-    
     return () => {
       window.removeEventListener('publicSidebarStateChange', handleSidebarChange);
     };
   }, []);
-
   useEffect(() => {
     // Set current date
     const now = new Date();
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     };
     setCurrentDate(now.toLocaleDateString('en-US', options));
 
@@ -40,12 +36,10 @@ const HomePage = () => {
     const fetchBarangayName = async () => {
       if (userProfile?.brgyid) {
         try {
-          const { data, error } = await supabase
-            .from('barangays')
-            .select('barangayname')
-            .eq('id', userProfile.brgyid)
-            .single();
-          
+          const {
+            data,
+            error
+          } = await supabase.from('barangays').select('barangayname').eq('id', userProfile.brgyid).single();
           if (data && !error) {
             setBarangayName(data.barangayname);
           }
@@ -54,25 +48,17 @@ const HomePage = () => {
         }
       }
     };
-
     fetchBarangayName();
   }, [userProfile]);
-
   const getInitials = (firstName?: string, lastName?: string) => {
     const first = firstName?.charAt(0) || '';
     const last = lastName?.charAt(0) || '';
     return (first + last).toUpperCase();
   };
-
-  return (
-    <div className="flex">
+  return <div className="flex">
       <PublicSidebar />
       
-      <div 
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? "ml-16" : "md:ml-64"
-        }`}
-      > 
+      <div className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "ml-16" : "md:ml-64"}`}> 
         <div className="p-6 bg-gray-50 min-h-screen">
           {/* Header Card */}
           <div className="relative bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 mb-6 text-white">
@@ -92,9 +78,7 @@ const HomePage = () => {
             </div>
             
             {/* User Avatar */}
-            <div className="absolute top-6 right-20 w-12 h-12 bg-orange-400 rounded-full flex items-center justify-center text-white font-semibold">
-              {getInitials(userProfile?.firstname, userProfile?.lastname)}
-            </div>
+            
           </div>
 
           {/* Main Content Grid */}
@@ -296,8 +280,6 @@ const HomePage = () => {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default HomePage;
