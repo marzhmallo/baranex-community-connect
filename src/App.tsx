@@ -91,11 +91,7 @@ const AppContent = () => {
   const isUserRoute = location.pathname === "/hub";
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
-  // Show loading screen while authentication is being determined
-  if (loading && !isAuthPage) {
-    return <AuthLoadingScreen />;
-  }
-  
+  // Move all hooks to the top before any conditional returns
   useEffect(() => {
     const handleSidebarChange = (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -108,6 +104,11 @@ const AppContent = () => {
       window.removeEventListener('sidebarStateChange', handleSidebarChange);
     };
   }, []);
+
+  // Show loading screen while authentication is being determined
+  if (loading && !isAuthPage) {
+    return <AuthLoadingScreen />;
+  }
 
   // Only show admin sidebar for admin/staff users and not on auth/user pages
   const showAdminSidebar = !isAuthPage && !isUserRoute && userProfile?.role !== "user";
