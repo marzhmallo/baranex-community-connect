@@ -432,6 +432,60 @@ export type Database = {
           },
         ]
       }
+      flagged_individuals: {
+        Row: {
+          alias: string | null
+          brgyid: string
+          created_at: string
+          created_by: string
+          full_name: string
+          id: string
+          linked_report_id: string
+          reason: string
+          risk_level: Database["public"]["Enums"]["risk_level"]
+          updated_at: string
+        }
+        Insert: {
+          alias?: string | null
+          brgyid: string
+          created_at?: string
+          created_by: string
+          full_name: string
+          id?: string
+          linked_report_id: string
+          reason: string
+          risk_level?: Database["public"]["Enums"]["risk_level"]
+          updated_at?: string
+        }
+        Update: {
+          alias?: string | null
+          brgyid?: string
+          created_at?: string
+          created_by?: string
+          full_name?: string
+          id?: string
+          linked_report_id?: string
+          reason?: string
+          risk_level?: Database["public"]["Enums"]["risk_level"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flagged_individuals_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flagged_individuals_linked_report_id_fkey"
+            columns: ["linked_report_id"]
+            isOneToOne: false
+            referencedRelation: "incident_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forums: {
         Row: {
           brgyid: string
@@ -555,6 +609,62 @@ export type Database = {
             columns: ["head_of_family"]
             isOneToOne: false
             referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_reports: {
+        Row: {
+          brgyid: string
+          created_at: string
+          created_by: string
+          date_reported: string
+          description: string
+          id: string
+          location: string
+          report_type: Database["public"]["Enums"]["report_type"]
+          reporter_contact: string | null
+          reporter_name: string
+          status: Database["public"]["Enums"]["incident_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brgyid: string
+          created_at?: string
+          created_by: string
+          date_reported?: string
+          description: string
+          id?: string
+          location: string
+          report_type: Database["public"]["Enums"]["report_type"]
+          reporter_contact?: string | null
+          reporter_name: string
+          status?: Database["public"]["Enums"]["incident_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brgyid?: string
+          created_at?: string
+          created_by?: string
+          date_reported?: string
+          description?: string
+          id?: string
+          location?: string
+          report_type?: Database["public"]["Enums"]["report_type"]
+          reporter_contact?: string | null
+          reporter_name?: string
+          status?: Database["public"]["Enums"]["incident_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_reports_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
             referencedColumns: ["id"]
           },
         ]
@@ -1394,7 +1504,9 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      incident_status: "open" | "under_investigation" | "resolved" | "dismissed"
+      report_type: "theft" | "dispute" | "vandalism" | "curfew" | "others"
+      risk_level: "low" | "moderate" | "high"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1509,6 +1621,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      incident_status: ["open", "under_investigation", "resolved", "dismissed"],
+      report_type: ["theft", "dispute", "vandalism", "curfew", "others"],
+      risk_level: ["low", "moderate", "high"],
+    },
   },
 } as const

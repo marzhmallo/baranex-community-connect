@@ -19,6 +19,7 @@ import HouseholdPage from "./pages/HouseholdsPage";
 import HouseholdMoreDetailsPage from "./pages/HouseholdMoreDetailsPage";
 import OfficialsPage from "./pages/OfficialsPage"; 
 import DocumentsPage from "./components/documents/DocumentsPage";
+import BlotterPage from "./pages/BlotterPage";
 import ProfilePage from "./pages/ProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
 import SettingsPage from "./pages/SettingsPage";
@@ -155,6 +156,7 @@ const AppContent = () => {
               <Route path="/officials" element={<AdminRoute><OfficialsPage /></AdminRoute>} />
               <Route path="/officials/:id" element={<AdminRoute><OfficialDetailsPage /></AdminRoute>} /> 
               <Route path="/documents" element={<AdminRoute><DocumentsPage /></AdminRoute>} />
+              <Route path="/blotter" element={<AdminRoute><BlotterPage /></AdminRoute>} />
               <Route path="/calendar" element={<AdminRoute><CalendarPage /></AdminRoute>} />
               <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
               <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
