@@ -24,6 +24,7 @@ import CalendarPage from "./pages/CalendarPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import ForumPage from "./pages/ForumPage";
 import OfficialDetailsPage from './pages/OfficialDetailsPage';
+import { Skeleton } from "@/components/ui/skeleton";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,9 +35,32 @@ const queryClient = new QueryClient({
   },
 });
 
+// Loading component for authentication state
+const AuthLoadingScreen = () => {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center space-x-2">
+          <span className="text-2xl font-bold text-white bg-baranex-accent px-3 py-2 rounded">Bara</span>
+          <span className="text-2xl font-bold text-baranex-accent">NEX</span>
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-48 mx-auto" />
+          <Skeleton className="h-4 w-32 mx-auto" />
+        </div>
+        <p className="text-muted-foreground">Loading your dashboard...</p>
+      </div>
+    </div>
+  );
+};
+
 // Component to protect admin-only routes
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile } = useAuth();
+  const { userProfile, loading } = useAuth();
+  
+  if (loading) {
+    return <AuthLoadingScreen />;
+  }
   
   if (userProfile?.role === "user") {
     return <Navigate to="/hub" replace />;
@@ -47,7 +71,11 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Component to protect user-only routes
 const UserRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile } = useAuth();
+  const { userProfile, loading } = useAuth();
+  
+  if (loading) {
+    return <AuthLoadingScreen />;
+  }
   
   if (userProfile?.role === "admin" || userProfile?.role === "staff") {
     return <Navigate to="/dashboard" replace />;
@@ -58,10 +86,15 @@ const UserRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppContent = () => {
   const location = useLocation();
-  const { userProfile } = useAuth();
+  const { userProfile, loading } = useAuth();
   const isAuthPage = location.pathname === "/login";
   const isUserRoute = location.pathname === "/hub";
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  
+  // Show loading screen while authentication is being determined
+  if (loading && !isAuthPage) {
+    return <AuthLoadingScreen />;
+  }
   
   useEffect(() => {
     const handleSidebarChange = (event: Event) => {
