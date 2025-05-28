@@ -613,6 +613,58 @@ export type Database = {
           },
         ]
       }
+      incident_parties: {
+        Row: {
+          contact_info: string | null
+          created_at: string
+          id: string
+          incident_id: string
+          name: string
+          resident_id: string | null
+          role: string
+        }
+        Insert: {
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          incident_id: string
+          name: string
+          resident_id?: string | null
+          role: string
+        }
+        Update: {
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          incident_id?: string
+          name?: string
+          resident_id?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_parties_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incident_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_parties_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_parties_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incident_reports: {
         Row: {
           brgyid: string
@@ -1504,9 +1556,9 @@ export type Database = {
       }
     }
     Enums: {
-      incident_status: "open" | "under_investigation" | "resolved" | "dismissed"
-      report_type: "theft" | "dispute" | "vandalism" | "curfew" | "others"
-      risk_level: "low" | "moderate" | "high"
+      incident_status: "Open" | "Under_Investigation" | "Resolved" | "Dismissed"
+      report_type: "Theft" | "Dispute" | "Vandalism" | "Curfew" | "Others"
+      risk_level: "Low" | "Moderate" | "High"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1622,9 +1674,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      incident_status: ["open", "under_investigation", "resolved", "dismissed"],
-      report_type: ["theft", "dispute", "vandalism", "curfew", "others"],
-      risk_level: ["low", "moderate", "high"],
+      incident_status: ["Open", "Under_Investigation", "Resolved", "Dismissed"],
+      report_type: ["Theft", "Dispute", "Vandalism", "Curfew", "Others"],
+      risk_level: ["Low", "Moderate", "High"],
     },
   },
 } as const

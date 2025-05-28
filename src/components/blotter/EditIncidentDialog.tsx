@@ -149,7 +149,7 @@ const EditIncidentDialog = ({ incident, open, onOpenChange, onSuccess }: EditInc
                         <SelectItem value="Theft">Theft</SelectItem>
                         <SelectItem value="Dispute">Dispute</SelectItem>
                         <SelectItem value="Vandalism">Vandalism</SelectItem>
-                        <SelectItem value="Curfew">Curfew</SelectItem>
+                        <SelectItem value="Curfew">Curfew Violation</SelectItem>
                         <SelectItem value="Others">Others</SelectItem>
                       </SelectContent>
                     </Select>
@@ -172,10 +172,10 @@ const EditIncidentDialog = ({ incident, open, onOpenChange, onSuccess }: EditInc
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="under_investigation">Under Investigation</SelectItem>
-                        <SelectItem value="resolved">Resolved</SelectItem>
-                        <SelectItem value="dismissed">Dismissed</SelectItem>
+                        <SelectItem value="Open">Open</SelectItem>
+                        <SelectItem value="Under_Investigation">Under Investigation</SelectItem>
+                        <SelectItem value="Resolved">Resolved</SelectItem>
+                        <SelectItem value="Dismissed">Dismissed</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

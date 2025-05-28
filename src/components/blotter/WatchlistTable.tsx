@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
@@ -54,7 +55,7 @@ const WatchlistTable = () => {
         .order('created_at', { ascending: false });
 
       if (filterRisk !== "all") {
-        query = query.eq('risk_level', filterRisk as "low" | "moderate" | "high");
+        query = query.eq('risk_level', filterRisk as "Low" | "Moderate" | "High");
       }
 
       if (searchTerm) {
@@ -92,15 +93,15 @@ const WatchlistTable = () => {
 
   const getRiskColor = (level: string) => {
     switch (level) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      case 'High': return 'bg-red-100 text-red-800 border-red-200';
+      case 'Moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Low': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getRiskIcon = (level: string) => {
-    if (level === 'high') {
+    if (level === 'High') {
       return <AlertTriangle className="h-3 w-3 mr-1" />;
     }
     return null;
@@ -170,9 +171,9 @@ const WatchlistTable = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Risk Levels</SelectItem>
-            <SelectItem value="high">High Risk</SelectItem>
-            <SelectItem value="moderate">Moderate Risk</SelectItem>
-            <SelectItem value="low">Low Risk</SelectItem>
+            <SelectItem value="High">High Risk</SelectItem>
+            <SelectItem value="Moderate">Moderate Risk</SelectItem>
+            <SelectItem value="Low">Low Risk</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -196,7 +197,7 @@ const WatchlistTable = () => {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">High Risk</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {flaggedIndividuals.filter(f => f.risk_level === 'high').length}
+                  {flaggedIndividuals.filter(f => f.risk_level === 'High').length}
                 </p>
               </div>
               <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
@@ -211,7 +212,7 @@ const WatchlistTable = () => {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Moderate Risk</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {flaggedIndividuals.filter(f => f.risk_level === 'moderate').length}
+                  {flaggedIndividuals.filter(f => f.risk_level === 'Moderate').length}
                 </p>
               </div>
               <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -226,7 +227,7 @@ const WatchlistTable = () => {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Low Risk</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {flaggedIndividuals.filter(f => f.risk_level === 'low').length}
+                  {flaggedIndividuals.filter(f => f.risk_level === 'Low').length}
                 </p>
               </div>
               <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
