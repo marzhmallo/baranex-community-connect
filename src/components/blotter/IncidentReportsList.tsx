@@ -26,6 +26,8 @@ interface IncidentReport {
   reporter_name: string;
   reporter_contact?: string;
   created_at: string;
+  complainant?: string;
+  respondent?: string;
 }
 
 const IncidentReportsList = () => {
@@ -218,16 +220,31 @@ const IncidentReportsList = () => {
                   <CardContent className="pt-0 border-t border-gray-100">
                     <div className="space-y-4">
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-2">Description</h4>
+                        <h4 className="font-bold text-gray-900 mb-2">Description</h4>
                         <p className="text-gray-700">{incident.description}</p>
                       </div>
 
-                      {incident.reporter_contact && (
-                        <div>
-                          <h4 className="font-medium text-gray-900 mb-1">Reporter Contact</h4>
-                          <p className="text-gray-700">{incident.reporter_contact}</p>
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-1">Reporter Information</h4>
+                        <p className="text-gray-700">{incident.reporter_name}</p>
+                        {incident.reporter_contact && (
+                          <p className="text-gray-600 text-sm">{incident.reporter_contact}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">Parties Involved</h4>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="font-medium text-gray-700">Complainant: </span>
+                            <span className="text-gray-700">{incident.complainant || 'Not specified'}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Respondent: </span>
+                            <span className="text-gray-700">{incident.respondent || 'Not specified'}</span>
+                          </div>
                         </div>
-                      )}
+                      </div>
 
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-2">
