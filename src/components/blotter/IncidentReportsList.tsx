@@ -1,20 +1,18 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useAuth } from "@/components/AuthProvider";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, AlertTriangle, ChevronDown, ChevronUp, Clock, MapPin, User } from "lucide-react";
-import { format } from 'date-fns';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import EditIncidentDialog from "@/components/blotter/EditIncidentDialog";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight, MapPin, Calendar, User, Phone, AlertTriangle, Users } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import EditIncidentDialog from "./EditIncidentDialog";
+import FlagIndividualDialog from "./FlagIndividualDialog";
+import IncidentPartiesManager from "./IncidentPartiesManager";
 
 interface IncidentReport {
   id: string;
@@ -22,49 +20,94 @@ interface IncidentReport {
   description: string;
   report_type: string;
   status: string;
+  date_reported: string;
   location: string;
   reporter_name: string;
   reporter_contact?: string;
   created_at: string;
-  complainant?: string;
-  respondent?: string;
+  flagged_individuals?: Array<{
+    id: string;
+    full_name: string;
+    risk_level: string;
+    reason: string;
+  }>;
+  incident_parties?: Array<{
+    id: string;
+    name: string;
+    role: string;
+    contact_info?: string;
+  }>;
 }
 
 const IncidentReportsList = () => {
   const [incidents, setIncidents] = useState<IncidentReport[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [editingIncident, setEditingIncident] = useState<IncidentReport | null>(null);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [editingIncident, setEditingIncident] = useState<IncidentReport | null>(null);
+  const [flaggingIncident, setFlaggingIncident] = useState<IncidentReport | null>(null);
+  const { userProfile } = useAuth();
 
   const fetchIncidents = async () => {
-    setLoading(true);
+    if (!userProfile?.brgyid) return;
+
     try {
+      setLoading(true);
+      
       let query = supabase
         .from('incident_reports')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select(`
+          *,
+          flagged_individuals (
+            id,
+            full_name,
+            risk_level,
+            reason
+          ),
+          incident_parties (
+            id,
+            name,
+            role,
+            contact_info
+          )
+        `)
+        .eq('brgyid', userProfile.brgyid)
+        .order('date_reported', { ascending: false });
+
+      if (filterStatus !== "all") {
+        query = query.eq('status', filterStatus as "Open" | "Under_Investigation" | "Resolved" | "Dismissed");
+      }
+
+      if (filterType !== "all") {
+        query = query.eq('report_type', filterType as "Theft" | "Dispute" | "Vandalism" | "Curfew" | "Others");
+      }
 
       if (searchTerm) {
-        query = query.ilike('title', `%${searchTerm}%`);
-      }
-
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter as "Open" | "Under_Investigation" | "Resolved" | "Dismissed");
-      }
-
-      if (typeFilter !== 'all') {
-        query = query.eq('report_type', typeFilter as "Theft" | "Dispute" | "Vandalism" | "Curfew" | "Others");
+        query = query.or(`title.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,reporter_name.ilike.%${searchTerm}%`);
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching incidents:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch incident reports",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setIncidents(data || []);
     } catch (error) {
-      console.error('Error fetching incidents:', error);
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -72,26 +115,7 @@ const IncidentReportsList = () => {
 
   useEffect(() => {
     fetchIncidents();
-  }, [searchTerm, statusFilter, typeFilter]);
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this incident report?")) {
-      try {
-        const { error } = await supabase
-          .from('incident_reports')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-
-        fetchIncidents();
-        alert("Incident report deleted successfully!");
-      } catch (error) {
-        console.error('Error deleting incident:', error);
-        alert("Failed to delete incident report.");
-      }
-    }
-  };
+  }, [userProfile?.brgyid, filterStatus, filterType, searchTerm]);
 
   const toggleExpanded = (id: string) => {
     const newExpanded = new Set(expandedCards);
@@ -105,11 +129,11 @@ const IncidentReportsList = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Open': return 'bg-red-100 text-red-800 border-red-200';
-      case 'Under_Investigation': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Resolved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Dismissed': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Open': return 'bg-red-100 text-red-800';
+      case 'Under_Investigation': return 'bg-yellow-100 text-yellow-800';
+      case 'Resolved': return 'bg-green-100 text-green-800';
+      case 'Dismissed': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -119,22 +143,40 @@ const IncidentReportsList = () => {
       case 'Dispute': return 'bg-orange-100 text-orange-800';
       case 'Vandalism': return 'bg-red-100 text-red-800';
       case 'Curfew': return 'bg-blue-100 text-blue-800';
+      case 'Others': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
+  const getRiskColor = (level: string) => {
+    switch (level) {
+      case 'High': return 'bg-red-100 text-red-800';
+      case 'Moderate': return 'bg-yellow-100 text-yellow-800';
+      case 'Low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
         <Input
-          type="text"
-          placeholder="Search by title..."
+          placeholder="Search by title, location, or reporter..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1"
         />
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -145,9 +187,8 @@ const IncidentReportsList = () => {
             <SelectItem value="Dismissed">Dismissed</SelectItem>
           </SelectContent>
         </Select>
-
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger>
+        <Select value={filterType} onValueChange={setFilterType}>
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by type" />
           </SelectTrigger>
           <SelectContent>
@@ -155,158 +196,178 @@ const IncidentReportsList = () => {
             <SelectItem value="Theft">Theft</SelectItem>
             <SelectItem value="Dispute">Dispute</SelectItem>
             <SelectItem value="Vandalism">Vandalism</SelectItem>
-            <SelectItem value="Curfew">Curfew Violation</SelectItem>
+            <SelectItem value="Curfew">Curfew</SelectItem>
             <SelectItem value="Others">Others</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-gray-500">Loading incident reports...</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {incidents.map((incident) => {
-            const isExpanded = expandedCards.has(incident.id);
+      {/* Incident Cards */}
+      <div className="space-y-4">
+        {incidents.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No incident reports found
+          </div>
+        ) : (
+          incidents.map((incident) => {
+            const complainants = incident.incident_parties?.filter(p => p.role === 'complainant') || [];
+            const respondents = incident.incident_parties?.filter(p => p.role === 'respondent') || [];
+            
             return (
-              <Card key={incident.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className={getTypeColor(incident.report_type)}>
-                          {incident.report_type}
-                        </Badge>
-                        <Badge className={getStatusColor(incident.status)}>
-                          {incident.status.replace('_', ' ')}
-                        </Badge>
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {incident.title}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {format(new Date(incident.created_at), 'MMM dd, yyyy')}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {incident.location}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          {incident.reporter_name}
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleExpanded(incident.id)}
-                      className="ml-2"
-                    >
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </CardHeader>
-
-                {isExpanded && (
-                  <CardContent className="pt-0 border-t border-gray-100">
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-2">Description</h4>
-                        <p className="text-gray-700">{incident.description}</p>
-                      </div>
-
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-1">Reporter Information</h4>
-                        <p className="text-gray-700">{incident.reporter_name}</p>
-                        {incident.reporter_contact && (
-                          <p className="text-gray-600 text-sm">{incident.reporter_contact}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-2">Parties Involved</h4>
-                        <div className="space-y-2">
-                          <div>
-                            <span className="font-medium text-gray-700">Complainant: </span>
-                            <span className="text-gray-700">{incident.complainant || 'Not specified'}</span>
+              <Collapsible key={incident.id}>
+                <Card className="w-full">
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            {expandedCards.has(incident.id) ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
+                            <CardTitle className="text-lg">{incident.title}</CardTitle>
                           </div>
-                          <div>
-                            <span className="font-medium text-gray-700">Respondent: </span>
-                            <span className="text-gray-700">{incident.respondent || 'Not specified'}</span>
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <Badge className={getStatusColor(incident.status)}>
+                              {incident.status.replace('_', ' ')}
+                            </Badge>
+                            <Badge className={getTypeColor(incident.report_type)}>
+                              {incident.report_type}
+                            </Badge>
+                            {complainants.length > 0 && (
+                              <Badge variant="outline" className="text-blue-600 border-blue-600">
+                                <User className="h-3 w-3 mr-1" />
+                                {complainants.length} Complainant{complainants.length !== 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                            {respondents.length > 0 && (
+                              <Badge variant="outline" className="text-orange-600 border-orange-600">
+                                <Users className="h-3 w-3 mr-1" />
+                                {respondents.length} Respondent{respondents.length !== 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                            {incident.flagged_individuals && incident.flagged_individuals.length > 0 && (
+                              <Badge variant="outline" className="text-red-600 border-red-600">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                {incident.flagged_individuals.length} Flagged
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(incident.date_reported).toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {incident.location}
+                            </div>
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">
-                            ID: {incident.id.slice(0, 8)}
-                          </Badge>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <div className="space-y-6">
+                        <div>
+                          <h4 className="font-semibold mb-2">Description</h4>
+                          <p className="text-sm text-muted-foreground">{incident.description}</p>
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2">Reporter Information</h4>
+                            <div className="space-y-1 text-sm">
+                              <div className="flex items-center gap-2">
+                                <User className="h-3 w-3" />
+                                {incident.reporter_name}
+                              </div>
+                              {incident.reporter_contact && (
+                                <div className="flex items-center gap-2">
+                                  <Phone className="h-3 w-3" />
+                                  {incident.reporter_contact}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {incident.flagged_individuals && incident.flagged_individuals.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold mb-2">Flagged Individuals</h4>
+                              <div className="space-y-2">
+                                {incident.flagged_individuals.map((individual) => (
+                                  <div key={individual.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                                    <div>
+                                      <p className="font-medium text-sm">{individual.full_name}</p>
+                                      <p className="text-xs text-muted-foreground">{individual.reason}</p>
+                                    </div>
+                                    <Badge className={getRiskColor(individual.risk_level)}>
+                                      {individual.risk_level}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Incident Parties Manager */}
+                        <div>
+                          <h4 className="font-semibold mb-3">Parties Involved</h4>
+                          <IncidentPartiesManager 
+                            incidentId={incident.id} 
+                            onUpdate={fetchIncidents}
+                          />
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-4 border-t">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setEditingIncident(incident)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFlaggingIncident(incident);
+                            }}
                           >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
+                            Flag Individual
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(incident.id)}
-                            className="text-red-600 hover:text-red-700"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingIncident(incident);
+                            }}
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
+                            Edit
                           </Button>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             );
-          })}
+          })
+        )}
+      </div>
 
-          {incidents.length === 0 && (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Incident Reports Found</h3>
-                <p className="text-muted-foreground">
-                  {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
-                    ? 'No reports match your current filters.'
-                    : 'No incident reports have been filed yet.'}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+      <EditIncidentDialog
+        incident={editingIncident}
+        open={!!editingIncident}
+        onOpenChange={(open) => !open && setEditingIncident(null)}
+        onSuccess={fetchIncidents}
+      />
 
-      {editingIncident && (
-        <EditIncidentDialog
-          incident={editingIncident}
-          open={!!editingIncident}
-          onOpenChange={(open) => !open && setEditingIncident(null)}
-          onSuccess={() => {
-            fetchIncidents();
-            setEditingIncident(null);
-          }}
-        />
-      )}
+      <FlagIndividualDialog
+        incident={flaggingIncident}
+        open={!!flaggingIncident}
+        onOpenChange={(open) => !open && setFlaggingIncident(null)}
+        onSuccess={fetchIncidents}
+      />
     </div>
   );
 };
