@@ -442,6 +442,7 @@ export type Database = {
           id: string
           linked_report_id: string
           reason: string
+          residentname: string | null
           risk_level: Database["public"]["Enums"]["risk_level"]
           updated_at: string
         }
@@ -454,6 +455,7 @@ export type Database = {
           id?: string
           linked_report_id: string
           reason: string
+          residentname?: string | null
           risk_level?: Database["public"]["Enums"]["risk_level"]
           updated_at?: string
         }
@@ -466,6 +468,7 @@ export type Database = {
           id?: string
           linked_report_id?: string
           reason?: string
+          residentname?: string | null
           risk_level?: Database["public"]["Enums"]["risk_level"]
           updated_at?: string
         }
@@ -482,6 +485,20 @@ export type Database = {
             columns: ["linked_report_id"]
             isOneToOne: false
             referencedRelation: "incident_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flagged_individuals_residentname_fkey"
+            columns: ["residentname"]
+            isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flagged_individuals_residentname_fkey"
+            columns: ["residentname"]
+            isOneToOne: false
+            referencedRelation: "residents"
             referencedColumns: ["id"]
           },
         ]

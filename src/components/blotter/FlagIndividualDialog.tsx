@@ -34,7 +34,7 @@ const FlagIndividualDialog = ({ incident, open, onOpenChange, onSuccess }: FlagI
       full_name: "",
       alias: "",
       reason: "",
-      risk_level: "low",
+      risk_level: "Low",
     },
   });
 
@@ -148,9 +148,9 @@ const FlagIndividualDialog = ({ incident, open, onOpenChange, onSuccess }: FlagI
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="low">Low Risk</SelectItem>
-                      <SelectItem value="moderate">Moderate Risk</SelectItem>
-                      <SelectItem value="high">High Risk</SelectItem>
+                      <SelectItem value="Low">Low Risk</SelectItem>
+                      <SelectItem value="Moderate">Moderate Risk</SelectItem>
+                      <SelectItem value="High">High Risk</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

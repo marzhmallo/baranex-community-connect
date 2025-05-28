@@ -22,6 +22,7 @@ interface FormData {
   reason: string;
   risk_level: string;
   linked_report_id: string;
+  residentname?: string;
 }
 
 interface IncidentReport {
@@ -30,9 +31,17 @@ interface IncidentReport {
   date_reported: string;
 }
 
+interface Resident {
+  id: string;
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+}
+
 const CreateFlaggedDialog = ({ open, onOpenChange }: CreateFlaggedDialogProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [incidents, setIncidents] = useState<IncidentReport[]>([]);
+  const [residents, setResidents] = useState<Resident[]>([]);
   const { userProfile } = useAuth();
   
   const form = useForm<FormData>({
@@ -40,14 +49,16 @@ const CreateFlaggedDialog = ({ open, onOpenChange }: CreateFlaggedDialogProps) =
       full_name: "",
       alias: "",
       reason: "",
-      risk_level: "low",
+      risk_level: "Low",
       linked_report_id: "",
+      residentname: "",
     },
   });
 
   useEffect(() => {
     if (open && userProfile?.brgyid) {
       fetchIncidents();
+      fetchResidents();
     }
   }, [open, userProfile?.brgyid]);
 
@@ -65,6 +76,25 @@ const CreateFlaggedDialog = ({ open, onOpenChange }: CreateFlaggedDialogProps) =
       }
 
       setIncidents(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const fetchResidents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('residents')
+        .select('id, first_name, last_name, middle_name')
+        .eq('brgyid', userProfile?.brgyid)
+        .order('last_name', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching residents:', error);
+        return;
+      }
+
+      setResidents(data || []);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -91,6 +121,7 @@ const CreateFlaggedDialog = ({ open, onOpenChange }: CreateFlaggedDialogProps) =
           reason: data.reason,
           risk_level: data.risk_level as any,
           linked_report_id: data.linked_report_id,
+          residentname: data.residentname || null,
           brgyid: userProfile.brgyid,
           created_by: userProfile.id,
         });
@@ -164,6 +195,32 @@ const CreateFlaggedDialog = ({ open, onOpenChange }: CreateFlaggedDialogProps) =
 
             <FormField
               control={form.control}
+              name="residentname"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Resident (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select resident if applicable" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">Not a registered resident</SelectItem>
+                      {residents.map((resident) => (
+                        <SelectItem key={resident.id} value={resident.id}>
+                          {resident.first_name} {resident.middle_name ? resident.middle_name + ' ' : ''}{resident.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="full_name"
               rules={{ required: "Full name is required" }}
               render={({ field }) => (
@@ -205,9 +262,9 @@ const CreateFlaggedDialog = ({ open, onOpenChange }: CreateFlaggedDialogProps) =
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="low">Low Risk</SelectItem>
-                      <SelectItem value="moderate">Moderate Risk</SelectItem>
-                      <SelectItem value="high">High Risk</SelectItem>
+                      <SelectItem value="Low">Low Risk</SelectItem>
+                      <SelectItem value="Moderate">Moderate Risk</SelectItem>
+                      <SelectItem value="High">High Risk</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
