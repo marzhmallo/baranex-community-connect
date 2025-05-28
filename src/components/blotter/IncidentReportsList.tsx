@@ -50,11 +50,11 @@ const IncidentReportsList = () => {
       }
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        query = query.eq('status', statusFilter as "Open" | "Under_Investigation" | "Resolved" | "Dismissed");
       }
 
       if (typeFilter !== 'all') {
-        query = query.eq('report_type', typeFilter);
+        query = query.eq('report_type', typeFilter as "Theft" | "Dispute" | "Vandalism" | "Curfew" | "Others");
       }
 
       const { data, error } = await query;
