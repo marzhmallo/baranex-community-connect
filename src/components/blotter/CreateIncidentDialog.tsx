@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,6 +110,7 @@ const CreateIncidentDialog = ({ open, onOpenChange }: CreateIncidentDialogProps)
 
     let partyData: IncidentParty = {
       role: newParty.role,
+      name: '', // Initialize with empty string, will be set below
       contact_info: newParty.contact_info || undefined
     };
 
