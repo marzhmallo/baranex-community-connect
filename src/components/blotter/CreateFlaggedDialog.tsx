@@ -51,7 +51,7 @@ const CreateFlaggedDialog = ({ open, onOpenChange }: CreateFlaggedDialogProps) =
       reason: "",
       risk_level: "Low",
       linked_report_id: "",
-      residentname: "",
+      residentname: "not_resident",
     },
   });
 
@@ -121,7 +121,7 @@ const CreateFlaggedDialog = ({ open, onOpenChange }: CreateFlaggedDialogProps) =
           reason: data.reason,
           risk_level: data.risk_level as any,
           linked_report_id: data.linked_report_id,
-          residentname: data.residentname || null,
+          residentname: data.residentname === "not_resident" ? null : data.residentname,
           brgyid: userProfile.brgyid,
           created_by: userProfile.id,
         });
@@ -206,7 +206,7 @@ const CreateFlaggedDialog = ({ open, onOpenChange }: CreateFlaggedDialogProps) =
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Not a registered resident</SelectItem>
+                      <SelectItem value="not_resident">Not a registered resident</SelectItem>
                       {residents.map((resident) => (
                         <SelectItem key={resident.id} value={resident.id}>
                           {resident.first_name} {resident.middle_name ? resident.middle_name + ' ' : ''}{resident.last_name}
