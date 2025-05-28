@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, MapPin, Calendar, User, Phone, AlertTriangle } from "lucide-react";
+import { ChevronDown, ChevronRight, MapPin, Calendar, User, Phone, AlertTriangle, Users } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import EditIncidentDialog from "./EditIncidentDialog";
 import FlagIndividualDialog from "./FlagIndividualDialog";
+import IncidentPartiesManager from "./IncidentPartiesManager";
 
 interface IncidentReport {
   id: string;
@@ -29,6 +30,12 @@ interface IncidentReport {
     full_name: string;
     risk_level: string;
     reason: string;
+  }>;
+  incident_parties?: Array<{
+    id: string;
+    name: string;
+    role: string;
+    contact_info?: string;
   }>;
 }
 
@@ -58,6 +65,12 @@ const IncidentReportsList = () => {
             full_name,
             risk_level,
             reason
+          ),
+          incident_parties (
+            id,
+            name,
+            role,
+            contact_info
           )
         `)
         .eq('brgyid', userProfile.brgyid)
@@ -196,123 +209,149 @@ const IncidentReportsList = () => {
             No incident reports found
           </div>
         ) : (
-          incidents.map((incident) => (
-            <Collapsible key={incident.id}>
-              <Card className="w-full">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          {expandedCards.has(incident.id) ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
-                          <CardTitle className="text-lg">{incident.title}</CardTitle>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <Badge className={getStatusColor(incident.status)}>
-                            {incident.status.replace('_', ' ')}
-                          </Badge>
-                          <Badge className={getTypeColor(incident.report_type)}>
-                            {incident.report_type}
-                          </Badge>
-                          {incident.flagged_individuals && incident.flagged_individuals.length > 0 && (
-                            <Badge variant="outline" className="text-red-600 border-red-600">
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                              {incident.flagged_individuals.length} Flagged
+          incidents.map((incident) => {
+            const complainants = incident.incident_parties?.filter(p => p.role === 'complainant') || [];
+            const respondents = incident.incident_parties?.filter(p => p.role === 'respondent') || [];
+            
+            return (
+              <Collapsible key={incident.id}>
+                <Card className="w-full">
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            {expandedCards.has(incident.id) ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
+                            <CardTitle className="text-lg">{incident.title}</CardTitle>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <Badge className={getStatusColor(incident.status)}>
+                              {incident.status.replace('_', ' ')}
                             </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(incident.date_reported).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {incident.location}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                
-                <CollapsibleContent>
-                  <CardContent className="pt-0">
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-semibold mb-2">Description</h4>
-                        <p className="text-sm text-muted-foreground">{incident.description}</p>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-semibold mb-2">Reporter Information</h4>
-                          <div className="space-y-1 text-sm">
-                            <div className="flex items-center gap-2">
-                              <User className="h-3 w-3" />
-                              {incident.reporter_name}
-                            </div>
-                            {incident.reporter_contact && (
-                              <div className="flex items-center gap-2">
-                                <Phone className="h-3 w-3" />
-                                {incident.reporter_contact}
-                              </div>
+                            <Badge className={getTypeColor(incident.report_type)}>
+                              {incident.report_type}
+                            </Badge>
+                            {complainants.length > 0 && (
+                              <Badge variant="outline" className="text-blue-600 border-blue-600">
+                                <User className="h-3 w-3 mr-1" />
+                                {complainants.length} Complainant{complainants.length !== 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                            {respondents.length > 0 && (
+                              <Badge variant="outline" className="text-orange-600 border-orange-600">
+                                <Users className="h-3 w-3 mr-1" />
+                                {respondents.length} Respondent{respondents.length !== 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                            {incident.flagged_individuals && incident.flagged_individuals.length > 0 && (
+                              <Badge variant="outline" className="text-red-600 border-red-600">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                {incident.flagged_individuals.length} Flagged
+                              </Badge>
                             )}
                           </div>
-                        </div>
-                        
-                        {incident.flagged_individuals && incident.flagged_individuals.length > 0 && (
-                          <div>
-                            <h4 className="font-semibold mb-2">Flagged Individuals</h4>
-                            <div className="space-y-2">
-                              {incident.flagged_individuals.map((individual) => (
-                                <div key={individual.id} className="flex items-center justify-between p-2 bg-muted rounded">
-                                  <div>
-                                    <p className="font-medium text-sm">{individual.full_name}</p>
-                                    <p className="text-xs text-muted-foreground">{individual.reason}</p>
-                                  </div>
-                                  <Badge className={getRiskColor(individual.risk_level)}>
-                                    {individual.risk_level}
-                                  </Badge>
-                                </div>
-                              ))}
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(incident.date_reported).toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {incident.location}
                             </div>
                           </div>
-                        )}
+                        </div>
                       </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <div className="space-y-6">
+                        <div>
+                          <h4 className="font-semibold mb-2">Description</h4>
+                          <p className="text-sm text-muted-foreground">{incident.description}</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2">Reporter Information</h4>
+                            <div className="space-y-1 text-sm">
+                              <div className="flex items-center gap-2">
+                                <User className="h-3 w-3" />
+                                {incident.reporter_name}
+                              </div>
+                              {incident.reporter_contact && (
+                                <div className="flex items-center gap-2">
+                                  <Phone className="h-3 w-3" />
+                                  {incident.reporter_contact}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {incident.flagged_individuals && incident.flagged_individuals.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold mb-2">Flagged Individuals</h4>
+                              <div className="space-y-2">
+                                {incident.flagged_individuals.map((individual) => (
+                                  <div key={individual.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                                    <div>
+                                      <p className="font-medium text-sm">{individual.full_name}</p>
+                                      <p className="text-xs text-muted-foreground">{individual.reason}</p>
+                                    </div>
+                                    <Badge className={getRiskColor(individual.risk_level)}>
+                                      {individual.risk_level}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="flex justify-end gap-2 pt-4 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFlaggingIncident(incident);
-                          }}
-                        >
-                          Flag Individual
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingIncident(incident);
-                          }}
-                        >
-                          Edit
-                        </Button>
+                        {/* Incident Parties Manager */}
+                        <div>
+                          <h4 className="font-semibold mb-3">Parties Involved</h4>
+                          <IncidentPartiesManager 
+                            incidentId={incident.id} 
+                            onUpdate={fetchIncidents}
+                          />
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-4 border-t">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFlaggingIncident(incident);
+                            }}
+                          >
+                            Flag Individual
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingIncident(incident);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          ))
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            );
+          })
         )}
       </div>
 
