@@ -54,7 +54,14 @@ const IncidentPartiesManager = ({ incidentId, onUpdate }: IncidentPartiesManager
         .order('role', { ascending: true });
 
       if (error) throw error;
-      setParties(data || []);
+      
+      // Type assertion to ensure role is properly typed
+      const typedData = (data || []).map(party => ({
+        ...party,
+        role: party.role as 'complainant' | 'respondent'
+      }));
+      
+      setParties(typedData);
     } catch (error) {
       console.error('Error fetching parties:', error);
       toast({
