@@ -112,7 +112,7 @@ const IncidentPartiesManager = ({ incidentId, onUpdate }: IncidentPartiesManager
         contact_info: newParty.contact_info || null
       };
 
-      if (newParty.resident_id) {
+      if (newParty.resident_id && newParty.resident_id !== 'not_resident') {
         const resident = residents.find(r => r.id === newParty.resident_id);
         partyData.resident_id = newParty.resident_id;
         partyData.name = `${resident?.first_name} ${resident?.middle_name ? resident.middle_name + ' ' : ''}${resident?.last_name}`;
@@ -173,7 +173,7 @@ const IncidentPartiesManager = ({ incidentId, onUpdate }: IncidentPartiesManager
   };
 
   const getSelectedResidentContact = () => {
-    if (!newParty.resident_id) return '';
+    if (!newParty.resident_id || newParty.resident_id === 'not_resident') return '';
     const resident = residents.find(r => r.id === newParty.resident_id);
     return resident?.mobile_number || '';
   };
@@ -289,8 +289,8 @@ const IncidentPartiesManager = ({ incidentId, onUpdate }: IncidentPartiesManager
                   setNewParty(prev => ({ 
                     ...prev, 
                     resident_id: value,
-                    name: value ? '' : prev.name,
-                    contact_info: value ? getSelectedResidentContact() : prev.contact_info
+                    name: value === 'not_resident' ? '' : prev.name,
+                    contact_info: value === 'not_resident' ? prev.contact_info : getSelectedResidentContact()
                   }))
                 }
               >
@@ -298,7 +298,7 @@ const IncidentPartiesManager = ({ incidentId, onUpdate }: IncidentPartiesManager
                   <SelectValue placeholder="Select resident or leave empty" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not a resident</SelectItem>
+                  <SelectItem value="not_resident">Not a resident</SelectItem>
                   {residents.map((resident) => (
                     <SelectItem key={resident.id} value={resident.id}>
                       {resident.first_name} {resident.middle_name ? resident.middle_name + ' ' : ''}{resident.last_name}
@@ -309,7 +309,7 @@ const IncidentPartiesManager = ({ incidentId, onUpdate }: IncidentPartiesManager
             </div>
           </div>
 
-          {!newParty.resident_id && (
+          {(!newParty.resident_id || newParty.resident_id === 'not_resident') && (
             <div>
               <Label htmlFor="name">Full Name</Label>
               <Input
@@ -333,7 +333,7 @@ const IncidentPartiesManager = ({ incidentId, onUpdate }: IncidentPartiesManager
 
           <Button 
             onClick={handleAddParty} 
-            disabled={adding || !newParty.role || (!newParty.resident_id && !newParty.name)}
+            disabled={adding || !newParty.role || ((!newParty.resident_id || newParty.resident_id === 'not_resident') && !newParty.name)}
             className="w-full"
           >
             {adding ? "Adding..." : "Add Party"}
