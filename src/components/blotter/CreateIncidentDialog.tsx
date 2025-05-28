@@ -137,11 +137,11 @@ const CreateIncidentDialog = ({ open, onOpenChange }: CreateIncidentDialogProps)
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="theft">Theft</SelectItem>
-                        <SelectItem value="dispute">Dispute</SelectItem>
-                        <SelectItem value="vandalism">Vandalism</SelectItem>
-                        <SelectItem value="curfew">Curfew Violation</SelectItem>
-                        <SelectItem value="others">Others</SelectItem>
+                        <SelectItem value="Theft">Theft</SelectItem>
+                        <SelectItem value="Dispute">Dispute</SelectItem>
+                        <SelectItem value="Vandalism">Vandalism</SelectItem>
+                        <SelectItem value="Curfew">Curfew Violation</SelectItem>
+                        <SelectItem value="Others">Others</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
