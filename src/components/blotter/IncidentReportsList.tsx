@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, AlertTriangle } from "lucide-react";
+import { Edit, Trash2, AlertTriangle, ChevronDown, ChevronUp, Clock, MapPin, User } from "lucide-react";
 import { format } from 'date-fns';
 import {
   Select,
@@ -35,6 +35,7 @@ const IncidentReportsList = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [editingIncident, setEditingIncident] = useState<IncidentReport | null>(null);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   const fetchIncidents = async () => {
     setLoading(true);
@@ -81,12 +82,42 @@ const IncidentReportsList = () => {
 
         if (error) throw error;
 
-        fetchIncidents(); // Refresh the list after deletion
+        fetchIncidents();
         alert("Incident report deleted successfully!");
       } catch (error) {
         console.error('Error deleting incident:', error);
         alert("Failed to delete incident report.");
       }
+    }
+  };
+
+  const toggleExpanded = (id: string) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedCards(newExpanded);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Open': return 'bg-red-100 text-red-800 border-red-200';
+      case 'Under_Investigation': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Resolved': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Dismissed': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'Theft': return 'bg-purple-100 text-purple-800';
+      case 'Dispute': return 'bg-orange-100 text-orange-800';
+      case 'Vandalism': return 'bg-red-100 text-red-800';
+      case 'Curfew': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -134,67 +165,103 @@ const IncidentReportsList = () => {
           <p className="mt-2 text-gray-500">Loading incident reports...</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {incidents.map((incident) => (
-            <Card key={incident.id} className="border-l-4 border-l-blue-500">
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold">{incident.title}</h2>
-                  <p className="text-gray-600">{incident.description}</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Type:</span>
-                      <p className="text-gray-700">{incident.report_type}</p>
+        <div className="space-y-3">
+          {incidents.map((incident) => {
+            const isExpanded = expandedCards.has(incident.id);
+            return (
+              <Card key={incident.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className={getTypeColor(incident.report_type)}>
+                          {incident.report_type}
+                        </Badge>
+                        <Badge className={getStatusColor(incident.status)}>
+                          {incident.status.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        {incident.title}
+                      </h3>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {format(new Date(incident.created_at), 'MMM dd, yyyy')}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {incident.location}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          {incident.reporter_name}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Status:</span>
-                      <p className="text-gray-700">{incident.status}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Location:</span>
-                      <p className="text-gray-700">{incident.location}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500">Reporter:</span>
-                      <p className="text-gray-700">{incident.reporter_name}</p>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleExpanded(incident.id)}
+                      className="ml-2"
+                    >
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
-                  
-                  {/* Actions */}
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">
-                        ID: {incident.id.slice(0, 8)}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        Filed: {format(new Date(incident.created_at), 'MMM dd, yyyy')}
-                      </span>
+                </CardHeader>
+
+                {isExpanded && (
+                  <CardContent className="pt-0 border-t border-gray-100">
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2">Description</h4>
+                        <p className="text-gray-700">{incident.description}</p>
+                      </div>
+
+                      {incident.reporter_contact && (
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-1">Reporter Contact</h4>
+                          <p className="text-gray-700">{incident.reporter_contact}</p>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            ID: {incident.id.slice(0, 8)}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingIncident(incident)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(incident.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingIncident(incident)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(incident.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
 
           {incidents.length === 0 && (
             <Card>
@@ -212,7 +279,6 @@ const IncidentReportsList = () => {
         </div>
       )}
 
-      {/* Edit Dialog */}
       {editingIncident && (
         <EditIncidentDialog
           incident={editingIncident}

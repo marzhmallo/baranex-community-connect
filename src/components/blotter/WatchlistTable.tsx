@@ -2,13 +2,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, Search, AlertTriangle } from "lucide-react";
+import { ExternalLink, Search, AlertTriangle, Calendar, FileText } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import EditFlaggedDialog from "./EditFlaggedDialog";
 
@@ -238,91 +237,84 @@ const WatchlistTable = () => {
         </Card>
       </div>
 
-      {/* Watchlist Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Flagged Individuals</CardTitle>
-          <CardDescription>
-            Individuals flagged in incident reports, sorted by risk level
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {flaggedIndividuals.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No flagged individuals found
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Risk Level</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Related Report</TableHead>
-                  <TableHead>Date Added</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {flaggedIndividuals.map((individual) => (
-                  <TableRow key={individual.id}>
-                    <TableCell>
+      {/* Flagged Individuals Cards */}
+      <div className="space-y-3">
+        {flaggedIndividuals.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Flagged Individuals Found</h3>
+              <p className="text-muted-foreground">
+                No individuals match your current search criteria.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          flaggedIndividuals.map((individual) => (
+            <Card key={individual.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className={getRiskColor(individual.risk_level)}>
+                        {getRiskIcon(individual.risk_level)}
+                        {individual.risk_level.toUpperCase()} RISK
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-2">
                       <div>
-                        <p className="font-medium">{individual.full_name}</p>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {individual.full_name}
+                        </h3>
                         {individual.alias && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-gray-500">
                             Alias: {individual.alias}
                           </p>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getRiskColor(individual.risk_level)}>
-                        {getRiskIcon(individual.risk_level)}
-                        {individual.risk_level.toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <p className="text-sm max-w-xs truncate" title={individual.reason}>
-                        {individual.reason}
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <p className="font-medium">{individual.incident_reports.title}</p>
-                        <p className="text-muted-foreground">
-                          {new Date(individual.incident_reports.date_reported).toLocaleDateString()}
-                        </p>
+                      
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 mb-1">Reason</p>
+                        <p className="text-gray-700">{individual.reason}</p>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(individual.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditingFlagged(individual)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => deleteFlaggedIndividual(individual.id)}
-                        >
-                          Remove
-                        </Button>
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <FileText className="h-4 w-4" />
+                          <span>Related: {individual.incident_reports.title}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>Added: {new Date(individual.created_at).toLocaleDateString()}</span>
+                        </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 ml-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingFlagged(individual)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => deleteFlaggedIndividual(individual.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
 
       <EditFlaggedDialog
         flaggedIndividual={editingFlagged}
