@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
@@ -63,11 +64,11 @@ const IncidentReportsList = () => {
         .order('date_reported', { ascending: false });
 
       if (filterStatus !== "all") {
-        query = query.eq('status', filterStatus as "open" | "under_investigation" | "resolved" | "dismissed");
+        query = query.eq('status', filterStatus as "Open" | "Under_Investigation" | "Resolved" | "Dismissed");
       }
 
       if (filterType !== "all") {
-        query = query.eq('report_type', filterType as "theft" | "dispute" | "vandalism" | "curfew" | "others");
+        query = query.eq('report_type', filterType as "Theft" | "Dispute" | "Vandalism" | "Curfew" | "Others");
       }
 
       if (searchTerm) {
@@ -115,30 +116,30 @@ const IncidentReportsList = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'bg-red-100 text-red-800';
-      case 'under_investigation': return 'bg-yellow-100 text-yellow-800';
-      case 'resolved': return 'bg-green-100 text-green-800';
-      case 'dismissed': return 'bg-gray-100 text-gray-800';
+      case 'Open': return 'bg-red-100 text-red-800';
+      case 'Under_Investigation': return 'bg-yellow-100 text-yellow-800';
+      case 'Resolved': return 'bg-green-100 text-green-800';
+      case 'Dismissed': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'theft': return 'bg-purple-100 text-purple-800';
-      case 'dispute': return 'bg-orange-100 text-orange-800';
-      case 'vandalism': return 'bg-red-100 text-red-800';
-      case 'curfew': return 'bg-blue-100 text-blue-800';
-      case 'others': return 'bg-gray-100 text-gray-800';
+      case 'Theft': return 'bg-purple-100 text-purple-800';
+      case 'Dispute': return 'bg-orange-100 text-orange-800';
+      case 'Vandalism': return 'bg-red-100 text-red-800';
+      case 'Curfew': return 'bg-blue-100 text-blue-800';
+      case 'Others': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getRiskColor = (level: string) => {
     switch (level) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'moderate': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
+      case 'High': return 'bg-red-100 text-red-800';
+      case 'Moderate': return 'bg-yellow-100 text-yellow-800';
+      case 'Low': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -167,10 +168,10 @@ const IncidentReportsList = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="under_investigation">Under Investigation</SelectItem>
-            <SelectItem value="resolved">Resolved</SelectItem>
-            <SelectItem value="dismissed">Dismissed</SelectItem>
+            <SelectItem value="Open">Open</SelectItem>
+            <SelectItem value="Under_Investigation">Under Investigation</SelectItem>
+            <SelectItem value="Resolved">Resolved</SelectItem>
+            <SelectItem value="Dismissed">Dismissed</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterType} onValueChange={setFilterType}>
@@ -179,11 +180,11 @@ const IncidentReportsList = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="theft">Theft</SelectItem>
-            <SelectItem value="dispute">Dispute</SelectItem>
-            <SelectItem value="vandalism">Vandalism</SelectItem>
-            <SelectItem value="curfew">Curfew</SelectItem>
-            <SelectItem value="others">Others</SelectItem>
+            <SelectItem value="Theft">Theft</SelectItem>
+            <SelectItem value="Dispute">Dispute</SelectItem>
+            <SelectItem value="Vandalism">Vandalism</SelectItem>
+            <SelectItem value="Curfew">Curfew</SelectItem>
+            <SelectItem value="Others">Others</SelectItem>
           </SelectContent>
         </Select>
       </div>
