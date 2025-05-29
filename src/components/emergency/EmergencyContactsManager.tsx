@@ -16,7 +16,7 @@ import { Plus, Phone, Edit, Trash2, Mail } from "lucide-react";
 
 interface EmergencyContact {
   id: string;
-  type: string;
+  type: 'fire' | 'police' | 'medical' | 'disaster' | 'rescue';
   name: string;
   phone_number: string;
   email?: string;
@@ -25,7 +25,7 @@ interface EmergencyContact {
 }
 
 interface ContactFormData {
-  type: string;
+  type: 'fire' | 'police' | 'medical' | 'disaster' | 'rescue' | '';
   name: string;
   phone_number: string;
   email?: string;
@@ -41,7 +41,7 @@ const EmergencyContactsManager = () => {
 
   const form = useForm<ContactFormData>({
     defaultValues: {
-      type: "",
+      type: '',
       name: "",
       phone_number: "",
       email: "",
@@ -79,14 +79,14 @@ const EmergencyContactsManager = () => {
   };
 
   const onSubmit = async (data: ContactFormData) => {
-    if (!userProfile?.id || !userProfile?.brgyid) return;
+    if (!userProfile?.id || !userProfile?.brgyid || !data.type) return;
 
     try {
       if (editingContact) {
         const { error } = await supabase
           .from('emergency_contacts')
           .update({
-            type: data.type,
+            type: data.type as 'fire' | 'police' | 'medical' | 'disaster' | 'rescue',
             name: data.name,
             phone_number: data.phone_number,
             email: data.email || null,
@@ -100,7 +100,7 @@ const EmergencyContactsManager = () => {
         const { error } = await supabase
           .from('emergency_contacts')
           .insert({
-            type: data.type,
+            type: data.type as 'fire' | 'police' | 'medical' | 'disaster' | 'rescue',
             name: data.name,
             phone_number: data.phone_number,
             email: data.email || null,

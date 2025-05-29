@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +19,7 @@ interface EvacuationCenter {
   address: string;
   capacity: number;
   current_occupancy: number;
-  status: string;
+  status: 'available' | 'full' | 'closed' | 'maintenance';
   contact_person?: string;
   contact_phone?: string;
   facilities?: string[];
@@ -142,7 +141,7 @@ const EvacuationCentersManager = () => {
     }
   };
 
-  const updateCenterStatus = async (id: string, status: string) => {
+  const updateCenterStatus = async (id: string, status: 'available' | 'full' | 'closed' | 'maintenance') => {
     try {
       const { error } = await supabase
         .from('evacuation_centers')
@@ -400,7 +399,7 @@ const EvacuationCentersManager = () => {
                   <div className="flex gap-1">
                     <Select 
                       value={center.status} 
-                      onValueChange={(value) => updateCenterStatus(center.id, value)}
+                      onValueChange={(value: 'available' | 'full' | 'closed' | 'maintenance') => updateCenterStatus(center.id, value)}
                     >
                       <SelectTrigger className="w-auto h-8">
                         <SelectValue />

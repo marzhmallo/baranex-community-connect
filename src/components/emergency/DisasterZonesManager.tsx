@@ -17,7 +17,7 @@ import { Plus, MapPin, Edit, Trash2, AlertTriangle } from "lucide-react";
 interface DisasterZone {
   id: string;
   zone_name: string;
-  zone_type: string;
+  zone_type: 'flood' | 'fire' | 'landslide' | 'earthquake' | 'typhoon' | 'other';
   polygon_coords: any;
   notes?: string;
   risk_level: string;
@@ -26,7 +26,7 @@ interface DisasterZone {
 
 interface ZoneFormData {
   zone_name: string;
-  zone_type: string;
+  zone_type: 'flood' | 'fire' | 'landslide' | 'earthquake' | 'typhoon' | 'other' | '';
   notes?: string;
   risk_level: string;
 }
@@ -41,7 +41,7 @@ const DisasterZonesManager = () => {
   const form = useForm<ZoneFormData>({
     defaultValues: {
       zone_name: "",
-      zone_type: "",
+      zone_type: '',
       notes: "",
       risk_level: "medium",
     },
@@ -77,7 +77,7 @@ const DisasterZonesManager = () => {
   };
 
   const onSubmit = async (data: ZoneFormData) => {
-    if (!userProfile?.id || !userProfile?.brgyid) return;
+    if (!userProfile?.id || !userProfile?.brgyid || !data.zone_type) return;
 
     try {
       // For now, create a simple polygon placeholder
@@ -97,7 +97,7 @@ const DisasterZonesManager = () => {
           .from('disaster_zones')
           .update({
             zone_name: data.zone_name,
-            zone_type: data.zone_type,
+            zone_type: data.zone_type as 'flood' | 'fire' | 'landslide' | 'earthquake' | 'typhoon' | 'other',
             notes: data.notes || null,
             risk_level: data.risk_level,
           })
@@ -110,7 +110,7 @@ const DisasterZonesManager = () => {
           .from('disaster_zones')
           .insert({
             zone_name: data.zone_name,
-            zone_type: data.zone_type,
+            zone_type: data.zone_type as 'flood' | 'fire' | 'landslide' | 'earthquake' | 'typhoon' | 'other',
             polygon_coords: defaultPolygon,
             notes: data.notes || null,
             risk_level: data.risk_level,
