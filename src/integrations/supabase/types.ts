@@ -299,6 +299,53 @@ export type Database = {
           },
         ]
       }
+      disaster_zones: {
+        Row: {
+          brgyid: string
+          created_at: string | null
+          created_by: string
+          id: string
+          notes: string | null
+          polygon_coords: Json
+          risk_level: string | null
+          updated_at: string | null
+          zone_name: string
+          zone_type: Database["public"]["Enums"]["disaster_zone_type"]
+        }
+        Insert: {
+          brgyid: string
+          created_at?: string | null
+          created_by: string
+          id?: string
+          notes?: string | null
+          polygon_coords: Json
+          risk_level?: string | null
+          updated_at?: string | null
+          zone_name: string
+          zone_type: Database["public"]["Enums"]["disaster_zone_type"]
+        }
+        Update: {
+          brgyid?: string
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          notes?: string | null
+          polygon_coords?: Json
+          risk_level?: string | null
+          updated_at?: string | null
+          zone_name?: string
+          zone_type?: Database["public"]["Enums"]["disaster_zone_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disaster_zones_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_logs: {
         Row: {
           action: string
@@ -376,6 +423,169 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_contacts: {
+        Row: {
+          brgyid: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          email: string | null
+          id: string
+          name: string
+          phone_number: string
+          type: Database["public"]["Enums"]["emergency_contact_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          brgyid: string
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone_number: string
+          type: Database["public"]["Enums"]["emergency_contact_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          brgyid?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone_number?: string
+          type?: Database["public"]["Enums"]["emergency_contact_type"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evacuation_centers: {
+        Row: {
+          address: string
+          brgyid: string
+          capacity: number
+          contact_person: string | null
+          contact_phone: string | null
+          created_at: string | null
+          current_occupancy: number | null
+          facilities: string[] | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          notes: string | null
+          status: Database["public"]["Enums"]["evacuation_center_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          address: string
+          brgyid: string
+          capacity?: number
+          contact_person?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          current_occupancy?: number | null
+          facilities?: string[] | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          notes?: string | null
+          status?:
+            | Database["public"]["Enums"]["evacuation_center_status"]
+            | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string
+          brgyid?: string
+          capacity?: number
+          contact_person?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          current_occupancy?: number | null
+          facilities?: string[] | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          notes?: string | null
+          status?:
+            | Database["public"]["Enums"]["evacuation_center_status"]
+            | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evacuation_centers_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evacuation_routes: {
+        Row: {
+          brgyid: string
+          created_at: string | null
+          created_by: string
+          distance_km: number | null
+          end_point: Json
+          estimated_time_minutes: number | null
+          id: string
+          route_coords: Json
+          route_name: string
+          start_point: Json
+          updated_at: string | null
+        }
+        Insert: {
+          brgyid: string
+          created_at?: string | null
+          created_by: string
+          distance_km?: number | null
+          end_point: Json
+          estimated_time_minutes?: number | null
+          id?: string
+          route_coords: Json
+          route_name: string
+          start_point: Json
+          updated_at?: string | null
+        }
+        Update: {
+          brgyid?: string
+          created_at?: string | null
+          created_by?: string
+          distance_km?: number | null
+          end_point?: Json
+          estimated_time_minutes?: number | null
+          id?: string
+          route_coords?: Json
+          route_name?: string
+          start_point?: Json
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evacuation_routes_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           brgyid: string | null
@@ -438,7 +648,7 @@ export type Database = {
           brgyid: string
           created_at: string
           created_by: string
-          full_name: string
+          full_name: string | null
           id: string
           linked_report_id: string
           reason: string
@@ -451,7 +661,7 @@ export type Database = {
           brgyid: string
           created_at?: string
           created_by: string
-          full_name: string
+          full_name?: string | null
           id?: string
           linked_report_id: string
           reason: string
@@ -464,7 +674,7 @@ export type Database = {
           brgyid?: string
           created_at?: string
           created_by?: string
-          full_name?: string
+          full_name?: string | null
           id?: string
           linked_report_id?: string
           reason?: string
@@ -1573,6 +1783,20 @@ export type Database = {
       }
     }
     Enums: {
+      disaster_zone_type:
+        | "flood"
+        | "fire"
+        | "landslide"
+        | "earthquake"
+        | "typhoon"
+        | "other"
+      emergency_contact_type:
+        | "fire"
+        | "police"
+        | "medical"
+        | "disaster"
+        | "rescue"
+      evacuation_center_status: "available" | "full" | "closed" | "maintenance"
       incident_status: "Open" | "Under_Investigation" | "Resolved" | "Dismissed"
       report_type: "Theft" | "Dispute" | "Vandalism" | "Curfew" | "Others"
       risk_level: "Low" | "Moderate" | "High"
@@ -1691,6 +1915,22 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      disaster_zone_type: [
+        "flood",
+        "fire",
+        "landslide",
+        "earthquake",
+        "typhoon",
+        "other",
+      ],
+      emergency_contact_type: [
+        "fire",
+        "police",
+        "medical",
+        "disaster",
+        "rescue",
+      ],
+      evacuation_center_status: ["available", "full", "closed", "maintenance"],
       incident_status: ["Open", "Under_Investigation", "Resolved", "Dismissed"],
       report_type: ["Theft", "Dispute", "Vandalism", "Curfew", "Others"],
       risk_level: ["Low", "Moderate", "High"],

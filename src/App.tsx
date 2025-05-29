@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,6 +26,7 @@ import CalendarPage from "./pages/CalendarPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import ForumPage from "./pages/ForumPage";
 import OfficialDetailsPage from './pages/OfficialDetailsPage';
+import EmergencyResponsePage from "./pages/EmergencyResponsePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -157,6 +157,7 @@ const AppContent = () => {
               <Route path="/officials/:id" element={<AdminRoute><OfficialDetailsPage /></AdminRoute>} /> 
               <Route path="/documents" element={<AdminRoute><DocumentsPage /></AdminRoute>} />
               <Route path="/blotter" element={<AdminRoute><BlotterPage /></AdminRoute>} />
+              <Route path="/emergency" element={<AdminRoute><EmergencyResponsePage /></AdminRoute>} />
               <Route path="/calendar" element={<AdminRoute><CalendarPage /></AdminRoute>} />
               <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
               <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
