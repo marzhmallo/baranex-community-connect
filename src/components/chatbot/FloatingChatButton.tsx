@@ -206,7 +206,7 @@ const FloatingChatButton = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
               <div className="flex items-center space-x-2">
                 <Bot className="h-5 w-5" />
-                <CardTitle className="text-lg">BaranexBot</CardTitle>
+                <CardTitle className="text-lg">Alex</CardTitle>
               </div>
               <Button
                 variant="ghost"
