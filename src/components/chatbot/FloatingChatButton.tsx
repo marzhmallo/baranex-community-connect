@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot } from 'lucide-react';
+import { Bot, X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -145,9 +144,9 @@ const FloatingChatButton = () => {
         <Button
           onClick={() => setIsOpen(true)}
           size="lg"
-          className="w-14 h-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg border-2 border-white"
+          className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl border-2 border-white hover:scale-110 transition-all duration-200"
         >
-          <MessageCircle className="h-6 w-6" />
+          <Bot className="h-8 w-8 text-white animate-pulse" />
         </Button>
       </div>
 
@@ -158,7 +157,7 @@ const FloatingChatButton = () => {
             ref={chatRef}
             className="w-full max-w-md h-[500px] flex flex-col shadow-2xl"
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-primary text-white rounded-t-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
               <div className="flex items-center space-x-2">
                 <Bot className="h-5 w-5" />
                 <CardTitle className="text-lg">BaranexBot</CardTitle>
