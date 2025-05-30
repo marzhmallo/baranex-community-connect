@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -73,10 +72,12 @@ const FloatingChatButton = () => {
     }
   };
 
-  // Handle mouse move for dragging
+  // Handle mouse move for dragging with immediate cursor speed
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
+      
+      e.preventDefault();
       
       // Calculate bounds considering sidebar
       const sidebarWidth = window.innerWidth >= 768 ? 256 : 0;
@@ -88,6 +89,7 @@ const FloatingChatButton = () => {
       const newX = Math.max(minX, Math.min(maxX, e.clientX - dragOffset.current.x));
       const newY = Math.max(minY, Math.min(maxY, e.clientY - dragOffset.current.y));
       
+      // Immediate position update for cursor-speed movement
       setPosition({ x: newX, y: newY });
     };
 
@@ -98,11 +100,17 @@ const FloatingChatButton = () => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      
+      // Prevent text selection while dragging
+      document.body.style.userSelect = 'none';
+    } else {
+      document.body.style.userSelect = '';
     }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
     };
   }, [isDragging]);
 
@@ -165,24 +173,27 @@ const FloatingChatButton = () => {
       <div
         ref={dragRef}
         className={cn(
-          "fixed z-50 transition-all duration-200 select-none",
-          isDragging ? "cursor-grabbing scale-110" : "cursor-grab hover:scale-105",
+          "fixed z-50 select-none",
+          isDragging ? "cursor-grabbing" : "cursor-grab hover:scale-105",
           isOpen && "opacity-0 pointer-events-none"
         )}
         style={{
           left: position.x,
           top: position.y,
+          transform: isDragging ? 'none' : 'translateZ(0)', // Remove transitions when dragging
+          transition: isDragging ? 'none' : 'transform 0.2s ease-out'
         }}
         onMouseDown={handleMouseDown}
       >
         <div className="relative">
-          {/* Robot Icon using your provided image */}
-          <div className="w-16 h-16 rounded-full shadow-xl border-2 border-white relative overflow-hidden transition-all duration-200 hover:shadow-2xl">
+          {/* Robot Icon - zoomed in and no white border */}
+          <div className="w-16 h-16 rounded-full shadow-xl relative overflow-hidden transition-shadow duration-200 hover:shadow-2xl">
             <img 
               src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
               alt="Alex - Barangay Assistant"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover scale-125"
               draggable={false}
+              style={{ objectPosition: 'center' }}
             />
           </div>
           
@@ -207,7 +218,8 @@ const FloatingChatButton = () => {
                 <img 
                   src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
                   alt="Alex"
-                  className="h-8 w-8 rounded-full"
+                  className="h-8 w-8 rounded-full object-cover scale-125"
+                  style={{ objectPosition: 'center' }}
                 />
                 <CardTitle className="text-lg">Alex</CardTitle>
               </div>
