@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ interface Message {
 const FloatingChatButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 20, y: window.innerHeight - 120 });
+  const [position, setPosition] = useState({ x: 20, y: 20 });
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -35,6 +36,22 @@ const FloatingChatButton = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const dragStartMousePos = useRef({ x: 0, y: 0 });
+
+  // Set initial position to bottom right of main content area
+  useEffect(() => {
+    const updatePosition = () => {
+      const mainContentWidth = window.innerWidth - (window.innerWidth >= 768 ? 256 : 0); // Account for sidebar
+      const sidebarOffset = window.innerWidth >= 768 ? 256 : 0;
+      setPosition({ 
+        x: mainContentWidth - 80 + sidebarOffset, 
+        y: window.innerHeight - 100 
+      });
+    };
+    
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -60,8 +77,17 @@ const FloatingChatButton = () => {
     const deltaX = e.clientX - dragStartMousePos.current.x;
     const deltaY = e.clientY - dragStartMousePos.current.y;
     
-    const newX = Math.max(0, Math.min(window.innerWidth - 60, dragStartPos.current.x + deltaX));
-    const newY = Math.max(0, Math.min(window.innerHeight - 60, dragStartPos.current.y + deltaY));
+    // Calculate bounds considering sidebar
+    const sidebarWidth = window.innerWidth >= 768 ? 256 : 0;
+    const mainContentWidth = window.innerWidth - sidebarWidth;
+    
+    const minX = sidebarWidth + 10;
+    const maxX = window.innerWidth - 70;
+    const minY = 10;
+    const maxY = window.innerHeight - 70;
+    
+    const newX = Math.max(minX, Math.min(maxX, dragStartPos.current.x + deltaX));
+    const newY = Math.max(minY, Math.min(maxY, dragStartPos.current.y + deltaY));
     
     setPosition({ x: newX, y: newY });
   };
@@ -127,12 +153,12 @@ const FloatingChatButton = () => {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Robot Button */}
       <div
         ref={dragRef}
         className={cn(
           "fixed z-50 transition-all duration-200",
-          isDragging ? "cursor-grabbing" : "cursor-grab",
+          isDragging ? "cursor-grabbing scale-110" : "cursor-grab hover:scale-105",
           isOpen && "opacity-0 pointer-events-none"
         )}
         style={{
@@ -141,13 +167,33 @@ const FloatingChatButton = () => {
         }}
         onMouseDown={handleMouseDown}
       >
-        <Button
-          onClick={() => setIsOpen(true)}
-          size="lg"
-          className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl border-2 border-white hover:scale-110 transition-all duration-200"
-        >
-          <Bot className="h-8 w-8 text-white animate-pulse" />
-        </Button>
+        <div className="relative">
+          {/* Robot body */}
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-2xl shadow-xl border-2 border-white relative overflow-hidden transition-all duration-200">
+            {/* Robot face */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative">
+                {/* Eyes */}
+                <div className="flex space-x-2 mb-1">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                </div>
+                {/* Mouth */}
+                <div className="w-6 h-1 bg-white rounded-full opacity-80"></div>
+              </div>
+            </div>
+            {/* Robot antenna */}
+            <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-2 bg-white rounded-full"></div>
+            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+          </div>
+          
+          {/* Click area */}
+          <button
+            onClick={() => setIsOpen(true)}
+            className="absolute inset-0 w-full h-full rounded-2xl bg-transparent"
+            aria-label="Open BaranexBot"
+          />
+        </div>
       </div>
 
       {/* Chat Window */}
