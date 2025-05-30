@@ -2,7 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,14 +42,16 @@ serve(async (req) => {
 
 Keep responses helpful, concise, and professional. If you don't know specific details about the barangay, provide general guidance and suggest contacting the barangay office. Always be respectful and courteous.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${openRouterApiKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://baranex.lovable.app',
+        'X-Title': 'Baranex Chatbot'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'deepseek/deepseek-r1-zero',
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages
@@ -60,7 +62,7 @@ Keep responses helpful, concise, and professional. If you don't know specific de
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenRouter API error: ${response.status}`);
     }
 
     const data = await response.json();
