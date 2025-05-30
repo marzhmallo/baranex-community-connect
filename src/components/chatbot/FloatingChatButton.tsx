@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send } from 'lucide-react';
+import { X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,13 +34,12 @@ const FloatingChatButton = () => {
   const dragRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const dragStartPos = useRef({ x: 0, y: 0 });
-  const dragStartMousePos = useRef({ x: 0, y: 0 });
+  const dragOffset = useRef({ x: 0, y: 0 });
 
   // Set initial position to bottom right of main content area
   useEffect(() => {
     const updatePosition = () => {
-      const mainContentWidth = window.innerWidth - (window.innerWidth >= 768 ? 256 : 0); // Account for sidebar
+      const mainContentWidth = window.innerWidth - (window.innerWidth >= 768 ? 256 : 0);
       const sidebarOffset = window.innerWidth >= 768 ? 256 : 0;
       setPosition({ 
         x: mainContentWidth - 80 + sidebarOffset, 
@@ -58,45 +57,54 @@ const FloatingChatButton = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle dragging
+  // Handle mouse down for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isOpen) return; // Don't drag when chat is open
+    if (isOpen) return;
     
-    setIsDragging(true);
-    dragStartPos.current = position;
-    dragStartMousePos.current = { x: e.clientX, y: e.clientY };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
     e.preventDefault();
+    setIsDragging(true);
+    
+    const rect = dragRef.current?.getBoundingClientRect();
+    if (rect) {
+      dragOffset.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    const deltaX = e.clientX - dragStartMousePos.current.x;
-    const deltaY = e.clientY - dragStartMousePos.current.y;
-    
-    // Calculate bounds considering sidebar
-    const sidebarWidth = window.innerWidth >= 768 ? 256 : 0;
-    const mainContentWidth = window.innerWidth - sidebarWidth;
-    
-    const minX = sidebarWidth + 10;
-    const maxX = window.innerWidth - 70;
-    const minY = 10;
-    const maxY = window.innerHeight - 70;
-    
-    const newX = Math.max(minX, Math.min(maxX, dragStartPos.current.x + deltaX));
-    const newY = Math.max(minY, Math.min(maxY, dragStartPos.current.y + deltaY));
-    
-    setPosition({ x: newX, y: newY });
-  };
+  // Handle mouse move for dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      // Calculate bounds considering sidebar
+      const sidebarWidth = window.innerWidth >= 768 ? 256 : 0;
+      const minX = sidebarWidth + 10;
+      const maxX = window.innerWidth - 70;
+      const minY = 10;
+      const maxY = window.innerHeight - 70;
+      
+      const newX = Math.max(minX, Math.min(maxX, e.clientX - dragOffset.current.x));
+      const newY = Math.max(minY, Math.min(maxY, e.clientY - dragOffset.current.y));
+      
+      setPosition({ x: newX, y: newY });
+    };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-  };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -157,7 +165,7 @@ const FloatingChatButton = () => {
       <div
         ref={dragRef}
         className={cn(
-          "fixed z-50 transition-all duration-200",
+          "fixed z-50 transition-all duration-200 select-none",
           isDragging ? "cursor-grabbing scale-110" : "cursor-grab hover:scale-105",
           isOpen && "opacity-0 pointer-events-none"
         )}
@@ -168,30 +176,21 @@ const FloatingChatButton = () => {
         onMouseDown={handleMouseDown}
       >
         <div className="relative">
-          {/* Robot body */}
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-2xl shadow-xl border-2 border-white relative overflow-hidden transition-all duration-200">
-            {/* Robot face */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative">
-                {/* Eyes */}
-                <div className="flex space-x-2 mb-1">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                </div>
-                {/* Mouth */}
-                <div className="w-6 h-1 bg-white rounded-full opacity-80"></div>
-              </div>
-            </div>
-            {/* Robot antenna */}
-            <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-2 bg-white rounded-full"></div>
-            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+          {/* Robot Icon using your provided image */}
+          <div className="w-16 h-16 rounded-full shadow-xl border-2 border-white relative overflow-hidden transition-all duration-200 hover:shadow-2xl">
+            <img 
+              src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
+              alt="Alex - Barangay Assistant"
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
           </div>
           
           {/* Click area */}
           <button
             onClick={() => setIsOpen(true)}
-            className="absolute inset-0 w-full h-full rounded-2xl bg-transparent"
-            aria-label="Open BaranexBot"
+            className="absolute inset-0 w-full h-full rounded-full bg-transparent"
+            aria-label="Open Alex - Barangay Assistant"
           />
         </div>
       </div>
@@ -205,7 +204,11 @@ const FloatingChatButton = () => {
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
               <div className="flex items-center space-x-2">
-                <Bot className="h-5 w-5" />
+                <img 
+                  src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
+                  alt="Alex"
+                  className="h-8 w-8 rounded-full"
+                />
                 <CardTitle className="text-lg">Alex</CardTitle>
               </div>
               <Button
