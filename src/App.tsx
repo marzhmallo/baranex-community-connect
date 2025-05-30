@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import Sidebar from "./components/layout/Sidebar";
 import PublicSidebar from "./components/layout/PublicSidebar";
+import FloatingChatButton from "./components/chatbot/FloatingChatButton";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -175,6 +177,9 @@ const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
+      
+      {/* Show chatbot only when user is authenticated and not on login page */}
+      {!isAuthPage && userProfile && <FloatingChatButton />}
     </div>
   );
 };
