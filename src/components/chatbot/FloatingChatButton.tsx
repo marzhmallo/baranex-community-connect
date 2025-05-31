@@ -1,9 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send } from 'lucide-react';
+import { X, Send, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +20,7 @@ interface Message {
 
 const FloatingChatButton = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [messages, setMessages] = useState<Message[]>([
@@ -39,6 +40,7 @@ const FloatingChatButton = () => {
   const dragRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
 
   // Set initial position to bottom right of main content area
@@ -59,12 +61,14 @@ const FloatingChatButton = () => {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (!isMinimized) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isMinimized]);
 
   // Update conversation history when messages change
   useEffect(() => {
-    const recentMessages = messages.slice(-12); // Keep last 12 messages for context
+    const recentMessages = messages.slice(-12);
     const history = recentMessages.map(msg => ({
       role: msg.role === 'user' ? 'user' : 'assistant',
       content: msg.content
@@ -74,7 +78,7 @@ const FloatingChatButton = () => {
 
   // Handle mouse down for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isOpen) return;
+    if (isOpen && !isMinimized) return;
     
     e.preventDefault();
     setIsDragging(true);
@@ -88,14 +92,13 @@ const FloatingChatButton = () => {
     }
   };
 
-  // Handle mouse move for dragging with immediate cursor speed
+  // Handle mouse move for dragging
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
       
       e.preventDefault();
       
-      // Calculate bounds considering sidebar
       const sidebarWidth = window.innerWidth >= 768 ? 256 : 0;
       const minX = sidebarWidth + 10;
       const maxX = window.innerWidth - 70;
@@ -105,7 +108,6 @@ const FloatingChatButton = () => {
       const newX = Math.max(minX, Math.min(maxX, e.clientX - dragOffset.current.x));
       const newY = Math.max(minY, Math.min(maxY, e.clientY - dragOffset.current.y));
       
-      // Immediate position update for cursor-speed movement
       setPosition({ x: newX, y: newY });
     };
 
@@ -116,8 +118,6 @@ const FloatingChatButton = () => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      
-      // Prevent text selection while dragging
       document.body.style.userSelect = 'none';
     } else {
       document.body.style.userSelect = '';
@@ -145,6 +145,8 @@ const FloatingChatButton = () => {
     setIsLoading(true);
 
     try {
+      console.log('Sending message to chatbot:', userMessage.content);
+      
       const chatMessages = [userMessage].map(msg => ({
         role: msg.role,
         content: msg.content
@@ -157,7 +159,16 @@ const FloatingChatButton = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('Chatbot response:', data, error);
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(`API Error: ${error.message}`);
+      }
+
+      if (!data || !data.message) {
+        throw new Error('Invalid response from chatbot service');
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -170,24 +181,17 @@ const FloatingChatButton = () => {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Show different toast based on source
+      // Show success feedback for FAQ responses
       if (data.source === 'faq') {
         console.log(`FAQ response from category: ${data.category}`);
-      } else if (data.source === 'fallback') {
-        toast({
-          title: "Service Notice",
-          description: "I'm using a fallback response. Some features may be limited.",
-          variant: "default",
-        });
       }
 
     } catch (error) {
       console.error('Chat error:', error);
       
-      // Add fallback message to chat
       const fallbackMessage: Message = {
         id: (Date.now() + 2).toString(),
-        content: "I apologize, but I'm having trouble connecting right now. Please try again later or contact the barangay office directly for assistance.",
+        content: "I'm having trouble connecting right now. Please try asking again or contact the barangay office directly for assistance.",
         role: 'assistant',
         timestamp: new Date(),
         source: 'fallback'
@@ -205,11 +209,32 @@ const FloatingChatButton = () => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const openChat = () => {
+    setIsOpen(true);
+    setIsMinimized(false);
+  };
+
+  const minimizeChat = () => {
+    setIsMinimized(true);
+  };
+
+  const closeChat = () => {
+    setIsOpen(false);
+    setIsMinimized(false);
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   };
 
   return (
@@ -220,18 +245,17 @@ const FloatingChatButton = () => {
         className={cn(
           "fixed z-50 select-none",
           isDragging ? "cursor-grabbing" : "cursor-grab hover:scale-105",
-          isOpen && "opacity-0 pointer-events-none"
+          (isOpen && !isMinimized) && "opacity-0 pointer-events-none"
         )}
         style={{
           left: position.x,
           top: position.y,
-          transform: isDragging ? 'none' : 'translateZ(0)', // Remove transitions when dragging
+          transform: isDragging ? 'none' : 'translateZ(0)',
           transition: isDragging ? 'none' : 'transform 0.2s ease-out'
         }}
         onMouseDown={handleMouseDown}
       >
         <div className="relative">
-          {/* Robot Icon - zoomed in and no white border */}
           <div className="w-16 h-16 rounded-full shadow-xl relative overflow-hidden transition-shadow duration-200 hover:shadow-2xl">
             <img 
               src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
@@ -242,17 +266,34 @@ const FloatingChatButton = () => {
             />
           </div>
           
-          {/* Click area */}
           <button
-            onClick={() => setIsOpen(true)}
+            onClick={openChat}
             className="absolute inset-0 w-full h-full rounded-full bg-transparent"
             aria-label="Open Alex - Barangay Assistant"
           />
         </div>
       </div>
 
+      {/* Minimized Chat Indicator */}
+      {isOpen && isMinimized && (
+        <div 
+          className="fixed z-50 bottom-4 right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+          onClick={() => setIsMinimized(false)}
+        >
+          <div className="flex items-center space-x-2">
+            <img 
+              src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
+              alt="Alex"
+              className="h-6 w-6 rounded-full object-cover scale-125"
+              style={{ objectPosition: 'center' }}
+            />
+            <span className="text-sm font-medium">Alex</span>
+          </div>
+        </div>
+      )}
+
       {/* Chat Window */}
-      {isOpen && (
+      {isOpen && !isMinimized && (
         <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4">
           <Card 
             ref={chatRef}
@@ -268,14 +309,24 @@ const FloatingChatButton = () => {
                 />
                 <CardTitle className="text-lg">Alex</CardTitle>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-white/20"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={minimizeChat}
+                  className="text-white hover:bg-white/20"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={closeChat}
+                  className="text-white hover:bg-white/20"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </CardHeader>
 
             <CardContent className="flex-1 flex flex-col p-0">
@@ -298,16 +349,18 @@ const FloatingChatButton = () => {
                         )}
                       >
                         <p className="whitespace-pre-wrap">{message.content}</p>
-                        <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center justify-between mt-2">
                           <p className="text-xs opacity-70">
-                            {message.timestamp.toLocaleTimeString([], { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
+                            {formatTime(message.timestamp)}
                           </p>
                           {message.source === 'faq' && (
-                            <span className="text-xs bg-green-100 text-green-800 px-1 rounded ml-2">
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded ml-2">
                               FAQ
+                            </span>
+                          )}
+                          {message.source === 'ai' && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">
+                              AI
                             </span>
                           )}
                         </div>
@@ -331,24 +384,27 @@ const FloatingChatButton = () => {
 
               <div className="p-4 border-t">
                 <div className="flex space-x-2">
-                  <Input
+                  <Textarea
+                    ref={textareaRef}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Ask me about barangay services..."
                     disabled={isLoading}
-                    className="flex-1"
+                    className="flex-1 min-h-[40px] max-h-[120px] resize-none"
+                    rows={1}
                   />
                   <Button 
                     onClick={sendMessage} 
                     disabled={!inputMessage.trim() || isLoading}
                     size="sm"
+                    className="self-end"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Ask about documents, services, or system help
+                  Press Enter to send • Shift+Enter for new line
                 </p>
               </div>
             </CardContent>
