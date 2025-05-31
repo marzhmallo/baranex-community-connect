@@ -328,7 +328,7 @@ const FloatingChatButton = () => {
                   className="h-8 w-8 rounded-full object-cover scale-125"
                   style={{ objectPosition: 'center' }}
                 />
-                <CardTitle className="text-lg">Alexander Cabalan Desierto</CardTitle>
+                <CardTitle className="text-lg">Alexander Desierto Cabalan</CardTitle>
               </div>
               <div className="flex items-center space-x-1">
                 <Button
