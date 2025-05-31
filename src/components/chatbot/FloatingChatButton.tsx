@@ -151,11 +151,24 @@ const FloatingChatButton = () => {
         content: msg.content
       }));
 
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+
+      // Add authorization header if user is authenticated
+      if (session?.access_token) {
+        headers['authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: { 
           messages: chatMessages,
           conversationHistory: conversationHistory 
-        }
+        },
+        headers
       });
 
       console.log('Chatbot response:', data, error);
@@ -180,9 +193,13 @@ const FloatingChatButton = () => {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Show success feedback for FAQ responses
+      // Show success feedback for different response types
       if (data.source === 'faq') {
         console.log(`FAQ response from category: ${data.category}`);
+      } else if (data.source === 'supabase') {
+        console.log(`Real-time data response: ${data.category}`);
+      } else if (data.source === 'auth_required') {
+        console.log('Authentication required for data access');
       }
 
     } catch (error) {
@@ -190,7 +207,7 @@ const FloatingChatButton = () => {
       
       const fallbackMessage: Message = {
         id: (Date.now() + 2).toString(),
-        content: "I'm having trouble connecting right now. Please try asking again or contact the barangay office directly for assistance.",
+        content: "Oops, I may not have access to that data or it doesn't exist. Please try again later or contact your barangay admin for assistance.",
         role: 'assistant',
         timestamp: new Date(),
         source: 'fallback'
