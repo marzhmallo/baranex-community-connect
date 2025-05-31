@@ -18,6 +18,20 @@ interface Message {
   category?: string;
 }
 
+// Simple markdown renderer for basic formatting
+const renderMarkdown = (text: string) => {
+  // Replace **text** with <strong>text</strong>
+  let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Replace *text* with <em>text</em>
+  formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Replace line breaks with <br>
+  formatted = formatted.replace(/\n/g, '<br>');
+  
+  return formatted;
+};
+
 const FloatingChatButton = () => {
   const { session } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -355,7 +369,12 @@ const FloatingChatButton = () => {
                             : "bg-muted"
                         )}
                       >
-                        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                        <div 
+                          className="whitespace-pre-wrap break-words"
+                          dangerouslySetInnerHTML={{ 
+                            __html: renderMarkdown(message.content) 
+                          }}
+                        />
                         <div className="flex items-center justify-between mt-2 gap-2">
                           <p className="text-xs opacity-70 flex-shrink-0">
                             {formatTime(message.timestamp)}
