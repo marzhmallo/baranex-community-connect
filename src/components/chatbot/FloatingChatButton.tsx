@@ -41,7 +41,7 @@ const FloatingChatButton = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm Alexander Cabalan Desierto, but you can call me Alex. I'm your barangay assistant here to help you with all aspects of our barangay management system. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. How can I assist you today?",
+      content: "Hello! I'm Alexander Cabalan Desierto, but you can call me Alex. I'm your barangay assistant here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. So how can I help?",
       role: 'assistant',
       timestamp: new Date(),
       source: 'ai',
