@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -297,9 +296,9 @@ const FloatingChatButton = () => {
         <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4">
           <Card 
             ref={chatRef}
-            className="w-full max-w-md h-[500px] flex flex-col shadow-2xl"
+            className="w-full max-w-md h-[600px] flex flex-col shadow-2xl"
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg flex-shrink-0">
               <div className="flex items-center space-x-2">
                 <img 
                   src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
@@ -329,9 +328,9 @@ const FloatingChatButton = () => {
               </div>
             </CardHeader>
 
-            <CardContent className="flex-1 flex flex-col p-0">
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
+            <CardContent className="flex-1 flex flex-col p-0 min-h-0">
+              <ScrollArea className="flex-1 h-full">
+                <div className="p-4 space-y-4">
                   {messages.map((message) => (
                     <div
                       key={message.id}
@@ -348,18 +347,18 @@ const FloatingChatButton = () => {
                             : "bg-muted"
                         )}
                       >
-                        <p className="whitespace-pre-wrap">{message.content}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="text-xs opacity-70">
+                        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                        <div className="flex items-center justify-between mt-2 gap-2">
+                          <p className="text-xs opacity-70 flex-shrink-0">
                             {formatTime(message.timestamp)}
                           </p>
                           {message.source === 'faq' && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded ml-2">
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0">
                               FAQ
                             </span>
                           )}
                           {message.source === 'ai' && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
                               AI
                             </span>
                           )}
@@ -382,7 +381,7 @@ const FloatingChatButton = () => {
                 </div>
               </ScrollArea>
 
-              <div className="p-4 border-t">
+              <div className="p-4 border-t flex-shrink-0">
                 <div className="flex space-x-2">
                   <Textarea
                     ref={textareaRef}
@@ -398,7 +397,7 @@ const FloatingChatButton = () => {
                     onClick={sendMessage} 
                     disabled={!inputMessage.trim() || isLoading}
                     size="sm"
-                    className="self-end"
+                    className="self-end flex-shrink-0"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
