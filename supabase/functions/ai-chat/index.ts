@@ -32,12 +32,20 @@ async function searchFAQ(userQuery: string) {
   const queryWords = normalizedQuery.split(' ');
   
   try {
+    console.log('Searching FAQ for query:', normalizedQuery);
+    
     const { data: faqs, error } = await supabaseService
       .from('chatbot_faq')
       .select('*');
     
     if (error) {
       console.error('FAQ search error:', error);
+      return null;
+    }
+    
+    console.log('Found FAQs:', faqs?.length || 0);
+    
+    if (!faqs || faqs.length === 0) {
       return null;
     }
     
@@ -71,6 +79,7 @@ async function searchFAQ(userQuery: string) {
       }
     }
     
+    console.log('Best FAQ match score:', maxScore);
     return bestMatch;
   } catch (error) {
     console.error('FAQ search failed:', error);
@@ -81,6 +90,7 @@ async function searchFAQ(userQuery: string) {
 // Check if user is authenticated and get their role
 async function getUserRole(authHeader: string | null) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('No valid auth header provided');
     return null;
   }
 
@@ -105,6 +115,7 @@ async function getUserRole(authHeader: string | null) {
       return null;
     }
 
+    console.log('User authenticated with role:', profile.role);
     return { userId: user.id, role: profile.role };
   } catch (error) {
     console.error('User verification failed:', error);
@@ -299,12 +310,43 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, conversationHistory = [] } = await req.json();
-    const userMessage = messages[messages.length - 1];
+    console.log('AI chat function called');
+    
+    // Parse request body with error handling
+    let requestBody;
+    try {
+      const bodyText = await req.text();
+      console.log('Request body text:', bodyText);
+      
+      if (!bodyText.trim()) {
+        throw new Error('Empty request body');
+      }
+      
+      requestBody = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      return new Response(JSON.stringify({ 
+        message: "Hello! I'm Alex, your barangay assistant. How can I help you today?",
+        source: 'fallback',
+        error: 'Invalid request format' 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { messages, conversationHistory = [] } = requestBody;
+    const userMessage = messages && messages.length > 0 ? messages[messages.length - 1] : null;
     const authHeader = req.headers.get('authorization');
     
     if (!userMessage || !userMessage.content) {
-      throw new Error('No user message provided');
+      return new Response(JSON.stringify({ 
+        message: "Hello! I'm Alex, your barangay assistant. How can I help you today?",
+        source: 'greeting',
+        category: 'Greeting' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log('User query:', userMessage.content);
@@ -360,7 +402,7 @@ serve(async (req) => {
     );
 
     if (isDataQuery && !userData) {
-      const authMessage = "Oops, I may not have access to that data or it doesn't exist. To access real-time barangay data, please log in to your Baranex account. Perhaps you can check the Baranex system or contact your barangay admin for assistance.";
+      const authMessage = "To access real-time barangay data, please log in to your Baranex account. For general questions, I'm happy to help guide you through the system!";
       return new Response(JSON.stringify({ 
         message: authMessage,
         source: 'auth_required',
@@ -386,7 +428,7 @@ serve(async (req) => {
     console.error('Error in ai-chat function:', error);
     
     // Fallback message when all systems fail
-    const fallbackMessage = "Oops, I may not have access to that data or it doesn't exist. Please try again later or contact your barangay admin for assistance.";
+    const fallbackMessage = "Hello! I'm Alex, your barangay assistant. I'm here to help with general guidance about the Baranex system. How can I assist you today?";
     
     return new Response(JSON.stringify({ 
       message: fallbackMessage,
