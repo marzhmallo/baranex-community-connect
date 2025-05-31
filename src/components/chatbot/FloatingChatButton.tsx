@@ -13,7 +13,7 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  source?: 'faq' | 'ai' | 'fallback';
+  source?: 'faq' | 'ai' | 'fallback' | 'supabase' | 'auth_required' | 'auth_error';
   category?: string;
 }
 
@@ -140,20 +140,23 @@ const FloatingChatButton = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputMessage.trim();
     setInputMessage('');
     setIsLoading(true);
 
     try {
-      console.log('Sending message to chatbot:', userMessage.content);
+      console.log('Sending message to chatbot:', currentInput);
       
-      const chatMessages = [userMessage].map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
-
       // Get current session for authentication
       const { data: { session } } = await supabase.auth.getSession();
       
+      const requestBody = {
+        messages: [{ role: 'user', content: currentInput }],
+        conversationHistory: conversationHistory
+      };
+
+      console.log('Request body:', JSON.stringify(requestBody));
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json'
       };
@@ -161,17 +164,18 @@ const FloatingChatButton = () => {
       // Add authorization header if user is authenticated
       if (session?.access_token) {
         headers['authorization'] = `Bearer ${session.access_token}`;
+        console.log('User authenticated, adding auth header');
+      } else {
+        console.log('User not authenticated');
       }
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { 
-          messages: chatMessages,
-          conversationHistory: conversationHistory 
-        },
+        body: requestBody,
         headers
       });
 
-      console.log('Chatbot response:', data, error);
+      console.log('Chatbot response data:', data);
+      console.log('Chatbot response error:', error);
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -179,6 +183,7 @@ const FloatingChatButton = () => {
       }
 
       if (!data || !data.message) {
+        console.error('Invalid response structure:', data);
         throw new Error('Invalid response from chatbot service');
       }
 
@@ -207,7 +212,7 @@ const FloatingChatButton = () => {
       
       const fallbackMessage: Message = {
         id: (Date.now() + 2).toString(),
-        content: "Oops, I may not have access to that data or it doesn't exist. Please try again later or contact your barangay admin for assistance.",
+        content: "I'm having trouble connecting right now. Please try again in a moment, or contact your barangay admin for assistance.",
         role: 'assistant',
         timestamp: new Date(),
         source: 'fallback'
@@ -374,8 +379,13 @@ const FloatingChatButton = () => {
                               FAQ
                             </span>
                           )}
-                          {message.source === 'ai' && (
+                          {message.source === 'supabase' && (
                             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
+                              Live Data
+                            </span>
+                          )}
+                          {message.source === 'ai' && (
+                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex-shrink-0">
                               AI
                             </span>
                           )}
