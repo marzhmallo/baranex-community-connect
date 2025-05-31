@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,8 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
+  source?: 'faq' | 'ai' | 'fallback';
+  category?: string;
 }
 
 const FloatingChatButton = () => {
@@ -24,11 +27,14 @@ const FloatingChatButton = () => {
       id: '1',
       content: "Hello! I'm Alex, your barangay assistant. I can help you with barangay services, document requests, system guidance, and general inquiries. How can I assist you today?",
       role: 'assistant',
-      timestamp: new Date()
+      timestamp: new Date(),
+      source: 'ai',
+      category: 'Greeting'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState<Array<{role: string, content: string}>>([]);
   
   const dragRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
@@ -54,6 +60,16 @@ const FloatingChatButton = () => {
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Update conversation history when messages change
+  useEffect(() => {
+    const recentMessages = messages.slice(-12); // Keep last 12 messages for context
+    const history = recentMessages.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+    setConversationHistory(history);
   }, [messages]);
 
   // Handle mouse down for dragging
@@ -129,13 +145,16 @@ const FloatingChatButton = () => {
     setIsLoading(true);
 
     try {
-      const chatMessages = [...messages, userMessage].map(msg => ({
+      const chatMessages = [userMessage].map(msg => ({
         role: msg.role,
         content: msg.content
       }));
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { messages: chatMessages }
+        body: { 
+          messages: chatMessages,
+          conversationHistory: conversationHistory 
+        }
       });
 
       if (error) throw error;
@@ -144,15 +163,41 @@ const FloatingChatButton = () => {
         id: (Date.now() + 1).toString(),
         content: data.message,
         role: 'assistant',
-        timestamp: new Date()
+        timestamp: new Date(),
+        source: data.source,
+        category: data.category
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Show different toast based on source
+      if (data.source === 'faq') {
+        console.log(`FAQ response from category: ${data.category}`);
+      } else if (data.source === 'fallback') {
+        toast({
+          title: "Service Notice",
+          description: "I'm using a fallback response. Some features may be limited.",
+          variant: "default",
+        });
+      }
+
     } catch (error) {
       console.error('Chat error:', error);
+      
+      // Add fallback message to chat
+      const fallbackMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        content: "I apologize, but I'm having trouble connecting right now. Please try again later or contact the barangay office directly for assistance.",
+        role: 'assistant',
+        timestamp: new Date(),
+        source: 'fallback'
+      };
+      
+      setMessages(prev => [...prev, fallbackMessage]);
+      
       toast({
-        title: "Chat Error",
-        description: "Failed to get response. Please try again.",
+        title: "Connection Error",
+        description: "Unable to connect to chat service. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -246,19 +291,26 @@ const FloatingChatButton = () => {
                     >
                       <div
                         className={cn(
-                          "max-w-[80%] rounded-lg p-3 text-sm",
+                          "max-w-[80%] rounded-lg p-3 text-sm relative",
                           message.role === 'user'
                             ? "bg-primary text-white"
                             : "bg-muted"
                         )}
                       >
                         <p className="whitespace-pre-wrap">{message.content}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {message.timestamp.toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </p>
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-xs opacity-70">
+                            {message.timestamp.toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </p>
+                          {message.source === 'faq' && (
+                            <span className="text-xs bg-green-100 text-green-800 px-1 rounded ml-2">
+                              FAQ
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

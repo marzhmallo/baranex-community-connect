@@ -254,6 +254,36 @@ export type Database = {
           },
         ]
       }
+      chatbot_faq: {
+        Row: {
+          answer_text: string
+          category: string
+          created_at: string
+          id: string
+          question_keywords: Json
+          relevant_roles: Json
+          updated_at: string
+        }
+        Insert: {
+          answer_text: string
+          category: string
+          created_at?: string
+          id?: string
+          question_keywords?: Json
+          relevant_roles?: Json
+          updated_at?: string
+        }
+        Update: {
+          answer_text?: string
+          category?: string
+          created_at?: string
+          id?: string
+          question_keywords?: Json
+          relevant_roles?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           content: string
