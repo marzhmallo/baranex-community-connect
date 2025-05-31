@@ -13,7 +13,7 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  source?: 'faq' | 'ai' | 'fallback' | 'supabase' | 'auth_required' | 'auth_error';
+  source?: 'faq' | 'ai' | 'fallback';
   category?: string;
 }
 
@@ -140,42 +140,25 @@ const FloatingChatButton = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    const currentInput = inputMessage.trim();
     setInputMessage('');
     setIsLoading(true);
 
     try {
-      console.log('Sending message to chatbot:', currentInput);
+      console.log('Sending message to chatbot:', userMessage.content);
       
-      // Get current session for authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const requestBody = {
-        messages: [{ role: 'user', content: currentInput }],
-        conversationHistory: conversationHistory
-      };
-
-      console.log('Request body:', JSON.stringify(requestBody));
-
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-
-      // Add authorization header if user is authenticated
-      if (session?.access_token) {
-        headers['authorization'] = `Bearer ${session.access_token}`;
-        console.log('User authenticated, adding auth header');
-      } else {
-        console.log('User not authenticated');
-      }
+      const chatMessages = [userMessage].map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: requestBody,
-        headers
+        body: { 
+          messages: chatMessages,
+          conversationHistory: conversationHistory 
+        }
       });
 
-      console.log('Chatbot response data:', data);
-      console.log('Chatbot response error:', error);
+      console.log('Chatbot response:', data, error);
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -183,7 +166,6 @@ const FloatingChatButton = () => {
       }
 
       if (!data || !data.message) {
-        console.error('Invalid response structure:', data);
         throw new Error('Invalid response from chatbot service');
       }
 
@@ -198,13 +180,9 @@ const FloatingChatButton = () => {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Show success feedback for different response types
+      // Show success feedback for FAQ responses
       if (data.source === 'faq') {
         console.log(`FAQ response from category: ${data.category}`);
-      } else if (data.source === 'supabase') {
-        console.log(`Real-time data response: ${data.category}`);
-      } else if (data.source === 'auth_required') {
-        console.log('Authentication required for data access');
       }
 
     } catch (error) {
@@ -212,7 +190,7 @@ const FloatingChatButton = () => {
       
       const fallbackMessage: Message = {
         id: (Date.now() + 2).toString(),
-        content: "I'm having trouble connecting right now. Please try again in a moment, or contact your barangay admin for assistance.",
+        content: "I'm having trouble connecting right now. Please try asking again or contact the barangay office directly for assistance.",
         role: 'assistant',
         timestamp: new Date(),
         source: 'fallback'
@@ -379,13 +357,8 @@ const FloatingChatButton = () => {
                               FAQ
                             </span>
                           )}
-                          {message.source === 'supabase' && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
-                              Live Data
-                            </span>
-                          )}
                           {message.source === 'ai' && (
-                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex-shrink-0">
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
                               AI
                             </span>
                           )}

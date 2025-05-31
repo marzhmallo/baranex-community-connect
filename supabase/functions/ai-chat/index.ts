@@ -4,14 +4,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
-// Service role client for data queries
-const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
-// Anon client for auth verification
-const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,20 +28,12 @@ async function searchFAQ(userQuery: string) {
   const queryWords = normalizedQuery.split(' ');
   
   try {
-    console.log('Searching FAQ for query:', normalizedQuery);
-    
-    const { data: faqs, error } = await supabaseService
+    const { data: faqs, error } = await supabase
       .from('chatbot_faq')
       .select('*');
     
     if (error) {
       console.error('FAQ search error:', error);
-      return null;
-    }
-    
-    console.log('Found FAQs:', faqs?.length || 0);
-    
-    if (!faqs || faqs.length === 0) {
       return null;
     }
     
@@ -79,7 +67,6 @@ async function searchFAQ(userQuery: string) {
       }
     }
     
-    console.log('Best FAQ match score:', maxScore);
     return bestMatch;
   } catch (error) {
     console.error('FAQ search failed:', error);
@@ -87,187 +74,24 @@ async function searchFAQ(userQuery: string) {
   }
 }
 
-// Check if user is authenticated and get their role
-async function getUserRole(authHeader: string | null) {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.log('No valid auth header provided');
-    return null;
-  }
-
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error } = await supabaseAnon.auth.getUser(token);
-    
-    if (error || !user) {
-      console.error('Auth error:', error);
-      return null;
-    }
-
-    // Get user profile to check role
-    const { data: profile, error: profileError } = await supabaseService
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      console.error('Profile error:', profileError);
-      return null;
-    }
-
-    console.log('User authenticated with role:', profile.role);
-    return { userId: user.id, role: profile.role };
-  } catch (error) {
-    console.error('User verification failed:', error);
-    return null;
-  }
-}
-
-// Query Supabase for real-time data
-async function querySupabaseData(query: string, userRole: string) {
-  const normalizedQuery = normalizeText(query);
-  console.log('Querying Supabase data for:', normalizedQuery);
-
-  // Only allow admin and staff to access real data
-  if (!['admin', 'staff'].includes(userRole)) {
-    return {
-      hasData: false,
-      message: "I can only provide real-time barangay data to authenticated administrators and staff members. Please contact your barangay admin for assistance."
-    };
-  }
-
-  try {
-    let results = [];
-
-    // Query events
-    if (normalizedQuery.includes('event') || normalizedQuery.includes('activity') || normalizedQuery.includes('schedule')) {
-      const { data: events, error } = await supabaseService
-        .from('events')
-        .select('title, description, start_time, end_time, location, event_type')
-        .gte('end_time', new Date().toISOString())
-        .order('start_time', { ascending: true })
-        .limit(5);
-
-      if (!error && events && events.length > 0) {
-        results.push({
-          type: 'events',
-          data: events,
-          message: `Here are the upcoming events:`
-        });
-      }
-    }
-
-    // Query announcements
-    if (normalizedQuery.includes('announcement') || normalizedQuery.includes('news') || normalizedQuery.includes('update')) {
-      const { data: announcements, error } = await supabaseService
-        .from('announcements')
-        .select('title, content, category, created_at')
-        .eq('is_public', true)
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      if (!error && announcements && announcements.length > 0) {
-        results.push({
-          type: 'announcements',
-          data: announcements,
-          message: `Here are the latest announcements:`
-        });
-      }
-    }
-
-    // Query officials
-    if (normalizedQuery.includes('official') || normalizedQuery.includes('captain') || normalizedQuery.includes('kagawad') || normalizedQuery.includes('leader')) {
-      const { data: officials, error } = await supabaseService
-        .from('officials')
-        .select('name, position, email, phone')
-        .order('position', { ascending: true });
-
-      if (!error && officials && officials.length > 0) {
-        results.push({
-          type: 'officials',
-          data: officials,
-          message: `Here are the barangay officials:`
-        });
-      }
-    }
-
-    if (results.length > 0) {
-      return {
-        hasData: true,
-        results: results
-      };
-    }
-
-    return { hasData: false };
-  } catch (error) {
-    console.error('Supabase query error:', error);
-    return { hasData: false };
-  }
-}
-
-// Format Supabase data into readable response
-function formatSupabaseResponse(results: any[]) {
-  let response = "";
-
-  for (const result of results) {
-    response += result.message + "\n\n";
-
-    if (result.type === 'events') {
-      result.data.forEach((event: any, index: number) => {
-        const startDate = new Date(event.start_time).toLocaleDateString();
-        const startTime = new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        response += `${index + 1}. **${event.title}**\n`;
-        response += `   📅 ${startDate} at ${startTime}\n`;
-        if (event.location) response += `   📍 ${event.location}\n`;
-        if (event.description) response += `   📝 ${event.description}\n`;
-        response += "\n";
-      });
-    }
-
-    if (result.type === 'announcements') {
-      result.data.forEach((announcement: any, index: number) => {
-        const date = new Date(announcement.created_at).toLocaleDateString();
-        response += `${index + 1}. **${announcement.title}**\n`;
-        response += `   📅 Posted on ${date}\n`;
-        response += `   📂 Category: ${announcement.category}\n`;
-        response += `   📝 ${announcement.content.substring(0, 200)}${announcement.content.length > 200 ? '...' : ''}\n\n`;
-      });
-    }
-
-    if (result.type === 'officials') {
-      result.data.forEach((official: any, index: number) => {
-        response += `${index + 1}. **${official.name}** - ${official.position}\n`;
-        if (official.email) response += `   📧 ${official.email}\n`;
-        if (official.phone) response += `   📞 ${official.phone}\n`;
-        response += "\n";
-      });
-    }
-  }
-
-  return response.trim();
-}
-
 // Call Gemini API for conversational responses
-async function callGeminiAPI(messages: any[], conversationHistory: any[], userData: any = null) {
+async function callGeminiAPI(messages: any[], conversationHistory: any[]) {
   if (!geminiApiKey) {
     throw new Error('Gemini API key not configured');
   }
   
-  let systemContext = `You are Alex, a friendly and helpful assistant for the Baranex Barangay Management System.
+  const modelInstructions = `You are Alex, a friendly and helpful assistant for the Baranex Barangay Management System.
 Your purpose is to provide general assistance, polite greetings, and guide users through common system interactions.
-You do NOT have access to real-time data from the Baranex system, specific database entries, or personal user information unless specifically provided.
-If a user asks for specific details about barangay services, politely suggest they check the relevant sections of the Baranex system or consult a barangay official for accurate information.
+You do NOT have access to real-time data from the Baranex system, specific database entries, or personal user information.
+If a user asks for specific details about barangay services (like "certificate of residency", "barangay clearance", "community events"),
+politely suggest they check the relevant sections of the Baranex system or consult a barangay official for accurate information.
 Do not make up information about barangay processes or personal user data.
 Keep your answers concise, professional, and maintain a consistent persona as Alex, the Barangay assistant.
 Always maintain a helpful and positive tone. Your primary function is system guidance and general assistance.`;
 
-  if (userData) {
-    systemContext += `\n\nAdditional context: The user is an authenticated ${userData.role} with access to real-time barangay data.`;
-  }
-
   // Combine conversation history with current messages
   const allMessages = [
-    { role: 'model', parts: [{ text: systemContext }] },
+    { role: 'model', parts: [{ text: modelInstructions }] },
     ...conversationHistory.map(msg => ({
       role: msg.role === 'user' ? 'user' : 'model',
       parts: [{ text: msg.content }]
@@ -278,15 +102,15 @@ Always maintain a helpful and positive tone. Your primary function is system gui
     }))
   ];
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      contents: allMessages.filter(msg => msg.role !== 'model' || msg.parts[0].text !== systemContext),
+      contents: allMessages.filter(msg => msg.role !== 'model' || msg.parts[0].text !== modelInstructions),
       systemInstruction: {
-        parts: [{ text: systemContext }]
+        parts: [{ text: modelInstructions }]
       },
       generationConfig: {
         temperature: 0.7,
@@ -310,51 +134,15 @@ serve(async (req) => {
   }
 
   try {
-    console.log('AI chat function called');
-    
-    // Parse request body with error handling
-    let requestBody;
-    try {
-      const bodyText = await req.text();
-      console.log('Request body text:', bodyText);
-      
-      if (!bodyText.trim()) {
-        throw new Error('Empty request body');
-      }
-      
-      requestBody = JSON.parse(bodyText);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      return new Response(JSON.stringify({ 
-        message: "Hello! I'm Alex, your barangay assistant. How can I help you today?",
-        source: 'fallback',
-        error: 'Invalid request format' 
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { messages, conversationHistory = [] } = requestBody;
-    const userMessage = messages && messages.length > 0 ? messages[messages.length - 1] : null;
-    const authHeader = req.headers.get('authorization');
+    const { messages, conversationHistory = [] } = await req.json();
+    const userMessage = messages[messages.length - 1];
     
     if (!userMessage || !userMessage.content) {
-      return new Response(JSON.stringify({ 
-        message: "Hello! I'm Alex, your barangay assistant. How can I help you today?",
-        source: 'greeting',
-        category: 'Greeting' 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      throw new Error('No user message provided');
     }
 
     console.log('User query:', userMessage.content);
     
-    // Check user authentication and role
-    const userData = await getUserRole(authHeader);
-    console.log('User data:', userData);
-
     // Step 1: Try FAQ lookup first
     const faqMatch = await searchFAQ(userMessage.content);
     
@@ -369,52 +157,9 @@ serve(async (req) => {
       });
     }
 
-    // Step 2: Try Supabase data query for authenticated users
-    if (userData) {
-      const supabaseResult = await querySupabaseData(userMessage.content, userData.role);
-      
-      if (supabaseResult.hasData && supabaseResult.results) {
-        const formattedResponse = formatSupabaseResponse(supabaseResult.results);
-        console.log('Supabase data found, returning formatted response');
-        return new Response(JSON.stringify({ 
-          message: formattedResponse,
-          source: 'supabase',
-          category: 'Real-time Data' 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } else if (!supabaseResult.hasData && supabaseResult.message) {
-        // User doesn't have permission for real data
-        return new Response(JSON.stringify({ 
-          message: supabaseResult.message,
-          source: 'auth_error',
-          category: 'Access Control' 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
-
-    // Step 3: Check if user is asking for data but not authenticated
-    const dataKeywords = ['event', 'announcement', 'official', 'schedule', 'news', 'update', 'captain', 'kagawad'];
-    const isDataQuery = dataKeywords.some(keyword => 
-      normalizeText(userMessage.content).includes(keyword)
-    );
-
-    if (isDataQuery && !userData) {
-      const authMessage = "To access real-time barangay data, please log in to your Baranex account. For general questions, I'm happy to help guide you through the system!";
-      return new Response(JSON.stringify({ 
-        message: authMessage,
-        source: 'auth_required',
-        category: 'Authentication Required' 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Step 4: Fallback to Gemini AI
-    console.log('No FAQ or Supabase match, using Gemini AI');
-    const geminiResponse = await callGeminiAPI(messages, conversationHistory, userData);
+    // Step 2: Fallback to Gemini AI
+    console.log('No FAQ match, using Gemini AI');
+    const geminiResponse = await callGeminiAPI(messages, conversationHistory);
 
     return new Response(JSON.stringify({ 
       message: geminiResponse,
@@ -427,8 +172,8 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in ai-chat function:', error);
     
-    // Fallback message when all systems fail
-    const fallbackMessage = "Hello! I'm Alex, your barangay assistant. I'm here to help with general guidance about the Baranex system. How can I assist you today?";
+    // Fallback message when both systems fail
+    const fallbackMessage = "I apologize, but I'm having trouble processing your request right now. Please try again later or contact the barangay office directly for assistance.";
     
     return new Response(JSON.stringify({ 
       message: fallbackMessage,
