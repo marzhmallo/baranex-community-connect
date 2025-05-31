@@ -102,22 +102,22 @@ async function checkUserRole(supabase: any): Promise<{ isAdmin: boolean, userPro
   }
 }
 
-// Query Supabase data for admin users with brgyid filtering
+// Enhanced query function for comprehensive Supabase data access
 async function querySupabaseData(userQuery: string, supabase: any, brgyid: string): Promise<string | null> {
   const normalizedQuery = normalizeText(userQuery);
   
   try {
     let responseData = '';
     
-    // Check for events-related queries
-    if (normalizedQuery.includes('event') || normalizedQuery.includes('upcoming') || normalizedQuery.includes('schedule')) {
+    // Events-related queries
+    if (normalizedQuery.includes('event') || normalizedQuery.includes('upcoming') || normalizedQuery.includes('schedule') || normalizedQuery.includes('calendar')) {
       const { data: events, error } = await supabase
         .from('events')
-        .select('title, description, start_time, end_time, location')
+        .select('title, description, start_time, end_time, location, event_type, target_audience')
         .eq('brgyid', brgyid)
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true })
-        .limit(5);
+        .limit(10);
       
       if (!error && events && events.length > 0) {
         responseData += 'Here are the upcoming events:\n\n';
@@ -127,23 +127,23 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
           responseData += `📅 **${event.title}**\n`;
           responseData += `📍 ${event.location || 'Location TBA'}\n`;
           responseData += `🕐 ${startDate} at ${startTime}\n`;
-          if (event.description) {
-            responseData += `📝 ${event.description}\n`;
-          }
+          if (event.event_type) responseData += `🏷️ Type: ${event.event_type}\n`;
+          if (event.target_audience) responseData += `👥 Audience: ${event.target_audience}\n`;
+          if (event.description) responseData += `📝 ${event.description}\n`;
           responseData += '\n';
         });
         return responseData;
       }
     }
     
-    // Check for announcements-related queries
-    if (normalizedQuery.includes('announcement') || normalizedQuery.includes('news') || normalizedQuery.includes('update')) {
+    // Announcements-related queries
+    if (normalizedQuery.includes('announcement') || normalizedQuery.includes('news') || normalizedQuery.includes('update') || normalizedQuery.includes('notice')) {
       const { data: announcements, error } = await supabase
         .from('announcements')
-        .select('title, content, category, created_at')
+        .select('title, content, category, created_at, audience')
         .eq('brgyid', brgyid)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(8);
       
       if (!error && announcements && announcements.length > 0) {
         responseData += 'Here are the latest announcements:\n\n';
@@ -151,6 +151,7 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
           const datePosted = new Date(announcement.created_at).toLocaleDateString();
           responseData += `📢 **${announcement.title}**\n`;
           responseData += `📂 Category: ${announcement.category}\n`;
+          responseData += `👥 Audience: ${announcement.audience}\n`;
           responseData += `📅 Posted: ${datePosted}\n`;
           responseData += `📝 ${announcement.content}\n\n`;
         });
@@ -158,19 +159,22 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       }
     }
     
-    // Check for officials-related queries
-    if (normalizedQuery.includes('official') || normalizedQuery.includes('barangay captain') || normalizedQuery.includes('councilor')) {
-      // Query officials with their current positions from official_positions table
+    // Officials-related queries
+    if (normalizedQuery.includes('official') || normalizedQuery.includes('barangay captain') || normalizedQuery.includes('councilor') || normalizedQuery.includes('chairman') || normalizedQuery.includes('kagawad')) {
       const { data: officials, error } = await supabase
         .from('officials')
         .select(`
           name, 
           email, 
           phone,
+          bio,
+          education,
           official_positions!inner(
             position,
             committee,
-            is_current
+            is_current,
+            term_start,
+            term_end
           )
         `)
         .eq('brgyid', brgyid)
@@ -182,26 +186,155 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         officials.forEach((official: any) => {
           responseData += `👤 **${official.name}**\n`;
           
-          // Display current positions
           if (official.official_positions && official.official_positions.length > 0) {
             official.official_positions.forEach((pos: any) => {
               responseData += `🏛️ Position: ${pos.position}\n`;
-              if (pos.committee) {
-                responseData += `📋 Committee: ${pos.committee}\n`;
-              }
+              if (pos.committee) responseData += `📋 Committee: ${pos.committee}\n`;
+              if (pos.term_start) responseData += `📅 Term: ${new Date(pos.term_start).getFullYear()} - ${pos.term_end ? new Date(pos.term_end).getFullYear() : 'Present'}\n`;
             });
           }
           
-          if (official.email) {
-            responseData += `📧 Email: ${official.email}\n`;
-          }
-          if (official.phone) {
-            responseData += `📞 Phone: ${official.phone}\n`;
-          }
+          if (official.email) responseData += `📧 Email: ${official.email}\n`;
+          if (official.phone) responseData += `📞 Phone: ${official.phone}\n`;
+          if (official.education) responseData += `🎓 Education: ${official.education}\n`;
+          if (official.bio) responseData += `📖 Bio: ${official.bio}\n`;
           responseData += '\n';
         });
         return responseData;
       }
+    }
+
+    // Residents-related queries
+    if (normalizedQuery.includes('resident') || normalizedQuery.includes('population') || normalizedQuery.includes('demographics') || normalizedQuery.includes('citizen')) {
+      const { data: residents, error } = await supabase
+        .from('residents')
+        .select('id, first_name, last_name, gender, civil_status, purok, occupation, status')
+        .eq('brgyid', brgyid)
+        .limit(10);
+      
+      if (!error && residents) {
+        responseData += `Population Overview:\n\n`;
+        responseData += `📊 Total Residents: ${residents.length}\n`;
+        
+        const genderStats = residents.reduce((acc: any, r: any) => {
+          acc[r.gender] = (acc[r.gender] || 0) + 1;
+          return acc;
+        }, {});
+        
+        responseData += `👥 Gender Distribution:\n`;
+        Object.entries(genderStats).forEach(([gender, count]) => {
+          responseData += `   • ${gender}: ${count}\n`;
+        });
+        responseData += '\n';
+        return responseData;
+      }
+    }
+
+    // Households-related queries
+    if (normalizedQuery.includes('household') || normalizedQuery.includes('family') || normalizedQuery.includes('home')) {
+      const { data: households, error } = await supabase
+        .from('households')
+        .select('id, name, purok, status, monthly_income, house_type, head_of_family')
+        .eq('brgyid', brgyid)
+        .limit(10);
+      
+      if (!error && households) {
+        responseData += `Household Overview:\n\n`;
+        responseData += `🏠 Total Households: ${households.length}\n`;
+        
+        const purokStats = households.reduce((acc: any, h: any) => {
+          acc[h.purok] = (acc[h.purok] || 0) + 1;
+          return acc;
+        }, {});
+        
+        responseData += `📍 Distribution by Purok:\n`;
+        Object.entries(purokStats).forEach(([purok, count]) => {
+          responseData += `   • ${purok}: ${count} households\n`;
+        });
+        responseData += '\n';
+        return responseData;
+      }
+    }
+
+    // Incident/Blotter-related queries
+    if (normalizedQuery.includes('incident') || normalizedQuery.includes('blotter') || normalizedQuery.includes('report') || normalizedQuery.includes('crime') || normalizedQuery.includes('complaint')) {
+      const { data: incidents, error } = await supabase
+        .from('incident_reports')
+        .select('title, description, status, report_type, location, date_reported')
+        .eq('brgyid', brgyid)
+        .order('date_reported', { ascending: false })
+        .limit(5);
+      
+      if (!error && incidents && incidents.length > 0) {
+        responseData += 'Recent Incident Reports:\n\n';
+        incidents.forEach((incident: any) => {
+          const reportDate = new Date(incident.date_reported).toLocaleDateString();
+          responseData += `🚨 **${incident.title}**\n`;
+          responseData += `📂 Type: ${incident.report_type}\n`;
+          responseData += `📍 Location: ${incident.location}\n`;
+          responseData += `📅 Reported: ${reportDate}\n`;
+          responseData += `🔄 Status: ${incident.status}\n`;
+          responseData += `📝 ${incident.description.substring(0, 100)}...\n\n`;
+        });
+        return responseData;
+      }
+    }
+
+    // Document-related queries
+    if (normalizedQuery.includes('document') || normalizedQuery.includes('certificate') || normalizedQuery.includes('clearance') || normalizedQuery.includes('permit')) {
+      const { data: docTypes, error } = await supabase
+        .from('document_types')
+        .select('name, description, fee, validity_days')
+        .eq('brgyid', brgyid);
+      
+      if (!error && docTypes && docTypes.length > 0) {
+        responseData += 'Available Documents/Certificates:\n\n';
+        docTypes.forEach((doc: any) => {
+          responseData += `📄 **${doc.name}**\n`;
+          if (doc.description) responseData += `📝 ${doc.description}\n`;
+          if (doc.fee) responseData += `💰 Fee: ₱${doc.fee}\n`;
+          if (doc.validity_days) responseData += `⏰ Valid for: ${doc.validity_days} days\n`;
+          responseData += '\n';
+        });
+        return responseData;
+      }
+    }
+
+    // Emergency-related queries
+    if (normalizedQuery.includes('emergency') || normalizedQuery.includes('evacuation') || normalizedQuery.includes('disaster') || normalizedQuery.includes('contact')) {
+      const { data: emergencyContacts, error: contactsError } = await supabase
+        .from('emergency_contacts')
+        .select('name, type, phone_number, description')
+        .eq('brgyid', brgyid);
+
+      const { data: evacuationCenters, error: centersError } = await supabase
+        .from('evacuation_centers')
+        .select('name, address, capacity, current_occupancy, status, contact_person, contact_phone')
+        .eq('brgyid', brgyid);
+      
+      if (!contactsError && emergencyContacts && emergencyContacts.length > 0) {
+        responseData += 'Emergency Contacts:\n\n';
+        emergencyContacts.forEach((contact: any) => {
+          responseData += `🚨 **${contact.name}** (${contact.type})\n`;
+          responseData += `📞 ${contact.phone_number}\n`;
+          if (contact.description) responseData += `📝 ${contact.description}\n`;
+          responseData += '\n';
+        });
+      }
+
+      if (!centersError && evacuationCenters && evacuationCenters.length > 0) {
+        responseData += 'Evacuation Centers:\n\n';
+        evacuationCenters.forEach((center: any) => {
+          responseData += `🏢 **${center.name}**\n`;
+          responseData += `📍 ${center.address}\n`;
+          responseData += `👥 Capacity: ${center.current_occupancy}/${center.capacity}\n`;
+          responseData += `🔄 Status: ${center.status}\n`;
+          if (center.contact_person) responseData += `👤 Contact: ${center.contact_person} (${center.contact_phone})\n`;
+          responseData += '\n';
+        });
+      }
+
+      if (responseData) return responseData;
     }
     
     return null;
@@ -217,14 +350,13 @@ async function callGeminiAPI(messages: any[], conversationHistory: any[]) {
     throw new Error('Gemini API key not configured');
   }
   
-  const modelInstructions = `You are Alex, a friendly and helpful assistant for the Baranex Barangay Management System.
-Your purpose is to provide general assistance, polite greetings, and guide users through common system interactions.
-You do NOT have access to real-time data from the Baranex system, specific database entries, or personal user information.
-If a user asks for specific details about barangay services (like "certificate of residency", "barangay clearance", "community events"),
-politely suggest they check the relevant sections of the Baranex system or consult a barangay official for accurate information.
-Do not make up information about barangay processes or personal user data.
-Keep your answers concise, professional, and maintain a consistent persona as Alex, the Barangay assistant.
-Always maintain a helpful and positive tone. Your primary function is system guidance and general assistance.`;
+  const modelInstructions = `You are Alexander Cabalan Desierto, also known as "Alex", a friendly and knowledgeable assistant for the Baranex Barangay Management System.
+Your personality is warm, professional, and deeply knowledgeable about barangay governance and community services.
+You have access to real-time data from the barangay management system including residents, households, officials, events, announcements, and more.
+When users ask about barangay services like certificates, clearances, or permits, provide helpful guidance about the process and requirements.
+You can assist with general inquiries about barangay operations, community programs, and administrative procedures.
+Always maintain a respectful and helpful tone, and feel free to provide context about barangay governance when appropriate.
+Your goal is to make barangay services more accessible and understandable for residents.`;
 
   // Combine conversation history with current messages
   const allMessages = [
