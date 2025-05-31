@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,12 @@ interface Message {
 
 // Simple markdown renderer for basic formatting
 const renderMarkdown = (text: string) => {
+  // Ensure text is a string
+  if (typeof text !== 'string') {
+    console.warn('renderMarkdown received non-string input:', text);
+    return String(text);
+  }
+  
   // Replace **text** with <strong>text</strong>
   let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   
@@ -41,7 +48,7 @@ const FloatingChatButton = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hey there! I'm Alexander Desierto Cabalan, but you can call me Alan, short for Automated Live Artificial Neurointelligence. I'm your barangay assistant here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. So how can I help?",
+      content: "Hey there! I'm Alexander Cabalan Desierto, but you can call me Alex. I'm your barangay assistant here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. So how can I help?",
       role: 'assistant',
       timestamp: new Date(),
       source: 'ai',
@@ -189,9 +196,18 @@ const FloatingChatButton = () => {
         throw new Error('Invalid response from chatbot service');
       }
 
+      // Handle both string and array responses
+      let messageContent: string;
+      if (Array.isArray(data.message)) {
+        // If it's an array, pick a random response or join them
+        messageContent = data.message[Math.floor(Math.random() * data.message.length)];
+      } else {
+        messageContent = data.message;
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.message,
+        content: messageContent,
         role: 'assistant',
         timestamp: new Date(),
         source: data.source,
@@ -280,7 +296,7 @@ const FloatingChatButton = () => {
           <div className="w-16 h-16 rounded-full shadow-xl relative overflow-hidden transition-shadow duration-200 hover:shadow-2xl">
             <img 
               src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
-              alt="Alan - Barangay Assistant"
+              alt="Alex - Barangay Assistant"
               className="w-full h-full object-cover scale-125"
               draggable={false}
               style={{ objectPosition: 'center' }}
@@ -290,7 +306,7 @@ const FloatingChatButton = () => {
           <button
             onClick={openChat}
             className="absolute inset-0 w-full h-full rounded-full bg-transparent"
-            aria-label="Open Alan - Barangay Assistant"
+            aria-label="Open Alex - Barangay Assistant"
           />
         </div>
       </div>
@@ -304,11 +320,11 @@ const FloatingChatButton = () => {
           <div className="flex items-center space-x-2">
             <img 
               src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
-              alt="Alan"
+              alt="Alex"
               className="h-6 w-6 rounded-full object-cover scale-125"
               style={{ objectPosition: 'center' }}
             />
-            <span className="text-sm font-medium">Alan</span>
+            <span className="text-sm font-medium">Alex</span>
           </div>
         </div>
       )}
@@ -324,11 +340,11 @@ const FloatingChatButton = () => {
               <div className="flex items-center space-x-2">
                 <img 
                   src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
-                  alt="Alan"
+                  alt="Alex"
                   className="h-8 w-8 rounded-full object-cover scale-125"
                   style={{ objectPosition: 'center' }}
                 />
-                <CardTitle className="text-lg">Alexander Desierto Cabalan</CardTitle>
+                <CardTitle className="text-lg">Alexander Cabalan Desierto</CardTitle>
               </div>
               <div className="flex items-center space-x-1">
                 <Button

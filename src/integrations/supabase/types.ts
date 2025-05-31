@@ -256,7 +256,8 @@ export type Database = {
       }
       chatbot_faq: {
         Row: {
-          answer_text: string
+          answer_text: Json[] | null
+          answer_textz: string
           category: string
           created_at: string
           id: string
@@ -265,7 +266,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          answer_text: string
+          answer_text?: Json[] | null
+          answer_textz: string
           category: string
           created_at?: string
           id?: string
@@ -274,7 +276,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          answer_text?: string
+          answer_text?: Json[] | null
+          answer_textz?: string
           category?: string
           created_at?: string
           id?: string
