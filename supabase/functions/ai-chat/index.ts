@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -72,39 +71,39 @@ async function searchFAQ(userQuery: string, supabase: any) {
   }
 }
 
-// Check if user has admin role
-async function checkUserRole(supabase: any): Promise<{ isAdmin: boolean, userProfile: any }> {
+// Check if user has admin role and get their brgyid
+async function checkUserRole(supabase: any): Promise<{ isAdmin: boolean, userProfile: any, brgyid: string | null }> {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
       console.log('No authenticated user found');
-      return { isAdmin: false, userProfile: null };
+      return { isAdmin: false, userProfile: null, brgyid: null };
     }
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role, firstname, lastname')
+      .select('role, firstname, lastname, brgyid')
       .eq('id', user.id)
       .single();
 
     if (profileError || !profile) {
       console.log('No profile found for user');
-      return { isAdmin: false, userProfile: null };
+      return { isAdmin: false, userProfile: null, brgyid: null };
     }
 
     const isAdmin = profile.role === 'admin' || profile.role === 'staff';
-    console.log(`User role: ${profile.role}, isAdmin: ${isAdmin}`);
+    console.log(`User role: ${profile.role}, isAdmin: ${isAdmin}, brgyid: ${profile.brgyid}`);
     
-    return { isAdmin, userProfile: profile };
+    return { isAdmin, userProfile: profile, brgyid: profile.brgyid };
   } catch (error) {
     console.error('Error checking user role:', error);
-    return { isAdmin: false, userProfile: null };
+    return { isAdmin: false, userProfile: null, brgyid: null };
   }
 }
 
-// Query Supabase data for admin users
-async function querySupabaseData(userQuery: string, supabase: any): Promise<string | null> {
+// Query Supabase data for admin users with brgyid filtering
+async function querySupabaseData(userQuery: string, supabase: any, brgyid: string): Promise<string | null> {
   const normalizedQuery = normalizeText(userQuery);
   
   try {
@@ -115,6 +114,7 @@ async function querySupabaseData(userQuery: string, supabase: any): Promise<stri
       const { data: events, error } = await supabase
         .from('events')
         .select('title, description, start_time, end_time, location')
+        .eq('brgyid', brgyid)
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true })
         .limit(5);
@@ -141,6 +141,7 @@ async function querySupabaseData(userQuery: string, supabase: any): Promise<stri
       const { data: announcements, error } = await supabase
         .from('announcements')
         .select('title, content, category, created_at')
+        .eq('brgyid', brgyid)
         .order('created_at', { ascending: false })
         .limit(5);
       
@@ -159,16 +160,38 @@ async function querySupabaseData(userQuery: string, supabase: any): Promise<stri
     
     // Check for officials-related queries
     if (normalizedQuery.includes('official') || normalizedQuery.includes('barangay captain') || normalizedQuery.includes('councilor')) {
+      // Query officials with their current positions from official_positions table
       const { data: officials, error } = await supabase
         .from('officials')
-        .select('name, position, email, phone')
-        .order('position');
+        .select(`
+          name, 
+          email, 
+          phone,
+          official_positions!inner(
+            position,
+            committee,
+            is_current
+          )
+        `)
+        .eq('brgyid', brgyid)
+        .eq('official_positions.is_current', true)
+        .order('name');
       
       if (!error && officials && officials.length > 0) {
         responseData += 'Here are the barangay officials:\n\n';
         officials.forEach((official: any) => {
           responseData += `👤 **${official.name}**\n`;
-          responseData += `🏛️ Position: ${official.position}\n`;
+          
+          // Display current positions
+          if (official.official_positions && official.official_positions.length > 0) {
+            official.official_positions.forEach((pos: any) => {
+              responseData += `🏛️ Position: ${pos.position}\n`;
+              if (pos.committee) {
+                responseData += `📋 Committee: ${pos.committee}\n`;
+              }
+            });
+          }
+          
           if (official.email) {
             responseData += `📧 Email: ${official.email}\n`;
           }
@@ -286,11 +309,11 @@ serve(async (req) => {
 
     // Step 2: Check if user is admin and try Supabase data query
     if (authToken) {
-      const { isAdmin, userProfile } = await checkUserRole(supabase);
+      const { isAdmin, userProfile, brgyid } = await checkUserRole(supabase);
       
-      if (isAdmin) {
-        console.log('Admin user detected, checking Supabase data');
-        const supabaseResponse = await querySupabaseData(userMessage.content, supabase);
+      if (isAdmin && brgyid) {
+        console.log('Admin user detected, checking Supabase data for brgyid:', brgyid);
+        const supabaseResponse = await querySupabaseData(userMessage.content, supabase, brgyid);
         
         if (supabaseResponse) {
           console.log('Supabase data found and returned');
@@ -303,7 +326,7 @@ serve(async (req) => {
           });
         }
       } else {
-        console.log('Non-admin user, skipping Supabase data query');
+        console.log('Non-admin user or missing brgyid, skipping Supabase data query');
       }
     }
 
