@@ -41,7 +41,7 @@ const FloatingChatButton = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm Alexander Cabalan Desierto, but you can call me Alex. I'm your barangay assistant here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. So how can I help?",
+      content: "Hey there! I'm Alexander Cabalan Desierto, but you can call me Alex, short for Artificial Language and Assistance Neurointelligence. I'm your barangay assistant here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. So how can I help?",
       role: 'assistant',
       timestamp: new Date(),
       source: 'ai',
@@ -280,7 +280,7 @@ const FloatingChatButton = () => {
           <div className="w-16 h-16 rounded-full shadow-xl relative overflow-hidden transition-shadow duration-200 hover:shadow-2xl">
             <img 
               src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
-              alt="Alexander - Barangay Assistant"
+              alt="Alan - Barangay Assistant"
               className="w-full h-full object-cover scale-125"
               draggable={false}
               style={{ objectPosition: 'center' }}
@@ -290,7 +290,7 @@ const FloatingChatButton = () => {
           <button
             onClick={openChat}
             className="absolute inset-0 w-full h-full rounded-full bg-transparent"
-            aria-label="Open Alexander - Barangay Assistant"
+            aria-label="Open Alan - Barangay Assistant"
           />
         </div>
       </div>
@@ -304,11 +304,11 @@ const FloatingChatButton = () => {
           <div className="flex items-center space-x-2">
             <img 
               src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
-              alt="Alexander"
+              alt="Alan"
               className="h-6 w-6 rounded-full object-cover scale-125"
               style={{ objectPosition: 'center' }}
             />
-            <span className="text-sm font-medium">Alexander</span>
+            <span className="text-sm font-medium">Alan</span>
           </div>
         </div>
       )}
@@ -324,7 +324,7 @@ const FloatingChatButton = () => {
               <div className="flex items-center space-x-2">
                 <img 
                   src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
-                  alt="Alexander"
+                  alt="Alan"
                   className="h-8 w-8 rounded-full object-cover scale-125"
                   style={{ objectPosition: 'center' }}
                 />
