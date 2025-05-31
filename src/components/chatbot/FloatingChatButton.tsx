@@ -7,17 +7,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/AuthProvider';
 
 interface Message {
   id: string;
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  source?: 'faq' | 'ai' | 'fallback';
+  source?: 'faq' | 'ai' | 'supabase' | 'fallback';
   category?: string;
 }
 
 const FloatingChatButton = () => {
+  const { session } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -151,10 +153,14 @@ const FloatingChatButton = () => {
         content: msg.content
       }));
 
+      // Get auth token if user is authenticated
+      const authToken = session?.access_token;
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: { 
           messages: chatMessages,
-          conversationHistory: conversationHistory 
+          conversationHistory: conversationHistory,
+          authToken: authToken 
         }
       });
 
@@ -183,6 +189,8 @@ const FloatingChatButton = () => {
       // Show success feedback for FAQ responses
       if (data.source === 'faq') {
         console.log(`FAQ response from category: ${data.category}`);
+      } else if (data.source === 'supabase') {
+        console.log(`Live data response from category: ${data.category}`);
       }
 
     } catch (error) {
@@ -355,6 +363,11 @@ const FloatingChatButton = () => {
                           {message.source === 'faq' && (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0">
                               FAQ
+                            </span>
+                          )}
+                          {message.source === 'supabase' && (
+                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex-shrink-0">
+                              Live Data
                             </span>
                           )}
                           {message.source === 'ai' && (

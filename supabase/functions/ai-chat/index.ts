@@ -7,8 +7,6 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -23,7 +21,7 @@ function normalizeText(text: string): string {
 }
 
 // Search FAQ database for matching entries
-async function searchFAQ(userQuery: string) {
+async function searchFAQ(userQuery: string, supabase: any) {
   const normalizedQuery = normalizeText(userQuery);
   const queryWords = normalizedQuery.split(' ');
   
@@ -70,6 +68,122 @@ async function searchFAQ(userQuery: string) {
     return bestMatch;
   } catch (error) {
     console.error('FAQ search failed:', error);
+    return null;
+  }
+}
+
+// Check if user has admin role
+async function checkUserRole(supabase: any): Promise<{ isAdmin: boolean, userProfile: any }> {
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.log('No authenticated user found');
+      return { isAdmin: false, userProfile: null };
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, firstname, lastname')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.log('No profile found for user');
+      return { isAdmin: false, userProfile: null };
+    }
+
+    const isAdmin = profile.role === 'admin' || profile.role === 'staff';
+    console.log(`User role: ${profile.role}, isAdmin: ${isAdmin}`);
+    
+    return { isAdmin, userProfile: profile };
+  } catch (error) {
+    console.error('Error checking user role:', error);
+    return { isAdmin: false, userProfile: null };
+  }
+}
+
+// Query Supabase data for admin users
+async function querySupabaseData(userQuery: string, supabase: any): Promise<string | null> {
+  const normalizedQuery = normalizeText(userQuery);
+  
+  try {
+    let responseData = '';
+    
+    // Check for events-related queries
+    if (normalizedQuery.includes('event') || normalizedQuery.includes('upcoming') || normalizedQuery.includes('schedule')) {
+      const { data: events, error } = await supabase
+        .from('events')
+        .select('title, description, start_time, end_time, location')
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+        .limit(5);
+      
+      if (!error && events && events.length > 0) {
+        responseData += 'Here are the upcoming events:\n\n';
+        events.forEach((event: any) => {
+          const startDate = new Date(event.start_time).toLocaleDateString();
+          const startTime = new Date(event.start_time).toLocaleTimeString();
+          responseData += `📅 **${event.title}**\n`;
+          responseData += `📍 ${event.location || 'Location TBA'}\n`;
+          responseData += `🕐 ${startDate} at ${startTime}\n`;
+          if (event.description) {
+            responseData += `📝 ${event.description}\n`;
+          }
+          responseData += '\n';
+        });
+        return responseData;
+      }
+    }
+    
+    // Check for announcements-related queries
+    if (normalizedQuery.includes('announcement') || normalizedQuery.includes('news') || normalizedQuery.includes('update')) {
+      const { data: announcements, error } = await supabase
+        .from('announcements')
+        .select('title, content, category, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (!error && announcements && announcements.length > 0) {
+        responseData += 'Here are the latest announcements:\n\n';
+        announcements.forEach((announcement: any) => {
+          const datePosted = new Date(announcement.created_at).toLocaleDateString();
+          responseData += `📢 **${announcement.title}**\n`;
+          responseData += `📂 Category: ${announcement.category}\n`;
+          responseData += `📅 Posted: ${datePosted}\n`;
+          responseData += `📝 ${announcement.content}\n\n`;
+        });
+        return responseData;
+      }
+    }
+    
+    // Check for officials-related queries
+    if (normalizedQuery.includes('official') || normalizedQuery.includes('barangay captain') || normalizedQuery.includes('councilor')) {
+      const { data: officials, error } = await supabase
+        .from('officials')
+        .select('name, position, email, phone')
+        .order('position');
+      
+      if (!error && officials && officials.length > 0) {
+        responseData += 'Here are the barangay officials:\n\n';
+        officials.forEach((official: any) => {
+          responseData += `👤 **${official.name}**\n`;
+          responseData += `🏛️ Position: ${official.position}\n`;
+          if (official.email) {
+            responseData += `📧 Email: ${official.email}\n`;
+          }
+          if (official.phone) {
+            responseData += `📞 Phone: ${official.phone}\n`;
+          }
+          responseData += '\n';
+        });
+        return responseData;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error querying Supabase data:', error);
     return null;
   }
 }
@@ -134,7 +248,13 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, conversationHistory = [] } = await req.json();
+    const requestBody = await req.text();
+    
+    if (!requestBody) {
+      throw new Error('Empty request body');
+    }
+
+    const { messages, conversationHistory = [], authToken } = JSON.parse(requestBody);
     const userMessage = messages[messages.length - 1];
     
     if (!userMessage || !userMessage.content) {
@@ -143,8 +263,15 @@ serve(async (req) => {
 
     console.log('User query:', userMessage.content);
     
+    // Create Supabase client with auth token if provided
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+      }
+    });
+    
     // Step 1: Try FAQ lookup first
-    const faqMatch = await searchFAQ(userMessage.content);
+    const faqMatch = await searchFAQ(userMessage.content, supabase);
     
     if (faqMatch) {
       console.log('FAQ match found:', faqMatch.category);
@@ -157,8 +284,31 @@ serve(async (req) => {
       });
     }
 
-    // Step 2: Fallback to Gemini AI
-    console.log('No FAQ match, using Gemini AI');
+    // Step 2: Check if user is admin and try Supabase data query
+    if (authToken) {
+      const { isAdmin, userProfile } = await checkUserRole(supabase);
+      
+      if (isAdmin) {
+        console.log('Admin user detected, checking Supabase data');
+        const supabaseResponse = await querySupabaseData(userMessage.content, supabase);
+        
+        if (supabaseResponse) {
+          console.log('Supabase data found and returned');
+          return new Response(JSON.stringify({ 
+            message: supabaseResponse,
+            source: 'supabase',
+            category: 'Live Data' 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      } else {
+        console.log('Non-admin user, skipping Supabase data query');
+      }
+    }
+
+    // Step 3: Fallback to Gemini AI
+    console.log('No FAQ or Supabase match, using Gemini AI');
     const geminiResponse = await callGeminiAPI(messages, conversationHistory);
 
     return new Response(JSON.stringify({ 
@@ -172,7 +322,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in ai-chat function:', error);
     
-    // Fallback message when both systems fail
+    // Fallback message when all systems fail
     const fallbackMessage = "I apologize, but I'm having trouble processing your request right now. Please try again later or contact the barangay office directly for assistance.";
     
     return new Response(JSON.stringify({ 
