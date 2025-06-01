@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -269,35 +268,57 @@ async function checkUserAccess(supabase: any): Promise<{ hasAccess: boolean, use
   }
 }
 
-// Enhanced query function for comprehensive Supabase data access with specific resident search
+// Enhanced query function for comprehensive Supabase data access with improved resident search
 async function querySupabaseData(userQuery: string, supabase: any, brgyid: string): Promise<string | null> {
   const normalizedQuery = normalizeText(userQuery);
   
   try {
     let responseData = '';
     
-    // 1. SPECIFIC RESIDENT SEARCH - Look for names mentioned in the query
+    // 1. ENHANCED RESIDENT SEARCH - More flexible name and context matching
     if (normalizedQuery.includes('tell me about') || 
         normalizedQuery.includes('information about') ||
         normalizedQuery.includes('details about') ||
         normalizedQuery.includes('who is') ||
-        normalizedQuery.includes('find')) {
+        normalizedQuery.includes('find') ||
+        normalizedQuery.includes('search') ||
+        normalizedQuery.includes('look for') ||
+        normalizedQuery.includes('show me') ||
+        normalizedQuery.includes('resident')) {
       
-      // Extract potential names from the query (words that are capitalized or common names)
-      const words = userQuery.split(' ');
-      const potentialNames = words.filter(word => 
-        word.length > 2 && 
-        (word[0] === word[0].toUpperCase() || 
-         ['about', 'tell', 'information', 'details'].some(keyword => 
-           normalizedQuery.includes(`${keyword} ${word.toLowerCase()}`)
-         ))
-      );
+      // Extract potential names from the query - be more inclusive
+      const words = userQuery.split(/\s+/);
+      const potentialNames = [];
+      
+      // Look for capitalized words that could be names
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i].replace(/[^\w]/g, ''); // Remove punctuation
+        if (word.length > 2 && word[0] === word[0].toUpperCase()) {
+          potentialNames.push(word);
+        }
+      }
+      
+      // Also try to extract names mentioned after common phrases
+      const namePatterns = [
+        /(?:about|for|named|called)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/gi,
+        /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g
+      ];
+      
+      for (const pattern of namePatterns) {
+        let match;
+        while ((match = pattern.exec(userQuery)) !== null) {
+          const extractedName = match[1] || match[0];
+          if (extractedName && extractedName.length > 2) {
+            potentialNames.push(...extractedName.split(/\s+/).filter(n => n.length > 2));
+          }
+        }
+      }
       
       if (potentialNames.length > 0) {
         console.log('Searching for residents with potential names:', potentialNames);
         
-        // Search for residents by first name, last name, or combination
-        const { data: residents, error } = await supabase
+        // Build flexible search query using OR conditions for both first and last names
+        let query = supabase
           .from('residents')
           .select(`
             id, first_name, last_name, middle_name, suffix, gender, birthdate,
@@ -305,19 +326,48 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
             monthly_income, years_in_barangay, purok, barangaydb, municipalitycity,
             provinze, regional, countryph, nationality, is_voter, has_philhealth,
             has_sss, has_pagibig, has_tin, classifications, remarks, photo_url,
-            emname, emrelation, emcontact, died_on, created_at, updated_at
+            emname, emrelation, emcontact, died_on, created_at, updated_at,
+            household_id
           `)
-          .eq('brgyid', brgyid)
-          .or(
-            potentialNames.map(name => 
-              `first_name.ilike.%${name}%,last_name.ilike.%${name}%`
-            ).join(',')
-          )
-          .limit(5);
+          .eq('brgyid', brgyid);
+        
+        // Create OR conditions for flexible name matching
+        const orConditions = [];
+        for (const name of potentialNames) {
+          orConditions.push(`first_name.ilike.%${name}%`);
+          orConditions.push(`last_name.ilike.%${name}%`);
+          orConditions.push(`middle_name.ilike.%${name}%`);
+        }
+        
+        const { data: residents, error } = await query
+          .or(orConditions.join(','))
+          .limit(10); // Increased limit to find more potential matches
         
         if (!error && residents && residents.length > 0) {
-          responseData += '👥 **Resident Information:**\n\n';
-          residents.forEach((resident: any) => {
+          responseData += '👥 **Resident Information Found:**\n\n';
+          
+          // Sort by relevance - exact matches first
+          const sortedResidents = residents.sort((a, b) => {
+            const aFullName = `${a.first_name} ${a.middle_name || ''} ${a.last_name}`.toLowerCase();
+            const bFullName = `${b.first_name} ${b.middle_name || ''} ${b.last_name}`.toLowerCase();
+            
+            const queryLower = normalizedQuery;
+            const aRelevance = potentialNames.reduce((score, name) => {
+              const nameLower = name.toLowerCase();
+              if (aFullName.includes(nameLower)) score += nameLower.length;
+              return score;
+            }, 0);
+            
+            const bRelevance = potentialNames.reduce((score, name) => {
+              const nameLower = name.toLowerCase();
+              if (bFullName.includes(nameLower)) score += nameLower.length;
+              return score;
+            }, 0);
+            
+            return bRelevance - aRelevance;
+          });
+          
+          sortedResidents.forEach((resident: any) => {
             const fullName = [resident.first_name, resident.middle_name, resident.last_name, resident.suffix]
               .filter(Boolean).join(' ');
             
@@ -327,10 +377,14 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
             responseData += `📅 Birthdate: ${resident.birthdate}\n`;
             responseData += `📍 Address: ${resident.address || 'Not specified'}\n`;
             responseData += `🏠 Purok: ${resident.purok}\n`;
+            responseData += `🏛️ Barangay: ${resident.barangaydb}\n`;
+            responseData += `🏙️ Municipality: ${resident.municipalitycity}\n`;
+            responseData += `🗺️ Province: ${resident.provinze}\n`;
             responseData += `📞 Contact: ${resident.mobile_number || 'Not provided'}\n`;
             responseData += `💼 Occupation: ${resident.occupation || 'Not specified'}\n`;
             responseData += `👑 Status: ${resident.status}\n`;
             responseData += `💒 Civil Status: ${resident.civil_status}\n`;
+            responseData += `🏳️ Nationality: ${resident.nationality}\n`;
             
             if (resident.monthly_income) {
               responseData += `💰 Monthly Income: ₱${resident.monthly_income}\n`;
@@ -365,12 +419,17 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
               responseData += `📝 Remarks: ${resident.remarks}\n`;
             }
             
+            if (resident.household_id) {
+              responseData += `🏠 Household ID: ${resident.household_id}\n`;
+            }
+            
             responseData += '\n';
           });
           
           return responseData;
         } else {
-          console.log('No residents found with those names');
+          console.log('No residents found with those names. Searched names:', potentialNames);
+          // Don't return here, let other queries try to match
         }
       }
     }
