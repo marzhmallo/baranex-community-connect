@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -9,6 +10,50 @@ const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Application structure and navigation guide
+const APPLICATION_GUIDE = {
+  navigation: {
+    admin_sidebar: [
+      "Dashboard - Main overview with statistics and charts",
+      "Residents - Manage resident records and information", 
+      "Households - Manage household data and family information",
+      "Officials - Manage barangay officials and positions",
+      "Documents - Issue certificates and manage document types",
+      "Announcements - Create and manage barangay announcements",
+      "Calendar - Manage events and scheduling",
+      "Blotter - Handle incident reports and crime records",
+      "Forum - Community discussion boards",
+      "Emergency Response - Manage emergency contacts and evacuation centers"
+    ],
+    user_sidebar: [
+      "Hub - Main user dashboard",
+      "Announcements - View barangay announcements",
+      "Events - View upcoming events",
+      "Officials - View barangay officials",
+      "Forum - Participate in community discussions",
+      "Documents - Request certificates and documents"
+    ]
+  },
+  features: {
+    residents: "Add, edit, view, and manage resident information including personal details, classifications, and household assignments",
+    households: "Manage household records, assign heads of family, and track household members and relationships",
+    documents: "Issue barangay certificates like clearances, indigency certificates, and other official documents",
+    announcements: "Create public announcements with categories, priorities, and audience targeting",
+    events: "Schedule and manage barangay events with date, time, location, and participant information",
+    blotter: "Record and track incident reports, crime records, and security-related matters",
+    officials: "Manage barangay official profiles, positions, committees, and terms of service",
+    emergency: "Maintain emergency contacts, evacuation centers, disaster zones, and emergency response protocols"
+  },
+  common_tasks: {
+    "add_resident": "Go to Residents page → Click 'Add Resident' button → Fill out the form with personal information",
+    "issue_document": "Go to Documents page → Click 'Issue Document' → Select document type → Fill recipient details",
+    "create_announcement": "Go to Announcements page → Click 'Create Announcement' → Fill title, content, category, and audience",
+    "schedule_event": "Go to Calendar page → Click 'Add Event' → Set date, time, location, and event details",
+    "record_incident": "Go to Blotter page → Click 'New Incident Report' → Fill incident details and parties involved",
+    "add_official": "Go to Officials page → Click 'Add Official' → Fill official information and position details"
+  }
 };
 
 // Normalize text for keyword matching
@@ -71,14 +116,14 @@ async function searchFAQ(userQuery: string, supabase: any) {
   }
 }
 
-// Check if user has admin role and get their brgyid
-async function checkUserRole(supabase: any): Promise<{ isAdmin: boolean, userProfile: any, brgyid: string | null }> {
+// Check user role and get their brgyid - now works for both admin and regular users
+async function checkUserAccess(supabase: any): Promise<{ hasAccess: boolean, userProfile: any, brgyid: string | null }> {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
       console.log('No authenticated user found');
-      return { isAdmin: false, userProfile: null, brgyid: null };
+      return { hasAccess: false, userProfile: null, brgyid: null };
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -89,16 +134,17 @@ async function checkUserRole(supabase: any): Promise<{ isAdmin: boolean, userPro
 
     if (profileError || !profile) {
       console.log('No profile found for user');
-      return { isAdmin: false, userProfile: null, brgyid: null };
+      return { hasAccess: false, userProfile: null, brgyid: null };
     }
 
-    const isAdmin = profile.role === 'admin' || profile.role === 'staff';
-    console.log(`User role: ${profile.role}, isAdmin: ${isAdmin}, brgyid: ${profile.brgyid}`);
+    // Allow access for both admin/staff and regular users
+    const hasAccess = profile.role === 'admin' || profile.role === 'staff' || profile.role === 'user';
+    console.log(`User role: ${profile.role}, hasAccess: ${hasAccess}, brgyid: ${profile.brgyid}`);
     
-    return { isAdmin, userProfile: profile, brgyid: profile.brgyid };
+    return { hasAccess, userProfile: profile, brgyid: profile.brgyid };
   } catch (error) {
-    console.error('Error checking user role:', error);
-    return { isAdmin: false, userProfile: null, brgyid: null };
+    console.error('Error checking user access:', error);
+    return { hasAccess: false, userProfile: null, brgyid: null };
   }
 }
 
@@ -120,16 +166,16 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         .limit(10);
       
       if (!error && events && events.length > 0) {
-        responseData += 'Here are the upcoming events:\n\n';
+        responseData += '📅 **Upcoming Events:**\n\n';
         events.forEach((event: any) => {
           const startDate = new Date(event.start_time).toLocaleDateString();
           const startTime = new Date(event.start_time).toLocaleTimeString();
-          responseData += `📅 **${event.title}**\n`;
-          responseData += `📍 ${event.location || 'Location TBA'}\n`;
-          responseData += `🕐 ${startDate} at ${startTime}\n`;
+          responseData += `**${event.title}**\n`;
+          responseData += `📍 Location: ${event.location || 'TBA'}\n`;
+          responseData += `🕐 Date & Time: ${startDate} at ${startTime}\n`;
           if (event.event_type) responseData += `🏷️ Type: ${event.event_type}\n`;
-          if (event.target_audience) responseData += `👥 Audience: ${event.target_audience}\n`;
-          if (event.description) responseData += `📝 ${event.description}\n`;
+          if (event.target_audience) responseData += `👥 Target Audience: ${event.target_audience}\n`;
+          if (event.description) responseData += `📝 Description: ${event.description}\n`;
           responseData += '\n';
         });
         return responseData;
@@ -146,10 +192,10 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         .limit(8);
       
       if (!error && announcements && announcements.length > 0) {
-        responseData += 'Here are the latest announcements:\n\n';
+        responseData += '📢 **Latest Announcements:**\n\n';
         announcements.forEach((announcement: any) => {
           const datePosted = new Date(announcement.created_at).toLocaleDateString();
-          responseData += `📢 **${announcement.title}**\n`;
+          responseData += `**${announcement.title}**\n`;
           responseData += `📂 Category: ${announcement.category}\n`;
           responseData += `👥 Audience: ${announcement.audience}\n`;
           responseData += `📅 Posted: ${datePosted}\n`;
@@ -169,31 +215,18 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
           phone,
           bio,
           education,
-          official_positions!inner(
-            position,
-            committee,
-            is_current,
-            term_start,
-            term_end
-          )
+          position,
+          committees
         `)
         .eq('brgyid', brgyid)
-        .eq('official_positions.is_current', true)
         .order('name');
       
       if (!error && officials && officials.length > 0) {
-        responseData += 'Here are the barangay officials:\n\n';
+        responseData += '👥 **Barangay Officials:**\n\n';
         officials.forEach((official: any) => {
-          responseData += `👤 **${official.name}**\n`;
-          
-          if (official.official_positions && official.official_positions.length > 0) {
-            official.official_positions.forEach((pos: any) => {
-              responseData += `🏛️ Position: ${pos.position}\n`;
-              if (pos.committee) responseData += `📋 Committee: ${pos.committee}\n`;
-              if (pos.term_start) responseData += `📅 Term: ${new Date(pos.term_start).getFullYear()} - ${pos.term_end ? new Date(pos.term_end).getFullYear() : 'Present'}\n`;
-            });
-          }
-          
+          responseData += `**${official.name}**\n`;
+          responseData += `🏛️ Position: ${official.position}\n`;
+          if (official.committees) responseData += `📋 Committees: ${JSON.stringify(official.committees)}\n`;
           if (official.email) responseData += `📧 Email: ${official.email}\n`;
           if (official.phone) responseData += `📞 Phone: ${official.phone}\n`;
           if (official.education) responseData += `🎓 Education: ${official.education}\n`;
@@ -210,21 +243,32 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         .from('residents')
         .select('id, first_name, last_name, gender, civil_status, purok, occupation, status')
         .eq('brgyid', brgyid)
-        .limit(10);
+        .limit(20);
       
       if (!error && residents) {
-        responseData += `Population Overview:\n\n`;
-        responseData += `📊 Total Residents: ${residents.length}\n`;
+        responseData += `📊 **Population Overview:**\n\n`;
+        responseData += `👥 Total Residents: ${residents.length}\n`;
         
         const genderStats = residents.reduce((acc: any, r: any) => {
           acc[r.gender] = (acc[r.gender] || 0) + 1;
           return acc;
         }, {});
         
-        responseData += `👥 Gender Distribution:\n`;
+        responseData += `\n**Gender Distribution:**\n`;
         Object.entries(genderStats).forEach(([gender, count]) => {
           responseData += `   • ${gender}: ${count}\n`;
         });
+        
+        const statusStats = residents.reduce((acc: any, r: any) => {
+          acc[r.status] = (acc[r.status] || 0) + 1;
+          return acc;
+        }, {});
+        
+        responseData += `\n**Status Distribution:**\n`;
+        Object.entries(statusStats).forEach(([status, count]) => {
+          responseData += `   • ${status}: ${count}\n`;
+        });
+        
         responseData += '\n';
         return responseData;
       }
@@ -234,12 +278,12 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
     if (normalizedQuery.includes('household') || normalizedQuery.includes('family') || normalizedQuery.includes('home')) {
       const { data: households, error } = await supabase
         .from('households')
-        .select('id, name, purok, status, monthly_income, house_type, head_of_family')
+        .select('id, name, purok, status, monthly_income, house_type, headname')
         .eq('brgyid', brgyid)
-        .limit(10);
+        .limit(15);
       
       if (!error && households) {
-        responseData += `Household Overview:\n\n`;
+        responseData += `🏠 **Household Overview:**\n\n`;
         responseData += `🏠 Total Households: ${households.length}\n`;
         
         const purokStats = households.reduce((acc: any, h: any) => {
@@ -247,7 +291,7 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
           return acc;
         }, {});
         
-        responseData += `📍 Distribution by Purok:\n`;
+        responseData += `\n**Distribution by Purok:**\n`;
         Object.entries(purokStats).forEach(([purok, count]) => {
           responseData += `   • ${purok}: ${count} households\n`;
         });
@@ -266,10 +310,10 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         .limit(5);
       
       if (!error && incidents && incidents.length > 0) {
-        responseData += 'Recent Incident Reports:\n\n';
+        responseData += '🚨 **Recent Incident Reports:**\n\n';
         incidents.forEach((incident: any) => {
           const reportDate = new Date(incident.date_reported).toLocaleDateString();
-          responseData += `🚨 **${incident.title}**\n`;
+          responseData += `**${incident.title}**\n`;
           responseData += `📂 Type: ${incident.report_type}\n`;
           responseData += `📍 Location: ${incident.location}\n`;
           responseData += `📅 Reported: ${reportDate}\n`;
@@ -288,9 +332,9 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         .eq('brgyid', brgyid);
       
       if (!error && docTypes && docTypes.length > 0) {
-        responseData += 'Available Documents/Certificates:\n\n';
+        responseData += '📄 **Available Documents/Certificates:**\n\n';
         docTypes.forEach((doc: any) => {
-          responseData += `📄 **${doc.name}**\n`;
+          responseData += `**${doc.name}**\n`;
           if (doc.description) responseData += `📝 ${doc.description}\n`;
           if (doc.fee) responseData += `💰 Fee: ₱${doc.fee}\n`;
           if (doc.validity_days) responseData += `⏰ Valid for: ${doc.validity_days} days\n`;
@@ -313,9 +357,9 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         .eq('brgyid', brgyid);
       
       if (!contactsError && emergencyContacts && emergencyContacts.length > 0) {
-        responseData += 'Emergency Contacts:\n\n';
+        responseData += '🚨 **Emergency Contacts:**\n\n';
         emergencyContacts.forEach((contact: any) => {
-          responseData += `🚨 **${contact.name}** (${contact.type})\n`;
+          responseData += `**${contact.name}** (${contact.type})\n`;
           responseData += `📞 ${contact.phone_number}\n`;
           if (contact.description) responseData += `📝 ${contact.description}\n`;
           responseData += '\n';
@@ -323,9 +367,9 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       }
 
       if (!centersError && evacuationCenters && evacuationCenters.length > 0) {
-        responseData += 'Evacuation Centers:\n\n';
+        responseData += '🏢 **Evacuation Centers:**\n\n';
         evacuationCenters.forEach((center: any) => {
-          responseData += `🏢 **${center.name}**\n`;
+          responseData += `**${center.name}**\n`;
           responseData += `📍 ${center.address}\n`;
           responseData += `👥 Capacity: ${center.current_occupancy}/${center.capacity}\n`;
           responseData += `🔄 Status: ${center.status}\n`;
@@ -344,19 +388,76 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
   }
 }
 
+// Provide application navigation guidance
+function getNavigationGuidance(userQuery: string): string | null {
+  const normalizedQuery = normalizeText(userQuery);
+  
+  // Check if query is asking about navigation or how to do something
+  if (normalizedQuery.includes('how to') || normalizedQuery.includes('where') || normalizedQuery.includes('navigate') || 
+      normalizedQuery.includes('find') || normalizedQuery.includes('go to') || normalizedQuery.includes('access')) {
+    
+    let guidance = '';
+    
+    // Check for specific features
+    for (const [task, instruction] of Object.entries(APPLICATION_GUIDE.common_tasks)) {
+      if (normalizedQuery.includes(task.replace('_', ' ')) || 
+          normalizedQuery.includes(task.replace('_', '')) ||
+          normalizedQuery.includes('add resident') && task === 'add_resident' ||
+          normalizedQuery.includes('create announcement') && task === 'create_announcement' ||
+          normalizedQuery.includes('issue document') && task === 'issue_document') {
+        guidance += `**How to ${task.replace('_', ' ')}:**\n${instruction}\n\n`;
+      }
+    }
+    
+    // General navigation help
+    if (normalizedQuery.includes('sidebar') || normalizedQuery.includes('menu') || normalizedQuery.includes('navigation')) {
+      guidance += "**📍 Navigation Menu:**\n";
+      guidance += "**Admin/Staff users can access:**\n";
+      APPLICATION_GUIDE.navigation.admin_sidebar.forEach(item => {
+        guidance += `• ${item}\n`;
+      });
+      guidance += "\n**Regular users can access:**\n";
+      APPLICATION_GUIDE.navigation.user_sidebar.forEach(item => {
+        guidance += `• ${item}\n`;
+      });
+    }
+    
+    return guidance || null;
+  }
+  
+  return null;
+}
+
 // Call Gemini API for conversational responses
-async function callGeminiAPI(messages: any[], conversationHistory: any[]) {
+async function callGeminiAPI(messages: any[], conversationHistory: any[], hasDataAccess: boolean, userRole: string) {
   if (!geminiApiKey) {
     throw new Error('Gemini API key not configured');
   }
   
-  const modelInstructions = `You are Alexander Cabalan, also known as "Alan" which is short for Automated Live Artificial Neurointelligence, a knowledgeable assistant for the Baranex Barangay Management System.
+  const modelInstructions = `You are Alexander Cabalan Desierto, also known as "Alex" which is short for Automated Live Electronic Xpert, a knowledgeable assistant for the Baranex Barangay Management System.
+
 Your personality is warm, professional, and deeply knowledgeable about barangay governance and community services.
-You have access to real-time data from the barangay management supabase and database system including residents, households, officials, events, announcements, and more.
-When users ask about barangay services like certificates, clearances, or permits, provide helpful guidance about the process and requirements according to how it's done in the system.
-You can assist with general inquiries about barangay operations, community programs, and administrative procedures.
-Feel free to provide context about barangay governance when appropriate.
-Your goal is to make barangay services more accessible and understandable for everyone.`;
+
+IMPORTANT CAPABILITIES:
+- You have access to real-time data from the barangay management system including residents, households, officials, events, announcements, and more.
+- You can provide step-by-step navigation guidance for the application interface.
+- You understand the application structure and can guide users to specific features and pages.
+
+APPLICATION STRUCTURE:
+${JSON.stringify(APPLICATION_GUIDE, null, 2)}
+
+When users ask about:
+1. **Navigation/How-to questions**: Provide specific step-by-step instructions on where to click and what to do
+2. **Data queries**: Use real data from the database when available (you have ${hasDataAccess ? 'full' : 'limited'} access)
+3. **Features**: Explain what each section does and how to use it
+4. **Certificates/Documents**: Guide them through the document issuance process
+5. **General barangay services**: Provide helpful information about procedures and requirements
+
+Current user role: ${userRole}
+
+Always be specific about navigation (e.g., "Click the 'Residents' tab in the left sidebar, then click the 'Add Resident' button") and use real data when responding to specific queries about residents, events, officials, etc.
+
+Your goal is to make barangay services more accessible and help users navigate the system effectively.`;
 
   // Combine conversation history with current messages
   const allMessages = [
@@ -431,7 +532,7 @@ serve(async (req) => {
     if (faqMatch) {
       console.log('FAQ match found:', faqMatch.category);
       return new Response(JSON.stringify({ 
-        message: faqMatch.answer_text,
+        message: faqMatch.answer_textz,
         source: 'faq',
         category: faqMatch.category 
       }), {
@@ -439,13 +540,32 @@ serve(async (req) => {
       });
     }
 
-    // Step 2: Check if user is admin and try Supabase data query
+    // Step 2: Check for navigation/guidance queries
+    const navigationGuidance = getNavigationGuidance(userMessage.content);
+    if (navigationGuidance) {
+      console.log('Navigation guidance provided');
+      return new Response(JSON.stringify({ 
+        message: navigationGuidance,
+        source: 'navigation',
+        category: 'Application Guide' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Step 3: Check user access and try Supabase data query
+    let supabaseResponse = null;
+    let userRole = 'guest';
+    let hasDataAccess = false;
+    
     if (authToken) {
-      const { isAdmin, userProfile, brgyid } = await checkUserRole(supabase);
+      const { hasAccess, userProfile, brgyid } = await checkUserAccess(supabase);
       
-      if (isAdmin && brgyid) {
-        console.log('Admin user detected, checking Supabase data for brgyid:', brgyid);
-        const supabaseResponse = await querySupabaseData(userMessage.content, supabase, brgyid);
+      if (hasAccess && brgyid) {
+        hasDataAccess = true;
+        userRole = userProfile.role;
+        console.log('User has access, checking Supabase data for brgyid:', brgyid);
+        supabaseResponse = await querySupabaseData(userMessage.content, supabase, brgyid);
         
         if (supabaseResponse) {
           console.log('Supabase data found and returned');
@@ -458,13 +578,13 @@ serve(async (req) => {
           });
         }
       } else {
-        console.log('Non-admin user or missing brgyid, skipping Supabase data query');
+        console.log('User access limited or missing brgyid');
       }
     }
 
-    // Step 3: Fallback to Gemini AI
-    console.log('No FAQ or Supabase match, using Gemini AI');
-    const geminiResponse = await callGeminiAPI(messages, conversationHistory);
+    // Step 4: Fallback to Gemini AI with enhanced context
+    console.log('Using Gemini AI with application context');
+    const geminiResponse = await callGeminiAPI(messages, conversationHistory, hasDataAccess, userRole);
 
     return new Response(JSON.stringify({ 
       message: geminiResponse,
