@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -268,14 +269,113 @@ async function checkUserAccess(supabase: any): Promise<{ hasAccess: boolean, use
   }
 }
 
-// Enhanced query function for comprehensive Supabase data access
+// Enhanced query function for comprehensive Supabase data access with specific resident search
 async function querySupabaseData(userQuery: string, supabase: any, brgyid: string): Promise<string | null> {
   const normalizedQuery = normalizeText(userQuery);
   
   try {
     let responseData = '';
     
-    // Events-related queries
+    // 1. SPECIFIC RESIDENT SEARCH - Look for names mentioned in the query
+    if (normalizedQuery.includes('tell me about') || 
+        normalizedQuery.includes('information about') ||
+        normalizedQuery.includes('details about') ||
+        normalizedQuery.includes('who is') ||
+        normalizedQuery.includes('find')) {
+      
+      // Extract potential names from the query (words that are capitalized or common names)
+      const words = userQuery.split(' ');
+      const potentialNames = words.filter(word => 
+        word.length > 2 && 
+        (word[0] === word[0].toUpperCase() || 
+         ['about', 'tell', 'information', 'details'].some(keyword => 
+           normalizedQuery.includes(`${keyword} ${word.toLowerCase()}`)
+         ))
+      );
+      
+      if (potentialNames.length > 0) {
+        console.log('Searching for residents with potential names:', potentialNames);
+        
+        // Search for residents by first name, last name, or combination
+        const { data: residents, error } = await supabase
+          .from('residents')
+          .select(`
+            id, first_name, last_name, middle_name, suffix, gender, birthdate,
+            address, mobile_number, email, occupation, status, civil_status,
+            monthly_income, years_in_barangay, purok, barangaydb, municipalitycity,
+            provinze, regional, countryph, nationality, is_voter, has_philhealth,
+            has_sss, has_pagibig, has_tin, classifications, remarks, photo_url,
+            emname, emrelation, emcontact, died_on, created_at, updated_at
+          `)
+          .eq('brgyid', brgyid)
+          .or(
+            potentialNames.map(name => 
+              `first_name.ilike.%${name}%,last_name.ilike.%${name}%`
+            ).join(',')
+          )
+          .limit(5);
+        
+        if (!error && residents && residents.length > 0) {
+          responseData += '👥 **Resident Information:**\n\n';
+          residents.forEach((resident: any) => {
+            const fullName = [resident.first_name, resident.middle_name, resident.last_name, resident.suffix]
+              .filter(Boolean).join(' ');
+            
+            responseData += `**${fullName}**\n`;
+            responseData += `🆔 Resident ID: ${resident.id}\n`;
+            responseData += `👤 Gender: ${resident.gender}\n`;
+            responseData += `📅 Birthdate: ${resident.birthdate}\n`;
+            responseData += `📍 Address: ${resident.address || 'Not specified'}\n`;
+            responseData += `🏠 Purok: ${resident.purok}\n`;
+            responseData += `📞 Contact: ${resident.mobile_number || 'Not provided'}\n`;
+            responseData += `💼 Occupation: ${resident.occupation || 'Not specified'}\n`;
+            responseData += `👑 Status: ${resident.status}\n`;
+            responseData += `💒 Civil Status: ${resident.civil_status}\n`;
+            
+            if (resident.monthly_income) {
+              responseData += `💰 Monthly Income: ₱${resident.monthly_income}\n`;
+            }
+            
+            if (resident.years_in_barangay) {
+              responseData += `📅 Years in Barangay: ${resident.years_in_barangay}\n`;
+            }
+            
+            // Emergency contact
+            if (resident.emname || resident.emrelation || resident.emcontact) {
+              responseData += `🚨 Emergency Contact: ${resident.emname || 'N/A'} (${resident.emrelation || 'N/A'}) - ${resident.emcontact || 'N/A'}\n`;
+            }
+            
+            // Government IDs
+            const govIds = [];
+            if (resident.is_voter) govIds.push('Voter');
+            if (resident.has_philhealth) govIds.push('PhilHealth');
+            if (resident.has_sss) govIds.push('SSS');
+            if (resident.has_pagibig) govIds.push('Pag-IBIG');
+            if (resident.has_tin) govIds.push('TIN');
+            
+            if (govIds.length > 0) {
+              responseData += `🆔 Government IDs: ${govIds.join(', ')}\n`;
+            }
+            
+            if (resident.classifications && resident.classifications.length > 0) {
+              responseData += `🏷️ Classifications: ${resident.classifications.join(', ')}\n`;
+            }
+            
+            if (resident.remarks) {
+              responseData += `📝 Remarks: ${resident.remarks}\n`;
+            }
+            
+            responseData += '\n';
+          });
+          
+          return responseData;
+        } else {
+          console.log('No residents found with those names');
+        }
+      }
+    }
+    
+    // 2. Events-related queries
     if (normalizedQuery.includes('event') || normalizedQuery.includes('upcoming') || normalizedQuery.includes('schedule') || normalizedQuery.includes('calendar')) {
       const { data: events, error } = await supabase
         .from('events')
@@ -302,7 +402,7 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       }
     }
     
-    // Announcements-related queries
+    // 3. Announcements-related queries
     if (normalizedQuery.includes('announcement') || normalizedQuery.includes('news') || normalizedQuery.includes('update') || normalizedQuery.includes('notice')) {
       const { data: announcements, error } = await supabase
         .from('announcements')
@@ -325,7 +425,7 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       }
     }
     
-    // Officials-related queries
+    // 4. Officials-related queries
     if (normalizedQuery.includes('official') || normalizedQuery.includes('barangay captain') || normalizedQuery.includes('councilor') || normalizedQuery.includes('chairman') || normalizedQuery.includes('kagawad')) {
       const { data: officials, error } = await supabase
         .from('officials')
@@ -357,13 +457,12 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       }
     }
 
-    // Residents-related queries
-    if (normalizedQuery.includes('resident') || normalizedQuery.includes('population') || normalizedQuery.includes('demographics') || normalizedQuery.includes('citizen')) {
+    // 5. Residents-related queries (general statistics only)
+    if (normalizedQuery.includes('population') || normalizedQuery.includes('demographics') || normalizedQuery.includes('how many residents')) {
       const { data: residents, error } = await supabase
         .from('residents')
-        .select('id, first_name, last_name, gender, civil_status, purok, occupation, status')
-        .eq('brgyid', brgyid)
-        .limit(20);
+        .select('id, gender, civil_status, purok, status')
+        .eq('brgyid', brgyid);
       
       if (!error && residents) {
         responseData += `📊 **Population Overview:**\n\n`;
@@ -394,7 +493,7 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       }
     }
 
-    // Households-related queries
+    // 6. Households-related queries
     if (normalizedQuery.includes('household') || normalizedQuery.includes('family') || normalizedQuery.includes('home')) {
       const { data: households, error } = await supabase
         .from('households')
@@ -420,7 +519,7 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       }
     }
 
-    // Incident/Blotter-related queries
+    // 7. Incident/Blotter-related queries
     if (normalizedQuery.includes('incident') || normalizedQuery.includes('blotter') || normalizedQuery.includes('report') || normalizedQuery.includes('crime') || normalizedQuery.includes('complaint')) {
       const { data: incidents, error } = await supabase
         .from('incident_reports')
@@ -444,7 +543,7 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       }
     }
 
-    // Document-related queries
+    // 8. Document-related queries
     if (normalizedQuery.includes('document') || normalizedQuery.includes('certificate') || normalizedQuery.includes('clearance') || normalizedQuery.includes('permit')) {
       const { data: docTypes, error } = await supabase
         .from('document_types')
@@ -464,7 +563,7 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       }
     }
 
-    // Emergency-related queries
+    // 9. Emergency-related queries
     if (normalizedQuery.includes('emergency') || normalizedQuery.includes('evacuation') || normalizedQuery.includes('disaster') || normalizedQuery.includes('contact')) {
       const { data: emergencyContacts, error: contactsError } = await supabase
         .from('emergency_contacts')
@@ -562,22 +661,31 @@ IMPORTANT CAPABILITIES:
 - You have access to real-time data from the barangay management system including residents, households, officials, events, announcements, and more.
 - You can provide step-by-step navigation guidance for the application interface.
 - You understand the application structure and can guide users to specific features and pages.
+- You can ONLY provide information about residents and data that actually exists in the Supabase database.
+- You must NEVER make up or invent data about residents or any other records.
 
 APPLICATION STRUCTURE:
 ${JSON.stringify(APPLICATION_GUIDE, null, 2)}
 
 When users ask about:
 1. **Navigation/How-to questions**: Provide specific step-by-step instructions on where to click and what to do
-2. **Data queries**: Use real data from the database when available (you have ${hasDataAccess ? 'full' : 'limited'} access)
+2. **Data queries**: Use ONLY real data from the database when available (you have ${hasDataAccess ? 'full' : 'limited'} access)
 3. **Features**: Explain what each section does and how to use it
 4. **Certificates/Documents**: Guide them through the document issuance process
 5. **General barangay services**: Provide helpful information about procedures and requirements
+6. **Resident information**: Only provide information that exists in the actual database records
+
+CRITICAL RULES:
+- If asked about a specific resident and no data is found in the database, say "I couldn't find any residents with that name in our database."
+- Never make up resident IDs, addresses, phone numbers, or any other personal information
+- Always base your responses on actual database records when discussing specific people or data
+- If the database query returns no results, acknowledge this rather than providing fictional information
 
 Current user role: ${userRole}
 
 Always be specific about navigation (e.g., "Click the 'Residents' tab in the left sidebar, then click the 'Add Resident' button") and use real data when responding to specific queries about residents, events, officials, etc.
 
-Your goal is to make barangay services more accessible and help users navigate the system effectively.`;
+Your goal is to make barangay services more accessible and help users navigate the system effectively while maintaining data integrity.`;
 
   // Combine conversation history with current messages
   const allMessages = [
