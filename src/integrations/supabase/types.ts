@@ -254,7 +254,7 @@ export type Database = {
           },
         ]
       }
-      chatbot_faq: {
+      "chatbot_faq (disabled)": {
         Row: {
           answer_text: Json[] | null
           answer_textz: string

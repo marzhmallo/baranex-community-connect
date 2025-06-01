@@ -11,6 +11,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Offline FAQ responses for common questions
+const OFFLINE_FAQ = {
+  "greeting": [
+    "Hello! I'm Alan, your barangay assistant. I can help you with basic information about our services.",
+    "Hi there! I'm here to help with general inquiries about barangay services and procedures."
+  ],
+  "documents": [
+    "For document requests like barangay clearance or certificates, you'll need to visit the barangay office with valid ID and the required fee.",
+    "Common documents we issue include barangay clearance, certificate of residency, and indigency certificates. Visit our office for specific requirements."
+  ],
+  "services": [
+    "We offer various services including document issuance, complaint handling, and community programs. Visit the barangay office for detailed information.",
+    "Our office provides services Monday to Friday, 8 AM to 5 PM. For specific services, please visit us during business hours."
+  ],
+  "contact": [
+    "You can reach the barangay office during regular business hours. For emergencies, contact local emergency services.",
+    "Our office is open Monday to Friday. For specific contact information, please visit the office or check our official announcements."
+  ],
+  "officials": [
+    "Information about current barangay officials is available at the office and through official announcements.",
+    "To learn about our barangay officials and their roles, please visit the office or check our public announcements board."
+  ],
+  "events": [
+    "Community events and activities are announced through our official channels. Check our announcements board for upcoming events.",
+    "We regularly organize community programs and events. Stay updated through our official announcements."
+  ]
+};
+
 // Application structure and navigation guide
 const APPLICATION_GUIDE = {
   navigation: {
@@ -61,6 +89,48 @@ function normalizeText(text: string): string {
     .replace(/[^\w\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// Offline mode response handler
+function getOfflineResponse(userQuery: string): string | null {
+  const normalizedQuery = normalizeText(userQuery);
+  
+  // Determine response category based on keywords
+  if (normalizedQuery.includes('hello') || normalizedQuery.includes('hi') || normalizedQuery.includes('hey')) {
+    return getRandomResponse(OFFLINE_FAQ.greeting);
+  }
+  
+  if (normalizedQuery.includes('document') || normalizedQuery.includes('certificate') || normalizedQuery.includes('clearance')) {
+    return getRandomResponse(OFFLINE_FAQ.documents);
+  }
+  
+  if (normalizedQuery.includes('service') || normalizedQuery.includes('help') || normalizedQuery.includes('assist')) {
+    return getRandomResponse(OFFLINE_FAQ.services);
+  }
+  
+  if (normalizedQuery.includes('contact') || normalizedQuery.includes('phone') || normalizedQuery.includes('office')) {
+    return getRandomResponse(OFFLINE_FAQ.contact);
+  }
+  
+  if (normalizedQuery.includes('official') || normalizedQuery.includes('captain') || normalizedQuery.includes('councilor')) {
+    return getRandomResponse(OFFLINE_FAQ.officials);
+  }
+  
+  if (normalizedQuery.includes('event') || normalizedQuery.includes('activity') || normalizedQuery.includes('program')) {
+    return getRandomResponse(OFFLINE_FAQ.events);
+  }
+  
+  // Navigation/system help
+  if (normalizedQuery.includes('navigate') || normalizedQuery.includes('how to') || normalizedQuery.includes('where')) {
+    const navigationGuidance = getNavigationGuidance(userQuery);
+    if (navigationGuidance) return navigationGuidance;
+  }
+  
+  return null;
+}
+
+function getRandomResponse(responses: string[]): string {
+  return responses[Math.floor(Math.random() * responses.length)];
 }
 
 // Enhanced FAQ search with semantic analysis and confidence scoring
@@ -910,7 +980,7 @@ serve(async (req) => {
       throw new Error('Empty request body');
     }
 
-    const { messages, conversationHistory = [], authToken, userBrgyId } = JSON.parse(requestBody);
+    const { messages, conversationHistory = [], authToken, userBrgyId, isOnlineMode = false } = JSON.parse(requestBody);
     const userMessage = messages[messages.length - 1];
     
     if (!userMessage || !userMessage.content) {
@@ -918,8 +988,40 @@ serve(async (req) => {
     }
 
     console.log('User query:', userMessage.content);
+    console.log('Online mode:', isOnlineMode);
     console.log('Auth token provided:', !!authToken);
     console.log('User brgyid provided:', userBrgyId);
+    
+    // OFFLINE MODE - Handle with predefined responses
+    if (!isOnlineMode) {
+      console.log('Processing in offline mode');
+      
+      // Try offline response first
+      const offlineResponse = getOfflineResponse(userMessage.content);
+      if (offlineResponse) {
+        console.log('Offline response found');
+        return new Response(JSON.stringify({ 
+          message: offlineResponse,
+          source: 'offline',
+          category: 'Offline FAQ' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // If no offline response available, return vague response
+      console.log('No offline response available');
+      return new Response(JSON.stringify({ 
+        message: "Hmm, I'm not quite sure I can help you with that. I probably can... but something's not right, I decided.",
+        source: 'offline',
+        category: 'Unknown Query' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // ONLINE MODE - Full functionality
+    console.log('Processing in online mode');
     
     // Create Supabase client with auth token if provided
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -1001,7 +1103,7 @@ serve(async (req) => {
     console.error('Error in ai-chat function:', error);
     
     // Fallback message when all systems fail
-    const fallbackMessage = "I apologize, but I'm having trouble processing your request right now. Please try again later or contact the barangay office directly for assistance.";
+    const fallbackMessage = "Hmm, I'm not quite sure I can help you with that. I probably can... but something's not right, I decided.";
     
     return new Response(JSON.stringify({ 
       message: fallbackMessage,
