@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -269,6 +268,47 @@ async function checkUserAccess(supabase: any): Promise<{ hasAccess: boolean, use
   }
 }
 
+// Enhanced resident search function with better name extraction and fuzzy matching
+function extractNamesFromQuery(userQuery: string): string[] {
+  console.log('Extracting names from query:', userQuery);
+  
+  const names: string[] = [];
+  
+  // Clean the query - remove common words and punctuation
+  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'resident', 'person', 'named', 'called', 'the', 'a', 'an', 'one', 'of', 'us', 'here', 'homie'];
+  const cleanQuery = userQuery.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  // Split into words and filter out common words
+  const words = cleanQuery.split(' ').filter(word => 
+    word.length > 1 && 
+    !commonWords.includes(word.toLowerCase()) &&
+    isNaN(Number(word)) // Exclude numbers
+  );
+  
+  console.log('Filtered words:', words);
+  
+  // Look for capitalized words in original query (likely names)
+  const originalWords = userQuery.split(/\s+/);
+  for (const word of originalWords) {
+    const cleanWord = word.replace(/[^\w]/g, '');
+    if (cleanWord.length > 1 && /^[A-Z]/.test(cleanWord)) {
+      if (!commonWords.includes(cleanWord.toLowerCase())) {
+        names.push(cleanWord);
+      }
+    }
+  }
+  
+  // Also add filtered words that might be names
+  for (const word of words) {
+    if (word.length > 2 && !names.includes(word)) {
+      names.push(word);
+    }
+  }
+  
+  console.log('Extracted names:', names);
+  return names;
+}
+
 // Enhanced query function for comprehensive Supabase data access with improved resident search
 async function querySupabaseData(userQuery: string, supabase: any, brgyid: string): Promise<string | null> {
   const normalizedQuery = normalizeText(userQuery);
@@ -285,39 +325,13 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         normalizedQuery.includes('search') ||
         normalizedQuery.includes('look for') ||
         normalizedQuery.includes('show me') ||
-        normalizedQuery.includes('resident')) {
+        normalizedQuery.includes('resident') ||
+        /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(userQuery)) { // Pattern for "FirstName LastName"
       
       console.log('Processing resident search query:', userQuery);
       
-      // Extract potential names from the query - be more inclusive
-      const words = userQuery.split(/\s+/);
-      const potentialNames = [];
-      
-      // Look for capitalized words that could be names
-      for (let i = 0; i < words.length; i++) {
-        const word = words[i].replace(/[^\w]/g, ''); // Remove punctuation
-        if (word.length > 2 && /^[A-Z]/.test(word)) {
-          potentialNames.push(word);
-        }
-      }
-      
-      // Also try to extract names mentioned after common phrases
-      const namePatterns = [
-        /(?:about|for|named|called)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/gi,
-        /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g
-      ];
-      
-      for (const pattern of namePatterns) {
-        let match;
-        while ((match = pattern.exec(userQuery)) !== null) {
-          const extractedName = match[1] || match[0];
-          if (extractedName && extractedName.length > 2) {
-            potentialNames.push(...extractedName.split(/\s+/).filter(n => n.length > 2));
-          }
-        }
-      }
-      
-      console.log('Extracted potential names:', potentialNames);
+      // Extract potential names using improved logic
+      const potentialNames = extractNamesFromQuery(userQuery);
       
       if (potentialNames.length > 0) {
         console.log('Searching for residents with potential names:', potentialNames);
@@ -332,21 +346,31 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         console.log('Sample residents in brgyid:', allResidents);
         console.log('Query error (if any):', allError);
         
-        // Build flexible search query using OR conditions for both first and last names
-        let query = supabase
-          .from('residents')
-          .select(`
-            id, first_name, last_name, middle_name, suffix, gender, birthdate,
-            address, mobile_number, email, occupation, status, civil_status,
-            monthly_income, years_in_barangay, purok, barangaydb, municipalitycity,
-            provinze, regional, countryph, nationality, is_voter, has_philhealth,
-            has_sss, has_pagibig, has_tin, classifications, remarks, photo_url,
-            emname, emrelation, emcontact, died_on, created_at, updated_at,
-            household_id
-          `)
-          .eq('brgyid', brgyid);
+        // Build multiple search strategies
+        const searchStrategies = [];
         
-        // Create OR conditions for flexible name matching
+        // Strategy 1: Exact name combinations
+        if (potentialNames.length >= 2) {
+          for (let i = 0; i < potentialNames.length - 1; i++) {
+            for (let j = i + 1; j < potentialNames.length; j++) {
+              const name1 = potentialNames[i];
+              const name2 = potentialNames[j];
+              
+              // Try both orders: first-last and last-first
+              searchStrategies.push({
+                strategy: 'exact_combination',
+                conditions: [
+                  `and(first_name.ilike.${name1},last_name.ilike.${name2})`,
+                  `and(first_name.ilike.${name2},last_name.ilike.${name1})`,
+                  `and(first_name.ilike.${name1},middle_name.ilike.${name2})`,
+                  `and(middle_name.ilike.${name1},last_name.ilike.${name2})`
+                ]
+              });
+            }
+          }
+        }
+        
+        // Strategy 2: Partial matches with OR conditions
         const orConditions = [];
         for (const name of potentialNames) {
           orConditions.push(`first_name.ilike.%${name}%`);
@@ -354,16 +378,76 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
           orConditions.push(`middle_name.ilike.%${name}%`);
         }
         
-        console.log('Using OR conditions:', orConditions);
+        searchStrategies.push({
+          strategy: 'partial_match',
+          conditions: [orConditions.join(',')]
+        });
         
-        const { data: residents, error } = await query
-          .or(orConditions.join(','))
-          .limit(10); // Increased limit to find more potential matches
+        console.log('Search strategies:', searchStrategies);
         
-        console.log('Resident search results:', residents);
-        console.log('Resident search error:', error);
+        let residents = [];
+        let searchError = null;
         
-        if (!error && residents && residents.length > 0) {
+        // Try each strategy until we find results
+        for (const strategy of searchStrategies) {
+          for (const condition of strategy.conditions) {
+            try {
+              console.log(`Trying ${strategy.strategy} with condition:`, condition);
+              
+              let query = supabase
+                .from('residents')
+                .select(`
+                  id, first_name, last_name, middle_name, suffix, gender, birthdate,
+                  address, mobile_number, email, occupation, status, civil_status,
+                  monthly_income, years_in_barangay, purok, barangaydb, municipalitycity,
+                  provinze, regional, countryph, nationality, is_voter, has_philhealth,
+                  has_sss, has_pagibig, has_tin, classifications, remarks, photo_url,
+                  emname, emrelation, emcontact, died_on, created_at, updated_at,
+                  household_id
+                `)
+                .eq('brgyid', brgyid);
+              
+              let result;
+              if (strategy.strategy === 'exact_combination') {
+                // For exact combinations, we need to handle the AND conditions properly
+                const parts = condition.split(',');
+                for (const part of parts) {
+                  if (part.includes('and(')) {
+                    // Parse the AND condition
+                    const match = part.match(/and\(([^,]+),([^)]+)\)/);
+                    if (match) {
+                      const [, cond1, cond2] = match;
+                      result = await query.filter(cond1.trim()).filter(cond2.trim()).limit(5);
+                    }
+                  }
+                }
+              } else {
+                result = await query.or(condition).limit(10);
+              }
+              
+              if (result) {
+                const { data, error } = result;
+                console.log(`${strategy.strategy} results:`, data?.length || 0, 'residents found');
+                
+                if (!error && data && data.length > 0) {
+                  residents = data;
+                  searchError = null;
+                  break;
+                }
+              }
+            } catch (error) {
+              console.log(`Strategy ${strategy.strategy} failed:`, error);
+              continue;
+            }
+          }
+          
+          if (residents.length > 0) break;
+        }
+        
+        console.log('Final resident search results:', residents?.length || 0);
+        console.log('Final search error:', searchError);
+        
+        if (residents && residents.length > 0) {
           responseData += '👥 **Resident Information Found:**\n\n';
           
           // Sort by relevance - exact matches first
@@ -371,7 +455,6 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
             const aFullName = `${a.first_name} ${a.middle_name || ''} ${a.last_name}`.toLowerCase();
             const bFullName = `${b.first_name} ${b.middle_name || ''} ${b.last_name}`.toLowerCase();
             
-            const queryLower = normalizedQuery;
             const aRelevance = potentialNames.reduce((score, name) => {
               const nameLower = name.toLowerCase();
               if (aFullName.includes(nameLower)) score += nameLower.length;
