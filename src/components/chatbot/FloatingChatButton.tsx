@@ -40,7 +40,7 @@ const renderMarkdown = (text: string) => {
 };
 
 const FloatingChatButton = () => {
-  const { session } = useAuth();
+  const { session, userProfile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -155,6 +155,16 @@ const FloatingChatButton = () => {
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
+    // Check if user is authenticated
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to use the chatbot.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       content: inputMessage.trim(),
@@ -168,20 +178,26 @@ const FloatingChatButton = () => {
 
     try {
       console.log('Sending message to chatbot:', userMessage.content);
+      console.log('User profile:', userProfile);
       
       const chatMessages = [userMessage].map(msg => ({
         role: msg.role,
         content: msg.content
       }));
 
-      // Get auth token if user is authenticated
+      // Get auth token and user profile for the edge function
       const authToken = session?.access_token;
+      const userBrgyId = userProfile?.brgyid;
+
+      console.log('Auth token present:', !!authToken);
+      console.log('User brgyid:', userBrgyId);
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: { 
           messages: chatMessages,
           conversationHistory: conversationHistory,
-          authToken: authToken 
+          authToken: authToken,
+          userBrgyId: userBrgyId
         }
       });
 
@@ -273,6 +289,11 @@ const FloatingChatButton = () => {
       minute: '2-digit' 
     });
   };
+
+  // Don't render if user is not authenticated
+  if (!session) {
+    return null;
+  }
 
   return (
     <>

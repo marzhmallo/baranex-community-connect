@@ -797,7 +797,7 @@ serve(async (req) => {
       throw new Error('Empty request body');
     }
 
-    const { messages, conversationHistory = [], authToken } = JSON.parse(requestBody);
+    const { messages, conversationHistory = [], authToken, userBrgyId } = JSON.parse(requestBody);
     const userMessage = messages[messages.length - 1];
     
     if (!userMessage || !userMessage.content) {
@@ -805,6 +805,8 @@ serve(async (req) => {
     }
 
     console.log('User query:', userMessage.content);
+    console.log('Auth token provided:', !!authToken);
+    console.log('User brgyid provided:', userBrgyId);
     
     // Create Supabase client with auth token if provided
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -848,11 +850,12 @@ serve(async (req) => {
     if (authToken) {
       const { hasAccess, userProfile, brgyid } = await checkUserAccess(supabase);
       
-      if (hasAccess && brgyid) {
+      if (hasAccess && (brgyid || userBrgyId)) {
         hasDataAccess = true;
         userRole = userProfile.role;
-        console.log('User has access, checking Supabase data for brgyid:', brgyid);
-        supabaseResponse = await querySupabaseData(userMessage.content, supabase, brgyid);
+        const effectiveBrgyId = brgyid || userBrgyId;
+        console.log('User has access, checking Supabase data for brgyid:', effectiveBrgyId);
+        supabaseResponse = await querySupabaseData(userMessage.content, supabase, effectiveBrgyId);
         
         if (supabaseResponse) {
           console.log('Supabase data found and returned');
