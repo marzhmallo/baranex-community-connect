@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -286,6 +287,8 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         normalizedQuery.includes('show me') ||
         normalizedQuery.includes('resident')) {
       
+      console.log('Processing resident search query:', userQuery);
+      
       // Extract potential names from the query - be more inclusive
       const words = userQuery.split(/\s+/);
       const potentialNames = [];
@@ -293,7 +296,7 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
       // Look for capitalized words that could be names
       for (let i = 0; i < words.length; i++) {
         const word = words[i].replace(/[^\w]/g, ''); // Remove punctuation
-        if (word.length > 2 && word[0] === word[0].toUpperCase()) {
+        if (word.length > 2 && /^[A-Z]/.test(word)) {
           potentialNames.push(word);
         }
       }
@@ -314,8 +317,20 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
         }
       }
       
+      console.log('Extracted potential names:', potentialNames);
+      
       if (potentialNames.length > 0) {
         console.log('Searching for residents with potential names:', potentialNames);
+        
+        // First, let's check what residents exist in this brgyid
+        const { data: allResidents, error: allError } = await supabase
+          .from('residents')
+          .select('first_name, last_name, middle_name')
+          .eq('brgyid', brgyid)
+          .limit(5);
+          
+        console.log('Sample residents in brgyid:', allResidents);
+        console.log('Query error (if any):', allError);
         
         // Build flexible search query using OR conditions for both first and last names
         let query = supabase
@@ -339,9 +354,14 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
           orConditions.push(`middle_name.ilike.%${name}%`);
         }
         
+        console.log('Using OR conditions:', orConditions);
+        
         const { data: residents, error } = await query
           .or(orConditions.join(','))
           .limit(10); // Increased limit to find more potential matches
+        
+        console.log('Resident search results:', residents);
+        console.log('Resident search error:', error);
         
         if (!error && residents && residents.length > 0) {
           responseData += '👥 **Resident Information Found:**\n\n';
@@ -429,6 +449,16 @@ async function querySupabaseData(userQuery: string, supabase: any, brgyid: strin
           return responseData;
         } else {
           console.log('No residents found with those names. Searched names:', potentialNames);
+          
+          // Let's also try a general count to see if there are any residents at all
+          const { count, error: countError } = await supabase
+            .from('residents')
+            .select('*', { count: 'exact', head: true })
+            .eq('brgyid', brgyid);
+            
+          console.log(`Total residents in brgyid ${brgyid}:`, count);
+          console.log('Count error:', countError);
+          
           // Don't return here, let other queries try to match
         }
       }
