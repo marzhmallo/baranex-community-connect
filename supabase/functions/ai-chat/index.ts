@@ -1012,7 +1012,7 @@ serve(async (req) => {
       // If no offline response available, return vague response
       console.log('No offline response available');
       return new Response(JSON.stringify({ 
-        message: "Hmm, I'm not quite sure I can help you with that. I probably can... but something's not right, I decided.",
+        message: "Hmm, I'm not sure I get what you're saying. I probably should... but something's just not right, I decided.",
         source: 'offline',
         category: 'Unknown Query' 
       }), {
