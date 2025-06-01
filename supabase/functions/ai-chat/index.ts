@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -64,10 +63,16 @@ function normalizeText(text: string): string {
     .trim();
 }
 
-// Search FAQ database for matching entries
+// Enhanced FAQ search with semantic analysis and confidence scoring
 async function searchFAQ(userQuery: string, supabase: any) {
   const normalizedQuery = normalizeText(userQuery);
-  const queryWords = normalizedQuery.split(' ');
+  const queryWords = normalizedQuery.split(' ').filter(word => word.length > 2);
+  
+  // Return early if query is too short or vague
+  if (queryWords.length < 2 || normalizedQuery.length < 10) {
+    console.log('Query too short or vague for FAQ matching');
+    return null;
+  }
   
   try {
     const { data: faqs, error } = await supabase
@@ -81,32 +86,72 @@ async function searchFAQ(userQuery: string, supabase: any) {
     
     let bestMatch = null;
     let maxScore = 0;
+    const MIN_CONFIDENCE_THRESHOLD = 8; // Increased threshold for better precision
     
     for (const faq of faqs) {
       const keywords = faq.question_keywords || [];
       let score = 0;
+      let matchedKeywords = 0;
+      let contextualRelevance = 0;
       
-      // Check for exact phrase matches first
+      // 1. Exact phrase matching (highest weight)
       for (const keyword of keywords) {
-        if (normalizedQuery.includes(normalizeText(keyword))) {
-          score += keyword.length; // Longer matches get higher scores
+        const normalizedKeyword = normalizeText(keyword);
+        if (normalizedQuery.includes(normalizedKeyword)) {
+          score += keyword.length * 2; // Higher weight for exact phrases
+          matchedKeywords++;
         }
       }
       
-      // Check for individual word matches
+      // 2. Multi-word keyword analysis
       for (const keyword of keywords) {
         const keywordWords = normalizeText(keyword).split(' ');
-        for (const keywordWord of keywordWords) {
-          if (queryWords.includes(keywordWord) && keywordWord.length > 2) {
-            score += 1;
+        const matchingWords = keywordWords.filter(kw => queryWords.includes(kw) && kw.length > 2);
+        
+        if (matchingWords.length > 0) {
+          // Require at least 60% of keyword words to match for multi-word keywords
+          const matchRatio = matchingWords.length / keywordWords.length;
+          if (matchRatio >= 0.6) {
+            score += matchingWords.length * matchRatio * 3;
+            matchedKeywords++;
           }
         }
       }
       
-      if (score > maxScore && score >= 2) { // Minimum threshold for match
-        maxScore = score;
+      // 3. Contextual relevance check
+      const questionIntent = faq.category?.toLowerCase() || '';
+      const queryIntent = extractIntent(normalizedQuery);
+      
+      if (questionIntent && queryIntent && questionIntent.includes(queryIntent)) {
+        contextualRelevance += 2;
+      }
+      
+      // 4. Semantic similarity bonus for related terms
+      const semanticBonus = calculateSemanticSimilarity(normalizedQuery, keywords);
+      score += semanticBonus;
+      
+      // 5. Final scoring with context consideration
+      const finalScore = score + contextualRelevance;
+      
+      // Require multiple keyword matches for complex queries
+      const requiredMatches = queryWords.length > 4 ? 2 : 1;
+      
+      if (finalScore > maxScore && 
+          finalScore >= MIN_CONFIDENCE_THRESHOLD && 
+          matchedKeywords >= requiredMatches) {
+        maxScore = finalScore;
         bestMatch = faq;
       }
+    }
+    
+    // Additional validation: check if the match makes sense in context
+    if (bestMatch && !validateContextualRelevance(userQuery, bestMatch)) {
+      console.log('FAQ match failed contextual validation');
+      return null;
+    }
+    
+    if (bestMatch) {
+      console.log(`FAQ match found: ${bestMatch.category} (confidence: ${maxScore})`);
     }
     
     return bestMatch;
@@ -114,6 +159,81 @@ async function searchFAQ(userQuery: string, supabase: any) {
     console.error('FAQ search failed:', error);
     return null;
   }
+}
+
+// Extract intent from user query
+function extractIntent(query: string): string {
+  const intentKeywords = {
+    'help': ['help', 'assist', 'support'],
+    'how': ['how', 'steps', 'process', 'procedure'],
+    'what': ['what', 'definition', 'meaning'],
+    'where': ['where', 'location', 'find'],
+    'when': ['when', 'time', 'schedule'],
+    'register': ['register', 'signup', 'enroll'],
+    'document': ['document', 'certificate', 'clearance'],
+    'emergency': ['emergency', 'urgent', 'crisis']
+  };
+  
+  for (const [intent, keywords] of Object.entries(intentKeywords)) {
+    if (keywords.some(keyword => query.includes(keyword))) {
+      return intent;
+    }
+  }
+  
+  return '';
+}
+
+// Calculate semantic similarity between query and FAQ keywords
+function calculateSemanticSimilarity(query: string, keywords: string[]): number {
+  const relatedTerms = {
+    'register': ['signup', 'enroll', 'join', 'apply'],
+    'document': ['certificate', 'clearance', 'permit', 'license'],
+    'emergency': ['urgent', 'crisis', 'disaster', 'help'],
+    'official': ['leader', 'captain', 'councilor', 'chairman'],
+    'resident': ['citizen', 'people', 'population', 'inhabitant']
+  };
+  
+  let similarity = 0;
+  
+  for (const keyword of keywords) {
+    const normalizedKeyword = normalizeText(keyword);
+    for (const [term, related] of Object.entries(relatedTerms)) {
+      if (normalizedKeyword.includes(term) && 
+          related.some(rel => query.includes(rel))) {
+        similarity += 1;
+      }
+    }
+  }
+  
+  return similarity;
+}
+
+// Validate if FAQ match is contextually relevant
+function validateContextualRelevance(query: string, faq: any): boolean {
+  const queryLength = query.trim().split(' ').length;
+  
+  // For very short queries, be more restrictive
+  if (queryLength <= 3) {
+    const keywords = faq.question_keywords || [];
+    const hasExactMatch = keywords.some(keyword => 
+      query.toLowerCase().includes(keyword.toLowerCase())
+    );
+    return hasExactMatch;
+  }
+  
+  // For longer queries, check if the FAQ category makes sense
+  const category = faq.category?.toLowerCase() || '';
+  const queryNormalized = normalizeText(query);
+  
+  // Avoid matching generic FAQs to specific technical queries
+  if (category === 'general' && 
+      (queryNormalized.includes('code') || 
+       queryNormalized.includes('error') || 
+       queryNormalized.includes('technical'))) {
+    return false;
+  }
+  
+  return true;
 }
 
 // Check user role and get their brgyid - now works for both admin and regular users
@@ -526,7 +646,7 @@ serve(async (req) => {
       }
     });
     
-    // Step 1: Try FAQ lookup first
+    // Step 1: Try FAQ lookup with enhanced matching
     const faqMatch = await searchFAQ(userMessage.content, supabase);
     
     if (faqMatch) {
