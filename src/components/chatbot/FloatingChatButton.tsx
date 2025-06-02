@@ -484,7 +484,7 @@ const FloatingChatButton = () => {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={isOnlineMode ? "Ask me anything about barangay services..." : "Ask me about local information..."}
+                    placeholder={isOnlineMode ? "Ask me anything..." : "Ask me anything..."}
                     disabled={isLoading}
                     className="flex-1 min-h-[40px] max-h-[120px] resize-none"
                     rows={1}
