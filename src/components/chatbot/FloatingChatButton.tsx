@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,7 +39,7 @@ const FloatingChatButton = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
-  const [isOnlineMode, setIsOnlineMode] = useState(false);
+  const [isOnlineMode, setIsOnlineMode] = useState(false); // Default to offline mode
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -226,14 +225,14 @@ const FloatingChatButton = () => {
       setMessages(prev => [...prev, assistantMessage]);
 
       // Log response source for debugging
-      if (data.source === 'faq') {
-        console.log(`FAQ response from category: ${data.category}`);
-      } else if (data.source === 'supabase') {
-        console.log(`Local data response from category: ${data.category}`);
-      } else if (data.source === 'gemini_with_data') {
-        console.log(`Gemini response with database data from category: ${data.category}`);
-      } else if (data.source === 'gemini') {
-        console.log(`Pure Gemini response from category: ${data.category}`);
+      if (data.source === 'offline_data') {
+        console.log(`Offline data response from category: ${data.category}`);
+      } else if (data.source === 'offline_fallback') {
+        console.log(`Offline fallback response: ${data.category}`);
+      } else if (data.source === 'online_with_data') {
+        console.log(`Online response with database data from category: ${data.category}`);
+      } else if (data.source === 'online_ai_only') {
+        console.log(`Online AI-only response from category: ${data.category}`);
       }
 
     } catch (error) {
@@ -241,7 +240,7 @@ const FloatingChatButton = () => {
       
       const fallbackMessage: Message = {
         id: (Date.now() + 2).toString(),
-        content: "Hmm, I'm not quite sure I can help you with that. I probably can... but something's not right, I decided.",
+        content: "I might need a moment to figure that out… it's a bit out of the ordinary. Try rewording it?",
         role: 'assistant',
         timestamp: new Date(),
         source: 'fallback'
@@ -345,7 +344,7 @@ const FloatingChatButton = () => {
             <span className="text-sm font-medium">Alan</span>
             <div className={cn(
               "w-2 h-2 rounded-full animate-pulse",
-              isOnlineMode ? "bg-green-400" : "bg-orange-400"
+              isOnlineMode ? "bg-green-400" : "bg-gray-400"
             )} title={isOnlineMode ? "Online Mode" : "Offline Mode"} />
           </div>
         </div>
@@ -370,7 +369,7 @@ const FloatingChatButton = () => {
                   <CardTitle className="text-lg">Alexander Cabalan</CardTitle>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs opacity-80">
-                      {isOnlineMode ? "🟢 Online" : "🟠 Offline"}
+                      {isOnlineMode ? "🟢 Online" : "📴 Offline"}
                     </span>
                     <Switch
                       checked={isOnlineMode}
@@ -379,7 +378,7 @@ const FloatingChatButton = () => {
                     />
                     <div className={cn(
                       "w-2 h-2 rounded-full animate-pulse ml-1",
-                      isOnlineMode ? "bg-green-400" : "bg-orange-400"
+                      isOnlineMode ? "bg-green-400" : "bg-gray-400"
                     )} />
                   </div>
                 </div>
@@ -433,29 +432,24 @@ const FloatingChatButton = () => {
                           <p className="text-xs opacity-70 flex-shrink-0">
                             {formatTime(message.timestamp)}
                           </p>
-                          {message.source === 'faq' && (
+                          {message.source === 'offline_data' && (
                             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
-                              FAQ
+                              Data
                             </span>
                           )}
-                          {message.source === 'supabase' && (
-                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex-shrink-0">
-                              Local Data
+                          {message.source === 'offline_fallback' && (
+                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded flex-shrink-0">
+                              Offline
                             </span>
                           )}
-                          {message.source === 'gemini_with_data' && (
+                          {message.source === 'online_with_data' && (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0">
                               AI + Data
                             </span>
                           )}
-                          {message.source === 'gemini' && (
+                          {message.source === 'online_ai_only' && (
                             <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded flex-shrink-0">
                               AI
-                            </span>
-                          )}
-                          {message.source === 'offline' && (
-                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded flex-shrink-0">
-                              Offline
                             </span>
                           )}
                         </div>
