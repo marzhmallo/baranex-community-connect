@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,25 +16,19 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  source?: 'faq' | 'ai' | 'supabase' | 'fallback' | 'offline';
+  source?: 'faq' | 'supabase' | 'gemini' | 'gemini_with_data' | 'offline' | 'fallback';
   category?: string;
 }
 
 // Simple markdown renderer for basic formatting
 const renderMarkdown = (text: string) => {
-  // Ensure text is a string
   if (typeof text !== 'string') {
     console.warn('renderMarkdown received non-string input:', text);
     return String(text);
   }
   
-  // Replace **text** with <strong>text</strong>
   let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  
-  // Replace *text* with <em>text</em>
   formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  
-  // Replace line breaks with <br>
   formatted = formatted.replace(/\n/g, '<br>');
   
   return formatted;
@@ -52,7 +47,7 @@ const FloatingChatButton = () => {
       content: "Hey there! I'm Alexander Cabalan, but you can call me Alan, short for Automated Live Artificial Neurointelligence. I'm here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. So how can I help?",
       role: 'assistant',
       timestamp: new Date(),
-      source: 'ai',
+      source: 'offline',
       category: 'Greeting'
     }
   ]);
@@ -156,11 +151,11 @@ const FloatingChatButton = () => {
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
-    // Check if user is authenticated for online mode
-    if (isOnlineMode && !session) {
+    // Check authentication for both modes (since both need Supabase access)
+    if (!session) {
       toast({
         title: "Authentication Required",
-        description: "Please log in to use online features.",
+        description: "Please log in to use the chatbot.",
         variant: "destructive",
       });
       return;
@@ -179,7 +174,7 @@ const FloatingChatButton = () => {
 
     try {
       console.log('Sending message to chatbot:', userMessage.content);
-      console.log('Online mode:', isOnlineMode);
+      console.log('Mode:', isOnlineMode ? 'Online' : 'Offline');
       console.log('User profile:', userProfile);
       
       const chatMessages = [userMessage].map(msg => ({
@@ -187,20 +182,15 @@ const FloatingChatButton = () => {
         content: msg.content
       }));
 
-      // Prepare request data
-      const requestData: any = { 
+      const requestData = { 
         messages: chatMessages,
         conversationHistory: conversationHistory,
-        isOnlineMode: isOnlineMode
+        isOnlineMode: isOnlineMode,
+        authToken: session.access_token,
+        userBrgyId: userProfile?.brgyid
       };
 
-      // Add auth data only for online mode
-      if (isOnlineMode && session) {
-        requestData.authToken = session.access_token;
-        requestData.userBrgyId = userProfile?.brgyid;
-      }
-
-      console.log('Request data:', { ...requestData, authToken: requestData.authToken ? '[PRESENT]' : '[MISSING]' });
+      console.log('Request data:', { ...requestData, authToken: '[PRESENT]' });
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: requestData
@@ -217,7 +207,6 @@ const FloatingChatButton = () => {
         throw new Error('Invalid response from chatbot service');
       }
 
-      // Handle both string and array responses
       let messageContent: string;
       if (Array.isArray(data.message)) {
         messageContent = data.message[Math.floor(Math.random() * data.message.length)];
@@ -236,13 +225,15 @@ const FloatingChatButton = () => {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Show success feedback for different response types
+      // Log response source for debugging
       if (data.source === 'faq') {
         console.log(`FAQ response from category: ${data.category}`);
       } else if (data.source === 'supabase') {
-        console.log(`Live data response from category: ${data.category}`);
-      } else if (data.source === 'offline') {
-        console.log(`Offline response from category: ${data.category}`);
+        console.log(`Local data response from category: ${data.category}`);
+      } else if (data.source === 'gemini_with_data') {
+        console.log(`Gemini response with database data from category: ${data.category}`);
+      } else if (data.source === 'gemini') {
+        console.log(`Pure Gemini response from category: ${data.category}`);
       }
 
     } catch (error) {
@@ -352,9 +343,10 @@ const FloatingChatButton = () => {
               style={{ objectPosition: 'center' }}
             />
             <span className="text-sm font-medium">Alan</span>
-            {isOnlineMode && (
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" title="Online Mode" />
-            )}
+            <div className={cn(
+              "w-2 h-2 rounded-full animate-pulse",
+              isOnlineMode ? "bg-green-400" : "bg-orange-400"
+            )} title={isOnlineMode ? "Online Mode" : "Offline Mode"} />
           </div>
         </div>
       )}
@@ -377,16 +369,18 @@ const FloatingChatButton = () => {
                 <div>
                   <CardTitle className="text-lg">Alexander Cabalan</CardTitle>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-xs opacity-80">Offline</span>
+                    <span className="text-xs opacity-80">
+                      {isOnlineMode ? "🟢 Online" : "🟠 Offline"}
+                    </span>
                     <Switch
                       checked={isOnlineMode}
                       onCheckedChange={setIsOnlineMode}
                       className="scale-75"
                     />
-                    <span className="text-xs opacity-80">Online</span>
-                    {isOnlineMode && (
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse ml-1" />
-                    )}
+                    <div className={cn(
+                      "w-2 h-2 rounded-full animate-pulse ml-1",
+                      isOnlineMode ? "bg-green-400" : "bg-orange-400"
+                    )} />
                   </div>
                 </div>
               </div>
@@ -440,22 +434,27 @@ const FloatingChatButton = () => {
                             {formatTime(message.timestamp)}
                           </p>
                           {message.source === 'faq' && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0">
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
                               FAQ
                             </span>
                           )}
                           {message.source === 'supabase' && (
                             <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex-shrink-0">
-                              Live Data
+                              Local Data
                             </span>
                           )}
-                          {message.source === 'ai' && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
+                          {message.source === 'gemini_with_data' && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0">
+                              AI + Data
+                            </span>
+                          )}
+                          {message.source === 'gemini' && (
+                            <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded flex-shrink-0">
                               AI
                             </span>
                           )}
                           {message.source === 'offline' && (
-                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded flex-shrink-0">
+                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded flex-shrink-0">
                               Offline
                             </span>
                           )}
@@ -485,7 +484,7 @@ const FloatingChatButton = () => {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={isOnlineMode ? "Ask me anything about barangay services..." : "Ask me about basic information..."}
+                    placeholder={isOnlineMode ? "Ask me anything about barangay services..." : "Ask me about local information..."}
                     disabled={isLoading}
                     className="flex-1 min-h-[40px] max-h-[120px] resize-none"
                     rows={1}
