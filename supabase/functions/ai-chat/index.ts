@@ -74,27 +74,12 @@ async function searchFAQ(userQuery: string, supabase: any) {
 // Get all accessible tables dynamically
 async function getAccessibleTables(supabase: any): Promise<string[]> {
   try {
-    const { data, error } = await supabase
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public')
-      .neq('table_name', 'spatial_ref_sys'); // Exclude PostGIS system table
-    
-    if (error) {
-      console.error('Error getting tables:', error);
-      // Fallback to known tables
-      return [
-        'residents', 'households', 'officials', 'announcements', 'events',
-        'incident_reports', 'emergency_contacts', 'evacuation_centers',
-        'document_types', 'issued_documents', 'forums', 'threads', 'comments'
-      ];
-    }
-    
-    return data.map(row => row.table_name).filter(name => 
-      !name.startsWith('_') && // Exclude system tables
-      !name.includes('view') && // Exclude views for now
-      name !== 'chatbot_faq' // Exclude FAQ table from general queries
-    );
+    // Fallback to known tables since information_schema query fails
+    return [
+      'residents', 'households', 'officials', 'announcements', 'events',
+      'incident_reports', 'emergency_contacts', 'evacuation_centers',
+      'document_types', 'issued_documents', 'forums', 'threads', 'comments'
+    ];
   } catch (error) {
     console.error('Failed to get accessible tables:', error);
     // Return core tables as fallback
@@ -137,36 +122,31 @@ async function querySupabaseData(userQuery: string, supabase: any, isOnlineMode:
           const { data: residents, error } = await supabase
             .from('residents')
             .select(`
-              id, first_name, last_name, middle_name, suffix, gender, birthdate,
-              address, mobile_number, email, occupation, status, civil_status,
-              purok, barangaydb, municipalitycity, provinze, household_id
+              id, first_name, last_name, middle_name, suffix
             `)
             .or(searchConditions.join(','))
             .limit(10);
           
           if (!error && residents && residents.length > 0) {
-            responseData += '👥 **Resident Information:**\n\n';
-            residents.forEach((resident: any) => {
+            console.log(`Found ${residents.length} residents in database`);
+            
+            // For privacy compliance - only confirm existence, don't provide details
+            responseData += '👥 **Resident Search Results:**\n\n';
+            responseData += `I found ${residents.length} resident(s) matching your search. `;
+            responseData += 'For privacy protection, I can only confirm their existence in our records. ';
+            responseData += 'Please visit the residents dashboard or contact the barangay office for detailed information.\n\n';
+            
+            // List only names for confirmation
+            residents.forEach((resident: any, index: number) => {
               const fullName = [resident.first_name, resident.middle_name, resident.last_name, resident.suffix]
                 .filter(Boolean).join(' ');
-              
-              responseData += `**${fullName}**\n`;
-              responseData += `🆔 ID: ${resident.id}\n`;
-              responseData += `👤 Gender: ${resident.gender}\n`;
-              responseData += `📅 Birthdate: ${resident.birthdate}\n`;
-              responseData += `📍 Address: ${resident.address || 'Not specified'}\n`;
-              responseData += `🏠 Purok: ${resident.purok}\n`;
-              responseData += `🏛️ Barangay: ${resident.barangaydb}\n`;
-              responseData += `🏙️ Municipality: ${resident.municipalitycity}\n`;
-              responseData += `💼 Occupation: ${resident.occupation || 'Not specified'}\n`;
-              responseData += `👑 Status: ${resident.status}\n`;
-              responseData += `💒 Civil Status: ${resident.civil_status}\n`;
-              if (resident.mobile_number) {
-                responseData += `📞 Contact: ${resident.mobile_number}\n`;
-              }
-              responseData += '\n';
+              responseData += `${index + 1}. ${fullName}\n`;
             });
+            
             return responseData;
+          } else {
+            console.log('No residents found in database');
+            return null; // Return null so we don't call AI
           }
         }
       }
@@ -376,8 +356,8 @@ async function checkUserAccess(supabase: any): Promise<{ hasAccess: boolean, use
   }
 }
 
-// Call Gemini API for online mode
-async function callGeminiAPI(messages: any[], conversationHistory: any[], hasDataAccess: boolean, userRole: string, supabaseData?: string) {
+// Call Gemini API for online mode - ONLY when we have actual data
+async function callGeminiAPI(messages: any[], conversationHistory: any[], hasDataAccess: boolean, userRole: string, supabaseData: string) {
   if (!geminiApiKey) {
     throw new Error('Gemini API key not configured');
   }
@@ -389,7 +369,9 @@ Your personality is rad and gnarly but professional, approachable, deeply knowle
 CURRENT CONTEXT:
 - User role: ${userRole}
 - Data access: ${hasDataAccess ? 'Full' : 'Limited'}
-${supabaseData ? `\nRELEVANT DATA FROM DATABASE:\n${supabaseData}` : ''}
+
+RELEVANT DATA FROM DATABASE:
+${supabaseData}
 
 CAPABILITIES:
 - You have access to real-time data from the barangay management system database and supabase
@@ -398,16 +380,14 @@ CAPABILITIES:
 - You can help with document requirements, procedures, and general inquiries
 
 IMPORTANT RULES:
-- ONLY answer using the actual Supabase data provided below.
-- DO NOT guess or make up any information not found here.
-- If no match is found, say: "I couldn't find anything on that."
+- ONLY answer using the actual Supabase data provided above.
+- DO NOT guess or make up any information not found in the provided data.
 - Base your responses on actual database records when discussing specific data
 - If asked about residents/data not found in the database, acknowledge this clearly
 - Provide specific, actionable guidance for system navigation
 - Never make up data - only use information from the actual database
 - Be helpful and informative while maintaining data integrity
-- If you are unsure or the data is unavailable, clearly say so and do not guess.
-- Avoid giving any personal resident information directly, even to admins. Only confirm existence and refer to the dashboard for full details.
+- The data provided above is already privacy-compliant, so you can work with it as given
 
 Your goal is to make barangay services more accessible and help users navigate the system effectively.`;
 
@@ -508,7 +488,7 @@ serve(async (req) => {
           console.log('FAQ match found:', faqMatch.category);
           return new Response(JSON.stringify({ 
             message: faqMatch.answer_textz,
-            source: 'faq',
+            source: 'offline_data',
             category: faqMatch.category 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -523,7 +503,7 @@ serve(async (req) => {
           console.log('Supabase data found and returned');
           return new Response(JSON.stringify({ 
             message: supabaseResponse,
-            source: 'supabase',
+            source: 'offline_data',
             category: 'Local Data' 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -535,7 +515,7 @@ serve(async (req) => {
       console.log('No offline response available');
       return new Response(JSON.stringify({ 
         message: "Hmm, I'm not quite sure I can help you with that. I probably can... but something's not right, I decided.",
-        source: 'offline',
+        source: 'offline_fallback',
         category: 'Unknown Query' 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -549,23 +529,52 @@ serve(async (req) => {
     let supabaseData = null;
     if (hasDataAccess) {
       supabaseData = await querySupabaseData(userMessage.content, supabase, true);
-      
-      if (supabaseData) {
-        console.log('Supabase data found, using with Gemini');
-      }
     }
     
-    // Step 2: Use Gemini AI (with or without Supabase data)
-    console.log('Using Gemini AI for online mode');
-    const geminiResponse = await callGeminiAPI(messages, conversationHistory, hasDataAccess, userRole, supabaseData);
+    // Step 2: Only call AI if we have actual Supabase data OR for general guidance
+    if (supabaseData) {
+      console.log('Supabase data found, using with Gemini');
+      const geminiResponse = await callGeminiAPI(messages, conversationHistory, hasDataAccess, userRole, supabaseData);
+      
+      return new Response(JSON.stringify({ 
+        message: geminiResponse,
+        source: 'online_with_data',
+        category: 'AI with Database' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } else {
+      // Check if query is about residents/data that wasn't found
+      const normalizedQuery = userMessage.content.toLowerCase();
+      if (normalizedQuery.includes('resident') || 
+          normalizedQuery.includes('person') ||
+          normalizedQuery.includes('who is') ||
+          normalizedQuery.includes('tell me about') ||
+          normalizedQuery.includes('find') ||
+          /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(userMessage.content)) {
+        
+        console.log('No resident data found, returning direct response');
+        return new Response(JSON.stringify({ 
+          message: "I couldn't find any residents matching that name in our records. Please check the spelling or try a different search term.",
+          source: 'online_with_data',
+          category: 'No Match Found' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // For general guidance queries (not about specific data), use AI
+      console.log('Using Gemini AI for general guidance');
+      const geminiResponse = await callGeminiAPI(messages, conversationHistory, hasDataAccess, userRole, "No specific database records found for this query. Provide general guidance about barangay services.");
 
-    return new Response(JSON.stringify({ 
-      message: geminiResponse,
-      source: supabaseData ? 'gemini_with_data' : 'gemini',
-      category: 'AI Response' 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      return new Response(JSON.stringify({ 
+        message: geminiResponse,
+        source: 'online_ai_only',
+        category: 'General Guidance' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
   } catch (error) {
     console.error('Error in ai-chat function:', error);
@@ -574,7 +583,7 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       message: fallbackMessage,
-      source: 'fallback',
+      source: 'error_fallback',
       error: error.message 
     }), {
       status: 200,
