@@ -87,6 +87,36 @@ async function getAccessibleTables(supabase: any): Promise<string[]> {
   }
 }
 
+// Helper function to extract names from query
+function extractNamesFromQuery(userQuery: string): string[] {
+  const names: string[] = [];
+  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'resident', 'person', 'named', 'called'];
+  
+  // Split into words and filter
+  const words = userQuery.toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 1 && !commonWords.includes(word) && isNaN(Number(word)));
+  
+  // Look for capitalized words in original query (likely names)
+  const originalWords = userQuery.split(/\s+/);
+  for (const word of originalWords) {
+    const cleanWord = word.replace(/[^\w]/g, '');
+    if (cleanWord.length > 1 && /^[A-Z]/.test(cleanWord) && !commonWords.includes(cleanWord.toLowerCase())) {
+      names.push(cleanWord);
+    }
+  }
+  
+  // Add filtered words that might be names
+  for (const word of words) {
+    if (word.length > 2 && !names.map(n => n.toLowerCase()).includes(word)) {
+      names.push(word);
+    }
+  }
+  
+  return names;
+}
+
 // Enhanced query function with dynamic table scanning
 async function querySupabaseData(userQuery: string, supabase: any, isOnlineMode: boolean): Promise<string | null> {
   const normalizedQuery = userQuery.toLowerCase();
@@ -132,29 +162,8 @@ async function querySupabaseData(userQuery: string, supabase: any, isOnlineMode:
           if (!error && residents && residents.length > 0) {
             console.log(`Found ${residents.length} residents in database`);
             
-            // Return actual data for privacy-compliant use
-            responseData += `👥 **Resident Search Results:**\n\n`;
-            responseData += `I found ${residents.length} resident(s) matching your search:\n\n`;
-            
-            residents.forEach((resident: any, index: number) => {
-              const fullName = [resident.first_name, resident.middle_name, resident.last_name, resident.suffix]
-                .filter(Boolean).join(' ');
-              responseData += `${index + 1}. **${fullName}**\n`;
-              responseData += `   • ID: ${resident.id}\n`;
-              responseData += `   • Gender: ${resident.gender}\n`;
-              responseData += `   • Birthdate: ${resident.birthdate}\n`;
-              responseData += `   • Address: ${resident.address}\n`;
-              responseData += `   • Purok: ${resident.purok}\n`;
-              responseData += `   • Barangay: ${resident.barangaydb}\n`;
-              responseData += `   • Municipality: ${resident.municipalitycity}\n`;
-              responseData += `   • Occupation: ${resident.occupation || 'Not specified'}\n`;
-              responseData += `   • Status: ${resident.status}\n`;
-              responseData += `   • Civil Status: ${resident.civil_status}\n`;
-              if (resident.mobile_number) {
-                responseData += `   • Contact: ${resident.mobile_number}\n`;
-              }
-              responseData += '\n';
-            });
+            // Return confirmation message only (privacy compliant)
+            responseData += `I found ${residents.length} resident(s) matching your search in our records. For privacy reasons, I can only confirm their existence. Please visit the office or contact the appropriate personnel for specific details.`;
             
             return responseData;
           } else {
@@ -306,36 +315,6 @@ async function querySpecificTable(supabase: any, tableName: string, query: strin
     console.error(`Error querying ${tableName}:`, error);
     return null;
   }
-}
-
-// Helper function to extract names from query
-function extractNamesFromQuery(userQuery: string): string[] {
-  const names: string[] = [];
-  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'resident', 'person', 'named', 'called'];
-  
-  // Split into words and filter
-  const words = userQuery.toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .split(/\s+/)
-    .filter(word => word.length > 1 && !commonWords.includes(word) && isNaN(Number(word)));
-  
-  // Look for capitalized words in original query (likely names)
-  const originalWords = userQuery.split(/\s+/);
-  for (const word of originalWords) {
-    const cleanWord = word.replace(/[^\w]/g, '');
-    if (cleanWord.length > 1 && /^[A-Z]/.test(cleanWord) && !commonWords.includes(cleanWord.toLowerCase())) {
-      names.push(cleanWord);
-    }
-  }
-  
-  // Add filtered words that might be names
-  for (const word of words) {
-    if (word.length > 2 && !names.map(n => n.toLowerCase()).includes(word)) {
-      names.push(word);
-    }
-  }
-  
-  return names;
 }
 
 // Check user access and get their profile
@@ -605,141 +584,3 @@ serve(async (req) => {
     });
   }
 });
-
-// Helper function to extract names from query
-function extractNamesFromQuery(userQuery: string): string[] {
-  const names: string[] = [];
-  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'resident', 'person', 'named', 'called'];
-  
-  // Split into words and filter
-  const words = userQuery.toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .split(/\s+/)
-    .filter(word => word.length > 1 && !commonWords.includes(word) && isNaN(Number(word)));
-  
-  // Look for capitalized words in original query (likely names)
-  const originalWords = userQuery.split(/\s+/);
-  for (const word of originalWords) {
-    const cleanWord = word.replace(/[^\w]/g, '');
-    if (cleanWord.length > 1 && /^[A-Z]/.test(cleanWord) && !commonWords.includes(cleanWord.toLowerCase())) {
-      names.push(cleanWord);
-    }
-  }
-  
-  // Add filtered words that might be names
-  for (const word of words) {
-    if (word.length > 2 && !names.map(n => n.toLowerCase()).includes(word)) {
-      names.push(word);
-    }
-  }
-  
-  return names;
-}
-
-// Check user access and get their profile
-async function checkUserAccess(supabase: any): Promise<{ hasAccess: boolean, userProfile: any, brgyid: string | null }> {
-  try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      console.log('No authenticated user found');
-      return { hasAccess: false, userProfile: null, brgyid: null };
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, firstname, lastname, brgyid')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      console.log('No profile found for user');
-      return { hasAccess: false, userProfile: null, brgyid: null };
-    }
-
-    const hasAccess = ['admin', 'staff', 'user'].includes(profile.role);
-    console.log(`User role: ${profile.role}, hasAccess: ${hasAccess}, brgyid: ${profile.brgyid}`);
-    
-    return { hasAccess, userProfile: profile, brgyid: profile.brgyid };
-  } catch (error) {
-    console.error('Error checking user access:', error);
-    return { hasAccess: false, userProfile: null, brgyid: null };
-  }
-}
-
-// Helper function to query specific tables
-async function querySpecificTable(supabase: any, tableName: string, query: string): Promise<string | null> {
-  try {
-    let selectQuery = '*';
-    let limit = 10;
-    
-    // Customize query based on table
-    switch (tableName) {
-      case 'announcements':
-        selectQuery = 'title, content, category, created_at, audience';
-        break;
-      case 'events':
-        selectQuery = 'title, description, start_time, end_time, location, event_type';
-        break;
-      case 'officials':
-        selectQuery = 'name, position, email, phone, bio, education, committees';
-        break;
-      case 'incident_reports':
-        selectQuery = 'title, description, status, report_type, location, date_reported';
-        limit = 5;
-        break;
-    }
-    
-    const { data, error } = await supabase
-      .from(tableName)
-      .select(selectQuery)
-      .limit(limit);
-    
-    if (error || !data || data.length === 0) {
-      return null;
-    }
-    
-    // Format response based on table type
-    let response = '';
-    switch (tableName) {
-      case 'announcements':
-        response += '📢 **Latest Announcements:**\n\n';
-        data.forEach((item: any) => {
-          response += `**${item.title}**\n`;
-          response += `📂 Category: ${item.category}\n`;
-          response += `👥 Audience: ${item.audience}\n`;
-          response += `📅 Posted: ${new Date(item.created_at).toLocaleDateString()}\n`;
-          response += `📝 ${item.content}\n\n`;
-        });
-        break;
-      case 'events':
-        response += '📅 **Events:**\n\n';
-        data.forEach((item: any) => {
-          response += `**${item.title}**\n`;
-          response += `📍 Location: ${item.location || 'TBA'}\n`;
-          response += `🕐 Date: ${new Date(item.start_time).toLocaleDateString()}\n`;
-          if (item.description) response += `📝 ${item.description}\n`;
-          response += '\n';
-        });
-        break;
-      case 'officials':
-        response += '👥 **Barangay Officials:**\n\n';
-        data.forEach((item: any) => {
-          response += `**${item.name}**\n`;
-          response += `🏛️ Position: ${item.position}\n`;
-          if (item.email) response += `📧 Email: ${item.email}\n`;
-          if (item.phone) response += `📞 Phone: ${item.phone}\n`;
-          response += '\n';
-        });
-        break;
-      default:
-        response += `**${tableName.charAt(0).toUpperCase() + tableName.slice(1)} Data:**\n\n`;
-        response += `Found ${data.length} records.\n`;
-    }
-    
-    return response;
-  } catch (error) {
-    console.error(`Error querying ${tableName}:`, error);
-    return null;
-  }
-}
