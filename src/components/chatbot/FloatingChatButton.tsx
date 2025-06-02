@@ -15,7 +15,7 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  source?: 'faq' | 'supabase' | 'gemini' | 'gemini_with_data' | 'offline' | 'fallback';
+  source?: 'offline_data' | 'offline_fallback' | 'online_with_data' | 'online_ai_only' | 'auth_required' | 'error_fallback';
   category?: string;
 }
 
@@ -243,7 +243,7 @@ const FloatingChatButton = () => {
         content: "I might need a moment to figure that out… it's a bit out of the ordinary. Try rewording it?",
         role: 'assistant',
         timestamp: new Date(),
-        source: 'fallback'
+        source: 'error_fallback'
       };
       
       setMessages(prev => [...prev, fallbackMessage]);
