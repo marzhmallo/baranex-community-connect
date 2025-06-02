@@ -43,7 +43,7 @@ const FloatingChatButton = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hey there! I'm Alexander Cabalan, but you can call me Alan, short for Automated Live Artificial Neurointelligence. I'm here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. So how can I help?",
+      content: "Hey there! I'm Alexander Cabalan, but you can call me Alan, short for Automated Live Artificial Neurointelligence. I'm here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. However, I strictly protect personal data privacy as required by Philippine law. So how can I help?",
       role: 'assistant',
       timestamp: new Date(),
       source: 'offline_data',
@@ -226,13 +226,13 @@ const FloatingChatButton = () => {
 
       // Log response source for debugging
       if (data.source === 'offline_data') {
-        console.log(`Offline data response from category: ${data.category}`);
+        console.log(`Privacy-safe offline response from category: ${data.category}`);
       } else if (data.source === 'offline_fallback') {
         console.log(`Offline fallback response: ${data.category}`);
       } else if (data.source === 'online_with_data') {
-        console.log(`Online response with database data from category: ${data.category}`);
+        console.log(`Privacy-protected online response from category: ${data.category}`);
       } else if (data.source === 'online_ai_only') {
-        console.log(`Online AI-only response from category: ${data.category}`);
+        console.log(`Privacy-protected AI-only response from category: ${data.category}`);
       }
 
     } catch (error) {
@@ -345,7 +345,7 @@ const FloatingChatButton = () => {
             <div className={cn(
               "w-2 h-2 rounded-full animate-pulse",
               isOnlineMode ? "bg-green-400" : "bg-gray-400"
-            )} title={isOnlineMode ? "Online Mode" : "Offline Mode"} />
+            )} title={isOnlineMode ? "Online Mode - Privacy Protected" : "Offline Mode - Privacy Protected"} />
           </div>
         </div>
       )}
@@ -369,7 +369,7 @@ const FloatingChatButton = () => {
                   <CardTitle className="text-lg">Alexander Cabalan</CardTitle>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs opacity-80">
-                      {isOnlineMode ? "🟢 Online" : "📴 Offline"}
+                      {isOnlineMode ? "🟢 Online (Privacy Protected)" : "📴 Offline (Privacy Protected)"}
                     </span>
                     <Switch
                       checked={isOnlineMode}
@@ -433,8 +433,8 @@ const FloatingChatButton = () => {
                             {formatTime(message.timestamp)}
                           </p>
                           {message.source === 'offline_data' && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
-                              Data
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0" title="Privacy-safe data check">
+                              🔒 Safe
                             </span>
                           )}
                           {message.source === 'offline_fallback' && (
@@ -443,8 +443,8 @@ const FloatingChatButton = () => {
                             </span>
                           )}
                           {message.source === 'online_with_data' && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0">
-                              AI + Data
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0" title="AI response with privacy-protected data">
+                              🔒 AI
                             </span>
                           )}
                           {message.source === 'online_ai_only' && (
@@ -478,7 +478,7 @@ const FloatingChatButton = () => {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={isOnlineMode ? "Ask me anything about barangay services..." : "Ask me about local information..."}
+                    placeholder={isOnlineMode ? "Ask me about barangay services (privacy protected)..." : "Ask me about records (privacy protected)..."}
                     disabled={isLoading}
                     className="flex-1 min-h-[40px] max-h-[120px] resize-none"
                     rows={1}
@@ -493,7 +493,7 @@ const FloatingChatButton = () => {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Press Enter to send • Shift+Enter for new line
+                  Press Enter to send • Privacy protected by PH Data Privacy Act
                 </p>
               </div>
             </CardContent>

@@ -43,175 +43,6 @@ async function getUserAccess(supabase: any): Promise<{ hasAccess: boolean, userP
   }
 }
 
-// Get all accessible tables for the user's barangay
-async function getAccessibleTables(supabase: any): Promise<string[]> {
-  // Core tables that should be accessible
-  const coreTables = [
-    'residents', 'households', 'officials', 'announcements', 'events',
-    'incident_reports', 'emergency_contacts', 'evacuation_centers',
-    'document_types', 'issued_documents', 'forums', 'threads', 'comments'
-  ];
-  
-  return coreTables;
-}
-
-// Search for residents with strict data-only approach
-async function searchResidents(supabase: any, query: string, brgyid: string): Promise<string | null> {
-  try {
-    const nameTerms = extractNamesFromQuery(query);
-    if (nameTerms.length === 0) return null;
-
-    console.log('Searching for residents with terms:', nameTerms);
-
-    // Build search conditions for name matching
-    const searchConditions = [];
-    for (const term of nameTerms) {
-      searchConditions.push(`first_name.ilike.%${term}%`);
-      searchConditions.push(`last_name.ilike.%${term}%`);
-      searchConditions.push(`middle_name.ilike.%${term}%`);
-    }
-
-    const { data: residents, error } = await supabase
-      .from('residents')
-      .select(`
-        id, first_name, last_name, middle_name, suffix, gender, birthdate,
-        address, mobile_number, email, occupation, status, civil_status,
-        purok, barangaydb, municipalitycity, provinze, household_id
-      `)
-      .or(searchConditions.join(','))
-      .eq('brgyid', brgyid)
-      .limit(5);
-
-    if (error || !residents || residents.length === 0) {
-      console.log('No residents found');
-      return null;
-    }
-
-    // Format response with strict template
-    let response = '👥 **Resident Information:**\n\n';
-    residents.forEach((resident: any) => {
-      const fullName = [resident.first_name, resident.middle_name, resident.last_name, resident.suffix]
-        .filter(Boolean).join(' ');
-      
-      response += `**${fullName}**\n`;
-      response += `🆔 ID: ${resident.id}\n`;
-      response += `👤 Gender: ${resident.gender}\n`;
-      response += `📅 Birthdate: ${resident.birthdate}\n`;
-      response += `📍 Address: ${resident.address || 'Not specified'}\n`;
-      response += `🏠 Purok: ${resident.purok}\n`;
-      response += `🏛️ Barangay: ${resident.barangaydb}\n`;
-      response += `🏙️ Municipality: ${resident.municipalitycity}\n`;
-      response += `💼 Occupation: ${resident.occupation || 'Not specified'}\n`;
-      response += `👑 Status: ${resident.status}\n`;
-      response += `💒 Civil Status: ${resident.civil_status}\n`;
-      if (resident.mobile_number) {
-        response += `📞 Contact: ${resident.mobile_number}\n`;
-      }
-      response += '\n';
-    });
-
-    return response;
-  } catch (error) {
-    console.error('Error searching residents:', error);
-    return null;
-  }
-}
-
-// Search households with strict templates
-async function searchHouseholds(supabase: any, query: string, brgyid: string): Promise<string | null> {
-  try {
-    const { data: households, error } = await supabase
-      .from('households')
-      .select('*')
-      .eq('brgyid', brgyid)
-      .limit(10);
-
-    if (error || !households || households.length === 0) {
-      return null;
-    }
-
-    let response = '🏠 **Household Information:**\n\n';
-    households.forEach((household: any) => {
-      response += `**${household.name}**\n`;
-      response += `📍 Address: ${household.address}\n`;
-      response += `🏠 Purok: ${household.purok}\n`;
-      if (household.headname) {
-        response += `👤 Head of Family: ${household.headname}\n`;
-      }
-      if (household.contact_number) {
-        response += `📞 Contact: ${household.contact_number}\n`;
-      }
-      response += `📊 Status: ${household.status}\n`;
-      response += '\n';
-    });
-
-    return response;
-  } catch (error) {
-    console.error('Error searching households:', error);
-    return null;
-  }
-}
-
-// Search officials with strict templates
-async function searchOfficials(supabase: any, query: string, brgyid: string): Promise<string | null> {
-  try {
-    const { data: officials, error } = await supabase
-      .from('officials')
-      .select('name, position, email, phone, bio')
-      .eq('brgyid', brgyid)
-      .limit(10);
-
-    if (error || !officials || officials.length === 0) {
-      return null;
-    }
-
-    let response = '👥 **Barangay Officials:**\n\n';
-    officials.forEach((official: any) => {
-      response += `**${official.name}**\n`;
-      response += `🏛️ Position: ${official.position}\n`;
-      if (official.email) response += `📧 Email: ${official.email}\n`;
-      if (official.phone) response += `📞 Phone: ${official.phone}\n`;
-      if (official.bio) response += `📝 Bio: ${official.bio}\n`;
-      response += '\n';
-    });
-
-    return response;
-  } catch (error) {
-    console.error('Error searching officials:', error);
-    return null;
-  }
-}
-
-// Search announcements with strict templates
-async function searchAnnouncements(supabase: any, query: string, brgyid: string): Promise<string | null> {
-  try {
-    const { data: announcements, error } = await supabase
-      .from('announcements')
-      .select('title, content, category, created_at, audience')
-      .eq('brgyid', brgyid)
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    if (error || !announcements || announcements.length === 0) {
-      return null;
-    }
-
-    let response = '📢 **Latest Announcements:**\n\n';
-    announcements.forEach((item: any) => {
-      response += `**${item.title}**\n`;
-      response += `📂 Category: ${item.category}\n`;
-      response += `👥 Audience: ${item.audience}\n`;
-      response += `📅 Posted: ${new Date(item.created_at).toLocaleDateString()}\n`;
-      response += `📝 ${item.content}\n\n`;
-    });
-
-    return response;
-  } catch (error) {
-    console.error('Error searching announcements:', error);
-    return null;
-  }
-}
-
 // Helper function to extract names from query
 function extractNamesFromQuery(userQuery: string): string[] {
   const names: string[] = [];
@@ -242,48 +73,92 @@ function extractNamesFromQuery(userQuery: string): string[] {
   return names;
 }
 
-// Strict data-only query for offline mode
-async function querySupabaseDataOnly(userQuery: string, supabase: any, brgyid: string): Promise<string | null> {
-  const normalizedQuery = userQuery.toLowerCase();
-  
-  console.log('Querying Supabase with strict data-only approach for brgyid:', brgyid);
-  
+// Privacy-safe search for residents - only confirms existence
+async function checkResidentExists(supabase: any, query: string, brgyid: string): Promise<string | null> {
   try {
-    // Residents search
-    if (normalizedQuery.includes('resident') || 
-        normalizedQuery.includes('person') ||
-        normalizedQuery.includes('who is') ||
-        normalizedQuery.includes('tell me about') ||
-        normalizedQuery.includes('find') ||
-        /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(userQuery)) {
-      
-      const result = await searchResidents(supabase, userQuery, brgyid);
-      if (result) return result;
+    const nameTerms = extractNamesFromQuery(query);
+    if (nameTerms.length === 0) return null;
+
+    console.log('Checking residents with terms:', nameTerms);
+
+    // Build search conditions for name matching
+    const searchConditions = [];
+    for (const term of nameTerms) {
+      searchConditions.push(`first_name.ilike.%${term}%`);
+      searchConditions.push(`last_name.ilike.%${term}%`);
+      searchConditions.push(`middle_name.ilike.%${term}%`);
     }
-    
-    // Household search
-    if (normalizedQuery.includes('household') || normalizedQuery.includes('family') || normalizedQuery.includes('home')) {
-      const result = await searchHouseholds(supabase, userQuery, brgyid);
-      if (result) return result;
+
+    const { data: residents, error } = await supabase
+      .from('residents')
+      .select('id, first_name, last_name')
+      .or(searchConditions.join(','))
+      .eq('brgyid', brgyid)
+      .limit(5);
+
+    if (error || !residents || residents.length === 0) {
+      console.log('No residents found');
+      return null;
     }
-    
-    // Officials search
-    if (normalizedQuery.includes('official') || normalizedQuery.includes('captain') || normalizedQuery.includes('councilor') || normalizedQuery.includes('kagawad')) {
-      const result = await searchOfficials(supabase, userQuery, brgyid);
-      if (result) return result;
+
+    // Privacy-safe response - only confirm existence
+    const count = residents.length;
+    if (count === 1) {
+      return `✅ I found **1 resident** matching that name in our records. For privacy protection, I can only confirm their existence in our database.`;
+    } else {
+      return `✅ I found **${count} residents** with similar names in our records. For privacy protection, I can only confirm their existence in our database.`;
     }
-    
-    // Announcements search
-    if (normalizedQuery.includes('announcement') || normalizedQuery.includes('news') || normalizedQuery.includes('update')) {
-      const result = await searchAnnouncements(supabase, userQuery, brgyid);
-      if (result) return result;
+  } catch (error) {
+    console.error('Error checking residents:', error);
+    return null;
+  }
+}
+
+// Privacy-safe search for households - only confirms existence
+async function checkHouseholdExists(supabase: any, query: string, brgyid: string): Promise<string | null> {
+  try {
+    const { data: households, error } = await supabase
+      .from('households')
+      .select('id, name')
+      .eq('brgyid', brgyid)
+      .limit(10);
+
+    if (error || !households || households.length === 0) {
+      return null;
     }
+
+    // Simple keyword matching for household names
+    const lowerQuery = query.toLowerCase();
+    const matchingHouseholds = households.filter(h => 
+      h.name.toLowerCase().includes(lowerQuery) || 
+      lowerQuery.includes(h.name.toLowerCase())
+    );
+
+    if (matchingHouseholds.length === 0) return null;
+
+    const count = matchingHouseholds.length;
+    if (count === 1) {
+      return `🏠 I found **1 household** matching that name in our records. For privacy protection, I can only confirm its existence in our database.`;
+    } else {
+      return `🏠 I found **${count} households** with similar names in our records. For privacy protection, I can only confirm their existence in our database.`;
+    }
+  } catch (error) {
+    console.error('Error checking households:', error);
+    return null;
+  }
+}
+
+// General statistics that don't reveal personal info
+async function getGeneralStats(supabase: any, query: string, brgyid: string): Promise<string | null> {
+  try {
+    const normalizedQuery = query.toLowerCase();
     
     // Population/statistics queries
     if (normalizedQuery.includes('population') || 
         normalizedQuery.includes('demographics') || 
         normalizedQuery.includes('how many') ||
-        normalizedQuery.includes('statistics')) {
+        normalizedQuery.includes('statistics') ||
+        normalizedQuery.includes('total')) {
       
       const { data: residents, error } = await supabase
         .from('residents')
@@ -310,13 +185,49 @@ async function querySupabaseDataOnly(userQuery: string, supabase: any, brgyid: s
     
     return null;
   } catch (error) {
+    console.error('Error getting general stats:', error);
+    return null;
+  }
+}
+
+// Privacy-safe data query for offline mode
+async function querySupabasePrivacySafe(userQuery: string, supabase: any, brgyid: string): Promise<string | null> {
+  const normalizedQuery = userQuery.toLowerCase();
+  
+  console.log('Querying Supabase with privacy-safe approach for brgyid:', brgyid);
+  
+  try {
+    // Check for residents
+    if (normalizedQuery.includes('resident') || 
+        normalizedQuery.includes('person') ||
+        normalizedQuery.includes('who is') ||
+        normalizedQuery.includes('tell me about') ||
+        normalizedQuery.includes('find') ||
+        /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(userQuery)) {
+      
+      const result = await checkResidentExists(supabase, userQuery, brgyid);
+      if (result) return result;
+    }
+    
+    // Check for households
+    if (normalizedQuery.includes('household') || normalizedQuery.includes('family') || normalizedQuery.includes('home')) {
+      const result = await checkHouseholdExists(supabase, userQuery, brgyid);
+      if (result) return result;
+    }
+    
+    // General statistics (safe to share)
+    const statsResult = await getGeneralStats(supabase, userQuery, brgyid);
+    if (statsResult) return statsResult;
+    
+    return null;
+  } catch (error) {
     console.error('Error querying Supabase data:', error);
     return null;
   }
 }
 
-// Call Gemini API for online mode with data context
-async function callGeminiAPI(messages: any[], conversationHistory: any[], userRole: string, supabaseData?: string) {
+// Call Gemini API for online mode with privacy guidelines
+async function callGeminiAPI(messages: any[], conversationHistory: any[], userRole: string, hasData?: boolean) {
   if (!geminiApiKey) {
     throw new Error('Gemini API key not configured');
   }
@@ -325,24 +236,29 @@ async function callGeminiAPI(messages: any[], conversationHistory: any[], userRo
 
 Your personality is professional yet approachable, deeply knowledgeable about barangay governance and community services.
 
+CRITICAL PRIVACY RULE: Due to the Philippines' Data Privacy Act of 2012, you MUST NEVER reveal personal information about residents, households, or any individuals. You can only:
+- Confirm existence of records without revealing details
+- Provide general statistics that don't identify individuals
+- Give guidance on barangay services and procedures
+- Answer general questions about the system
+
 CURRENT CONTEXT:
 - User role: ${userRole}
-${supabaseData ? `\nRELEVANT DATA FROM DATABASE:\n${supabaseData}` : ''}
+${hasData ? '\nRELEVANT DATA: Some records were found in the database, but privacy rules prevent sharing details.' : ''}
 
 CAPABILITIES:
-- You have access to real-time data from the barangay management system
+- You can confirm if records exist in the barangay management system
 - You can provide guidance on system navigation and features
 - You understand barangay governance, community services, and administrative processes
 - You can help with document requirements, procedures, and general inquiries
 
 IMPORTANT RULES:
-- Base your responses STRICTLY on actual database records when discussing specific data
-- If asked about residents/data not found in the database, acknowledge this clearly
-- Provide specific, actionable guidance for system navigation
-- Never make up data - only use information from the actual database
-- Be helpful and informative while maintaining data integrity
+- NEVER reveal names, addresses, contact information, or any personal details
+- Only confirm existence: "I found X records matching that criteria"
+- Provide helpful guidance about barangay services instead
+- Always respect privacy and data protection laws
 
-Your goal is to make barangay services more accessible and help users navigate the system effectively.`;
+Your goal is to be helpful while strictly protecting resident privacy and personal data.`;
 
   const allMessages = [
     { role: 'model', parts: [{ text: systemInstructions }] },
@@ -428,18 +344,18 @@ serve(async (req) => {
     const userRole = userProfile.role;
     console.log('User has access, brgyid:', brgyid);
     
-    // OFFLINE MODE - Strict data-only approach
+    // OFFLINE MODE - Privacy-safe data checking only
     if (!isOnlineMode) {
-      console.log('Processing in OFFLINE mode - strict data only');
+      console.log('Processing in OFFLINE mode - privacy-safe data checking');
       
-      const supabaseResponse = await querySupabaseDataOnly(userMessage.content, supabase, brgyid);
+      const supabaseResponse = await querySupabasePrivacySafe(userMessage.content, supabase, brgyid);
       
       if (supabaseResponse) {
-        console.log('Found data in offline mode');
+        console.log('Found data in offline mode (privacy-safe)');
         return new Response(JSON.stringify({ 
           message: supabaseResponse,
           source: 'offline_data',
-          category: 'Local Data' 
+          category: 'Privacy-Safe Data Check' 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -456,20 +372,20 @@ serve(async (req) => {
       });
     }
     
-    // ONLINE MODE - AI + Data approach
-    console.log('Processing in ONLINE mode - AI + data');
+    // ONLINE MODE - AI with privacy guidelines
+    console.log('Processing in ONLINE mode - AI with privacy protection');
     
-    // Try to get data first
-    const supabaseData = await querySupabaseDataOnly(userMessage.content, supabase, brgyid);
+    // Check if we have any relevant data (without revealing it)
+    const hasData = await querySupabasePrivacySafe(userMessage.content, supabase, brgyid) !== null;
     
-    // Use Gemini AI with or without data context
-    console.log('Using Gemini AI for online mode');
-    const geminiResponse = await callGeminiAPI(messages, conversationHistory, userRole, supabaseData);
+    // Use Gemini AI with privacy guidelines
+    console.log('Using Gemini AI for online mode with privacy protection');
+    const geminiResponse = await callGeminiAPI(messages, conversationHistory, userRole, hasData);
 
     return new Response(JSON.stringify({ 
       message: geminiResponse,
-      source: supabaseData ? 'online_with_data' : 'online_ai_only',
-      category: 'AI Response' 
+      source: hasData ? 'online_with_data' : 'online_ai_only',
+      category: 'Privacy-Protected AI Response' 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
