@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -87,15 +86,84 @@ async function getAccessibleTables(supabase: any): Promise<string[]> {
   }
 }
 
-// Helper function to extract names from query
-function extractNamesFromQuery(userQuery: string): string[] {
-  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'from', 'with', 'by', 'what', 'do', 'you', 'know', 'resident', 'official', 'household', 'family', 'pamily'];
+// Improved function to check if query is asking for database information
+function isDataQuery(userQuery: string): boolean {
+  const normalizedQuery = userQuery.toLowerCase().trim();
   
-  // Split into words and filter out common words
-  const words = userQuery.toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .split(/\s+/)
-    .filter(word => word.length > 2 && !commonWords.includes(word) && isNaN(Number(word)));
+  // Patterns that suggest looking for specific data
+  const dataPatterns = [
+    // Direct name searches with context
+    /^[a-z]+ [a-z]+$/i, // Simple "First Last" pattern
+    /\b(find|search|look|locate)\b.*\b(resident|official|household|person|family)\b/i,
+    /\b(who is|tell me about|show me|give me info)\b/i,
+    /\b(resident|official|household|family|person)\b.*\b(named|called)\b/i,
+    /\bis.*\b(resident|official|household member)\b/i,
+    /\b(list|show).*\b(residents|officials|households)\b/i,
+    /\b(population|demographics|statistics|how many)\b/i,
+    
+    // Specific table indicators
+    /\b(resident|residents)\b/i,
+    /\b(household|family|pamily)\b/i,
+    /\b(official|officials|captain|kagawad|chairman)\b/i,
+    
+    // Name-like patterns with question words
+    /\b(what|who|where|how).*[A-Z][a-z]+\s+[A-Z][a-z]+/i,
+  ];
+  
+  // General conversation patterns that should NOT trigger data search
+  const conversationPatterns = [
+    /^(hello|hi|hey|yo|sup|what\'s up|what up)/i,
+    /^(how are you|what\'s your name|who are you)/i,
+    /^(thanks|thank you|ok|okay|yes|no)/i,
+    /^(what the hell|wtf|damn|shit|fuck)/i,
+    /^(help|assist|guide)/i,
+    /\b(joke|funny|laugh)\b/i,
+  ];
+  
+  // Check conversation patterns first (these override data patterns)
+  for (const pattern of conversationPatterns) {
+    if (pattern.test(normalizedQuery)) {
+      return false;
+    }
+  }
+  
+  // Check data patterns
+  for (const pattern of dataPatterns) {
+    if (pattern.test(normalizedQuery)) {
+      return true;
+    }
+  }
+  
+  // Check if it contains a name-like structure but in a conversational way
+  const namePattern = /\b[A-Z][a-z]+\b/g;
+  const nameMatches = normalizedQuery.match(namePattern);
+  
+  if (nameMatches && nameMatches.length >= 1) {
+    // If it has conversational words with names, it might be asking about that person
+    const conversationalWords = ['what', 'tell', 'about', 'know', 'got', 'info', 'details'];
+    const hasConversational = conversationalWords.some(word => 
+      normalizedQuery.includes(word)
+    );
+    
+    if (hasConversational) {
+      return true; // "Peter, what you got?" should be treated as data query
+    }
+  }
+  
+  return false;
+}
+
+// Helper function to extract names from query with better context awareness
+function extractNamesFromQuery(userQuery: string): string[] {
+  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'from', 'with', 'by', 'what', 'do', 'you', 'know', 'resident', 'official', 'household', 'family', 'pamily', 'got', 'have', 'any', 'info'];
+  
+  // Clean the query and split into words
+  const cleanQuery = userQuery.replace(/[^\w\s]/g, ' ').toLowerCase();
+  const words = cleanQuery.split(/\s+/).filter(word => 
+    word.length > 2 && 
+    !commonWords.includes(word) && 
+    isNaN(Number(word))
+  );
   
   // Also look for capitalized words in original query (likely names/proper nouns)
   const originalWords = userQuery.split(/\s+/);
@@ -106,16 +174,16 @@ function extractNamesFromQuery(userQuery: string): string[] {
     }
   }
   
-  // Remove duplicates
+  // Remove duplicates and return
   return [...new Set(words)];
 }
 
-// Determine search intent from user query
+// Determine search intent from user query with improved logic
 function determineSearchIntent(userQuery: string): { type: 'specific' | 'fuzzy', target: 'residents' | 'households' | 'officials' | 'all' } {
   const normalizedQuery = userQuery.toLowerCase();
   
   // Check for specific table indicators
-  if (normalizedQuery.includes('resident') && !normalizedQuery.includes('household') && !normalizedQuery.includes('official')) {
+  if ((normalizedQuery.includes('resident') || normalizedQuery.includes('person')) && !normalizedQuery.includes('household') && !normalizedQuery.includes('official')) {
     return { type: 'specific', target: 'residents' };
   }
   
@@ -141,7 +209,7 @@ function formatResidentData(resident: any): string {
   }
   
   if (resident.mobile_number) {
-    // Mask phone number for privacy
+    // Mask phone number for privacy (show first 4 digits)
     const masked = resident.mobile_number.substring(0, 4) + 'xxxxxxx';
     result += `📞 Contact: ${masked}\n`;
   }
@@ -424,7 +492,7 @@ async function handleStatisticsQuery(userQuery: string, supabase: any): Promise<
   return null;
 }
 
-// Enhanced query function with new logic
+// Enhanced query function with improved logic
 async function querySupabaseData(userQuery: string, supabase: any, isOnlineMode: boolean): Promise<string | null> {
   const accessibleTables = await getAccessibleTables(supabase);
   console.log('Accessible tables:', accessibleTables);
@@ -481,8 +549,8 @@ async function checkUserAccess(supabase: any): Promise<{ hasAccess: boolean, use
   }
 }
 
-// Call Gemini API for online mode - ONLY when we have actual data
-async function callGeminiAPI(messages: any[], conversationHistory: any[], hasDataAccess: boolean, userRole: string, supabaseData: string) {
+// Call Gemini API for online mode - Enhanced to handle both data and conversation
+async function callGeminiAPI(messages: any[], conversationHistory: any[], hasDataAccess: boolean, userRole: string, supabaseData: string | null) {
   if (!geminiApiKey) {
     throw new Error('Gemini API key not configured');
   }
@@ -495,23 +563,21 @@ CURRENT CONTEXT:
 - User role: ${userRole}
 - Data access: ${hasDataAccess ? 'Full' : 'Limited'}
 
-RELEVANT DATA FROM DATABASE:
-${supabaseData}
+${supabaseData ? `RELEVANT DATA FROM DATABASE:\n${supabaseData}\n` : 'No specific database data for this query.'}
 
 CAPABILITIES:
 - You have access to real-time data from the barangay management system database and supabase.
 - You can provide guidance on system navigation and features based on the project's codebase.
 - You understand barangay governance, community services, and administrative processes.
 - You can help with document requirements, procedures, and general inquiries.
+- You can have normal conversations and answer general questions.
 
 IMPORTANT RULES:
-- ONLY answer using the actual Supabase data provided.
-- DO NOT guess or make up any information not found in the supabase.
-- Base your responses on actual database records when discussing specific data.
-- If asked about data not found in the database, acknowledge this clearly DO NOT EVER EVER MAKE UP ANY DATA!
-- Provide specific, actionable guidance for system navigation according to the codebase.
-- Never make up data - only use information from the actual supabase database.
-- Be helpful and informative while maintaining data integrity.
+- If database data is provided, base your response on that actual data.
+- If no database data is provided, you can have normal conversation and provide general guidance.
+- DO NOT make up any specific names, addresses, or personal information.
+- Be helpful and conversational while maintaining data integrity.
+- Handle casual language and questions naturally - "Peter, what you got?" means "tell me about Peter".
 
 Your goal is to make barangay services more accessible and help users navigate the system effectively.`;
 
@@ -620,8 +686,8 @@ serve(async (req) => {
         }
       }
       
-      // Step 2: Try Supabase data query
-      if (hasDataAccess) {
+      // Step 2: Try Supabase data query only if it looks like a data query
+      if (hasDataAccess && isDataQuery(userMessage.content)) {
         const supabaseResponse = await querySupabaseData(userMessage.content, supabase, false);
         if (supabaseResponse) {
           console.log('Supabase data found and returned');
@@ -649,38 +715,24 @@ serve(async (req) => {
     // ONLINE MODE
     console.log('Processing in online mode');
     
-    // Step 1: ALWAYS try Supabase data query first
+    // Step 1: Check if this looks like a data query
     let supabaseData = null;
-    if (hasDataAccess) {
+    if (hasDataAccess && isDataQuery(userMessage.content)) {
       supabaseData = await querySupabaseData(userMessage.content, supabase, true);
       console.log('Supabase query result:', supabaseData ? 'Data found' : 'No data found');
     }
     
-    // Step 2: Only call AI if we have actual Supabase data
-    if (supabaseData) {
-      console.log('Supabase data found, using with Gemini');
-      const geminiResponse = await callGeminiAPI(messages, conversationHistory, hasDataAccess, userRole, supabaseData);
-      
-      return new Response(JSON.stringify({ 
-        message: geminiResponse,
-        source: 'online_with_data',
-        category: 'AI with Database' 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    } else {
-      // For general guidance queries (not about specific data), use AI
-      console.log('Using Gemini AI for general guidance');
-      const geminiResponse = await callGeminiAPI(messages, conversationHistory, hasDataAccess, userRole, "No specific database records found for this query. Provide general guidance about barangay services.");
-
-      return new Response(JSON.stringify({ 
-        message: geminiResponse,
-        source: 'online_ai_only',
-        category: 'General Guidance' 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Step 2: Always call Gemini AI (with or without data)
+    console.log('Using Gemini AI for response');
+    const geminiResponse = await callGeminiAPI(messages, conversationHistory, hasDataAccess, userRole, supabaseData);
+    
+    return new Response(JSON.stringify({ 
+      message: geminiResponse,
+      source: supabaseData ? 'online_with_data' : 'online_ai_only',
+      category: supabaseData ? 'AI with Database' : 'General Conversation' 
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
     console.error('Error in ai-chat function:', error);
