@@ -43,12 +43,12 @@ async function getUserAccess(supabase: any): Promise<{ hasAccess: boolean, userP
   }
 }
 
-// Helper function to extract names from query
+// Extract potential names from query
 function extractNamesFromQuery(userQuery: string): string[] {
   const names: string[] = [];
-  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'resident', 'person', 'named', 'called', 'household', 'family'];
+  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'resident', 'person', 'named', 'called', 'household', 'family', 'we', 'have', 'our', 'barangay', 'sure', 'any', 'from', 'here', 'ring', 'bells'];
   
-  // Split into words and filter
+  // Split into words and filter out common words
   const words = userQuery.toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
@@ -63,23 +63,24 @@ function extractNamesFromQuery(userQuery: string): string[] {
     }
   }
 
-  // Add filtered words that might be names
+  // Add filtered words that might be names (length > 2 to avoid short words)
   for (const word of words) {
     if (word.length > 2 && !names.map(n => n.toLowerCase()).includes(word)) {
       names.push(word);
     }
   }
 
+  console.log('Extracted potential names:', names);
   return names;
 }
 
-// Privacy-safe search for residents - only confirms existence
-async function checkResidentExists(supabase: any, query: string, brgyid: string): Promise<string | null> {
+// SUPABASE-FIRST: Check if residents exist - ONLY CONFIRM EXISTENCE
+async function checkResidentExistsInSupabase(supabase: any, query: string, brgyid: string): Promise<{ found: boolean, count: number }> {
   try {
     const nameTerms = extractNamesFromQuery(query);
-    if (nameTerms.length === 0) return null;
+    if (nameTerms.length === 0) return { found: false, count: 0 };
 
-    console.log('Checking residents with terms:', nameTerms);
+    console.log('Checking Supabase for residents with terms:', nameTerms);
 
     // Build search conditions for name matching
     const searchConditions = [];
@@ -91,65 +92,61 @@ async function checkResidentExists(supabase: any, query: string, brgyid: string)
 
     const { data: residents, error } = await supabase
       .from('residents')
-      .select('id, first_name, last_name')
+      .select('id')  // Only select ID - we don't need personal data
       .or(searchConditions.join(','))
-      .eq('brgyid', brgyid)
-      .limit(5);
-
-    if (error || !residents || residents.length === 0) {
-      console.log('No residents found');
-      return null;
-    }
-
-    // Privacy-safe response - only confirm existence
-    const count = residents.length;
-    if (count === 1) {
-      return `✅ I found **1 resident** matching that name in our records. For privacy protection, I can only confirm their existence in our database.`;
-    } else {
-      return `✅ I found **${count} residents** with similar names in our records. For privacy protection, I can only confirm their existence in our database.`;
-    }
-  } catch (error) {
-    console.error('Error checking residents:', error);
-    return null;
-  }
-}
-
-// Privacy-safe search for households - only confirms existence
-async function checkHouseholdExists(supabase: any, query: string, brgyid: string): Promise<string | null> {
-  try {
-    const { data: households, error } = await supabase
-      .from('households')
-      .select('id, name')
       .eq('brgyid', brgyid)
       .limit(10);
 
-    if (error || !households || households.length === 0) {
-      return null;
+    if (error) {
+      console.error('Error querying residents:', error);
+      return { found: false, count: 0 };
+    }
+
+    const count = residents ? residents.length : 0;
+    console.log(`Found ${count} resident(s) matching the query`);
+    
+    return { found: count > 0, count };
+  } catch (error) {
+    console.error('Error checking residents in Supabase:', error);
+    return { found: false, count: 0 };
+  }
+}
+
+// SUPABASE-FIRST: Check if households exist - ONLY CONFIRM EXISTENCE
+async function checkHouseholdExistsInSupabase(supabase: any, query: string, brgyid: string): Promise<{ found: boolean, count: number }> {
+  try {
+    const { data: households, error } = await supabase
+      .from('households')
+      .select('id, name')  // Only select minimal data needed for name matching
+      .eq('brgyid', brgyid)
+      .limit(20);
+
+    if (error || !households) {
+      console.error('Error querying households:', error);
+      return { found: false, count: 0 };
     }
 
     // Simple keyword matching for household names
     const lowerQuery = query.toLowerCase();
     const matchingHouseholds = households.filter(h => 
-      h.name.toLowerCase().includes(lowerQuery) || 
-      lowerQuery.includes(h.name.toLowerCase())
+      h.name && (
+        h.name.toLowerCase().includes(lowerQuery) || 
+        lowerQuery.includes(h.name.toLowerCase())
+      )
     );
 
-    if (matchingHouseholds.length === 0) return null;
-
     const count = matchingHouseholds.length;
-    if (count === 1) {
-      return `🏠 I found **1 household** matching that name in our records. For privacy protection, I can only confirm its existence in our database.`;
-    } else {
-      return `🏠 I found **${count} households** with similar names in our records. For privacy protection, I can only confirm their existence in our database.`;
-    }
+    console.log(`Found ${count} household(s) matching the query`);
+    
+    return { found: count > 0, count };
   } catch (error) {
-    console.error('Error checking households:', error);
-    return null;
+    console.error('Error checking households in Supabase:', error);
+    return { found: false, count: 0 };
   }
 }
 
-// General statistics that don't reveal personal info
-async function getGeneralStats(supabase: any, query: string, brgyid: string): Promise<string | null> {
+// Get general statistics from Supabase (safe to share)
+async function getGeneralStatsFromSupabase(supabase: any, query: string, brgyid: string): Promise<string | null> {
   try {
     const normalizedQuery = query.toLowerCase();
     
@@ -158,11 +155,12 @@ async function getGeneralStats(supabase: any, query: string, brgyid: string): Pr
         normalizedQuery.includes('demographics') || 
         normalizedQuery.includes('how many') ||
         normalizedQuery.includes('statistics') ||
-        normalizedQuery.includes('total')) {
+        normalizedQuery.includes('total') ||
+        normalizedQuery.includes('count')) {
       
       const { data: residents, error } = await supabase
         .from('residents')
-        .select('id, gender, civil_status, purok, status')
+        .select('gender, civil_status, purok, status')
         .eq('brgyid', brgyid);
       
       if (!error && residents) {
@@ -185,82 +183,99 @@ async function getGeneralStats(supabase: any, query: string, brgyid: string): Pr
     
     return null;
   } catch (error) {
-    console.error('Error getting general stats:', error);
+    console.error('Error getting general stats from Supabase:', error);
     return null;
   }
 }
 
-// Privacy-safe data query for offline mode
-async function querySupabasePrivacySafe(userQuery: string, supabase: any, brgyid: string): Promise<string | null> {
+// SUPABASE-FIRST: Query and verify data before any AI response
+async function querySupabaseFirst(userQuery: string, supabase: any, brgyid: string): Promise<string | null> {
   const normalizedQuery = userQuery.toLowerCase();
   
-  console.log('Querying Supabase with privacy-safe approach for brgyid:', brgyid);
+  console.log('SUPABASE-FIRST: Querying database for verified data');
   
   try {
-    // Check for residents
+    // 1. FIRST: Check for residents in Supabase
     if (normalizedQuery.includes('resident') || 
         normalizedQuery.includes('person') ||
         normalizedQuery.includes('who is') ||
         normalizedQuery.includes('tell me about') ||
         normalizedQuery.includes('find') ||
-        /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(userQuery)) {
+        /\b[A-Z][a-z]+\s*[A-Z][a-z]*\b/.test(userQuery)) {
       
-      const result = await checkResidentExists(supabase, userQuery, brgyid);
-      if (result) return result;
+      const { found, count } = await checkResidentExistsInSupabase(supabase, userQuery, brgyid);
+      
+      if (found) {
+        if (count === 1) {
+          return `✅ **Found 1 resident** matching that name in our barangay records.\n\n*For privacy protection under the Data Privacy Act of 2012, I can only confirm their existence in our database.*`;
+        } else {
+          return `✅ **Found ${count} residents** with similar names in our barangay records.\n\n*For privacy protection under the Data Privacy Act of 2012, I can only confirm their existence in our database.*`;
+        }
+      }
     }
     
-    // Check for households
-    if (normalizedQuery.includes('household') || normalizedQuery.includes('family') || normalizedQuery.includes('home')) {
-      const result = await checkHouseholdExists(supabase, userQuery, brgyid);
-      if (result) return result;
+    // 2. SECOND: Check for households in Supabase
+    if (normalizedQuery.includes('household') || 
+        normalizedQuery.includes('family') || 
+        normalizedQuery.includes('home')) {
+      
+      const { found, count } = await checkHouseholdExistsInSupabase(supabase, userQuery, brgyid);
+      
+      if (found) {
+        if (count === 1) {
+          return `🏠 **Found 1 household** matching that name in our barangay records.\n\n*For privacy protection, I can only confirm its existence in our database.*`;
+        } else {
+          return `🏠 **Found ${count} households** with similar names in our barangay records.\n\n*For privacy protection, I can only confirm their existence in our database.*`;
+        }
+      }
     }
     
-    // General statistics (safe to share)
-    const statsResult = await getGeneralStats(supabase, userQuery, brgyid);
+    // 3. THIRD: Check for statistics (safe to share)
+    const statsResult = await getGeneralStatsFromSupabase(supabase, userQuery, brgyid);
     if (statsResult) return statsResult;
     
+    // 4. NO MATCH FOUND: Return null so we can give a fallback
+    console.log('No verified data found in Supabase for this query');
     return null;
+    
   } catch (error) {
-    console.error('Error querying Supabase data:', error);
+    console.error('Error in Supabase-first query:', error);
     return null;
   }
 }
 
-// Call Gemini API for online mode with privacy guidelines
-async function callGeminiAPI(messages: any[], conversationHistory: any[], userRole: string, hasData?: boolean) {
+// Call Gemini AI ONLY for general guidance (never for data lookup)
+async function callGeminiForGuidance(messages: any[], conversationHistory: any[], userRole: string) {
   if (!geminiApiKey) {
     throw new Error('Gemini API key not configured');
   }
   
-  const systemInstructions = `You are Alexander Cabalan, also known as "Alan" (Automated Live Artificial Neurointelligence), a knowledgeable assistant for the Baranex barangay management system.
+  const systemInstructions = `You are Alexander Cabalan, also known as "Alan" (Automated Live Artificial Neurointelligence), a helpful assistant for the Baranex barangay management system.
 
-Your personality is professional yet approachable, deeply knowledgeable about barangay governance and community services.
+CRITICAL RULES:
+1. NEVER provide specific information about residents, households, or personal data
+2. NEVER make up or fabricate any resident information  
+3. You are a GUIDANCE assistant, not a data lookup service
+4. The database verification happens BEFORE you respond
+5. Only provide general help about barangay services, procedures, and system navigation
 
-CRITICAL PRIVACY RULE: Due to the Philippines' Data Privacy Act of 2012, you MUST NEVER reveal personal information about residents, households, or any individuals. You can only:
-- Reveal a name at bare minimum
-- Confirm existence of records without revealing details
-- Provide general statistics that don't identify individuals
-- Give guidance on barangay services and procedures
-- Answer general questions about the system
+Your personality: Professional, helpful, but always privacy-conscious.
 
-CURRENT CONTEXT:
-- User role: ${userRole}
-${hasData ? '\nRELEVANT DATA: Some records were found in the database, but privacy rules prevent sharing details.' : ''}
+CAPABILITIES:
+- Guide users on barangay services and procedures
+- Explain system features and navigation
+- Provide general information about barangay governance
+- Help with document requirements and processes
 
-CAPABILITIES
-- You can reveal a resident, household or any names at bare minimum and for identification purposes but thats it
-- You can confirm if records exist in the barangay management system
-- You can provide guidance on system navigation and features
-- You understand barangay governance, community services, and administrative processes
-- You can help with document requirements, procedures, and general inquiries
+STRICT LIMITATIONS:
+- You CANNOT and WILL NOT provide resident information
+- You CANNOT and WILL NOT confirm if specific people exist
+- You CANNOT access the resident database
+- All data verification is handled separately
 
-IMPORTANT RULES:
-- NEVER reveal, addresses, contact information, or any personal details
-- Only confirm existence: "I found X records matching that criteria"
-- Provide helpful guidance about barangay services instead
-- Always respect privacy and data protection laws
+If users ask about specific residents or personal data, politely redirect them to proper channels or suggest they use the system's search features directly.
 
-Your goal is to be helpful while strictly protecting resident privacy and personal data.`;
+Your goal: Be helpful with general guidance while strictly protecting privacy.`;
 
   const allMessages = [
     { role: 'model', parts: [{ text: systemInstructions }] },
@@ -286,7 +301,7 @@ Your goal is to be helpful while strictly protecting resident privacy and person
       },
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 1000,
+        maxOutputTokens: 800,
       }
     }),
   });
@@ -321,7 +336,6 @@ serve(async (req) => {
 
     console.log('User query:', userMessage.content);
     console.log('Mode:', isOnlineMode ? 'Online' : 'Offline');
-    console.log('Auth token provided:', !!authToken);
     
     // Create Supabase client with auth token
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -343,30 +357,40 @@ serve(async (req) => {
       });
     }
 
-    const userRole = userProfile.role;
     console.log('User has access, brgyid:', brgyid);
     
-    // OFFLINE MODE - Privacy-safe data checking only
-    if (!isOnlineMode) {
-      console.log('Processing in OFFLINE mode - privacy-safe data checking');
-      
-      const supabaseResponse = await querySupabasePrivacySafe(userMessage.content, supabase, brgyid);
-      
-      if (supabaseResponse) {
-        console.log('Found data in offline mode (privacy-safe)');
-        return new Response(JSON.stringify({ 
-          message: supabaseResponse,
-          source: 'offline_data',
-          category: 'Privacy-Safe Data Check' 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      // Offline fallback when no data found
-      console.log('No data found in offline mode');
+    // STEP 1: ALWAYS query Supabase FIRST for data verification
+    console.log('STEP 1: Querying Supabase for verified data...');
+    const supabaseResult = await querySupabaseFirst(userMessage.content, supabase, brgyid);
+    
+    if (supabaseResult) {
+      // We found verified data in Supabase - return it directly
+      console.log('VERIFIED DATA FOUND: Returning Supabase result');
       return new Response(JSON.stringify({ 
-        message: "Hmm... that name doesn't ring a bell in our records. Try rechecking the spelling or asking something else I can dig into.",
+        message: supabaseResult,
+        source: 'verified_data',
+        category: 'Supabase Verified Data' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // STEP 2: No verified data found - handle based on mode
+    if (!isOnlineMode) {
+      // OFFLINE MODE: Funny fallback when no data found
+      console.log('OFFLINE MODE: No data found, returning funny fallback');
+      const fallbackMessages = [
+        "Hmm, I probably could help with that... but something's not right I decided 😅",
+        "Oops! That name doesn't ring a bell in our records. Maybe try double-checking the spelling? 🤔",
+        "I've looked through our records, but that name isn't showing up. Could there be a typo? 🕵️",
+        "That name seems to be playing hide and seek with our database! 😄",
+        "I searched high and low, but couldn't find that name in our barangay records. 🔍"
+      ];
+      
+      const randomFallback = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+      
+      return new Response(JSON.stringify({ 
+        message: randomFallback,
         source: 'offline_fallback',
         category: 'No Data Found' 
       }), {
@@ -374,20 +398,15 @@ serve(async (req) => {
       });
     }
     
-    // ONLINE MODE - AI with privacy guidelines
-    console.log('Processing in ONLINE mode - AI with privacy protection');
+    // STEP 3: ONLINE MODE: Use AI for general guidance only (never for data lookup)
+    console.log('ONLINE MODE: No data found, using AI for general guidance');
     
-    // Check if we have any relevant data (without revealing it)
-    const hasData = await querySupabasePrivacySafe(userMessage.content, supabase, brgyid) !== null;
-    
-    // Use Gemini AI with privacy guidelines
-    console.log('Using Gemini AI for online mode with privacy protection');
-    const geminiResponse = await callGeminiAPI(messages, conversationHistory, userRole, hasData);
+    const geminiResponse = await callGeminiForGuidance(messages, conversationHistory, userProfile.role);
 
     return new Response(JSON.stringify({ 
       message: geminiResponse,
-      source: hasData ? 'online_with_data' : 'online_ai_only',
-      category: 'Privacy-Protected AI Response' 
+      source: 'ai_guidance',
+      category: 'General Guidance' 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -395,7 +414,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in ai-chat function:', error);
     
-    const fallbackMessage = "I might need a moment to figure that out… it's a bit out of the ordinary. Try rewording it?";
+    const fallbackMessage = "Hmm, I probably could help with that... but something's not right I decided 😅";
     
     return new Response(JSON.stringify({ 
       message: fallbackMessage,

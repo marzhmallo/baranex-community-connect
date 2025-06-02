@@ -15,7 +15,7 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  source?: 'offline_data' | 'offline_fallback' | 'online_with_data' | 'online_ai_only' | 'auth_required' | 'error_fallback';
+  source?: 'verified_data' | 'offline_fallback' | 'ai_guidance' | 'auth_required' | 'error_fallback';
   category?: string;
 }
 
@@ -46,7 +46,7 @@ const FloatingChatButton = () => {
       content: "Hey there! I'm Alexander Cabalan, but you can call me Alan, short for Automated Live Artificial Neurointelligence. I'm here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. However, I strictly protect personal data privacy as required by Philippine law. So how can I help?",
       role: 'assistant',
       timestamp: new Date(),
-      source: 'offline_data',
+      source: 'ai_guidance',
       category: 'Greeting'
     }
   ]);
@@ -173,7 +173,7 @@ const FloatingChatButton = () => {
 
     try {
       console.log('Sending message to chatbot:', userMessage.content);
-      console.log('Mode:', isOnlineMode ? 'Online' : 'Offline');
+      console.log('Mode:', isOnlineMode ? 'Online (AI Guidance)' : 'Offline (Data Verification Only)');
       console.log('User profile:', userProfile);
       
       const chatMessages = [userMessage].map(msg => ({
@@ -225,14 +225,12 @@ const FloatingChatButton = () => {
       setMessages(prev => [...prev, assistantMessage]);
 
       // Log response source for debugging
-      if (data.source === 'offline_data') {
-        console.log(`Privacy-safe offline response from category: ${data.category}`);
+      if (data.source === 'verified_data') {
+        console.log(`✅ VERIFIED DATA from Supabase: ${data.category}`);
       } else if (data.source === 'offline_fallback') {
-        console.log(`Offline fallback response: ${data.category}`);
-      } else if (data.source === 'online_with_data') {
-        console.log(`Privacy-protected online response from category: ${data.category}`);
-      } else if (data.source === 'online_ai_only') {
-        console.log(`Privacy-protected AI-only response from category: ${data.category}`);
+        console.log(`📴 OFFLINE FALLBACK: ${data.category}`);
+      } else if (data.source === 'ai_guidance') {
+        console.log(`🤖 AI GUIDANCE ONLY: ${data.category}`);
       }
 
     } catch (error) {
@@ -240,7 +238,7 @@ const FloatingChatButton = () => {
       
       const fallbackMessage: Message = {
         id: (Date.now() + 2).toString(),
-        content: "I might need a moment to figure that out… it's a bit out of the ordinary. Try rewording it?",
+        content: "Hmm, I probably could help with that... but something's not right I decided 😅",
         role: 'assistant',
         timestamp: new Date(),
         source: 'error_fallback'
@@ -369,7 +367,7 @@ const FloatingChatButton = () => {
                   <CardTitle className="text-lg">Alexander Cabalan</CardTitle>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs opacity-80">
-                      {isOnlineMode ? "🟢 Online (Privacy Protected)" : "📴 Offline (Privacy Protected)"}
+                      {isOnlineMode ? "🟢 Online (AI Guidance)" : "📴 Offline (Data Only)"}
                     </span>
                     <Switch
                       checked={isOnlineMode}
@@ -378,7 +376,7 @@ const FloatingChatButton = () => {
                     />
                     <div className={cn(
                       "w-2 h-2 rounded-full animate-pulse ml-1",
-                      isOnlineMode ? "bg-green-400" : "bg-gray-400"
+                      isOnlineMode ? "bg-green-400" : "bg-blue-400"
                     )} />
                   </div>
                 </div>
@@ -432,24 +430,19 @@ const FloatingChatButton = () => {
                           <p className="text-xs opacity-70 flex-shrink-0">
                             {formatTime(message.timestamp)}
                           </p>
-                          {message.source === 'offline_data' && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0" title="Privacy-safe data check">
-                              🔒 Safe
+                          {message.source === 'verified_data' && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0" title="Verified from Supabase database">
+                              ✅ Verified
                             </span>
                           )}
                           {message.source === 'offline_fallback' && (
                             <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded flex-shrink-0">
-                              Offline
+                              📴 No Data
                             </span>
                           )}
-                          {message.source === 'online_with_data' && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0" title="AI response with privacy-protected data">
-                              🔒 AI
-                            </span>
-                          )}
-                          {message.source === 'online_ai_only' && (
-                            <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded flex-shrink-0">
-                              AI
+                          {message.source === 'ai_guidance' && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0" title="AI guidance only - no data lookup">
+                              🤖 Guidance
                             </span>
                           )}
                         </div>
@@ -478,7 +471,7 @@ const FloatingChatButton = () => {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={isOnlineMode ? "Ask me about barangay services (privacy protected)..." : "Ask me about records (privacy protected)..."}
+                    placeholder={isOnlineMode ? "Ask me about barangay services (AI guidance)..." : "Search our records (verified data only)..."}
                     disabled={isLoading}
                     className="flex-1 min-h-[40px] max-h-[120px] resize-none"
                     rows={1}
@@ -493,7 +486,7 @@ const FloatingChatButton = () => {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Press Enter to send • Privacy protected by PH Data Privacy Act
+                  Press Enter to send • {isOnlineMode ? "AI guidance mode" : "Database verification only"}
                 </p>
               </div>
             </CardContent>
