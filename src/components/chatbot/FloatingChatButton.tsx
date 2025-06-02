@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  source?: 'verified_data' | 'offline_fallback' | 'ai_guidance' | 'auth_required' | 'error_fallback';
+  source?: 'faq' | 'supabase' | 'gemini' | 'gemini_with_data' | 'offline' | 'fallback';
   category?: string;
 }
 
@@ -39,14 +40,14 @@ const FloatingChatButton = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
-  const [isOnlineMode, setIsOnlineMode] = useState(false); // Default to offline mode
+  const [isOnlineMode, setIsOnlineMode] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hey there! I'm Alexander Cabalan, but you can call me Alan, short for Automated Live Artificial Neurointelligence. I'm here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. However, I strictly protect personal data privacy as required by Philippine law. So how can I help?",
+      content: "Hey there! I'm Alexander Cabalan, but you can call me Alan, short for Automated Live Artificial Neurointelligence. I'm here to help you with all aspects of baranex. I can provide information about residents, households, officials, events, announcements, documents, emergency services, and much more. So how can I help?",
       role: 'assistant',
       timestamp: new Date(),
-      source: 'ai_guidance',
+      source: 'offline',
       category: 'Greeting'
     }
   ]);
@@ -173,7 +174,7 @@ const FloatingChatButton = () => {
 
     try {
       console.log('Sending message to chatbot:', userMessage.content);
-      console.log('Mode:', isOnlineMode ? 'Online (AI Guidance)' : 'Offline (Data Verification Only)');
+      console.log('Mode:', isOnlineMode ? 'Online' : 'Offline');
       console.log('User profile:', userProfile);
       
       const chatMessages = [userMessage].map(msg => ({
@@ -225,12 +226,14 @@ const FloatingChatButton = () => {
       setMessages(prev => [...prev, assistantMessage]);
 
       // Log response source for debugging
-      if (data.source === 'verified_data') {
-        console.log(`✅ VERIFIED DATA from Supabase: ${data.category}`);
-      } else if (data.source === 'offline_fallback') {
-        console.log(`📴 OFFLINE FALLBACK: ${data.category}`);
-      } else if (data.source === 'ai_guidance') {
-        console.log(`🤖 AI GUIDANCE ONLY: ${data.category}`);
+      if (data.source === 'faq') {
+        console.log(`FAQ response from category: ${data.category}`);
+      } else if (data.source === 'supabase') {
+        console.log(`Local data response from category: ${data.category}`);
+      } else if (data.source === 'gemini_with_data') {
+        console.log(`Gemini response with database data from category: ${data.category}`);
+      } else if (data.source === 'gemini') {
+        console.log(`Pure Gemini response from category: ${data.category}`);
       }
 
     } catch (error) {
@@ -238,10 +241,10 @@ const FloatingChatButton = () => {
       
       const fallbackMessage: Message = {
         id: (Date.now() + 2).toString(),
-        content: "Hmm, I probably could help with that... but something's not right I decided 😅",
+        content: "Hmm, I'm not quite sure I can help you with that. I probably can... but something's not right, I decided.",
         role: 'assistant',
         timestamp: new Date(),
-        source: 'error_fallback'
+        source: 'fallback'
       };
       
       setMessages(prev => [...prev, fallbackMessage]);
@@ -342,8 +345,8 @@ const FloatingChatButton = () => {
             <span className="text-sm font-medium">Alan</span>
             <div className={cn(
               "w-2 h-2 rounded-full animate-pulse",
-              isOnlineMode ? "bg-green-400" : "bg-gray-400"
-            )} title={isOnlineMode ? "Online Mode - Privacy Protected" : "Offline Mode - Privacy Protected"} />
+              isOnlineMode ? "bg-green-400" : "bg-orange-400"
+            )} title={isOnlineMode ? "Online Mode" : "Offline Mode"} />
           </div>
         </div>
       )}
@@ -367,7 +370,7 @@ const FloatingChatButton = () => {
                   <CardTitle className="text-lg">Alexander Cabalan</CardTitle>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs opacity-80">
-                      {isOnlineMode ? "🟢 Online (AI Guidance)" : "📴 Offline (Data Only)"}
+                      {isOnlineMode ? "🟢 Online" : "🟠 Offline"}
                     </span>
                     <Switch
                       checked={isOnlineMode}
@@ -376,7 +379,7 @@ const FloatingChatButton = () => {
                     />
                     <div className={cn(
                       "w-2 h-2 rounded-full animate-pulse ml-1",
-                      isOnlineMode ? "bg-green-400" : "bg-blue-400"
+                      isOnlineMode ? "bg-green-400" : "bg-orange-400"
                     )} />
                   </div>
                 </div>
@@ -430,19 +433,29 @@ const FloatingChatButton = () => {
                           <p className="text-xs opacity-70 flex-shrink-0">
                             {formatTime(message.timestamp)}
                           </p>
-                          {message.source === 'verified_data' && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0" title="Verified from Supabase database">
-                              ✅ Verified
+                          {message.source === 'faq' && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
+                              FAQ
                             </span>
                           )}
-                          {message.source === 'offline_fallback' && (
-                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded flex-shrink-0">
-                              📴 No Data
+                          {message.source === 'supabase' && (
+                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex-shrink-0">
+                              Local Data
                             </span>
                           )}
-                          {message.source === 'ai_guidance' && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0" title="AI guidance only - no data lookup">
-                              🤖 Guidance
+                          {message.source === 'gemini_with_data' && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0">
+                              AI + Data
+                            </span>
+                          )}
+                          {message.source === 'gemini' && (
+                            <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded flex-shrink-0">
+                              AI
+                            </span>
+                          )}
+                          {message.source === 'offline' && (
+                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded flex-shrink-0">
+                              Offline
                             </span>
                           )}
                         </div>
@@ -471,7 +484,7 @@ const FloatingChatButton = () => {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={isOnlineMode ? "Ask me about barangay services (AI guidance)..." : "Search our records (verified data only)..."}
+                    placeholder={isOnlineMode ? "Ask me anything about barangay services..." : "Ask me about local information..."}
                     disabled={isLoading}
                     className="flex-1 min-h-[40px] max-h-[120px] resize-none"
                     rows={1}
@@ -486,7 +499,7 @@ const FloatingChatButton = () => {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Press Enter to send • {isOnlineMode ? "AI guidance mode" : "Database verification only"}
+                  Press Enter to send • Shift+Enter for new line
                 </p>
               </div>
             </CardContent>
