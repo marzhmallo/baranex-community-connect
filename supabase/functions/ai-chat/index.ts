@@ -87,232 +87,224 @@ async function getAccessibleTables(supabase: any): Promise<string[]> {
   }
 }
 
-// Helper function to extract names from query
-function extractNamesFromQuery(userQuery: string): string[] {
-  const names: string[] = [];
-  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'resident', 'person', 'named', 'called'];
+// Helper function to extract search terms from query
+function extractSearchTerms(userQuery: string): string[] {
+  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'from', 'with', 'by'];
   
-  // Split into words and filter
+  // Split into words and filter out common words
   const words = userQuery.toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
-    .filter(word => word.length > 1 && !commonWords.includes(word) && isNaN(Number(word)));
+    .filter(word => word.length > 2 && !commonWords.includes(word) && isNaN(Number(word)));
   
-  // Look for capitalized words in original query (likely names)
+  // Also look for capitalized words in original query (likely names/proper nouns)
   const originalWords = userQuery.split(/\s+/);
   for (const word of originalWords) {
     const cleanWord = word.replace(/[^\w]/g, '');
-    if (cleanWord.length > 1 && /^[A-Z]/.test(cleanWord) && !commonWords.includes(cleanWord.toLowerCase())) {
-      names.push(cleanWord);
+    if (cleanWord.length > 2 && /^[A-Z]/.test(cleanWord) && !commonWords.includes(cleanWord.toLowerCase())) {
+      words.push(cleanWord.toLowerCase());
     }
   }
   
-  // Add filtered words that might be names
-  for (const word of words) {
-    if (word.length > 2 && !names.map(n => n.toLowerCase()).includes(word)) {
-      names.push(word);
-    }
-  }
-  
-  return names;
+  // Remove duplicates
+  return [...new Set(words)];
 }
 
-// Enhanced query function with dynamic table scanning
-async function querySupabaseData(userQuery: string, supabase: any, isOnlineMode: boolean): Promise<string | null> {
+// Comprehensive search across all tables and columns
+async function comprehensiveSearch(userQuery: string, supabase: any): Promise<string | null> {
+  const searchTerms = extractSearchTerms(userQuery);
   const normalizedQuery = userQuery.toLowerCase();
-  const accessibleTables = await getAccessibleTables(supabase);
   
+  console.log('Search terms extracted:', searchTerms);
+  
+  if (searchTerms.length === 0) {
+    return null;
+  }
+  
+  let responseData = '';
+  let foundResults = false;
+  
+  // Define search configurations for each table
+  const tableSearchConfigs = {
+    residents: {
+      columns: ['first_name', 'last_name', 'middle_name', 'address', 'purok', 'occupation', 'email'],
+      displayColumns: 'id, first_name, last_name, middle_name, suffix, gender, birthdate, address, purok, occupation, status, civil_status, mobile_number',
+      resultHandler: (data: any[]) => {
+        if (data.length > 0) {
+          return `I found ${data.length} resident(s) matching your search in our records. For privacy reasons, I can only confirm their existence. Please visit the office or contact the appropriate personnel for specific details.`;
+        }
+        return null;
+      }
+    },
+    households: {
+      columns: ['name', 'address', 'purok', 'headname'],
+      displayColumns: 'id, name, address, purok, headname, status, monthly_income',
+      resultHandler: (data: any[]) => {
+        if (data.length > 0) {
+          let result = `🏠 **Households Found:**\n\n`;
+          data.forEach((item: any) => {
+            result += `**${item.name}**\n`;
+            result += `📍 Address: ${item.address}\n`;
+            result += `📍 Purok: ${item.purok}\n`;
+            if (item.headname) result += `👤 Head: ${item.headname}\n`;
+            result += `📊 Status: ${item.status}\n\n`;
+          });
+          return result;
+        }
+        return null;
+      }
+    },
+    officials: {
+      columns: ['name', 'position', 'email', 'phone', 'bio'],
+      displayColumns: 'name, position, email, phone, bio, education, committees',
+      resultHandler: (data: any[]) => {
+        if (data.length > 0) {
+          let result = `👥 **Barangay Officials:**\n\n`;
+          data.forEach((item: any) => {
+            result += `**${item.name}**\n`;
+            result += `🏛️ Position: ${item.position}\n`;
+            if (item.email) result += `📧 Email: ${item.email}\n`;
+            if (item.phone) result += `📞 Phone: ${item.phone}\n`;
+            if (item.bio) result += `📝 Bio: ${item.bio}\n`;
+            result += '\n';
+          });
+          return result;
+        }
+        return null;
+      }
+    },
+    announcements: {
+      columns: ['title', 'content', 'category'],
+      displayColumns: 'title, content, category, created_at, audience',
+      resultHandler: (data: any[]) => {
+        if (data.length > 0) {
+          let result = `📢 **Announcements:**\n\n`;
+          data.forEach((item: any) => {
+            result += `**${item.title}**\n`;
+            result += `📂 Category: ${item.category}\n`;
+            result += `👥 Audience: ${item.audience}\n`;
+            result += `📅 Posted: ${new Date(item.created_at).toLocaleDateString()}\n`;
+            result += `📝 ${item.content}\n\n`;
+          });
+          return result;
+        }
+        return null;
+      }
+    },
+    events: {
+      columns: ['title', 'description', 'location', 'event_type'],
+      displayColumns: 'title, description, start_time, end_time, location, event_type',
+      resultHandler: (data: any[]) => {
+        if (data.length > 0) {
+          let result = `📅 **Events:**\n\n`;
+          data.forEach((item: any) => {
+            result += `**${item.title}**\n`;
+            result += `📍 Location: ${item.location || 'TBA'}\n`;
+            result += `🕐 Date: ${new Date(item.start_time).toLocaleDateString()}\n`;
+            if (item.description) result += `📝 ${item.description}\n`;
+            result += '\n';
+          });
+          return result;
+        }
+        return null;
+      }
+    }
+  };
+  
+  // Search through each configured table
+  for (const [tableName, config] of Object.entries(tableSearchConfigs)) {
+    try {
+      // Build search conditions for all searchable columns
+      const searchConditions = [];
+      for (const term of searchTerms) {
+        for (const column of config.columns) {
+          searchConditions.push(`${column}.ilike.%${term}%`);
+        }
+      }
+      
+      if (searchConditions.length === 0) continue;
+      
+      console.log(`Searching ${tableName} with conditions:`, searchConditions.slice(0, 10)); // Log first 10 to avoid too much output
+      
+      const { data, error } = await supabase
+        .from(tableName)
+        .select(config.displayColumns)
+        .or(searchConditions.join(','))
+        .limit(10);
+      
+      if (!error && data && data.length > 0) {
+        console.log(`Found ${data.length} results in ${tableName}`);
+        const result = config.resultHandler(data);
+        if (result) {
+          responseData += result;
+          foundResults = true;
+          // For residents, return immediately for privacy
+          if (tableName === 'residents') {
+            return responseData;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error searching ${tableName}:`, error);
+    }
+  }
+  
+  // If we found results in other tables, return them
+  if (foundResults) {
+    return responseData;
+  }
+  
+  // Population/statistics queries
+  if (normalizedQuery.includes('population') || 
+      normalizedQuery.includes('demographics') || 
+      normalizedQuery.includes('how many') ||
+      normalizedQuery.includes('statistics')) {
+    
+    try {
+      const { data: residents, error } = await supabase
+        .from('residents')
+        .select('id, gender, civil_status, purok, status');
+      
+      if (!error && residents) {
+        responseData += `📊 **Population Overview:**\n\n`;
+        responseData += `👥 Total Residents: ${residents.length}\n`;
+        
+        const genderStats = residents.reduce((acc: any, r: any) => {
+          acc[r.gender] = (acc[r.gender] || 0) + 1;
+          return acc;
+        }, {});
+        
+        responseData += `\n**Gender Distribution:**\n`;
+        Object.entries(genderStats).forEach(([gender, count]) => {
+          responseData += `   • ${gender}: ${count}\n`;
+        });
+        
+        return responseData;
+      }
+    } catch (error) {
+      console.error('Error querying population stats:', error);
+    }
+  }
+  
+  return null;
+}
+
+// Enhanced query function with comprehensive search
+async function querySupabaseData(userQuery: string, supabase: any, isOnlineMode: boolean): Promise<string | null> {
+  const accessibleTables = await getAccessibleTables(supabase);
   console.log('Accessible tables:', accessibleTables);
   
   try {
-    let responseData = '';
-    
-    // Enhanced resident search with flexible name matching
-    if (normalizedQuery.includes('resident') || 
-        normalizedQuery.includes('person') ||
-        normalizedQuery.includes('who is') ||
-        normalizedQuery.includes('tell me about') ||
-        normalizedQuery.includes('find') ||
-        /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(userQuery)) {
-      
-      if (accessibleTables.includes('residents')) {
-        const potentialNames = extractNamesFromQuery(userQuery);
-        
-        if (potentialNames.length > 0) {
-          console.log('Searching for residents with names:', potentialNames);
-          
-          // Build more comprehensive search query
-          const searchConditions = [];
-          for (const name of potentialNames) {
-            searchConditions.push(`first_name.ilike.%${name}%`);
-            searchConditions.push(`last_name.ilike.%${name}%`);
-            searchConditions.push(`middle_name.ilike.%${name}%`);
-          }
-          
-          const { data: residents, error } = await supabase
-            .from('residents')
-            .select(`
-              id, first_name, last_name, middle_name, suffix, gender, birthdate, 
-              address, purok, barangaydb, municipalitycity, occupation, status, 
-              civil_status, mobile_number
-            `)
-            .or(searchConditions.join(','))
-            .limit(10);
-          
-          if (!error && residents && residents.length > 0) {
-            console.log(`Found ${residents.length} residents in database`);
-            
-            // Return confirmation message only (privacy compliant)
-            responseData += `I found ${residents.length} resident(s) matching your search in our records. For privacy reasons, I can only confirm their existence. Please visit the office or contact the appropriate personnel for specific details.`;
-            
-            return responseData;
-          } else {
-            console.log('No residents found in database for names:', potentialNames);
-            return null; // Return null so we don't call AI with made-up data
-          }
-        }
-      }
+    // First try comprehensive search across all tables
+    const searchResult = await comprehensiveSearch(userQuery, supabase);
+    if (searchResult) {
+      return searchResult;
     }
     
-    // Dynamic table queries based on keywords
-    const tableKeywords = {
-      'announcements': ['announcement', 'news', 'update', 'notice'],
-      'events': ['event', 'upcoming', 'schedule', 'calendar'],
-      'officials': ['official', 'captain', 'councilor', 'chairman', 'kagawad'],
-      'households': ['household', 'family', 'home'],
-      'incident_reports': ['incident', 'report', 'crime', 'complaint', 'blotter'],
-      'emergency_contacts': ['emergency', 'contact'],
-      'evacuation_centers': ['evacuation', 'center'],
-      'document_types': ['document', 'certificate', 'clearance'],
-      'issued_documents': ['issued', 'certificate'],
-      'forums': ['forum', 'discussion'],
-      'threads': ['thread', 'topic'],
-      'comments': ['comment', 'reply']
-    };
-    
-    for (const [tableName, keywords] of Object.entries(tableKeywords)) {
-      if (!accessibleTables.includes(tableName)) continue;
-      
-      const hasKeyword = keywords.some(keyword => normalizedQuery.includes(keyword));
-      if (hasKeyword) {
-        const result = await querySpecificTable(supabase, tableName, normalizedQuery);
-        if (result) {
-          responseData += result;
-          return responseData;
-        }
-      }
-    }
-    
-    // Population/statistics queries
-    if (normalizedQuery.includes('population') || 
-        normalizedQuery.includes('demographics') || 
-        normalizedQuery.includes('how many') ||
-        normalizedQuery.includes('statistics')) {
-      
-      if (accessibleTables.includes('residents')) {
-        const { data: residents, error } = await supabase
-          .from('residents')
-          .select('id, gender, civil_status, purok, status');
-        
-        if (!error && residents) {
-          responseData += `📊 **Population Overview:**\n\n`;
-          responseData += `👥 Total Residents: ${residents.length}\n`;
-          
-          const genderStats = residents.reduce((acc: any, r: any) => {
-            acc[r.gender] = (acc[r.gender] || 0) + 1;
-            return acc;
-          }, {});
-          
-          responseData += `\n**Gender Distribution:**\n`;
-          Object.entries(genderStats).forEach(([gender, count]) => {
-            responseData += `   • ${gender}: ${count}\n`;
-          });
-          
-          return responseData;
-        }
-      }
-    }
-    
+    console.log('No data found in comprehensive search');
     return null;
   } catch (error) {
-    console.error('Error querying Supabase data:', error);
-    return null;
-  }
-}
-
-// Helper function to query specific tables
-async function querySpecificTable(supabase: any, tableName: string, query: string): Promise<string | null> {
-  try {
-    let selectQuery = '*';
-    let limit = 10;
-    
-    // Customize query based on table
-    switch (tableName) {
-      case 'announcements':
-        selectQuery = 'title, content, category, created_at, audience';
-        break;
-      case 'events':
-        selectQuery = 'title, description, start_time, end_time, location, event_type';
-        break;
-      case 'officials':
-        selectQuery = 'name, position, email, phone, bio, education, committees';
-        break;
-      case 'incident_reports':
-        selectQuery = 'title, description, status, report_type, location, date_reported';
-        limit = 5;
-        break;
-    }
-    
-    const { data, error } = await supabase
-      .from(tableName)
-      .select(selectQuery)
-      .limit(limit);
-    
-    if (error || !data || data.length === 0) {
-      return null;
-    }
-    
-    // Format response based on table type
-    let response = '';
-    switch (tableName) {
-      case 'announcements':
-        response += '📢 **Latest Announcements:**\n\n';
-        data.forEach((item: any) => {
-          response += `**${item.title}**\n`;
-          response += `📂 Category: ${item.category}\n`;
-          response += `👥 Audience: ${item.audience}\n`;
-          response += `📅 Posted: ${new Date(item.created_at).toLocaleDateString()}\n`;
-          response += `📝 ${item.content}\n\n`;
-        });
-        break;
-      case 'events':
-        response += '📅 **Events:**\n\n';
-        data.forEach((item: any) => {
-          response += `**${item.title}**\n`;
-          response += `📍 Location: ${item.location || 'TBA'}\n`;
-          response += `🕐 Date: ${new Date(item.start_time).toLocaleDateString()}\n`;
-          if (item.description) response += `📝 ${item.description}\n`;
-          response += '\n';
-        });
-        break;
-      case 'officials':
-        response += '👥 **Barangay Officials:**\n\n';
-        data.forEach((item: any) => {
-          response += `**${item.name}**\n`;
-          response += `🏛️ Position: ${item.position}\n`;
-          if (item.email) response += `📧 Email: ${item.email}\n`;
-          if (item.phone) response += `📞 Phone: ${item.phone}\n`;
-          response += '\n';
-        });
-        break;
-      default:
-        response += `**${tableName.charAt(0).toUpperCase() + tableName.slice(1)} Data:**\n\n`;
-        response += `Found ${data.length} records.\n`;
-    }
-    
-    return response;
-  } catch (error) {
-    console.error(`Error querying ${tableName}:`, error);
+    console.error('Error in querySupabaseData:', error);
     return null;
   }
 }
