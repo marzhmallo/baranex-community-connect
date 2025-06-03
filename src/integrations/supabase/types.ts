@@ -254,7 +254,7 @@ export type Database = {
           },
         ]
       }
-      "chatbot_faq (disabled)": {
+      chatbot_faq: {
         Row: {
           answer_text: Json[] | null
           answer_textz: string
@@ -782,8 +782,10 @@ export type Database = {
       households: {
         Row: {
           address: string
+          barangayname: string | null
           brgyid: string | null
           contact_number: string | null
+          country: string | null
           created_at: string | null
           electricity_source: string | null
           garbage_disposal: string | null
@@ -792,10 +794,13 @@ export type Database = {
           house_type: string | null
           id: string
           monthly_income: string | null
+          municipality: string | null
           name: string
           name_extension: string | null
           property_type: string | null
+          province: string | null
           purok: string
+          region: string | null
           remarks: string | null
           status: string
           toilet_type: string | null
@@ -805,8 +810,10 @@ export type Database = {
         }
         Insert: {
           address: string
+          barangayname?: string | null
           brgyid?: string | null
           contact_number?: string | null
+          country?: string | null
           created_at?: string | null
           electricity_source?: string | null
           garbage_disposal?: string | null
@@ -815,10 +822,13 @@ export type Database = {
           house_type?: string | null
           id: string
           monthly_income?: string | null
+          municipality?: string | null
           name: string
           name_extension?: string | null
           property_type?: string | null
+          province?: string | null
           purok: string
+          region?: string | null
           remarks?: string | null
           status: string
           toilet_type?: string | null
@@ -828,8 +838,10 @@ export type Database = {
         }
         Update: {
           address?: string
+          barangayname?: string | null
           brgyid?: string | null
           contact_number?: string | null
+          country?: string | null
           created_at?: string | null
           electricity_source?: string | null
           garbage_disposal?: string | null
@@ -838,10 +850,13 @@ export type Database = {
           house_type?: string | null
           id?: string
           monthly_income?: string | null
+          municipality?: string | null
           name?: string
           name_extension?: string | null
           property_type?: string | null
+          province?: string | null
           purok?: string
+          region?: string | null
           remarks?: string | null
           status?: string
           toilet_type?: string | null
@@ -1200,6 +1215,7 @@ export type Database = {
           lastname: string | null
           middlename: string | null
           phone: string | null
+          purok: string | null
           role: string | null
           status: string | null
           username: string | null
@@ -1215,6 +1231,7 @@ export type Database = {
           lastname?: string | null
           middlename?: string | null
           phone?: string | null
+          purok?: string | null
           role?: string | null
           status?: string | null
           username?: string | null
@@ -1230,6 +1247,7 @@ export type Database = {
           lastname?: string | null
           middlename?: string | null
           phone?: string | null
+          purok?: string | null
           role?: string | null
           status?: string | null
           username?: string | null
