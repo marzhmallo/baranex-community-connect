@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,11 +17,12 @@ import { toast } from "@/hooks/use-toast";
 interface UserProfile {
   id: string;
   email: string;
-  first_name: string;
-  last_name: string;
+  firstname: string;
+  lastname: string;
+  middlename: string;
   phone: string;
-  address: string;
-  barangay: string;
+  username: string;
+  brgyid: string;
   purok: string;
   role: 'admin' | 'staff' | 'user';
   status: 'pending' | 'approved' | 'rejected' | 'blocked';
@@ -28,27 +30,41 @@ interface UserProfile {
 }
 
 const UserAccountManagement = () => {
+  const { userProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState('all');
 
   const { data: users, isLoading, refetch } = useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', userProfile?.brgyid],
     queryFn: async () => {
+      if (!userProfile?.brgyid) {
+        console.log('No barangay ID available for filtering');
+        return [];
+      }
+
+      console.log('Fetching users for barangay:', userProfile.brgyid);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .eq('brgyid', userProfile.brgyid)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+      
+      console.log('Fetched users:', data);
       return data as UserProfile[];
     },
+    enabled: !!userProfile?.brgyid,
   });
 
   const filteredUsers = users?.filter(user => {
     const matchesSearch = 
-      user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesTab = 
@@ -66,7 +82,8 @@ const UserAccountManagement = () => {
     const { error } = await supabase
       .from('profiles')
       .update({ status })
-      .eq('id', userId);
+      .eq('id', userId)
+      .eq('brgyid', userProfile?.brgyid); // Additional security check
     
     if (error) {
       toast({
@@ -120,12 +137,28 @@ const UserAccountManagement = () => {
     );
   }
 
+  if (!userProfile?.brgyid) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="flex items-center justify-center p-8">
+            <div className="text-center">
+              <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Access Restricted</h3>
+              <p className="text-muted-foreground">No barangay assignment found. Please contact your administrator.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Account Management</h1>
-          <p className="text-muted-foreground">Manage user accounts, roles, and permissions</p>
+          <p className="text-muted-foreground">Manage user accounts, roles, and permissions for your barangay</p>
         </div>
       </div>
 
@@ -178,12 +211,12 @@ const UserAccountManagement = () => {
                             <div className="flex items-center space-x-3">
                               <Avatar className="h-8 w-8">
                                 <AvatarFallback>
-                                  {user.first_name?.[0]}{user.last_name?.[0]}
+                                  {user.firstname?.[0]}{user.lastname?.[0]}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <div className="font-medium">
-                                  {user.first_name} {user.last_name}
+                                  {user.firstname} {user.lastname}
                                 </div>
                               </div>
                             </div>
@@ -215,12 +248,12 @@ const UserAccountManagement = () => {
                                       <div className="flex items-center space-x-3">
                                         <Avatar className="h-12 w-12">
                                           <AvatarFallback>
-                                            {selectedUser.first_name?.[0]}{selectedUser.last_name?.[0]}
+                                            {selectedUser.firstname?.[0]}{selectedUser.lastname?.[0]}
                                           </AvatarFallback>
                                         </Avatar>
                                         <div>
                                           <h3 className="font-semibold">
-                                            {selectedUser.first_name} {selectedUser.last_name}
+                                            {selectedUser.firstname} {selectedUser.lastname}
                                           </h3>
                                           <p className="text-sm text-muted-foreground">
                                             {selectedUser.email}
@@ -242,12 +275,16 @@ const UserAccountManagement = () => {
                                           <p>{getStatusBadge(selectedUser.status)}</p>
                                         </div>
                                         <div>
-                                          <span className="font-medium">Barangay:</span>
-                                          <p>{selectedUser.barangay || 'N/A'}</p>
+                                          <span className="font-medium">Username:</span>
+                                          <p>{selectedUser.username || 'N/A'}</p>
                                         </div>
-                                        <div className="col-span-2">
-                                          <span className="font-medium">Address:</span>
-                                          <p>{selectedUser.address || 'N/A'}</p>
+                                        <div>
+                                          <span className="font-medium">Purok:</span>
+                                          <p>{selectedUser.purok || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                          <span className="font-medium">Middle Name:</span>
+                                          <p>{selectedUser.middlename || 'N/A'}</p>
                                         </div>
                                       </div>
                                       
