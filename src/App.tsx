@@ -165,6 +165,7 @@ const AppContent = () => {
               <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
               <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
               <Route path="/profile" element={<AdminRoute><ProfilePage /></AdminRoute>} />
+              <Route path="/management" element={<AdminRoute><UserAccountManagement /></AdminRoute>} />
             </>
           )}
           

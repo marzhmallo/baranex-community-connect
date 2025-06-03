@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -144,10 +143,10 @@ const Sidebar = () => {
           </Link>
 
           <Link 
-            to="/user-management" 
+            to="/management" 
             className={cn(
               "flex items-center py-2 px-3 rounded-md",
-              isActive("/user-management") 
+              isActive("/management") 
                 ? "bg-sidebar-accent text-white" 
                 : "text-sidebar-foreground hover:bg-sidebar-accent"
             )}
