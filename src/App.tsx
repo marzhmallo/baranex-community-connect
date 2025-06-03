@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,6 +28,7 @@ import AnnouncementsPage from "./pages/AnnouncementsPage";
 import ForumPage from "./pages/ForumPage";
 import OfficialDetailsPage from './pages/OfficialDetailsPage';
 import EmergencyResponsePage from "./pages/EmergencyResponsePage";
+import UserAccountManagement from "./pages/UserAccountManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
