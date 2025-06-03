@@ -310,7 +310,7 @@ const UserAccountManagement = () => {
                           </TableCell>
                         </TableRow>
                       ))}
-                    </TabsContent>
+                    </TableBody>
                   </Table>
                 </div>
               </TabsContent>
