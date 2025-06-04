@@ -29,11 +29,27 @@ export const feedbackAPI = {
     }
 
     const { data, error } = await query;
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching feedback reports:', error);
+      // If the relation doesn't exist, fetch without profiles
+      const { data: reportsData, error: reportsError } = await supabase
+        .from('feedback_reports')
+        .select('*')
+        .eq('brgyid', brgyid)
+        .order('created_at', { ascending: false });
+      
+      if (reportsError) throw reportsError;
+      
+      return reportsData?.map(report => ({
+        ...report,
+        user_name: 'Unknown User',
+        user_email: ''
+      })) as FeedbackReport[];
+    }
 
     return data?.map(report => ({
       ...report,
-      user_name: report.profiles ? `${report.profiles.firstname} ${report.profiles.lastname}` : 'Unknown User',
+      user_name: report.profiles ? `${report.profiles.firstname || ''} ${report.profiles.lastname || ''}`.trim() : 'Unknown User',
       user_email: report.profiles?.email || ''
     })) as FeedbackReport[];
   },
@@ -54,7 +70,17 @@ export const feedbackAPI = {
   createReport: async (report: Omit<FeedbackReport, 'id' | 'created_at' | 'updated_at'>) => {
     const { data, error } = await supabase
       .from('feedback_reports')
-      .insert(report)
+      .insert({
+        user_id: report.user_id,
+        brgyid: report.brgyid,
+        type: report.type,
+        category: report.category,
+        description: report.description,
+        location: report.location || null,
+        attachments: report.attachments || null,
+        status: report.status,
+        admin_notes: report.admin_notes || null
+      })
       .select()
       .single();
 

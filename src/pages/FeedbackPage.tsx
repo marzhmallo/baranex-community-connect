@@ -113,7 +113,7 @@ const FeedbackPage = () => {
                 />
               </div>
               
-              <Select value={filterType} onValueChange={setFilterType}>
+              <Select value={filterType} onValueChange={(value: FeedbackType | 'all') => setFilterType(value)}>
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
@@ -124,7 +124,7 @@ const FeedbackPage = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus} onValueChange={(value: FeedbackStatus | 'all') => setFilterStatus(value)}>
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
