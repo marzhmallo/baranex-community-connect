@@ -162,6 +162,7 @@ const AppContent = () => {
               <Route path="/officials/:id" element={<AdminRoute><OfficialDetailsPage /></AdminRoute>} /> 
               <Route path="/documents" element={<AdminRoute><DocumentsPage /></AdminRoute>} />
               <Route path="/blotter" element={<AdminRoute><BlotterPage /></AdminRoute>} />
+              <Route path="/feedback" element={<AdminRoute><FeedbackPage /></AdminRoute>} />
               <Route path="/emergency" element={<AdminRoute><EmergencyResponsePage /></AdminRoute>} />
               <Route path="/calendar" element={<AdminRoute><CalendarPage /></AdminRoute>} />
               <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
