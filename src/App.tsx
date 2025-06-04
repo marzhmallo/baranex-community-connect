@@ -175,6 +175,7 @@ const AppContent = () => {
           
           {/* User Routes */}
           <Route path="/hub" element={<UserRoute><HomePage /></UserRoute>} />
+          <Route path="/feedback" element={<UserRoute><UserFeedbackPage /></UserRoute>} />
           <Route path="/profile" element={<UserRoute><UserProfilePage /></UserRoute>} />
           
           {/* Default redirects - redirect to login instead of dashboard */}
