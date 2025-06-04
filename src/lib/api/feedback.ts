@@ -40,14 +40,14 @@ export const feedbackAPI = {
       
       if (reportsError) throw reportsError;
       
-      return reportsData?.map(report => ({
+      return (reportsData || []).map(report => ({
         ...report,
         user_name: 'Unknown User',
         user_email: ''
       })) as FeedbackReport[];
     }
 
-    return data?.map(report => ({
+    return (data || []).map((report: any) => ({
       ...report,
       user_name: report.profiles ? `${report.profiles.firstname || ''} ${report.profiles.lastname || ''}`.trim() : 'Unknown User',
       user_email: report.profiles?.email || ''
