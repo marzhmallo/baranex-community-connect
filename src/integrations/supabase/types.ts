@@ -675,6 +675,59 @@ export type Database = {
           },
         ]
       }
+      feedback_reports: {
+        Row: {
+          admin_notes: string | null
+          attachments: string[] | null
+          brgyid: string
+          category: string
+          created_at: string
+          description: string
+          id: string
+          location: string
+          status: Database["public"]["Enums"]["feedback_status"]
+          type: Database["public"]["Enums"]["feedback_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          attachments?: string[] | null
+          brgyid: string
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          location: string
+          status: Database["public"]["Enums"]["feedback_status"]
+          type: Database["public"]["Enums"]["feedback_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          attachments?: string[] | null
+          brgyid?: string
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          location?: string
+          status?: Database["public"]["Enums"]["feedback_status"]
+          type?: Database["public"]["Enums"]["feedback_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_reports_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flagged_individuals: {
         Row: {
           alias: string | null
@@ -1848,6 +1901,8 @@ export type Database = {
         | "disaster"
         | "rescue"
       evacuation_center_status: "available" | "full" | "closed" | "maintenance"
+      feedback_status: "pending" | "in_progress" | "resolved" | "rejected"
+      feedback_type: "barangay" | "system"
       incident_status: "Open" | "Under_Investigation" | "Resolved" | "Dismissed"
       report_type: "Theft" | "Dispute" | "Vandalism" | "Curfew" | "Others"
       risk_level: "Low" | "Moderate" | "High"
@@ -1982,6 +2037,8 @@ export const Constants = {
         "rescue",
       ],
       evacuation_center_status: ["available", "full", "closed", "maintenance"],
+      feedback_status: ["pending", "in_progress", "resolved", "rejected"],
+      feedback_type: ["barangay", "system"],
       incident_status: ["Open", "Under_Investigation", "Resolved", "Dismissed"],
       report_type: ["Theft", "Dispute", "Vandalism", "Curfew", "Others"],
       risk_level: ["Low", "Moderate", "High"],

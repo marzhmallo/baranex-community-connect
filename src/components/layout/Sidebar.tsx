@@ -104,6 +104,11 @@ const Sidebar = () => {
             {!isCollapsed && <span className="ml-2">Blotter</span>}
           </Link>
 
+          <Link to="/feedback" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/feedback") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
+            <MessageSquare className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Feedback & Reports</span>}
+          </Link>
+
           <Link to="/statistics" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/statistics") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
             <BarChart3 className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Statistics</span>}
