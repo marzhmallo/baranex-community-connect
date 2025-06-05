@@ -92,7 +92,14 @@ const AppContent = () => {
   const location = useLocation();
   const { userProfile, loading } = useAuth();
   const isAuthPage = location.pathname === "/login";
-  const isUserRoute = location.pathname.startsWith("/hub") || (location.pathname === "/profile" && userProfile?.role === "user");
+  
+  // Updated logic to properly detect user routes
+  const isUserRoute = userProfile?.role === "user" && (
+    location.pathname.startsWith("/hub") || 
+    (location.pathname === "/feedback" && userProfile?.role === "user") ||
+    (location.pathname === "/profile" && userProfile?.role === "user")
+  );
+  
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isPublicSidebarCollapsed, setIsPublicSidebarCollapsed] = useState(false);
   
