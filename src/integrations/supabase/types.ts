@@ -1271,6 +1271,7 @@ export type Database = {
           purok: string | null
           role: string | null
           status: string | null
+          superior_admin: boolean | null
           username: string | null
         }
         Insert: {
@@ -1287,6 +1288,7 @@ export type Database = {
           purok?: string | null
           role?: string | null
           status?: string | null
+          superior_admin?: boolean | null
           username?: string | null
         }
         Update: {
@@ -1303,6 +1305,7 @@ export type Database = {
           purok?: string | null
           role?: string | null
           status?: string | null
+          superior_admin?: boolean | null
           username?: string | null
         }
         Relationships: [

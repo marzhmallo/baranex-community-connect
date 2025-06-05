@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Eye, Check, X, Edit, Trash2, Mail, Shield, User, Users } from "lucide-react";
+import { Search, Eye, Check, X, Edit, Trash2, Mail, Shield, User, Users, Info } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface UserProfile {
   id: string;
@@ -48,6 +48,7 @@ const UserAccountManagement = () => {
         .from('profiles')
         .select('*')
         .eq('brgyid', userProfile.brgyid)
+        .neq('id', userProfile.id) // Exclude current admin from the list
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -58,7 +59,7 @@ const UserAccountManagement = () => {
       console.log('Fetched users:', data);
       return data as UserProfile[];
     },
-    enabled: !!userProfile?.brgyid,
+    enabled: !!userProfile?.brgyid && !!userProfile?.id,
   });
 
   const filteredUsers = users?.filter(user => {
@@ -161,6 +162,13 @@ const UserAccountManagement = () => {
           <p className="text-muted-foreground">Manage user accounts, roles, and permissions for your barangay</p>
         </div>
       </div>
+
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          Your own account ({userProfile.email}) is not shown in this list for security reasons. To manage your profile, use the Profile section instead.
+        </AlertDescription>
+      </Alert>
 
       <Card>
         <CardHeader>
