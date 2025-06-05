@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Eye, Check, X, Edit, Trash2, Mail, Shield, User, Users, Info } from "lucide-react";
+import { Search, Eye, Check, X, Edit, Trash2, Mail, Shield, User, Users, Info, Crown, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -26,6 +27,7 @@ interface UserProfile {
   purok: string;
   role: 'admin' | 'staff' | 'user';
   status: 'pending' | 'approved' | 'rejected' | 'blocked';
+  superior_admin: boolean;
   created_at: string;
 }
 
@@ -34,6 +36,7 @@ const UserAccountManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
 
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users', userProfile?.brgyid],
@@ -80,6 +83,17 @@ const UserAccountManagement = () => {
   });
 
   const updateUserStatus = async (userId: string, status: string) => {
+    // Check if the target user is a superior admin
+    const targetUser = users?.find(u => u.id === userId);
+    if (targetUser?.superior_admin && !userProfile?.superior_admin) {
+      toast({
+        title: "Access Denied",
+        description: "You cannot modify a superior admin's status",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from('profiles')
       .update({ status })
@@ -101,6 +115,72 @@ const UserAccountManagement = () => {
     }
   };
 
+  const transferSuperiority = async (newSuperiorId: string) => {
+    if (!userProfile?.superior_admin) {
+      toast({
+        title: "Access Denied",
+        description: "Only superior admins can transfer superiority",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Start a transaction to update both users
+    const { error: removeError } = await supabase
+      .from('profiles')
+      .update({ superior_admin: false })
+      .eq('id', userProfile.id);
+
+    if (removeError) {
+      toast({
+        title: "Error",
+        description: "Failed to transfer superiority",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error: assignError } = await supabase
+      .from('profiles')
+      .update({ superior_admin: true })
+      .eq('id', newSuperiorId);
+
+    if (assignError) {
+      // Rollback the previous change
+      await supabase
+        .from('profiles')
+        .update({ superior_admin: true })
+        .eq('id', userProfile.id);
+      
+      toast({
+        title: "Error",
+        description: "Failed to transfer superiority",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Superiority transferred successfully. Please log in again.",
+    });
+    
+    setTransferDialogOpen(false);
+    // Force a sign out since their role has changed
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+  };
+
+  const canModifyUser = (user: UserProfile) => {
+    // Superior admins can modify anyone except other superior admins
+    if (userProfile?.superior_admin) {
+      return !user.superior_admin || user.id === userProfile.id;
+    }
+    // Regular admins cannot modify superior admins
+    return !user.superior_admin;
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       pending: "outline",
@@ -116,7 +196,7 @@ const UserAccountManagement = () => {
     );
   };
 
-  const getRoleBadge = (role: string) => {
+  const getRoleBadge = (role: string, isSuperior: boolean = false) => {
     const colors: Record<string, string> = {
       admin: "bg-red-100 text-red-800",
       staff: "bg-blue-100 text-blue-800",
@@ -124,9 +204,17 @@ const UserAccountManagement = () => {
     };
     
     return (
-      <Badge className={colors[role] || "bg-gray-100 text-gray-800"}>
-        {role.charAt(0).toUpperCase() + role.slice(1)}
-      </Badge>
+      <div className="flex items-center gap-1">
+        <Badge className={colors[role] || "bg-gray-100 text-gray-800"}>
+          {role.charAt(0).toUpperCase() + role.slice(1)}
+        </Badge>
+        {isSuperior && (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+            <Crown className="h-3 w-3 mr-1" />
+            Superior
+          </Badge>
+        )}
+      </div>
     );
   };
 
@@ -169,6 +257,22 @@ const UserAccountManagement = () => {
           Your own account ({userProfile.email}) is not shown in this list for security reasons. To manage your profile, use the Profile section instead.
         </AlertDescription>
       </Alert>
+
+      {userProfile?.superior_admin && (
+        <Alert>
+          <Crown className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>You are the superior admin of this barangay. You can transfer your superiority to another admin.</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTransferDialogOpen(true)}
+            >
+              Transfer Superiority
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
@@ -230,7 +334,7 @@ const UserAccountManagement = () => {
                             </div>
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
-                          <TableCell>{getRoleBadge(user.role)}</TableCell>
+                          <TableCell>{getRoleBadge(user.role, user.superior_admin)}</TableCell>
                           <TableCell>{getStatusBadge(user.status)}</TableCell>
                           <TableCell>
                             {new Date(user.created_at).toLocaleDateString()}
@@ -276,7 +380,7 @@ const UserAccountManagement = () => {
                                         </div>
                                         <div>
                                           <span className="font-medium">Role:</span>
-                                          <p>{getRoleBadge(selectedUser.role)}</p>
+                                          <p>{getRoleBadge(selectedUser.role, selectedUser.superior_admin)}</p>
                                         </div>
                                         <div>
                                           <span className="font-medium">Status:</span>
@@ -295,9 +399,18 @@ const UserAccountManagement = () => {
                                           <p>{selectedUser.middlename || 'N/A'}</p>
                                         </div>
                                       </div>
+
+                                      {selectedUser.superior_admin && (
+                                        <Alert>
+                                          <AlertTriangle className="h-4 w-4" />
+                                          <AlertDescription>
+                                            This user is a superior admin and cannot be modified by other admins.
+                                          </AlertDescription>
+                                        </Alert>
+                                      )}
                                       
                                       <div className="flex space-x-2">
-                                        {selectedUser.status === 'pending' && (
+                                        {selectedUser.status === 'pending' && canModifyUser(selectedUser) && (
                                           <>
                                             <Button
                                               size="sm"
@@ -326,7 +439,7 @@ const UserAccountManagement = () => {
                                 </DialogContent>
                               </Dialog>
                               
-                              {user.status === 'pending' && (
+                              {user.status === 'pending' && canModifyUser(user) && (
                                 <>
                                   <Button
                                     variant="ghost"
@@ -345,12 +458,22 @@ const UserAccountManagement = () => {
                                 </>
                               )}
                               
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              {canModifyUser(user) && (
+                                <>
+                                  <Button variant="ghost" size="sm">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                              
+                              {!canModifyUser(user) && (
+                                <Badge variant="outline" className="text-xs">
+                                  Protected
+                                </Badge>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -363,6 +486,48 @@ const UserAccountManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Transfer Superiority Dialog */}
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Transfer Superior Admin Role</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                This action will transfer your superior admin privileges to another admin. You will lose your superior status and the selected admin will become the new superior admin.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="space-y-2">
+              <h4 className="font-medium">Select new superior admin:</h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {users?.filter(u => (u.role === 'admin' || u.role === 'staff') && !u.superior_admin).map(user => (
+                  <div key={user.id} className="flex items-center justify-between p-2 border rounded">
+                    <div className="flex items-center space-x-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-xs">
+                          {user.firstname?.[0]}{user.lastname?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm">{user.firstname} {user.lastname}</span>
+                      <span className="text-xs text-muted-foreground">({user.email})</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => transferSuperiority(user.id)}
+                    >
+                      Transfer
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
