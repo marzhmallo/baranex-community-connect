@@ -108,6 +108,18 @@ const HouseholdDetails = ({ household, open, onOpenChange, initialEditMode = fal
     }
   };
 
+  // Helper function to format the new address
+  const formatAddress = (household: Household) => {
+    const addressParts = [
+      household.barangayname,
+      household.municipality,
+      household.province,
+      household.purok ? `Purok ${household.purok}` : null
+    ].filter(Boolean);
+    
+    return addressParts.length > 0 ? addressParts.join(', ') : household.address || "Address not specified";
+  };
+
   return (
     <Dialog 
       open={open} 
@@ -168,13 +180,9 @@ const HouseholdDetails = ({ household, open, onOpenChange, initialEditMode = fal
                           <p className="text-sm text-gray-500">Contact Number</p>
                           <p>{household.contact_number || "Not specified"}</p>
                         </div>
-                        <div>
+                        <div className="md:col-span-2">
                           <p className="text-sm text-gray-500">Address</p>
-                          <p>{household.address}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Purok</p>
-                          <p>{household.purok}</p>
+                          <p>{formatAddress(household)}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Year Established</p>
@@ -184,6 +192,39 @@ const HouseholdDetails = ({ household, open, onOpenChange, initialEditMode = fal
                           <p className="text-sm text-gray-500">Monthly Income</p>
                           <p>{household.monthly_income || "Not specified"}</p>
                         </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Address Information */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <h3 className="text-lg font-medium mb-4">Address Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Barangay</p>
+                        <p>{household.barangayname || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Municipality</p>
+                        <p>{household.municipality || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Province</p>
+                        <p>{household.province || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Region</p>
+                        <p>{household.region || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Country</p>
+                        <p>{household.country || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Purok</p>
+                        <p>{household.purok}</p>
                       </div>
                     </div>
                   </CardContent>

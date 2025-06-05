@@ -1,3 +1,4 @@
+
 // Resident types
 export interface Resident {
   id: string;
@@ -138,7 +139,12 @@ export interface DashboardStats {
 export interface Household {
   id: string;
   name: string;
-  address: string;
+  address?: string; // Keep for backward compatibility but make optional
+  barangayname?: string | null; // New address field
+  municipality?: string | null; // New address field
+  province?: string | null; // New address field
+  region?: string | null; // New address field
+  country?: string | null; // New address field
   purok: string;
   head_of_family?: string | null; // UUID reference to resident
   headname?: string | null; // Plain text name

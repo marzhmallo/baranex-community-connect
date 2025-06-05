@@ -167,7 +167,7 @@ export const getHouseholdById = async (id: string) => {
 export const saveHousehold = async (household: Partial<Household>) => {
   try {
     // Ensure required fields are present
-    if (!household.name || !household.address || !household.purok || !household.status) {
+    if (!household.name || !household.purok || !household.status) {
       throw new Error('Missing required fields for household');
     }
 
@@ -188,7 +188,11 @@ export const saveHousehold = async (household: Partial<Household>) => {
         .from('households')
         .update({
           name: household.name,
-          address: household.address,
+          barangayname: household.barangayname,
+          municipality: household.municipality,
+          province: household.province,
+          region: household.region,
+          country: household.country,
           purok: household.purok,
           head_of_family: household.head_of_family,
           headname: household.headname,
@@ -218,7 +222,11 @@ export const saveHousehold = async (household: Partial<Household>) => {
         .insert({
           id: newHouseholdId,
           name: household.name,
-          address: household.address,
+          barangayname: household.barangayname || null,
+          municipality: household.municipality || null,
+          province: household.province || null,
+          region: household.region || null,
+          country: household.country || null,
           purok: household.purok,
           status: household.status,
           head_of_family: household.head_of_family || null,

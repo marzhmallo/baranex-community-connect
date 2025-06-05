@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -26,10 +25,14 @@ import HeadOfFamilyInput from "./HeadOfFamilyInput";
 const HOUSEHOLD_STATUSES = ["Permanent", "Temporary", "Relocated", "Abandoned"] as const;
 type HouseholdStatus = typeof HOUSEHOLD_STATUSES[number];
 
-// Define form schema
+// Define form schema with new address fields
 const householdFormSchema = z.object({
   name: z.string().min(1, { message: "Household name is required" }),
-  address: z.string().min(1, { message: "Address is required" }),
+  barangayname: z.string().min(1, { message: "Barangay name is required" }),
+  municipality: z.string().min(1, { message: "Municipality is required" }),
+  province: z.string().min(1, { message: "Province is required" }),
+  region: z.string().min(1, { message: "Region is required" }),
+  country: z.string().min(1, { message: "Country is required" }),
   purok: z.string().min(1, { message: "Purok is required" }),
   head_of_family_input: z.string().optional(),
   contact_number: z.string().optional(),
@@ -63,7 +66,11 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
   // Transform household data for the form
   const defaultValues: HouseholdFormValues = household ? {
     name: household.name,
-    address: household.address,
+    barangayname: household.barangayname || "",
+    municipality: household.municipality || "",
+    province: household.province || "",
+    region: household.region || "",
+    country: household.country || "",
     purok: household.purok,
     head_of_family_input: household.head_of_family_name || household.headname || "",
     contact_number: household.contact_number || "",
@@ -79,7 +86,11 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     remarks: household.remarks || "",
   } : {
     name: "",
-    address: "",
+    barangayname: "",
+    municipality: "",
+    province: "",
+    region: "",
+    country: "",
     purok: "",
     head_of_family_input: "",
     contact_number: "",
@@ -110,7 +121,11 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
       const householdToSave: Partial<Household> = {
         id: household?.id,
         name: values.name,
-        address: values.address,
+        barangayname: values.barangayname,
+        municipality: values.municipality,
+        province: values.province,
+        region: values.region,
+        country: values.country,
         purok: values.purok,
         head_of_family: selectedResidentId,
         headname: selectedResidentId ? null : (values.head_of_family_input || null),
@@ -219,29 +234,17 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
               />
             </div>
             
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Address *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Mabuhay, Liloy, Zamboanga del Norte" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <h3 className="text-lg font-medium mb-4 pt-4 border-t">Address Information</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="purok"
+                name="barangayname"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Purok *</FormLabel>
+                    <FormLabel>Barangay *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Purok 1" {...field} />
+                      <Input placeholder="Barangay Mabuhay" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -250,18 +253,72 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
               
               <FormField
                 control={form.control}
-                name="year_established"
+                name="municipality"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Year Established</FormLabel>
+                    <FormLabel>Municipality *</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="2010" 
-                        {...field}
-                        value={field.value === undefined ? '' : field.value}
-                        onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                      />
+                      <Input placeholder="Liloy" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="province"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Province *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Zamboanga del Norte" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="region"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Region *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Region IX" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Philippines" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="purok"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Purok *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Purok 1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -310,6 +367,26 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="year_established"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Year Established</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="2010" 
+                      {...field}
+                      value={field.value === undefined ? '' : field.value}
+                      onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormField
               control={form.control}
