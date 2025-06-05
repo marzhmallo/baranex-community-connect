@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,9 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
-import { Plus, Edit, Trash2, Shield, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Shield, User, Crown, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -23,6 +27,9 @@ interface UserProfile {
   status?: string;
   brgyid?: string;
   superior_admin?: boolean;
+  username?: string;
+  purok?: string;
+  middlename?: string;
   created_at?: string;
 }
 
