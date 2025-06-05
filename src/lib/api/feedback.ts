@@ -68,6 +68,25 @@ export const feedbackAPI = {
 
   // Create new report
   createReport: async (report: Omit<FeedbackReport, 'id' | 'created_at' | 'updated_at'>) => {
+    console.log('Creating report with data:', report);
+    
+    // Validate required fields
+    if (!report.user_id) {
+      throw new Error('User ID is required');
+    }
+    if (!report.brgyid) {
+      throw new Error('Barangay ID is required');
+    }
+    if (!report.type) {
+      throw new Error('Report type is required');
+    }
+    if (!report.category) {
+      throw new Error('Category is required');
+    }
+    if (!report.description) {
+      throw new Error('Description is required');
+    }
+
     const { data, error } = await supabase
       .from('feedback_reports')
       .insert({
@@ -84,7 +103,12 @@ export const feedbackAPI = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Database error creating report:', error);
+      throw new Error(`Failed to create report: ${error.message}`);
+    }
+    
+    console.log('Report created successfully:', data);
     return data as FeedbackReport;
   },
 

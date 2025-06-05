@@ -1,34 +1,29 @@
-
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/AuthProvider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Eye, Check, X, Edit, Trash2, Mail, Shield, User, Users, Info, Crown, AlertTriangle } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/AuthProvider';
+import { Plus, Edit, Trash2, Shield, User } from 'lucide-react';
 
 interface UserProfile {
   id: string;
-  email: string;
-  firstname: string;
-  lastname: string;
-  middlename: string;
-  phone: string;
-  username: string;
-  brgyid: string;
-  purok: string;
-  role: 'admin' | 'staff' | 'user';
-  status: 'pending' | 'approved' | 'rejected' | 'blocked';
-  superior_admin: boolean;
-  created_at: string;
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  status?: string;
+  brgyid?: string;
+  superior_admin?: boolean;
+  created_at?: string;
 }
 
 const UserAccountManagement = () => {

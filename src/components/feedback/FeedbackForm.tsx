@@ -66,10 +66,24 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
   };
 
   const onSubmit = async (data: FormData) => {
-    if (!userProfile?.brgyid) {
+    console.log('Form submission started');
+    console.log('User profile:', userProfile);
+    
+    if (!userProfile?.id) {
+      console.error('User profile ID not found');
       toast({
         title: "Error",
-        description: "User profile not found",
+        description: "User profile not found. Please log in again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!userProfile?.brgyid) {
+      console.error('User brgyid not found');
+      toast({
+        title: "Error",
+        description: "User barangay ID not found. Please contact administrator.",
         variant: "destructive"
       });
       return;
@@ -92,6 +106,8 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
         status: 'pending' as const
       };
 
+      console.log('Report data to submit:', reportData);
+
       if (editData) {
         await feedbackAPI.updateReport(editData.id, reportData);
         toast({
@@ -111,7 +127,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       console.error('Error submitting report:', error);
       toast({
         title: "Error",
-        description: "Failed to submit report. Please try again.",
+        description: `Failed to submit report: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {
