@@ -180,6 +180,14 @@ export const saveHousehold = async (household: Partial<Household>) => {
       return { success: false, error: "User's barangay ID not found" };
     }
 
+    // Create a fallback address from the new address fields
+    const fallbackAddress = [
+      household.barangayname,
+      household.municipality,
+      household.province,
+      household.purok ? `Purok ${household.purok}` : null
+    ].filter(Boolean).join(', ') || 'Address not specified';
+
     let result;
     
     if (household.id) {
@@ -188,6 +196,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
         .from('households')
         .update({
           name: household.name,
+          address: fallbackAddress, // Keep for database compatibility
           barangayname: household.barangayname,
           municipality: household.municipality,
           province: household.province,
@@ -222,6 +231,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
         .insert({
           id: newHouseholdId,
           name: household.name,
+          address: fallbackAddress, // Keep for database compatibility
           barangayname: household.barangayname || null,
           municipality: household.municipality || null,
           province: household.province || null,
