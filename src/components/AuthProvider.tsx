@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,19 +46,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authInitialized, setAuthInitialized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Clear profile fetched flag when user changes
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Update user online status and last login
   const updateUserOnlineStatus = async (userId: string, isOnline: boolean) => {
     try {
       const updateData: any = { online: isOnline };
       
-      // If user is logging in (going online), update last_login with full timestamp
       if (isOnline) {
         updateData.last_login = new Date().toISOString();
       }
@@ -77,14 +73,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Fetch user profile data from profiles table only
+  // Fetch user profile data from profiles table
   const fetchUserProfile = async (userId: string) => {
-    // Skip if we're trying to fetch the same user repeatedly
-    if (currentUserId === userId && userProfile !== null) return;
-    
     console.log('Fetching user profile for:', userId);
     try {
-      // Fetch from profiles table for all user types
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -101,34 +93,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      // If found in profiles table
       if (profileData) {
         console.log('User found in profiles table:', profileData);
         
-        // Check if user status is pending
         if (profileData.status === "pending") {
-          await supabase.auth.signOut();
-          setUser(null);
-          setSession(null);
-          setUserProfile(null);
-          setCurrentUserId(null);
+          await signOut();
           toast({
             title: "Account Pending Approval",
             description: "Your account is pending approval from your barangay administrator.",
             variant: "destructive",
           });
-          navigate("/login");
           return;
         }
 
-        // Update user to online status and last login
         await updateUserOnlineStatus(userId, true);
-
         setUserProfile(profileData as UserProfile);
-        setCurrentUserId(userId);
-        console.log('Profile loaded:', profileData);
         
-        // Redirect based on user role after profile is loaded
+        // Handle navigation after profile is loaded
         if (location.pathname === "/login" || location.pathname === "/") {
           if (profileData.role === "user") {
             console.log('Redirecting user to /hub');
@@ -139,14 +120,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         }
         
-        // Also fetch the barangay data if brgyid is available
         if (profileData.brgyid) {
           fetchBarangayData(profileData.brgyid);
         }
         return;
       }
 
-      // If not found in profiles table
       console.log('No user profile found in profiles table for user ID:', userId);
       toast({
         title: "Profile Not Found",
@@ -154,13 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         variant: "destructive",
       });
       
-      // Sign out the user since they don't have a profile
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setUserProfile(null);
-      setCurrentUserId(null);
-      navigate("/login");
+      await signOut();
       
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
@@ -196,28 +169,58 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      // Update user to offline status before signing out
-      if (user?.id) {
-        await updateUserOnlineStatus(user.id, false);
+      // Get current user before clearing state
+      const currentUser = user;
+      const currentSession = session;
+      
+      console.log('Signing out user:', currentUser?.id);
+      
+      // Update user to offline status before signing out if we have user info
+      if (currentUser?.id) {
+        await updateUserOnlineStatus(currentUser.id, false);
       }
 
-      await supabase.auth.signOut();
+      // Clear local state first
       setUser(null);
       setSession(null);
       setUserProfile(null);
-      setCurrentUserId(null);
-      toast({
-        title: "Signed out",
-        description: "You have been signed out successfully",
-      });
+
+      // Then sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Sign out error:", error);
+        // Only show error if it's not a session missing error
+        if (!error.message.includes('session')) {
+          toast({
+            title: "Error",
+            description: "Failed to sign out completely, but you've been logged out locally.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Signed out",
+          description: "You have been signed out successfully",
+        });
+      }
+      
+      // Always navigate to login regardless of sign out success
       navigate("/login");
+      
     } catch (error) {
       console.error("Sign out error:", error);
+      // Clear local state even if signout fails
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+      
       toast({
-        title: "Error",
-        description: "Failed to sign out",
-        variant: "destructive",
+        title: "Signed out locally",
+        description: "You have been signed out from this device.",
       });
+      
+      navigate("/login");
     }
   };
 
@@ -231,7 +234,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           online: false
         });
         
-        navigator.sendBeacon('/api/update-offline-status', data);
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/api/update-offline-status', data);
+        }
         
         // Fallback: immediate update
         updateUserOnlineStatus(user.id, false);
@@ -247,55 +252,66 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     console.log("Auth provider initialized");
+    let mounted = true;
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      console.log("Auth state change:", _event, currentSession?.user?.id);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log("Auth state change:", event, currentSession?.user?.id);
       
-      if (_event === 'SIGNED_OUT') {
-        // User signed out, update offline status
-        if (user?.id) {
-          await updateUserOnlineStatus(user.id, false);
-        }
+      if (!mounted) return;
+      
+      if (event === 'SIGNED_OUT') {
+        console.log('User signed out event');
         setUser(null);
         setSession(null);
         setUserProfile(null);
-        setCurrentUserId(null);
+        setLoading(false);
         return;
       }
       
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        setTimeout(() => {
-          fetchUserProfile(currentSession.user.id);
-        }, 100);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        console.log('User signed in or token refreshed');
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          // Use setTimeout to avoid blocking the auth state change
+          setTimeout(() => {
+            if (mounted) {
+              fetchUserProfile(currentSession.user.id);
+            }
+          }, 100);
+        }
       }
+      
+      setLoading(false);
     });
 
-    if (!authInitialized) {
-      supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-        console.log("Got initial session:", initialSession?.user?.id);
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
-        
-        if (initialSession?.user) {
-          fetchUserProfile(initialSession.user.id);
-        }
-        
-        setLoading(false);
-        setAuthInitialized(true);
-      }).catch(error => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
+      if (!mounted) return;
+      
+      if (error) {
         console.error("Error getting session:", error);
         setLoading(false);
-        setAuthInitialized(true);
-      });
-    }
+        return;
+      }
+      
+      console.log("Got initial session:", initialSession?.user?.id);
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      
+      if (initialSession?.user) {
+        fetchUserProfile(initialSession.user.id);
+      }
+      
+      setLoading(false);
+    });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [authInitialized]);
+  }, []);
 
   // Handle redirects based on auth status and role
   useEffect(() => {
