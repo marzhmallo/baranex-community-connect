@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -78,14 +79,14 @@ const OfficialCard = ({
     navigate(`/officials/${official.id}`);
   };
   
-  return <Card className="overflow-hidden bg-[#1e2637] text-white border-none">
+  return <Card className="overflow-hidden bg-card text-card-foreground border-border">
       <div className="relative">
         {/* Photo section with hover effect */}
         <Dialog>
           <DialogTrigger asChild>
             <div className="relative cursor-pointer h-64 overflow-hidden" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
-              {official.photo_url ? <img src={official.photo_url} alt={`${official.name} - ${getPosition()}`} className="w-full h-full object-cover object-center transition-transform duration-300" /> : <div className="w-full h-full bg-[#202a3c] flex items-center justify-center">
-                  <Avatar className="h-24 w-24 bg-[#2a3649] text-white">
+              {official.photo_url ? <img src={official.photo_url} alt={`${official.name} - ${getPosition()}`} className="w-full h-full object-cover object-center transition-transform duration-300" /> : <div className="w-full h-full bg-muted flex items-center justify-center">
+                  <Avatar className="h-24 w-24 bg-secondary text-secondary-foreground">
                     <span className="text-2xl font-medium">
                       {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                     </span>
@@ -99,13 +100,13 @@ const OfficialCard = ({
             </div>
           </DialogTrigger>
           
-          <DialogContent className="sm:max-w-md bg-[#1e2637] border-[#2a3649] text-white">
+          <DialogContent className="sm:max-w-md bg-card border-border text-card-foreground">
             <DialogHeader>
-              <DialogTitle className="text-white">{official.name}</DialogTitle>
+              <DialogTitle className="text-card-foreground">{official.name}</DialogTitle>
             </DialogHeader>
             <div className="flex justify-center">
-              {official.photo_url ? <img src={official.photo_url} alt={`${official.name} - ${getPosition()}`} className="max-h-[70vh] object-contain" /> : <div className="w-full h-64 bg-[#202a3c] flex items-center justify-center">
-                  <Avatar className="h-24 w-24 bg-[#2a3649] text-white">
+              {official.photo_url ? <img src={official.photo_url} alt={`${official.name} - ${getPosition()}`} className="max-h-[70vh] object-contain" /> : <div className="w-full h-64 bg-muted flex items-center justify-center">
+                  <Avatar className="h-24 w-24 bg-secondary text-secondary-foreground">
                     <span className="text-2xl font-medium">
                       {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                     </span>
@@ -123,28 +124,28 @@ const OfficialCard = ({
 
       <div className="p-5">
         {/* Official name and position */}
-        <h3 className="font-bold text-xl text-white">{official.name}</h3>
-        <p className="text-blue-400 mb-4">{getPosition()}</p>
+        <h3 className="font-bold text-xl text-foreground">{official.name}</h3>
+        <p className="text-primary mb-4">{getPosition()}</p>
         
         {/* Description */}
-        <p className="text-gray-300 text-sm mb-4">
+        <p className="text-muted-foreground text-sm mb-4">
           {getShortDescription()}
         </p>
         
         {/* Contact information */}
-        {official.email && <div className="flex items-center gap-2 text-gray-300 mb-2">
+        {official.email && <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Mail className="w-4 h-4" />
             <span className="text-sm">{official.email}</span>
           </div>}
         
-        {official.phone && <div className="flex items-center gap-2 text-gray-300 mb-4">
+        {official.phone && <div className="flex items-center gap-2 text-muted-foreground mb-4">
             <Phone className="w-4 h-4" />
             <span className="text-sm">{official.phone}</span>
           </div>}
         
         {/* Term duration */}
         <div className="flex justify-between items-center mt-4">
-          <div className="text-gray-400 text-sm">
+          <div className="text-muted-foreground text-sm">
             Term: {formatDate(getTermStart())} - {formatDate(getTermEnd())}
           </div>
           
@@ -154,19 +155,19 @@ const OfficialCard = ({
             
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" className="bg-transparent border-[#2a3649] text-white hover:bg-[#2a3649]">
+                <Button variant="outline" className="bg-transparent border-border text-foreground hover:bg-accent hover:text-accent-foreground">
                   <Eye className="w-4 h-4 mr-1" /> View
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white">
+              <DialogContent className="bg-card border-border text-card-foreground">
                 <DialogHeader>
-                  <DialogTitle className="text-white">{official.name}</DialogTitle>
+                  <DialogTitle className="text-card-foreground">{official.name}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <img src={official.photo_url || '/placeholder.svg'} alt={official.name} className="w-full max-h-64 object-cover object-center rounded-md" />
                   <div>
                     <h4 className="font-bold">{getPosition()}</h4>
-                    <p className="text-gray-300 mt-2">{official.bio || getShortDescription()}</p>
+                    <p className="text-muted-foreground mt-2">{official.bio || getShortDescription()}</p>
                   </div>
                   
                   <div className="space-y-2">
@@ -190,7 +191,7 @@ const OfficialCard = ({
                   </div>
                   
                   <div className="flex justify-end">
-                    <Button onClick={handleViewFullDetails} className="bg-blue-600 hover:bg-blue-700">
+                    <Button onClick={handleViewFullDetails} className="bg-primary hover:bg-primary/90">
                       <ExternalLink className="w-4 h-4 mr-1" /> More Details
                     </Button>
                   </div>

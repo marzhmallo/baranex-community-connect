@@ -72,25 +72,25 @@ const EventCard = ({ event, onEventUpdated }: EventCardProps) => {
 
   return (
     <>
-      <Card className="bg-[#0f1623] border-gray-800 hover:border-gray-700 transition-colors overflow-hidden">
+      <Card className="bg-card border-border hover:border-muted-foreground transition-colors overflow-hidden">
         <CardContent className="p-0">
           <div className="flex">
             <div className={`${getEventTypeColor(event.event_type)} w-1.5`} />
             <div className="p-4 flex-1">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-lg font-medium">{event.title}</h3>
-                  <p className="text-gray-400 text-sm mt-1">{event.description}</p>
+                  <h3 className="text-lg font-medium text-foreground">{event.title}</h3>
+                  <p className="text-muted-foreground text-sm mt-1">{event.description}</p>
                   
                   <div className="flex flex-wrap gap-4 mt-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
+                      <div className="w-4 h-4 rounded-full border border-border flex items-center justify-center">
                         <span className="text-xs">⏱</span>
                       </div>
                       {isAllDay ? (
-                        <span className="text-sm text-gray-300">All day</span>
+                        <span className="text-sm text-muted-foreground">All day</span>
                       ) : (
-                        <span className="text-sm text-gray-300">
+                        <span className="text-sm text-muted-foreground">
                           {format(parseISO(event.start_time), "h:mm a")} - {format(parseISO(event.end_time), "h:mm a")}
                         </span>
                       )}
@@ -98,10 +98,10 @@ const EventCard = ({ event, onEventUpdated }: EventCardProps) => {
                     
                     {event.location && (
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
+                        <div className="w-4 h-4 rounded-full border border-border flex items-center justify-center">
                           <span className="text-xs">📍</span>
                         </div>
-                        <span className="text-sm text-gray-300">{event.location}</span>
+                        <span className="text-sm text-muted-foreground">{event.location}</span>
                       </div>
                     )}
                   </div>
@@ -111,12 +111,12 @@ const EventCard = ({ event, onEventUpdated }: EventCardProps) => {
                   {event.event_type && (
                     <span className={`
                       text-xs px-3 py-1 rounded-full font-medium
-                      ${event.event_type === 'meeting' ? 'bg-blue-900 text-blue-300' : ''}
-                      ${event.event_type === 'health' ? 'bg-red-900 text-red-300' : ''}
-                      ${event.event_type === 'environment' ? 'bg-green-900 text-green-300' : ''}
-                      ${event.event_type === 'education' ? 'bg-yellow-900 text-yellow-300' : ''}
-                      ${event.event_type === 'social' ? 'bg-purple-900 text-purple-300' : ''}
-                      ${!event.event_type ? 'bg-gray-900 text-gray-300' : ''}
+                      ${event.event_type === 'meeting' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' : ''}
+                      ${event.event_type === 'health' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : ''}
+                      ${event.event_type === 'environment' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : ''}
+                      ${event.event_type === 'education' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' : ''}
+                      ${event.event_type === 'social' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' : ''}
+                      ${!event.event_type ? 'bg-muted text-muted-foreground' : ''}
                     `}>
                       {event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1)}
                     </span>
@@ -143,7 +143,7 @@ const EventCard = ({ event, onEventUpdated }: EventCardProps) => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-sm text-red-400 hover:text-red-300 ml-2"
+                  className="text-sm text-destructive hover:text-destructive ml-2"
                   onClick={() => setShowDeleteDialog(true)}
                 >
                   Delete
