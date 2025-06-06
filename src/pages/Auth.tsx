@@ -255,6 +255,7 @@ const Auth = () => {
 
     try {
       let brgyId: string | null = null;
+      let isSuperiorAdmin = false;
       
       // Process barangay selection or creation
       if (values.barangayId === "new-barangay") {
@@ -312,9 +313,15 @@ const Auth = () => {
         
         if (brgyData) {
           brgyId = brgyData.id;
+          // If admin/staff is creating a new barangay, they become superior admin
+          if (values.role === "admin" || values.role === "staff") {
+            isSuperiorAdmin = true;
+          }
         }
       } else {
         brgyId = values.barangayId || null;
+        // If admin/staff is joining existing barangay, they remain regular admin/staff
+        isSuperiorAdmin = false;
       }
       
       const userStatus = (values.role === "admin" || values.role === "staff") && values.barangayId === "new-barangay" 
@@ -363,6 +370,7 @@ const Auth = () => {
             bday: values.bday,
             role: values.role,
             status: userStatus,
+            superior_admin: isSuperiorAdmin,
             created_at: new Date().toISOString()
           });
         

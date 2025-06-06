@@ -1262,7 +1262,7 @@ export type Database = {
           bday: string
           brgyid: string | null
           created_at: string | null
-          email: string | null
+          email: string
           firstname: string | null
           gender: string
           id: string
@@ -1274,8 +1274,8 @@ export type Database = {
           profile_picture: string | null
           purok: string | null
           role: string | null
-          status: string | null
-          superior_admin: boolean | null
+          status: string
+          superior_admin: boolean
           username: string | null
         }
         Insert: {
@@ -1283,7 +1283,7 @@ export type Database = {
           bday: string
           brgyid?: string | null
           created_at?: string | null
-          email?: string | null
+          email: string
           firstname?: string | null
           gender?: string
           id?: string
@@ -1295,8 +1295,8 @@ export type Database = {
           profile_picture?: string | null
           purok?: string | null
           role?: string | null
-          status?: string | null
-          superior_admin?: boolean | null
+          status?: string
+          superior_admin?: boolean
           username?: string | null
         }
         Update: {
@@ -1304,7 +1304,7 @@ export type Database = {
           bday?: string
           brgyid?: string | null
           created_at?: string | null
-          email?: string | null
+          email?: string
           firstname?: string | null
           gender?: string
           id?: string
@@ -1316,8 +1316,8 @@ export type Database = {
           profile_picture?: string | null
           purok?: string | null
           role?: string | null
-          status?: string | null
-          superior_admin?: boolean | null
+          status?: string
+          superior_admin?: boolean
           username?: string | null
         }
         Relationships: [
