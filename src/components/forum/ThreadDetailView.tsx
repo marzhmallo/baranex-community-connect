@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, PinIcon, Trash2, MessageSquare, ThumbsUp, ThumbsDown, Heart, Send } from 'lucide-react';
+import { ChevronLeft, PinIcon, Trash2, MessageSquare, ThumbsUp, ThumbsDown, Heart, Send, Eye, Share, Flag } from 'lucide-react';
 import { Thread } from './ThreadsView';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -14,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -357,41 +357,48 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
     const isCommentOwner = userProfile && comment.created_by === userProfile.id;
     
     return (
-      <div key={comment.id} className={`relative ${isReply ? 'ml-8 mt-2' : 'mt-4'}`}>
-        <div className="absolute left-0 top-0 w-0.5 h-full bg-border" style={{ left: isReply ? '-1rem' : '-1.5rem' }}></div>
-        <Card className={isReply ? 'mb-2' : 'mb-4'}>
-          <CardHeader className="pb-2 pt-3 px-4">
-            <div className="flex justify-between">
-              <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarFallback>{comment.authorInitials}</AvatarFallback>
-                </Avatar>
-                <span className="font-medium text-sm">{comment.authorName}</span>
-                <span className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                </span>
+      <div key={comment.id} className={`${isReply ? 'ml-12 mt-3' : 'mt-6'}`}>
+        <div className="flex gap-3">
+          <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-medium">
+              {comment.authorInitials}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div className="flex-1 min-w-0">
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl px-4 py-3 relative">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                    {comment.authorName}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                  </span>
+                </div>
+                {isCommentOwner && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600" 
+                    onClick={() => {
+                      setCommentToDelete(comment.id);
+                      setDeleteConfirmOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
-              {isCommentOwner && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 w-6 p-0" 
-                  onClick={() => {
-                    setCommentToDelete(comment.id);
-                    setDeleteConfirmOpen(true);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              )}
+              
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {comment.content}
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="py-2 px-4">
-            <p className="text-sm">{comment.content}</p>
-          </CardContent>
-          <CardFooter className="py-2 px-4 flex justify-between">
-            <div className="flex items-center gap-2">
-              {AVAILABLE_REACTIONS.map((reaction) => {
+            
+            {/* Reaction and Reply Actions */}
+            <div className="flex items-center gap-1 mt-2 ml-2">
+              {AVAILABLE_REACTIONS.slice(0, 3).map((reaction) => {
                 const count = comment.reactionCounts?.[reaction.emoji] || 0;
                 const isActive = comment.userReaction === reaction.emoji;
                 
@@ -400,116 +407,144 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                     key={reaction.name}
                     variant="ghost" 
                     size="sm"
-                    className={`h-8 px-2 py-0 gap-1 text-muted-foreground ${isActive ? 'bg-secondary' : ''}`}
+                    className={`h-7 px-2 py-0 gap-1 text-xs ${
+                      isActive 
+                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
                     onClick={() => handleReactionClick(reaction.emoji, comment.id)}
                   >
-                    <span>{reaction.emoji}</span>
-                    {count > 0 && <span className="text-xs">{count}</span>}
+                    <span className="text-sm">{reaction.emoji}</span>
+                    {count > 0 && <span>{count}</span>}
                   </Button>
                 );
               })}
+              
+              {isUserFromSameBarangay && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 px-2 text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                  onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                >
+                  Reply
+                </Button>
+              )}
             </div>
-            {isUserFromSameBarangay && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 px-2"
-                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-              >
-                <MessageSquare className="h-4 w-4 mr-1" />
-                Reply
-              </Button>
+            
+            {/* Reply Form */}
+            {replyingTo === comment.id && (
+              <div className="mt-3 ml-2">
+                <div className="flex gap-2">
+                  <Avatar className="h-6 w-6 mt-1">
+                    <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
+                      {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <Textarea
+                      placeholder="Write a reply..."
+                      value={replyContent[comment.id] || ''}
+                      onChange={(e) => setReplyContent(prev => ({...prev, [comment.id]: e.target.value}))}
+                      className="min-h-[80px] resize-none border-gray-200 focus:border-blue-500 rounded-xl"
+                    />
+                    <div className="flex justify-end mt-2 gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setReplyingTo(null)}
+                        className="h-8 px-3 text-xs"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleSubmitReply(comment.id)}
+                        disabled={isSubmitting || !replyContent[comment.id]}
+                        className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700"
+                      >
+                        Reply
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
-          </CardFooter>
-        </Card>
-        
-        {replyingTo === comment.id && (
-          <div className="mb-4 pl-4">
-            <div className="flex gap-2">
-              <Textarea
-                placeholder="Write a reply..."
-                value={replyContent[comment.id] || ''}
-                onChange={(e) => setReplyContent(prev => ({...prev, [comment.id]: e.target.value}))}
-                className="min-h-[80px]"
-              />
-            </div>
-            <div className="flex justify-end mt-2 gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setReplyingTo(null)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                size="sm"
-                onClick={() => handleSubmitReply(comment.id)}
-                disabled={isSubmitting || !replyContent[comment.id]}
-              >
-                Reply
-              </Button>
-            </div>
+            
+            {/* Nested Replies */}
+            {comment.replies && comment.replies.length > 0 && (
+              <div className="mt-3">
+                {comment.replies.map(reply => renderComment(reply, true))}
+              </div>
+            )}
           </div>
-        )}
-        
-        {comment.replies && comment.replies.length > 0 && (
-          <div className="ml-4">
-            {comment.replies.map(reply => renderComment(reply, true))}
-          </div>
-        )}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Button 
-        variant="ghost" 
-        className="w-fit flex items-center mb-6"
-        onClick={onBack}
-      >
-        <ChevronLeft className="h-4 w-4 mr-2" />
-        Back to Threads
-      </Button>
-      
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          {thread.pinned && <PinIcon className="h-5 w-5 text-primary" />}
-          <h1 className="text-2xl font-bold">{thread.title}</h1>
-        </div>
+    <div className="max-w-4xl mx-auto py-6 px-4">
+      {/* Header */}
+      <div className="mb-6">
+        <Button 
+          variant="ghost" 
+          className="mb-4 text-gray-600 hover:text-gray-900"
+          onClick={onBack}
+        >
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Back to Forum
+        </Button>
         
-        <div className="flex gap-2 mb-4">
-          {thread.tags && thread.tags.length > 0 && thread.tags.map((tag, i) => (
-            <Badge key={i} variant="outline" className="bg-secondary/50">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-        
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>{thread.authorName?.substring(0, 2) || 'UN'}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{thread.authorName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-              </div>
+        {/* Thread Header */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              {thread.pinned && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                  <PinIcon className="h-3 w-3 mr-1" />
+                  Pinned
+                </Badge>
+              )}
+              {thread.tags && thread.tags.length > 0 && (
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                  Infrastructure
+                </Badge>
+              )}
             </div>
-          </CardHeader>
-          <CardContent className="whitespace-pre-line">
+            
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Eye className="h-4 w-4" />
+              <span>156 views</span>
+            </div>
+          </div>
+          
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight">
+            {thread.title}
+          </h1>
+          
+          <div className="flex items-center gap-3 mb-4">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-gradient-to-br from-orange-500 to-red-600 text-white font-medium">
+                {thread.authorName?.substring(0, 2) || 'UN'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{thread.authorName}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
+              </p>
+            </div>
+          </div>
+          
+          <div className="prose max-w-none text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
             {thread.content}
-          </CardContent>
-          <CardFooter className="border-t pt-4">
+          </div>
+          
+          {/* Thread Actions */}
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-2">
-              {AVAILABLE_REACTIONS.map((reaction) => {
+              {AVAILABLE_REACTIONS.slice(0, 3).map((reaction) => {
                 const count = threadReactions[reaction.emoji] || 0;
                 const isActive = userThreadReaction === reaction.emoji;
                 
@@ -518,73 +553,106 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                     key={reaction.name}
                     variant="ghost" 
                     size="sm"
-                    className={`h-8 px-3 py-0 gap-1 text-muted-foreground ${isActive ? 'bg-secondary' : ''}`}
+                    className={`h-9 px-3 gap-2 ${
+                      isActive 
+                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
                     onClick={() => handleReactionClick(reaction.emoji)}
                   >
                     <span>{reaction.emoji}</span>
-                    {count > 0 && <span className="text-xs">{count}</span>}
+                    {count > 0 && <span className="text-sm">{count}</span>}
                   </Button>
                 );
               })}
             </div>
-          </CardFooter>
-        </Card>
-
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Comments</h2>
-          
-          {isUserFromSameBarangay && (
-            <form onSubmit={handleSubmitComment} className="mb-6">
-              <Textarea
-                placeholder="Join the discussion..."
-                value={commentContent}
-                onChange={(e) => setCommentContent(e.target.value)}
-                className="mb-2"
-                rows={4}
-              />
-              <div className="flex justify-end">
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting || !commentContent.trim()}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Post Comment
-                </Button>
-              </div>
-            </form>
-          )}
-          
-          {isCommentsLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="border rounded-md p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <div>
-                      <Skeleton className="h-4 w-24 mb-1" />
-                      <Skeleton className="h-3 w-16" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-12 w-full mb-2" />
-                </div>
-              ))}
+            
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                <Share className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                <Flag className="h-4 w-4 mr-2" />
+                Report
+              </Button>
             </div>
-          ) : comments && comments.length > 0 ? (
-            <ScrollArea className="h-full max-h-[600px] pr-4">
-              <div className="relative pl-6">
-                {comments.map(comment => renderComment(comment))}
-              </div>
-            </ScrollArea>
-          ) : (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No comments yet. Be the first to join the discussion!
-              </CardContent>
-            </Card>
-          )}
+          </div>
         </div>
       </div>
 
+      {/* Comments Section */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Comments ({comments?.length || 0})
+          </h2>
+        </div>
+        
+        {/* Add Comment Form */}
+        {isUserFromSameBarangay && (
+          <form onSubmit={handleSubmitComment} className="mb-8">
+            <div className="flex gap-3">
+              <Avatar className="h-8 w-8 mt-1">
+                <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
+                  {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <Textarea
+                  placeholder="Add a comment..."
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                  className="min-h-[100px] resize-none border-gray-200 focus:border-blue-500 rounded-xl"
+                  rows={3}
+                />
+                <div className="flex justify-end mt-3">
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting || !commentContent.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Post Comment
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </form>
+        )}
+        
+        {/* Comments List */}
+        {isCommentsLoading ? (
+          <div className="space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex-1">
+                  <div className="bg-gray-50 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : comments && comments.length > 0 ? (
+          <div className="space-y-2">
+            {comments.map(comment => renderComment(comment))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-gray-500">
+            <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">No comments yet</p>
+            <p className="text-sm">Be the first to join the discussion!</p>
+          </div>
+        )}
+      </div>
+
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -595,7 +663,9 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteComment}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDeleteComment} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
