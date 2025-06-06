@@ -805,7 +805,7 @@ const Auth = () => {
                                             onClick={handleNewBarangaySelect}
                                             className="w-full text-left text-blue-600 font-medium hover:bg-blue-50 py-2 px-2 rounded"
                                           >
-                                            + Register "{barangaySearch}" as New Barangay
+                                            + Register New Barangay
                                           </button>
                                         ) : (
                                           "No barangays found. Contact an admin to register your barangay."
