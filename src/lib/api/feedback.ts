@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { FeedbackReport, FeedbackType, FeedbackStatus } from "@/lib/types/feedback";
 
@@ -11,10 +10,7 @@ export const feedbackAPI = {
   }) => {
     let query = supabase
       .from('feedback_reports')
-      .select(`
-        *,
-        profiles!feedback_reports_user_id_fkey(firstname, lastname, email)
-      `)
+      .select('*')
       .eq('brgyid', brgyid)
       .order('created_at', { ascending: false });
 
@@ -28,30 +24,42 @@ export const feedbackAPI = {
       query = query.or(`description.ilike.%${filters.search}%,category.ilike.%${filters.search}%`);
     }
 
-    const { data, error } = await query;
-    if (error) {
-      console.error('Error fetching feedback reports:', error);
-      // If the relation doesn't exist, fetch without profiles
-      const { data: reportsData, error: reportsError } = await supabase
-        .from('feedback_reports')
-        .select('*')
-        .eq('brgyid', brgyid)
-        .order('created_at', { ascending: false });
+    const { data: reports, error } = await query;
+    if (error) throw error;
+
+    // Fetch user profiles for all reports
+    if (reports && reports.length > 0) {
+      const userIds = [...new Set(reports.map(report => report.user_id))];
       
-      if (reportsError) throw reportsError;
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, firstname, lastname, email')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Return reports with unknown users if profile fetch fails
+        return (reports || []).map(report => ({
+          ...report,
+          user_name: 'Unknown User',
+          user_email: ''
+        })) as FeedbackReport[];
+      }
+
+      // Map profiles to reports
+      const profilesMap = new Map(profiles?.map(profile => [profile.id, profile]) || []);
       
-      return (reportsData || []).map(report => ({
-        ...report,
-        user_name: 'Unknown User',
-        user_email: ''
-      })) as FeedbackReport[];
+      return (reports || []).map((report: any) => {
+        const profile = profilesMap.get(report.user_id);
+        return {
+          ...report,
+          user_name: profile ? `${profile.firstname || ''} ${profile.lastname || ''}`.trim() : 'Unknown User',
+          user_email: profile?.email || ''
+        };
+      }) as FeedbackReport[];
     }
 
-    return (data || []).map((report: any) => ({
-      ...report,
-      user_name: report.profiles ? `${report.profiles.firstname || ''} ${report.profiles.lastname || ''}`.trim() : 'Unknown User',
-      user_email: report.profiles?.email || ''
-    })) as FeedbackReport[];
+    return [];
   },
 
   // Get user's own reports
