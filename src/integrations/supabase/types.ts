@@ -1272,7 +1272,7 @@ export type Database = {
           online: boolean
           phone: string | null
           profile_picture: string | null
-          purok: string | null
+          purok: string
           role: string | null
           status: string
           superior_admin: boolean
@@ -1293,7 +1293,7 @@ export type Database = {
           online?: boolean
           phone?: string | null
           profile_picture?: string | null
-          purok?: string | null
+          purok: string
           role?: string | null
           status?: string
           superior_admin?: boolean
@@ -1314,7 +1314,7 @@ export type Database = {
           online?: boolean
           phone?: string | null
           profile_picture?: string | null
-          purok?: string | null
+          purok?: string
           role?: string | null
           status?: string
           superior_admin?: boolean

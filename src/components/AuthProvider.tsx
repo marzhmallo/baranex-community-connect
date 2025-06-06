@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,9 @@ interface UserProfile {
   created_at?: string;
   superior_admin?: boolean;
   purok?: string;
+  online?: boolean;
+  last_login?: string;
+  profile_picture?: string;
 }
 
 interface AuthContextType {
@@ -48,6 +52,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   
   // Clear profile fetched flag when user changes
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Update user online status and last login
+  const updateUserOnlineStatus = async (userId: string, isOnline: boolean) => {
+    try {
+      const updateData: any = { online: isOnline };
+      
+      // If user is logging in (going online), update last_login
+      if (isOnline) {
+        updateData.last_login = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating online status:', error);
+      } else {
+        console.log(`User ${userId} is now ${isOnline ? 'online' : 'offline'}`);
+      }
+    } catch (err) {
+      console.error('Error in updateUserOnlineStatus:', err);
+    }
+  };
 
   // Fetch user profile data from profiles table only
   const fetchUserProfile = async (userId: string) => {
@@ -92,6 +121,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           navigate("/login");
           return;
         }
+
+        // Update user to online status and last login
+        await updateUserOnlineStatus(userId, true);
 
         setUserProfile(profileData as UserProfile);
         setCurrentUserId(userId);
@@ -165,6 +197,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      // Update user to offline status before signing out
+      if (user?.id) {
+        await updateUserOnlineStatus(user.id, false);
+      }
+
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
@@ -185,6 +222,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Handle page refresh/close to set user offline
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (user?.id) {
+        // Use navigator.sendBeacon for reliable offline status update on page close
+        const data = JSON.stringify({
+          userId: user.id,
+          online: false
+        });
+        
+        navigator.sendBeacon('/api/update-offline-status', data);
+        
+        // Fallback: immediate update
+        updateUserOnlineStatus(user.id, false);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [user?.id]);
+
   useEffect(() => {
     console.log("Auth provider initialized");
     
@@ -192,6 +253,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Auth state change:", _event, currentSession?.user?.id);
       
       if (_event === 'SIGNED_OUT') {
+        // User signed out, update offline status
+        if (user?.id) {
+          await updateUserOnlineStatus(user.id, false);
+        }
         setUser(null);
         setSession(null);
         setUserProfile(null);
