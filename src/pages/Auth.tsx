@@ -622,7 +622,7 @@ const Auth = () => {
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                <Input placeholder="fpj_pon" className="pl-9" {...field} />
+                                <Input placeholder="lordjay01" className="pl-9" {...field} />
                               </div>
                             </FormControl>
                             <FormMessage />
