@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +30,11 @@ const signupSchema = z.object({
   middlename: z.string().optional(),
   username: z.string().min(3, "Username must be at least 3 characters long"),
   phone: z.string().min(10, "Please enter a valid phone number").optional(),
+  gender: z.enum(["Male", "Female", "Other"], {
+    required_error: "Please select a gender",
+  }),
+  purok: z.string().min(1, "Please enter your purok"),
+  bday: z.string().min(1, "Please enter your date of birth"),
   role: z.enum(["admin", "staff", "user"]),
   barangayId: z.string().refine(val => val !== "", {
     message: "Please select a barangay or choose to register a new one"
@@ -108,6 +114,9 @@ const Auth = () => {
       middlename: "",
       username: "",
       phone: "",
+      gender: undefined,
+      purok: "",
+      bday: "",
       role: "user",
       barangayId: "",
       barangayname: "",
@@ -329,9 +338,11 @@ const Auth = () => {
             lastname: values.lastname,
             email: values.email,
             phone: values.phone || null,
+            gender: values.gender,
+            purok: values.purok,
+            bday: values.bday,
             role: values.role,
             status: userStatus,
-            bday: new Date().toISOString().split('T')[0], // Add default birthday
             created_at: new Date().toISOString()
           });
         
@@ -597,6 +608,59 @@ const Auth = () => {
                             <FormLabel>Phone Number (Optional)</FormLabel>
                             <FormControl>
                               <Input type="tel" placeholder="+63 XXX XXX XXXX" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={signupForm.control}
+                          name="gender"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Gender</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="Male">Male</SelectItem>
+                                  <SelectItem value="Female">Female</SelectItem>
+                                  <SelectItem value="Other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={signupForm.control}
+                          name="purok"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Purok</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Purok 1" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={signupForm.control}
+                        name="bday"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date of Birth</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

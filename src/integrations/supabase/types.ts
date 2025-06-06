@@ -1264,10 +1264,14 @@ export type Database = {
           created_at: string | null
           email: string | null
           firstname: string | null
+          gender: string
           id: string
+          last_login: string
           lastname: string | null
           middlename: string | null
+          online: boolean
           phone: string | null
+          profile_picture: string | null
           purok: string | null
           role: string | null
           status: string | null
@@ -1281,10 +1285,14 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           firstname?: string | null
+          gender?: string
           id?: string
+          last_login?: string
           lastname?: string | null
           middlename?: string | null
+          online?: boolean
           phone?: string | null
+          profile_picture?: string | null
           purok?: string | null
           role?: string | null
           status?: string | null
@@ -1298,10 +1306,14 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           firstname?: string | null
+          gender?: string
           id?: string
+          last_login?: string
           lastname?: string | null
           middlename?: string | null
+          online?: boolean
           phone?: string | null
+          profile_picture?: string | null
           purok?: string | null
           role?: string | null
           status?: string | null
