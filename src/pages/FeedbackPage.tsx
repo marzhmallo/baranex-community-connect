@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -155,10 +154,7 @@ const FeedbackPage = () => {
                   {reports?.map((report) => (
                     <TableRow key={report.id}>
                       <TableCell>
-                        <div>
-                          <div className="font-medium">{report.user_name}</div>
-                          <div className="text-sm text-muted-foreground">{report.user_email}</div>
-                        </div>
+                        <div className="font-medium">{report.user_name}</div>
                       </TableCell>
                       <TableCell>{getTypeBadge(report.type)}</TableCell>
                       <TableCell>{report.category}</TableCell>
