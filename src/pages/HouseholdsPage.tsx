@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import HouseholdList from '@/components/households/HouseholdList';
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,9 +9,11 @@ import { Home } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import HouseholdForm from '@/components/households/HouseholdForm';
 import { useQueryClient } from '@tanstack/react-query';
+
 const HouseholdPage = () => {
   const [isAddHouseholdOpen, setIsAddHouseholdOpen] = useState(false);
   const queryClient = useQueryClient();
+
   const handleCloseDialog = () => {
     console.log("Dialog close handler triggered");
 
@@ -35,7 +38,9 @@ const HouseholdPage = () => {
       console.log("Dialog cleanup completed");
     }, 150);
   };
-  return <div className="p-6 max-w-[1600px] mx-auto">
+
+  return (
+    <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Household Registry</h1>
@@ -48,8 +53,8 @@ const HouseholdPage = () => {
         </Button>
       </div>
       
-      <Card className="shadow-lg border-t-4 border-t-baranex-primary bg-card text-card-foreground my-0 px-[10px] py-[15px]">
-        <CardContent className="p-0">
+      <Card className="shadow-lg border-t-4 border-t-baranex-primary bg-card text-card-foreground">
+        <CardContent className="p-6">
           <ScrollArea className="h-[calc(100vh-200px)]">
             <HouseholdList />
           </ScrollArea>
@@ -58,20 +63,20 @@ const HouseholdPage = () => {
       
       {/* Add Household Dialog */}
       <Dialog open={isAddHouseholdOpen} onOpenChange={isOpen => {
-      console.log("Dialog open state changed to:", isOpen);
-      if (!isOpen) {
-        handleCloseDialog();
-      } else {
-        setIsAddHouseholdOpen(true);
-      }
-    }}>
-        <DialogContent className="sm:max-w-[600px]" onInteractOutside={e => {
-        console.log("Interaction outside dialog detected");
-        e.preventDefault();
-      }} onEscapeKeyDown={e => {
-        console.log("Escape key pressed");
-        e.preventDefault();
+        console.log("Dialog open state changed to:", isOpen);
+        if (!isOpen) {
+          handleCloseDialog();
+        } else {
+          setIsAddHouseholdOpen(true);
+        }
       }}>
+        <DialogContent className="sm:max-w-[600px]" onInteractOutside={e => {
+          console.log("Interaction outside dialog detected");
+          e.preventDefault();
+        }} onEscapeKeyDown={e => {
+          console.log("Escape key pressed");
+          e.preventDefault();
+        }}>
           <DialogHeader>
             <DialogTitle>Add New Household</DialogTitle>
             <DialogDescription>
@@ -83,6 +88,8 @@ const HouseholdPage = () => {
       </Dialog>
       
       <Toaster />
-    </div>;
+    </div>
+  );
 };
+
 export default HouseholdPage;

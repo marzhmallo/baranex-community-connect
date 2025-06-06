@@ -244,7 +244,7 @@ const HouseholdList: React.FC = () => {
   return (
     <>
       {/* Enhanced Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 p-2">
         {/* Total Households */}
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105">
           <div className="flex items-center justify-between mb-3">
