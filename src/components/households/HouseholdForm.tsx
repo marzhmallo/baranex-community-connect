@@ -202,7 +202,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                   <FormItem>
                     <FormLabel>Household Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Doe Family" {...field} />
+                      <Input placeholder="Dafun Family" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -244,7 +244,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                   <FormItem>
                     <FormLabel>Barangay *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Mabuhay" {...field} />
+                      <Input placeholder="Barangay Mabuhay" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -318,7 +318,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                   <FormItem>
                     <FormLabel>Purok *</FormLabel>
                     <FormControl>
-                      <Input placeholder="1" {...field} />
+                      <Input placeholder="Purok 1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
