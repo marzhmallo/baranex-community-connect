@@ -169,18 +169,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      // Get current user before clearing state
-      const currentUser = user;
-      const currentSession = session;
+      // Store current user ID before clearing state
+      const currentUserId = user?.id;
       
-      console.log('Signing out user:', currentUser?.id);
+      console.log('Signing out user:', currentUserId);
       
-      // Update user to offline status before signing out if we have user info
-      if (currentUser?.id) {
-        await updateUserOnlineStatus(currentUser.id, false);
+      // Update user to offline status BEFORE clearing state and signing out
+      if (currentUserId) {
+        await updateUserOnlineStatus(currentUserId, false);
       }
 
-      // Clear local state first
+      // Clear local state
       setUser(null);
       setSession(null);
       setUserProfile(null);
@@ -188,16 +187,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
-      if (error) {
+      if (error && !error.message.includes('session')) {
         console.error("Sign out error:", error);
-        // Only show error if it's not a session missing error
-        if (!error.message.includes('session')) {
-          toast({
-            title: "Error",
-            description: "Failed to sign out completely, but you've been logged out locally.",
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Error",
+          description: "Failed to sign out completely, but you've been logged out locally.",
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Signed out",
@@ -205,7 +201,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
       
-      // Always navigate to login regardless of sign out success
+      // Always navigate to login
       navigate("/login");
       
     } catch (error) {
@@ -226,27 +222,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Handle page refresh/close to set user offline
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = async () => {
       if (user?.id) {
-        // Use navigator.sendBeacon for reliable offline status update on page close
-        const data = JSON.stringify({
-          userId: user.id,
-          online: false
-        });
-        
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon('/api/update-offline-status', data);
+        // Use synchronous approach for page close
+        try {
+          await updateUserOnlineStatus(user.id, false);
+        } catch (error) {
+          console.error('Error updating offline status on page close:', error);
         }
-        
-        // Fallback: immediate update
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && user?.id) {
+        // Page is being hidden, update to offline
         updateUserOnlineStatus(user.id, false);
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [user?.id]);
 
@@ -260,11 +259,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!mounted) return;
       
       if (event === 'SIGNED_OUT') {
-        console.log('User signed out event');
+        console.log('User signed out event - clearing state');
+        // Get user ID before clearing state for offline update
+        const userId = user?.id;
+        
         setUser(null);
         setSession(null);
         setUserProfile(null);
         setLoading(false);
+        
+        // Update offline status after automatic logout
+        if (userId) {
+          updateUserOnlineStatus(userId, false);
+        }
         return;
       }
       
@@ -273,7 +280,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        if (currentSession?.user) {
+        if (currentSession?.user && mounted) {
           // Use setTimeout to avoid blocking the auth state change
           setTimeout(() => {
             if (mounted) {
