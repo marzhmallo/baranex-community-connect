@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -242,61 +243,95 @@ const HouseholdList: React.FC = () => {
 
   return (
     <>
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 p-4 shadow my-[15px] mx-[15px] rounded-lg px-[15px] py-[15px]">
-          <div className="flex items-center">
-            <div className="rounded-full p-3 bg-blue-100">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-blue-600">
+      {/* Enhanced Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {/* Total Households */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-3 bg-blue-500 rounded-full shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
               </svg>
             </div>
-            <div className="ml-4">
-              <h3 className="text-sm text-gray-500 font-medium">Total Households</h3>
-              <span className="text-2xl font-bold">{householdStats.total}</span>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{householdStats.total}</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Total</p>
             </div>
+          </div>
+          <div className="h-2 bg-blue-200 dark:bg-blue-800 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 rounded-full" style={{ width: '100%' }}></div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mx-[15px] my-[15px] px-[15px] py-[15px]">
-          <div className="flex items-center">
-            <div className="rounded-full p-3 bg-green-100">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-green-600">
+        {/* Permanent Households */}
+        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-700 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-3 bg-green-500 rounded-full shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div className="ml-4">
-              <h3 className="text-sm text-gray-500 font-medium">Permanent</h3>
-              <span className="text-2xl font-bold">{householdStats.permanent}</span>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300">{householdStats.permanent}</p>
+              <p className="text-sm text-green-600 dark:text-green-400 font-medium">Permanent</p>
             </div>
+          </div>
+          <div className="h-2 bg-green-200 dark:bg-green-800 rounded-full overflow-hidden">
+            <div className="h-full bg-green-500 rounded-full" style={{ width: householdStats.total > 0 ? `${(householdStats.permanent / householdStats.total) * 100}%` : '0%' }}></div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mx-[15px] my-[15px] py-[15px] px-[15px]">
-          <div className="flex items-center">
-            <div className="rounded-full p-3 bg-yellow-100">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-yellow-600">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+        {/* Temporary Households */}
+        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-3 bg-yellow-500 rounded-full shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div className="ml-4">
-              <h3 className="text-sm text-gray-500 font-medium">Temporary</h3>
-              <span className="text-2xl font-bold">{householdStats.temporary}</span>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{householdStats.temporary}</p>
+              <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">Temporary</p>
             </div>
+          </div>
+          <div className="h-2 bg-yellow-200 dark:bg-yellow-800 rounded-full overflow-hidden">
+            <div className="h-full bg-yellow-500 rounded-full" style={{ width: householdStats.total > 0 ? `${(householdStats.temporary / householdStats.total) * 100}%` : '0%' }}></div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mx-[15px] my-[15px] py-[15px] px-[15px]">
-          <div className="flex items-center">
-            <div className="rounded-full p-3 bg-purple-100">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-purple-600">
+        {/* Relocated Households */}
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-3 bg-purple-500 rounded-full shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
               </svg>
             </div>
-            <div className="ml-4">
-              <h3 className="text-sm text-gray-500 font-medium">Relocated</h3>
-              <span className="text-2xl font-bold">{householdStats.relocated}</span>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{householdStats.relocated}</p>
+              <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Relocated</p>
             </div>
+          </div>
+          <div className="h-2 bg-purple-200 dark:bg-purple-800 rounded-full overflow-hidden">
+            <div className="h-full bg-purple-500 rounded-full" style={{ width: householdStats.total > 0 ? `${(householdStats.relocated / householdStats.total) * 100}%` : '0%' }}></div>
+          </div>
+        </div>
+        
+        {/* Abandoned Households */}
+        <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-700 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-3 bg-red-500 rounded-full shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-red-700 dark:text-red-300">{householdStats.abandoned}</p>
+              <p className="text-sm text-red-600 dark:text-red-400 font-medium">Abandoned</p>
+            </div>
+          </div>
+          <div className="h-2 bg-red-200 dark:bg-red-800 rounded-full overflow-hidden">
+            <div className="h-full bg-red-500 rounded-full" style={{ width: householdStats.total > 0 ? `${(householdStats.abandoned / householdStats.total) * 100}%` : '0%' }}></div>
           </div>
         </div>
       </div>
