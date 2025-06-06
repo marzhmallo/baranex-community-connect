@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,8 @@ import { FeedbackType, FEEDBACK_CATEGORIES } from '@/lib/types/feedback';
 import { feedbackAPI } from '@/lib/api/feedback';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
+
+const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
 
 interface FeedbackFormProps {
   onSuccess?: () => void;
@@ -60,7 +61,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
     if (editData?.attachments) {
       const existingAttachments = editData.attachments.map((url: string) => ({
         file: null,
-        url: `${supabase.supabaseUrl}/storage/v1/object/public/reportfeedback/userreports/${url}`,
+        url: `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${url}`,
         uploading: false
       }));
       setAttachments(existingAttachments);
@@ -114,7 +115,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       const fileName = await uploadFileToStorage(file);
       
       if (fileName) {
-        const publicUrl = `${supabase.supabaseUrl}/storage/v1/object/public/reportfeedback/userreports/${fileName}`;
+        const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${fileName}`;
         
         setAttachments(prev => 
           prev.map((attachment, index) => 

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,8 @@ import { useAuth } from '@/components/AuthProvider';
 import { feedbackAPI } from '@/lib/api/feedback';
 import { FeedbackForm } from '@/components/feedback/FeedbackForm';
 import { FeedbackReport, FeedbackStatus, STATUS_COLORS } from '@/lib/types/feedback';
-import { supabase } from '@/integrations/supabase/client';
+
+const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
 
 const UserFeedbackPage = () => {
   const { userProfile } = useAuth();
@@ -186,7 +188,7 @@ const UserFeedbackPage = () => {
                                     <strong>Attachments:</strong>
                                     <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-4">
                                       {selectedReport.attachments.map((attachment, index) => {
-                                        const imageUrl = `${supabase.supabaseUrl}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
+                                        const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
                                         return (
                                           <div key={index} className="relative group">
                                             <img
