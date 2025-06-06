@@ -57,11 +57,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const updateData: any = { online: isOnline };
       
-      // If user is logging in (going online), update last_login with proper time format
+      // If user is logging in (going online), update last_login with full timestamp
       if (isOnline) {
-        const now = new Date();
-        const timeString = now.toTimeString().split(' ')[0]; // Gets "HH:MM:SS" format
-        updateData.last_login = timeString;
+        updateData.last_login = new Date().toISOString();
       }
 
       const { error } = await supabase
