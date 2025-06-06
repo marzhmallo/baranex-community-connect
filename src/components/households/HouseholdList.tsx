@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Eye } from "lucide-react";
+import { Pencil, Trash2, Eye, ChevronUp, ChevronDown } from "lucide-react";
 import { getHouseholds, deleteHousehold } from "@/lib/api/households";
 import { Household } from "@/lib/types";
 import HouseholdDetails from './HouseholdDetails';
@@ -12,11 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 const HouseholdList: React.FC = () => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,6 +26,13 @@ const HouseholdList: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [householdToDelete, setHouseholdToDelete] = useState<string | null>(null);
+  
+  // Sorting and pagination states
+  const [sortField, setSortField] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const {
     data: householdsData,
     isLoading,
@@ -55,7 +61,7 @@ const HouseholdList: React.FC = () => {
       });
     }
   });
-  
+
   const handleViewDetails = (household: Household) => {
     setSelectedHousehold(household);
     setIsEditMode(false);
@@ -83,7 +89,23 @@ const HouseholdList: React.FC = () => {
     }
   };
 
-  // Helper function to get status badge
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="h-4 w-4 inline ml-1" /> : 
+      <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'permanent':
@@ -99,7 +121,6 @@ const HouseholdList: React.FC = () => {
     }
   };
 
-  // Calculate unique puroks for filtering
   const uniquePuroks = useMemo(() => {
     if (!householdsData?.data) return [];
     const puroks = new Set<string>();
@@ -111,7 +132,6 @@ const HouseholdList: React.FC = () => {
     return Array.from(puroks).sort();
   }, [householdsData?.data]);
 
-  // Calculate unique statuses for filtering
   const uniqueStatuses = useMemo(() => {
     if (!householdsData?.data) return [];
     const statuses = new Set<string>();
@@ -123,7 +143,6 @@ const HouseholdList: React.FC = () => {
     return Array.from(statuses).sort();
   }, [householdsData?.data]);
 
-  // Calculate various household statistics
   const householdStats = useMemo(() => {
     if (!householdsData?.data) return {
       total: 0,
@@ -140,15 +159,18 @@ const HouseholdList: React.FC = () => {
       abandoned: 0
     };
     householdsData.data.forEach((household: Household) => {
-      if (household.status?.toLowerCase() === 'permanent') stats.permanent++;else if (household.status?.toLowerCase() === 'temporary') stats.temporary++;else if (household.status?.toLowerCase() === 'relocated') stats.relocated++;else if (household.status?.toLowerCase() === 'abandoned') stats.abandoned++;
+      if (household.status?.toLowerCase() === 'permanent') stats.permanent++;
+      else if (household.status?.toLowerCase() === 'temporary') stats.temporary++;
+      else if (household.status?.toLowerCase() === 'relocated') stats.relocated++;
+      else if (household.status?.toLowerCase() === 'abandoned') stats.abandoned++;
     });
     return stats;
   }, [householdsData?.data]);
 
-  const filteredHouseholds = useMemo(() => {
+  const sortedAndFilteredHouseholds = useMemo(() => {
     if (!householdsData?.data) return [];
     
-    return householdsData.data.filter((household: Household) => {
+    let filtered = householdsData.data.filter((household: Household) => {
       const query = searchQuery.toLowerCase();
       const matchesSearch = 
         household.name?.toLowerCase().includes(query) || false ||
@@ -165,10 +187,59 @@ const HouseholdList: React.FC = () => {
       
       return matchesSearch && matchesStatus && matchesPurok;
     });
-  }, [householdsData?.data, searchQuery, statusFilter, purokFilter]);
+
+    // Apply sorting
+    if (sortField) {
+      filtered.sort((a: Household, b: Household) => {
+        let aValue = '';
+        let bValue = '';
+        
+        switch (sortField) {
+          case 'name':
+            aValue = a.name || '';
+            bValue = b.name || '';
+            break;
+          case 'address':
+            aValue = a.address || '';
+            bValue = b.address || '';
+            break;
+          case 'head_of_family_name':
+            aValue = a.head_of_family_name || '';
+            bValue = b.head_of_family_name || '';
+            break;
+          case 'contact_number':
+            aValue = a.contact_number || '';
+            bValue = b.contact_number || '';
+            break;
+          case 'status':
+            aValue = a.status || '';
+            bValue = b.status || '';
+            break;
+          default:
+            return 0;
+        }
+        
+        const comparison = aValue.localeCompare(bValue);
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    return filtered;
+  }, [householdsData?.data, searchQuery, statusFilter, purokFilter, sortField, sortDirection]);
+
+  const totalItems = sortedAndFilteredHouseholds.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const currentHouseholds = sortedAndFilteredHouseholds.slice(startIndex, endIndex);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, purokFilter, itemsPerPage]);
 
   if (isLoading) return <div className="p-4 text-center">Loading households...</div>;
   if (error) return <div className="p-4 text-center text-red-500">Error loading households: {error.toString()}</div>;
+
   return (
     <>
       {/* Stat Cards */}
@@ -259,20 +330,67 @@ const HouseholdList: React.FC = () => {
         </div>
       </div>
       
+      {/* Pagination controls and info */}
+      <div className="flex justify-between items-center mb-4 px-4">
+        <div className="text-sm text-muted-foreground">
+          Showing {totalItems > 0 ? startIndex + 1 : 0} to {endIndex} of {totalItems} households
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Show</span>
+          <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="15">15</SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-muted-foreground">per page</span>
+        </div>
+      </div>
+      
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Address</TableHead>
-            <TableHead>Head of Family</TableHead>
-            <TableHead>Contact Number</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 select-none"
+              onClick={() => handleSort('name')}
+            >
+              Name <SortIcon field="name" />
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 select-none"
+              onClick={() => handleSort('address')}
+            >
+              Address <SortIcon field="address" />
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 select-none"
+              onClick={() => handleSort('head_of_family_name')}
+            >
+              Head of Family <SortIcon field="head_of_family_name" />
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 select-none"
+              onClick={() => handleSort('contact_number')}
+            >
+              Contact Number <SortIcon field="contact_number" />
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50 select-none"
+              onClick={() => handleSort('status')}
+            >
+              Status <SortIcon field="status" />
+            </TableHead>
             <TableHead className="text-right px-[60px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredHouseholds.length > 0 ? (
-            filteredHouseholds.map((household: Household) => (
+          {currentHouseholds.length > 0 ? (
+            currentHouseholds.map((household: Household) => (
               <TableRow key={household.id}>
                 <TableCell className="font-medium">{household.name}</TableCell>
                 <TableCell>{household.address}</TableCell>
@@ -309,6 +427,52 @@ const HouseholdList: React.FC = () => {
           )}
         </TableBody>
       </Table>
+      
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) setCurrentPage(currentPage - 1);
+                  }}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage(page);
+                    }}
+                    isActive={currentPage === page}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                  }}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
       
       {/* Household Details Dialog */}
       <HouseholdDetails 
