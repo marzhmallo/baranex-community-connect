@@ -191,7 +191,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
     let result;
     
     if (household.id) {
-      // Update existing household
+      // Update existing household - make sure to set updated_at to current timestamp
       const { data, error } = await supabase
         .from('households')
         .update({
@@ -216,7 +216,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
           toilet_type: household.toilet_type,
           garbage_disposal: household.garbage_disposal,
           remarks: household.remarks,
-          updated_at: household.updated_at,
+          updated_at: new Date().toISOString(), // Set current timestamp
         })
         .eq('id', household.id)
         .select();
