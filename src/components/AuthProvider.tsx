@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,9 +57,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const updateData: any = { online: isOnline };
       
-      // If user is logging in (going online), update last_login
+      // If user is logging in (going online), update last_login with proper time format
       if (isOnline) {
-        updateData.last_login = new Date().toISOString();
+        const now = new Date();
+        const timeString = now.toTimeString().split(' ')[0]; // Gets "HH:MM:SS" format
+        updateData.last_login = timeString;
       }
 
       const { error } = await supabase
