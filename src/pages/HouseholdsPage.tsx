@@ -42,7 +42,7 @@ const HouseholdPage = () => {
           <p className="text-muted-foreground mt-2">Track and manage households within the barangay</p>
         </div>
         
-        <Button onClick={() => setIsAddHouseholdOpen(true)} className="bg-baranex-primary hover:bg-baranex-primary/90">
+        <Button onClick={() => setIsAddHouseholdOpen(true)} className="bg-baranex-primary hover:bg-baranex-primary/90 px-0 py-0">
           <Home className="h-4 w-4 mr-2" />
           Add Household
         </Button>
