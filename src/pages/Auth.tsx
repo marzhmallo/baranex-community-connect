@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -63,6 +62,9 @@ const Auth = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [barangays, setBarangays] = useState<{id: string, name: string, municipality: string, province: string}[]>([]);
+  const [barangaySearch, setBarangaySearch] = useState("");
+  const [showBarangaySuggestions, setShowBarangaySuggestions] = useState(false);
+  const [filteredBarangays, setFilteredBarangays] = useState<{id: string, name: string, municipality: string, province: string}[]>([]);
   const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
   
@@ -95,6 +97,24 @@ const Auth = () => {
 
     fetchBarangays();
   }, []);
+
+  // Add useEffect to filter barangays based on search
+  useEffect(() => {
+    if (barangaySearch.trim() === "") {
+      setFilteredBarangays([]);
+      setShowBarangaySuggestions(false);
+      return;
+    }
+
+    const filtered = barangays.filter(barangay => 
+      barangay.name.toLowerCase().includes(barangaySearch.toLowerCase()) ||
+      barangay.municipality.toLowerCase().includes(barangaySearch.toLowerCase()) ||
+      barangay.province.toLowerCase().includes(barangaySearch.toLowerCase())
+    );
+    
+    setFilteredBarangays(filtered.slice(0, 10)); // Limit to 10 suggestions
+    setShowBarangaySuggestions(true);
+  }, [barangaySearch, barangays]);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -377,6 +397,25 @@ const Auth = () => {
       setIsLoading(false);
       captchaRef.current?.resetCaptcha();
       setCaptchaToken(null);
+    }
+  };
+
+  const handleBarangaySelect = (barangay: {id: string, name: string, municipality: string, province: string}) => {
+    signupForm.setValue("barangayId", barangay.id);
+    setBarangaySearch(`${barangay.name}, ${barangay.municipality}, ${barangay.province}`);
+    setShowBarangaySuggestions(false);
+  };
+
+  const handleNewBarangaySelect = () => {
+    signupForm.setValue("barangayId", "new-barangay");
+    setBarangaySearch("Register New Barangay");
+    setShowBarangaySuggestions(false);
+  };
+
+  const handleBarangaySearchChange = (value: string) => {
+    setBarangaySearch(value);
+    if (value === "") {
+      signupForm.setValue("barangayId", "");
     }
   };
 
@@ -709,27 +748,86 @@ const Auth = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Barangay</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || undefined}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select your barangay" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="max-h-[200px]">
-                                {barangays.map(barangay => (
-                                  <SelectItem key={barangay.id} value={barangay.id}>
-                                    {`${barangay.name}, ${barangay.municipality}, ${barangay.province}`}
-                                  </SelectItem>
-                                ))}
-                                {(selectedRole === "admin" || selectedRole === "staff") && (
-                                  <SelectItem value="new-barangay">Register New Barangay</SelectItem>
+                            <FormControl>
+                              <div className="relative">
+                                <div className="relative">
+                                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Input
+                                    placeholder="Search for your barangay..."
+                                    value={barangaySearch}
+                                    onChange={(e) => handleBarangaySearchChange(e.target.value)}
+                                    onFocus={() => {
+                                      if (barangaySearch && filteredBarangays.length > 0) {
+                                        setShowBarangaySuggestions(true);
+                                      }
+                                    }}
+                                    className="pl-9"
+                                  />
+                                </div>
+                                
+                                {showBarangaySuggestions && (
+                                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                                    {filteredBarangays.length > 0 && (
+                                      <>
+                                        {filteredBarangays.map((barangay) => (
+                                          <button
+                                            key={barangay.id}
+                                            type="button"
+                                            onClick={() => handleBarangaySelect(barangay)}
+                                            className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                                          >
+                                            <div className="font-medium">{barangay.name}</div>
+                                            <div className="text-sm text-gray-500">
+                                              {barangay.municipality}, {barangay.province}
+                                            </div>
+                                          </button>
+                                        ))}
+                                        {(selectedRole === "admin" || selectedRole === "staff") && (
+                                          <>
+                                            <div className="border-t border-gray-200 my-1"></div>
+                                            <button
+                                              type="button"
+                                              onClick={handleNewBarangaySelect}
+                                              className="w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-600 font-medium"
+                                            >
+                                              + Register New Barangay
+                                            </button>
+                                          </>
+                                        )}
+                                      </>
+                                    )}
+                                    
+                                    {filteredBarangays.length === 0 && barangaySearch.trim() !== "" && (
+                                      <div className="px-4 py-2 text-gray-500">
+                                        {(selectedRole === "admin" || selectedRole === "staff") ? (
+                                          <button
+                                            type="button"
+                                            onClick={handleNewBarangaySelect}
+                                            className="w-full text-left text-blue-600 font-medium hover:bg-blue-50 py-2 px-2 rounded"
+                                          >
+                                            + Register "{barangaySearch}" as New Barangay
+                                          </button>
+                                        ) : (
+                                          "No barangays found. Contact an admin to register your barangay."
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
-                              </SelectContent>
-                            </Select>
+                              </div>
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                      
+                      {/* Click outside to close suggestions */}
+                      {showBarangaySuggestions && (
+                        <div 
+                          className="fixed inset-0 z-40"
+                          onClick={() => setShowBarangaySuggestions(false)}
+                        />
+                      )}
                       
                       {isNewBarangay && (selectedRole === "admin" || selectedRole === "staff") && (
                         <>
