@@ -133,7 +133,7 @@ const OfficialsPage = () => {
     refetch();
   };
 
-  return <div className="min-h-screen bg-[#0f172a] p-6">
+  return <div className="min-h-screen bg-background p-6">
       {/* Header with title, subtitle, and action buttons */}
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -141,30 +141,30 @@ const OfficialsPage = () => {
             <Button variant="ghost" className="p-0 hover:bg-transparent">
               
             </Button>
-            <h1 className="text-3xl font-bold text-white mx-0">Barangay Officials</h1>
+            <h1 className="text-3xl font-bold text-foreground mx-0">Barangay Officials</h1>
           </div>
-          <p className="text-gray-400 mx-[10px]">Meet the elected officials serving our barangay</p>
+          <p className="text-muted-foreground mx-[10px]">Meet the elected officials serving our barangay</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800" onClick={handleRefreshTerms}>
+          <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshTerms}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh Terms
           </Button>
-          <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => setShowAddDialog(true)}>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> Add Official
           </Button>
         </div>
       </div>
 
       {/* Main tabbed navigation */}
-      <div className="mx-auto max-w-3xl mb-8 bg-[#1e2637] rounded-full p-1">
+      <div className="mx-auto max-w-3xl mb-8 bg-card rounded-full p-1 border">
         <div className="flex justify-center">
-          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'current' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'}`} onClick={() => setActiveTab('current')}>
+          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'current' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('current')}>
             Current Officials ({currentCount})
           </div>
-          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'sk' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'}`} onClick={() => setActiveTab('sk')}>
+          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'sk' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('sk')}>
             SK Officials ({skCount})
           </div>
-          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'previous' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'}`} onClick={() => setActiveTab('previous')}>
+          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'previous' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('previous')}>
             Previous Officials ({previousCount})
           </div>
         </div>
@@ -172,16 +172,16 @@ const OfficialsPage = () => {
 
       {/* SK Tab sub-navigation */}
       {activeTab === 'sk' && (
-        <div className="mx-auto max-w-xl mb-8 bg-[#1e2637] rounded-full p-1">
+        <div className="mx-auto max-w-xl mb-8 bg-card rounded-full p-1 border">
           <div className="flex justify-center">
             <div 
-              className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-gray-200'}`} 
+              className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
               onClick={() => setActiveSKTab('current')}
             >
               Current SK ({skCurrentCount})
             </div>
             <div 
-              className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'previous' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-gray-200'}`} 
+              className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'previous' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
               onClick={() => setActiveSKTab('previous')}
             >
               Previous SK ({skPreviousCount})
@@ -195,27 +195,27 @@ const OfficialsPage = () => {
         {isLoading ?
           // Show skeleton loaders while loading
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-[#1e2637] rounded-lg overflow-hidden">
-              <Skeleton className="w-full h-64 bg-[#2a3649]" />
+            <div key={i} className="bg-card rounded-lg overflow-hidden border">
+              <Skeleton className="w-full h-64 bg-muted" />
               <div className="p-5">
-                <Skeleton className="h-6 w-3/4 mb-2 bg-[#2a3649]" />
-                <Skeleton className="h-4 w-1/2 mb-4 bg-[#2a3649]" />
-                <Skeleton className="h-16 w-full mb-4 bg-[#2a3649]" />
-                <Skeleton className="h-4 w-full mb-2 bg-[#2a3649]" />
-                <Skeleton className="h-4 w-full mb-4 bg-[#2a3649]" />
+                <Skeleton className="h-6 w-3/4 mb-2 bg-muted" />
+                <Skeleton className="h-4 w-1/2 mb-4 bg-muted" />
+                <Skeleton className="h-16 w-full mb-4 bg-muted" />
+                <Skeleton className="h-4 w-full mb-2 bg-muted" />
+                <Skeleton className="h-4 w-full mb-4 bg-muted" />
                 <div className="flex justify-between">
-                  <Skeleton className="h-4 w-1/3 bg-[#2a3649]" />
-                  <Skeleton className="h-8 w-20 bg-[#2a3649]" />
+                  <Skeleton className="h-4 w-1/3 bg-muted" />
+                  <Skeleton className="h-8 w-20 bg-muted" />
                 </div>
               </div>
             </div>
           )) 
         : error ? 
-          <div className="col-span-full p-6 text-red-500 bg-[#1e2637] rounded-lg">
+          <div className="col-span-full p-6 text-destructive bg-card rounded-lg border">
             Error loading officials: {error.message}
           </div> 
         : filteredOfficials.length === 0 ? 
-          <div className="col-span-full p-6 text-center text-gray-400 bg-[#1e2637] rounded-lg">
+          <div className="col-span-full p-6 text-center text-muted-foreground bg-card rounded-lg border">
             No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? (activeSKTab === 'current' ? 'current SK' : 'previous SK') : 'previous'} officials found.
           </div> 
         : filteredOfficials.map(official => 

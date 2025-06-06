@@ -147,7 +147,7 @@ const CalendarPage = () => {
   };
 
   return (
-    <div className="bg-[#0a0e17] text-white min-h-screen p-8">
+    <div className="bg-background text-foreground min-h-screen p-8">
       <div className="flex flex-col gap-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center">
@@ -156,7 +156,7 @@ const CalendarPage = () => {
           </Button>
           <div className="ml-2">
             <h1 className="text-2xl font-bold">Events Calendar</h1>
-            <p className="text-gray-400">View and manage barangay events and activities</p>
+            <p className="text-muted-foreground">View and manage barangay events and activities</p>
           </div>
         </div>
 
@@ -177,7 +177,7 @@ const CalendarPage = () => {
             </Select>
           </div>
           
-          <Button onClick={() => setShowEventForm(true)} className="bg-blue-500 hover:bg-blue-600">
+          <Button onClick={() => setShowEventForm(true)} className="bg-primary hover:bg-primary/90">
             <Plus className="mr-2 h-4 w-4" />
             Add Event
           </Button>
@@ -186,10 +186,10 @@ const CalendarPage = () => {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Calendar */}
-          <Card className="col-span-1 lg:col-span-5 bg-[#0f1623] border-gray-800">
+          <Card className="col-span-1 lg:col-span-5 bg-card border">
             <CardContent className="p-6">
               <h2 className="text-xl font-bold mb-2">Calendar</h2>
-              <p className="text-gray-400 text-sm mb-4">Select a date to view events</p>
+              <p className="text-muted-foreground text-sm mb-4">Select a date to view events</p>
 
               {/* Month Navigation */}
               <div className="flex justify-between items-center mb-4">
@@ -210,7 +210,7 @@ const CalendarPage = () => {
               <div className="grid grid-cols-7 gap-1">
                 {/* Weekday Headers */}
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                  <div key={day} className="text-center p-2 text-sm font-medium text-gray-400">
+                  <div key={day} className="text-center p-2 text-sm font-medium text-muted-foreground">
                     {day}
                   </div>
                 ))}
@@ -219,7 +219,7 @@ const CalendarPage = () => {
                 {isLoading ? (
                   // Loading skeleton
                   Array(35).fill(0).map((_, index) => (
-                    <Skeleton key={index} className="h-12 w-full rounded-md bg-gray-800" />
+                    <Skeleton key={index} className="h-12 w-full rounded-md bg-muted" />
                   ))
                 ) : (
                   // Calendar days
@@ -233,9 +233,9 @@ const CalendarPage = () => {
                         onClick={() => setSelectedDate(day.date)}
                         className={`
                           p-1 h-12 relative rounded-md transition-colors
-                          ${!day.isCurrentMonth ? "text-gray-600" : ""}
-                          ${isToday(day.date) ? "bg-blue-900/30 font-bold text-blue-400" : ""}
-                          ${isSelected ? "bg-blue-600 text-white" : "hover:bg-gray-800"}
+                          ${!day.isCurrentMonth ? "text-muted-foreground/50" : ""}
+                          ${isToday(day.date) ? "bg-primary/20 font-bold text-primary" : ""}
+                          ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent"}
                         `}
                       >
                         <div className="text-xs">{format(day.date, "d")}</div>
@@ -251,12 +251,12 @@ const CalendarPage = () => {
                                   ${event.event_type === "environment" ? "bg-green-500" : ""}
                                   ${event.event_type === "education" ? "bg-yellow-500" : ""}
                                   ${event.event_type === "social" ? "bg-purple-500" : ""}
-                                  ${!event.event_type ? "bg-gray-500" : ""}
+                                  ${!event.event_type ? "bg-muted-foreground" : ""}
                                 `}
                               />
                             ))}
                             {day.events.length > 3 && (
-                              <span className="text-[10px] text-gray-400">+{day.events.length - 3}</span>
+                              <span className="text-[10px] text-muted-foreground">+{day.events.length - 3}</span>
                             )}
                           </div>
                         )}
@@ -273,14 +273,14 @@ const CalendarPage = () => {
             <h2 className="text-xl font-bold mb-4">
               Events for {format(selectedDate, "MMMM d, yyyy")}
             </h2>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-muted-foreground text-sm mb-6">
               {selectedDateEvents.length} {selectedDateEvents.length === 1 ? "event" : "events"} scheduled
             </p>
 
             {isLoading ? (
               // Loading skeleton for events
               Array(3).fill(0).map((_, index) => (
-                <Skeleton key={index} className="h-32 w-full mb-4 rounded-md bg-gray-800" />
+                <Skeleton key={index} className="h-32 w-full mb-4 rounded-md bg-muted" />
               ))
             ) : selectedDateEvents.length > 0 ? (
               <div className="space-y-4">
@@ -289,7 +289,7 @@ const CalendarPage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400">No events scheduled for this day.</p>
+              <p className="text-muted-foreground">No events scheduled for this day.</p>
             )}
           </div>
         </div>
