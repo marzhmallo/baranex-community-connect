@@ -577,7 +577,7 @@ const Auth = () => {
                             <FormItem>
                               <FormLabel>First Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="John" {...field} />
+                                <Input placeholder="Francis Jay" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -591,7 +591,7 @@ const Auth = () => {
                             <FormItem>
                               <FormLabel>Last Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="Doe" {...field} />
+                                <Input placeholder="Pon" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -606,7 +606,7 @@ const Auth = () => {
                           <FormItem>
                             <FormLabel>Middle Name (Optional)</FormLabel>
                             <FormControl>
-                              <Input placeholder="Middle Name" {...field} />
+                              <Input placeholder="Jaugin" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -622,7 +622,7 @@ const Auth = () => {
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                <Input placeholder="johndoe" className="pl-9" {...field} />
+                                <Input placeholder="fpj_pon" className="pl-9" {...field} />
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -639,7 +639,7 @@ const Auth = () => {
                             <FormControl>
                               <div className="relative">
                                 <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                <Input placeholder="you@example.com" className="pl-9" {...field} />
+                                <Input placeholder="francisjaypon@gmail.com" className="pl-9" {...field} />
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -654,7 +654,7 @@ const Auth = () => {
                           <FormItem>
                             <FormLabel>Phone Number (Optional)</FormLabel>
                             <FormControl>
-                              <Input type="tel" placeholder="+63 XXX XXX XXXX" {...field} />
+                              <Input type="tel" placeholder="+63 912 345 6789" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -849,7 +849,7 @@ const Auth = () => {
                                   <div className="relative">
                                     <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input 
-                                      placeholder="Barangay Name" 
+                                      placeholder="Poblacion" 
                                       className="pl-9" 
                                       {...field} 
                                     />
@@ -868,7 +868,7 @@ const Auth = () => {
                                 <FormItem>
                                   <FormLabel>Municipality/City</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="Municipality or City" {...field} />
+                                    <Input placeholder="Sindangan" {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -882,7 +882,7 @@ const Auth = () => {
                                 <FormItem>
                                   <FormLabel>Province</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="Province" {...field} />
+                                    <Input placeholder="Zamboanga Del Norte" {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -898,7 +898,7 @@ const Auth = () => {
                                 <FormItem>
                                   <FormLabel>Region (Optional)</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="Region" {...field} />
+                                    <Input placeholder="IX" {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -913,7 +913,7 @@ const Auth = () => {
                                   <FormLabel>Country</FormLabel>
                                   <FormControl>
                                     <Input 
-                                      placeholder="Country" 
+                                      placeholder="Philippines" 
                                       defaultValue="Philippines"
                                       {...field} 
                                     />
