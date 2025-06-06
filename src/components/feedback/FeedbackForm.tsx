@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { FeedbackType, FEEDBACK_CATEGORIES } from '@/lib/types/feedback';
 import { feedbackAPI } from '@/lib/api/feedback';
 import { useAuth } from '@/components/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FeedbackFormProps {
   onSuccess?: () => void;
@@ -27,6 +28,12 @@ interface FormData {
   location?: string;
 }
 
+interface UploadedFile {
+  file: File;
+  url?: string;
+  uploading?: boolean;
+}
+
 export const FeedbackForm: React.FC<FeedbackFormProps> = ({ 
   onSuccess, 
   onCancel,
@@ -34,7 +41,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
 }) => {
   const { userProfile } = useAuth();
   const [selectedType, setSelectedType] = useState<FeedbackType>(editData?.type || 'barangay');
-  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
@@ -48,7 +55,41 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
 
   const watchedType = watch('type');
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Load existing attachments if editing
+  React.useEffect(() => {
+    if (editData?.attachments) {
+      const existingAttachments = editData.attachments.map((url: string) => ({
+        file: null,
+        url: `${supabase.supabaseUrl}/storage/v1/object/public/reportfeedback/userreports/${url}`,
+        uploading: false
+      }));
+      setAttachments(existingAttachments);
+    }
+  }, [editData]);
+
+  const uploadFileToStorage = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `userreports/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('reportfeedback')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        return null;
+      }
+
+      return fileName;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      return null;
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (attachments.length + files.length > 5) {
       toast({
@@ -58,7 +99,40 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       });
       return;
     }
-    setAttachments(prev => [...prev, ...files]);
+
+    // Add files to state with uploading status
+    const newAttachments = files.map(file => ({
+      file,
+      uploading: true
+    }));
+    
+    setAttachments(prev => [...prev, ...newAttachments]);
+
+    // Upload each file
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileName = await uploadFileToStorage(file);
+      
+      if (fileName) {
+        const publicUrl = `${supabase.supabaseUrl}/storage/v1/object/public/reportfeedback/userreports/${fileName}`;
+        
+        setAttachments(prev => 
+          prev.map((attachment, index) => 
+            attachment.file === file 
+              ? { ...attachment, url: publicUrl, uploading: false }
+              : attachment
+          )
+        );
+      } else {
+        // Remove failed upload
+        setAttachments(prev => prev.filter(attachment => attachment.file !== file));
+        toast({
+          title: "Upload failed",
+          description: `Failed to upload ${file.name}`,
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const removeAttachment = (index: number) => {
@@ -89,11 +163,23 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       return;
     }
 
+    // Check if any files are still uploading
+    const stillUploading = attachments.some(att => att.uploading);
+    if (stillUploading) {
+      toast({
+        title: "Please wait",
+        description: "Files are still uploading. Please wait before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // For now, we'll store attachment file names
-      // In a real implementation, you'd upload to storage first
-      const attachmentUrls = attachments.map(file => file.name);
+      // Get filenames from uploaded attachments
+      const attachmentUrls = attachments
+        .filter(att => att.url)
+        .map(att => att.url!.split('/').pop()!);
 
       const reportData = {
         user_id: userProfile.id,
@@ -226,19 +312,35 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
               </label>
               
               {attachments.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  {attachments.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                      <FileImage className="h-4 w-4" />
-                      <span className="text-sm flex-1">{file.name}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeAttachment(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {attachments.map((attachment, index) => (
+                    <div key={index} className="relative group">
+                      {attachment.uploading ? (
+                        <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        </div>
+                      ) : attachment.url ? (
+                        <div className="relative aspect-square">
+                          <img
+                            src={attachment.url}
+                            alt="Attachment"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => removeAttachment(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                          <FileImage className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -247,7 +349,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
           </div>
 
           <div className="flex gap-2">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || attachments.some(att => att.uploading)}>
               {isSubmitting ? 'Submitting...' : (editData ? 'Update Report' : 'Submit Report')}
             </Button>
             {onCancel && (

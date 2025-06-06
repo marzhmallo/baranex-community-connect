@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { feedbackAPI } from '@/lib/api/feedback';
 import { FeedbackForm } from '@/components/feedback/FeedbackForm';
 import { FeedbackReport, FeedbackStatus, STATUS_COLORS } from '@/lib/types/feedback';
+import { supabase } from '@/integrations/supabase/client';
 
 const UserFeedbackPage = () => {
   const { userProfile } = useAuth();
@@ -153,7 +153,7 @@ const UserFeedbackPage = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
+                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle>Report Details</DialogTitle>
                             </DialogHeader>
@@ -184,13 +184,32 @@ const UserFeedbackPage = () => {
                                 {selectedReport.attachments && selectedReport.attachments.length > 0 && (
                                   <div>
                                     <strong>Attachments:</strong>
-                                    <div className="mt-2 space-y-1">
-                                      {selectedReport.attachments.map((attachment, index) => (
-                                        <div key={index} className="flex items-center gap-2 text-sm">
-                                          <FileText className="h-4 w-4" />
-                                          {attachment}
-                                        </div>
-                                      ))}
+                                    <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-4">
+                                      {selectedReport.attachments.map((attachment, index) => {
+                                        const imageUrl = `${supabase.supabaseUrl}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
+                                        return (
+                                          <div key={index} className="relative group">
+                                            <img
+                                              src={imageUrl}
+                                              alt={`Attachment ${index + 1}`}
+                                              className="w-full aspect-square object-cover rounded-lg border"
+                                              onError={(e) => {
+                                                // Fallback to filename display if image fails to load
+                                                const target = e.target as HTMLImageElement;
+                                                target.style.display = 'none';
+                                                const fallback = target.nextElementSibling as HTMLElement;
+                                                if (fallback) fallback.style.display = 'flex';
+                                              }}
+                                            />
+                                            <div className="hidden w-full aspect-square bg-gray-100 rounded-lg items-center justify-center border">
+                                              <div className="text-center p-2">
+                                                <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                                                <span className="text-xs text-gray-600">{attachment}</span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 )}
