@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Edit } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Edit, Clock } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddEditPositionDialog } from '@/components/officials/AddEditPositionDialog';
 import { Badge } from '@/components/ui/badge';
@@ -63,6 +64,18 @@ const OfficialDetailsPage = () => {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
+    });
+  };
+  
+  // Format date with time for record information
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return 'Unknown';
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
   
@@ -214,17 +227,17 @@ const OfficialDetailsPage = () => {
   
   if (officialLoading) {
     return (
-      <div className="p-6 min-h-screen bg-[#0f172a]">
+      <div className="p-6 min-h-screen bg-background">
         <div className="max-w-4xl mx-auto">
-          <Skeleton className="h-8 w-48 bg-[#2a3649] mb-8" />
+          <Skeleton className="h-8 w-48 mb-8" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Skeleton className="h-80 bg-[#2a3649]" />
+            <Skeleton className="h-80" />
             <div className="md:col-span-2 space-y-4">
-              <Skeleton className="h-10 w-2/3 bg-[#2a3649]" />
-              <Skeleton className="h-6 w-1/3 bg-[#2a3649]" />
-              <Skeleton className="h-32 bg-[#2a3649]" />
-              <Skeleton className="h-6 bg-[#2a3649]" />
-              <Skeleton className="h-6 bg-[#2a3649]" />
+              <Skeleton className="h-10 w-2/3" />
+              <Skeleton className="h-6 w-1/3" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-6" />
+              <Skeleton className="h-6" />
             </div>
           </div>
         </div>
@@ -234,7 +247,7 @@ const OfficialDetailsPage = () => {
   
   if (!official) {
     return (
-      <div className="p-6 min-h-screen bg-[#0f172a] text-white">
+      <div className="p-6 min-h-screen bg-background text-foreground">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl font-bold mb-4">Official Not Found</h2>
           <p className="mb-4">The official you are looking for could not be found.</p>
@@ -258,18 +271,18 @@ const OfficialDetailsPage = () => {
   const currentPosition = getCurrentPosition();
   
   return (
-    <div className="p-6 min-h-screen bg-[#0f172a]">
+    <div className="p-6 min-h-screen bg-background">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
-            <Button onClick={goBack} variant="ghost" className="p-1 text-white hover:bg-[#1e2637]">
+            <Button onClick={goBack} variant="ghost" className="p-1 hover:bg-accent">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-bold text-white">Official Details</h1>
+            <h1 className="text-2xl font-bold text-foreground">Official Details</h1>
           </div>
           <Button 
             onClick={handleEditOfficial} 
-            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+            className="bg-primary hover:bg-primary/90 flex items-center gap-2"
           >
             <Edit className="h-4 w-4" />
             Edit Official
@@ -279,7 +292,7 @@ const OfficialDetailsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left Column - Photo and basic info */}
           <div className="space-y-6">
-            <Card className="overflow-hidden bg-[#1e2637] border-none">
+            <Card className="overflow-hidden bg-card border">
               <div className="h-80 relative">
                 {official?.photo_url ? (
                   <img
@@ -288,19 +301,19 @@ const OfficialDetailsPage = () => {
                     className="w-full h-full object-cover object-center"
                   />
                 ) : (
-                  <div className="w-full h-full bg-[#2a3649] flex items-center justify-center">
-                    <User className="h-24 w-24 text-gray-400" />
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <User className="h-24 w-24 text-muted-foreground" />
                   </div>
                 )}
               </div>
               
               <div className="p-4 space-y-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white">{official?.name}</h2>
-                  <p className="text-blue-400">{currentPosition?.position || 'Barangay Official'}</p>
+                  <h2 className="text-xl font-bold text-foreground">{official?.name}</h2>
+                  <p className="text-primary">{currentPosition?.position || 'Barangay Official'}</p>
                 </div>
                 
-                <div className="space-y-2 text-gray-300">
+                <div className="space-y-2 text-muted-foreground">
                   {official?.email && (
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
@@ -336,21 +349,21 @@ const OfficialDetailsPage = () => {
           {/* Right Column - Detailed information */}
           <div className="md:col-span-2 space-y-6">
             {/* Biography Section */}
-            <Card className="bg-[#1e2637] border-none p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Biography</h2>
-              <p className="text-gray-300 whitespace-pre-line">
+            <Card className="bg-card border p-6">
+              <h2 className="text-xl font-bold text-foreground mb-4">Biography</h2>
+              <p className="text-muted-foreground whitespace-pre-line">
                 {official?.bio || `${official?.name || 'This official'} is a dedicated public servant working for the betterment of the community.`}
               </p>
             </Card>
             
             {/* Committees Section */}
             {official?.committees && (
-              <Card className="bg-[#1e2637] border-none p-6">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Card className="bg-card border p-6">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   Committees
                 </h2>
-                <div className="text-gray-300">
+                <div className="text-muted-foreground">
                   {formatCommittees(official.committees)}
                 </div>
               </Card>
@@ -358,12 +371,12 @@ const OfficialDetailsPage = () => {
             
             {/* Education Section */}
             {official?.educ && (
-              <Card className="bg-[#1e2637] border-none p-6">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Card className="bg-card border p-6">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <GraduationCap className="h-5 w-5" />
                   Education
                 </h2>
-                <div className="text-gray-300">
+                <div className="text-muted-foreground">
                   {formatEducation(official.educ)}
                 </div>
               </Card>
@@ -371,56 +384,56 @@ const OfficialDetailsPage = () => {
             
             {/* Achievements Section */}
             {official?.achievements && (
-              <Card className="bg-[#1e2637] border-none p-6">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Card className="bg-card border p-6">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Award className="h-5 w-5" />
                   Achievements
                 </h2>
-                <div className="text-gray-300">
+                <div className="text-muted-foreground">
                   {formatAchievements(official.achievements)}
                 </div>
               </Card>
             )}
             
             {/* Positions Section */}
-            <Card className="bg-[#1e2637] border-none p-6">
+            <Card className="bg-card border p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                   <Briefcase className="h-5 w-5" />
                   Positions
                 </h2>
                 <Button 
                   onClick={handleAddPosition} 
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary hover:bg-primary/90"
                 >
                   Add Position
                 </Button>
               </div>
               
               <Tabs defaultValue="current" className="w-full">
-                <TabsList className="w-full bg-[#2a3649] mb-4">
+                <TabsList className="w-full bg-muted mb-4">
                   <TabsTrigger value="current" className="flex-1">Current Positions ({currentPositions.length})</TabsTrigger>
                   <TabsTrigger value="past" className="flex-1">Past Positions ({pastPositions.length})</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="current">
                   {positionsLoading ? (
-                    <Skeleton className="h-32 w-full bg-[#2a3649]" />
+                    <Skeleton className="h-32 w-full" />
                   ) : currentPositions.length > 0 ? (
                     <div className="space-y-4">
                       {currentPositions.map((position) => (
-                        <Card key={position.id} className="bg-[#2a3649] border-none p-4">
+                        <Card key={position.id} className="bg-muted border p-4">
                           <div className="flex justify-between">
                             <div>
-                              <h3 className="font-bold text-white">{position.position}</h3>
+                              <h3 className="font-bold text-foreground">{position.position}</h3>
                               {position.committee && (
-                                <p className="text-blue-400">Committee: {position.committee}</p>
+                                <p className="text-primary">Committee: {position.committee}</p>
                               )}
-                              <p className="text-gray-400 text-sm mt-2">
+                              <p className="text-muted-foreground text-sm mt-2">
                                 {formatDate(position.term_start)} - {formatDate(position.term_end)}
                               </p>
                               {position.description && (
-                                <p className="text-gray-300 mt-2">{position.description}</p>
+                                <p className="text-muted-foreground mt-2">{position.description}</p>
                               )}
                             </div>
                             <Button 
@@ -435,28 +448,28 @@ const OfficialDetailsPage = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-400 py-4 text-center">No current positions found.</p>
+                    <p className="text-muted-foreground py-4 text-center">No current positions found.</p>
                   )}
                 </TabsContent>
                 
                 <TabsContent value="past">
                   {positionsLoading ? (
-                    <Skeleton className="h-32 w-full bg-[#2a3649]" />
+                    <Skeleton className="h-32 w-full" />
                   ) : pastPositions.length > 0 ? (
                     <div className="space-y-4">
                       {pastPositions.map((position) => (
-                        <Card key={position.id} className="bg-[#2a3649] border-none p-4">
+                        <Card key={position.id} className="bg-muted border p-4">
                           <div className="flex justify-between">
                             <div>
-                              <h3 className="font-bold text-white">{position.position}</h3>
+                              <h3 className="font-bold text-foreground">{position.position}</h3>
                               {position.committee && (
-                                <p className="text-blue-400">Committee: {position.committee}</p>
+                                <p className="text-primary">Committee: {position.committee}</p>
                               )}
-                              <p className="text-gray-400 text-sm mt-2">
+                              <p className="text-muted-foreground text-sm mt-2">
                                 {formatDate(position.term_start)} - {formatDate(position.term_end)}
                               </p>
                               {position.description && (
-                                <p className="text-gray-300 mt-2">{position.description}</p>
+                                <p className="text-muted-foreground mt-2">{position.description}</p>
                               )}
                             </div>
                             <Button 
@@ -471,10 +484,28 @@ const OfficialDetailsPage = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-400 py-4 text-center">No past positions found.</p>
+                    <p className="text-muted-foreground py-4 text-center">No past positions found.</p>
                   )}
                 </TabsContent>
               </Tabs>
+            </Card>
+
+            {/* Record Information Section */}
+            <Card className="bg-card border p-6">
+              <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Record Information
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">Created</h3>
+                  <p className="text-muted-foreground">{formatDateTime(official.created_at)}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">Last Updated</h3>
+                  <p className="text-muted-foreground">{formatDateTime(official.updated_at)}</p>
+                </div>
+              </div>
             </Card>
           </div>
         </div>

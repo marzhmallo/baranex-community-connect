@@ -1138,11 +1138,11 @@ export type Database = {
       official_positions: {
         Row: {
           committee: string | null
-          created_at: string | null
+          created_at: string
           description: string | null
           id: string
           is_current: boolean | null
-          official_id: string | null
+          official_id: string
           position: string
           term_end: string
           term_start: string
@@ -1150,11 +1150,11 @@ export type Database = {
         }
         Insert: {
           committee?: string | null
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           id?: string
           is_current?: boolean | null
-          official_id?: string | null
+          official_id: string
           position: string
           term_end: string
           term_start: string
@@ -1162,11 +1162,11 @@ export type Database = {
         }
         Update: {
           committee?: string | null
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           id?: string
           is_current?: boolean | null
-          official_id?: string | null
+          official_id?: string
           position?: string
           term_end?: string
           term_start?: string
@@ -1187,10 +1187,10 @@ export type Database = {
           achievements: Json | null
           address: string | null
           bio: string | null
-          birthdate: string | null
-          brgyid: string | null
+          birthdate: string
+          brgyid: string
           committees: Json | null
-          created_at: string | null
+          created_at: string
           educ: Json | null
           education: string | null
           email: string | null
@@ -1202,16 +1202,16 @@ export type Database = {
           position: string
           term_end: string | null
           term_start: string | null
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           achievements?: Json | null
           address?: string | null
           bio?: string | null
-          birthdate?: string | null
-          brgyid?: string | null
+          birthdate: string
+          brgyid?: string
           committees?: Json | null
-          created_at?: string | null
+          created_at?: string
           educ?: Json | null
           education?: string | null
           email?: string | null
@@ -1223,16 +1223,16 @@ export type Database = {
           position: string
           term_end?: string | null
           term_start?: string | null
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           achievements?: Json | null
           address?: string | null
           bio?: string | null
-          birthdate?: string | null
-          brgyid?: string | null
+          birthdate?: string
+          brgyid?: string
           committees?: Json | null
-          created_at?: string | null
+          created_at?: string
           educ?: Json | null
           education?: string | null
           email?: string | null
@@ -1244,7 +1244,7 @@ export type Database = {
           position?: string
           term_end?: string | null
           term_start?: string | null
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
