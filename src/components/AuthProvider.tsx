@@ -58,6 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         updateData.last_login = new Date().toISOString();
       }
 
+      console.log(`Updating user ${userId} online status to: ${isOnline}`);
+      
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
@@ -106,6 +108,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
+        // Set user to ONLINE when successfully fetching profile (login)
         await updateUserOnlineStatus(userId, true);
         setUserProfile(profileData as UserProfile);
         
@@ -174,7 +177,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       console.log('Signing out user:', currentUserId);
       
-      // Update user to offline status BEFORE clearing state and signing out
+      // Update user to OFFLINE status BEFORE clearing state and signing out
       if (currentUserId) {
         await updateUserOnlineStatus(currentUserId, false);
       }
@@ -270,7 +273,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Update offline status after automatic logout
         if (userId) {
-          updateUserOnlineStatus(userId, false);
+          await updateUserOnlineStatus(userId, false);
         }
         return;
       }
