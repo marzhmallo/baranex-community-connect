@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getResidentById } from '@/lib/api/residents';
@@ -7,13 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, FileText, UserCheck, MapPin, Mail, Phone, Briefcase, Calendar, Home, Skull, Clock, History } from "lucide-react";
+import { ArrowLeft, FileText, UserCheck, MapPin, Mail, Phone, Briefcase, Calendar, Home, Skull, Clock, History, ZoomIn, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import {RefreshCw } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import RelationshipManager from '@/components/residents/RelationshipManager';
 import HouseholdSelector from '@/components/residents/HouseholdSelector';
+import ResidentForm from '@/components/residents/ResidentForm';
 import { supabase } from '@/integrations/supabase/client';
 
 // Helper function to calculate age
@@ -95,6 +97,8 @@ const formatSimpleDate = (dateString?: string) => {
 const ResidentMoreDetailsPage = () => {
   const { residentId } = useParams<{ residentId: string }>();
   const navigate = useNavigate();
+  const [showFullPhoto, setShowFullPhoto] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const { data: resident, isLoading, error, refetch } = useQuery({
     queryKey: ['resident', residentId],
@@ -188,6 +192,11 @@ const ResidentMoreDetailsPage = () => {
     refetch();
   };
 
+  const handleEditFormSubmit = () => {
+    setIsEditDialogOpen(false);
+    refetch();
+  };
+
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex items-center mb-8">
@@ -208,15 +217,18 @@ const ResidentMoreDetailsPage = () => {
           <Card className="border-t-4 border-t-baranex-primary">
             <CardContent className="pt-6 pb-6">
               <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-                {/* Photo/Avatar */}
+                {/* Photo/Avatar with click to enlarge */}
                 {resident.photoUrl ? (
-                  <div className="relative">
+                  <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
                     <Avatar className="w-32 h-32 border-4 border-gray-100">
                       <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
                       <AvatarFallback className="text-4xl">
                         {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
+                    <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <ZoomIn className="text-white h-8 w-8" />
+                    </div>
                   </div>
                 ) : (
                   <Avatar className="w-32 h-32 border-4 border-gray-100">
@@ -275,7 +287,7 @@ const ResidentMoreDetailsPage = () => {
                     <FileText className="mr-2 h-4 w-4" />
                     Issue Document
                   </Button>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
                     Edit Profile
                   </Button>
                 </div>
@@ -666,6 +678,54 @@ const ResidentMoreDetailsPage = () => {
           </Card>
         </div>
       </ScrollArea>
+
+      {/* Full screen photo dialog */}
+      {resident.photoUrl && (
+        <Dialog open={showFullPhoto} onOpenChange={setShowFullPhoto}>
+          <DialogContent 
+            className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center"
+            hideCloseButton={true}
+          >
+            <div 
+              className="relative w-full h-full flex items-center justify-center bg-black/70 p-2 rounded-lg"
+              onClick={() => setShowFullPhoto(false)}
+            >
+              <img 
+                src={resident.photoUrl} 
+                alt={`${resident.firstName} ${resident.lastName}`} 
+                className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
+              />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute top-2 right-2 bg-black/40 hover:bg-black/60 text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowFullPhoto(false);
+                }}
+              >
+                <span className="sr-only">Close</span>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Edit resident dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold">Edit Resident</h2>
+              <p className="text-sm text-muted-foreground">
+                Update information for {resident.firstName} {resident.lastName}
+              </p>
+            </div>
+          </div>
+          <ResidentForm onSubmit={handleEditFormSubmit} resident={resident} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
