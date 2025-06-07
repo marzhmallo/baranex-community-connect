@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -171,6 +170,11 @@ const UserProfilePage = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const getFullAddress = () => {
+    if (!barangay) return "Address not available";
+    return `${barangay.barangayname}, ${barangay.municipality}, ${barangay.province}, ${barangay.region}, ${barangay.country}`;
   };
 
   if (loading) {
@@ -375,25 +379,25 @@ const UserProfilePage = () => {
               </div>
             </div>
 
-            {/* Country */}
+            {/* Account Created (shortened) */}
             <div className="space-y-2">
-              <Label htmlFor="country" className="text-sm font-medium text-muted-foreground">
-                Country
-              </Label>
-              <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
-                <span className="text-foreground">{barangay?.country || "Philippines"}</span>
-              </div>
-            </div>
-
-            {/* Record Date */}
-            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="created_at" className="text-sm font-medium text-muted-foreground">
                 Account Created
               </Label>
               <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
                 <span className="text-foreground">
-                  {profileData?.created_at ? formatDate(profileData.created_at) : "Not available"}
+                  {profileData?.created_at ? new Date(profileData.created_at).toLocaleDateString() : "Not available"}
                 </span>
+              </div>
+            </div>
+
+            {/* Address (full width, before bio) */}
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="address" className="text-sm font-medium text-muted-foreground">
+                Address
+              </Label>
+              <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                <span className="text-foreground">{getFullAddress()}</span>
               </div>
             </div>
           </div>

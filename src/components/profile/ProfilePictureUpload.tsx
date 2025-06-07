@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -158,7 +157,7 @@ const ProfilePictureUpload = ({
   return (
     <div className="flex flex-col items-center space-y-4">
       <div className="relative">
-        <Avatar className="h-24 w-24">
+        <Avatar className="h-36 w-36">
           {photoUrl && (
             <AvatarImage 
               src={photoUrl} 
@@ -169,7 +168,7 @@ const ProfilePictureUpload = ({
               }}
             />
           )}
-          <AvatarFallback className="text-lg bg-muted text-muted-foreground">
+          <AvatarFallback className="text-2xl bg-muted text-muted-foreground">
             {userInitials}
           </AvatarFallback>
         </Avatar>
