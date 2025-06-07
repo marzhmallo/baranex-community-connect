@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -127,7 +128,6 @@ const HouseholdMoreDetailsPage = () => {
               Household: {household.name} 
               <span className="ml-3">{getStatusBadge(household.status)}</span>
             </h1>
-            <p className="text-muted-foreground">ID: {householdId}</p>
           </div>
         </div>
         
