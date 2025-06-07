@@ -8,7 +8,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { RefreshCw, Plus, ArrowLeft } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
-
 const OfficialsPage = () => {
   const [activeTab, setActiveTab] = useState('current');
   const [activeSKTab, setActiveSKTab] = useState('current');
@@ -24,47 +23,42 @@ const OfficialsPage = () => {
     queryKey: ['officials-with-positions'],
     queryFn: async () => {
       // First, fetch all officials
-      const { data: officials, error: officialsError } = await supabase
-        .from('officials')
-        .select('*');
-      
+      const {
+        data: officials,
+        error: officialsError
+      } = await supabase.from('officials').select('*');
       if (officialsError) throw officialsError;
-      
+
       // Then fetch all positions
-      const { data: positions, error: positionsError } = await supabase
-        .from('official_positions')
-        .select('*')
-        .order('term_start', { ascending: false });
-        
+      const {
+        data: positions,
+        error: positionsError
+      } = await supabase.from('official_positions').select('*').order('term_start', {
+        ascending: false
+      });
       if (positionsError) throw positionsError;
 
       // Group positions by official
       const officialsWithPositions: Official[] = officials.map(official => {
         // Get all positions for this official
-        const officialPositions = positions.filter(
-          position => position.official_id === official.id
-        );
-        
+        const officialPositions = positions.filter(position => position.official_id === official.id);
+
         // Use the most recent position (latest term_start date)
         let latestPosition = officialPositions.length > 0 ? officialPositions[0] : null;
-        
         if (officialPositions.length > 1) {
           latestPosition = officialPositions.reduce((latest, current) => {
             // If either position has no term_end, compare carefully
             if (!latest.term_end) return latest; // Latest has no end date, keep it
             if (!current.term_end) return current; // Current has no end date, it's ongoing
-            
+
             // Otherwise compare end dates
             return new Date(current.term_end) > new Date(latest.term_end) ? current : latest;
           }, officialPositions[0]);
         }
-        
         return {
           ...official,
           // Handle boolean conversion for is_sk field
-          is_sk: Array.isArray(official.is_sk) ? 
-            official.is_sk.length > 0 && official.is_sk[0] === true : 
-            Boolean(official.is_sk),
+          is_sk: Array.isArray(official.is_sk) ? official.is_sk.length > 0 && official.is_sk[0] === true : Boolean(official.is_sk),
           // Update with position data if we have it
           position: latestPosition?.position || '',
           term_start: latestPosition?.term_start || official.term_start,
@@ -73,7 +67,6 @@ const OfficialsPage = () => {
           officialPositions: officialPositions
         };
       });
-      
       return officialsWithPositions;
     }
   });
@@ -81,10 +74,7 @@ const OfficialsPage = () => {
   // Filter officials based on the active tab
   const filteredOfficials = officialsData ? officialsData.filter(official => {
     const now = new Date();
-    const isSk = Array.isArray(official.is_sk) ? 
-      official.is_sk.length > 0 && official.is_sk[0] === true : 
-      Boolean(official.is_sk);
-      
+    const isSk = Array.isArray(official.is_sk) ? official.is_sk.length > 0 && official.is_sk[0] === true : Boolean(official.is_sk);
     if (activeTab === 'current') {
       // Exclude SK officials from the current tab
       return !isSk && (!official.term_end || new Date(official.term_end) > now);
@@ -107,32 +97,25 @@ const OfficialsPage = () => {
     const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
     return !isSk && (!o.term_end || new Date(o.term_end) > new Date());
   }).length : 0;
-  
   const skCurrentCount = officialsData ? officialsData.filter(o => {
     const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
     return isSk && (!o.term_end || new Date(o.term_end) > new Date());
   }).length : 0;
-  
   const skPreviousCount = officialsData ? officialsData.filter(o => {
     const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
     return isSk && o.term_end && new Date(o.term_end) < new Date();
   }).length : 0;
-  
   const skCount = skCurrentCount + skPreviousCount;
-  
   const previousCount = officialsData ? officialsData.filter(o => {
     const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
     return !isSk && o.term_end && new Date(o.term_end) < new Date();
   }).length : 0;
-  
   const handleRefreshTerms = () => {
     refetch();
   };
-
   const handleAddSuccess = () => {
     refetch();
   };
-
   return <div className="min-h-screen bg-background p-6">
       {/* Header with title, subtitle, and action buttons */}
       <div className="flex justify-between items-start mb-8">
@@ -171,31 +154,24 @@ const OfficialsPage = () => {
       </div>
 
       {/* SK Tab sub-navigation */}
-      {activeTab === 'sk' && (
-        <div className="mx-auto max-w-xl mb-8 bg-card rounded-full p-1 border">
+      {activeTab === 'sk' && <div className="mx-auto max-w-xl mb-8 bg-card rounded-full p-1 border">
           <div className="flex justify-center">
-            <div 
-              className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
-              onClick={() => setActiveSKTab('current')}
-            >
+            <div className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('current')}>
               Current SK ({skCurrentCount})
             </div>
-            <div 
-              className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'previous' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
-              onClick={() => setActiveSKTab('previous')}
-            >
+            <div className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'previous' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('previous')}>
               Previous SK ({skPreviousCount})
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Officials cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {isLoading ?
-          // Show skeleton loaders while loading
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-card rounded-lg overflow-hidden border">
+      // Show skeleton loaders while loading
+      Array.from({
+        length: 4
+      }).map((_, i) => <div key={i} className="bg-card rounded-lg overflow-hidden border">
               <Skeleton className="w-full h-64 bg-muted" />
               <div className="p-5">
                 <Skeleton className="h-6 w-3/4 mb-2 bg-muted" />
@@ -208,28 +184,15 @@ const OfficialsPage = () => {
                   <Skeleton className="h-8 w-20 bg-muted" />
                 </div>
               </div>
-            </div>
-          )) 
-        : error ? 
-          <div className="col-span-full p-6 text-destructive bg-card rounded-lg border">
+            </div>) : error ? <div className="col-span-full p-6 text-destructive bg-card rounded-lg border">
             Error loading officials: {error.message}
-          </div> 
-        : filteredOfficials.length === 0 ? 
-          <div className="col-span-full p-6 text-center text-muted-foreground bg-card rounded-lg border">
-            No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? (activeSKTab === 'current' ? 'current SK' : 'previous SK') : 'previous'} officials found.
-          </div> 
-        : filteredOfficials.map(official => 
-          <OfficialCard key={official.id} official={official} />
-        )}
+          </div> : filteredOfficials.length === 0 ? <div className="col-span-full p-6 text-center text-muted-foreground bg-card rounded-lg border mx-[240px]">
+            No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? activeSKTab === 'current' ? 'current SK' : 'previous SK' : 'previous'} officials found.
+          </div> : filteredOfficials.map(official => <OfficialCard key={official.id} official={official} />)}
       </div>
 
       {/* Add Official Dialog */}
-      <AddOfficialDialog 
-        open={showAddDialog} 
-        onOpenChange={setShowAddDialog}
-        onSuccess={handleAddSuccess}
-      />
+      <AddOfficialDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={handleAddSuccess} />
     </div>;
 };
-
 export default OfficialsPage;
