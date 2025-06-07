@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +12,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Plus, X, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { searchResidentsForRelationship } from '@/lib/api/relationships';
 
 interface HouseholdMembersManagerProps {
   householdId: string;
@@ -63,17 +63,49 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
     setIsSearching(true);
     try {
-      const result = await searchResidentsForRelationship(term, '');
-      if (result.success) {
-        // Filter out residents already in this household
-        const currentMemberIds = members?.map(m => m.id) || [];
-        const filteredResults = result.data.filter(
-          resident => !currentMemberIds.includes(resident.id)
-        );
-        setSearchResults(filteredResults);
+      // Search directly in the residents table
+      const { data, error } = await supabase
+        .from('residents')
+        .select(`
+          id,
+          first_name,
+          middle_name,
+          last_name,
+          suffix,
+          photo_url,
+          status,
+          purok,
+          gender,
+          birthdate
+        `)
+        .or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,middle_name.ilike.%${term}%`)
+        .is('household_id', null) // Only show residents not already in a household
+        .order('first_name');
+
+      if (error) {
+        console.error('Error searching residents:', error);
+        toast({
+          title: "Search error",
+          description: "Failed to search for residents.",
+          variant: "destructive",
+        });
+        return;
       }
+
+      // Format the results to include full_name for display
+      const formattedResults = data?.map(resident => ({
+        ...resident,
+        full_name: `${resident.first_name} ${resident.middle_name ? resident.middle_name + ' ' : ''}${resident.last_name}${resident.suffix ? ' ' + resident.suffix : ''}`
+      })) || [];
+
+      setSearchResults(formattedResults);
     } catch (error) {
       console.error('Error searching residents:', error);
+      toast({
+        title: "Search error",
+        description: "An unexpected error occurred while searching.",
+        variant: "destructive",
+      });
     } finally {
       setIsSearching(false);
     }
@@ -219,7 +251,13 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                     
                     {searchTerm.length >= 2 && !isSearching && searchResults.length === 0 && (
                       <p className="text-sm text-gray-500 text-center py-4">
-                        No residents found matching your search.
+                        No available residents found matching your search. All residents may already be assigned to households.
+                      </p>
+                    )}
+                    
+                    {searchTerm.length < 2 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Type at least 2 characters to search for residents.
                       </p>
                     )}
                   </div>
