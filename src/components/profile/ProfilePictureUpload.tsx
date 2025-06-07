@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -21,6 +21,11 @@ const ProfilePictureUpload = ({
 }: ProfilePictureUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(currentPhotoUrl);
+
+  // Update photoUrl when currentPhotoUrl changes
+  useEffect(() => {
+    setPhotoUrl(currentPhotoUrl);
+  }, [currentPhotoUrl]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -72,6 +77,7 @@ const ProfilePictureUpload = ({
         throw updateError;
       }
 
+      // Update local state immediately
       setPhotoUrl(url);
       onPhotoUploaded(url);
 
@@ -147,11 +153,22 @@ const ProfilePictureUpload = ({
     }
   };
 
+  console.log('ProfilePictureUpload render:', { photoUrl, currentPhotoUrl, userInitials });
+
   return (
     <div className="flex flex-col items-center space-y-4">
       <div className="relative">
         <Avatar className="h-24 w-24">
-          <AvatarImage src={photoUrl} alt="Profile picture" />
+          {photoUrl && (
+            <AvatarImage 
+              src={photoUrl} 
+              alt="Profile picture" 
+              onError={(e) => {
+                console.error('Failed to load image:', photoUrl);
+                setPhotoUrl(undefined);
+              }}
+            />
+          )}
           <AvatarFallback className="text-lg bg-muted text-muted-foreground">
             {userInitials}
           </AvatarFallback>
