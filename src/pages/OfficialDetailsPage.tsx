@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -12,51 +11,57 @@ import { Official, OfficialPosition } from '@/lib/types';
 import { AddEditPositionDialog } from '@/components/officials/AddEditPositionDialog';
 import { Badge } from '@/components/ui/badge';
 import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
-
 const OfficialDetailsPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const {
+    id
+  } = useParams<{
+    id: string;
+  }>();
   const navigate = useNavigate();
-  
   const [isPositionDialogOpen, setIsPositionDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<OfficialPosition | null>(null);
-  
+
   // Fetch official details
-  const { data: official, isLoading: officialLoading, refetch: refetchOfficial } = useQuery({
+  const {
+    data: official,
+    isLoading: officialLoading,
+    refetch: refetchOfficial
+  } = useQuery({
     queryKey: ['official-details-page', id],
     queryFn: async () => {
       if (!id) return null;
-      
-      const { data, error } = await supabase
-        .from('officials')
-        .select('*')
-        .eq('id', id)
-        .single();
-        
+      const {
+        data,
+        error
+      } = await supabase.from('officials').select('*').eq('id', id).single();
       if (error) throw error;
       return data as Official;
     },
     enabled: !!id
   });
-  
+
   // Fetch positions for the official
-  const { data: positions, isLoading: positionsLoading, refetch: refetchPositions } = useQuery({
+  const {
+    data: positions,
+    isLoading: positionsLoading,
+    refetch: refetchPositions
+  } = useQuery({
     queryKey: ['official-positions-page', id],
     queryFn: async () => {
       if (!id) return [];
-      
-      const { data, error } = await supabase
-        .from('official_positions')
-        .select('*')
-        .eq('official_id', id)
-        .order('term_start', { ascending: false });
-        
+      const {
+        data,
+        error
+      } = await supabase.from('official_positions').select('*').eq('official_id', id).order('term_start', {
+        ascending: false
+      });
       if (error) throw error;
       return data as OfficialPosition[];
     },
     enabled: !!id
   });
-  
+
   // Format date to readable format
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Present';
@@ -66,7 +71,7 @@ const OfficialDetailsPage = () => {
       day: 'numeric'
     });
   };
-  
+
   // Format date with time for record information
   const formatDateTime = (dateString?: string) => {
     if (!dateString) return 'Unknown';
@@ -78,13 +83,12 @@ const OfficialDetailsPage = () => {
       minute: '2-digit'
     });
   };
-  
+
   // Format achievements into bullet points
   const formatAchievements = (achievements: any) => {
     if (!achievements) return null;
-    
     let achievementItems: string[] = [];
-    
+
     // Handle different formats of the achievements field
     if (Array.isArray(achievements)) {
       achievementItems = achievements;
@@ -105,24 +109,17 @@ const OfficialDetailsPage = () => {
         achievementItems = [achievements];
       }
     }
-    
     if (achievementItems.length === 0) return null;
-    
-    return (
-      <ul className="list-disc pl-5 space-y-2">
-        {achievementItems.map((achievement, i) => (
-          <li key={i} className="text-gray-300">{achievement}</li>
-        ))}
-      </ul>
-    );
+    return <ul className="list-disc pl-5 space-y-2">
+        {achievementItems.map((achievement, i) => <li key={i} className="text-muted-foreground whitespace-pre-line">{achievement}</li>)}
+      </ul>;
   };
-  
+
   // Format committees into bullet points
   const formatCommittees = (committees: any) => {
     if (!committees) return null;
-    
     let committeeItems: string[] = [];
-    
+
     // Handle different formats of the committees field
     if (Array.isArray(committees)) {
       committeeItems = committees;
@@ -143,24 +140,17 @@ const OfficialDetailsPage = () => {
         committeeItems = [committees];
       }
     }
-    
     if (committeeItems.length === 0) return null;
-    
-    return (
-      <ul className="list-disc pl-5 space-y-2">
-        {committeeItems.map((committee, i) => (
-          <li key={i} className="text-gray-300">{committee}</li>
-        ))}
-      </ul>
-    );
+    return <ul className="list-disc pl-5 space-y-2">
+        {committeeItems.map((committee, i) => <li key={i} className="text-gray-300">{committee}</li>)}
+      </ul>;
   };
-  
+
   // Format education into bullet points
   const formatEducation = (educ: any) => {
     if (!educ) return null;
-    
     let educItems: string[] = [];
-    
+
     // Handle different formats of the educ field
     if (Array.isArray(educ)) {
       educItems = educ;
@@ -181,53 +171,35 @@ const OfficialDetailsPage = () => {
         educItems = [educ];
       }
     }
-    
     if (educItems.length === 0) return null;
-    
-    return (
-      <ul className="list-disc pl-5 space-y-2">
-        {educItems.map((education, i) => (
-          <li key={i} className="text-gray-300">{education}</li>
-        ))}
-      </ul>
-    );
+    return <ul className="list-disc pl-5 space-y-2">
+        {educItems.map((education, i) => <li key={i} className="text-gray-300">{education}</li>)}
+      </ul>;
   };
-  
+
   // Filter positions into current and past
-  const currentPositions = positions?.filter(position => 
-    !position.term_end || new Date(position.term_end) >= new Date()
-  ) || [];
-  
-  const pastPositions = positions?.filter(position => 
-    position.term_end && new Date(position.term_end) < new Date()
-  ) || [];
-  
+  const currentPositions = positions?.filter(position => !position.term_end || new Date(position.term_end) >= new Date()) || [];
+  const pastPositions = positions?.filter(position => position.term_end && new Date(position.term_end) < new Date()) || [];
   const handleAddPosition = () => {
     setSelectedPosition(null);
     setIsPositionDialogOpen(true);
   };
-  
   const handleEditPosition = (position: OfficialPosition) => {
     setSelectedPosition(position);
     setIsPositionDialogOpen(true);
   };
-  
   const handleEditOfficial = () => {
     setIsEditDialogOpen(true);
   };
-
   const handleEditSuccess = () => {
     refetchOfficial();
     refetchPositions();
   };
-  
   const goBack = () => {
     navigate(-1);
   };
-  
   if (officialLoading) {
-    return (
-      <div className="p-6 min-h-screen bg-background">
+    return <div className="p-6 min-h-screen bg-background">
         <div className="max-w-4xl mx-auto">
           <Skeleton className="h-8 w-48 mb-8" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -241,20 +213,16 @@ const OfficialDetailsPage = () => {
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-  
   if (!official) {
-    return (
-      <div className="p-6 min-h-screen bg-background text-foreground">
+    return <div className="p-6 min-h-screen bg-background text-foreground">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl font-bold mb-4">Official Not Found</h2>
           <p className="mb-4">The official you are looking for could not be found.</p>
           <Button onClick={goBack} variant="outline">Go Back</Button>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Get the current position from positions
@@ -267,11 +235,8 @@ const OfficialDetailsPage = () => {
       return null;
     }
   };
-
   const currentPosition = getCurrentPosition();
-  
-  return (
-    <div className="p-6 min-h-screen bg-background">
+  return <div className="p-6 min-h-screen bg-background">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
@@ -280,10 +245,7 @@ const OfficialDetailsPage = () => {
             </Button>
             <h1 className="text-2xl font-bold text-foreground">Official Details</h1>
           </div>
-          <Button 
-            onClick={handleEditOfficial} 
-            className="bg-primary hover:bg-primary/90 flex items-center gap-2"
-          >
+          <Button onClick={handleEditOfficial} className="bg-primary hover:bg-primary/90 flex items-center gap-2">
             <Edit className="h-4 w-4" />
             Edit Official
           </Button>
@@ -294,17 +256,9 @@ const OfficialDetailsPage = () => {
           <div className="space-y-6">
             <Card className="overflow-hidden bg-card border">
               <div className="h-80 relative">
-                {official?.photo_url ? (
-                  <img
-                    src={official.photo_url}
-                    alt={official.name}
-                    className="w-full h-full object-cover object-center"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                {official?.photo_url ? <img src={official.photo_url} alt={official.name} className="w-full h-full object-cover object-center" /> : <div className="w-full h-full bg-muted flex items-center justify-center">
                     <User className="h-24 w-24 text-muted-foreground" />
-                  </div>
-                )}
+                  </div>}
               </div>
               
               <div className="p-4 space-y-4">
@@ -314,33 +268,25 @@ const OfficialDetailsPage = () => {
                 </div>
                 
                 <div className="space-y-2 text-muted-foreground">
-                  {official?.email && (
-                    <div className="flex items-center gap-2">
+                  {official?.email && <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       <span>{official.email}</span>
-                    </div>
-                  )}
+                    </div>}
                   
-                  {official?.phone && (
-                    <div className="flex items-center gap-2">
+                  {official?.phone && <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
                       <span>{official.phone}</span>
-                    </div>
-                  )}
+                    </div>}
                   
-                  {official?.address && (
-                    <div className="flex items-start gap-2">
+                  {official?.address && <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
                       <span>{official.address}</span>
-                    </div>
-                  )}
+                    </div>}
                   
-                  {official?.birthdate && (
-                    <div className="flex items-center gap-2">
+                  {official?.birthdate && <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       <span>Born: {formatDate(official.birthdate)}</span>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
             </Card>
@@ -357,8 +303,7 @@ const OfficialDetailsPage = () => {
             </Card>
             
             {/* Committees Section */}
-            {official?.committees && (
-              <Card className="bg-card border p-6">
+            {official?.committees && <Card className="bg-card border p-6">
                 <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   Committees
@@ -366,12 +311,10 @@ const OfficialDetailsPage = () => {
                 <div className="text-muted-foreground">
                   {formatCommittees(official.committees)}
                 </div>
-              </Card>
-            )}
+              </Card>}
             
             {/* Education Section */}
-            {official?.educ && (
-              <Card className="bg-card border p-6">
+            {official?.educ && <Card className="bg-card border p-6">
                 <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <GraduationCap className="h-5 w-5" />
                   Education
@@ -379,12 +322,10 @@ const OfficialDetailsPage = () => {
                 <div className="text-muted-foreground">
                   {formatEducation(official.educ)}
                 </div>
-              </Card>
-            )}
+              </Card>}
             
             {/* Achievements Section */}
-            {official?.achievements && (
-              <Card className="bg-card border p-6">
+            {official?.achievements && <Card className="bg-card border p-6">
                 <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Award className="h-5 w-5" />
                   Achievements
@@ -392,8 +333,7 @@ const OfficialDetailsPage = () => {
                 <div className="text-muted-foreground">
                   {formatAchievements(official.achievements)}
                 </div>
-              </Card>
-            )}
+              </Card>}
             
             {/* Positions Section */}
             <Card className="bg-card border p-6">
@@ -402,10 +342,7 @@ const OfficialDetailsPage = () => {
                   <Briefcase className="h-5 w-5" />
                   Positions
                 </h2>
-                <Button 
-                  onClick={handleAddPosition} 
-                  className="bg-primary hover:bg-primary/90"
-                >
+                <Button onClick={handleAddPosition} className="bg-primary hover:bg-primary/90">
                   Add Position
                 </Button>
               </div>
@@ -417,75 +354,43 @@ const OfficialDetailsPage = () => {
                 </TabsList>
                 
                 <TabsContent value="current">
-                  {positionsLoading ? (
-                    <Skeleton className="h-32 w-full" />
-                  ) : currentPositions.length > 0 ? (
-                    <div className="space-y-4">
-                      {currentPositions.map((position) => (
-                        <Card key={position.id} className="bg-muted border p-4">
+                  {positionsLoading ? <Skeleton className="h-32 w-full" /> : currentPositions.length > 0 ? <div className="space-y-4">
+                      {currentPositions.map(position => <Card key={position.id} className="bg-muted border p-4">
                           <div className="flex justify-between">
                             <div>
                               <h3 className="font-bold text-foreground">{position.position}</h3>
-                              {position.committee && (
-                                <p className="text-primary">Committee: {position.committee}</p>
-                              )}
+                              {position.committee && <p className="text-primary">Committee: {position.committee}</p>}
                               <p className="text-muted-foreground text-sm mt-2">
                                 {formatDate(position.term_start)} - {formatDate(position.term_end)}
                               </p>
-                              {position.description && (
-                                <p className="text-muted-foreground mt-2">{position.description}</p>
-                              )}
+                              {position.description && <p className="text-muted-foreground mt-2">{position.description}</p>}
                             </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleEditPosition(position)}
-                            >
+                            <Button variant="ghost" size="sm" onClick={() => handleEditPosition(position)}>
                               Edit
                             </Button>
                           </div>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground py-4 text-center">No current positions found.</p>
-                  )}
+                        </Card>)}
+                    </div> : <p className="text-muted-foreground py-4 text-center">No current positions found.</p>}
                 </TabsContent>
                 
                 <TabsContent value="past">
-                  {positionsLoading ? (
-                    <Skeleton className="h-32 w-full" />
-                  ) : pastPositions.length > 0 ? (
-                    <div className="space-y-4">
-                      {pastPositions.map((position) => (
-                        <Card key={position.id} className="bg-muted border p-4">
+                  {positionsLoading ? <Skeleton className="h-32 w-full" /> : pastPositions.length > 0 ? <div className="space-y-4">
+                      {pastPositions.map(position => <Card key={position.id} className="bg-muted border p-4">
                           <div className="flex justify-between">
                             <div>
                               <h3 className="font-bold text-foreground">{position.position}</h3>
-                              {position.committee && (
-                                <p className="text-primary">Committee: {position.committee}</p>
-                              )}
+                              {position.committee && <p className="text-primary">Committee: {position.committee}</p>}
                               <p className="text-muted-foreground text-sm mt-2">
                                 {formatDate(position.term_start)} - {formatDate(position.term_end)}
                               </p>
-                              {position.description && (
-                                <p className="text-muted-foreground mt-2">{position.description}</p>
-                              )}
+                              {position.description && <p className="text-muted-foreground mt-2">{position.description}</p>}
                             </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleEditPosition(position)}
-                            >
+                            <Button variant="ghost" size="sm" onClick={() => handleEditPosition(position)}>
                               Edit
                             </Button>
                           </div>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground py-4 text-center">No past positions found.</p>
-                  )}
+                        </Card>)}
+                    </div> : <p className="text-muted-foreground py-4 text-center">No past positions found.</p>}
                 </TabsContent>
               </Tabs>
             </Card>
@@ -512,26 +417,12 @@ const OfficialDetailsPage = () => {
       </div>
       
       {/* Position Dialog */}
-      <AddEditPositionDialog
-        open={isPositionDialogOpen}
-        onOpenChange={setIsPositionDialogOpen}
-        position={selectedPosition}
-        officialId={id || null}
-        onSuccess={() => {
-          refetchPositions();
-        }}
-      />
+      <AddEditPositionDialog open={isPositionDialogOpen} onOpenChange={setIsPositionDialogOpen} position={selectedPosition} officialId={id || null} onSuccess={() => {
+      refetchPositions();
+    }} />
 
       {/* Edit Official Dialog */}
-      <AddOfficialDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        onSuccess={handleEditSuccess}
-        official={official}
-        position={currentPosition}
-      />
-    </div>
-  );
+      <AddOfficialDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} onSuccess={handleEditSuccess} official={official} position={currentPosition} />
+    </div>;
 };
-
 export default OfficialDetailsPage;
