@@ -223,6 +223,16 @@ const EvacuationCentersManager = () => {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'available': return 'Available';
+      case 'full': return 'Full';
+      case 'closed': return 'Closed';
+      case 'maintenance': return 'Maintenance';
+      default: return status;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -393,7 +403,7 @@ const EvacuationCentersManager = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{getStatusIcon(center.status)}</span>
                     <Badge variant={getStatusColor(center.status) as any}>
-                      {center.status}
+                      {getStatusLabel(center.status)}
                     </Badge>
                   </div>
                   <div className="flex gap-1">
