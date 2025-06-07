@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,17 +176,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       console.log('Signing out user:', currentUserId);
       
-      // Update user to OFFLINE status BEFORE clearing state and signing out
+      // Update user to OFFLINE status FIRST
       if (currentUserId) {
         await updateUserOnlineStatus(currentUserId, false);
       }
 
-      // Clear local state
-      setUser(null);
-      setSession(null);
-      setUserProfile(null);
-
-      // Then sign out from Supabase
+      // Then sign out from Supabase (this will trigger auth state change)
       const { error } = await supabase.auth.signOut();
       
       if (error && !error.message.includes('session')) {
@@ -203,6 +197,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           description: "You have been signed out successfully",
         });
       }
+      
+      // Clear local state after signout
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
       
       // Always navigate to login
       navigate("/login");
@@ -263,18 +262,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (event === 'SIGNED_OUT') {
         console.log('User signed out event - clearing state');
-        // Get user ID before clearing state for offline update
-        const userId = user?.id;
-        
+        // State should already be cleared by signOut function
+        // Just ensure everything is clean
         setUser(null);
         setSession(null);
         setUserProfile(null);
         setLoading(false);
-        
-        // Update offline status after automatic logout
-        if (userId) {
-          await updateUserOnlineStatus(userId, false);
-        }
         return;
       }
       
