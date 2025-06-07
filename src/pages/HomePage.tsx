@@ -9,7 +9,6 @@ const HomePage = () => {
   const { userProfile } = useAuth();
   const [barangayName, setBarangayName] = useState<string>('');
   const [currentDate, setCurrentDate] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Set current date
@@ -22,7 +21,7 @@ const HomePage = () => {
     };
     setCurrentDate(now.toLocaleDateString('en-US', options));
 
-    // Fetch barangay name
+    // Fetch barangay name immediately
     const fetchBarangayName = async () => {
       if (userProfile?.brgyid) {
         try {
@@ -37,11 +36,7 @@ const HomePage = () => {
           }
         } catch (err) {
           console.error('Error fetching barangay name:', err);
-        } finally {
-          setIsLoading(false);
         }
-      } else {
-        setIsLoading(false);
       }
     };
 
@@ -57,11 +52,9 @@ const HomePage = () => {
             <h1 className="text-3xl font-bold mb-2">
               Welcome back, {userProfile?.firstname}!
             </h1>
-            {!isLoading && (
-              <p className="text-primary-foreground/80">
-                Here's what's happening in {barangayName || 'your barangay'} today
-              </p>
-            )}
+            <p className="text-primary-foreground/80">
+              Here's what's happening in {barangayName || 'your barangay'} today
+            </p>
           </div>
           <div className="flex items-center space-x-2 bg-primary-foreground/20 rounded-lg px-3 py-2">
             <Calendar className="h-4 w-4" />
