@@ -1260,6 +1260,7 @@ export type Database = {
         Row: {
           adminid: string | null
           bday: string
+          bio: string | null
           brgyid: string | null
           created_at: string | null
           email: string
@@ -1281,6 +1282,7 @@ export type Database = {
         Insert: {
           adminid?: string | null
           bday: string
+          bio?: string | null
           brgyid?: string | null
           created_at?: string | null
           email: string
@@ -1302,6 +1304,7 @@ export type Database = {
         Update: {
           adminid?: string | null
           bday?: string
+          bio?: string | null
           brgyid?: string | null
           created_at?: string | null
           email?: string

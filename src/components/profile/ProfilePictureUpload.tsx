@@ -31,12 +31,22 @@ const ProfilePictureUpload = ({
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const filePath = `profiles/${fileName}`;
+      
+      // Get user role to determine folder structure
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+      
+      const isAdmin = profile?.role === 'admin';
+      const folder = isAdmin ? 'admin' : 'users';
+      const filePath = `${folder}/${fileName}`;
       
       setUploading(true);
 
       const { data, error } = await supabase.storage
-        .from('profile-pictures')
+        .from('profilepictures')
         .upload(filePath, file, {
           upsert: true
         });
@@ -47,7 +57,7 @@ const ProfilePictureUpload = ({
 
       // Get the public URL
       const { data: publicUrlData } = supabase.storage
-        .from('profile-pictures')
+        .from('profilepictures')
         .getPublicUrl(filePath);
 
       const url = publicUrlData.publicUrl;
@@ -89,10 +99,21 @@ const ProfilePictureUpload = ({
     try {
       // Extract file path from URL
       const urlParts = photoUrl.split('/');
-      const filePath = `profiles/${urlParts[urlParts.length - 1]}`;
+      const fileName = urlParts[urlParts.length - 1];
+      
+      // Get user role to determine folder structure
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+      
+      const isAdmin = profile?.role === 'admin';
+      const folder = isAdmin ? 'admin' : 'users';
+      const filePath = `${folder}/${fileName}`;
 
       const { error: storageError } = await supabase.storage
-        .from('profile-pictures')
+        .from('profilepictures')
         .remove([filePath]);
 
       if (storageError) {
@@ -131,7 +152,7 @@ const ProfilePictureUpload = ({
       <div className="relative">
         <Avatar className="h-24 w-24">
           <AvatarImage src={photoUrl} alt="Profile picture" />
-          <AvatarFallback className="text-lg">
+          <AvatarFallback className="text-lg bg-muted text-muted-foreground">
             {userInitials}
           </AvatarFallback>
         </Avatar>
@@ -162,7 +183,7 @@ const ProfilePictureUpload = ({
             type="button"
             variant="outline"
             disabled={uploading}
-            className="cursor-pointer"
+            className="cursor-pointer border-border text-foreground hover:bg-muted"
             asChild
           >
             <span>

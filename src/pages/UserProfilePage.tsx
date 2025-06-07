@@ -5,10 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Camera, Edit } from "lucide-react";
+import { Loader2, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
 
 interface Barangay {
   id: string;
@@ -20,40 +21,78 @@ interface Barangay {
   created_at: string;
 }
 
+interface ProfileData {
+  id: string;
+  firstname: string;
+  lastname: string;
+  middlename: string;
+  phone: string;
+  bio: string;
+  gender: string;
+  bday: string;
+  profile_picture: string;
+  created_at: string;
+  role: string;
+}
+
 const UserProfilePage = () => {
   const { user, userProfile } = useAuth();
   const [barangay, setBarangay] = useState<Barangay | null>(null);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [canEdit, setCanEdit] = useState(true);
 
   const [editData, setEditData] = useState({
-    firstname: userProfile?.firstname || "",
-    lastname: userProfile?.lastname || "",
-    phone: userProfile?.phone || "",
+    firstname: "",
+    lastname: "",
+    middlename: "",
+    phone: "",
     bio: "",
   });
 
-  // Fetch barangay data when component mounts
+  // Fetch profile and barangay data when component mounts
   useEffect(() => {
-    const fetchBarangayData = async () => {
-      if (userProfile?.brgyid) {
+    const fetchData = async () => {
+      if (user?.id) {
         try {
-          const { data, error } = await supabase
-            .from("barangays")
+          // Fetch profile data
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
             .select("*")
-            .eq("id", userProfile.brgyid)
+            .eq("id", user.id)
             .single();
 
-          if (error) throw error;
-          if (data) {
-            setBarangay(data);
+          if (profileError) throw profileError;
+          
+          if (profile) {
+            setProfileData(profile);
+            setEditData({
+              firstname: profile.firstname || "",
+              lastname: profile.lastname || "",
+              middlename: profile.middlename || "",
+              phone: profile.phone || "",
+              bio: profile.bio || "",
+            });
+
+            // Fetch barangay data if brgyid exists
+            if (profile.brgyid) {
+              const { data: barangayData, error: barangayError } = await supabase
+                .from("barangays")
+                .select("*")
+                .eq("id", profile.brgyid)
+                .single();
+
+              if (barangayError) throw barangayError;
+              if (barangayData) {
+                setBarangay(barangayData);
+              }
+            }
           }
         } catch (error) {
-          console.error("Error fetching barangay data:", error);
+          console.error("Error fetching data:", error);
           toast({
             title: "Error",
-            description: "Failed to load barangay information",
+            description: "Failed to load profile information",
             variant: "destructive",
           });
         }
@@ -61,19 +100,8 @@ const UserProfilePage = () => {
       setLoading(false);
     };
 
-    if (userProfile) {
-      setEditData({
-        firstname: userProfile.firstname || "",
-        lastname: userProfile.lastname || "",
-        phone: userProfile.phone || "",
-        bio: "",
-      });
-      
-      fetchBarangayData();
-    } else {
-      setLoading(false);
-    }
-  }, [userProfile]);
+    fetchData();
+  }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -90,11 +118,23 @@ const UserProfilePage = () => {
         .update({
           firstname: editData.firstname,
           lastname: editData.lastname,
+          middlename: editData.middlename,
           phone: editData.phone,
+          bio: editData.bio,
         })
         .eq("id", user.id);
 
       if (error) throw error;
+
+      // Update local state
+      setProfileData(prev => prev ? {
+        ...prev,
+        firstname: editData.firstname,
+        lastname: editData.lastname,
+        middlename: editData.middlename,
+        phone: editData.phone,
+        bio: editData.bio,
+      } : null);
 
       toast({
         title: "Profile Updated",
@@ -114,38 +154,55 @@ const UserProfilePage = () => {
     }
   };
 
+  const handlePhotoUploaded = (url: string) => {
+    setProfileData(prev => prev ? { ...prev, profile_picture: url } : null);
+  };
+
+  const getUserInitials = () => {
+    if (profileData?.firstname && profileData?.lastname) {
+      return `${profileData.firstname.charAt(0)}${profileData.lastname.charAt(0)}`.toUpperCase();
+    }
+    return "U";
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-4xl">
-      <Card>
+    <div className="container mx-auto py-6 px-4 max-w-4xl bg-background min-h-screen">
+      <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold">Account Information</CardTitle>
+          <CardTitle className="text-2xl font-semibold text-foreground">Account Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Profile Picture Section */}
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
-                <Camera className="w-8 h-8 text-gray-400" />
-              </div>
-              <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                <Camera className="w-3 h-3 text-white" />
-              </button>
-            </div>
+          <div className="flex flex-col items-center space-y-4">
+            <ProfilePictureUpload
+              userId={user?.id || ""}
+              currentPhotoUrl={profileData?.profile_picture}
+              onPhotoUploaded={handlePhotoUploaded}
+              userInitials={getUserInitials()}
+            />
           </div>
 
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* First Name */}
             <div className="space-y-2">
-              <Label htmlFor="firstname" className="text-sm font-medium text-gray-600">
+              <Label htmlFor="firstname" className="text-sm font-medium text-muted-foreground">
                 First Name
               </Label>
               <div className="relative">
@@ -155,18 +212,18 @@ const UserProfilePage = () => {
                     name="firstname"
                     value={editData.firstname}
                     onChange={handleInputChange}
-                    className="pr-10"
+                    className="pr-10 bg-background border-input text-foreground"
                   />
                 ) : (
-                  <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                    <span>{userProfile?.firstname || "Not set"}</span>
+                  <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                    <span className="text-foreground">{profileData?.firstname || "Not set"}</span>
                   </div>
                 )}
                 {!editing && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-600"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80"
                     onClick={() => setEditing(true)}
                   >
                     Edit
@@ -177,7 +234,7 @@ const UserProfilePage = () => {
 
             {/* Last Name */}
             <div className="space-y-2">
-              <Label htmlFor="lastname" className="text-sm font-medium text-gray-600">
+              <Label htmlFor="lastname" className="text-sm font-medium text-muted-foreground">
                 Last Name
               </Label>
               <div className="relative">
@@ -187,18 +244,50 @@ const UserProfilePage = () => {
                     name="lastname"
                     value={editData.lastname}
                     onChange={handleInputChange}
-                    className="pr-10"
+                    className="pr-10 bg-background border-input text-foreground"
                   />
                 ) : (
-                  <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                    <span>{userProfile?.lastname || "Not set"}</span>
+                  <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                    <span className="text-foreground">{profileData?.lastname || "Not set"}</span>
                   </div>
                 )}
                 {!editing && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-600"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80"
+                    onClick={() => setEditing(true)}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Middle Name */}
+            <div className="space-y-2">
+              <Label htmlFor="middlename" className="text-sm font-medium text-muted-foreground">
+                Middle Name
+              </Label>
+              <div className="relative">
+                {editing ? (
+                  <Input
+                    id="middlename"
+                    name="middlename"
+                    value={editData.middlename}
+                    onChange={handleInputChange}
+                    className="pr-10 bg-background border-input text-foreground"
+                  />
+                ) : (
+                  <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                    <span className="text-foreground">{profileData?.middlename || "Not set"}</span>
+                  </div>
+                )}
+                {!editing && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80"
                     onClick={() => setEditing(true)}
                   >
                     Edit
@@ -209,13 +298,13 @@ const UserProfilePage = () => {
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-600">
+              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">
                 Email
               </Label>
-              <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                <span>{user?.email}</span>
+              <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                <span className="text-foreground">{user?.email}</span>
                 <div className="flex items-center space-x-2">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                     ✓ Verified
                   </span>
                 </div>
@@ -224,7 +313,7 @@ const UserProfilePage = () => {
 
             {/* Phone Number */}
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-sm font-medium text-gray-600">
+              <Label htmlFor="phone" className="text-sm font-medium text-muted-foreground">
                 Phone Number
               </Label>
               <div className="relative">
@@ -234,18 +323,18 @@ const UserProfilePage = () => {
                     name="phone"
                     value={editData.phone}
                     onChange={handleInputChange}
-                    className="pr-10"
+                    className="pr-10 bg-background border-input text-foreground"
                   />
                 ) : (
-                  <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                    <span>{userProfile?.phone || "Not set"}</span>
+                  <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                    <span className="text-foreground">{profileData?.phone || "Not set"}</span>
                   </div>
                 )}
                 {!editing && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-600"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80"
                     onClick={() => setEditing(true)}
                   >
                     Edit
@@ -254,30 +343,64 @@ const UserProfilePage = () => {
               </div>
             </div>
 
+            {/* Gender */}
+            <div className="space-y-2">
+              <Label htmlFor="gender" className="text-sm font-medium text-muted-foreground">
+                Gender
+              </Label>
+              <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                <span className="text-foreground">{profileData?.gender || "Not set"}</span>
+              </div>
+            </div>
+
             {/* Date of Birth */}
             <div className="space-y-2">
-              <Label htmlFor="dob" className="text-sm font-medium text-gray-600">
+              <Label htmlFor="birthdate" className="text-sm font-medium text-muted-foreground">
                 Date of Birth
               </Label>
-              <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                <span>Not set</span>
+              <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                <span className="text-foreground">
+                  {profileData?.bday ? formatDate(profileData.bday) : "Not set"}
+                </span>
+              </div>
+            </div>
+
+            {/* Role */}
+            <div className="space-y-2">
+              <Label htmlFor="role" className="text-sm font-medium text-muted-foreground">
+                Role
+              </Label>
+              <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                <span className="text-foreground capitalize">{profileData?.role || "User"}</span>
               </div>
             </div>
 
             {/* Country */}
             <div className="space-y-2">
-              <Label htmlFor="country" className="text-sm font-medium text-gray-600">
+              <Label htmlFor="country" className="text-sm font-medium text-muted-foreground">
                 Country
               </Label>
-              <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                <span>{barangay?.country || "Philippines"}</span>
+              <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                <span className="text-foreground">{barangay?.country || "Philippines"}</span>
+              </div>
+            </div>
+
+            {/* Record Date */}
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="created_at" className="text-sm font-medium text-muted-foreground">
+                Account Created
+              </Label>
+              <div className="flex items-center justify-between p-3 border border-border rounded-md bg-muted/50">
+                <span className="text-foreground">
+                  {profileData?.created_at ? formatDate(profileData.created_at) : "Not available"}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Bio Section */}
           <div className="space-y-2">
-            <Label htmlFor="bio" className="text-sm font-medium text-gray-600">
+            <Label htmlFor="bio" className="text-sm font-medium text-muted-foreground">
               Bio
             </Label>
             <div className="relative">
@@ -288,19 +411,21 @@ const UserProfilePage = () => {
                   value={editData.bio}
                   onChange={handleInputChange}
                   rows={4}
-                  className="resize-none"
+                  className="resize-none bg-background border-input text-foreground"
                   placeholder="Tell us about yourself..."
                 />
               ) : (
-                <div className="p-3 border rounded-md bg-gray-50 min-h-[100px]">
-                  <span className="text-gray-500">No bio added yet</span>
+                <div className="p-3 border border-border rounded-md bg-muted/50 min-h-[100px]">
+                  <span className="text-foreground">
+                    {profileData?.bio || <span className="text-muted-foreground">No bio added yet</span>}
+                  </span>
                 </div>
               )}
               {!editing && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute right-2 top-2 text-blue-600"
+                  className="absolute right-2 top-2 text-primary hover:text-primary/80"
                   onClick={() => setEditing(true)}
                 >
                   <Edit className="w-4 h-4" />
@@ -317,16 +442,23 @@ const UserProfilePage = () => {
                 onClick={() => {
                   setEditing(false);
                   setEditData({
-                    firstname: userProfile?.firstname || "",
-                    lastname: userProfile?.lastname || "",
-                    phone: userProfile?.phone || "",
-                    bio: "",
+                    firstname: profileData?.firstname || "",
+                    lastname: profileData?.lastname || "",
+                    middlename: profileData?.middlename || "",
+                    phone: profileData?.phone || "",
+                    bio: profileData?.bio || "",
                   });
                 }}
+                className="border-border text-foreground hover:bg-muted"
               >
                 Cancel
               </Button>
-              <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                onClick={handleSave} 
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Save Changes
               </Button>
             </div>
