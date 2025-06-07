@@ -173,7 +173,7 @@ const OfficialDetailsPage = () => {
     }
     if (educItems.length === 0) return null;
     return <ul className="list-disc pl-5 space-y-2">
-        {educItems.map((education, i) => <li key={i} className="text-gray-300">{education}</li>)}
+        {educItems.map((education, i) => <li key={i} className="text-muted-foreground whitespace-pre-line">{education}</li>)}
       </ul>;
   };
 
