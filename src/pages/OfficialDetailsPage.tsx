@@ -142,7 +142,7 @@ const OfficialDetailsPage = () => {
     }
     if (committeeItems.length === 0) return null;
     return <ul className="list-disc pl-5 space-y-2">
-        {committeeItems.map((committee, i) => <li key={i} className="text-gray-300">{committee}</li>)}
+        {committeeItems.map((committee, i) => <li key={i} className="text-muted-foreground whitespace-pre-line">{committee}</li>)}
       </ul>;
   };
 
