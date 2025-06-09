@@ -621,7 +621,7 @@ export type Database = {
       }
       events: {
         Row: {
-          brgyid: string | null
+          brgyid: string
           created_at: string | null
           created_by: string
           description: string | null
@@ -636,7 +636,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          brgyid?: string | null
+          brgyid: string
           created_at?: string | null
           created_by: string
           description?: string | null
@@ -651,7 +651,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          brgyid?: string | null
+          brgyid?: string
           created_at?: string | null
           created_by?: string
           description?: string | null

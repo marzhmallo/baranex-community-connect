@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -171,47 +172,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      console.log('Starting sign out process...');
+      
       // Store current user ID before clearing state
       const currentUserId = user?.id;
       
-      console.log('Signing out user:', currentUserId);
+      // Clear local state FIRST to prevent any UI issues
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
       
-      // Update user to OFFLINE status FIRST
+      // Update user to OFFLINE status if we have a user ID
       if (currentUserId) {
+        console.log('Setting user offline before logout:', currentUserId);
         await updateUserOnlineStatus(currentUserId, false);
       }
 
-      // Then sign out from Supabase (this will trigger auth state change)
-      const { error } = await supabase.auth.signOut();
+      // Force sign out from Supabase and clear all local storage
+      console.log('Clearing Supabase session...');
+      await supabase.auth.signOut({ scope: 'global' });
       
-      if (error && !error.message.includes('session')) {
-        console.error("Sign out error:", error);
-        toast({
-          title: "Error",
-          description: "Failed to sign out completely, but you've been logged out locally.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Signed out",
-          description: "You have been signed out successfully",
-        });
-      }
+      // Additional cleanup - clear any remaining auth data
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.clear();
       
-      // Clear local state after signout
-      setUser(null);
-      setSession(null);
-      setUserProfile(null);
+      console.log('Sign out completed successfully');
       
-      // Always navigate to login
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully",
+      });
+      
+      // Navigate to login
       navigate("/login");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Sign out error:", error);
-      // Clear local state even if signout fails
+      
+      // Even if signout fails, clear local state and redirect
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      
+      // Force clear storage
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.clear();
       
       toast({
         title: "Signed out locally",
@@ -255,6 +260,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("Auth provider initialized");
     let mounted = true;
     
+    // Clear any existing session data on mount to prevent conflicts
+    const clearConflictingSessions = async () => {
+      try {
+        // Get current session to check if it's valid
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.log('Session error detected, clearing:', error.message);
+          localStorage.removeItem('supabase.auth.token');
+          sessionStorage.clear();
+        } else if (currentSession) {
+          console.log('Valid session found:', currentSession.user?.id);
+        }
+      } catch (err) {
+        console.error('Error checking session:', err);
+        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.clear();
+      }
+    };
+    
+    clearConflictingSessions();
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       console.log("Auth state change:", event, currentSession?.user?.id);
       
@@ -262,8 +289,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (event === 'SIGNED_OUT') {
         console.log('User signed out event - clearing state');
-        // State should already be cleared by signOut function
-        // Just ensure everything is clean
         setUser(null);
         setSession(null);
         setUserProfile(null);
@@ -289,12 +314,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    // Get initial session
+    // Get initial session with better error handling
     supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
       if (!mounted) return;
       
       if (error) {
         console.error("Error getting session:", error);
+        // Clear potentially corrupted session data
+        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.clear();
         setLoading(false);
         return;
       }
