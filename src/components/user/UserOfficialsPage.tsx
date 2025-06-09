@@ -31,43 +31,48 @@ const UserOfficialsPage = () => {
   const { data: officials, isLoading } = useQuery({
     queryKey: ['user-officials'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, get the official positions
+      const { data: positionsData, error: positionsError } = await supabase
         .from('official_positions')
-        .select(`
-          id,
-          position,
-          committee,
-          term_start,
-          term_end,
-          description,
-          official_id,
-          officials (
-            id,
-            name,
-            photo_url
-          )
-        `)
+        .select('*')
         .eq('brgyid', userProfile?.brgyid)
         .lte('term_start', new Date().toISOString())
         .or(`term_end.is.null,term_end.gte.${new Date().toISOString()}`)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      
-      // Cast to any first to avoid type inference issues, then map to our interface
-      const rawData = data as any[];
-      const mappedData: OfficialPositionData[] = rawData?.map(item => ({
-        id: item.id,
-        position: item.position,
-        committee: item.committee,
-        term_start: item.term_start,
-        term_end: item.term_end,
-        description: item.description,
-        official_id: item.official_id,
-        officials: item.officials
-      })) || [];
-      
-      return mappedData;
+      if (positionsError) throw positionsError;
+
+      if (!positionsData || positionsData.length === 0) {
+        return [];
+      }
+
+      // Get unique official IDs
+      const officialIds = [...new Set(positionsData.map(pos => pos.official_id))];
+
+      // Then get the officials data
+      const { data: officialsData, error: officialsError } = await supabase
+        .from('officials')
+        .select('id, name, photo_url')
+        .in('id', officialIds);
+
+      if (officialsError) throw officialsError;
+
+      // Combine the data
+      const combinedData: OfficialPositionData[] = positionsData.map(position => {
+        const official = officialsData?.find(off => off.id === position.official_id);
+        return {
+          id: position.id,
+          position: position.position,
+          committee: position.committee,
+          term_start: position.term_start,
+          term_end: position.term_end,
+          description: position.description,
+          official_id: position.official_id,
+          officials: official || null
+        };
+      });
+
+      return combinedData;
     },
     enabled: !!userProfile?.brgyid
   });
