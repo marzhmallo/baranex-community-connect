@@ -182,6 +182,14 @@ const AppContent = () => {
           
           {/* User Routes */}
           <Route path="/hub" element={<UserRoute><HomePage /></UserRoute>} />
+          <Route path="/hub/calendar" element={<UserRoute><CalendarPage /></UserRoute>} />
+          <Route path="/hub/announcements" element={<UserRoute><AnnouncementsPage /></UserRoute>} />
+          <Route path="/hub/officials" element={<UserRoute><OfficialsPage /></UserRoute>} />
+          <Route path="/hub/officials/:id" element={<UserRoute><OfficialDetailsPage /></UserRoute>} />
+          <Route path="/hub/forum" element={<UserRoute><ForumPage /></UserRoute>} />
+          <Route path="/hub/documents" element={<UserRoute><DocumentsPage /></UserRoute>} />
+          <Route path="/hub/emergency" element={<UserRoute><EmergencyResponsePage /></UserRoute>} />
+          <Route path="/hub/settings" element={<UserRoute><SettingsPage /></UserRoute>} />
           <Route path="/feedback" element={<UserRoute><UserFeedbackPage /></UserRoute>} />
           <Route path="/profile" element={<UserRoute><UserProfilePage /></UserRoute>} />
           
