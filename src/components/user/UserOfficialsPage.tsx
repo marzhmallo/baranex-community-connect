@@ -8,12 +8,27 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Award, Calendar, MapPin } from 'lucide-react';
 import moment from 'moment';
 
+interface OfficialPositionData {
+  id: string;
+  position: string;
+  committee?: string;
+  term_start: string;
+  term_end?: string;
+  description?: string;
+  official_id: string;
+  officials: {
+    id: string;
+    name: string;
+    photo_url?: string;
+  } | null;
+}
+
 const UserOfficialsPage = () => {
   const { userProfile } = useAuth();
 
   const { data: officials, isLoading } = useQuery({
     queryKey: ['user-officials'],
-    queryFn: async () => {
+    queryFn: async (): Promise<OfficialPositionData[]> => {
       const { data, error } = await supabase
         .from('official_positions')
         .select(`
@@ -36,7 +51,16 @@ const UserOfficialsPage = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data as any[])?.map(item => ({
+        id: item.id,
+        position: item.position,
+        committee: item.committee,
+        term_start: item.term_start,
+        term_end: item.term_end,
+        description: item.description,
+        official_id: item.official_id,
+        officials: item.officials
+      })) || [];
     },
     enabled: !!userProfile?.brgyid
   });
@@ -67,7 +91,7 @@ const UserOfficialsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {officials?.map((position: any) => (
+        {officials?.map((position) => (
           <Card key={position.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="text-center pb-4">
               <Avatar className="w-24 h-24 mx-auto mb-4">
