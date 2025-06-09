@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,6 +31,13 @@ import ForumPage from "./pages/ForumPage";
 import OfficialDetailsPage from './pages/OfficialDetailsPage';
 import EmergencyResponsePage from "./pages/EmergencyResponsePage";
 import UserAccountManagement from "./pages/UserAccountManagement";
+import UserCalendarPage from "./components/user/UserCalendarPage";
+import UserAnnouncementsPage from "./components/user/UserAnnouncementsPage";
+import UserOfficialsPage from "./components/user/UserOfficialsPage";
+import UserForumPage from "./components/user/UserForumPage";
+import UserDocumentsPage from "./components/user/UserDocumentsPage";
+import UserEmergencyPage from "./components/user/UserEmergencyPage";
+import UserSettingsPage from "./components/user/UserSettingsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -182,14 +188,14 @@ const AppContent = () => {
           
           {/* User Routes */}
           <Route path="/hub" element={<UserRoute><HomePage /></UserRoute>} />
-          <Route path="/hub/calendar" element={<UserRoute><CalendarPage /></UserRoute>} />
-          <Route path="/hub/announcements" element={<UserRoute><AnnouncementsPage /></UserRoute>} />
-          <Route path="/hub/officials" element={<UserRoute><OfficialsPage /></UserRoute>} />
+          <Route path="/hub/calendar" element={<UserRoute><UserCalendarPage /></UserRoute>} />
+          <Route path="/hub/announcements" element={<UserRoute><UserAnnouncementsPage /></UserRoute>} />
+          <Route path="/hub/officials" element={<UserRoute><UserOfficialsPage /></UserRoute>} />
           <Route path="/hub/officials/:id" element={<UserRoute><OfficialDetailsPage /></UserRoute>} />
-          <Route path="/hub/forum" element={<UserRoute><ForumPage /></UserRoute>} />
-          <Route path="/hub/documents" element={<UserRoute><DocumentsPage /></UserRoute>} />
-          <Route path="/hub/emergency" element={<UserRoute><EmergencyResponsePage /></UserRoute>} />
-          <Route path="/hub/settings" element={<UserRoute><SettingsPage /></UserRoute>} />
+          <Route path="/hub/forum" element={<UserRoute><UserForumPage /></UserRoute>} />
+          <Route path="/hub/documents" element={<UserRoute><UserDocumentsPage /></UserRoute>} />
+          <Route path="/hub/emergency" element={<UserRoute><UserEmergencyPage /></UserRoute>} />
+          <Route path="/hub/settings" element={<UserRoute><UserSettingsPage /></UserRoute>} />
           <Route path="/feedback" element={<UserRoute><UserFeedbackPage /></UserRoute>} />
           <Route path="/profile" element={<UserRoute><UserProfilePage /></UserRoute>} />
           

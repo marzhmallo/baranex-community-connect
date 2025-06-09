@@ -1,0 +1,279 @@
+
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Shield, MapPin, Users, Phone, AlertTriangle, Navigation, Clock } from "lucide-react";
+
+const UserEmergencyPage = () => {
+  const { userProfile } = useAuth();
+
+  // Fetch emergency contacts
+  const { data: contacts, isLoading: contactsLoading } = useQuery({
+    queryKey: ['user-emergency-contacts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('emergency_contacts')
+        .select('*')
+        .eq('brgyid', userProfile?.brgyid)
+        .order('priority', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userProfile?.brgyid
+  });
+
+  // Fetch disaster zones
+  const { data: zones, isLoading: zonesLoading } = useQuery({
+    queryKey: ['user-disaster-zones'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('disaster_zones')
+        .select('*')
+        .eq('brgyid', userProfile?.brgyid)
+        .order('risk_level', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userProfile?.brgyid
+  });
+
+  // Fetch evacuation centers
+  const { data: centers, isLoading: centersLoading } = useQuery({
+    queryKey: ['user-evacuation-centers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evacuation_centers')
+        .select('*')
+        .eq('brgyid', userProfile?.brgyid)
+        .order('capacity', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userProfile?.brgyid
+  });
+
+  if (contactsLoading || zonesLoading || centersLoading) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex items-center gap-3 mb-6">
+        <Shield className="h-8 w-8 text-red-600" />
+        <div>
+          <h1 className="text-2xl font-bold">Emergency Information</h1>
+          <p className="text-muted-foreground">Important safety information and emergency contacts</p>
+        </div>
+      </div>
+
+      <Alert className="mb-6 border-red-200 bg-red-50">
+        <AlertTriangle className="h-4 w-4 text-red-600" />
+        <AlertDescription className="text-red-800">
+          <strong>Emergency:</strong> In case of immediate danger, call 911 or your local emergency services first.
+        </AlertDescription>
+      </Alert>
+
+      <Tabs defaultValue="contacts" className="w-full">
+        <TabsList className="grid grid-cols-3 mb-6">
+          <TabsTrigger value="contacts" className="flex items-center gap-2">
+            <Phone className="h-4 w-4" />
+            Emergency Contacts
+          </TabsTrigger>
+          <TabsTrigger value="zones" className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            Risk Areas
+          </TabsTrigger>
+          <TabsTrigger value="centers" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Evacuation Centers
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="contacts">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {contacts?.map((contact) => (
+              <Card key={contact.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5" />
+                    {contact.service_name}
+                  </CardTitle>
+                  <div className="flex gap-2">
+                    <Badge variant={contact.is_24_7 ? "default" : "secondary"}>
+                      {contact.is_24_7 ? "24/7" : "Limited Hours"}
+                    </Badge>
+                    <Badge variant="outline">Priority {contact.priority}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <p className="font-medium text-lg text-primary">{contact.phone_number}</p>
+                    {contact.alternative_number && (
+                      <p className="text-sm text-muted-foreground">
+                        Alt: {contact.alternative_number}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {contact.description && (
+                    <p className="text-sm text-muted-foreground">{contact.description}</p>
+                  )}
+                  
+                  {contact.operating_hours && !contact.is_24_7 && (
+                    <div className="flex items-center gap-1 text-sm">
+                      <Clock className="h-3 w-3" />
+                      {contact.operating_hours}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+            
+            {contacts?.length === 0 && (
+              <div className="col-span-full">
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Phone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No emergency contacts available.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="zones">
+          <div className="space-y-4">
+            {zones?.map((zone) => (
+              <Card key={zone.id} className={`border-l-4 ${
+                zone.risk_level === 'high' ? 'border-l-red-500' :
+                zone.risk_level === 'medium' ? 'border-l-yellow-500' :
+                'border-l-green-500'
+              }`}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5" />
+                        {zone.zone_name}
+                      </CardTitle>
+                      <CardDescription>{zone.description}</CardDescription>
+                    </div>
+                    <Badge variant={
+                      zone.risk_level === 'high' ? 'destructive' :
+                      zone.risk_level === 'medium' ? 'default' :
+                      'secondary'
+                    }>
+                      {zone.risk_level} Risk
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p><strong>Hazard Type:</strong> {zone.hazard_type}</p>
+                    {zone.coordinates && (
+                      <p><strong>Coordinates:</strong> {zone.coordinates}</p>
+                    )}
+                    {zone.safety_instructions && (
+                      <div>
+                        <p><strong>Safety Instructions:</strong></p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {zone.safety_instructions}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {zones?.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No disaster zones identified.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="centers">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {centers?.map((center) => (
+              <Card key={center.id}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    {center.center_name}
+                  </CardTitle>
+                  <div className="flex gap-2">
+                    <Badge variant={center.is_active ? "default" : "secondary"}>
+                      {center.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                    <Badge variant="outline">Capacity: {center.capacity}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                    <p className="text-sm">{center.address}</p>
+                  </div>
+                  
+                  {center.contact_person && (
+                    <p className="text-sm">
+                      <strong>Contact:</strong> {center.contact_person}
+                      {center.contact_number && ` - ${center.contact_number}`}
+                    </p>
+                  )}
+                  
+                  {center.facilities && (
+                    <div>
+                      <p className="text-sm font-medium">Facilities:</p>
+                      <p className="text-sm text-muted-foreground">{center.facilities}</p>
+                    </div>
+                  )}
+                  
+                  {center.coordinates && (
+                    <p className="text-xs text-muted-foreground">
+                      Coordinates: {center.coordinates}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+            
+            {centers?.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No evacuation centers available.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default UserEmergencyPage;
