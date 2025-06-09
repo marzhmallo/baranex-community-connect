@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Search, Calendar, Eye, Download } from "lucide-react";
+import { FileText, Search, Calendar, Download } from "lucide-react";
 import moment from "moment";
 
 const UserDocumentsPage = () => {
@@ -16,67 +16,45 @@ const UserDocumentsPage = () => {
   const [activeTab, setActiveTab] = useState("available");
   const { userProfile } = useAuth();
 
-  // Fetch available document templates
-  const { data: templates, isLoading: templatesLoading } = useQuery({
-    queryKey: ['user-document-templates'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('document_templates')
-        .select('*')
-        .eq('brgyid', userProfile?.brgyid)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+  // For now, show a simple message about document services
+  const mockTemplates = [
+    {
+      id: '1',
+      name: 'Barangay Clearance',
+      description: 'Certificate of good moral character and residence',
+      fee: 50,
+      requirements: 'Valid ID, Proof of residence'
     },
-    enabled: !!userProfile?.brgyid
-  });
+    {
+      id: '2', 
+      name: 'Certificate of Indigency',
+      description: 'Certification for financial assistance applications',
+      fee: 0,
+      requirements: 'Valid ID, Proof of income (if any)'
+    },
+    {
+      id: '3',
+      name: 'Business Permit',
+      description: 'Permit to operate small business in the barangay',
+      fee: 200,
+      requirements: 'Valid ID, Business registration, Location map'
+    }
+  ];
 
-  // Fetch user's document requests
+  // Fetch user's document requests (simplified for now)
   const { data: userDocuments, isLoading: documentsLoading } = useQuery({
     queryKey: ['user-documents'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('issued_documents')
-        .select(`
-          *,
-          document_templates (
-            template_name,
-            description
-          )
-        `)
-        .eq('resident_id', userProfile?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      // For now return empty array - this would connect to actual issued documents
+      return [];
     },
     enabled: !!userProfile?.id
   });
 
-  const filteredTemplates = templates?.filter(template =>
-    template.template_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredTemplates = mockTemplates.filter(template =>
+    template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     template.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const filteredDocuments = userDocuments?.filter(doc =>
-    doc.document_templates?.template_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  if (templatesLoading || documentsLoading) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -114,7 +92,7 @@ const UserDocumentsPage = () => {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    {template.template_name}
+                    {template.name}
                   </CardTitle>
                   {template.description && (
                     <p className="text-sm text-muted-foreground">{template.description}</p>
@@ -124,8 +102,8 @@ const UserDocumentsPage = () => {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">Available</Badge>
-                      {template.fee_amount > 0 && (
-                        <Badge variant="outline">₱{template.fee_amount}</Badge>
+                      {template.fee > 0 && (
+                        <Badge variant="outline">₱{template.fee}</Badge>
                       )}
                     </div>
                     
@@ -152,7 +130,7 @@ const UserDocumentsPage = () => {
                 <Card>
                   <CardContent className="text-center py-12">
                     <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No document templates available.</p>
+                    <p className="text-muted-foreground">No document templates found matching your search.</p>
                   </CardContent>
                 </Card>
               </div>
@@ -162,65 +140,14 @@ const UserDocumentsPage = () => {
 
         <TabsContent value="requests" className="mt-0">
           <div className="space-y-4">
-            {filteredDocuments?.map((document) => (
-              <Card key={document.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <h3 className="font-medium">
-                        {document.document_templates?.template_name || 'Unknown Document'}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Requested: {moment(document.created_at).format('MMM DD, YYYY')}
-                        </div>
-                        {document.issued_date && (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Issued: {moment(document.issued_date).format('MMM DD, YYYY')}
-                          </div>
-                        )}
-                      </div>
-                      {document.purpose && (
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Purpose:</strong> {document.purpose}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div className="text-right space-y-2">
-                      <Badge 
-                        variant={
-                          document.status === 'issued' ? 'default' :
-                          document.status === 'processing' ? 'secondary' :
-                          'outline'
-                        }
-                      >
-                        {document.status}
-                      </Badge>
-                      
-                      {document.document_url && (
-                        <div>
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={document.document_url} target="_blank" rel="noopener noreferrer">
-                              <Download className="mr-2 h-3 w-3" />
-                              Download
-                            </a>
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            
-            {filteredDocuments?.length === 0 && (
+            {userDocuments?.length === 0 && (
               <Card>
                 <CardContent className="text-center py-12">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">You haven't requested any documents yet.</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Visit the barangay office to request documents.
+                  </p>
                 </CardContent>
               </Card>
             )}

@@ -6,12 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, MapPin, Users, Phone, AlertTriangle, Navigation, Clock } from "lucide-react";
+import { Shield, MapPin, Users, Phone, AlertTriangle, Clock } from "lucide-react";
 
 const UserEmergencyPage = () => {
   const { userProfile } = useAuth();
 
-  // Fetch emergency contacts
+  // Fetch emergency contacts using correct field names
   const { data: contacts, isLoading: contactsLoading } = useQuery({
     queryKey: ['user-emergency-contacts'],
     queryFn: async () => {
@@ -19,7 +19,7 @@ const UserEmergencyPage = () => {
         .from('emergency_contacts')
         .select('*')
         .eq('brgyid', userProfile?.brgyid)
-        .order('priority', { ascending: true });
+        .order('type', { ascending: true });
 
       if (error) throw error;
       return data || [];
@@ -114,34 +114,22 @@ const UserEmergencyPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Phone className="h-5 w-5" />
-                    {contact.service_name}
+                    {contact.name}
                   </CardTitle>
-                  <div className="flex gap-2">
-                    <Badge variant={contact.is_24_7 ? "default" : "secondary"}>
-                      {contact.is_24_7 ? "24/7" : "Limited Hours"}
-                    </Badge>
-                    <Badge variant="outline">Priority {contact.priority}</Badge>
-                  </div>
+                  <Badge variant="outline">{contact.type}</Badge>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
                     <p className="font-medium text-lg text-primary">{contact.phone_number}</p>
-                    {contact.alternative_number && (
+                    {contact.email && (
                       <p className="text-sm text-muted-foreground">
-                        Alt: {contact.alternative_number}
+                        Email: {contact.email}
                       </p>
                     )}
                   </div>
                   
                   {contact.description && (
                     <p className="text-sm text-muted-foreground">{contact.description}</p>
-                  )}
-                  
-                  {contact.operating_hours && !contact.is_24_7 && (
-                    <div className="flex items-center gap-1 text-sm">
-                      <Clock className="h-3 w-3" />
-                      {contact.operating_hours}
-                    </div>
                   )}
                 </CardContent>
               </Card>

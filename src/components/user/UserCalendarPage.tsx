@@ -23,15 +23,15 @@ const UserCalendarPage = () => {
         .from('events')
         .select('*')
         .eq('brgyid', userProfile?.brgyid)
-        .order('start_date', { ascending: true });
+        .order('start_time', { ascending: true });
 
       if (error) throw error;
 
       return data?.map(event => ({
         id: event.id,
         title: event.title,
-        start: new Date(event.start_date),
-        end: new Date(event.end_date),
+        start: new Date(event.start_time),
+        end: new Date(event.end_time),
         resource: event
       })) || [];
     },
