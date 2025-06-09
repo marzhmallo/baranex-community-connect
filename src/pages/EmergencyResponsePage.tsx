@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,19 +7,14 @@ import DisasterZonesManager from "@/components/emergency/DisasterZonesManager";
 import EvacuationCentersManager from "@/components/emergency/EvacuationCentersManager";
 import EvacuationRoutesManager from "@/components/emergency/EvacuationRoutesManager";
 import EmergencyDashboard from "@/components/emergency/EmergencyDashboard";
-
 const EmergencyResponsePage = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-
-  return (
-    <div className="p-6 space-y-6">
+  return <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
         <Shield className="h-8 w-8 text-red-600" />
         <div>
           <h1 className="text-3xl font-bold">Emergency Preparedness & Response</h1>
-          <p className="text-muted-foreground">
-            Manage emergency contacts, disaster zones, evacuation centers, and response coordination
-          </p>
+          <p className="text-muted-foreground">Stay informed during emergencies. Connect with help, view danger zones, and find safe places.</p>
         </div>
       </div>
 
@@ -108,8 +102,6 @@ const EmergencyResponsePage = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default EmergencyResponsePage;
