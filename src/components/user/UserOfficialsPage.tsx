@@ -38,56 +38,23 @@ const UserOfficialsPage = () => {
       }
 
       try {
-        // Step 1: Get official positions using raw query
+        // Step 1: Get official positions with simple query
         const currentDate = new Date().toISOString();
-        const { data: positions, error: positionsError } = await supabase
-          .rpc('get_current_official_positions', {
-            barangay_id: userProfile.brgyid,
-            current_date: currentDate
-          })
-          .returns<PositionData[]>();
+        
+        const positionsResponse = await supabase
+          .from('official_positions')
+          .select('id, position, committee, term_start, term_end, description, official_id')
+          .lte('term_start', currentDate)
+          .or(`term_end.is.null,term_end.gte.${currentDate}`);
 
-        if (positionsError) {
-          console.error('Error fetching positions:', positionsError);
-          // Fallback to direct query if RPC fails
-          const fallbackQuery = await supabase
-            .from('official_positions')
-            .select('id, position, committee, term_start, term_end, description, official_id');
-          
-          const positions = fallbackQuery.data as PositionData[] || [];
-          
-          if (!positions || positions.length === 0) {
-            return [];
-          }
-
-          // Step 2: Get officials data
-          const officialIds = positions.map(pos => pos.official_id);
-          const uniqueOfficialIds = [...new Set(officialIds)];
-
-          const { data: officials, error: officialsError } = await supabase
-            .from('officials')
-            .select('id, name, photo_url');
-
-          if (officialsError) {
-            console.error('Error fetching officials:', officialsError);
-            throw officialsError;
-          }
-
-          const officialsData = officials as OfficialData[] || [];
-
-          // Step 3: Manually combine the data
-          const result: OfficialPositionData[] = positions.map(position => {
-            const official = officialsData.find(off => off.id === position.official_id) || null;
-            return {
-              ...position,
-              officials: official
-            };
-          });
-
-          return result;
+        if (positionsResponse.error) {
+          console.error('Error fetching positions:', positionsResponse.error);
+          throw positionsResponse.error;
         }
 
-        if (!positions || positions.length === 0) {
+        const positions = positionsResponse.data || [];
+        
+        if (positions.length === 0) {
           return [];
         }
 
@@ -95,16 +62,17 @@ const UserOfficialsPage = () => {
         const officialIds = positions.map(pos => pos.official_id);
         const uniqueOfficialIds = [...new Set(officialIds)];
 
-        const { data: officials, error: officialsError } = await supabase
+        const officialsResponse = await supabase
           .from('officials')
-          .select('id, name, photo_url');
+          .select('id, name, photo_url')
+          .in('id', uniqueOfficialIds);
 
-        if (officialsError) {
-          console.error('Error fetching officials:', officialsError);
-          throw officialsError;
+        if (officialsResponse.error) {
+          console.error('Error fetching officials:', officialsResponse.error);
+          throw officialsResponse.error;
         }
 
-        const officialsData = officials as OfficialData[] || [];
+        const officialsData = officialsResponse.data || [];
 
         // Step 3: Manually combine the data
         const result: OfficialPositionData[] = positions.map(position => {
