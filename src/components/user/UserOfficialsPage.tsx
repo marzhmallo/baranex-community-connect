@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
@@ -16,8 +17,14 @@ const UserOfficialsPage = () => {
       const { data, error } = await supabase
         .from('official_positions')
         .select(`
-          *,
-          officials (
+          id,
+          position,
+          committee,
+          term_start,
+          term_end,
+          description,
+          official_id,
+          officials!inner (
             id,
             name,
             photo_url
@@ -60,7 +67,7 @@ const UserOfficialsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {officials?.map((position) => (
+        {officials?.map((position: any) => (
           <Card key={position.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="text-center pb-4">
               <Avatar className="w-24 h-24 mx-auto mb-4">
@@ -69,7 +76,7 @@ const UserOfficialsPage = () => {
                   alt={position.officials?.name} 
                 />
                 <AvatarFallback className="text-lg">
-                  {position.officials?.name?.split(' ').map(n => n.charAt(0)).join('') || 'OF'}
+                  {position.officials?.name?.split(' ').map((n: string) => n.charAt(0)).join('') || 'OF'}
                 </AvatarFallback>
               </Avatar>
               <CardTitle className="text-lg">
