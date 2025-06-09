@@ -14,7 +14,7 @@ interface OfficialData {
   photo_url?: string;
 }
 
-interface OfficialPositionData {
+interface PositionData {
   id: string;
   position: string;
   committee?: string;
@@ -22,6 +22,9 @@ interface OfficialPositionData {
   term_end?: string;
   description?: string;
   official_id: string;
+}
+
+interface OfficialPositionData extends PositionData {
   officials: OfficialData | null;
 }
 
@@ -35,51 +38,57 @@ const UserOfficialsPage = () => {
         return [];
       }
 
-      // First, get the official positions with explicit typing
-      const positionsResponse = await supabase
-        .from('official_positions')
-        .select('*')
-        .eq('brgyid', userProfile.brgyid)
-        .lte('term_start', new Date().toISOString())
-        .or(`term_end.is.null,term_end.gte.${new Date().toISOString()}`)
-        .order('created_at', { ascending: true });
+      try {
+        // Step 1: Get official positions as plain objects
+        const positionsQuery = supabase
+          .from('official_positions')
+          .select('id, position, committee, term_start, term_end, description, official_id')
+          .eq('brgyid', userProfile.brgyid)
+          .lte('term_start', new Date().toISOString())
+          .or(`term_end.is.null,term_end.gte.${new Date().toISOString()}`)
+          .order('created_at', { ascending: true });
 
-      if (positionsResponse.error) throw positionsResponse.error;
+        const { data: positions, error: positionsError } = await positionsQuery;
 
-      const positionsData = positionsResponse.data as any[];
-      if (!positionsData || positionsData.length === 0) {
-        return [];
+        if (positionsError) {
+          console.error('Error fetching positions:', positionsError);
+          throw positionsError;
+        }
+
+        if (!positions || positions.length === 0) {
+          return [];
+        }
+
+        // Step 2: Get officials data
+        const officialIds = positions.map(pos => pos.official_id);
+        const uniqueOfficialIds = [...new Set(officialIds)];
+
+        const officialsQuery = supabase
+          .from('officials')
+          .select('id, name, photo_url')
+          .in('id', uniqueOfficialIds);
+
+        const { data: officials, error: officialsError } = await officialsQuery;
+
+        if (officialsError) {
+          console.error('Error fetching officials:', officialsError);
+          throw officialsError;
+        }
+
+        // Step 3: Manually combine the data
+        const result: OfficialPositionData[] = positions.map(position => {
+          const official = officials?.find(off => off.id === position.official_id) || null;
+          return {
+            ...position,
+            officials: official
+          };
+        });
+
+        return result;
+      } catch (error) {
+        console.error('Error in officials query:', error);
+        throw error;
       }
-
-      // Get unique official IDs
-      const officialIds = [...new Set(positionsData.map((pos: any) => pos.official_id))];
-
-      // Then get the officials data with explicit typing
-      const officialsResponse = await supabase
-        .from('officials')
-        .select('id, name, photo_url')
-        .in('id', officialIds);
-
-      if (officialsResponse.error) throw officialsResponse.error;
-
-      const officialsData = officialsResponse.data as any[];
-
-      // Combine the data with explicit typing
-      const combinedData: OfficialPositionData[] = positionsData.map((position: any) => {
-        const official = officialsData?.find((off: any) => off.id === position.official_id);
-        return {
-          id: position.id,
-          position: position.position,
-          committee: position.committee,
-          term_start: position.term_start,
-          term_end: position.term_end,
-          description: position.description,
-          official_id: position.official_id,
-          officials: official || null
-        };
-      });
-
-      return combinedData;
     },
     enabled: !!userProfile?.brgyid
   });
