@@ -10,6 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/components/AuthProvider";
 import { Event } from "@/pages/CalendarPage";
 import {
   Dialog,
@@ -47,6 +48,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
   const [isAllDay, setIsAllDay] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
 
   // If all-day is detected, set the switch
   useEffect(() => {
@@ -90,6 +92,9 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
       // If there's no user ID, use a placeholder value or handle accordingly
       const createdBy = userId || "00000000-0000-0000-0000-000000000000";
       
+      // Get the user's barangay ID from their profile
+      const brgyid = userProfile?.brgyid || "00000000-0000-0000-0000-000000000000";
+      
       const eventData = {
         title,
         description,
@@ -99,7 +104,8 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         event_type: eventType,
         target_audience: targetAudience,
         is_public: isPublic,
-        created_by: createdBy  // Add the created_by field
+        created_by: createdBy,
+        brgyid: brgyid  // Add the required brgyid field
       };
       
       let response;
