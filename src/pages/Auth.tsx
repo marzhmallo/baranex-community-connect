@@ -505,7 +505,7 @@ const Auth = () => {
                             <div className="relative">
                               <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                               <Input 
-                                placeholder="you@example.com or username" 
+                                placeholder="Enter email or username" 
                                 className="pl-9" 
                                 {...field} 
                               />
