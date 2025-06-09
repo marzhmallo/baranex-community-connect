@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
@@ -20,15 +19,14 @@ const UserOfficialsPage = () => {
           *,
           officials (
             id,
-            firstname,
-            lastname,
+            name,
             photo_url
           )
         `)
         .eq('brgyid', userProfile?.brgyid)
-        .lte('start_date', new Date().toISOString())
-        .or(`end_date.is.null,end_date.gte.${new Date().toISOString()}`)
-        .order('position_order', { ascending: true });
+        .lte('term_start', new Date().toISOString())
+        .or(`term_end.is.null,term_end.gte.${new Date().toISOString()}`)
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       return data || [];
@@ -68,25 +66,25 @@ const UserOfficialsPage = () => {
               <Avatar className="w-24 h-24 mx-auto mb-4">
                 <AvatarImage 
                   src={position.officials?.photo_url} 
-                  alt={`${position.officials?.firstname} ${position.officials?.lastname}`} 
+                  alt={position.officials?.name} 
                 />
                 <AvatarFallback className="text-lg">
-                  {position.officials?.firstname?.charAt(0)}{position.officials?.lastname?.charAt(0)}
+                  {position.officials?.name?.split(' ').map(n => n.charAt(0)).join('') || 'OF'}
                 </AvatarFallback>
               </Avatar>
               <CardTitle className="text-lg">
-                {position.officials?.firstname} {position.officials?.lastname}
+                {position.officials?.name || 'Unknown Official'}
               </CardTitle>
               <Badge variant="secondary" className="mx-auto">
-                {position.position_title}
+                {position.position}
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
                 <span>
-                  Since {moment(position.start_date).format('MMM YYYY')}
-                  {position.end_date && ` - ${moment(position.end_date).format('MMM YYYY')}`}
+                  Since {moment(position.term_start).format('MMM YYYY')}
+                  {position.term_end && ` - ${moment(position.term_end).format('MMM YYYY')}`}
                 </span>
               </div>
               
@@ -100,8 +98,8 @@ const UserOfficialsPage = () => {
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">Term Status:</span>
-                  <Badge variant={position.end_date ? "outline" : "default"}>
-                    {position.end_date ? "Term Ended" : "Active"}
+                  <Badge variant={position.term_end ? "outline" : "default"}>
+                    {position.term_end ? "Term Ended" : "Active"}
                   </Badge>
                 </div>
               </div>

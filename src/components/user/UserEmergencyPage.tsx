@@ -163,7 +163,7 @@ const UserEmergencyPage = () => {
                         <MapPin className="h-5 w-5" />
                         {zone.zone_name}
                       </CardTitle>
-                      <CardDescription>{zone.description}</CardDescription>
+                      <CardDescription>{zone.notes}</CardDescription>
                     </div>
                     <Badge variant={
                       zone.risk_level === 'high' ? 'destructive' :
@@ -176,15 +176,15 @@ const UserEmergencyPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <p><strong>Hazard Type:</strong> {zone.hazard_type}</p>
-                    {zone.coordinates && (
-                      <p><strong>Coordinates:</strong> {zone.coordinates}</p>
+                    <p><strong>Hazard Type:</strong> {zone.zone_type}</p>
+                    {zone.polygon_coords && (
+                      <p><strong>Coordinates:</strong> {JSON.stringify(zone.polygon_coords)}</p>
                     )}
-                    {zone.safety_instructions && (
+                    {zone.notes && (
                       <div>
                         <p><strong>Safety Instructions:</strong></p>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {zone.safety_instructions}
+                          {zone.notes}
                         </p>
                       </div>
                     )}
@@ -211,11 +211,11 @@ const UserEmergencyPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    {center.center_name}
+                    {center.name}
                   </CardTitle>
                   <div className="flex gap-2">
-                    <Badge variant={center.is_active ? "default" : "secondary"}>
-                      {center.is_active ? "Active" : "Inactive"}
+                    <Badge variant={center.status === 'available' ? "default" : "secondary"}>
+                      {center.status === 'available' ? "Available" : center.status}
                     </Badge>
                     <Badge variant="outline">Capacity: {center.capacity}</Badge>
                   </div>
@@ -229,20 +229,20 @@ const UserEmergencyPage = () => {
                   {center.contact_person && (
                     <p className="text-sm">
                       <strong>Contact:</strong> {center.contact_person}
-                      {center.contact_number && ` - ${center.contact_number}`}
+                      {center.contact_phone && ` - ${center.contact_phone}`}
                     </p>
                   )}
                   
                   {center.facilities && (
                     <div>
                       <p className="text-sm font-medium">Facilities:</p>
-                      <p className="text-sm text-muted-foreground">{center.facilities}</p>
+                      <p className="text-sm text-muted-foreground">{center.facilities.join(', ')}</p>
                     </div>
                   )}
                   
-                  {center.coordinates && (
+                  {(center.latitude && center.longitude) && (
                     <p className="text-xs text-muted-foreground">
-                      Coordinates: {center.coordinates}
+                      Coordinates: {center.latitude}, {center.longitude}
                     </p>
                   )}
                 </CardContent>
