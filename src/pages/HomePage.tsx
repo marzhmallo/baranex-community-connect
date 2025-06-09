@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,11 +23,11 @@ interface Announcement {
   created_by: string;
 }
 
-interface Official {
+interface OfficialWithPosition {
   id: string;
   name: string;
-  position: string;
   photo_url: string;
+  position: string;
   term_start: string;
   term_end: string;
 }
@@ -39,7 +38,7 @@ const HomePage = () => {
   const [currentDate, setCurrentDate] = useState('');
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [latestAnnouncements, setLatestAnnouncements] = useState<Announcement[]>([]);
-  const [barangayOfficials, setBarangayOfficials] = useState<Official[]>([]);
+  const [barangayOfficials, setBarangayOfficials] = useState<OfficialWithPosition[]>([]);
 
   useEffect(() => {
     // Set current date
@@ -112,19 +111,43 @@ const HomePage = () => {
       }
     };
 
-    // Fetch barangay officials
+    // Fetch barangay officials with positions
     const fetchBarangayOfficials = async () => {
       if (userProfile?.brgyid) {
         try {
           const { data, error } = await supabase
-            .from('officials')
-            .select('*')
-            .eq('brgyid', userProfile.brgyid)
-            .order('position', { ascending: true })
+            .from('official_positions')
+            .select(`
+              id,
+              position,
+              term_start,
+              term_end,
+              is_current,
+              officials (
+                id,
+                name,
+                photo_url
+              )
+            `)
+            .eq('officials.brgyid', userProfile.brgyid)
+            .eq('is_current', true)
+            .order('term_start', { ascending: true })
             .limit(5);
           
           if (data && !error) {
-            setBarangayOfficials(data);
+            // Transform the data to match our interface
+            const officialsWithPositions: OfficialWithPosition[] = data
+              .filter(item => item.officials) // Only include items with valid officials data
+              .map(item => ({
+                id: item.officials.id,
+                name: item.officials.name,
+                photo_url: item.officials.photo_url,
+                position: item.position,
+                term_start: item.term_start,
+                term_end: item.term_end
+              }));
+            
+            setBarangayOfficials(officialsWithPositions);
           }
         } catch (err) {
           console.error('Error fetching barangay officials:', err);
