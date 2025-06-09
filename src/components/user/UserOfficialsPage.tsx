@@ -8,6 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Award, Calendar, MapPin } from 'lucide-react';
 import moment from 'moment';
 
+interface OfficialData {
+  id: string;
+  name: string;
+  photo_url?: string;
+}
+
 interface OfficialPositionData {
   id: string;
   position: string;
@@ -16,11 +22,7 @@ interface OfficialPositionData {
   term_end?: string;
   description?: string;
   official_id: string;
-  officials: {
-    id: string;
-    name: string;
-    photo_url?: string;
-  } | null;
+  officials: OfficialData | null;
 }
 
 const UserOfficialsPage = () => {
@@ -28,7 +30,7 @@ const UserOfficialsPage = () => {
 
   const { data: officials, isLoading } = useQuery({
     queryKey: ['user-officials'],
-    queryFn: async (): Promise<OfficialPositionData[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('official_positions')
         .select(`
@@ -39,7 +41,7 @@ const UserOfficialsPage = () => {
           term_end,
           description,
           official_id,
-          officials!inner (
+          officials (
             id,
             name,
             photo_url
@@ -51,7 +53,10 @@ const UserOfficialsPage = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return (data as any[])?.map(item => ({
+      
+      // Cast to any first to avoid type inference issues, then map to our interface
+      const rawData = data as any[];
+      const mappedData: OfficialPositionData[] = rawData?.map(item => ({
         id: item.id,
         position: item.position,
         committee: item.committee,
@@ -61,6 +66,8 @@ const UserOfficialsPage = () => {
         official_id: item.official_id,
         officials: item.officials
       })) || [];
+      
+      return mappedData;
     },
     enabled: !!userProfile?.brgyid
   });
