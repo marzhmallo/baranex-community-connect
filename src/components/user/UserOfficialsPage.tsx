@@ -30,36 +30,43 @@ const UserOfficialsPage = () => {
 
   const { data: officials, isLoading } = useQuery({
     queryKey: ['user-officials'],
-    queryFn: async () => {
-      // First, get the official positions
-      const { data: positionsData, error: positionsError } = await supabase
+    queryFn: async (): Promise<OfficialPositionData[]> => {
+      if (!userProfile?.brgyid) {
+        return [];
+      }
+
+      // First, get the official positions with explicit typing
+      const positionsResponse = await supabase
         .from('official_positions')
         .select('*')
-        .eq('brgyid', userProfile?.brgyid)
+        .eq('brgyid', userProfile.brgyid)
         .lte('term_start', new Date().toISOString())
         .or(`term_end.is.null,term_end.gte.${new Date().toISOString()}`)
         .order('created_at', { ascending: true });
 
-      if (positionsError) throw positionsError;
+      if (positionsResponse.error) throw positionsResponse.error;
 
+      const positionsData = positionsResponse.data as any[];
       if (!positionsData || positionsData.length === 0) {
         return [];
       }
 
       // Get unique official IDs
-      const officialIds = [...new Set(positionsData.map(pos => pos.official_id))];
+      const officialIds = [...new Set(positionsData.map((pos: any) => pos.official_id))];
 
-      // Then get the officials data
-      const { data: officialsData, error: officialsError } = await supabase
+      // Then get the officials data with explicit typing
+      const officialsResponse = await supabase
         .from('officials')
         .select('id, name, photo_url')
         .in('id', officialIds);
 
-      if (officialsError) throw officialsError;
+      if (officialsResponse.error) throw officialsResponse.error;
 
-      // Combine the data
-      const combinedData: OfficialPositionData[] = positionsData.map(position => {
-        const official = officialsData?.find(off => off.id === position.official_id);
+      const officialsData = officialsResponse.data as any[];
+
+      // Combine the data with explicit typing
+      const combinedData: OfficialPositionData[] = positionsData.map((position: any) => {
+        const official = officialsData?.find((off: any) => off.id === position.official_id);
         return {
           id: position.id,
           position: position.position,
