@@ -3,7 +3,6 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface Event {
   id: string;
@@ -35,7 +34,6 @@ interface OfficialWithPosition {
 
 const HomePage = () => {
   const { userProfile } = useAuth();
-  const navigate = useNavigate();
   const [barangayName, setBarangayName] = useState<string>('');
   const [currentDate, setCurrentDate] = useState('');
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
@@ -424,10 +422,7 @@ const HomePage = () => {
           </div>
           
           <div className="text-center mt-6">
-            <button 
-              onClick={() => navigate('/hub/officials')}
-              className="text-primary hover:text-primary/80 text-sm font-medium"
-            >
+            <button className="text-primary hover:text-primary/80 text-sm font-medium">
               View all barangay officials →
             </button>
           </div>
@@ -438,5 +433,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
-</edits_to_apply>
