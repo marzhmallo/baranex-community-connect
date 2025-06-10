@@ -1,89 +1,47 @@
+
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Calendar, MapPin } from 'lucide-react';
+import { Award, Calendar, MapPin, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import OfficialCard from '@/components/officials/OfficialCard';
+import { Official } from '@/lib/types';
 import moment from 'moment';
-
-interface OfficialData {
-  id: string;
-  name: string;
-  photo_url?: string;
-}
-
-interface PositionData {
-  id: string;
-  position: string;
-  committee?: string;
-  term_start: string;
-  term_end?: string;
-  description?: string;
-  official_id: string;
-}
-
-interface OfficialPositionData extends PositionData {
-  officials: OfficialData | null;
-}
 
 const UserOfficialsPage = () => {
   const { userProfile } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('current');
 
   const { data: officials, isLoading } = useQuery({
-    queryKey: ['user-officials'],
-    queryFn: async (): Promise<OfficialPositionData[]> => {
+    queryKey: ['user-officials', userProfile?.brgyid],
+    queryFn: async (): Promise<Official[]> => {
       if (!userProfile?.brgyid) {
         return [];
       }
 
       try {
-        // Step 1: Get official positions with simple query
-        const currentDate = new Date().toISOString();
-        
-        const positionsResponse = await supabase
-          .from('official_positions')
-          .select('id, position, committee, term_start, term_end, description, official_id')
-          .lte('term_start', currentDate)
-          .or(`term_end.is.null,term_end.gte.${currentDate}`);
-
-        if (positionsResponse.error) {
-          console.error('Error fetching positions:', positionsResponse.error);
-          throw positionsResponse.error;
-        }
-
-        const positions = positionsResponse.data || [];
-        
-        if (positions.length === 0) {
-          return [];
-        }
-
-        // Step 2: Get officials data
-        const officialIds = positions.map(pos => pos.official_id);
-        const uniqueOfficialIds = [...new Set(officialIds)];
-
-        const officialsResponse = await supabase
+        // Get officials with their positions
+        const { data: officials, error } = await supabase
           .from('officials')
-          .select('id, name, photo_url')
-          .in('id', uniqueOfficialIds);
+          .select(`
+            *,
+            officialPositions:official_positions(*)
+          `)
+          .eq('brgyid', userProfile.brgyid);
 
-        if (officialsResponse.error) {
-          console.error('Error fetching officials:', officialsResponse.error);
-          throw officialsResponse.error;
+        if (error) {
+          console.error('Error fetching officials:', error);
+          throw error;
         }
 
-        const officialsData = officialsResponse.data || [];
-
-        // Step 3: Manually combine the data
-        const result: OfficialPositionData[] = positions.map(position => {
-          const official = officialsData.find(off => off.id === position.official_id) || null;
-          return {
-            ...position,
-            officials: official
-          };
-        });
-
-        return result;
+        return officials || [];
       } catch (error) {
         console.error('Error in officials query:', error);
         throw error;
@@ -91,6 +49,65 @@ const UserOfficialsPage = () => {
     },
     enabled: !!userProfile?.brgyid
   });
+
+  // Filter officials based on search query
+  const filteredOfficials = officials?.filter(official => 
+    official.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    official.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    official.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
+  // Filter officials by tab (current, SK, previous)
+  const getCurrentOfficials = () => {
+    return filteredOfficials.filter(official => {
+      if (official.officialPositions && official.officialPositions.length > 0) {
+        return official.officialPositions.some(pos => 
+          !pos.term_end || new Date(pos.term_end) >= new Date()
+        );
+      }
+      return !official.term_end || new Date(official.term_end) >= new Date();
+    });
+  };
+
+  const getSKOfficials = () => {
+    return filteredOfficials.filter(official => {
+      const isSK = Array.isArray(official.is_sk) ? official.is_sk.includes(true) : official.is_sk;
+      if (official.officialPositions && official.officialPositions.length > 0) {
+        const hasCurrentTerm = official.officialPositions.some(pos => 
+          !pos.term_end || new Date(pos.term_end) >= new Date()
+        );
+        return isSK && hasCurrentTerm;
+      }
+      const hasCurrentTerm = !official.term_end || new Date(official.term_end) >= new Date();
+      return isSK && hasCurrentTerm;
+    });
+  };
+
+  const getPreviousOfficials = () => {
+    return filteredOfficials.filter(official => {
+      if (official.officialPositions && official.officialPositions.length > 0) {
+        return official.officialPositions.every(pos => 
+          pos.term_end && new Date(pos.term_end) < new Date()
+        );
+      }
+      return official.term_end && new Date(official.term_end) < new Date();
+    });
+  };
+
+  const getOfficialsForTab = () => {
+    switch (activeTab) {
+      case 'current':
+        return getCurrentOfficials();
+      case 'sk':
+        return getSKOfficials();
+      case 'previous':
+        return getPreviousOfficials();
+      default:
+        return getCurrentOfficials();
+    }
+  };
+
+  const officialsToShow = getOfficialsForTab();
 
   if (isLoading) {
     return (
@@ -117,65 +134,98 @@ const UserOfficialsPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {officials?.map((position) => (
-          <Card key={position.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="text-center pb-4">
-              <Avatar className="w-24 h-24 mx-auto mb-4">
-                <AvatarImage 
-                  src={position.officials?.photo_url} 
-                  alt={position.officials?.name} 
-                />
-                <AvatarFallback className="text-lg">
-                  {position.officials?.name?.split(' ').map((n: string) => n.charAt(0)).join('') || 'OF'}
-                </AvatarFallback>
-              </Avatar>
-              <CardTitle className="text-lg">
-                {position.officials?.name || 'Unknown Official'}
-              </CardTitle>
-              <Badge variant="secondary" className="mx-auto">
-                {position.position}
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>
-                  Since {moment(position.term_start).format('MMM YYYY')}
-                  {position.term_end && ` - ${moment(position.term_end).format('MMM YYYY')}`}
-                </span>
-              </div>
-              
-              {position.description && (
-                <p className="text-sm text-muted-foreground">
-                  {position.description}
-                </p>
-              )}
-
-              <div className="pt-2 border-t">
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Term Status:</span>
-                  <Badge variant={position.term_end ? "outline" : "default"}>
-                    {position.term_end ? "Term Ended" : "Active"}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        
-        {officials?.length === 0 && (
-          <div className="col-span-full">
-            <Card>
-              <CardContent className="text-center py-12">
-                <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No officials information available at this time.</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+      <div className="flex flex-col sm:flex-row gap-4 items-start justify-between mb-6">
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search officials..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
+        </div>
       </div>
+
+      <Tabs defaultValue="current" className="w-full" onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 mb-6">
+          <TabsTrigger value="current">Current Officials</TabsTrigger>
+          <TabsTrigger value="sk">SK Officials</TabsTrigger>
+          <TabsTrigger value="previous">Previous Officials</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="current" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {officialsToShow.map((official) => (
+              <OfficialCard key={official.id} official={official} />
+            ))}
+            
+            {officialsToShow.length === 0 && (
+              <div className="col-span-full">
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      {searchQuery 
+                        ? "No officials found matching your search."
+                        : "No current officials information available at this time."
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sk" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {officialsToShow.map((official) => (
+              <OfficialCard key={official.id} official={official} />
+            ))}
+            
+            {officialsToShow.length === 0 && (
+              <div className="col-span-full">
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      {searchQuery 
+                        ? "No SK officials found matching your search."
+                        : "No SK officials information available at this time."
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="previous" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {officialsToShow.map((official) => (
+              <OfficialCard key={official.id} official={official} />
+            ))}
+            
+            {officialsToShow.length === 0 && (
+              <div className="col-span-full">
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      {searchQuery 
+                        ? "No previous officials found matching your search."
+                        : "No previous officials information available at this time."
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
