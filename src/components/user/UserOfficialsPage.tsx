@@ -10,38 +10,66 @@ import { Award, Calendar, MapPin, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import OfficialCard from '@/components/officials/OfficialCard';
 import { Official } from '@/lib/types';
-import moment from 'moment';
+import { useNavigate } from 'react-router-dom';
 
 const UserOfficialsPage = () => {
   const { userProfile } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('current');
+  const [activeSKTab, setActiveSKTab] = useState('current');
 
-  const { data: officials, isLoading } = useQuery({
-    queryKey: ['user-officials', userProfile?.brgyid],
+  const { data: officialsData, isLoading } = useQuery({
+    queryKey: ['user-officials-with-positions', userProfile?.brgyid],
     queryFn: async (): Promise<Official[]> => {
       if (!userProfile?.brgyid) {
         return [];
       }
 
       try {
-        // Get officials with their positions
-        const { data: officials, error } = await supabase
+        // First, fetch all officials
+        const { data: officials, error: officialsError } = await supabase
           .from('officials')
-          .select(`
-            *,
-            officialPositions:official_positions(*)
-          `)
+          .select('*')
           .eq('brgyid', userProfile.brgyid);
+        
+        if (officialsError) throw officialsError;
 
-        if (error) {
-          console.error('Error fetching officials:', error);
-          throw error;
-        }
+        // Then fetch all positions
+        const { data: positions, error: positionsError } = await supabase
+          .from('official_positions')
+          .select('*')
+          .order('term_start', { ascending: false });
+        
+        if (positionsError) throw positionsError;
 
-        return officials || [];
+        // Group positions by official
+        const officialsWithPositions: Official[] = officials.map(official => {
+          // Get all positions for this official
+          const officialPositions = positions.filter(position => position.official_id === official.id);
+
+          // Use the most recent position (latest term_start date)
+          let latestPosition = officialPositions.length > 0 ? officialPositions[0] : null;
+          if (officialPositions.length > 1) {
+            latestPosition = officialPositions.reduce((latest, current) => {
+              if (!latest.term_end) return latest;
+              if (!current.term_end) return current;
+              return new Date(current.term_end) > new Date(latest.term_end) ? current : latest;
+            }, officialPositions[0]);
+          }
+
+          return {
+            ...official,
+            is_sk: Array.isArray(official.is_sk) ? official.is_sk.length > 0 && official.is_sk[0] === true : Boolean(official.is_sk),
+            position: latestPosition?.position || official.position || '',
+            term_start: latestPosition?.term_start || official.term_start,
+            term_end: latestPosition?.term_end || official.term_end,
+            officialPositions: officialPositions
+          };
+        });
+
+        return officialsWithPositions;
       } catch (error) {
         console.error('Error in officials query:', error);
         throw error;
@@ -51,63 +79,64 @@ const UserOfficialsPage = () => {
   });
 
   // Filter officials based on search query
-  const filteredOfficials = officials?.filter(official => 
+  const filteredOfficials = officialsData?.filter(official => 
     official.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     official.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     official.email?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  // Filter officials by tab (current, SK, previous)
-  const getCurrentOfficials = () => {
+  // Filter officials based on the active tab
+  const getFilteredOfficials = () => {
     return filteredOfficials.filter(official => {
-      if (official.officialPositions && official.officialPositions.length > 0) {
-        return official.officialPositions.some(pos => 
-          !pos.term_end || new Date(pos.term_end) >= new Date()
-        );
+      const now = new Date();
+      const isSk = Array.isArray(official.is_sk) ? official.is_sk.length > 0 && official.is_sk[0] === true : Boolean(official.is_sk);
+      
+      if (activeTab === 'current') {
+        // Exclude SK officials from the current tab
+        return !isSk && (!official.term_end || new Date(official.term_end) > now);
+      } else if (activeTab === 'sk') {
+        if (activeSKTab === 'current') {
+          return isSk && (!official.term_end || new Date(official.term_end) > now);
+        } else if (activeSKTab === 'previous') {
+          return isSk && official.term_end && new Date(official.term_end) < now;
+        }
+        return isSk;
+      } else if (activeTab === 'previous') {
+        // Exclude SK officials from the previous tab
+        return !isSk && official.term_end && new Date(official.term_end) < now;
       }
-      return !official.term_end || new Date(official.term_end) >= new Date();
+      return false;
     });
   };
 
-  const getSKOfficials = () => {
-    return filteredOfficials.filter(official => {
-      const isSK = Array.isArray(official.is_sk) ? official.is_sk.includes(true) : official.is_sk;
-      if (official.officialPositions && official.officialPositions.length > 0) {
-        const hasCurrentTerm = official.officialPositions.some(pos => 
-          !pos.term_end || new Date(pos.term_end) >= new Date()
-        );
-        return isSK && hasCurrentTerm;
-      }
-      const hasCurrentTerm = !official.term_end || new Date(official.term_end) >= new Date();
-      return isSK && hasCurrentTerm;
-    });
-  };
+  const filteredOfficialsToShow = getFilteredOfficials();
 
-  const getPreviousOfficials = () => {
-    return filteredOfficials.filter(official => {
-      if (official.officialPositions && official.officialPositions.length > 0) {
-        return official.officialPositions.every(pos => 
-          pos.term_end && new Date(pos.term_end) < new Date()
-        );
-      }
-      return official.term_end && new Date(official.term_end) < new Date();
-    });
-  };
+  // Count for each category (excluding SK from current/previous)
+  const currentCount = officialsData ? officialsData.filter(o => {
+    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
+    return !isSk && (!o.term_end || new Date(o.term_end) > new Date());
+  }).length : 0;
 
-  const getOfficialsForTab = () => {
-    switch (activeTab) {
-      case 'current':
-        return getCurrentOfficials();
-      case 'sk':
-        return getSKOfficials();
-      case 'previous':
-        return getPreviousOfficials();
-      default:
-        return getCurrentOfficials();
-    }
-  };
+  const skCurrentCount = officialsData ? officialsData.filter(o => {
+    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
+    return isSk && (!o.term_end || new Date(o.term_end) > new Date());
+  }).length : 0;
 
-  const officialsToShow = getOfficialsForTab();
+  const skPreviousCount = officialsData ? officialsData.filter(o => {
+    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
+    return isSk && o.term_end && new Date(o.term_end) < new Date();
+  }).length : 0;
+
+  const skCount = skCurrentCount + skPreviousCount;
+
+  const previousCount = officialsData ? officialsData.filter(o => {
+    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
+    return !isSk && o.term_end && new Date(o.term_end) < new Date();
+  }).length : 0;
+
+  const handleOfficialClick = (officialId: string) => {
+    navigate(`/hub/officials/${officialId}`);
+  };
 
   if (isLoading) {
     return (
@@ -147,85 +176,103 @@ const UserOfficialsPage = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="current" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 mb-6">
-          <TabsTrigger value="current">Current Officials</TabsTrigger>
-          <TabsTrigger value="sk">SK Officials</TabsTrigger>
-          <TabsTrigger value="previous">Previous Officials</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="current" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {officialsToShow.map((official) => (
-              <OfficialCard key={official.id} official={official} />
-            ))}
-            
-            {officialsToShow.length === 0 && (
-              <div className="col-span-full">
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      {searchQuery 
-                        ? "No officials found matching your search."
-                        : "No current officials information available at this time."
-                      }
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+      {/* Main tabbed navigation */}
+      <div className="mx-auto max-w-3xl mb-8 bg-card rounded-full p-1 border">
+        <div className="flex justify-center">
+          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'current' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('current')}>
+            Current Officials ({currentCount})
           </div>
-        </TabsContent>
-
-        <TabsContent value="sk" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {officialsToShow.map((official) => (
-              <OfficialCard key={official.id} official={official} />
-            ))}
-            
-            {officialsToShow.length === 0 && (
-              <div className="col-span-full">
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      {searchQuery 
-                        ? "No SK officials found matching your search."
-                        : "No SK officials information available at this time."
-                      }
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'sk' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('sk')}>
+            SK Officials ({skCount})
           </div>
-        </TabsContent>
-
-        <TabsContent value="previous" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {officialsToShow.map((official) => (
-              <OfficialCard key={official.id} official={official} />
-            ))}
-            
-            {officialsToShow.length === 0 && (
-              <div className="col-span-full">
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      {searchQuery 
-                        ? "No previous officials found matching your search."
-                        : "No previous officials information available at this time."
-                      }
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'previous' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('previous')}>
+            Previous Officials ({previousCount})
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
+
+      {/* SK Tab sub-navigation */}
+      {activeTab === 'sk' && (
+        <div className="mx-auto max-w-xl mb-8 bg-card rounded-full p-1 border">
+          <div className="flex justify-center">
+            <div className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('current')}>
+              Current SK ({skCurrentCount})
+            </div>
+            <div className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'previous' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('previous')}>
+              Previous SK ({skPreviousCount})
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Officials cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredOfficialsToShow.length === 0 ? (
+          <div className="col-span-full p-6 text-center text-muted-foreground bg-card rounded-lg border mx-[240px]">
+            No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? activeSKTab === 'current' ? 'current SK' : 'previous SK' : 'previous'} officials found.
+          </div>
+        ) : (
+          filteredOfficialsToShow.map(official => (
+            <Card 
+              key={official.id} 
+              className="bg-card rounded-lg overflow-hidden border cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleOfficialClick(official.id)}
+            >
+              <div className="relative">
+                <div className="w-full h-64 overflow-hidden">
+                  {official.photo_url ? (
+                    <img
+                      src={official.photo_url}
+                      alt={official.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                      <Avatar className="h-20 w-20">
+                        <AvatarFallback className="text-2xl">
+                          {official.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  )}
+                </div>
+                
+                {official.is_sk && (
+                  <Badge className="absolute top-2 right-2 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                    SK
+                  </Badge>
+                )}
+              </div>
+              
+              <CardContent className="p-5">
+                <div className="text-center mb-4">
+                  <h3 className="font-bold text-lg text-foreground mb-1">{official.name}</h3>
+                  <p className="text-primary font-medium">{official.position}</p>
+                </div>
+                
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  {official.email && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{official.email}</span>
+                    </div>
+                  )}
+                  
+                  {(official.term_start || official.term_end) && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 flex-shrink-0" />
+                      <span>
+                        {official.term_start ? new Date(official.term_start).getFullYear() : 'N/A'} - 
+                        {official.term_end ? new Date(official.term_end).getFullYear() : 'Present'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 };
