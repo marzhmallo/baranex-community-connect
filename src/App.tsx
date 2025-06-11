@@ -38,6 +38,7 @@ import UserForumPage from "./components/user/UserForumPage";
 import UserDocumentsPage from "./components/user/UserDocumentsPage";
 import UserEmergencyPage from "./components/user/UserEmergencyPage";
 import UserSettingsPage from "./components/user/UserSettingsPage";
+import UserOfficialDetailsPage from "./components/user/UserOfficialDetailsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -192,6 +193,7 @@ const AppContent = () => {
           <Route path="/hub/announcements" element={<UserRoute><UserAnnouncementsPage /></UserRoute>} />
           <Route path="/hub/officials" element={<UserRoute><UserOfficialsPage /></UserRoute>} />
           <Route path="/hub/officials/:id" element={<UserRoute><OfficialDetailsPage /></UserRoute>} />
+          <Route path="/hub/user-officials/:id" element={<UserRoute><UserOfficialDetailsPage /></UserRoute>} />
           <Route path="/hub/forum" element={<UserRoute><UserForumPage /></UserRoute>} />
           <Route path="/hub/documents" element={<UserRoute><UserDocumentsPage /></UserRoute>} />
           <Route path="/hub/emergency" element={<UserRoute><UserEmergencyPage /></UserRoute>} />

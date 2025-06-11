@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -76,7 +75,7 @@ const OfficialCard = ({
   };
   
   const handleViewFullDetails = () => {
-    navigate(`/hub/officials/${official.id}`);
+    navigate(`/hub/user-officials/${official.id}`);
   };
   
   return (
