@@ -76,27 +76,42 @@ const OfficialCard = ({
   };
   
   const handleViewFullDetails = () => {
-    navigate(`/officials/${official.id}`);
+    navigate(`/hub/officials/${official.id}`);
   };
   
-  return <Card className="overflow-hidden bg-card text-card-foreground border-border">
+  return (
+    <Card className="overflow-hidden bg-card text-card-foreground border-border">
       <div className="relative">
         {/* Photo section with hover effect */}
         <Dialog>
           <DialogTrigger asChild>
-            <div className="relative cursor-pointer h-64 overflow-hidden" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
-              {official.photo_url ? <img src={official.photo_url} alt={`${official.name} - ${getPosition()}`} className="w-full h-full object-cover object-center transition-transform duration-300" /> : <div className="w-full h-full bg-muted flex items-center justify-center">
+            <div 
+              className="relative cursor-pointer h-64 overflow-hidden" 
+              onMouseEnter={() => setIsHovered(true)} 
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              {official.photo_url ? (
+                <img 
+                  src={official.photo_url} 
+                  alt={`${official.name} - ${getPosition()}`} 
+                  className="w-full h-full object-cover object-center transition-transform duration-300" 
+                />
+              ) : (
+                <div className="w-full h-full bg-muted flex items-center justify-center">
                   <Avatar className="h-24 w-24 bg-secondary text-secondary-foreground">
                     <span className="text-2xl font-medium">
                       {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                     </span>
                   </Avatar>
-                </div>}
+                </div>
+              )}
               
               {/* Magnify icon overlay on hover */}
-              {isHovered && <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              {isHovered && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                   <Search className="w-8 h-8 text-white" />
-                </div>}
+                </div>
+              )}
             </div>
           </DialogTrigger>
           
@@ -105,13 +120,21 @@ const OfficialCard = ({
               <DialogTitle className="text-card-foreground">{official.name}</DialogTitle>
             </DialogHeader>
             <div className="flex justify-center">
-              {official.photo_url ? <img src={official.photo_url} alt={`${official.name} - ${getPosition()}`} className="max-h-[70vh] object-contain" /> : <div className="w-full h-64 bg-muted flex items-center justify-center">
+              {official.photo_url ? (
+                <img 
+                  src={official.photo_url} 
+                  alt={`${official.name} - ${getPosition()}`} 
+                  className="max-h-[70vh] object-contain" 
+                />
+              ) : (
+                <div className="w-full h-64 bg-muted flex items-center justify-center">
                   <Avatar className="h-24 w-24 bg-secondary text-secondary-foreground">
                     <span className="text-2xl font-medium">
                       {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                     </span>
                   </Avatar>
-                </div>}
+                </div>
+              )}
             </div>
             <DialogClose asChild>
               <Button type="button" variant="secondary" className="mt-2">
@@ -133,15 +156,19 @@ const OfficialCard = ({
         </p>
         
         {/* Contact information */}
-        {official.email && <div className="flex items-center gap-2 text-muted-foreground mb-2">
+        {official.email && (
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Mail className="w-4 h-4" />
             <span className="text-sm">{official.email}</span>
-          </div>}
+          </div>
+        )}
         
-        {official.phone && <div className="flex items-center gap-2 text-muted-foreground mb-4">
+        {official.phone && (
+          <div className="flex items-center gap-2 text-muted-foreground mb-4">
             <Phone className="w-4 h-4" />
             <span className="text-sm">{official.phone}</span>
-          </div>}
+          </div>
+        )}
         
         {/* Term duration */}
         <div className="flex justify-between items-center mt-4">
@@ -151,8 +178,6 @@ const OfficialCard = ({
           
           {/* View and More Details buttons */}
           <div className="flex gap-2">
-            
-            
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" className="bg-transparent border-border text-foreground hover:bg-accent hover:text-accent-foreground">
@@ -164,26 +189,36 @@ const OfficialCard = ({
                   <DialogTitle className="text-card-foreground">{official.name}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <img src={official.photo_url || '/placeholder.svg'} alt={official.name} className="w-full max-h-64 object-cover object-center rounded-md" />
+                  <img 
+                    src={official.photo_url || '/placeholder.svg'} 
+                    alt={official.name} 
+                    className="w-full max-h-64 object-cover object-center rounded-md" 
+                  />
                   <div>
                     <h4 className="font-bold">{getPosition()}</h4>
                     <p className="text-muted-foreground mt-2">{official.bio || getShortDescription()}</p>
                   </div>
                   
                   <div className="space-y-2">
-                    {official.email && <div className="flex items-center gap-2">
+                    {official.email && (
+                      <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4" />
                         <span>{official.email}</span>
-                      </div>}
+                      </div>
+                    )}
                     
-                    {official.phone && <div className="flex items-center gap-2">
+                    {official.phone && (
+                      <div className="flex items-center gap-2">
                         <Phone className="w-4 h-4" />
                         <span>{official.phone}</span>
-                      </div>}
+                      </div>
+                    )}
                     
-                    {official.education && <div>
+                    {official.education && (
+                      <div>
                         <span className="font-medium">Education:</span> {official.education}
-                      </div>}
+                      </div>
+                    )}
                     
                     <div>
                       <span className="font-medium">Term:</span> {formatDate(getTermStart())} - {formatDate(getTermEnd())}
@@ -203,8 +238,13 @@ const OfficialCard = ({
       </div>
 
       {/* Details Dialog */}
-      <OfficialDetailsDialog officialId={official.id} open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} />
-    </Card>;
+      <OfficialDetailsDialog 
+        officialId={official.id} 
+        open={detailsDialogOpen} 
+        onOpenChange={setDetailsDialogOpen} 
+      />
+    </Card>
+  );
 };
 
 export default OfficialCard;
