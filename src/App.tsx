@@ -47,8 +47,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-        <AuthProvider>
-          <Router>
+        <Router>
+          <AuthProvider>
             <div className="min-h-screen bg-background">
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -87,8 +87,8 @@ function App() {
               </Routes>
             </div>
             <Toaster />
-          </Router>
-        </AuthProvider>
+          </AuthProvider>
+        </Router>
       </ThemeProvider>
     </QueryClientProvider>
   );
