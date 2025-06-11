@@ -76,7 +76,7 @@ const OfficialCard = ({
   };
   
   const handleViewFullDetails = () => {
-    navigate(`/user-officials/${official.id}`);
+    navigate(`/hub/officials/${official.id}`);
   };
   
   return (
