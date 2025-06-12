@@ -3,6 +3,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Event {
   id: string;
@@ -422,9 +423,12 @@ const HomePage = () => {
           </div>
           
           <div className="text-center mt-6">
-            <button className="text-primary hover:text-primary/80 text-sm font-medium">
+            <Link 
+              to="/hub/officials" 
+              className="text-primary hover:text-primary/80 text-sm font-medium"
+            >
               View all barangay officials →
-            </button>
+            </Link>
           </div>
         </CardContent>
       </Card>
