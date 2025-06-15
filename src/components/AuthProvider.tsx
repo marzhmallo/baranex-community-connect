@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Fetch user profile data from profiles table
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string, shouldRedirect: boolean = false) => {
     console.log('Fetching user profile for:', userId);
     try {
       const { data: profileData, error: profileError } = await supabase
@@ -112,8 +112,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await updateUserOnlineStatus(userId, true);
         setUserProfile(profileData as UserProfile);
         
-        // Handle navigation after profile is loaded
-        if (location.pathname === "/login" || location.pathname === "/") {
+        // Only redirect during initial login or when explicitly requested
+        if (shouldRedirect && (location.pathname === "/login" || location.pathname === "/")) {
           if (profileData.role === "user") {
             console.log('Redirecting user to /hub');
             navigate("/hub");
@@ -296,8 +296,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        console.log('User signed in or token refreshed');
+      if (event === 'SIGNED_IN') {
+        console.log('User signed in - fetching profile with redirect');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -305,7 +305,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Use setTimeout to avoid blocking the auth state change
           setTimeout(() => {
             if (mounted) {
-              fetchUserProfile(currentSession.user.id);
+              fetchUserProfile(currentSession.user.id, true); // Allow redirect on sign in
+            }
+          }, 100);
+        }
+        setIsInitialLoad(false);
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed - updating profile without redirect');
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user && mounted) {
+          // Use setTimeout to avoid blocking the auth state change
+          setTimeout(() => {
+            if (mounted) {
+              fetchUserProfile(currentSession.user.id, false); // No redirect on token refresh
             }
           }, 100);
         }
@@ -332,10 +346,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(initialSession?.user ?? null);
       
       if (initialSession?.user) {
-        fetchUserProfile(initialSession.user.id);
+        fetchUserProfile(initialSession.user.id, isInitialLoad); // Only redirect on initial load
       }
       
       setLoading(false);
+      setIsInitialLoad(false);
     });
 
     return () => {
