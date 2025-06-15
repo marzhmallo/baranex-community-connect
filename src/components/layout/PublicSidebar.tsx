@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSquare, AlertTriangle, ChevronLeft, ChevronRight, Home, Award, Briefcase, BellRing, Settings, Sun, Moon, X, Menu, Shield, Users } from 'lucide-react';
@@ -7,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-
 const PublicSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -22,9 +20,10 @@ const PublicSidebar = () => {
     });
     window.dispatchEvent(event);
   }, [isCollapsed]);
-
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    const {
+      error
+    } = await supabase.auth.signOut();
     if (error) {
       toast({
         title: "Error signing out",
@@ -39,21 +38,16 @@ const PublicSidebar = () => {
       navigate("/login");
     }
   };
-
   const isActive = (path: string) => {
     return location.pathname === path;
   };
-
-  return (
-    <aside className={cn("fixed left-0 top-0 bottom-0 z-40 h-screen bg-sidebar transition-all duration-300 ease-in-out", isCollapsed ? "w-16" : "w-64")}>
+  return <aside className={cn("fixed left-0 top-0 bottom-0 z-40 h-screen bg-sidebar transition-all duration-300 ease-in-out", isCollapsed ? "w-16" : "w-64")}>
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between p-4">
-          {!isCollapsed && (
-            <Link to="/hub" className="text-xl font-bold tracking-tight flex items-center">
+          {!isCollapsed && <Link to="/hub" className="text-xl font-bold tracking-tight flex items-center">
               <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Bara</span>
               <span className="text-baranex-accent">NEX</span>
-            </Link>
-          )}
+            </Link>}
           <Button variant="sidebar" size="icon" onClick={() => setIsCollapsed(!isCollapsed)} className="ml-auto">
             {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
@@ -92,7 +86,7 @@ const PublicSidebar = () => {
 
           <Link to="/hub/emergency" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub/emergency") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
             <AlertTriangle className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Emergency Info</span>}
+            {!isCollapsed && <span className="ml-2">Emergency</span>}
           </Link>
 
           <Link to="/feedback" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/feedback") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
@@ -120,8 +114,6 @@ const PublicSidebar = () => {
           </Button>
         </div>
       </div>
-    </aside>
-  );
+    </aside>;
 };
-
 export default PublicSidebar;
