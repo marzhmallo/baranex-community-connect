@@ -16,8 +16,6 @@ import { feedbackAPI } from '@/lib/api/feedback';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 
-const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
-
 interface FeedbackFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -62,12 +60,32 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
   // Load existing attachments if editing
   React.useEffect(() => {
     if (editData?.attachments) {
-      const existingAttachments = editData.attachments.map((url: string) => ({
-        file: null,
-        url: `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${url}`,
-        uploading: false
-      }));
-      setAttachments(existingAttachments);
+      const loadExistingAttachments = async () => {
+        const existingAttachments = await Promise.all(
+          editData.attachments.map(async (fileName: string) => {
+            try {
+              const { data } = await supabase.storage
+                .from('reportfeedback')
+                .createSignedUrl(`userreports/${fileName}`, 3600);
+              
+              return {
+                file: null,
+                url: data?.signedUrl || null,
+                uploading: false
+              };
+            } catch (error) {
+              console.error('Error loading existing attachment:', error);
+              return {
+                file: null,
+                url: null,
+                uploading: false
+              };
+            }
+          })
+        );
+        setAttachments(existingAttachments.filter(att => att.url));
+      };
+      loadExistingAttachments();
     }
   }, [editData]);
 
@@ -118,12 +136,15 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       const fileName = await uploadFileToStorage(file);
       
       if (fileName) {
-        const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${fileName}`;
+        // Get signed URL for immediate preview
+        const { data } = await supabase.storage
+          .from('reportfeedback')
+          .createSignedUrl(`userreports/${fileName}`, 3600);
         
         setAttachments(prev => 
           prev.map((attachment, index) => 
             attachment.file === file 
-              ? { ...attachment, url: publicUrl, uploading: false }
+              ? { ...attachment, url: data?.signedUrl || null, uploading: false }
               : attachment
           )
         );
@@ -202,7 +223,15 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       // Get filenames from uploaded attachments
       const attachmentUrls = attachments
         .filter(att => att.url)
-        .map(att => att.url!.split('/').pop()!);
+        .map(att => {
+          // Extract filename from signed URL or use the original filename approach
+          if (att.url?.includes('userreports/')) {
+            const urlParts = att.url.split('userreports/')[1];
+            return urlParts.split('?')[0]; // Remove query parameters
+          }
+          return null;
+        })
+        .filter(Boolean) as string[];
 
       const reportData = {
         user_id: userProfile.id,
@@ -348,7 +377,17 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
                             src={attachment.url}
                             alt="Attachment"
                             className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => {
+                              console.error('Image failed to load:', attachment.url);
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
                           />
+                          <div className="hidden w-full h-full bg-gray-100 rounded-lg absolute top-0 left-0 items-center justify-center">
+                            <FileImage className="h-8 w-8 text-gray-400" />
+                          </div>
                           <Button
                             type="button"
                             variant="destructive"
