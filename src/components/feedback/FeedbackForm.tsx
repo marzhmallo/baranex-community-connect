@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,6 +46,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
   const [selectedType, setSelectedType] = useState<FeedbackType>(editData?.type || 'barangay');
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     defaultValues: {
@@ -140,9 +143,28 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleCaptchaVerify = (token: string) => {
+    console.log('Captcha verified with token:', token);
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaExpire = () => {
+    console.log('Captcha expired');
+    setCaptchaToken(null);
+  };
+
   const onSubmit = async (data: FormData) => {
     console.log('Form submission started');
     console.log('User profile:', userProfile);
+    
+    if (!editData && !captchaToken) {
+      toast({
+        title: "Captcha required",
+        description: "Please complete the captcha verification before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (!userProfile?.id) {
       console.error('User profile ID not found');
@@ -349,8 +371,24 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
             </div>
           </div>
 
+          {!editData && (
+            <div>
+              <Label>Security Verification</Label>
+              <div className="mt-2">
+                <HCaptcha
+                  sitekey={import.meta.env.VITE_HCAPTCHA_SITE_KEY}
+                  onVerify={handleCaptchaVerify}
+                  onExpire={handleCaptchaExpire}
+                />
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
-            <Button type="submit" disabled={isSubmitting || attachments.some(att => att.uploading)}>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || attachments.some(att => att.uploading) || (!editData && !captchaToken)}
+            >
               {isSubmitting ? 'Submitting...' : (editData ? 'Update Report' : 'Submit Report')}
             </Button>
             {onCancel && (
