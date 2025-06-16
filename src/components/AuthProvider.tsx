@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [hasInitiallyRedirected, setHasInitiallyRedirected] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -75,8 +76,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Fetch user profile data from profiles table
-  const fetchUserProfile = async (userId: string, shouldRedirect: boolean = false) => {
+  // Fetch user profile data from profiles table - NO MORE AUTOMATIC REDIRECTS
+  const fetchUserProfile = async (userId: string) => {
     console.log('Fetching user profile for:', userId);
     try {
       const { data: profileData, error: profileError } = await supabase
@@ -112,17 +113,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await updateUserOnlineStatus(userId, true);
         setUserProfile(profileData as UserProfile);
         
-        // Only redirect during initial login or when explicitly requested
-        if (shouldRedirect && (location.pathname === "/login" || location.pathname === "/")) {
-          if (profileData.role === "user") {
-            console.log('Redirecting user to /hub');
-            navigate("/hub");
-          } else if (profileData.role === "admin" || profileData.role === "staff") {
-            console.log('Redirecting admin/staff to /dashboard');
-            navigate("/dashboard");
-          }
-        }
-        
         if (profileData.brgyid) {
           fetchBarangayData(profileData.brgyid);
         }
@@ -145,6 +135,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "An unexpected error occurred while fetching your profile.",
         variant: "destructive",
       });
+    }
+  };
+
+  // Handle initial redirect only once after login
+  const handleInitialRedirect = (profileData: UserProfile) => {
+    if (hasInitiallyRedirected) return;
+    
+    // Only redirect if on login page or root page
+    if (location.pathname === "/login" || location.pathname === "/") {
+      if (profileData.role === "user") {
+        console.log('Initial redirect: user to /hub');
+        navigate("/hub");
+      } else if (profileData.role === "admin" || profileData.role === "staff") {
+        console.log('Initial redirect: admin/staff to /dashboard');
+        navigate("/dashboard");
+      }
+      setHasInitiallyRedirected(true);
     }
   };
   
@@ -181,6 +188,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setHasInitiallyRedirected(false);
       
       // Update user to OFFLINE status if we have a user ID
       if (currentUserId) {
@@ -213,6 +221,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setHasInitiallyRedirected(false);
       
       // Force clear storage
       localStorage.removeItem('supabase.auth.token');
@@ -284,34 +293,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setSession(null);
         setUserProfile(null);
+        setHasInitiallyRedirected(false);
         setLoading(false);
         return;
       }
       
       if (event === 'SIGNED_IN') {
-        console.log('User signed in - fetching profile with redirect');
+        console.log('User signed in - fetching profile');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user && mounted) {
-          // Use setTimeout to avoid blocking the auth state change
-          setTimeout(() => {
+          setTimeout(async () => {
             if (mounted) {
-              fetchUserProfile(currentSession.user.id, true); // Allow redirect on sign in
+              await fetchUserProfile(currentSession.user.id);
+              // Handle redirect only after profile is fetched
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentSession.user.id)
+                .maybeSingle();
+              
+              if (profileData) {
+                handleInitialRedirect(profileData as UserProfile);
+              }
             }
           }, 100);
         }
-        setIsInitialLoad(false);
       } else if (event === 'TOKEN_REFRESHED') {
         console.log('Token refreshed - updating profile without redirect');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user && mounted) {
-          // Use setTimeout to avoid blocking the auth state change
           setTimeout(() => {
             if (mounted) {
-              fetchUserProfile(currentSession.user.id, false); // No redirect on token refresh
+              fetchUserProfile(currentSession.user.id); // No redirect on token refresh
             }
           }, 100);
         }
@@ -321,7 +338,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     // Get initial session with better error handling
-    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
+    supabase.auth.getSession().then(async ({ data: { session: initialSession }, error }) => {
       if (!mounted) return;
       
       if (error) {
@@ -338,11 +355,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(initialSession?.user ?? null);
       
       if (initialSession?.user) {
-        fetchUserProfile(initialSession.user.id, isInitialLoad); // Only redirect on initial load
+        await fetchUserProfile(initialSession.user.id);
+        // Handle initial redirect for existing sessions
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', initialSession.user.id)
+          .maybeSingle();
+        
+        if (profileData) {
+          handleInitialRedirect(profileData as UserProfile);
+        }
       }
       
       setLoading(false);
-      setIsInitialLoad(false);
     });
 
     return () => {
