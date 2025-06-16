@@ -46,7 +46,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasHandledInitialAuth, setHasHandledInitialAuth] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -160,26 +159,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Handle redirect logic ONLY for initial authentication
-  const handleInitialRedirect = async (profileData: UserProfile) => {
-    const isLoginOrRoot = location.pathname === "/login" || location.pathname === "/";
-    
-    if (!isLoginOrRoot) {
-      console.log('Not on login/root page, skipping redirect. Current path:', location.pathname);
-      return;
-    }
-
-    console.log('Initial authentication redirect for role:', profileData.role);
-    
-    if (profileData.role === "user") {
-      console.log('Redirecting user to /hub');
-      navigate("/hub");
-    } else if (profileData.role === "admin" || profileData.role === "staff") {
-      console.log('Redirecting admin/staff to /dashboard');
-      navigate("/dashboard");
-    }
-  };
-
   const signOut = async () => {
     try {
       console.log('Starting sign out process...');
@@ -262,39 +241,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("Auth provider initialized");
     let mounted = true;
     
-    // Clear any existing session data on mount to prevent conflicts
-    const clearConflictingSessions = async () => {
-      try {
-        // Get current session to check if it's valid
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.log('Session error detected, clearing:', error.message);
-          localStorage.removeItem('supabase.auth.token');
-          sessionStorage.clear();
-        } else if (currentSession) {
-          console.log('Valid session found:', currentSession.user?.id);
-        }
-      } catch (err) {
-        console.error('Error checking session:', err);
-        localStorage.removeItem('supabase.auth.token');
-        sessionStorage.clear();
-      }
-    };
-    
-    clearConflictingSessions();
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       console.log("Auth state change:", event, currentSession?.user?.id, "Path:", location.pathname);
       
       if (!mounted) return;
       
+      // Handle all auth events but NEVER redirect except for initial sign-in from login page
       if (event === 'SIGNED_OUT') {
         console.log('User signed out event - clearing state');
         setUser(null);
         setSession(null);
         setUserProfile(null);
-        setHasHandledInitialAuth(false);
         setLoading(false);
         return;
       }
@@ -303,13 +260,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
-      // Only handle profile fetching and redirects for SIGNED_IN and initial load
-      if (event === 'SIGNED_IN' && !hasHandledInitialAuth) {
-        console.log('Processing SIGNED_IN event for first time');
+      // ONLY handle redirects for SIGNED_IN event and ONLY if currently on login page
+      if (event === 'SIGNED_IN' && location.pathname === '/login') {
+        console.log('Processing SIGNED_IN event from login page - will redirect');
         
         if (currentSession?.user && mounted) {
-          setHasHandledInitialAuth(true);
-          
           setTimeout(async () => {
             if (mounted) {
               await fetchUserProfile(currentSession.user.id);
@@ -322,15 +277,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 .maybeSingle();
               
               if (profileData) {
-                await handleInitialRedirect(profileData as UserProfile);
+                console.log('Redirecting based on role:', profileData.role);
+                if (profileData.role === "user") {
+                  navigate("/hub");
+                } else if (profileData.role === "admin" || profileData.role === "staff") {
+                  navigate("/dashboard");
+                }
               }
             }
           }, 100);
         }
-      } else if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed - updating profile silently, NO REDIRECTS');
+      } else if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        console.log(`${event} event - updating profile silently, NO REDIRECTS`);
         
-        // Only update profile data, never redirect on token refresh
+        // Only update profile data, never redirect on token refresh or initial session
         if (currentSession?.user && mounted) {
           setTimeout(() => {
             if (mounted) {
@@ -343,13 +303,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    // Get initial session with better error handling
+    // Get initial session
     supabase.auth.getSession().then(async ({ data: { session: initialSession }, error }) => {
       if (!mounted) return;
       
       if (error) {
         console.error("Error getting session:", error);
-        // Clear potentially corrupted session data
         localStorage.removeItem('supabase.auth.token');
         sessionStorage.clear();
         setLoading(false);
@@ -360,13 +319,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       
-      if (initialSession?.user && !hasHandledInitialAuth) {
-        setHasHandledInitialAuth(true);
+      if (initialSession?.user) {
         await fetchUserProfile(initialSession.user.id);
         
-        // ONLY redirect on initial load from login/root page - not when already authenticated on other pages
-        const isLoginOrRoot = location.pathname === "/login" || location.pathname === "/";
-        if (isLoginOrRoot) {
+        // ONLY redirect on initial load if on login or root page
+        if (location.pathname === "/login" || location.pathname === "/") {
           console.log('Initial load from login/root, checking for redirect...');
           const { data: profileData } = await supabase
             .from('profiles')
@@ -375,7 +332,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .maybeSingle();
           
           if (profileData) {
-            await handleInitialRedirect(profileData as UserProfile);
+            console.log('Redirecting based on role:', profileData.role);
+            if (profileData.role === "user") {
+              navigate("/hub");
+            } else if (profileData.role === "admin" || profileData.role === "staff") {
+              navigate("/dashboard");
+            }
           }
         } else {
           console.log('Already on valid page, no redirect needed. Current path:', location.pathname);
@@ -389,7 +351,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []); // Remove location dependency and keep empty to prevent re-running
+  }, []); // Empty dependency array to prevent re-running
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
