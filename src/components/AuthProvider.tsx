@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Fetch user profile data from profiles table - NO MORE AUTOMATIC REDIRECTS
+  // Fetch user profile data from profiles table
   const fetchUserProfile = async (userId: string) => {
     console.log('Fetching user profile for:', userId);
     try {
@@ -376,17 +376,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
-
-  // Handle redirects based on auth status and role
-  useEffect(() => {
-    if (loading) return;
-
-    // If no session and not on login page, redirect to login
-    if (!session && !location.pathname.includes("/login")) {
-      navigate("/login");
-      return;
-    }
-  }, [session, loading, location.pathname, navigate]);
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
