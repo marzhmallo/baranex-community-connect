@@ -46,6 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasHandledInitialAuth, setHasHandledInitialAuth] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -159,6 +160,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Handle redirect logic ONLY for initial authentication
+  const handleInitialRedirect = async (profileData: UserProfile) => {
+    const isLoginOrRoot = location.pathname === "/login" || location.pathname === "/";
+    
+    if (!isLoginOrRoot) {
+      console.log('Not on login/root page, skipping redirect. Current path:', location.pathname);
+      return;
+    }
+
+    console.log('Initial authentication redirect for role:', profileData.role);
+    
+    if (profileData.role === "user") {
+      console.log('Redirecting user to /hub');
+      navigate("/hub");
+    } else if (profileData.role === "admin" || profileData.role === "staff") {
+      console.log('Redirecting admin/staff to /dashboard');
+      navigate("/dashboard");
+    }
+  };
+
   const signOut = async () => {
     try {
       console.log('Starting sign out process...');
@@ -264,7 +285,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     clearConflictingSessions();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log("Auth state change:", event, currentSession?.user?.id);
+      console.log("Auth state change:", event, currentSession?.user?.id, "Path:", location.pathname);
       
       if (!mounted) return;
       
@@ -273,52 +294,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setSession(null);
         setUserProfile(null);
+        setHasHandledInitialAuth(false);
         setLoading(false);
         return;
       }
       
-      // Only handle SIGNED_IN events - not TOKEN_REFRESHED or other events
-      if (event === 'SIGNED_IN') {
-        console.log('User signed in - fetching profile');
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+      // Update session and user for all events
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      // Only handle profile fetching and redirects for SIGNED_IN and initial load
+      if (event === 'SIGNED_IN' && !hasHandledInitialAuth) {
+        console.log('Processing SIGNED_IN event for first time');
         
         if (currentSession?.user && mounted) {
+          setHasHandledInitialAuth(true);
+          
           setTimeout(async () => {
             if (mounted) {
               await fetchUserProfile(currentSession.user.id);
               
-              // ONLY redirect on actual sign in from login page - not on tab switch
-              const isLoginPage = location.pathname === "/login" || location.pathname === "/";
-              if (isLoginPage) {
-                console.log('Login detected, checking for redirect...');
-                const { data: profileData } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', currentSession.user.id)
-                  .maybeSingle();
-                
-                if (profileData) {
-                  if (profileData.role === "user") {
-                    console.log('Redirecting user to /hub');
-                    navigate("/hub");
-                  } else if (profileData.role === "admin" || profileData.role === "staff") {
-                    console.log('Redirecting admin/staff to /dashboard');
-                    navigate("/dashboard");
-                  }
-                }
-              } else {
-                console.log('Not on login page, skipping redirect. Current path:', location.pathname);
+              // Get fresh profile data for redirect
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentSession.user.id)
+                .maybeSingle();
+              
+              if (profileData) {
+                await handleInitialRedirect(profileData as UserProfile);
               }
             }
           }, 100);
         }
       } else if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed - updating session without redirect');
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        console.log('Token refreshed - updating profile silently, NO REDIRECTS');
         
-        // NO REDIRECTS on token refresh - just update profile silently
+        // Only update profile data, never redirect on token refresh
         if (currentSession?.user && mounted) {
           setTimeout(() => {
             if (mounted) {
@@ -348,7 +360,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       
-      if (initialSession?.user) {
+      if (initialSession?.user && !hasHandledInitialAuth) {
+        setHasHandledInitialAuth(true);
         await fetchUserProfile(initialSession.user.id);
         
         // ONLY redirect on initial load from login/root page - not when already authenticated on other pages
@@ -362,13 +375,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .maybeSingle();
           
           if (profileData) {
-            if (profileData.role === "user") {
-              console.log('Initial redirect: user to /hub');
-              navigate("/hub");
-            } else if (profileData.role === "admin" || profileData.role === "staff") {
-              console.log('Initial redirect: admin/staff to /dashboard');
-              navigate("/dashboard");
-            }
+            await handleInitialRedirect(profileData as UserProfile);
           }
         } else {
           console.log('Already on valid page, no redirect needed. Current path:', location.pathname);
@@ -382,7 +389,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []); // Remove location dependency to prevent re-running on route changes
+  }, []); // Remove location dependency and keep empty to prevent re-running
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
