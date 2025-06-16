@@ -46,6 +46,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasHandledInitialAuth, setHasHandledInitialAuth] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(!document.hidden);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -170,6 +172,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setHasHandledInitialAuth(false);
       
       // Update user to OFFLINE status if we have a user ID
       if (currentUserId) {
@@ -202,6 +205,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setHasHandledInitialAuth(false);
       
       // Force clear storage
       localStorage.removeItem('supabase.auth.token');
@@ -220,7 +224,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const handleBeforeUnload = async () => {
       if (user?.id) {
-        // Use synchronous approach for page close
         try {
           await updateUserOnlineStatus(user.id, false);
         } catch (error) {
@@ -229,7 +232,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // Only listen for actual page unload, not tab switches
     window.addEventListener('beforeunload', handleBeforeUnload);
     
     return () => {
@@ -237,12 +239,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [user?.id]);
 
+  // Handle visibility changes to prevent redirects when switching tabs
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const isVisible = !document.hidden;
+      console.log('Visibility changed:', isVisible ? 'visible' : 'hidden');
+      setIsPageVisible(isVisible);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   useEffect(() => {
     console.log("Auth provider initialized");
     let mounted = true;
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log("Auth state change:", event, currentSession?.user?.id, "Path:", location.pathname);
+      console.log("Auth state change:", event, currentSession?.user?.id, "Path:", location.pathname, "Visibility:", isPageVisible);
       
       if (!mounted) return;
       
@@ -252,6 +269,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setSession(null);
         setUserProfile(null);
+        setHasHandledInitialAuth(false);
         setLoading(false);
         return;
       }
@@ -260,33 +278,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
-      // ONLY handle redirects for SIGNED_IN event and ONLY if currently on login page
-      if (event === 'SIGNED_IN' && location.pathname === '/login') {
-        console.log('Processing SIGNED_IN event from login page - will redirect');
+      // ONLY handle redirects for SIGNED_IN event from login page AND only if we haven't already handled initial auth AND page is visible
+      if (event === 'SIGNED_IN' && 
+          location.pathname === '/login' && 
+          !hasHandledInitialAuth && 
+          isPageVisible &&
+          currentSession?.user) {
         
-        if (currentSession?.user && mounted) {
-          setTimeout(async () => {
-            if (mounted) {
-              await fetchUserProfile(currentSession.user.id);
-              
-              // Get fresh profile data for redirect
-              const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentSession.user.id)
-                .maybeSingle();
-              
-              if (profileData) {
-                console.log('Redirecting based on role:', profileData.role);
-                if (profileData.role === "user") {
-                  navigate("/hub");
-                } else if (profileData.role === "admin" || profileData.role === "staff") {
-                  navigate("/dashboard");
-                }
+        console.log('Processing SIGNED_IN event from login page - will redirect');
+        setHasHandledInitialAuth(true);
+        
+        setTimeout(async () => {
+          if (mounted) {
+            await fetchUserProfile(currentSession.user.id);
+            
+            // Get fresh profile data for redirect
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', currentSession.user.id)
+              .maybeSingle();
+            
+            if (profileData) {
+              console.log('Redirecting based on role:', profileData.role);
+              if (profileData.role === "user") {
+                navigate("/hub");
+              } else if (profileData.role === "admin" || profileData.role === "staff") {
+                navigate("/dashboard");
               }
             }
-          }, 100);
-        }
+          }
+        }, 100);
       } else if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         console.log(`${event} event - updating profile silently, NO REDIRECTS`);
         
@@ -298,6 +320,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
           }, 100);
         }
+      } else if (event === 'SIGNED_IN') {
+        console.log('SIGNED_IN event ignored - not from login page or already handled initial auth');
       }
       
       setLoading(false);
@@ -322,9 +346,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (initialSession?.user) {
         await fetchUserProfile(initialSession.user.id);
         
-        // ONLY redirect on initial load if on login or root page
-        if (location.pathname === "/login" || location.pathname === "/") {
+        // ONLY redirect on initial load if on login or root page AND haven't handled initial auth
+        if ((location.pathname === "/login" || location.pathname === "/") && !hasHandledInitialAuth) {
           console.log('Initial load from login/root, checking for redirect...');
+          setHasHandledInitialAuth(true);
+          
           const { data: profileData } = await supabase
             .from('profiles')
             .select('*')
@@ -340,7 +366,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
           }
         } else {
-          console.log('Already on valid page, no redirect needed. Current path:', location.pathname);
+          console.log('Already on valid page or already handled auth, no redirect needed. Current path:', location.pathname);
         }
       }
       
@@ -351,7 +377,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array to prevent re-running
+  }, [location.pathname, isPageVisible]); // Include dependencies for proper tracking
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
