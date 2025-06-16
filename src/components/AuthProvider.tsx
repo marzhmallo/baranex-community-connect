@@ -240,19 +240,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && user?.id) {
-        // Page is being hidden, update to offline
-        updateUserOnlineStatus(user.id, false);
-      }
-    };
-
+    // Only listen for actual page unload, not tab switches
     window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [user?.id]);
 
