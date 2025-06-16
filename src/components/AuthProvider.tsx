@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Fetch user profile data from profiles table
+  // Fetch user profile data from profiles table - NO REDIRECTS HERE
   const fetchUserProfile = async (userId: string) => {
     console.log('Fetching user profile for:', userId);
     try {
@@ -277,6 +277,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
+      // Only handle SIGNED_IN events - not TOKEN_REFRESHED or other events
       if (event === 'SIGNED_IN') {
         console.log('User signed in - fetching profile');
         setSession(currentSession);
@@ -286,8 +287,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setTimeout(async () => {
             if (mounted) {
               await fetchUserProfile(currentSession.user.id);
-              // Only redirect on actual sign in from login page
-              if (location.pathname === "/login" || location.pathname === "/") {
+              
+              // ONLY redirect on actual sign in from login page - not on tab switch
+              const isLoginPage = location.pathname === "/login" || location.pathname === "/";
+              if (isLoginPage) {
+                console.log('Login detected, checking for redirect...');
                 const { data: profileData } = await supabase
                   .from('profiles')
                   .select('*')
@@ -296,26 +300,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 
                 if (profileData) {
                   if (profileData.role === "user") {
-                    console.log('Initial redirect: user to /hub');
+                    console.log('Redirecting user to /hub');
                     navigate("/hub");
                   } else if (profileData.role === "admin" || profileData.role === "staff") {
-                    console.log('Initial redirect: admin/staff to /dashboard');
+                    console.log('Redirecting admin/staff to /dashboard');
                     navigate("/dashboard");
                   }
                 }
+              } else {
+                console.log('Not on login page, skipping redirect. Current path:', location.pathname);
               }
             }
           }, 100);
         }
       } else if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed - updating profile without redirect');
+        console.log('Token refreshed - updating session without redirect');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
+        // NO REDIRECTS on token refresh - just update profile silently
         if (currentSession?.user && mounted) {
           setTimeout(() => {
             if (mounted) {
-              fetchUserProfile(currentSession.user.id); // No redirect on token refresh
+              fetchUserProfile(currentSession.user.id);
             }
           }, 100);
         }
@@ -343,8 +350,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (initialSession?.user) {
         await fetchUserProfile(initialSession.user.id);
-        // Only redirect on initial load from login/root page
-        if (location.pathname === "/login" || location.pathname === "/") {
+        
+        // ONLY redirect on initial load from login/root page - not when already authenticated on other pages
+        const isLoginOrRoot = location.pathname === "/login" || location.pathname === "/";
+        if (isLoginOrRoot) {
+          console.log('Initial load from login/root, checking for redirect...');
           const { data: profileData } = await supabase
             .from('profiles')
             .select('*')
@@ -360,6 +370,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               navigate("/dashboard");
             }
           }
+        } else {
+          console.log('Already on valid page, no redirect needed. Current path:', location.pathname);
         }
       }
       
@@ -370,7 +382,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Remove location dependency to prevent re-running on route changes
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
