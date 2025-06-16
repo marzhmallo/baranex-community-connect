@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,33 +14,33 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { feedbackAPI } from '@/lib/api/feedback';
 import { FeedbackReport, FeedbackType, FeedbackStatus, STATUS_COLORS } from '@/lib/types/feedback';
-
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
-
 const FeedbackPage = () => {
-  const { userProfile } = useAuth();
+  const {
+    userProfile
+  } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedReport, setSelectedReport] = useState<FeedbackReport | null>(null);
   const [filterType, setFilterType] = useState<FeedbackType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<FeedbackStatus | 'all'>('all');
   const [adminNotes, setAdminNotes] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
-
-  const { data: reports, isLoading, refetch } = useQuery({
+  const {
+    data: reports,
+    isLoading,
+    refetch
+  } = useQuery({
     queryKey: ['feedback-reports', userProfile?.brgyid, filterType, filterStatus, searchTerm],
     queryFn: async () => {
       if (!userProfile?.brgyid) return [];
-      
       const filters: any = {};
       if (filterType !== 'all') filters.type = filterType;
       if (filterStatus !== 'all') filters.status = filterStatus;
       if (searchTerm) filters.search = searchTerm;
-      
       return await feedbackAPI.getAllReports(userProfile.brgyid, filters);
     },
-    enabled: !!userProfile?.brgyid,
+    enabled: !!userProfile?.brgyid
   });
-
   const handleStatusUpdate = async (reportId: string, newStatus: FeedbackStatus) => {
     setIsUpdating(true);
     try {
@@ -64,29 +63,18 @@ const FeedbackPage = () => {
       setIsUpdating(false);
     }
   };
-
-  const getStatusBadge = (status: FeedbackStatus) => (
-    <Badge className={STATUS_COLORS[status]}>
+  const getStatusBadge = (status: FeedbackStatus) => <Badge className={STATUS_COLORS[status]}>
       {status.replace('_', ' ').toUpperCase()}
-    </Badge>
-  );
-
-  const getTypeBadge = (type: FeedbackType) => (
-    <Badge variant={type === 'barangay' ? 'default' : 'secondary'}>
+    </Badge>;
+  const getTypeBadge = (type: FeedbackType) => <Badge variant={type === 'barangay' ? 'default' : 'secondary'}>
       {type === 'barangay' ? 'Barangay Issue' : 'System Issue'}
-    </Badge>
-  );
-
+    </Badge>;
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
+    return <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="container mx-auto p-6 space-y-6">
+  return <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Feedback & Reports</h1>
@@ -107,12 +95,7 @@ const FeedbackPage = () => {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search reports..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64"
-                />
+                <Input placeholder="Search reports..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-64" />
               </div>
               
               <Select value={filterType} onValueChange={(value: FeedbackType | 'all') => setFilterType(value)}>
@@ -154,8 +137,7 @@ const FeedbackPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reports?.map((report) => (
-                    <TableRow key={report.id}>
+                  {reports?.map(report => <TableRow key={report.id}>
                       <TableCell>
                         <div className="font-medium">{report.user_name}</div>
                       </TableCell>
@@ -168,14 +150,10 @@ const FeedbackPage = () => {
                       <TableCell>
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedReport(report);
-                                setAdminNotes(report.admin_notes || '');
-                              }}
-                            >
+                            <Button variant="ghost" size="sm" onClick={() => {
+                          setSelectedReport(report);
+                          setAdminNotes(report.admin_notes || '');
+                        }}>
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
@@ -183,8 +161,7 @@ const FeedbackPage = () => {
                             <DialogHeader>
                               <DialogTitle>Report Details</DialogTitle>
                             </DialogHeader>
-                            {selectedReport && (
-                              <div className="space-y-4">
+                            {selectedReport && <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
                                     <strong>Reporter:</strong> {selectedReport.user_name}
@@ -200,103 +177,66 @@ const FeedbackPage = () => {
                                   </div>
                                 </div>
 
-                                {selectedReport.location && (
-                                  <div>
+                                {selectedReport.location && <div>
                                     <strong>Location:</strong> {selectedReport.location}
-                                  </div>
-                                )}
+                                  </div>}
 
                                 <div>
                                   <strong>Description:</strong>
                                   <p className="mt-2 p-3 bg-gray-50 rounded">{selectedReport.description}</p>
                                 </div>
 
-                                {selectedReport.attachments && selectedReport.attachments.length > 0 && (
-                                  <div>
+                                {selectedReport.attachments && selectedReport.attachments.length > 0 && <div>
                                     <strong>Attachments:</strong>
                                     <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-4">
                                       {selectedReport.attachments.map((attachment, index) => {
-                                        const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
-                                        return (
-                                          <div key={index} className="relative group">
-                                            <img
-                                              src={imageUrl}
-                                              alt={`Attachment ${index + 1}`}
-                                              className="w-full aspect-square object-cover rounded-lg border"
-                                              onError={(e) => {
-                                                // Fallback to filename display if image fails to load
-                                                const target = e.target as HTMLImageElement;
-                                                target.style.display = 'none';
-                                                const fallback = target.nextElementSibling as HTMLElement;
-                                                if (fallback) fallback.style.display = 'flex';
-                                              }}
-                                            />
+                                const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
+                                return <div key={index} className="relative group">
+                                            <img src={imageUrl} alt={`Attachment ${index + 1}`} className="w-full aspect-square object-cover rounded-lg border" onError={e => {
+                                    // Fallback to filename display if image fails to load
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const fallback = target.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }} />
                                             <div className="hidden w-full aspect-square bg-gray-100 rounded-lg items-center justify-center border">
                                               <div className="text-center p-2">
                                                 <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                                                 <span className="text-xs text-gray-600">{attachment}</span>
                                               </div>
                                             </div>
-                                          </div>
-                                        );
-                                      })}
+                                          </div>;
+                              })}
                                     </div>
-                                  </div>
-                                )}
+                                  </div>}
 
                                 <div>
                                   <strong>Admin Notes:</strong>
-                                  <Textarea
-                                    value={adminNotes}
-                                    onChange={(e) => setAdminNotes(e.target.value)}
-                                    placeholder="Add notes for this report..."
-                                    className="mt-2"
-                                  />
+                                  <Textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder="Add notes for this report..." className="mt-2" />
                                 </div>
 
                                 <div className="flex gap-2">
-                                  {selectedReport.status === 'pending' && (
-                                    <Button
-                                      onClick={() => handleStatusUpdate(selectedReport.id, 'in_progress')}
-                                      disabled={isUpdating}
-                                    >
+                                  {selectedReport.status === 'pending' && <Button onClick={() => handleStatusUpdate(selectedReport.id, 'in_progress')} disabled={isUpdating}>
                                       Mark In Progress
-                                    </Button>
-                                  )}
-                                  {(selectedReport.status === 'pending' || selectedReport.status === 'in_progress') && (
-                                    <>
-                                      <Button
-                                        onClick={() => handleStatusUpdate(selectedReport.id, 'resolved')}
-                                        disabled={isUpdating}
-                                        className="bg-green-600 hover:bg-green-700"
-                                      >
-                                        Resolve
-                                      </Button>
-                                      <Button
-                                        onClick={() => handleStatusUpdate(selectedReport.id, 'rejected')}
-                                        disabled={isUpdating}
-                                        variant="destructive"
-                                      >
+                                    </Button>}
+                                  {(selectedReport.status === 'pending' || selectedReport.status === 'in_progress') && <>
+                                      <Button onClick={() => handleStatusUpdate(selectedReport.id, 'resolved')} disabled={isUpdating} className="bg-green-600 hover:bg-green-700">Mark Resolved</Button>
+                                      <Button onClick={() => handleStatusUpdate(selectedReport.id, 'rejected')} disabled={isUpdating} variant="destructive">
                                         Reject
                                       </Button>
-                                    </>
-                                  )}
+                                    </>}
                                 </div>
-                              </div>
-                            )}
+                              </div>}
                           </DialogContent>
                         </Dialog>
                       </TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)}
                 </TableBody>
               </Table>
             </div>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default FeedbackPage;
