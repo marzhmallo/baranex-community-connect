@@ -7,15 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
-import { Plus, Edit, Trash2, Shield, User, Crown, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle } from 'lucide-react';
+import { Crown, Shield, User, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle, Edit, MoreVertical, UserX, Play, Block } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -37,7 +35,6 @@ const UserAccountManagement = () => {
   const { userProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [activeTab, setActiveTab] = useState('all');
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
 
   const { data: users, isLoading, refetch } = useQuery({
@@ -73,15 +70,7 @@ const UserAccountManagement = () => {
       user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesTab = 
-      activeTab === 'all' ||
-      (activeTab === 'admins' && (user.role === 'admin' || user.role === 'staff')) ||
-      (activeTab === 'users' && user.role === 'user') ||
-      (activeTab === 'pending' && user.status === 'pending') ||
-      (activeTab === 'approved' && user.status === 'approved') ||
-      (activeTab === 'blocked' && user.status === 'blocked');
-    
-    return matchesSearch && matchesTab;
+    return matchesSearch;
   });
 
   const updateUserStatus = async (userId: string, status: string) => {
@@ -184,40 +173,64 @@ const UserAccountManagement = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      pending: "outline",
-      approved: "default",
-      rejected: "destructive",
-      blocked: "secondary"
+    const statusConfig = {
+      pending: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-800 dark:text-amber-200', dot: 'bg-amber-500' },
+      approved: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-200', dot: 'bg-green-500' },
+      rejected: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-200', dot: 'bg-red-500' },
+      blocked: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-200', dot: 'bg-red-500' },
+      active: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-200', dot: 'bg-green-500' },
     };
     
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    
     return (
-      <Badge variant={variants[status] || "outline"}>
+      <span className={`inline-flex items-center gap-1 ${config.bg} ${config.text} px-3 py-1 rounded-full text-sm font-medium`}>
+        <span className={`w-2 h-2 ${config.dot} rounded-full`}></span>
         {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
+      </span>
     );
   };
 
   const getRoleBadge = (role: string, isSuperior: boolean = false) => {
-    const colors: Record<string, string> = {
-      admin: "bg-red-100 text-red-800",
-      staff: "bg-blue-100 text-blue-800",
-      user: "bg-green-100 text-green-800"
+    const roleConfig = {
+      admin: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-200' },
+      staff: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-200' },
+      user: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-800 dark:text-gray-200' }
     };
     
+    const config = roleConfig[role as keyof typeof roleConfig] || roleConfig.user;
+    
+    if (isSuperior) {
+      return (
+        <span className="inline-flex items-center gap-1 bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 px-3 py-1 rounded-full text-sm font-medium">
+          <Crown className="w-3 h-3" />
+          Head Admin
+        </span>
+      );
+    }
+    
     return (
-      <div className="flex items-center gap-1">
-        <Badge className={colors[role] || "bg-gray-100 text-gray-800"}>
-          {role.charAt(0).toUpperCase() + role.slice(1)}
-        </Badge>
-        {isSuperior && (
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
-            <Crown className="h-3 w-3 mr-1" />
-            Superior
-          </Badge>
-        )}
-      </div>
+      <span className={`inline-flex items-center gap-1 ${config.bg} ${config.text} px-3 py-1 rounded-full text-sm font-medium`}>
+        <Shield className="w-3 h-3" />
+        {role.charAt(0).toUpperCase() + role.slice(1)}
+      </span>
     );
+  };
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  };
+
+  const getGradientColor = (index: number) => {
+    const gradients = [
+      'from-primary-500 to-primary-600',
+      'from-blue-500 to-blue-600',
+      'from-green-500 to-green-600',
+      'from-purple-500 to-purple-600',
+      'from-pink-500 to-pink-600',
+      'from-indigo-500 to-indigo-600'
+    ];
+    return gradients[index % gradients.length];
   };
 
   if (isLoading) {
@@ -244,292 +257,343 @@ const UserAccountManagement = () => {
     );
   }
 
+  const adminUsers = filteredUsers?.filter(u => u.role === 'admin' || u.role === 'staff') || [];
+  const regularUsers = filteredUsers?.filter(u => u.role === 'user') || [];
+  const pendingUsers = filteredUsers?.filter(u => u.status === 'pending') || [];
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Account Management</h1>
-          <p className="text-muted-foreground">Manage user accounts, roles, and permissions for your barangay</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-200 mb-2">User Management System</h1>
+          <p className="text-slate-600 dark:text-slate-400">Manage barangay administrators and system users with role-based permissions</p>
         </div>
-      </div>
 
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Your own account ({userProfile.email}) is not shown in this list for security reasons. To manage your profile, use the Profile section instead.
-        </AlertDescription>
-      </Alert>
-
-      {userProfile?.superior_admin && (
-        <Alert>
-          <Crown className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>You are the superior admin of this barangay. You can transfer your superiority to another admin.</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setTransferDialogOpen(true)}
-            >
-              Transfer Superiority
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            User Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-primary-100 dark:bg-primary-900/30 p-3 rounded-full">
+                <Shield className="text-primary-600 dark:text-primary-400 h-6 w-6" />
+              </div>
+              <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{adminUsers.length}</span>
             </div>
-
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="all">All Users ({users?.length || 0})</TabsTrigger>
-                <TabsTrigger value="admins">Admins ({users?.filter(u => u.role === 'admin' || u.role === 'staff').length || 0})</TabsTrigger>
-                <TabsTrigger value="users">Users ({users?.filter(u => u.role === 'user').length || 0})</TabsTrigger>
-                <TabsTrigger value="pending">Pending ({users?.filter(u => u.status === 'pending').length || 0})</TabsTrigger>
-                <TabsTrigger value="approved">Approved ({users?.filter(u => u.status === 'approved').length || 0})</TabsTrigger>
-                <TabsTrigger value="blocked">Blocked ({users?.filter(u => u.status === 'blocked').length || 0})</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value={activeTab} className="mt-4">
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Date Registered</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers?.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarFallback>
-                                  {user.firstname?.[0]}{user.lastname?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="font-medium">
-                                  {user.firstname} {user.lastname}
-                                </div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>{getRoleBadge(user.role, user.superior_admin)}</TableCell>
-                          <TableCell>{getStatusBadge(user.status)}</TableCell>
-                          <TableCell>
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setSelectedUser(user)}
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-md">
-                                  <DialogHeader>
-                                    <DialogTitle>User Details</DialogTitle>
-                                  </DialogHeader>
-                                  {selectedUser && (
-                                    <div className="space-y-4">
-                                      <div className="flex items-center space-x-3">
-                                        <Avatar className="h-12 w-12">
-                                          <AvatarFallback>
-                                            {selectedUser.firstname?.[0]}{selectedUser.lastname?.[0]}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                          <h3 className="font-semibold">
-                                            {selectedUser.firstname} {selectedUser.lastname}
-                                          </h3>
-                                          <p className="text-sm text-muted-foreground">
-                                            {selectedUser.email}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                          <span className="font-medium">Phone:</span>
-                                          <p>{selectedUser.phone || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Role:</span>
-                                          <p>{getRoleBadge(selectedUser.role, selectedUser.superior_admin)}</p>
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Status:</span>
-                                          <p>{getStatusBadge(selectedUser.status)}</p>
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Username:</span>
-                                          <p>{selectedUser.username || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Purok:</span>
-                                          <p>{selectedUser.purok || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Middle Name:</span>
-                                          <p>{selectedUser.middlename || 'N/A'}</p>
-                                        </div>
-                                      </div>
-
-                                      {selectedUser.superior_admin && (
-                                        <Alert>
-                                          <AlertTriangle className="h-4 w-4" />
-                                          <AlertDescription>
-                                            This user is a superior admin and cannot be modified by other admins.
-                                          </AlertDescription>
-                                        </Alert>
-                                      )}
-                                      
-                                      <div className="flex space-x-2">
-                                        {selectedUser.status === 'pending' && canModifyUser(selectedUser) && (
-                                          <>
-                                            <Button
-                                              size="sm"
-                                              onClick={() => updateUserStatus(selectedUser.id, 'approved')}
-                                            >
-                                              <Check className="h-4 w-4 mr-1" />
-                                              Approve
-                                            </Button>
-                                            <Button
-                                              size="sm"
-                                              variant="destructive"
-                                              onClick={() => updateUserStatus(selectedUser.id, 'rejected')}
-                                            >
-                                              <X className="h-4 w-4 mr-1" />
-                                              Reject
-                                            </Button>
-                                          </>
-                                        )}
-                                        <Button size="sm" variant="outline">
-                                          <Mail className="h-4 w-4 mr-1" />
-                                          Send Email
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  )}
-                                </DialogContent>
-                              </Dialog>
-                              
-                              {user.status === 'pending' && canModifyUser(user) && (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => updateUserStatus(user.id, 'approved')}
-                                  >
-                                    <Check className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => updateUserStatus(user.id, 'rejected')}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </>
-                              )}
-                              
-                              {canModifyUser(user) && (
-                                <>
-                                  <Button variant="ghost" size="sm">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </>
-                              )}
-                              
-                              {!canModifyUser(user) && (
-                                <Badge variant="outline" className="text-xs">
-                                  Protected
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-            </Tabs>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-1">Admins</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Barangay administrators with privileges</p>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Transfer Superiority Dialog */}
-      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Transfer Superior Admin Role</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                This action will transfer your superior admin privileges to another admin. You will lose your superior status and the selected admin will become the new superior admin.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">Select new superior admin:</h4>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {users?.filter(u => (u.role === 'admin' || u.role === 'staff') && !u.superior_admin).map(user => (
-                  <div key={user.id} className="flex items-center justify-between p-2 border rounded">
-                    <div className="flex items-center space-x-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarFallback className="text-xs">
-                          {user.firstname?.[0]}{user.lastname?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm">{user.firstname} {user.lastname}</span>
-                      <span className="text-xs text-muted-foreground">({user.email})</span>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => transferSuperiority(user.id)}
-                    >
-                      Transfer
-                    </Button>
-                  </div>
-                ))}
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
+                <Users className="text-blue-600 dark:text-blue-400 h-6 w-6" />
+              </div>
+              <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{regularUsers.length}</span>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-1">Users</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Regular users</p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-amber-100 dark:bg-amber-900/30 p-3 rounded-full">
+                <AlertTriangle className="text-amber-600 dark:text-amber-400 h-6 w-6" />
+              </div>
+              <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{pendingUsers.length}</span>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-1">Pending Approval</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Users awaiting verification</p>
+          </div>
+        </div>
+
+        {/* Main Table */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200">User Management Dashboard</h2>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Search users..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full sm:w-64"
+                  />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                </div>
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 dark:bg-slate-700">
+                <tr>
+                  <th className="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">User</th>
+                  <th className="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">Role</th>
+                  <th className="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                  <th className="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">Joined</th>
+                  <th className="text-center py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                {filteredUsers?.map((user, index) => (
+                  <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 bg-gradient-to-br ${getGradientColor(index)} rounded-full flex items-center justify-center text-white font-semibold`}>
+                          {getInitials(user.firstname, user.lastname)}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-800 dark:text-slate-200">
+                            {user.firstname} {user.lastname}
+                          </div>
+                          <div className="text-sm text-slate-600 dark:text-slate-400">{user.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      {getRoleBadge(user.role || 'user', user.superior_admin)}
+                    </td>
+                    <td className="py-4 px-6">
+                      {getStatusBadge(user.status || 'pending')}
+                    </td>
+                    <td className="py-4 px-6 text-slate-600 dark:text-slate-400">
+                      {new Date(user.created_at || '').toLocaleDateString()}
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center justify-center gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedUser(user)}
+                              className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-full"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>User Details</DialogTitle>
+                            </DialogHeader>
+                            {selectedUser && (
+                              <div className="space-y-4">
+                                <div className="flex items-center space-x-3">
+                                  <Avatar className="h-12 w-12">
+                                    <AvatarFallback>
+                                      {getInitials(selectedUser.firstname, selectedUser.lastname)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <h3 className="font-semibold">
+                                      {selectedUser.firstname} {selectedUser.lastname}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                      {selectedUser.email}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <span className="font-medium">Phone:</span>
+                                    <p>{selectedUser.phone || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Role:</span>
+                                    <p>{getRoleBadge(selectedUser.role || 'user', selectedUser.superior_admin)}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Status:</span>
+                                    <p>{getStatusBadge(selectedUser.status || 'pending')}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Username:</span>
+                                    <p>{selectedUser.username || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Purok:</span>
+                                    <p>{selectedUser.purok || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Middle Name:</span>
+                                    <p>{selectedUser.middlename || 'N/A'}</p>
+                                  </div>
+                                </div>
+
+                                {selectedUser.superior_admin && (
+                                  <Alert>
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <AlertDescription>
+                                      This user is a superior admin and cannot be modified by other admins.
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+                                
+                                <div className="flex space-x-2">
+                                  {selectedUser.status === 'pending' && canModifyUser(selectedUser) && (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => updateUserStatus(selectedUser.id, 'approved')}
+                                      >
+                                        <Check className="h-4 w-4 mr-1" />
+                                        Approve
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => updateUserStatus(selectedUser.id, 'rejected')}
+                                      >
+                                        <X className="h-4 w-4 mr-1" />
+                                        Reject
+                                      </Button>
+                                    </>
+                                  )}
+                                  <Button size="sm" variant="outline">
+                                    <Mail className="h-4 w-4 mr-1" />
+                                    Send Email
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </DialogContent>
+                        </Dialog>
+                        
+                        {user.status === 'pending' && canModifyUser(user) && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => updateUserStatus(user.id, 'approved')}
+                              className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-full"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => updateUserStatus(user.id, 'rejected')}
+                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        
+                        {user.superior_admin ? (
+                          <Badge variant="outline" className="text-xs">
+                            Protected
+                          </Badge>
+                        ) : canModifyUser(user) ? (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-2 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
+                            >
+                              <UserX className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="text-xs">
+                            Protected
+                          </Badge>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                Showing {filteredUsers?.length || 0} users
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Guidelines Section */}
+        <div className="mt-8 bg-gradient-to-r from-blue-50 to-primary-50 dark:from-blue-900/20 dark:to-primary-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+          <div className="flex items-start gap-4">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full flex-shrink-0">
+              <Info className="text-blue-600 dark:text-blue-400 h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">User Management Guidelines</h3>
+              <ul className="text-sm text-slate-700 dark:text-slate-300 space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-primary-500 rounded-full"></span>
+                  Head Admins are barangay founders with permanent protection from removal or suspension
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-primary-500 rounded-full"></span>
+                  Regular admins can be managed by Head Admins within their respective barangays
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-primary-500 rounded-full"></span>
+                  All user actions are logged and auditable for security compliance
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Transfer Superiority Dialog */}
+        <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Transfer Superior Admin Role</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  This action will transfer your superior admin privileges to another admin. You will lose your superior status and the selected admin will become the new superior admin.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="space-y-2">
+                <h4 className="font-medium">Select new superior admin:</h4>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {users?.filter(u => (u.role === 'admin' || u.role === 'staff') && !u.superior_admin).map(user => (
+                    <div key={user.id} className="flex items-center justify-between p-2 border rounded">
+                      <div className="flex items-center space-x-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs">
+                            {getInitials(user.firstname, user.lastname)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm">{user.firstname} {user.lastname}</span>
+                        <span className="text-xs text-muted-foreground">({user.email})</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => transferSuperiority(user.id)}
+                      >
+                        Transfer
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
