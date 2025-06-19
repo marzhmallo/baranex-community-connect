@@ -60,8 +60,8 @@ const OfficialsPage = () => {
         }
         return {
           ...official,
-          // Handle boolean conversion for is_sk field
-          is_sk: Array.isArray(official.is_sk) ? official.is_sk.length > 0 && official.is_sk[0] === true : Boolean(official.is_sk),
+          // Keep is_sk as array to match the Official interface
+          is_sk: official.is_sk || [],
           // Update with position data if we have it
           position: latestPosition?.position || '',
           term_start: latestPosition?.term_start || official.term_start,
