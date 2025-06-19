@@ -122,20 +122,27 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
     defaultValues
   });
 
-  // Auto-fill address fields when creating a new household
+  // Override address fields when auto-fill is enabled
   useEffect(() => {
-    if (!household) {
-      // Only for new households, not editing
-      const autoFillData = getAutoFillData();
-      if (autoFillData) {
-        form.setValue('barangayname', autoFillData.barangayname);
-        form.setValue('municipality', autoFillData.municipality);
-        form.setValue('province', autoFillData.province);
-        form.setValue('region', autoFillData.region);
-        form.setValue('country', autoFillData.country);
-      }
+    const autoFillData = getAutoFillData();
+    if (autoFillData && isAutoFillEnabled) {
+      // Override address fields with admin's data, regardless of existing values
+      form.setValue('barangayname', autoFillData.barangayname);
+      form.setValue('municipality', autoFillData.municipality);
+      form.setValue('province', autoFillData.province);
+      form.setValue('region', autoFillData.region);
+      form.setValue('country', autoFillData.country);
     }
-  }, [getAutoFillData, form, household]);
+  }, [getAutoFillData, form, isAutoFillEnabled]);
+
+  // Function to handle cancel button click
+  const handleCancel = () => {
+    // Reset form values
+    form.reset();
+    // Close dialog
+    onSubmit();
+  };
+
   const handleSubmit = async (values: HouseholdFormValues) => {
     console.log("Form submitted with values:", values);
     console.log("Selected resident ID:", selectedResidentId);
@@ -200,13 +207,6 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
     }
   };
 
-  // Function to handle cancel button click
-  const handleCancel = () => {
-    // Reset form values
-    form.reset();
-    // Close dialog
-    onSubmit();
-  };
   return <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <ScrollArea className="pr-4 h-[calc(85vh-180px)]">
