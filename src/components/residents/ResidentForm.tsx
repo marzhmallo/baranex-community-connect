@@ -22,13 +22,22 @@ import ResidentPhotoUpload from "./ResidentPhotoUpload";
 import { useAutoFillAddress } from "@/hooks/useAutoFillAddress";
 
 // Available resident classifications with capitalized labels
-const residentClassifications = [
-  { id: "Indigent", label: "Indigent" }, 
-  { id: "Student", label: "Student" },
-  { id: "OFW", label: "OFW" },
-  { id: "PWD", label: "PWD" },
-  { id: "Missing", label: "Missing" }
-];
+const residentClassifications = [{
+  id: "Indigent",
+  label: "Indigent"
+}, {
+  id: "Student",
+  label: "Student"
+}, {
+  id: "OFW",
+  label: "OFW"
+}, {
+  id: "PWD",
+  label: "PWD"
+}, {
+  id: "Missing",
+  label: "Missing"
+}];
 
 // Form schema using zod
 const formSchema = z.object({
@@ -63,12 +72,11 @@ const formSchema = z.object({
   status: z.enum(["Permanent", "Temporary", "Deceased", "Relocated"]),
   diedOn: z.date().optional().nullable(),
   remarks: z.string().optional(),
-  photoUrl: z.string().optional(),
+  photoUrl: z.string().optional()
 });
 
 // Define the type for form values based on the schema
 type ResidentFormValues = z.infer<typeof formSchema>;
-
 interface ResidentFormProps {
   onSubmit: () => void;
   resident?: Resident;
@@ -77,25 +85,36 @@ interface ResidentFormProps {
 // Map database status to form status
 const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
   switch (dbStatus) {
-    case 'Permanent': return 'Permanent';
-    case 'Temporary': return 'Temporary';
-    case 'Deceased': return 'Deceased';
-    case 'Relocated': return 'Relocated';
-    default: return 'Temporary'; // Default fallback
+    case 'Permanent':
+      return 'Permanent';
+    case 'Temporary':
+      return 'Temporary';
+    case 'Deceased':
+      return 'Deceased';
+    case 'Relocated':
+      return 'Relocated';
+    default:
+      return 'Temporary';
+    // Default fallback
   }
 };
 
 // Map form status to database format
 const mapFormStatusToDB = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
   switch (formStatus) {
-    case 'Permanent': return 'Permanent';
-    case 'Temporary': return 'Temporary';
-    case 'Deceased': return 'Deceased';
-    case 'Relocated': return 'Relocated';
-    default: return 'Temporary'; // Default fallback
+    case 'Permanent':
+      return 'Permanent';
+    case 'Temporary':
+      return 'Temporary';
+    case 'Deceased':
+      return 'Deceased';
+    case 'Relocated':
+      return 'Relocated';
+    default:
+      return 'Temporary';
+    // Default fallback
   }
 };
-
 const ResidentForm = ({
   onSubmit,
   resident
@@ -103,12 +122,15 @@ const ResidentForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(resident?.photoUrl);
-  const { getAutoFillData, isAutoFillEnabled } = useAutoFillAddress();
-  
+  const {
+    getAutoFillData,
+    isAutoFillEnabled
+  } = useAutoFillAddress();
+
   // Transform resident data for the form
   const transformResidentForForm = (resident: Resident): ResidentFormValues => {
     console.log("Transforming resident for form:", resident);
-    
+
     // Handle died_on date if present
     let diedOnDate = null;
     if (resident.diedOn) {
@@ -119,7 +141,7 @@ const ResidentForm = ({
         console.error("Error parsing diedOn date:", error);
       }
     }
-    
+
     // Modified to use empty strings instead of placeholder text for emergency contact fields
     return {
       // Personal Info
@@ -129,10 +151,8 @@ const ResidentForm = ({
       suffix: resident.suffix ?? "",
       gender: resident.gender as "Male" | "Female" | "Other",
       birthDate: resident.birthDate,
-      
       // Photo
       photoUrl: resident.photoUrl ?? "",
-      
       // Address
       purok: resident.purok ?? "",
       barangay: resident.barangay ?? "",
@@ -140,42 +160,34 @@ const ResidentForm = ({
       province: resident.province ?? "",
       region: resident.region ?? "",
       country: resident.country ?? "",
-      
       // Contact
       contactNumber: resident.contactNumber ?? "",
       email: resident.email ?? "",
-      
       // Civil Status
       civilStatus: resident.civilStatus as "Single" | "Married" | "Widowed" | "Divorced" | "Separated",
       status: mapDBStatusToForm(resident.status),
-      
       // Economic
       occupation: resident.occupation ?? "",
       monthlyIncome: resident.monthlyIncome ?? 0,
       yearsInBarangay: resident.yearsInBarangay ?? 0,
-      
       // Documents
       isVoter: resident.isVoter ?? false,
       hasPhilhealth: resident.hasPhilhealth ?? false,
       hasSss: resident.hasSss ?? false,
       hasPagibig: resident.hasPagibig ?? false,
       hasTin: resident.hasTin ?? false,
-      
       // Other
       nationality: resident.nationality ?? "",
       classifications: resident.classifications ?? [],
       remarks: resident.remarks ?? "",
-      
       // Emergency Contact - Changed to use empty strings instead of placeholder text
       emergencyContactName: resident.emergencyContact?.name === "Emergency contact not set" ? "" : resident.emergencyContact?.name ?? "",
       emergencyContactRelationship: resident.emergencyContact?.relationship === "Not specified" ? "" : resident.emergencyContact?.relationship ?? "",
       emergencyContactNumber: resident.emergencyContact?.contactNumber === "Not specified" ? "" : resident.emergencyContact?.contactNumber ?? "",
-      
       // Death date
-      diedOn: diedOnDate,
+      diedOn: diedOnDate
     };
   };
-  
   const defaultValues: ResidentFormValues = resident ? transformResidentForForm(resident) : {
     firstName: "",
     lastName: "",
@@ -206,17 +218,17 @@ const ResidentForm = ({
     emergencyContactName: "",
     emergencyContactRelationship: "",
     emergencyContactNumber: "",
-    status: "Temporary", // Default status
+    status: "Temporary",
+    // Default status
     diedOn: null,
     remarks: ""
   };
-  
   const form = useForm<ResidentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
     mode: "onChange"
   });
-  
+
   // Auto-fill address fields when auto-fill is enabled (for both new residents and edits)
   useEffect(() => {
     if (isAutoFillEnabled) {
@@ -232,37 +244,34 @@ const ResidentForm = ({
       }
     }
   }, [getAutoFillData, form, isAutoFillEnabled]);
-  
+
   // Log form validation state changes
   useEffect(() => {
     const subscription = form.watch(() => {
       if (form.formState.isSubmitSuccessful) {
         console.log("Form was successfully submitted");
       }
-      
       if (Object.keys(form.formState.errors).length > 0) {
         console.log("Form has validation errors:", form.formState.errors);
       }
     });
-    
     return () => subscription.unsubscribe();
   }, [form]);
-  
+
   // Watch for status changes to show/hide the death date picker
   const status = form.watch("status");
-
   const handlePhotoUploaded = (url: string) => {
     setPhotoUrl(url);
     form.setValue("photoUrl", url);
   };
-
   const handleSubmit = async (values: ResidentFormValues) => {
     console.log("Form submitted with values:", values);
     setIsSubmitting(true);
-    
     try {
       // If auto-fill is enabled, ensure we use the admin's barangay data for address fields
-      let finalValues = { ...values };
+      let finalValues = {
+        ...values
+      };
       if (isAutoFillEnabled) {
         const autoFillData = getAutoFillData();
         if (autoFillData) {
@@ -277,10 +286,10 @@ const ResidentForm = ({
           };
         }
       }
-      
+
       // Construct address string from individual components
       const addressString = `Purok ${finalValues.purok}, ${finalValues.barangay}, ${finalValues.municipality}, ${finalValues.province}, ${finalValues.region}`;
-      
+
       // Create the resident data object based on form values
       const residentToSave: Partial<Resident> = {
         id: resident?.id,
@@ -314,34 +323,25 @@ const ResidentForm = ({
         remarks: finalValues.remarks,
         status: mapFormStatusToDB(finalValues.status),
         photoUrl: finalValues.photoUrl,
-        
         // Emergency contact handling:
         // Only include if any of the fields have content, otherwise set to null
         // This ensures we send null to the database when all fields are empty
-        emergencyContact: 
-          finalValues.emergencyContactName || finalValues.emergencyContactRelationship || finalValues.emergencyContactNumber
-            ? {
-                name: finalValues.emergencyContactName || "",
-                relationship: finalValues.emergencyContactRelationship || "",
-                contactNumber: finalValues.emergencyContactNumber || ""
-              }
-            : null,
-            
+        emergencyContact: finalValues.emergencyContactName || finalValues.emergencyContactRelationship || finalValues.emergencyContactNumber ? {
+          name: finalValues.emergencyContactName || "",
+          relationship: finalValues.emergencyContactRelationship || "",
+          contactNumber: finalValues.emergencyContactNumber || ""
+        } : null,
         // Add died_on date if status is Deceased and a date was selected
         // Otherwise explicitly set to null
-        diedOn: finalValues.status === "Deceased" && finalValues.diedOn ? 
-          format(finalValues.diedOn, 'yyyy-MM-dd') : null,
+        diedOn: finalValues.status === "Deceased" && finalValues.diedOn ? format(finalValues.diedOn, 'yyyy-MM-dd') : null
       };
-      
       console.log("Sending to saveResident:", residentToSave);
       console.log("Emergency contact being saved:", residentToSave.emergencyContact);
       console.log("Death date being saved:", residentToSave.diedOn);
-      
+
       // Use the saveResident function
       const result = await saveResident(residentToSave);
-      
       console.log("saveResident result:", result);
-
       if (!result.success) {
         console.error("Error in saveResident:", result.error);
         throw new Error(result.error);
@@ -390,9 +390,7 @@ const ResidentForm = ({
       console.log("ResidentForm rendered for new resident creation");
     }
   }, [resident]);
-
-  return (
-    <FormProvider {...form}>
+  return <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <ScrollArea className="pr-4 h-[calc(85vh-180px)]">
           <div className="pr-4 space-y-6">
@@ -400,11 +398,7 @@ const ResidentForm = ({
             
             {/* Photo upload component */}
             <div className="flex justify-center mb-4">
-              <ResidentPhotoUpload 
-                residentId={resident?.id} 
-                existingPhotoUrl={photoUrl}
-                onPhotoUploaded={handlePhotoUploaded} 
-              />
+              <ResidentPhotoUpload residentId={resident?.id} existingPhotoUrl={photoUrl} onPhotoUploaded={handlePhotoUploaded} />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -526,18 +520,9 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Barangay *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="San Jose" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="San Jose" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && (
-                      <FormDescription>
-                        This field is auto-filled with admin's barangay data
-                      </FormDescription>
-                    )}
+                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -546,18 +531,11 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Municipality/City *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Manila" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="Manila" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && (
-                      <FormDescription>
+                    {isAutoFillEnabled && <FormDescription>
                         This field is auto-filled with admin's barangay data
-                      </FormDescription>
-                    )}
+                      </FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -566,18 +544,11 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Province *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Metro Manila" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="Metro Manila" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && (
-                      <FormDescription>
+                    {isAutoFillEnabled && <FormDescription>
                         This field is auto-filled with admin's barangay data
-                      </FormDescription>
-                    )}
+                      </FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -586,18 +557,11 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Region *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="NCR" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="NCR" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && (
-                      <FormDescription>
+                    {isAutoFillEnabled && <FormDescription>
                         This field is auto-filled with admin's barangay data
-                      </FormDescription>
-                    )}
+                      </FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -606,18 +570,11 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Country *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Philippines" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="Philippines" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && (
-                      <FormDescription>
+                    {isAutoFillEnabled && <FormDescription>
                         This field is auto-filled with admin's barangay data
-                      </FormDescription>
-                    )}
+                      </FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -830,51 +787,28 @@ const ResidentForm = ({
                       <FormMessage />
                     </FormItem>} />
                 
-                {status === "Deceased" && (
-                  <FormField
-                    control={form.control}
-                    name="diedOn"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                {status === "Deceased" && <FormField control={form.control} name="diedOn" render={({
+                field
+              }) => <FormItem className="flex flex-col">
                         <FormLabel>Date of Death</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "MMMM d, yyyy")
-                                ) : (
-                                  <span>Select date</span>
-                                )}
+                              <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                {field.value ? format(field.value, "MMMM d, yyyy") : <span>Select date</span>}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value || undefined}
-                              onSelect={field.onChange}
-                              disabled={(date) => date > new Date()}
-                              initialFocus
-                              className="p-3 pointer-events-auto"
-                            />
+                            <Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} disabled={date => date > new Date()} initialFocus className="p-3 pointer-events-auto" />
                           </PopoverContent>
                         </Popover>
                         <FormDescription>
                           Select the date when the resident passed away
                         </FormDescription>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                      </FormItem>} />}
               </div>
             </div>
 
@@ -896,12 +830,7 @@ const ResidentForm = ({
         </ScrollArea>
         
         <div className="flex justify-end space-x-4 pt-4 border-t mt-6">
-          <Button
-            variant="outline"
-            type="button"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" type="button" onClick={handleCancel} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
@@ -909,8 +838,6 @@ const ResidentForm = ({
           </Button>
         </div>
       </form>
-    </FormProvider>
-  );
+    </FormProvider>;
 };
-
 export default ResidentForm;
