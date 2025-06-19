@@ -247,8 +247,8 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
             
             <h3 className="text-lg font-medium mb-4 pt-4 border-t">Address Information</h3>
             
-            {isAutoFillEnabled && <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">📍 Address fields are automatically filled and are read-only for security.</p>
+            {isAutoFillEnabled && <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">📍 Address fields are automatically filled and are read-only for security.</p>
               </div>}
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -257,7 +257,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
             }) => <FormItem>
                     <FormLabel>Barangay *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Barangay Mabuhay" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
+                      <Input placeholder="Barangay Mabuhay" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -267,7 +267,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
             }) => <FormItem>
                     <FormLabel>Municipality *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Liloy" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
+                      <Input placeholder="Liloy" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -279,7 +279,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
             }) => <FormItem>
                     <FormLabel>Province *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Zamboanga del Norte" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
+                      <Input placeholder="Zamboanga del Norte" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -289,7 +289,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
             }) => <FormItem>
                     <FormLabel>Region *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Region IX" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
+                      <Input placeholder="Region IX" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -301,7 +301,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
             }) => <FormItem>
                     <FormLabel>Country *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Philippines" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
+                      <Input placeholder="Philippines" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
