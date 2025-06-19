@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +22,7 @@ const OfficialsPage = () => {
   const [selectedOfficial, setSelectedOfficial] = useState<Official | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'organizational'>('cards');
 
-  // Fetch officials data from Supabase with positions and ranks
+  // Fetch officials data from Supabase with positions and ranks using JOIN
   const {
     data: officialsData,
     isLoading,
@@ -30,69 +31,88 @@ const OfficialsPage = () => {
   } = useQuery({
     queryKey: ['officials-with-positions'],
     queryFn: async () => {
-      // First, fetch all officials
-      const {
-        data: officials,
-        error: officialsError
-      } = await supabase.from('officials').select('*');
+      // Get current user's brgyid
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError) throw profileError;
+
+      // First, fetch all officials with their current positions using a JOIN
+      const { data: officialsWithPositions, error: officialsError } = await supabase
+        .from('officials')
+        .select(`
+          *,
+          official_positions!inner(
+            id,
+            position,
+            committee,
+            term_start,
+            term_end,
+            is_current,
+            description,
+            position_no
+          )
+        `)
+        .eq('brgyid', userProfile.brgyid)
+        .eq('official_positions.is_current', true)
+        .order('official_positions.position_no', { ascending: true });
+
       if (officialsError) throw officialsError;
 
-      // Then fetch all positions
-      const {
-        data: positions,
-        error: positionsError
-      } = await supabase.from('official_positions').select('*').order('term_start', {
-        ascending: false
-      });
-      if (positionsError) throw positionsError;
+      // Also fetch officials without current positions
+      const { data: officialsWithoutPositions, error: noPositionsError } = await supabase
+        .from('officials')
+        .select(`
+          *,
+          official_positions(
+            id,
+            position,
+            committee,
+            term_start,
+            term_end,
+            is_current,
+            description,
+            position_no
+          )
+        `)
+        .eq('brgyid', userProfile.brgyid)
+        .is('official_positions.is_current', null);
 
-      // Fetch official ranks
-      const {
-        data: officialRanks,
-        error: ranksError
-      } = await supabase
-        .from('officialranks')
-        .select('*')
-        .not('officialid', 'is', null);
-      if (ranksError) throw ranksError;
+      if (noPositionsError) throw noPositionsError;
 
-      // Group positions by official
-      const officialsWithPositions: Official[] = officials.map(official => {
-        // Get all positions for this official
-        const officialPositions = positions.filter(position => position.official_id === official.id);
+      // Combine and process the data
+      const allOfficials: Official[] = [];
 
-        // Use the most recent position (latest term_start date)
-        let latestPosition = officialPositions.length > 0 ? officialPositions[0] : null;
-        if (officialPositions.length > 1) {
-          latestPosition = officialPositions.reduce((latest, current) => {
-            // If either position has no term_end, compare carefully
-            if (!latest.term_end) return latest; // Latest has no end date, keep it
-            if (!current.term_end) return current; // Current has no end date, it's ongoing
-
-            // Otherwise compare end dates
-            return new Date(current.term_end) > new Date(latest.term_end) ? current : latest;
-          }, officialPositions[0]);
-        }
-
-        // Find rank information for this official
-        const officialRank = officialRanks.find(rank => rank.officialid === official.id);
-
-        return {
+      // Process officials with current positions
+      officialsWithPositions?.forEach(official => {
+        const currentPosition = official.official_positions?.[0];
+        allOfficials.push({
           ...official,
-          // Keep is_sk as array to match the Official interface
-          is_sk: official.is_sk || [],
-          // Update with position data if we have it
-          position: latestPosition?.position || '',
-          term_start: latestPosition?.term_start || official.term_start,
-          term_end: latestPosition?.term_end || official.term_end,
-          // Add rank information from officialranks table as string
-          rank_number: officialRank?.rankno || null,
-          rank_label: officialRank?.ranklabel || null,
-          // Store the positions for potential use in components
-          officialPositions: officialPositions
-        };
+          position: currentPosition?.position || '',
+          term_start: currentPosition?.term_start || official.term_start,
+          term_end: currentPosition?.term_end || official.term_end,
+          position_no: currentPosition?.position_no || 999999, // Use position's position_no for sorting
+          officialPositions: official.official_positions || []
+        });
       });
-      return officialsWithPositions;
+
+      // Process officials without current positions
+      officialsWithoutPositions?.forEach(official => {
+        allOfficials.push({
+          ...official,
+          position: '',
+          position_no: 999999, // Put at end if no current position
+          officialPositions: official.official_positions || []
+        });
+      });
+
+      return allOfficials;
     }
   });
 
@@ -116,10 +136,13 @@ const OfficialsPage = () => {
     }
     return false;
   }).sort((a, b) => {
-    // Sort by position_no if available, otherwise maintain original order
-    const aPos = a.position_no || 999999; // Put unranked officials at the end
+    // Sort by position_no (from position's rank), then by name
+    const aPos = a.position_no || 999999;
     const bPos = b.position_no || 999999;
-    return aPos - bPos;
+    if (aPos !== bPos) {
+      return aPos - bPos;
+    }
+    return a.name.localeCompare(b.name);
   }) : [];
 
   // Count for each category (excluding SK from current/previous)

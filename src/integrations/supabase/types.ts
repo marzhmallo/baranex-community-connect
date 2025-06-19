@@ -1144,6 +1144,7 @@ export type Database = {
           is_current: boolean | null
           official_id: string
           position: string
+          position_no: number | null
           term_end: string
           term_start: string
           updated_at: string | null
@@ -1156,6 +1157,7 @@ export type Database = {
           is_current?: boolean | null
           official_id: string
           position: string
+          position_no?: number | null
           term_end: string
           term_start: string
           updated_at?: string | null
@@ -1168,6 +1170,7 @@ export type Database = {
           is_current?: boolean | null
           official_id?: string
           position?: string
+          position_no?: number | null
           term_end?: string
           term_start?: string
           updated_at?: string | null

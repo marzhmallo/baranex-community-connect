@@ -205,7 +205,7 @@ export interface DocumentLog {
   created_at: string;
 }
 
-// Updated Official interface to match the database structure
+// Updated Official interface to remove position_no since we'll get it from positions
 export interface Official {
   id: string;
   name: string;
@@ -226,11 +226,10 @@ export interface Official {
   achievements?: any;
   committees?: any;
   education?: string;
-  position_no?: number; // Added position_no for custom sorting
   officialPositions?: OfficialPosition[];
 }
 
-// New interface for official positions
+// Updated interface for official positions with position_no
 export interface OfficialPosition {
   id: string;
   official_id: string;
@@ -242,4 +241,5 @@ export interface OfficialPosition {
   created_at?: string;
   updated_at?: string;
   description?: string;
+  position_no?: number; // Added position_no for custom sorting
 }
