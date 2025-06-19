@@ -87,35 +87,56 @@ export const useChatbotSettings = () => {
   const updateChatbotEnabled = async (enabled: boolean) => {
     console.log('Updating chatbot enabled to:', enabled);
     
+    // Update local state immediately for responsive UI
+    setChatbotSettings(prev => ({ ...prev, enabled }));
+    
     if (!user?.id) {
       // If no user, use localStorage
       localStorage.setItem('chatbot-enabled', enabled.toString());
-      setChatbotSettings(prev => ({ ...prev, enabled }));
       return;
     }
 
     try {
-      const { error } = await supabase
+      // Check if setting exists first
+      const { data: existingSetting } = await supabase
         .from('settings')
-        .upsert({
-          userid: user.id,
-          key: 'chatbot_enabled',
-          value: enabled.toString(),
-          description: 'Enable or disable the chatbot',
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'userid,key'
-        });
+        .select('id')
+        .eq('userid', user.id)
+        .eq('key', 'chatbot_enabled')
+        .maybeSingle();
 
-      if (error) {
-        console.error('Database error:', error);
-        throw error;
+      let result;
+      if (existingSetting) {
+        // Update existing setting
+        result = await supabase
+          .from('settings')
+          .update({
+            value: enabled.toString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('userid', user.id)
+          .eq('key', 'chatbot_enabled');
+      } else {
+        // Insert new setting
+        result = await supabase
+          .from('settings')
+          .insert({
+            userid: user.id,
+            key: 'chatbot_enabled',
+            value: enabled.toString(),
+            description: 'Enable or disable the chatbot'
+          });
+      }
+
+      if (result.error) {
+        console.error('Database error:', result.error);
+        throw result.error;
       }
 
       console.log('Chatbot enabled setting updated successfully:', enabled);
       
-      // Update local state immediately for responsive UI
-      setChatbotSettings(prev => ({ ...prev, enabled }));
+      // Dispatch custom event to trigger re-render of FloatingChatButton
+      window.dispatchEvent(new CustomEvent('chatbot-settings-changed'));
       
     } catch (error) {
       console.error('Error updating chatbot enabled setting:', error);
@@ -127,35 +148,56 @@ export const useChatbotSettings = () => {
   const updateChatbotMode = async (mode: string) => {
     console.log('Updating chatbot mode to:', mode);
     
+    // Update local state immediately for responsive UI
+    setChatbotSettings(prev => ({ ...prev, mode }));
+    
     if (!user?.id) {
       // If no user, use localStorage
       localStorage.setItem('chatbot-mode', mode);
-      setChatbotSettings(prev => ({ ...prev, mode }));
       return;
     }
 
     try {
-      const { error } = await supabase
+      // Check if setting exists first
+      const { data: existingSetting } = await supabase
         .from('settings')
-        .upsert({
-          userid: user.id,
-          key: 'chatbot_mode',
-          value: mode,
-          description: 'Chatbot mode: online or offline',
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'userid,key'
-        });
+        .select('id')
+        .eq('userid', user.id)
+        .eq('key', 'chatbot_mode')
+        .maybeSingle();
 
-      if (error) {
-        console.error('Database error:', error);
-        throw error;
+      let result;
+      if (existingSetting) {
+        // Update existing setting
+        result = await supabase
+          .from('settings')
+          .update({
+            value: mode,
+            updated_at: new Date().toISOString()
+          })
+          .eq('userid', user.id)
+          .eq('key', 'chatbot_mode');
+      } else {
+        // Insert new setting
+        result = await supabase
+          .from('settings')
+          .insert({
+            userid: user.id,
+            key: 'chatbot_mode',
+            value: mode,
+            description: 'Chatbot mode: online or offline'
+          });
+      }
+
+      if (result.error) {
+        console.error('Database error:', result.error);
+        throw result.error;
       }
 
       console.log('Chatbot mode setting updated successfully:', mode);
       
-      // Update local state immediately for responsive UI
-      setChatbotSettings(prev => ({ ...prev, mode }));
+      // Dispatch custom event to trigger re-render of FloatingChatButton
+      window.dispatchEvent(new CustomEvent('chatbot-settings-changed'));
       
     } catch (error) {
       console.error('Error updating chatbot mode setting:', error);
