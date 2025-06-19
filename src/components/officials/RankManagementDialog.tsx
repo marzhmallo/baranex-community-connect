@@ -51,8 +51,7 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
         .from('officialranks')
         .insert({
           rankno: rankData.rankno,
-          ranklabel: rankData.ranklabel,
-          brgyid: 'gen_random_uuid()' // This will use the default from the table
+          ranklabel: rankData.ranklabel
         })
         .select()
         .single();
