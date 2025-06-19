@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,18 +6,23 @@ import { Skeleton } from '@/components/ui/skeleton';
 import OfficialCard from '@/components/officials/OfficialCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { RefreshCw, Plus, ArrowLeft, LayoutGrid, Users } from 'lucide-react';
+import { RefreshCw, Plus, ArrowLeft, LayoutGrid, Users, Settings } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
 import { OrganizationalChart } from '@/components/officials/OrganizationalChart';
+import { RankManagementDialog } from '@/components/officials/RankManagementDialog';
+import { AssignOfficialToRankDialog } from '@/components/officials/AssignOfficialToRankDialog';
 
 const OfficialsPage = () => {
   const [activeTab, setActiveTab] = useState('current');
   const [activeSKTab, setActiveSKTab] = useState('current');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showRankManagement, setShowRankManagement] = useState(false);
+  const [showAssignRank, setShowAssignRank] = useState(false);
+  const [selectedOfficial, setSelectedOfficial] = useState<Official | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'organizational'>('cards');
 
-  // Fetch officials data from Supabase with positions
+  // Fetch officials data from Supabase with positions and ranks
   const {
     data: officialsData,
     isLoading,
@@ -41,6 +47,16 @@ const OfficialsPage = () => {
       });
       if (positionsError) throw positionsError;
 
+      // Fetch official ranks
+      const {
+        data: officialRanks,
+        error: ranksError
+      } = await supabase
+        .from('officialranks')
+        .select('*')
+        .not('officialid', 'is', null);
+      if (ranksError) throw ranksError;
+
       // Group positions by official
       const officialsWithPositions: Official[] = officials.map(official => {
         // Get all positions for this official
@@ -58,6 +74,10 @@ const OfficialsPage = () => {
             return new Date(current.term_end) > new Date(latest.term_end) ? current : latest;
           }, officialPositions[0]);
         }
+
+        // Find rank information for this official
+        const officialRank = officialRanks.find(rank => rank.officialid === official.id);
+
         return {
           ...official,
           // Keep is_sk as array to match the Official interface
@@ -66,6 +86,9 @@ const OfficialsPage = () => {
           position: latestPosition?.position || '',
           term_start: latestPosition?.term_start || official.term_start,
           term_end: latestPosition?.term_end || official.term_end,
+          // Add rank information from officialranks table
+          rank_number: officialRank?.rankno || null,
+          rank_label: officialRank?.ranklabel || null,
           // Store the positions for potential use in components
           officialPositions: officialPositions
         };
@@ -122,6 +145,11 @@ const OfficialsPage = () => {
     refetch();
   };
 
+  const handleAssignRank = (official: Official) => {
+    setSelectedOfficial(official);
+    setShowAssignRank(true);
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       {/* Header with title, subtitle, and action buttons */}
@@ -156,6 +184,9 @@ const OfficialsPage = () => {
               Organization
             </Button>
           </div>
+          <Button variant="outline" onClick={() => setShowRankManagement(true)}>
+            <Settings className="h-4 w-4 mr-2" /> Manage Ranks
+          </Button>
           <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshTerms}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh Terms
           </Button>
@@ -225,14 +256,32 @@ const OfficialsPage = () => {
                 No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? activeSKTab === 'current' ? 'current SK' : 'previous SK' : 'previous'} officials found.
               </div>
             ) : filteredOfficials.map(official => (
-              <OfficialCard key={official.id} official={official} />
+              <div key={official.id} className="relative">
+                <OfficialCard official={official} />
+                <div className="absolute top-2 right-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleAssignRank(official)}
+                    className="text-xs"
+                  >
+                    Assign Rank
+                  </Button>
+                </div>
+              </div>
             ))
           }
         </div>
       )}
 
-      {/* Add Official Dialog */}
+      {/* Dialogs */}
       <AddOfficialDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={handleAddSuccess} />
+      <RankManagementDialog open={showRankManagement} onOpenChange={setShowRankManagement} />
+      <AssignOfficialToRankDialog 
+        open={showAssignRank} 
+        onOpenChange={setShowAssignRank} 
+        official={selectedOfficial}
+      />
     </div>
   );
 };

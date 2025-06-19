@@ -1182,6 +1182,47 @@ export type Database = {
           },
         ]
       }
+      officialranks: {
+        Row: {
+          brgyid: string
+          created_at: string
+          id: string
+          officialid: string | null
+          ranklabel: string | null
+          rankno: number | null
+          sdfds: number
+          updated_at: string | null
+        }
+        Insert: {
+          brgyid?: string
+          created_at?: string
+          id: string
+          officialid?: string | null
+          ranklabel?: string | null
+          rankno?: number | null
+          sdfds?: number
+          updated_at?: string | null
+        }
+        Update: {
+          brgyid?: string
+          created_at?: string
+          id?: string
+          officialid?: string | null
+          ranklabel?: string | null
+          rankno?: number | null
+          sdfds?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "officialranks_officialid_fkey"
+            columns: ["officialid"]
+            isOneToOne: false
+            referencedRelation: "officials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       officials: {
         Row: {
           achievements: Json | null
