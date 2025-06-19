@@ -1,0 +1,125 @@
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/components/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
+
+export const useChatbotSettings = () => {
+  const { user } = useAuth();
+  const [chatbotSettings, setChatbotSettings] = useState({
+    enabled: true, // default to true
+    mode: 'offline' // default to offline
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      if (!user?.id) {
+        // If no user, use localStorage defaults
+        const enabled = localStorage.getItem('chatbot-enabled') !== 'false';
+        const mode = localStorage.getItem('chatbot-mode') || 'offline';
+        setChatbotSettings({ enabled, mode });
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Fetch both settings from the database
+        const { data: settings } = await supabase
+          .from('settings')
+          .select('key, value')
+          .eq('userid', user.id)
+          .in('key', ['chatbot_enabled', 'chatbot_mode']);
+
+        let enabled = true; // default
+        let mode = 'offline'; // default
+
+        if (settings) {
+          const enabledSetting = settings.find(s => s.key === 'chatbot_enabled');
+          const modeSetting = settings.find(s => s.key === 'chatbot_mode');
+          
+          if (enabledSetting) enabled = enabledSetting.value === 'true';
+          if (modeSetting) mode = modeSetting.value;
+        }
+
+        setChatbotSettings({ enabled, mode });
+      } catch (error) {
+        console.error('Error fetching chatbot settings:', error);
+        // Fall back to localStorage on error
+        const enabled = localStorage.getItem('chatbot-enabled') !== 'false';
+        const mode = localStorage.getItem('chatbot-mode') || 'offline';
+        setChatbotSettings({ enabled, mode });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, [user?.id]);
+
+  const updateChatbotEnabled = async (enabled: boolean) => {
+    if (!user?.id) {
+      // If no user, use localStorage
+      localStorage.setItem('chatbot-enabled', enabled.toString());
+      setChatbotSettings(prev => ({ ...prev, enabled }));
+      window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
+        detail: { enabled, mode: chatbotSettings.mode } 
+      }));
+      return;
+    }
+
+    try {
+      await supabase
+        .from('settings')
+        .upsert({
+          userid: user.id,
+          key: 'chatbot_enabled',
+          value: enabled.toString(),
+          description: 'Enable or disable the chatbot'
+        });
+
+      setChatbotSettings(prev => ({ ...prev, enabled }));
+      window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
+        detail: { enabled, mode: chatbotSettings.mode } 
+      }));
+    } catch (error) {
+      console.error('Error updating chatbot enabled setting:', error);
+    }
+  };
+
+  const updateChatbotMode = async (mode: string) => {
+    if (!user?.id) {
+      // If no user, use localStorage
+      localStorage.setItem('chatbot-mode', mode);
+      setChatbotSettings(prev => ({ ...prev, mode }));
+      window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
+        detail: { enabled: chatbotSettings.enabled, mode } 
+      }));
+      return;
+    }
+
+    try {
+      await supabase
+        .from('settings')
+        .upsert({
+          userid: user.id,
+          key: 'chatbot_mode',
+          value: mode,
+          description: 'Chatbot mode: online or offline'
+        });
+
+      setChatbotSettings(prev => ({ ...prev, mode }));
+      window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
+        detail: { enabled: chatbotSettings.enabled, mode } 
+      }));
+    } catch (error) {
+      console.error('Error updating chatbot mode setting:', error);
+    }
+  };
+
+  return {
+    chatbotSettings,
+    updateChatbotEnabled,
+    updateChatbotMode,
+    isLoading
+  };
+};

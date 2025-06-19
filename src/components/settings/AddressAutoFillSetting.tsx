@@ -5,22 +5,33 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/AuthProvider';
 
 const AddressAutoFillSetting = () => {
+  const { user } = useAuth();
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchSetting = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from('settings')
           .select('value')
+          .eq('userid', user.id)
           .eq('key', 'auto_fill_address_from_admin_barangay')
           .single();
 
-        if (error) throw error;
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+        
         setIsEnabled(data?.value === 'true');
       } catch (error) {
         console.error('Error fetching setting:', error);
@@ -30,14 +41,27 @@ const AddressAutoFillSetting = () => {
     };
 
     fetchSetting();
-  }, []);
+  }, [user?.id]);
 
   const handleToggle = async (enabled: boolean) => {
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "User not authenticated.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('settings')
-        .update({ value: enabled.toString() })
-        .eq('key', 'auto_fill_address_from_admin_barangay');
+        .upsert({ 
+          userid: user.id,
+          key: 'auto_fill_address_from_admin_barangay',
+          value: enabled.toString(),
+          description: 'Automatically fill address fields based on admin\'s barangay when adding/editing residents and households'
+        });
 
       if (error) throw error;
 

@@ -12,18 +12,24 @@ interface BarangayData {
 }
 
 export const useAutoFillAddress = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, user } = useAuth();
   const [isAutoFillEnabled, setIsAutoFillEnabled] = useState(false);
   const [barangayData, setBarangayData] = useState<BarangayData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        // Fetch the auto-fill setting
+        // Fetch the user's auto-fill setting
         const { data: settingData } = await supabase
           .from('settings')
           .select('value')
+          .eq('userid', user.id)
           .eq('key', 'auto_fill_address_from_admin_barangay')
           .single();
 
@@ -57,7 +63,7 @@ export const useAutoFillAddress = () => {
     };
 
     fetchSettings();
-  }, [userProfile]);
+  }, [userProfile, user?.id]);
 
   const getAutoFillData = () => {
     if (!isAutoFillEnabled || !barangayData) {

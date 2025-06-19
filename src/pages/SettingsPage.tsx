@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,9 +6,12 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/components/AuthProvider";
 import AddressAutoFillSetting from "@/components/settings/AddressAutoFillSetting";
+import { useChatbotSettings } from "@/hooks/useChatbotSettings";
 
 const SettingsPage = () => {
   const { userProfile } = useAuth();
+  const { chatbotSettings, updateChatbotEnabled, updateChatbotMode } = useChatbotSettings();
+  
   const [notifications, setNotifications] = useState({
     email: true,
     inApp: true,
@@ -19,12 +21,6 @@ const SettingsPage = () => {
   const [preferences, setPreferences] = useState({
     showWelcomeMessage: true,
     autoSaveChanges: false,
-  });
-
-  // Chatbot settings with localStorage persistence
-  const [chatbotSettings, setChatbotSettings] = useState({
-    enabled: localStorage.getItem('chatbot-enabled') !== 'false', // default to true
-    mode: localStorage.getItem('chatbot-mode') || 'offline' // default to offline
   });
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
@@ -38,30 +34,6 @@ const SettingsPage = () => {
     setPreferences(prev => ({
       ...prev,
       [key]: !prev[key]
-    }));
-  };
-
-  const handleChatbotEnabledChange = (enabled: boolean) => {
-    setChatbotSettings(prev => ({
-      ...prev,
-      enabled
-    }));
-    localStorage.setItem('chatbot-enabled', enabled.toString());
-    // Dispatch custom event to notify chatbot component
-    window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
-      detail: { enabled, mode: chatbotSettings.mode } 
-    }));
-  };
-
-  const handleChatbotModeChange = (mode: string) => {
-    setChatbotSettings(prev => ({
-      ...prev,
-      mode
-    }));
-    localStorage.setItem('chatbot-mode', mode);
-    // Dispatch custom event to notify chatbot component
-    window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
-      detail: { enabled: chatbotSettings.enabled, mode } 
     }));
   };
 
@@ -91,7 +63,7 @@ const SettingsPage = () => {
                 <Switch 
                   id="chatbot-enabled" 
                   checked={chatbotSettings.enabled}
-                  onCheckedChange={handleChatbotEnabledChange}
+                  onCheckedChange={updateChatbotEnabled}
                 />
               </div>
               
@@ -100,7 +72,7 @@ const SettingsPage = () => {
                   <Label>Chatbot Mode</Label>
                   <RadioGroup 
                     value={chatbotSettings.mode} 
-                    onValueChange={handleChatbotModeChange}
+                    onValueChange={updateChatbotMode}
                     className="grid grid-cols-2 gap-4"
                   >
                     <div className="flex items-center space-x-2">

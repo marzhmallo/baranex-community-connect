@@ -1612,6 +1612,7 @@ export type Database = {
           id: string
           key: string
           updated_at: string | null
+          userid: string
           value: string
         }
         Insert: {
@@ -1619,6 +1620,7 @@ export type Database = {
           id?: string
           key: string
           updated_at?: string | null
+          userid?: string
           value: string
         }
         Update: {
@@ -1626,6 +1628,34 @@ export type Database = {
           id?: string
           key?: string
           updated_at?: string | null
+          userid?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      settings_duplicate: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          userid: string | null
+          value: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          userid?: string | null
+          value: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          userid?: string | null
           value?: string
         }
         Relationships: []
