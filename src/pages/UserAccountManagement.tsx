@@ -36,7 +36,7 @@ const UserAccountManagement = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
 
-  const { data: users, isLoading, refetch } = useQuery({
+  const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users', userProfile?.brgyid],
     queryFn: async () => {
       if (!userProfile?.brgyid) {
@@ -45,23 +45,36 @@ const UserAccountManagement = () => {
       }
 
       console.log('Fetching users for barangay:', userProfile.brgyid);
+      console.log('Current user profile:', userProfile);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('brgyid', userProfile.brgyid)
-        .neq('id', userProfile.id) // Exclude current admin from the list
-        .order('created_at', { ascending: false });
+        .eq('brgyid', userProfile.brgyid);
       
       if (error) {
         console.error('Error fetching users:', error);
         throw error;
       }
       
-      console.log('Fetched users:', data);
+      console.log('Fetched all users:', data);
+      console.log('Total users found:', data?.length || 0);
+      
+      // Filter out current user from the list for admin accounts section
+      const filteredUsers = data?.filter(user => user.id !== userProfile.id) || [];
+      console.log('Users excluding current admin:', filteredUsers);
+      
       return data as UserProfile[];
     },
     enabled: !!userProfile?.brgyid && !!userProfile?.id,
   });
+
+  // Log the users data whenever it changes
+  useEffect(() => {
+    console.log('Users data updated:', users);
+    console.log('Is loading:', isLoading);
+    console.log('Error:', error);
+  }, [users, isLoading, error]);
 
   const updateUserStatus = async (userId: string, status: string) => {
     // Check if the target user is a superior admin
@@ -201,7 +214,7 @@ const UserAccountManagement = () => {
     );
   };
 
-  // Filter users based on search and get superior admin
+  // Filter users based on search
   const filteredUsers = users?.filter(user => {
     const matchesSearch = 
       user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -210,15 +223,42 @@ const UserAccountManagement = () => {
     return matchesSearch;
   });
 
+  // Categorize users
   const superiorAdmins = filteredUsers?.filter(user => user.superior_admin) || [];
   const adminUsers = filteredUsers?.filter(user => (user.role === 'admin' || user.role === 'staff') && !user.superior_admin) || [];
   const pendingUsers = filteredUsers?.filter(user => user.status === 'pending') || [];
   const blockedUsers = filteredUsers?.filter(user => user.status === 'blocked') || [];
 
+  console.log('Categorized users:', {
+    all: filteredUsers?.length || 0,
+    superior: superiorAdmins.length,
+    admin: adminUsers.length,
+    pending: pendingUsers.length,
+    blocked: blockedUsers.length
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Query error:', error);
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="flex items-center justify-center p-8">
+            <div className="text-center">
+              <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Error Loading Users</h3>
+              <p className="text-muted-foreground mb-4">{error.message}</p>
+              <Button onClick={() => refetch()}>Try Again</Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -262,41 +302,58 @@ const UserAccountManagement = () => {
         </div>
       </div>
 
+      {/* Debug Info */}
+      <Card className="bg-muted/50">
+        <CardContent className="p-4">
+          <p className="text-sm text-muted-foreground">
+            Debug: Found {users?.length || 0} total users, {superiorAdmins.length} superior admins, {adminUsers.length} admin users
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Barangay Administrators Section */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-foreground">Barangay Administrators</h2>
         
-        {superiorAdmins.map((user) => (
-          <Card key={user.id} className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-purple-500 text-white">
-                      {user.firstname?.[0]}{user.lastname?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-foreground">{user.firstname} {user.lastname}</h3>
-                    <p className="text-sm text-muted-foreground">Head Administrator • {userProfile?.brgyid}</p>
-                    <p className="text-xs text-muted-foreground">Registered {new Date(user.created_at || '').toLocaleDateString()}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="mt-3">
-                <p className="text-xs text-muted-foreground">Note: Head Administrators cannot be blocked, banned or removed by other administrators.</p>
-              </div>
+        {superiorAdmins.length === 0 ? (
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 text-center">
+              <p className="text-muted-foreground">No superior administrators found.</p>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          superiorAdmins.map((user) => (
+            <Card key={user.id} className="bg-card border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="bg-purple-500 text-white">
+                        {user.firstname?.[0]}{user.lastname?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{user.firstname} {user.lastname}</h3>
+                      <p className="text-sm text-muted-foreground">Head Administrator • {userProfile?.brgyid}</p>
+                      <p className="text-xs text-muted-foreground">Registered {new Date(user.created_at || '').toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground">Note: Head Administrators cannot be blocked, banned or removed by other administrators.</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Administrator Accounts Section */}
@@ -315,46 +372,54 @@ const UserAccountManagement = () => {
           </div>
         </div>
 
-        <Card className="bg-card border-border">
-          <CardContent className="p-0">
-            {adminUsers.map((user, index) => (
-              <div key={user.id} className={`p-4 flex items-center justify-between ${index < adminUsers.length - 1 ? 'border-b border-border' : ''}`}>
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-blue-500 text-white">
-                      {user.firstname?.[0]}{user.lastname?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-medium text-foreground">{user.firstname} {user.lastname}</h3>
-                      {getStatusBadge(user.status || 'pending')}
+        {adminUsers.length === 0 ? (
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 text-center">
+              <p className="text-muted-foreground">No administrator accounts found.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-card border-border">
+            <CardContent className="p-0">
+              {adminUsers.map((user, index) => (
+                <div key={user.id} className={`p-4 flex items-center justify-between ${index < adminUsers.length - 1 ? 'border-b border-border' : ''}`}>
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-blue-500 text-white">
+                        {user.firstname?.[0]}{user.lastname?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium text-foreground">{user.firstname} {user.lastname}</h3>
+                        {getStatusBadge(user.status || 'pending')}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{user.role?.charAt(0).toUpperCase() + user.role?.slice(1)} • {userProfile?.brgyid}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{user.role?.charAt(0).toUpperCase() + user.role?.slice(1)} • {userProfile?.brgyid}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)}>
+                      <Edit className="h-4 w-4 text-blue-500" />
+                    </Button>
+                    {user.status === 'pending' && canModifyUser(user) && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => updateUserStatus(user.id, 'approved')}>
+                          <Check className="h-4 w-4 text-green-500" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => updateUserStatus(user.id, 'rejected')}>
+                          <X className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </>
+                    )}
+                    <Button variant="ghost" size="sm">
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)}>
-                    <Edit className="h-4 w-4 text-blue-500" />
-                  </Button>
-                  {user.status === 'pending' && canModifyUser(user) && (
-                    <>
-                      <Button variant="ghost" size="sm" onClick={() => updateUserStatus(user.id, 'approved')}>
-                        <Check className="h-4 w-4 text-green-500" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => updateUserStatus(user.id, 'rejected')}>
-                        <X className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </>
-                  )}
-                  <Button variant="ghost" size="sm">
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Recently Blocked Users Section */}
