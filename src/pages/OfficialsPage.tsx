@@ -191,11 +191,6 @@ const OfficialsPage = () => {
               Organization
             </Button>
           </div>
-          {viewMode === 'organizational' && (
-            <Button variant="outline" onClick={() => setShowRankManagement(true)}>
-              <Settings className="h-4 w-4 mr-2" /> Manage Ranks
-            </Button>
-          )}
           <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshTerms}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh Terms
           </Button>
@@ -238,7 +233,15 @@ const OfficialsPage = () => {
 
       {/* Content based on view mode */}
       {viewMode === 'organizational' ? (
-        <OrganizationalChart officials={officialsData || []} isLoading={isLoading} error={error} />
+        <div>
+          {/* Manage Ranks button positioned above organizational chart */}
+          <div className="flex justify-end mb-4">
+            <Button variant="outline" onClick={() => setShowRankManagement(true)}>
+              <Settings className="h-4 w-4 mr-2" /> Manage Ranks
+            </Button>
+          </div>
+          <OrganizationalChart officials={officialsData || []} isLoading={isLoading} error={error} />
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {isLoading ?
