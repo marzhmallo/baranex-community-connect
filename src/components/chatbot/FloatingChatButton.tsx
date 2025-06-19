@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
+import { useChatbotSettings } from './ChatbotSettingsContext';
 
 interface Message {
   id: string;
@@ -36,11 +37,11 @@ const renderMarkdown = (text: string) => {
 
 const FloatingChatButton = () => {
   const { session, userProfile } = useAuth();
+  const { settings, updateSettings } = useChatbotSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
-  const [isOnlineMode, setIsOnlineMode] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -60,6 +61,11 @@ const FloatingChatButton = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
+
+  // Don't render if chatbot is disabled
+  if (!settings.enabled || !session) {
+    return null;
+  }
 
   // Set initial position to bottom right of main content area
   useEffect(() => {
@@ -174,7 +180,7 @@ const FloatingChatButton = () => {
 
     try {
       console.log('Sending message to chatbot:', userMessage.content);
-      console.log('Mode:', isOnlineMode ? 'Online' : 'Offline');
+      console.log('Mode:', settings.useOnlineMode ? 'Online' : 'Offline');
       console.log('User profile:', userProfile);
       
       const chatMessages = [userMessage].map(msg => ({
@@ -185,7 +191,7 @@ const FloatingChatButton = () => {
       const requestData = { 
         messages: chatMessages,
         conversationHistory: conversationHistory,
-        isOnlineMode: isOnlineMode,
+        isOnlineMode: settings.useOnlineMode,
         authToken: session.access_token,
         userBrgyId: userProfile?.brgyid
       };
@@ -287,10 +293,9 @@ const FloatingChatButton = () => {
     });
   };
 
-  // Don't render if user is not authenticated
-  if (!session) {
-    return null;
-  }
+  const handleModeToggle = (checked: boolean) => {
+    updateSettings({ useOnlineMode: checked });
+  };
 
   return (
     <>
@@ -345,8 +350,8 @@ const FloatingChatButton = () => {
             <span className="text-sm font-medium">Alan</span>
             <div className={cn(
               "w-2 h-2 rounded-full animate-pulse",
-              isOnlineMode ? "bg-green-400" : "bg-orange-400"
-            )} title={isOnlineMode ? "Online Mode" : "Offline Mode"} />
+              settings.useOnlineMode ? "bg-green-400" : "bg-orange-400"
+            )} title={settings.useOnlineMode ? "Online Mode" : "Offline Mode"} />
           </div>
         </div>
       )}
@@ -370,16 +375,16 @@ const FloatingChatButton = () => {
                   <CardTitle className="text-lg">Alexander Cabalan</CardTitle>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs opacity-80">
-                      {isOnlineMode ? "🟢 Online" : "🟠 Offline"}
+                      {settings.useOnlineMode ? "🟢 Online" : "🟠 Offline"}
                     </span>
                     <Switch
-                      checked={isOnlineMode}
-                      onCheckedChange={setIsOnlineMode}
+                      checked={settings.useOnlineMode}
+                      onCheckedChange={handleModeToggle}
                       className="scale-75"
                     />
                     <div className={cn(
                       "w-2 h-2 rounded-full animate-pulse ml-1",
-                      isOnlineMode ? "bg-green-400" : "bg-orange-400"
+                      settings.useOnlineMode ? "bg-green-400" : "bg-orange-400"
                     )} />
                   </div>
                 </div>
@@ -484,7 +489,7 @@ const FloatingChatButton = () => {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={isOnlineMode ? "Ask me anything..." : "Ask me anything..."}
+                    placeholder={settings.useOnlineMode ? "Ask me anything..." : "Ask me anything..."}
                     disabled={isLoading}
                     className="flex-1 min-h-[40px] max-h-[120px] resize-none"
                     rows={1}

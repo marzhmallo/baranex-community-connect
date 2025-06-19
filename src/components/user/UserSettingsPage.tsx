@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { Settings, User, Shield, Bell, Eye } from 'lucide-react';
+import { Settings, User, Shield, Bell, Eye, Bot } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,6 +19,11 @@ const UserSettingsPage = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [chatbotSettings, setChatbotSettings] = useState({
+    enabled: true,
+    useOnlineMode: false,
+  });
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -68,6 +74,13 @@ const UserSettingsPage = () => {
     }
   };
 
+  const handleChatbotSettingChange = (key: keyof typeof chatbotSettings) => {
+    setChatbotSettings(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center gap-3 mb-6">
@@ -109,6 +122,50 @@ const UserSettingsPage = () => {
             <p className="text-sm text-muted-foreground">
               To update your profile information, please contact your barangay administrator.
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Chatbot Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              AI Assistant Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Enable Chatbot</Label>
+                <p className="text-sm text-muted-foreground">
+                  Show or hide the Alexander Cabalan AI assistant
+                </p>
+              </div>
+              <Switch
+                checked={chatbotSettings.enabled}
+                onCheckedChange={() => handleChatbotSettingChange('enabled')}
+              />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Online Mode</Label>
+                <p className="text-sm text-muted-foreground">
+                  Use online AI features for enhanced responses
+                </p>
+              </div>
+              <Switch
+                checked={chatbotSettings.useOnlineMode}
+                onCheckedChange={() => handleChatbotSettingChange('useOnlineMode')}
+                disabled={!chatbotSettings.enabled}
+              />
+            </div>
+            <div className="mt-4 p-3 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                <strong>Offline Mode:</strong> Uses local FAQ database for faster responses<br />
+                <strong>Online Mode:</strong> Uses advanced AI with access to your barangay data
+              </p>
+            </div>
           </CardContent>
         </Card>
 

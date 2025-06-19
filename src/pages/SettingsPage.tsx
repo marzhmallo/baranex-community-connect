@@ -19,6 +19,11 @@ const SettingsPage = () => {
     autoSaveChanges: false,
   });
 
+  const [chatbotSettings, setChatbotSettings] = useState({
+    enabled: true,
+    useOnlineMode: false,
+  });
+
   const handleNotificationChange = (key: keyof typeof notifications) => {
     setNotifications(prev => ({
       ...prev,
@@ -28,6 +33,13 @@ const SettingsPage = () => {
 
   const handlePreferenceChange = (key: keyof typeof preferences) => {
     setPreferences(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const handleChatbotSettingChange = (key: keyof typeof chatbotSettings) => {
+    setChatbotSettings(prev => ({
       ...prev,
       [key]: !prev[key]
     }));
@@ -78,6 +90,39 @@ const SettingsPage = () => {
                   id="announcement-notifications" 
                   checked={notifications.announcements}
                   onCheckedChange={() => handleNotificationChange('announcements')}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Chatbot Settings</CardTitle>
+              <CardDescription>Configure your AI assistant preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="chatbot-enabled">Enable Chatbot</Label>
+                  <p className="text-sm text-muted-foreground">Show or hide the Alexander Cabalan AI assistant</p>
+                </div>
+                <Switch 
+                  id="chatbot-enabled" 
+                  checked={chatbotSettings.enabled}
+                  onCheckedChange={() => handleChatbotSettingChange('enabled')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="chatbot-online-mode">Online Mode</Label>
+                  <p className="text-sm text-muted-foreground">Use online AI features for enhanced responses</p>
+                </div>
+                <Switch 
+                  id="chatbot-online-mode" 
+                  checked={chatbotSettings.useOnlineMode}
+                  onCheckedChange={() => handleChatbotSettingChange('useOnlineMode')}
+                  disabled={!chatbotSettings.enabled}
                 />
               </div>
             </CardContent>
