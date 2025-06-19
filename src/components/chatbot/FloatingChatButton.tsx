@@ -62,11 +62,6 @@ const FloatingChatButton = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
 
-  // Don't render if chatbot is disabled
-  if (!settings.enabled || !session) {
-    return null;
-  }
-
   // Set initial position to bottom right of main content area
   useEffect(() => {
     const updatePosition = () => {
@@ -99,22 +94,6 @@ const FloatingChatButton = () => {
     }));
     setConversationHistory(history);
   }, [messages]);
-
-  // Handle mouse down for dragging
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isOpen && !isMinimized) return;
-    
-    e.preventDefault();
-    setIsDragging(true);
-    
-    const rect = dragRef.current?.getBoundingClientRect();
-    if (rect) {
-      dragOffset.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      };
-    }
-  };
 
   // Handle mouse move for dragging
   useEffect(() => {
@@ -153,6 +132,27 @@ const FloatingChatButton = () => {
       document.body.style.userSelect = '';
     };
   }, [isDragging]);
+
+  // Don't render if chatbot is disabled or no session - moved after all hooks
+  if (!settings.enabled || !session) {
+    return null;
+  }
+
+  // Handle mouse down for dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isOpen && !isMinimized) return;
+    
+    e.preventDefault();
+    setIsDragging(true);
+    
+    const rect = dragRef.current?.getBoundingClientRect();
+    if (rect) {
+      dragOffset.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    }
+  };
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
