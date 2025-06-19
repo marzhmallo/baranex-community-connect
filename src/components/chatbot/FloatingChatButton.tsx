@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -40,7 +39,15 @@ const FloatingChatButton = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
-  const [isOnlineMode, setIsOnlineMode] = useState(false);
+  
+  // Get chatbot settings from localStorage
+  const [isEnabled, setIsEnabled] = useState(() => {
+    return localStorage.getItem('chatbot-enabled') !== 'false';
+  });
+  const [isOnlineMode, setIsOnlineMode] = useState(() => {
+    return localStorage.getItem('chatbot-mode') === 'online';
+  });
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -60,6 +67,19 @@ const FloatingChatButton = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
+
+  // Listen for settings changes
+  useEffect(() => {
+    const handleSettingsChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { enabled, mode } = customEvent.detail;
+      setIsEnabled(enabled);
+      setIsOnlineMode(mode === 'online');
+    };
+
+    window.addEventListener('chatbot-settings-changed', handleSettingsChange);
+    return () => window.removeEventListener('chatbot-settings-changed', handleSettingsChange);
+  }, []);
 
   // Set initial position to bottom right of main content area
   useEffect(() => {
@@ -287,8 +307,8 @@ const FloatingChatButton = () => {
     });
   };
 
-  // Don't render if user is not authenticated
-  if (!session) {
+  // Don't render if user is not authenticated OR if chatbot is disabled
+  if (!session || !isEnabled) {
     return null;
   }
 
@@ -372,11 +392,6 @@ const FloatingChatButton = () => {
                     <span className="text-xs opacity-80">
                       {isOnlineMode ? "🟢 Online" : "🟠 Offline"}
                     </span>
-                    <Switch
-                      checked={isOnlineMode}
-                      onCheckedChange={setIsOnlineMode}
-                      className="scale-75"
-                    />
                     <div className={cn(
                       "w-2 h-2 rounded-full animate-pulse ml-1",
                       isOnlineMode ? "bg-green-400" : "bg-orange-400"

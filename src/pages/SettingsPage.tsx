@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/components/AuthProvider";
 
 const SettingsPage = () => {
@@ -17,6 +18,12 @@ const SettingsPage = () => {
   const [preferences, setPreferences] = useState({
     showWelcomeMessage: true,
     autoSaveChanges: false,
+  });
+
+  // Chatbot settings with localStorage persistence
+  const [chatbotSettings, setChatbotSettings] = useState({
+    enabled: localStorage.getItem('chatbot-enabled') !== 'false', // default to true
+    mode: localStorage.getItem('chatbot-mode') || 'offline' // default to offline
   });
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
@@ -33,12 +40,87 @@ const SettingsPage = () => {
     }));
   };
 
+  const handleChatbotEnabledChange = (enabled: boolean) => {
+    setChatbotSettings(prev => ({
+      ...prev,
+      enabled
+    }));
+    localStorage.setItem('chatbot-enabled', enabled.toString());
+    // Dispatch custom event to notify chatbot component
+    window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
+      detail: { enabled, mode: chatbotSettings.mode } 
+    }));
+  };
+
+  const handleChatbotModeChange = (mode: string) => {
+    setChatbotSettings(prev => ({
+      ...prev,
+      mode
+    }));
+    localStorage.setItem('chatbot-mode', mode);
+    // Dispatch custom event to notify chatbot component
+    window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
+      detail: { enabled: chatbotSettings.enabled, mode } 
+    }));
+  };
+
   return (
     <div className="container mx-auto py-6 px-4">
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-8">
+          {/* Chatbot Settings */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Alexander Cabalan (Chatbot)</CardTitle>
+              <CardDescription>Configure your AI assistant preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="chatbot-enabled">Enable Chatbot</Label>
+                  <p className="text-sm text-muted-foreground">Show or hide the floating chatbot button</p>
+                </div>
+                <Switch 
+                  id="chatbot-enabled" 
+                  checked={chatbotSettings.enabled}
+                  onCheckedChange={handleChatbotEnabledChange}
+                />
+              </div>
+              
+              {chatbotSettings.enabled && (
+                <div className="space-y-3 pt-2 border-t">
+                  <Label>Chatbot Mode</Label>
+                  <RadioGroup 
+                    value={chatbotSettings.mode} 
+                    onValueChange={handleChatbotModeChange}
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="offline" id="offline-mode" />
+                      <Label htmlFor="offline-mode" className="cursor-pointer">
+                        <div>
+                          <div className="font-medium">🟠 Offline Mode</div>
+                          <div className="text-xs text-muted-foreground">Local responses only</div>
+                        </div>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="online" id="online-mode" />
+                      <Label htmlFor="online-mode" className="cursor-pointer">
+                        <div>
+                          <div className="font-medium">🟢 Online Mode</div>
+                          <div className="text-xs text-muted-foreground">AI-powered responses</div>
+                        </div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>

@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { Settings, User, Shield, Bell, Eye } from 'lucide-react';
+import { Settings, User, Shield, Bell, Eye, Bot } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,6 +20,12 @@ const UserSettingsPage = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Chatbot settings with localStorage persistence
+  const [chatbotSettings, setChatbotSettings] = useState({
+    enabled: localStorage.getItem('chatbot-enabled') !== 'false', // default to true
+    mode: localStorage.getItem('chatbot-mode') || 'offline' // default to offline
+  });
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -68,6 +76,30 @@ const UserSettingsPage = () => {
     }
   };
 
+  const handleChatbotEnabledChange = (enabled: boolean) => {
+    setChatbotSettings(prev => ({
+      ...prev,
+      enabled
+    }));
+    localStorage.setItem('chatbot-enabled', enabled.toString());
+    // Dispatch custom event to notify chatbot component
+    window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
+      detail: { enabled, mode: chatbotSettings.mode } 
+    }));
+  };
+
+  const handleChatbotModeChange = (mode: string) => {
+    setChatbotSettings(prev => ({
+      ...prev,
+      mode
+    }));
+    localStorage.setItem('chatbot-mode', mode);
+    // Dispatch custom event to notify chatbot component
+    window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
+      detail: { enabled: chatbotSettings.enabled, mode } 
+    }));
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center gap-3 mb-6">
@@ -79,6 +111,59 @@ const UserSettingsPage = () => {
       </div>
 
       <div className="max-w-2xl space-y-6">
+        {/* Chatbot Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              Alexander Cabalan (Chatbot)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="chatbot-enabled">Enable Chatbot</Label>
+                <p className="text-sm text-muted-foreground">Show or hide the floating chatbot button</p>
+              </div>
+              <Switch 
+                id="chatbot-enabled" 
+                checked={chatbotSettings.enabled}
+                onCheckedChange={handleChatbotEnabledChange}
+              />
+            </div>
+            
+            {chatbotSettings.enabled && (
+              <div className="space-y-3 pt-2 border-t">
+                <Label>Chatbot Mode</Label>
+                <RadioGroup 
+                  value={chatbotSettings.mode} 
+                  onValueChange={handleChatbotModeChange}
+                  className="grid grid-cols-1 gap-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="offline" id="offline-mode" />
+                    <Label htmlFor="offline-mode" className="cursor-pointer">
+                      <div>
+                        <div className="font-medium">🟠 Offline Mode</div>
+                        <div className="text-xs text-muted-foreground">Local responses only</div>
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="online" id="online-mode" />
+                    <Label htmlFor="online-mode" className="cursor-pointer">
+                      <div>
+                        <div className="font-medium">🟢 Online Mode</div>
+                        <div className="text-xs text-muted-foreground">AI-powered responses</div>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Profile Information */}
         <Card>
           <CardHeader>
