@@ -1145,6 +1145,7 @@ export type Database = {
           official_id: string
           position: string
           position_no: number | null
+          tenure: string | null
           term_end: string
           term_start: string
           updated_at: string | null
@@ -1158,6 +1159,7 @@ export type Database = {
           official_id: string
           position: string
           position_no?: number | null
+          tenure?: string | null
           term_end: string
           term_start: string
           updated_at?: string | null
@@ -1171,6 +1173,7 @@ export type Database = {
           official_id?: string
           position?: string
           position_no?: number | null
+          tenure?: string | null
           term_end?: string
           term_start?: string
           updated_at?: string | null

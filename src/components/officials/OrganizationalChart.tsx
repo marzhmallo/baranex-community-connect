@@ -1,3 +1,4 @@
+
 import { Official } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,11 +12,13 @@ import { Label } from '@/components/ui/label';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
 interface OrganizationalChartProps {
   officials: Official[];
   isLoading: boolean;
   error: Error | null;
 }
+
 interface OfficialRank {
   id: string;
   rankno: string;
@@ -25,6 +28,7 @@ interface OfficialRank {
   created_at: string;
   updated_at: string;
 }
+
 export const OrganizationalChart = ({
   officials,
   isLoading,
@@ -112,10 +116,12 @@ export const OrganizationalChart = ({
       toast.error('Failed to assign official to rank');
     }
   });
+
   const handleAssignOfficial = (rankId: string) => {
     setSelectedRankId(rankId);
     setShowAssignDialog(true);
   };
+
   const handleConfirmAssignment = () => {
     if (!selectedRankId || !selectedOfficialForAssignment) {
       toast.error('Please select an official');
@@ -126,6 +132,7 @@ export const OrganizationalChart = ({
       officialId: selectedOfficialForAssignment
     });
   };
+
   const getOfficialInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
@@ -144,55 +151,6 @@ export const OrganizationalChart = ({
     return !hasRank;
   });
 
-  // Group ranks by categories for display
-  const getGroupedRanks = () => {
-    if (!allRanks) return {};
-    const groups: {
-      [key: string]: {
-        ranks: OfficialRank[];
-        color: string;
-        icon: any;
-      };
-    } = {};
-    allRanks.forEach(rank => {
-      const rankNum = parseInt(rank.rankno);
-      let category = '';
-      let color = '';
-      let icon = Building;
-      if (rankNum === 1) {
-        category = 'Barangay Captain';
-        color = 'bg-purple-500';
-      } else if (rankNum >= 2 && rankNum <= 11) {
-        category = 'Barangay Councilors';
-        color = 'bg-blue-500';
-      } else if (rankNum >= 12 && rankNum <= 14) {
-        category = 'SK Leadership';
-        color = 'bg-orange-500';
-      } else if (rankNum >= 15 && rankNum <= 21) {
-        category = 'Barangay Tanod';
-        color = 'bg-red-500';
-      } else if (rankNum >= 22 && rankNum <= 24) {
-        category = 'Health Workers';
-        color = 'bg-teal-500';
-      } else if (rankNum >= 25 && rankNum <= 28) {
-        category = 'Lupong Tagapamayapa';
-        color = 'bg-purple-600';
-      } else {
-        category = 'Other Staff';
-        color = 'bg-gray-500';
-      }
-      if (!groups[category]) {
-        groups[category] = {
-          ranks: [],
-          color,
-          icon
-        };
-      }
-      groups[category].ranks.push(rank);
-    });
-    return groups;
-  };
-
   // Calculate totals for summary
   const getTotals = () => {
     const totalOfficials = officials.length;
@@ -205,6 +163,7 @@ export const OrganizationalChart = ({
       totalRanks: allRanks?.length || 0
     };
   };
+
   if (isLoading) {
     return <div className="space-y-6">
         {[1, 2, 3].map(rank => <Card key={rank} className="animate-pulse">
@@ -221,213 +180,116 @@ export const OrganizationalChart = ({
           </Card>)}
       </div>;
   }
+
   if (error) {
     return <div className="p-6 text-destructive bg-card rounded-lg border">
         Error loading officials: {error.message}
       </div>;
   }
-  const groupedRanks = getGroupedRanks();
+
   const totals = getTotals();
+
   return <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2">Barangay Officials</h2>
         <p className="text-muted-foreground">Official Directory</p>
       </div>
 
-      {Object.entries(groupedRanks).map(([category, {
-      ranks,
-      color
-    }]) => {
-      // Special handling for different categories
-      if (category === 'Barangay Captain') {
-        const captainRank = ranks[0];
-        const captainOfficial = getOfficialsForRank(captainRank.id)[0];
-        return <Card key={category} className="overflow-hidden">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${color}`}>
-                      <Building className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl flex items-center gap-2">
-                        {category}
-                        <Badge variant="outline" className="bg-purple-500 text-white border-purple-500">
-                          Rank {captainRank.rankno}
-                        </Badge>
-                      </CardTitle>
+      {/* Display all ranks individually using their actual rank labels */}
+      {allRanks?.map(rank => {
+        const official = getOfficialsForRank(rank.id)[0];
+        const rankNum = parseInt(rank.rankno);
+        
+        // Determine styling based on rank number
+        let cardStyle = '';
+        let badgeColor = 'bg-gray-500';
+        let statusText = 'Appointed';
+        
+        if (rankNum === 1) {
+          cardStyle = 'border-2 border-purple-200 bg-purple-50';
+          badgeColor = 'bg-purple-500';
+          statusText = 'Elected';
+        } else if (rankNum >= 2 && rankNum <= 11) {
+          cardStyle = 'border-2 border-blue-200 bg-blue-50';
+          badgeColor = 'bg-blue-500';
+          statusText = 'Elected';
+        } else if (rankNum >= 12 && rankNum <= 14) {
+          cardStyle = 'border-2 border-orange-200 bg-orange-50';
+          badgeColor = 'bg-orange-500';
+          statusText = 'Elected';
+        } else if (rankNum >= 15 && rankNum <= 21) {
+          cardStyle = 'border-2 border-red-200 bg-red-50';
+          badgeColor = 'bg-red-500';
+          statusText = 'Appointed';
+        } else if (rankNum >= 22 && rankNum <= 24) {
+          cardStyle = 'border-2 border-teal-200 bg-teal-50';
+          badgeColor = 'bg-teal-500';
+          statusText = 'Appointed';
+        } else if (rankNum >= 25 && rankNum <= 28) {
+          cardStyle = 'border-2 border-purple-200 bg-purple-50';
+          badgeColor = 'bg-purple-600';
+          statusText = 'Appointed';
+        }
+
+        return (
+          <Card key={rank.id} className={`overflow-hidden ${cardStyle}`}>
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full ${badgeColor.replace('bg-', 'bg-').replace('500', '500').replace('600', '600')}`}>
+                    <Building className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      {rank.ranklabel}
+                      <Badge variant="outline" className={`${badgeColor} text-white border-none`}>
+                        Rank {rank.rankno}
+                      </Badge>
+                    </CardTitle>
+                  </div>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => handleAssignOfficial(rank.id)} className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Assign
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {official ? (
+                <div className="flex items-center gap-4 p-6 rounded-lg">
+                  <Avatar className="h-16 w-16 ring-2 ring-offset-2 ring-primary">
+                    <AvatarImage src={official.photo_url} alt={official.name} />
+                    <AvatarFallback className={`${badgeColor} text-white text-lg font-semibold`}>
+                      {getOfficialInitials(official.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-lg truncate">
+                      {official.name}
+                    </h4>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {rank.ranklabel}
+                    </p>
+                    <div className="flex gap-2 mt-2">
+                      <Badge className={`${badgeColor} text-white`}>
+                        {statusText}
+                      </Badge>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => handleAssignOfficial(captainRank.id)} className="flex items-center gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    Assign
+                  <Button variant="outline" size="sm" onClick={() => setSelectedOfficial(official)}>
+                    <Eye className="h-4 w-4" />
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {captainOfficial ? <div className="flex items-center gap-4 p-6 bg-purple-50 rounded-lg border-2 border-purple-200">
-                    <Avatar className="h-16 w-16 ring-2 ring-offset-2 ring-purple-500">
-                      <AvatarImage src={captainOfficial.photo_url} alt={captainOfficial.name} />
-                      <AvatarFallback className="bg-purple-500 text-white text-lg font-semibold">
-                        {getOfficialInitials(captainOfficial.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-lg text-purple-700 truncate">
-                        [{captainOfficial.name}]
-                      </h4>
-                      <p className="text-sm text-purple-600 truncate">
-                        Top Executive Officer
-                      </p>
-                      <div className="flex gap-2 mt-2">
-                        <Badge className="bg-green-500 text-white">Elected</Badge>
-                        <Badge className="bg-blue-500 text-white">Executive</Badge>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => setSelectedOfficial(captainOfficial)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </div> : <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
-                    <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No official assigned to this position</p>
-                  </div>}
-              </CardContent>
-            </Card>;
-      }
-      if (category === 'Barangay Councilors') {
-        return <Card key={category} className="overflow-hidden">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${color}`}>
-                      <Users className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl flex items-center gap-2">
-                        {category}
-                        <Badge variant="outline" className="bg-blue-500 text-white border-blue-500">
-                          Rank {ranks[0]?.rankno}
-                        </Badge>
-                      </CardTitle>
-                    </div>
-                  </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
+                  <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No official assigned to this position</p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  {ranks.slice(0, 4).map(rank => {
-                const official = getOfficialsForRank(rank.id)[0];
-                return <div key={rank.id} className="text-center">
-                        <Avatar className="h-16 w-16 mx-auto mb-2 ring-2 ring-offset-2 ring-blue-500">
-                          <AvatarImage src={official?.photo_url} alt={official?.name || 'Vacant'} />
-                          <AvatarFallback className="bg-blue-500 text-white">
-                            {official ? getOfficialInitials(official.name) : '?'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <h4 className="font-medium text-sm">Councilor {parseInt(rank.rankno) - 1}</h4>
-                        <p className="text-xs text-muted-foreground">[{official?.name || 'Name'}]</p>
-                        {!official && <Button size="sm" variant="outline" onClick={() => handleAssignOfficial(rank.id)} className="mt-2 text-xs">
-                            Assign
-                          </Button>}
-                      </div>;
-              })}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {ranks.slice(4).map(rank => {
-                const official = getOfficialsForRank(rank.id)[0];
-                return <div key={rank.id} className="text-center">
-                        <Avatar className="h-16 w-16 mx-auto mb-2 ring-2 ring-offset-2 ring-blue-500">
-                          <AvatarImage src={official?.photo_url} alt={official?.name || 'Vacant'} />
-                          <AvatarFallback className="bg-blue-500 text-white">
-                            {official ? getOfficialInitials(official.name) : '?'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <h4 className="font-medium text-sm">Councilor {parseInt(rank.rankno) - 1}</h4>
-                        <p className="text-xs text-muted-foreground">[{official?.name || 'Name'}]</p>
-                        {!official && <Button size="sm" variant="outline" onClick={() => handleAssignOfficial(rank.id)} className="mt-2 text-xs">
-                            Assign
-                          </Button>}
-                      </div>;
-              })}
-                </div>
-                <p className="text-sm text-muted-foreground mt-4 text-center">
-                  Legislative team responsible for creating barangay ordinances and resolutions
-                </p>
-              </CardContent>
-            </Card>;
-      }
-
-      // For other categories, use a grid layout
-      return <div key={category} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {ranks.map(rank => {
-          const official = getOfficialsForRank(rank.id)[0];
-          let badgeColor = 'bg-gray-500';
-          let statusText = 'Appointed';
-          if (category === 'SK Leadership') {
-            badgeColor = 'bg-orange-500';
-            statusText = 'Elected';
-          } else if (category === 'Health Workers') {
-            badgeColor = 'bg-teal-500';
-            statusText = 'Appointed';
-          } else if (category === 'Lupong Tagapamayapa') {
-            badgeColor = 'bg-purple-600';
-            statusText = 'Appointed';
-          } else if (category === 'Barangay Tanod') {
-            badgeColor = 'bg-red-500';
-            statusText = 'Appointed';
-          }
-          return <Card key={rank.id} className="overflow-hidden">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`p-1 rounded-full ${color}`}>
-                          <Building className="h-4 w-4 text-white" />
-                        </div>
-                        <CardTitle className="text-lg">{rank.ranklabel}</CardTitle>
-                        <Badge variant="outline" className={`${badgeColor} text-white border-none`}>
-                          Rank {rank.rankno}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {official ? <div className="text-center">
-                        <Avatar className="h-20 w-20 mx-auto mb-3 ring-2 ring-offset-2 ring-primary">
-                          <AvatarImage src={official.photo_url} alt={official.name} />
-                          <AvatarFallback className={`${color} text-white text-lg`}>
-                            {getOfficialInitials(official.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <h4 className="font-semibold text-base mb-1">
-                          [{official.name}]
-                        </h4>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {rank.ranklabel === 'SK Chairperson' ? 'Youth Representative' : rank.ranklabel === 'Barangay Secretary' ? 'Appointed Official' : rank.ranklabel === 'Barangay Treasurer' ? 'Appointed Official' : 'Security force responsible for peace and order (non-elected)'}
-                        </p>
-                        <Badge className={`${badgeColor} text-white`}>
-                          {statusText}
-                        </Badge>
-                        <div className="mt-3">
-                          <Button variant="outline" size="sm" onClick={() => setSelectedOfficial(official)}>
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                        </div>
-                      </div> : <div className="text-center py-8 text-muted-foreground">
-                        <Avatar className="h-20 w-20 mx-auto mb-3 bg-muted">
-                          <AvatarFallback>?</AvatarFallback>
-                        </Avatar>
-                        <p className="mb-3">No official assigned</p>
-                        <Button size="sm" variant="outline" onClick={() => handleAssignOfficial(rank.id)}>
-                          <UserPlus className="h-4 w-4 mr-1" />
-                          Assign
-                        </Button>
-                      </div>}
-                  </CardContent>
-                </Card>;
-        })}
-          </div>;
-    })}
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
 
       {/* Organization Summary */}
       <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
