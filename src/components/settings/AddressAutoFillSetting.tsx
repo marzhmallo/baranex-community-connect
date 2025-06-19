@@ -26,7 +26,7 @@ const AddressAutoFillSetting = () => {
           .select('value')
           .eq('userid', user.id)
           .eq('key', 'auto_fill_address_from_admin_barangay')
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           throw error;
@@ -57,13 +57,13 @@ const AddressAutoFillSetting = () => {
     }
 
     try {
-      // First, try to check if the setting exists
+      // Check if setting exists
       const { data: existingSetting } = await supabase
         .from('settings')
         .select('id')
         .eq('userid', user.id)
         .eq('key', 'auto_fill_address_from_admin_barangay')
-        .single();
+        .maybeSingle();
 
       let result;
       
@@ -89,13 +89,18 @@ const AddressAutoFillSetting = () => {
           });
       }
 
-      if (result.error) throw result.error;
+      if (result.error) {
+        console.error('Database error:', result.error);
+        throw result.error;
+      }
 
       setIsEnabled(enabled);
       toast({
         title: "Setting updated",
         description: `Address auto-fill has been ${enabled ? 'enabled' : 'disabled'}.`,
       });
+
+      console.log('Address auto-fill setting updated successfully:', enabled);
     } catch (error) {
       console.error('Error updating setting:', error);
       toast({
@@ -103,6 +108,8 @@ const AddressAutoFillSetting = () => {
         description: "Failed to update setting. Please try again.",
         variant: "destructive",
       });
+      // Revert the switch state on error
+      setIsEnabled(!enabled);
     }
   };
 

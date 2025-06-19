@@ -68,21 +68,53 @@ export const useChatbotSettings = () => {
     }
 
     try {
-      await supabase
+      // Check if setting exists
+      const { data: existingSetting } = await supabase
         .from('settings')
-        .upsert({
-          userid: user.id,
-          key: 'chatbot_enabled',
-          value: enabled.toString(),
-          description: 'Enable or disable the chatbot'
-        });
+        .select('id')
+        .eq('userid', user.id)
+        .eq('key', 'chatbot_enabled')
+        .maybeSingle();
 
+      let result;
+      if (existingSetting) {
+        // Update existing setting
+        result = await supabase
+          .from('settings')
+          .update({ 
+            value: enabled.toString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('userid', user.id)
+          .eq('key', 'chatbot_enabled');
+      } else {
+        // Insert new setting
+        result = await supabase
+          .from('settings')
+          .insert({
+            userid: user.id,
+            key: 'chatbot_enabled',
+            value: enabled.toString(),
+            description: 'Enable or disable the chatbot'
+          });
+      }
+
+      if (result.error) {
+        console.error('Database error:', result.error);
+        throw result.error;
+      }
+
+      // Update local state immediately
       setChatbotSettings(prev => ({ ...prev, enabled }));
       window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
         detail: { enabled, mode: chatbotSettings.mode } 
       }));
+
+      console.log('Chatbot enabled setting updated successfully:', enabled);
     } catch (error) {
       console.error('Error updating chatbot enabled setting:', error);
+      // Revert local state on error
+      setChatbotSettings(prev => ({ ...prev, enabled: !enabled }));
     }
   };
 
@@ -98,21 +130,54 @@ export const useChatbotSettings = () => {
     }
 
     try {
-      await supabase
+      // Check if setting exists
+      const { data: existingSetting } = await supabase
         .from('settings')
-        .upsert({
-          userid: user.id,
-          key: 'chatbot_mode',
-          value: mode,
-          description: 'Chatbot mode: online or offline'
-        });
+        .select('id')
+        .eq('userid', user.id)
+        .eq('key', 'chatbot_mode')
+        .maybeSingle();
 
+      let result;
+      if (existingSetting) {
+        // Update existing setting
+        result = await supabase
+          .from('settings')
+          .update({ 
+            value: mode,
+            updated_at: new Date().toISOString()
+          })
+          .eq('userid', user.id)
+          .eq('key', 'chatbot_mode');
+      } else {
+        // Insert new setting
+        result = await supabase
+          .from('settings')
+          .insert({
+            userid: user.id,
+            key: 'chatbot_mode',
+            value: mode,
+            description: 'Chatbot mode: online or offline'
+          });
+      }
+
+      if (result.error) {
+        console.error('Database error:', result.error);
+        throw result.error;
+      }
+
+      // Update local state immediately
       setChatbotSettings(prev => ({ ...prev, mode }));
       window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
         detail: { enabled: chatbotSettings.enabled, mode } 
       }));
+
+      console.log('Chatbot mode setting updated successfully:', mode);
     } catch (error) {
       console.error('Error updating chatbot mode setting:', error);
+      // Revert local state on error
+      const previousMode = chatbotSettings.mode;
+      setChatbotSettings(prev => ({ ...prev, mode: previousMode }));
     }
   };
 
