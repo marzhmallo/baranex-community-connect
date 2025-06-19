@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -145,6 +144,19 @@ export function AddEditPositionDialog({
       if (result.error) {
         throw result.error;
       }
+
+      // Update the officials table with the same position_no
+      if (data.position_no !== undefined) {
+        const { error: officialError } = await supabase
+          .from('officials')
+          .update({ position_no: data.position_no })
+          .eq('id', officialId);
+
+        if (officialError) {
+          console.error('Error updating official position_no:', officialError);
+          // Don't throw here as the position was already saved successfully
+        }
+      }
       
       toast({
         title: `Position ${isEditMode ? 'updated' : 'added'} successfully`,
@@ -209,7 +221,7 @@ export function AddEditPositionDialog({
                     />
                   </FormControl>
                   <div className="text-xs text-gray-400 mt-1">
-                    Lower numbers appear first (1 = highest priority)
+                    Lower numbers appear first (1 = highest priority). This will also update the official's rank.
                   </div>
                   <FormMessage />
                 </FormItem>

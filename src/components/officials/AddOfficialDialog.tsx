@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Minus } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import OfficialPhotoUpload from './OfficialPhotoUpload';
+
 const officialSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
@@ -41,7 +42,9 @@ const officialSchema = z.object({
   photo_url: z.string().optional().or(z.literal('')),
   position_no: z.number().optional()
 });
+
 type OfficialFormValues = z.infer<typeof officialSchema>;
+
 interface AddOfficialDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -115,6 +118,7 @@ const POSITION_RANKINGS = [{
   value: 21,
   label: "21 - SK Kagawad 7"
 }];
+
 export function AddOfficialDialog({
   open,
   onOpenChange,
@@ -123,13 +127,11 @@ export function AddOfficialDialog({
   position
 }: AddOfficialDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    toast
-  } = useToast();
-  const {
-    userProfile
-  } = useAuth();
+  const { toast } = useToast();
+  const { userProfile } = useAuth();
+  
   const isEditing = !!official;
+  
   const form = useForm<OfficialFormValues>({
     resolver: zodResolver(officialSchema),
     defaultValues: {
@@ -139,15 +141,9 @@ export function AddOfficialDialog({
       bio: '',
       address: '',
       birthdate: '',
-      educ: [{
-        value: ''
-      }],
-      achievements: [{
-        value: ''
-      }],
-      committees: [{
-        value: ''
-      }],
+      educ: [{ value: '' }],
+      achievements: [{ value: '' }],
+      committees: [{ value: '' }],
       is_sk: false,
       position: '',
       committee: '',
@@ -186,9 +182,7 @@ export function AddOfficialDialog({
   });
 
   // Helper function to parse JSONB data from the database
-  const parseJsonField = (field: any, defaultValue = [{
-    value: ''
-  }]) => {
+  const parseJsonField = (field: any, defaultValue = [{ value: '' }]) => {
     if (!field) return defaultValue;
 
     // If it's already an array, format it for our form
@@ -373,7 +367,8 @@ export function AddOfficialDialog({
       setIsSubmitting(false);
     }
   };
-  return <Dialog open={open} onOpenChange={onOpenChange}>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Official' : 'Add New Official'}</DialogTitle>
@@ -384,153 +379,302 @@ export function AddOfficialDialog({
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Personal Information</h3>
               
-              {/* Photo Upload Section */}
-              <OfficialPhotoUpload officialId={official?.id} existingPhotoUrl={form.watch('photo_url')} onPhotoUploaded={handlePhotoUploaded} />
+              <OfficialPhotoUpload 
+                officialId={official?.id} 
+                existingPhotoUrl={form.watch('photo_url')} 
+                onPhotoUploaded={handlePhotoUploaded} 
+              />
               
-              <FormField control={form.control} name="name" render={({
-              field
-            }) => <FormItem>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter full name" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                      <Input
+                        placeholder="Enter full name"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
 
-              {/* Position Number Section */}
-              <FormField control={form.control} name="position_no" render={({
-              field
-            }) => {}} />
+              <FormField
+                control={form.control}
+                name="position_no"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position Rank (optional)</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value?.toString() || ""}
+                        onValueChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                      >
+                        <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
+                          <SelectValue placeholder="Select position rank" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {POSITION_RANKINGS.map((rank) => (
+                            <SelectItem key={rank.value} value={rank.value.toString()}>
+                              {rank.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <div className="text-xs text-gray-400 mt-1">
+                      Lower numbers appear first (1 = highest priority)
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="email" render={({
-                field
-              }) => <FormItem>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Email (Optional)</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="email@example.com" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                        <Input
+                          type="email"
+                          placeholder="email@example.com"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>} />
+                    </FormItem>
+                  )}
+                />
                 
-                <FormField control={form.control} name="phone" render={({
-                field
-              }) => <FormItem>
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Phone (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Contact number" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                        <Input
+                          placeholder="Contact number"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>} />
+                    </FormItem>
+                  )}
+                />
               </div>
               
-              <FormField control={form.control} name="birthdate" render={({
-              field
-            }) => <FormItem>
+              <FormField
+                control={form.control}
+                name="birthdate"
+                render={({ field }) => (
+                  <FormItem>
                     <FormLabel>Birthdate (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                      <Input
+                        type="date"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
-              <FormField control={form.control} name="address" render={({
-              field
-            }) => <FormItem>
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
                     <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Input placeholder="Official's address" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                      <Input
+                        placeholder="Official's address"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <FormLabel>Education (Optional)</FormLabel>
-                  <Button type="button" onClick={() => appendEduc({
-                  value: ""
-                })} variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full">
+                  <Button
+                    type="button"
+                    onClick={() => appendEduc({ value: "" })}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                {educFields.map((field, index) => <div key={field.id} className="flex items-center gap-2">
-                    <FormField control={form.control} name={`educ.${index}.value`} render={({
-                  field
-                }) => <FormItem className="flex-1">
+                {educFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`educ.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
                           <FormControl>
-                            <Input {...field} placeholder="Educational background" className="bg-[#2a3649] border-[#3a4659]" />
+                            <Input
+                              {...field}
+                              placeholder="Educational background"
+                              className="bg-[#2a3649] border-[#3a4659]"
+                            />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
-                    {educFields.length > 1 && <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50" onClick={() => removeEduc(index)}>
+                        </FormItem>
+                      )}
+                    />
+                    {educFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50"
+                        onClick={() => removeEduc(index)}
+                      >
                         <Minus className="h-4 w-4 text-red-400" />
-                      </Button>}
-                  </div>)}
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
               
-              <FormField control={form.control} name="bio" render={({
-              field
-            }) => <FormItem>
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
                     <FormLabel>Bio (Optional)</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Brief biography" {...field} className="bg-[#2a3649] border-[#3a4659] min-h-[100px]" />
+                      <Textarea
+                        placeholder="Brief biography"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659] min-h-[100px]"
+                      />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <FormLabel>Achievements (Optional)</FormLabel>
-                  <Button type="button" onClick={() => appendAchievement({
-                  value: ""
-                })} variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full">
+                  <Button
+                    type="button"
+                    onClick={() => appendAchievement({ value: "" })}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                {achievementFields.map((field, index) => <div key={field.id} className="flex items-center gap-2">
-                    <FormField control={form.control} name={`achievements.${index}.value`} render={({
-                  field
-                }) => <FormItem className="flex-1">
+                {achievementFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`achievements.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
                           <FormControl>
-                            <Input {...field} placeholder="Notable achievement" className="bg-[#2a3649] border-[#3a4659]" />
+                            <Input
+                              {...field}
+                              placeholder="Notable achievement"
+                              className="bg-[#2a3649] border-[#3a4659]"
+                            />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
-                    {achievementFields.length > 1 && <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50" onClick={() => removeAchievement(index)}>
+                        </FormItem>
+                      )}
+                    />
+                    {achievementFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50"
+                        onClick={() => removeAchievement(index)}
+                      >
                         <Minus className="h-4 w-4 text-red-400" />
-                      </Button>}
-                  </div>)}
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <FormLabel>Committees (Optional)</FormLabel>
-                  <Button type="button" onClick={() => appendCommittee({
-                  value: ""
-                })} variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full">
+                  <Button
+                    type="button"
+                    onClick={() => appendCommittee({ value: "" })}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                {committeeFields.map((field, index) => <div key={field.id} className="flex items-center gap-2">
-                    <FormField control={form.control} name={`committees.${index}.value`} render={({
-                  field
-                }) => <FormItem className="flex-1">
+                {committeeFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`committees.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
                           <FormControl>
-                            <Input {...field} placeholder="Committee name" className="bg-[#2a3649] border-[#3a4659]" />
+                            <Input
+                              {...field}
+                              placeholder="Committee name"
+                              className="bg-[#2a3649] border-[#3a4659]"
+                            />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
-                    {committeeFields.length > 1 && <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50" onClick={() => removeCommittee(index)}>
+                        </FormItem>
+                      )}
+                    />
+                    {committeeFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50"
+                        onClick={() => removeCommittee(index)}
+                      >
                         <Minus className="h-4 w-4 text-red-400" />
-                      </Button>}
-                  </div>)}
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
               
-              <FormField control={form.control} name="is_sk" render={({
-              field
-            }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649]">
+              <FormField
+                control={form.control}
+                name="is_sk"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649]">
                     <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel>SK Official</FormLabel>
@@ -538,63 +682,103 @@ export function AddOfficialDialog({
                         Check if this person is an SK official
                       </p>
                     </div>
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
             </div>
             
-            {/* Only show position fields when creating a new official, not when editing */}
-            {!isEditing && <div className="border-t border-[#3a4659] pt-4 mt-6">
+            {!isEditing && (
+              <div className="border-t border-[#3a4659] pt-4 mt-6">
                 <h3 className="text-lg font-medium mb-4">Position Information</h3>
                 
-                <FormField control={form.control} name="position" render={({
-              field
-            }) => <FormItem>
+                <FormField
+                  control={form.control}
+                  name="position"
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Position</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Barangay Captain" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                        <Input
+                          placeholder="e.g., Barangay Captain"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>} />
+                    </FormItem>
+                  )}
+                />
                 
-                <FormField control={form.control} name="committee" render={({
-              field
-            }) => <FormItem>
+                <FormField
+                  control={form.control}
+                  name="committee"
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Committee (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Peace & Order" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                        <Input
+                          placeholder="e.g., Peace & Order"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>} />
+                    </FormItem>
+                  )}
+                />
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="term_start" render={({
-                field
-              }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="term_start"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Term Start Date</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                          <Input
+                            type="date"
+                            {...field}
+                            className="bg-[#2a3649] border-[#3a4659]"
+                          />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <FormField control={form.control} name="term_end" render={({
-                field
-              }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="term_end"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Term End Date (Optional)</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} disabled={form.watch('is_current')} className="bg-[#2a3649] border-[#3a4659]" />
+                          <Input
+                            type="date"
+                            {...field}
+                            disabled={form.watch('is_current')}
+                            className="bg-[#2a3649] border-[#3a4659]"
+                          />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 
-                <FormField control={form.control} name="is_current" render={({
-              field
-            }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649] mt-4">
+                <FormField
+                  control={form.control}
+                  name="is_current"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649] mt-4">
                       <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={checked => {
-                  field.onChange(checked);
-                  handleIsCurrentChange(!!checked);
-                }} />
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            handleIsCurrentChange(!!checked);
+                          }}
+                        />
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel>Current Position</FormLabel>
@@ -602,19 +786,38 @@ export function AddOfficialDialog({
                           Check if this is a current position (no end date)
                         </p>
                       </div>
-                    </FormItem>} />
-              </div>}
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
             
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="border-[#3a4659]">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="border-[#3a4659]"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
-                {isSubmitting ? isEditing ? 'Updating...' : 'Adding...' : isEditing ? 'Update Official' : 'Add Official'}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isSubmitting
+                  ? isEditing
+                    ? 'Updating...'
+                    : 'Adding...'
+                  : isEditing
+                  ? 'Update Official'
+                  : 'Add Official'}
               </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
