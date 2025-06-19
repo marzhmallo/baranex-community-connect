@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +18,7 @@ interface RankManagementDialogProps {
 
 interface OfficialRank {
   id: string;
-  rankno: string; // Changed from number to string to match database
+  rankno: string;
   ranklabel: string;
   brgyid: string;
   created_at: string;
@@ -73,18 +74,17 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
         throw new Error('Barangay ID not found');
       }
 
-      // Generate a UUID using crypto.randomUUID()
-      const newId = crypto.randomUUID();
-
       const { data: insertData, error: insertError } = await supabase
         .from('officialranks')
         .insert([{
-          id: newId,
+          id: crypto.randomUUID(),
           rankno: rankData.rankno,
           ranklabel: rankData.ranklabel,
           brgyid: currentUser.brgyid,
-          created_at: new Date().toISOString()
-        } as any])
+          officialid: null, // Set to null when creating a new rank
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
         .select()
         .single();
       
@@ -112,7 +112,7 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
           rankno: rankData.rankno,
           ranklabel: rankData.ranklabel,
           updated_at: new Date().toISOString()
-        } as any)
+        })
         .eq('id', rankData.id)
         .select()
         .single();
@@ -178,7 +178,7 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
     }
     
     createRankMutation.mutate({
-      rankno: newRank.rankno, // Keep as string
+      rankno: newRank.rankno,
       ranklabel: newRank.ranklabel
     });
   };
