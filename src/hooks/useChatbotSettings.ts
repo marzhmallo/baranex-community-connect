@@ -59,7 +59,7 @@ export const useChatbotSettings = () => {
     let channel;
     if (user?.id) {
       channel = supabase
-        .channel('chatbot-settings-changes')
+        .channel(`chatbot-settings-${user.id}`)
         .on(
           'postgres_changes',
           {
@@ -77,34 +77,24 @@ export const useChatbotSettings = () => {
         .subscribe();
     }
 
-    // Listen for custom events from other components
-    const handleSettingsChange = (event: CustomEvent) => {
-      setChatbotSettings(event.detail);
-    };
-
-    window.addEventListener('chatbot-settings-changed', handleSettingsChange as EventListener);
-
     return () => {
       if (channel) {
         supabase.removeChannel(channel);
       }
-      window.removeEventListener('chatbot-settings-changed', handleSettingsChange as EventListener);
     };
   }, [user?.id]);
 
   const updateChatbotEnabled = async (enabled: boolean) => {
+    console.log('Updating chatbot enabled to:', enabled);
+    
     if (!user?.id) {
       // If no user, use localStorage
       localStorage.setItem('chatbot-enabled', enabled.toString());
       setChatbotSettings(prev => ({ ...prev, enabled }));
-      window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
-        detail: { enabled, mode: chatbotSettings.mode } 
-      }));
       return;
     }
 
     try {
-      // Use upsert to handle both insert and update
       const { error } = await supabase
         .from('settings')
         .upsert({
@@ -122,13 +112,11 @@ export const useChatbotSettings = () => {
         throw error;
       }
 
-      // Update local state immediately
-      setChatbotSettings(prev => ({ ...prev, enabled }));
-      window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
-        detail: { enabled, mode: chatbotSettings.mode } 
-      }));
-
       console.log('Chatbot enabled setting updated successfully:', enabled);
+      
+      // Update local state immediately for responsive UI
+      setChatbotSettings(prev => ({ ...prev, enabled }));
+      
     } catch (error) {
       console.error('Error updating chatbot enabled setting:', error);
       // Revert local state on error
@@ -137,18 +125,16 @@ export const useChatbotSettings = () => {
   };
 
   const updateChatbotMode = async (mode: string) => {
+    console.log('Updating chatbot mode to:', mode);
+    
     if (!user?.id) {
       // If no user, use localStorage
       localStorage.setItem('chatbot-mode', mode);
       setChatbotSettings(prev => ({ ...prev, mode }));
-      window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
-        detail: { enabled: chatbotSettings.enabled, mode } 
-      }));
       return;
     }
 
     try {
-      // Use upsert to handle both insert and update
       const { error } = await supabase
         .from('settings')
         .upsert({
@@ -166,13 +152,11 @@ export const useChatbotSettings = () => {
         throw error;
       }
 
-      // Update local state immediately
-      setChatbotSettings(prev => ({ ...prev, mode }));
-      window.dispatchEvent(new CustomEvent('chatbot-settings-changed', { 
-        detail: { enabled: chatbotSettings.enabled, mode } 
-      }));
-
       console.log('Chatbot mode setting updated successfully:', mode);
+      
+      // Update local state immediately for responsive UI
+      setChatbotSettings(prev => ({ ...prev, mode }));
+      
     } catch (error) {
       console.error('Error updating chatbot mode setting:', error);
       // Revert local state on error
