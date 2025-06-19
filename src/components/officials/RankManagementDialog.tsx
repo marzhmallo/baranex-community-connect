@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,30 +29,56 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
   const [editingRank, setEditingRank] = useState<OfficialRank | null>(null);
   const queryClient = useQueryClient();
 
+  // Get current user's brgyid
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user-profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: open
+  });
+
   // Fetch existing ranks
   const { data: ranks, isLoading } = useQuery({
     queryKey: ['official-ranks'],
     queryFn: async () => {
+      if (!currentUser?.brgyid) return [];
+      
       const { data, error } = await supabase
         .from('officialranks')
         .select('*')
+        .eq('brgyid', currentUser.brgyid)
         .order('rankno', { ascending: true });
       
       if (error) throw error;
       return data as OfficialRank[];
     },
-    enabled: open
+    enabled: open && !!currentUser?.brgyid
   });
 
   // Create rank mutation
   const createRankMutation = useMutation({
     mutationFn: async (rankData: { rankno: number; ranklabel: string }) => {
-      // Use a raw insert query to avoid TypeScript issues with the auto-generated types
+      if (!currentUser?.brgyid) {
+        throw new Error('Barangay ID not found');
+      }
+
       const { data, error } = await supabase
         .from('officialranks')
         .insert([{
           rankno: rankData.rankno,
-          ranklabel: rankData.ranklabel
+          ranklabel: rankData.ranklabel,
+          brgyid: currentUser.brgyid
         } as any])
         .select()
         .single();
@@ -142,6 +167,11 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
       return;
     }
     
+    if (!currentUser?.brgyid) {
+      toast.error('Unable to determine your barangay. Please try logging in again.');
+      return;
+    }
+    
     createRankMutation.mutate({
       rankno: parseInt(newRank.rankno),
       ranklabel: newRank.ranklabel
@@ -201,7 +231,7 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
               </div>
               <Button 
                 onClick={handleCreateRank}
-                disabled={createRankMutation.isPending}
+                disabled={createRankMutation.isPending || !currentUser?.brgyid}
               >
                 {createRankMutation.isPending ? 'Creating...' : 'Create Rank'}
               </Button>
