@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
-import { useChatbotSettings } from './ChatbotSettingsContext';
 
 interface Message {
   id: string;
@@ -37,11 +36,11 @@ const renderMarkdown = (text: string) => {
 
 const FloatingChatButton = () => {
   const { session, userProfile } = useAuth();
-  const { settings, updateSettings } = useChatbotSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
+  const [isOnlineMode, setIsOnlineMode] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -95,6 +94,22 @@ const FloatingChatButton = () => {
     setConversationHistory(history);
   }, [messages]);
 
+  // Handle mouse down for dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isOpen && !isMinimized) return;
+    
+    e.preventDefault();
+    setIsDragging(true);
+    
+    const rect = dragRef.current?.getBoundingClientRect();
+    if (rect) {
+      dragOffset.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    }
+  };
+
   // Handle mouse move for dragging
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -133,27 +148,6 @@ const FloatingChatButton = () => {
     };
   }, [isDragging]);
 
-  // Don't render if chatbot is disabled or no session - moved after all hooks
-  if (!settings.enabled || !session) {
-    return null;
-  }
-
-  // Handle mouse down for dragging
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isOpen && !isMinimized) return;
-    
-    e.preventDefault();
-    setIsDragging(true);
-    
-    const rect = dragRef.current?.getBoundingClientRect();
-    if (rect) {
-      dragOffset.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      };
-    }
-  };
-
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -180,7 +174,7 @@ const FloatingChatButton = () => {
 
     try {
       console.log('Sending message to chatbot:', userMessage.content);
-      console.log('Mode:', settings.useOnlineMode ? 'Online' : 'Offline');
+      console.log('Mode:', isOnlineMode ? 'Online' : 'Offline');
       console.log('User profile:', userProfile);
       
       const chatMessages = [userMessage].map(msg => ({
@@ -191,7 +185,7 @@ const FloatingChatButton = () => {
       const requestData = { 
         messages: chatMessages,
         conversationHistory: conversationHistory,
-        isOnlineMode: settings.useOnlineMode,
+        isOnlineMode: isOnlineMode,
         authToken: session.access_token,
         userBrgyId: userProfile?.brgyid
       };
@@ -293,9 +287,10 @@ const FloatingChatButton = () => {
     });
   };
 
-  const handleModeToggle = (checked: boolean) => {
-    updateSettings({ useOnlineMode: checked });
-  };
+  // Don't render if user is not authenticated
+  if (!session) {
+    return null;
+  }
 
   return (
     <>
@@ -350,8 +345,8 @@ const FloatingChatButton = () => {
             <span className="text-sm font-medium">Alan</span>
             <div className={cn(
               "w-2 h-2 rounded-full animate-pulse",
-              settings.useOnlineMode ? "bg-green-400" : "bg-orange-400"
-            )} title={settings.useOnlineMode ? "Online Mode" : "Offline Mode"} />
+              isOnlineMode ? "bg-green-400" : "bg-orange-400"
+            )} title={isOnlineMode ? "Online Mode" : "Offline Mode"} />
           </div>
         </div>
       )}
@@ -375,16 +370,16 @@ const FloatingChatButton = () => {
                   <CardTitle className="text-lg">Alexander Cabalan</CardTitle>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs opacity-80">
-                      {settings.useOnlineMode ? "🟢 Online" : "🟠 Offline"}
+                      {isOnlineMode ? "🟢 Online" : "🟠 Offline"}
                     </span>
                     <Switch
-                      checked={settings.useOnlineMode}
-                      onCheckedChange={handleModeToggle}
+                      checked={isOnlineMode}
+                      onCheckedChange={setIsOnlineMode}
                       className="scale-75"
                     />
                     <div className={cn(
                       "w-2 h-2 rounded-full animate-pulse ml-1",
-                      settings.useOnlineMode ? "bg-green-400" : "bg-orange-400"
+                      isOnlineMode ? "bg-green-400" : "bg-orange-400"
                     )} />
                   </div>
                 </div>
@@ -489,7 +484,7 @@ const FloatingChatButton = () => {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={settings.useOnlineMode ? "Ask me anything..." : "Ask me anything..."}
+                    placeholder={isOnlineMode ? "Ask me anything..." : "Ask me anything..."}
                     disabled={isLoading}
                     className="flex-1 min-h-[40px] max-h-[120px] resize-none"
                     rows={1}
