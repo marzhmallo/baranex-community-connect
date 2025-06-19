@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -61,7 +62,7 @@ const officialSchema = z.object({
   term_end: z.string().optional().or(z.literal('')),
   is_current: z.boolean().optional(),
   photo_url: z.string().optional().or(z.literal('')),
-  rank_number: z.number().optional(),
+  rank_number: z.string().optional(), // Changed from number to string
   rank_label: z.string().optional().or(z.literal('')),
 });
 
@@ -193,7 +194,7 @@ export function AddOfficialDialog({
         committees: committeesArray,
         is_sk: official.is_sk?.[0] || false,
         photo_url: official.photo_url || '',
-        rank_number: official.rank_number || undefined,
+        rank_number: official.rank_number || undefined, // Now string
         rank_label: official.rank_label || '',
       });
     }
@@ -242,7 +243,7 @@ export function AddOfficialDialog({
           committees: committeesArray.length > 0 ? committeesArray : null,
           is_sk: data.is_sk ? [true] : [false], // Database expects an array
           photo_url: data.photo_url || null,
-          rank_number: data.rank_number || null,
+          rank_number: data.rank_number || null, // Now string
           rank_label: data.rank_label || null,
         };
         
@@ -273,7 +274,7 @@ export function AddOfficialDialog({
           position: data.position, // Add position to satisfy type requirements
           brgyid: userProfile.brgyid, // Use current user's brgyid
           photo_url: data.photo_url || null,
-          rank_number: data.rank_number || null,
+          rank_number: data.rank_number || null, // Now string
           rank_label: data.rank_label || null,
         };
         
@@ -368,8 +369,8 @@ export function AddOfficialDialog({
                     <FormItem>
                       <FormLabel>Rank Number</FormLabel>
                       <Select 
-                        onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
-                        value={field.value?.toString() || ''}
+                        onValueChange={(value) => field.onChange(value || undefined)} // Keep as string
+                        value={field.value || ''}
                       >
                         <FormControl>
                           <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
