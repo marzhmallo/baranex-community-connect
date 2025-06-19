@@ -1,3 +1,4 @@
+
 // Resident types
 export interface Resident {
   id: string;
@@ -227,6 +228,7 @@ export interface Official {
   committees?: any;
   education?: string;
   officialPositions?: OfficialPosition[];
+  currentPositionNo?: number; // For sorting - comes from current position
 }
 
 // Updated interface for official positions with position_no

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Official } from '@/lib/types';
-import { OfficialPhotoUpload } from './OfficialPhotoUpload';
+import OfficialPhotoUpload from './OfficialPhotoUpload';
 
 const officialSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -107,8 +106,14 @@ export function AddOfficialDialog({
       setIsSubmitting(true);
       
       const officialData = {
-        ...data,
-        photo_url: photoUrl || official?.photo_url,
+        name: data.name,
+        email: data.email || null,
+        phone: data.phone || null,
+        bio: data.bio || null,
+        address: data.address || null,
+        birthdate: data.birthdate, // Ensure this is always provided
+        education: data.education || null,
+        photo_url: photoUrl || official?.photo_url || null,
         brgyid: currentUser.brgyid,
         is_sk: [data.is_sk || false] // Convert boolean to array format
       };

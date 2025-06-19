@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +49,7 @@ const OfficialsPage = () => {
           *,
           official_positions!inner(
             id,
+            official_id,
             position,
             committee,
             term_start,
@@ -72,6 +72,7 @@ const OfficialsPage = () => {
           *,
           official_positions(
             id,
+            official_id,
             position,
             committee,
             term_start,
@@ -97,7 +98,7 @@ const OfficialsPage = () => {
           position: currentPosition?.position || '',
           term_start: currentPosition?.term_start || official.term_start,
           term_end: currentPosition?.term_end || official.term_end,
-          position_no: currentPosition?.position_no || 999999, // Use position's position_no for sorting
+          currentPositionNo: currentPosition?.position_no || 999999, // Use position's position_no for sorting
           officialPositions: official.official_positions || []
         });
       });
@@ -107,7 +108,7 @@ const OfficialsPage = () => {
         allOfficials.push({
           ...official,
           position: '',
-          position_no: 999999, // Put at end if no current position
+          currentPositionNo: 999999, // Put at end if no current position
           officialPositions: official.official_positions || []
         });
       });
@@ -136,9 +137,9 @@ const OfficialsPage = () => {
     }
     return false;
   }).sort((a, b) => {
-    // Sort by position_no (from position's rank), then by name
-    const aPos = a.position_no || 999999;
-    const bPos = b.position_no || 999999;
+    // Sort by currentPositionNo (from position's rank), then by name
+    const aPos = a.currentPositionNo || 999999;
+    const bPos = b.currentPositionNo || 999999;
     if (aPos !== bPos) {
       return aPos - bPos;
     }
