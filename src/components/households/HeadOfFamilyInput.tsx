@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -134,7 +135,7 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
               placeholder={placeholder}
               className={cn(
                 "w-full pr-20",
-                selectedResidentId && "border-green-500 bg-green-50"
+                selectedResidentId && "border-green-500 bg-green-50 dark:bg-green-950"
               )}
             />
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
@@ -147,12 +148,12 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={handleClearSelection}
-                  className="h-6 w-6 p-0 hover:bg-gray-200"
+                  className="h-6 w-6 p-0 hover:bg-muted"
                 >
                   <X className="h-3 w-3" />
                 </Button>
               )}
-              <ChevronsUpDown className="h-4 w-4 text-gray-400" />
+              <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
             </div>
           </div>
         </PopoverTrigger>
@@ -190,7 +191,7 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
                     >
                       <div>
                         <div className="font-medium">{resident.full_name}</div>
-                        <div className="text-sm text-gray-500">Purok {resident.purok}</div>
+                        <div className="text-sm text-muted-foreground">Purok {resident.purok}</div>
                       </div>
                       <Check
                         className={cn(
