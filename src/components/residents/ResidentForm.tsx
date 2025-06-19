@@ -533,9 +533,7 @@ const ResidentForm = ({
                     <FormControl>
                       <Input placeholder="Manila" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && <FormDescription>
-                        This field is auto-filled with admin's barangay data
-                      </FormDescription>}
+                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -546,9 +544,7 @@ const ResidentForm = ({
                     <FormControl>
                       <Input placeholder="Metro Manila" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && <FormDescription>
-                        This field is auto-filled with admin's barangay data
-                      </FormDescription>}
+                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -559,9 +555,7 @@ const ResidentForm = ({
                     <FormControl>
                       <Input placeholder="NCR" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && <FormDescription>
-                        This field is auto-filled with admin's barangay data
-                      </FormDescription>}
+                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -572,9 +566,7 @@ const ResidentForm = ({
                     <FormControl>
                       <Input placeholder="Philippines" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && <FormDescription>
-                        This field is auto-filled with admin's barangay data
-                      </FormDescription>}
+                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
