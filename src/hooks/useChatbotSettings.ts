@@ -95,40 +95,23 @@ export const useChatbotSettings = () => {
     }
 
     try {
-      // First try to update existing setting
-      const { data: existingSetting } = await supabase
+      // Use upsert with proper conflict resolution
+      const { error } = await supabase
         .from('settings')
-        .select('id')
-        .eq('userid', user.id)
-        .eq('key', 'chatbot_enabled')
-        .maybeSingle();
+        .upsert({
+          userid: user.id,
+          key: 'chatbot_enabled',
+          value: enabled.toString(),
+          description: 'Enable or disable the chatbot',
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'userid,key',
+          ignoreDuplicates: false
+        });
 
-      let result;
-      if (existingSetting) {
-        // Update existing setting
-        result = await supabase
-          .from('settings')
-          .update({ 
-            value: enabled.toString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('userid', user.id)
-          .eq('key', 'chatbot_enabled');
-      } else {
-        // Insert new setting
-        result = await supabase
-          .from('settings')
-          .insert({
-            userid: user.id,
-            key: 'chatbot_enabled',
-            value: enabled.toString(),
-            description: 'Enable or disable the chatbot'
-          });
-      }
-
-      if (result.error) {
-        console.error('Database error:', result.error);
-        throw result.error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
       }
 
       console.log('Chatbot enabled setting updated successfully:', enabled);
@@ -155,40 +138,23 @@ export const useChatbotSettings = () => {
     }
 
     try {
-      // First try to update existing setting
-      const { data: existingSetting } = await supabase
+      // Use upsert with proper conflict resolution
+      const { error } = await supabase
         .from('settings')
-        .select('id')
-        .eq('userid', user.id)
-        .eq('key', 'chatbot_mode')
-        .maybeSingle();
+        .upsert({
+          userid: user.id,
+          key: 'chatbot_mode',
+          value: mode,
+          description: 'Chatbot mode: online or offline',
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'userid,key',
+          ignoreDuplicates: false
+        });
 
-      let result;
-      if (existingSetting) {
-        // Update existing setting
-        result = await supabase
-          .from('settings')
-          .update({ 
-            value: mode,
-            updated_at: new Date().toISOString()
-          })
-          .eq('userid', user.id)
-          .eq('key', 'chatbot_mode');
-      } else {
-        // Insert new setting
-        result = await supabase
-          .from('settings')
-          .insert({
-            userid: user.id,
-            key: 'chatbot_mode',
-            value: mode,
-            description: 'Chatbot mode: online or offline'
-          });
-      }
-
-      if (result.error) {
-        console.error('Database error:', result.error);
-        throw result.error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
       }
 
       console.log('Chatbot mode setting updated successfully:', mode);

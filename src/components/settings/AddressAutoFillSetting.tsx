@@ -57,41 +57,23 @@ const AddressAutoFillSetting = () => {
     }
 
     try {
-      // Check if setting exists
-      const { data: existingSetting } = await supabase
+      // Use upsert with proper conflict resolution
+      const { error } = await supabase
         .from('settings')
-        .select('id')
-        .eq('userid', user.id)
-        .eq('key', 'auto_fill_address_from_admin_barangay')
-        .maybeSingle();
+        .upsert({
+          userid: user.id,
+          key: 'auto_fill_address_from_admin_barangay',
+          value: enabled.toString(),
+          description: 'Automatically fill address fields based on admin\'s barangay when adding/editing residents and households',
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'userid,key',
+          ignoreDuplicates: false
+        });
 
-      let result;
-      
-      if (existingSetting) {
-        // Update existing setting
-        result = await supabase
-          .from('settings')
-          .update({ 
-            value: enabled.toString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('userid', user.id)
-          .eq('key', 'auto_fill_address_from_admin_barangay');
-      } else {
-        // Insert new setting
-        result = await supabase
-          .from('settings')
-          .insert({ 
-            userid: user.id,
-            key: 'auto_fill_address_from_admin_barangay',
-            value: enabled.toString(),
-            description: 'Automatically fill address fields based on admin\'s barangay when adding/editing residents and households'
-          });
-      }
-
-      if (result.error) {
-        console.error('Database error:', result.error);
-        throw result.error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
       }
 
       setIsEnabled(enabled);
