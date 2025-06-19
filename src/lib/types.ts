@@ -228,6 +228,8 @@ export interface Official {
   education?: string;
   position_no?: number; // Added position_no for custom sorting
   officialPositions?: OfficialPosition[];
+  rank_number?: string | null; // Added for ranking system
+  rank_label?: string | null; // Added for ranking system
 }
 
 // New interface for official positions
@@ -242,4 +244,5 @@ export interface OfficialPosition {
   created_at?: string;
   updated_at?: string;
   description?: string;
+  position_no?: number; // Added position_no for custom sorting
 }

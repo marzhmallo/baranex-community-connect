@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,7 +38,7 @@ const OfficialsPage = () => {
       } = await supabase.from('officials').select('*');
       if (officialsError) throw officialsError;
 
-      // Then fetch all positions
+      // Then fetch all positions with position_no
       const {
         data: positions,
         error: positionsError
@@ -89,7 +90,9 @@ const OfficialsPage = () => {
           rank_number: officialRank?.rankno || null,
           rank_label: officialRank?.ranklabel || null,
           // Store the positions for potential use in components
-          officialPositions: officialPositions
+          officialPositions: officialPositions,
+          // Add position_no from the current position for sorting
+          position_no: latestPosition?.position_no || null
         };
       });
       return officialsWithPositions;
@@ -116,7 +119,7 @@ const OfficialsPage = () => {
     }
     return false;
   }).sort((a, b) => {
-    // Sort by position_no if available, otherwise maintain original order
+    // Sort by position_no if available, otherwise put at the end
     const aPos = a.position_no || 999999; // Put unranked officials at the end
     const bPos = b.position_no || 999999;
     return aPos - bPos;
