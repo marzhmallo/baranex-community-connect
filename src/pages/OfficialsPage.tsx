@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,7 +85,7 @@ const OfficialsPage = () => {
           position: latestPosition?.position || '',
           term_start: latestPosition?.term_start || official.term_start,
           term_end: latestPosition?.term_end || official.term_end,
-          // Add rank information from officialranks table
+          // Add rank information from officialranks table as string
           rank_number: officialRank?.rankno || null,
           rank_label: officialRank?.ranklabel || null,
           // Store the positions for potential use in components

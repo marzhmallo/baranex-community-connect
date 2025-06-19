@@ -17,7 +17,7 @@ interface AssignOfficialToRankDialogProps {
 
 interface OfficialRank {
   id: string;
-  rankno: number;
+  rankno: string; // Changed from number to string
   ranklabel: string;
 }
 

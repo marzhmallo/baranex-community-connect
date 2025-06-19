@@ -17,7 +17,7 @@ interface RankManagementDialogProps {
 
 interface OfficialRank {
   id: string;
-  rankno: number;
+  rankno: string; // Changed from number to string to match database
   ranklabel: string;
   brgyid: string;
   created_at: string;
@@ -68,15 +68,13 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
 
   // Create rank mutation
   const createRankMutation = useMutation({
-    mutationFn: async (rankData: { rankno: number; ranklabel: string }) => {
+    mutationFn: async (rankData: { rankno: string; ranklabel: string }) => {
       if (!currentUser?.brgyid) {
         throw new Error('Barangay ID not found');
       }
 
-      // Generate a UUID for the id field
-      const { data, error } = await supabase.rpc('gen_random_uuid');
-      if (error) throw error;
-      const newId = data;
+      // Generate a UUID using crypto.randomUUID()
+      const newId = crypto.randomUUID();
 
       const { data: insertData, error: insertError } = await supabase
         .from('officialranks')
@@ -107,7 +105,7 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
 
   // Update rank mutation
   const updateRankMutation = useMutation({
-    mutationFn: async (rankData: { id: string; rankno: number; ranklabel: string }) => {
+    mutationFn: async (rankData: { id: string; rankno: string; ranklabel: string }) => {
       const { data, error } = await supabase
         .from('officialranks')
         .update({
@@ -180,7 +178,7 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
     }
     
     createRankMutation.mutate({
-      rankno: parseInt(newRank.rankno),
+      rankno: newRank.rankno, // Keep as string
       ranklabel: newRank.ranklabel
     });
   };
@@ -220,7 +218,7 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
                   <Label htmlFor="rankno">Rank Number</Label>
                   <Input
                     id="rankno"
-                    type="number"
+                    type="text"
                     placeholder="e.g., 1"
                     value={newRank.rankno}
                     onChange={(e) => setNewRank({ ...newRank, rankno: e.target.value })}

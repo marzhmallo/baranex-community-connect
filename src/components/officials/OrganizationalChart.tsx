@@ -49,16 +49,17 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
   // Group officials by rank_number, only including those with assigned ranks
   const groupedOfficials = officials.reduce((groups, official) => {
     if (official.rank_number != null) {
-      if (!groups[official.rank_number]) groups[official.rank_number] = [];
-      groups[official.rank_number].push(official);
+      // Sort ranks numerically by converting string to number for sorting
+      const rankKey = official.rank_number;
+      if (!groups[rankKey]) groups[rankKey] = [];
+      groups[rankKey].push(official);
     }
     return groups;
-  }, {} as Record<number, Official[]>);
+  }, {} as Record<string, Official[]>);
 
-  // Sort ranks in ascending order
+  // Sort ranks in ascending order (convert to numbers for proper sorting)
   const sortedRanks = Object.keys(groupedOfficials)
-    .map(Number)
-    .sort((a, b) => a - b);
+    .sort((a, b) => parseInt(a) - parseInt(b));
 
   const handleViewOfficial = (official: Official) => {
     setSelectedOfficial(official);
@@ -68,7 +69,7 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
 
-  const getRankLabel = (rank: number, officials: Official[]) => {
+  const getRankLabel = (rank: string, officials: Official[]) => {
     // Use the first official's rank_label if available, otherwise use generic label
     const firstOfficial = officials[0];
     if (firstOfficial?.rank_label) {
