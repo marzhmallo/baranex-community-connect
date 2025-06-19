@@ -1,4 +1,3 @@
-
 import { Official } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,13 +11,11 @@ import { Label } from '@/components/ui/label';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
 interface OrganizationalChartProps {
   officials: Official[];
   isLoading: boolean;
   error: Error | null;
 }
-
 interface OfficialRank {
   id: string;
   rankno: string;
@@ -28,8 +25,11 @@ interface OfficialRank {
   created_at: string;
   updated_at: string;
 }
-
-export const OrganizationalChart = ({ officials, isLoading, error }: OrganizationalChartProps) => {
+export const OrganizationalChart = ({
+  officials,
+  isLoading,
+  error
+}: OrganizationalChartProps) => {
   const [selectedOfficial, setSelectedOfficial] = useState<Official | null>(null);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedRankId, setSelectedRankId] = useState<string>('');
@@ -37,35 +37,39 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
   const queryClient = useQueryClient();
 
   // Get current user's brgyid
-  const { data: currentUser } = useQuery({
+  const {
+    data: currentUser
+  } = useQuery({
     queryKey: ['current-user-profile'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('brgyid')
-        .eq('id', user.id)
-        .single();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('profiles').select('brgyid').eq('id', user.id).single();
       if (error) throw error;
       return data;
     }
   });
 
   // Fetch all ranks
-  const { data: allRanks } = useQuery({
+  const {
+    data: allRanks
+  } = useQuery({
     queryKey: ['all-official-ranks'],
     queryFn: async () => {
       if (!currentUser?.brgyid) return [];
-      
-      const { data, error } = await supabase
-        .from('officialranks')
-        .select('*')
-        .eq('brgyid', currentUser.brgyid)
-        .order('rankno', { ascending: true });
-      
+      const {
+        data,
+        error
+      } = await supabase.from('officialranks').select('*').eq('brgyid', currentUser.brgyid).order('rankno', {
+        ascending: true
+      });
       if (error) throw error;
       return data as OfficialRank[];
     },
@@ -74,51 +78,54 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
 
   // Assign official to rank mutation
   const assignMutation = useMutation({
-    mutationFn: async ({ rankId, officialId }: { rankId: string; officialId: string }) => {
-      const { data, error } = await supabase
-        .from('officialranks')
-        .update({
-          officialid: officialId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', rankId)
-        .select()
-        .single();
-      
+    mutationFn: async ({
+      rankId,
+      officialId
+    }: {
+      rankId: string;
+      officialId: string;
+    }) => {
+      const {
+        data,
+        error
+      } = await supabase.from('officialranks').update({
+        officialid: officialId,
+        updated_at: new Date().toISOString()
+      }).eq('id', rankId).select().single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-official-ranks'] });
-      queryClient.invalidateQueries({ queryKey: ['officials-with-positions'] });
+      queryClient.invalidateQueries({
+        queryKey: ['all-official-ranks']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['officials-with-positions']
+      });
       setShowAssignDialog(false);
       setSelectedRankId('');
       setSelectedOfficialForAssignment('');
       toast.success('Official assigned to rank successfully');
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Error assigning official to rank:', error);
       toast.error('Failed to assign official to rank');
     }
   });
-
   const handleAssignOfficial = (rankId: string) => {
     setSelectedRankId(rankId);
     setShowAssignDialog(true);
   };
-
   const handleConfirmAssignment = () => {
     if (!selectedRankId || !selectedOfficialForAssignment) {
       toast.error('Please select an official');
       return;
     }
-    
     assignMutation.mutate({
       rankId: selectedRankId,
       officialId: selectedOfficialForAssignment
     });
   };
-
   const getOfficialInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
@@ -140,15 +147,18 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
   // Group ranks by categories for display
   const getGroupedRanks = () => {
     if (!allRanks) return {};
-    
-    const groups: { [key: string]: { ranks: OfficialRank[], color: string, icon: any } } = {};
-    
+    const groups: {
+      [key: string]: {
+        ranks: OfficialRank[];
+        color: string;
+        icon: any;
+      };
+    } = {};
     allRanks.forEach(rank => {
       const rankNum = parseInt(rank.rankno);
       let category = '';
       let color = '';
       let icon = Building;
-      
       if (rankNum === 1) {
         category = 'Barangay Captain';
         color = 'bg-purple-500';
@@ -171,13 +181,15 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
         category = 'Other Staff';
         color = 'bg-gray-500';
       }
-      
       if (!groups[category]) {
-        groups[category] = { ranks: [], color, icon };
+        groups[category] = {
+          ranks: [],
+          color,
+          icon
+        };
       }
       groups[category].ranks.push(rank);
     });
-    
     return groups;
   };
 
@@ -186,7 +198,6 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
     const totalOfficials = officials.length;
     const assignedOfficials = allRanks?.filter(rank => rank.officialid).length || 0;
     const unassignedOfficials = totalOfficials - assignedOfficials;
-    
     return {
       totalOfficials,
       assignedOfficials,
@@ -194,54 +205,44 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
       totalRanks: allRanks?.length || 0
     };
   };
-
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        {[1, 2, 3].map((rank) => (
-          <Card key={rank} className="animate-pulse">
+    return <div className="space-y-6">
+        {[1, 2, 3].map(rank => <Card key={rank} className="animate-pulse">
             <CardHeader>
               <div className="h-6 bg-muted rounded w-1/3"></div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-32 bg-muted rounded"></div>
-                ))}
+                {Array.from({
+              length: 4
+            }).map((_, i) => <div key={i} className="h-32 bg-muted rounded"></div>)}
               </div>
             </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+          </Card>)}
+      </div>;
   }
-
   if (error) {
-    return (
-      <div className="p-6 text-destructive bg-card rounded-lg border">
+    return <div className="p-6 text-destructive bg-card rounded-lg border">
         Error loading officials: {error.message}
-      </div>
-    );
+      </div>;
   }
-
   const groupedRanks = getGroupedRanks();
   const totals = getTotals();
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2">Barangay Officials</h2>
-        <p className="text-muted-foreground">BaranEX System - Official Directory</p>
+        <p className="text-muted-foreground">Official Directory</p>
       </div>
 
-      {Object.entries(groupedRanks).map(([category, { ranks, color }]) => {
-        // Special handling for different categories
-        if (category === 'Barangay Captain') {
-          const captainRank = ranks[0];
-          const captainOfficial = getOfficialsForRank(captainRank.id)[0];
-          
-          return (
-            <Card key={category} className="overflow-hidden">
+      {Object.entries(groupedRanks).map(([category, {
+      ranks,
+      color
+    }]) => {
+      // Special handling for different categories
+      if (category === 'Barangay Captain') {
+        const captainRank = ranks[0];
+        const captainOfficial = getOfficialsForRank(captainRank.id)[0];
+        return <Card key={category} className="overflow-hidden">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -257,20 +258,14 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
                       </CardTitle>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleAssignOfficial(captainRank.id)}
-                    className="flex items-center gap-2"
-                  >
+                  <Button size="sm" variant="outline" onClick={() => handleAssignOfficial(captainRank.id)} className="flex items-center gap-2">
                     <UserPlus className="h-4 w-4" />
                     Assign
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                {captainOfficial ? (
-                  <div className="flex items-center gap-4 p-6 bg-purple-50 rounded-lg border-2 border-purple-200">
+                {captainOfficial ? <div className="flex items-center gap-4 p-6 bg-purple-50 rounded-lg border-2 border-purple-200">
                     <Avatar className="h-16 w-16 ring-2 ring-offset-2 ring-purple-500">
                       <AvatarImage src={captainOfficial.photo_url} alt={captainOfficial.name} />
                       <AvatarFallback className="bg-purple-500 text-white text-lg font-semibold">
@@ -289,28 +284,18 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
                         <Badge className="bg-blue-500 text-white">Executive</Badge>
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedOfficial(captainOfficial)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setSelectedOfficial(captainOfficial)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
+                  </div> : <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
                     <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p>No official assigned to this position</p>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
-            </Card>
-          );
-        }
-
-        if (category === 'Barangay Councilors') {
-          return (
-            <Card key={category} className="overflow-hidden">
+            </Card>;
+      }
+      if (category === 'Barangay Councilors') {
+        return <Card key={category} className="overflow-hidden">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -330,10 +315,9 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  {ranks.slice(0, 4).map((rank) => {
-                    const official = getOfficialsForRank(rank.id)[0];
-                    return (
-                      <div key={rank.id} className="text-center">
+                  {ranks.slice(0, 4).map(rank => {
+                const official = getOfficialsForRank(rank.id)[0];
+                return <div key={rank.id} className="text-center">
                         <Avatar className="h-16 w-16 mx-auto mb-2 ring-2 ring-offset-2 ring-blue-500">
                           <AvatarImage src={official?.photo_url} alt={official?.name || 'Vacant'} />
                           <AvatarFallback className="bg-blue-500 text-white">
@@ -342,25 +326,16 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
                         </Avatar>
                         <h4 className="font-medium text-sm">Councilor {parseInt(rank.rankno) - 1}</h4>
                         <p className="text-xs text-muted-foreground">[{official?.name || 'Name'}]</p>
-                        {!official && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleAssignOfficial(rank.id)}
-                            className="mt-2 text-xs"
-                          >
+                        {!official && <Button size="sm" variant="outline" onClick={() => handleAssignOfficial(rank.id)} className="mt-2 text-xs">
                             Assign
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
+                          </Button>}
+                      </div>;
+              })}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {ranks.slice(4).map((rank) => {
-                    const official = getOfficialsForRank(rank.id)[0];
-                    return (
-                      <div key={rank.id} className="text-center">
+                  {ranks.slice(4).map(rank => {
+                const official = getOfficialsForRank(rank.id)[0];
+                return <div key={rank.id} className="text-center">
                         <Avatar className="h-16 w-16 mx-auto mb-2 ring-2 ring-offset-2 ring-blue-500">
                           <AvatarImage src={official?.photo_url} alt={official?.name || 'Vacant'} />
                           <AvatarFallback className="bg-blue-500 text-white">
@@ -369,52 +344,39 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
                         </Avatar>
                         <h4 className="font-medium text-sm">Councilor {parseInt(rank.rankno) - 1}</h4>
                         <p className="text-xs text-muted-foreground">[{official?.name || 'Name'}]</p>
-                        {!official && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleAssignOfficial(rank.id)}
-                            className="mt-2 text-xs"
-                          >
+                        {!official && <Button size="sm" variant="outline" onClick={() => handleAssignOfficial(rank.id)} className="mt-2 text-xs">
                             Assign
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
+                          </Button>}
+                      </div>;
+              })}
                 </div>
                 <p className="text-sm text-muted-foreground mt-4 text-center">
                   Legislative team responsible for creating barangay ordinances and resolutions
                 </p>
               </CardContent>
-            </Card>
-          );
-        }
+            </Card>;
+      }
 
-        // For other categories, use a grid layout
-        return (
-          <div key={category} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {ranks.map((rank) => {
-              const official = getOfficialsForRank(rank.id)[0];
-              let badgeColor = 'bg-gray-500';
-              let statusText = 'Appointed';
-              
-              if (category === 'SK Leadership') {
-                badgeColor = 'bg-orange-500';
-                statusText = 'Elected';
-              } else if (category === 'Health Workers') {
-                badgeColor = 'bg-teal-500';
-                statusText = 'Appointed';
-              } else if (category === 'Lupong Tagapamayapa') {
-                badgeColor = 'bg-purple-600';
-                statusText = 'Appointed';
-              } else if (category === 'Barangay Tanod') {
-                badgeColor = 'bg-red-500';
-                statusText = 'Appointed';
-              }
-              
-              return (
-                <Card key={rank.id} className="overflow-hidden">
+      // For other categories, use a grid layout
+      return <div key={category} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {ranks.map(rank => {
+          const official = getOfficialsForRank(rank.id)[0];
+          let badgeColor = 'bg-gray-500';
+          let statusText = 'Appointed';
+          if (category === 'SK Leadership') {
+            badgeColor = 'bg-orange-500';
+            statusText = 'Elected';
+          } else if (category === 'Health Workers') {
+            badgeColor = 'bg-teal-500';
+            statusText = 'Appointed';
+          } else if (category === 'Lupong Tagapamayapa') {
+            badgeColor = 'bg-purple-600';
+            statusText = 'Appointed';
+          } else if (category === 'Barangay Tanod') {
+            badgeColor = 'bg-red-500';
+            statusText = 'Appointed';
+          }
+          return <Card key={rank.id} className="overflow-hidden">
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -429,8 +391,7 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {official ? (
-                      <div className="text-center">
+                    {official ? <div className="text-center">
                         <Avatar className="h-20 w-20 mx-auto mb-3 ring-2 ring-offset-2 ring-primary">
                           <AvatarImage src={official.photo_url} alt={official.name} />
                           <AvatarFallback className={`${color} text-white text-lg`}>
@@ -441,48 +402,32 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
                           [{official.name}]
                         </h4>
                         <p className="text-sm text-muted-foreground mb-2">
-                          {rank.ranklabel === 'SK Chairperson' ? 'Youth Representative' : 
-                           rank.ranklabel === 'Barangay Secretary' ? 'Appointed Official' : 
-                           rank.ranklabel === 'Barangay Treasurer' ? 'Appointed Official' : 
-                           'Security force responsible for peace and order (non-elected)'}
+                          {rank.ranklabel === 'SK Chairperson' ? 'Youth Representative' : rank.ranklabel === 'Barangay Secretary' ? 'Appointed Official' : rank.ranklabel === 'Barangay Treasurer' ? 'Appointed Official' : 'Security force responsible for peace and order (non-elected)'}
                         </p>
                         <Badge className={`${badgeColor} text-white`}>
                           {statusText}
                         </Badge>
                         <div className="mt-3">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedOfficial(official)}
-                          >
+                          <Button variant="outline" size="sm" onClick={() => setSelectedOfficial(official)}>
                             <Eye className="h-4 w-4 mr-1" />
                             View
                           </Button>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
+                      </div> : <div className="text-center py-8 text-muted-foreground">
                         <Avatar className="h-20 w-20 mx-auto mb-3 bg-muted">
                           <AvatarFallback>?</AvatarFallback>
                         </Avatar>
                         <p className="mb-3">No official assigned</p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleAssignOfficial(rank.id)}
-                        >
+                        <Button size="sm" variant="outline" onClick={() => handleAssignOfficial(rank.id)}>
                           <UserPlus className="h-4 w-4 mr-1" />
                           Assign
                         </Button>
-                      </div>
-                    )}
+                      </div>}
                   </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        );
-      })}
+                </Card>;
+        })}
+          </div>;
+    })}
 
       {/* Organization Summary */}
       <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
@@ -522,11 +467,9 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
           </DialogHeader>
           
           <div className="space-y-4">
-            {selectedRankId && allRanks && (
-              <div className="p-4 bg-muted rounded-lg">
+            {selectedRankId && allRanks && <div className="p-4 bg-muted rounded-lg">
                 <p><strong>Rank:</strong> {allRanks.find(r => r.id === selectedRankId)?.ranklabel}</p>
-              </div>
-            )}
+              </div>}
             
             <div>
               <Label htmlFor="official-select">Select Official</Label>
@@ -535,28 +478,21 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
                   <SelectValue placeholder="Choose an official..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {unassignedOfficials.map((official) => (
-                    <SelectItem key={official.id} value={official.id}>
+                  {unassignedOfficials.map(official => <SelectItem key={official.id} value={official.id}>
                       {official.name} - {official.position}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
-              {unassignedOfficials.length === 0 && (
-                <p className="text-sm text-muted-foreground mt-2">
+              {unassignedOfficials.length === 0 && <p className="text-sm text-muted-foreground mt-2">
                   No unassigned officials available
-                </p>
-              )}
+                </p>}
             </div>
             
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowAssignDialog(false)}>
                 Cancel
               </Button>
-              <Button 
-                onClick={handleConfirmAssignment}
-                disabled={assignMutation.isPending || !selectedOfficialForAssignment}
-              >
+              <Button onClick={handleConfirmAssignment} disabled={assignMutation.isPending || !selectedOfficialForAssignment}>
                 {assignMutation.isPending ? 'Assigning...' : 'Assign Official'}
               </Button>
             </div>
@@ -570,8 +506,7 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
           <DialogHeader>
             <DialogTitle>{selectedOfficial?.name}</DialogTitle>
           </DialogHeader>
-          {selectedOfficial && (
-            <div className="space-y-4">
+          {selectedOfficial && <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={selectedOfficial.photo_url} alt={selectedOfficial.name} />
@@ -585,29 +520,21 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
                 </div>
               </div>
               
-              {selectedOfficial.bio && (
-                <div>
+              {selectedOfficial.bio && <div>
                   <h4 className="font-medium mb-2">About</h4>
                   <p className="text-sm text-muted-foreground">{selectedOfficial.bio}</p>
-                </div>
-              )}
+                </div>}
               
               <div className="space-y-2">
-                {selectedOfficial.email && (
-                  <div className="text-sm">
+                {selectedOfficial.email && <div className="text-sm">
                     <span className="font-medium">Email:</span> {selectedOfficial.email}
-                  </div>
-                )}
-                {selectedOfficial.phone && (
-                  <div className="text-sm">
+                  </div>}
+                {selectedOfficial.phone && <div className="text-sm">
                     <span className="font-medium">Phone:</span> {selectedOfficial.phone}
-                  </div>
-                )}
+                  </div>}
               </div>
-            </div>
-          )}
+            </div>}
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
