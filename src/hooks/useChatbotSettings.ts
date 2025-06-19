@@ -11,48 +11,48 @@ export const useChatbotSettings = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchSettings = async () => {
+    if (!user?.id) {
+      // If no user, use localStorage defaults
+      const enabled = localStorage.getItem('chatbot-enabled') !== 'false';
+      const mode = localStorage.getItem('chatbot-mode') || 'offline';
+      setChatbotSettings({ enabled, mode });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Fetch both settings from the database
+      const { data: settings } = await supabase
+        .from('settings')
+        .select('key, value')
+        .eq('userid', user.id)
+        .in('key', ['chatbot_enabled', 'chatbot_mode']);
+
+      let enabled = true; // default
+      let mode = 'offline'; // default
+
+      if (settings) {
+        const enabledSetting = settings.find(s => s.key === 'chatbot_enabled');
+        const modeSetting = settings.find(s => s.key === 'chatbot_mode');
+        
+        if (enabledSetting) enabled = enabledSetting.value === 'true';
+        if (modeSetting) mode = modeSetting.value;
+      }
+
+      setChatbotSettings({ enabled, mode });
+    } catch (error) {
+      console.error('Error fetching chatbot settings:', error);
+      // Fall back to localStorage on error
+      const enabled = localStorage.getItem('chatbot-enabled') !== 'false';
+      const mode = localStorage.getItem('chatbot-mode') || 'offline';
+      setChatbotSettings({ enabled, mode });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchSettings = async () => {
-      if (!user?.id) {
-        // If no user, use localStorage defaults
-        const enabled = localStorage.getItem('chatbot-enabled') !== 'false';
-        const mode = localStorage.getItem('chatbot-mode') || 'offline';
-        setChatbotSettings({ enabled, mode });
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Fetch both settings from the database
-        const { data: settings } = await supabase
-          .from('settings')
-          .select('key, value')
-          .eq('userid', user.id)
-          .in('key', ['chatbot_enabled', 'chatbot_mode']);
-
-        let enabled = true; // default
-        let mode = 'offline'; // default
-
-        if (settings) {
-          const enabledSetting = settings.find(s => s.key === 'chatbot_enabled');
-          const modeSetting = settings.find(s => s.key === 'chatbot_mode');
-          
-          if (enabledSetting) enabled = enabledSetting.value === 'true';
-          if (modeSetting) mode = modeSetting.value;
-        }
-
-        setChatbotSettings({ enabled, mode });
-      } catch (error) {
-        console.error('Error fetching chatbot settings:', error);
-        // Fall back to localStorage on error
-        const enabled = localStorage.getItem('chatbot-enabled') !== 'false';
-        const mode = localStorage.getItem('chatbot-mode') || 'offline';
-        setChatbotSettings({ enabled, mode });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchSettings();
 
     // Set up real-time subscription for settings changes
@@ -77,10 +77,19 @@ export const useChatbotSettings = () => {
         .subscribe();
     }
 
+    // Listen for custom events to force re-render
+    const handleSettingsChange = () => {
+      console.log('Custom settings change event received');
+      fetchSettings();
+    };
+
+    window.addEventListener('chatbot-settings-changed', handleSettingsChange);
+
     return () => {
       if (channel) {
         supabase.removeChannel(channel);
       }
+      window.removeEventListener('chatbot-settings-changed', handleSettingsChange);
     };
   }, [user?.id]);
 
@@ -93,6 +102,8 @@ export const useChatbotSettings = () => {
     if (!user?.id) {
       // If no user, use localStorage
       localStorage.setItem('chatbot-enabled', enabled.toString());
+      // Dispatch custom event for localStorage users too
+      window.dispatchEvent(new CustomEvent('chatbot-settings-changed'));
       return;
     }
 
@@ -154,6 +165,8 @@ export const useChatbotSettings = () => {
     if (!user?.id) {
       // If no user, use localStorage
       localStorage.setItem('chatbot-mode', mode);
+      // Dispatch custom event for localStorage users too
+      window.dispatchEvent(new CustomEvent('chatbot-settings-changed'));
       return;
     }
 
