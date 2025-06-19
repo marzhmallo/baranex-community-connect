@@ -1,17 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,13 +21,27 @@ type HouseholdStatus = typeof HOUSEHOLD_STATUSES[number];
 
 // Define form schema with new address fields
 const householdFormSchema = z.object({
-  name: z.string().min(1, { message: "Household name is required" }),
-  barangayname: z.string().min(1, { message: "Barangay name is required" }),
-  municipality: z.string().min(1, { message: "Municipality is required" }),
-  province: z.string().min(1, { message: "Province is required" }),
-  region: z.string().min(1, { message: "Region is required" }),
-  country: z.string().min(1, { message: "Country is required" }),
-  purok: z.string().min(1, { message: "Purok is required" }),
+  name: z.string().min(1, {
+    message: "Household name is required"
+  }),
+  barangayname: z.string().min(1, {
+    message: "Barangay name is required"
+  }),
+  municipality: z.string().min(1, {
+    message: "Municipality is required"
+  }),
+  province: z.string().min(1, {
+    message: "Province is required"
+  }),
+  region: z.string().min(1, {
+    message: "Region is required"
+  }),
+  country: z.string().min(1, {
+    message: "Country is required"
+  }),
+  purok: z.string().min(1, {
+    message: "Purok is required"
+  }),
   head_of_family_input: z.string().optional(),
   contact_number: z.string().optional(),
   year_established: z.coerce.number().int().optional(),
@@ -47,25 +53,28 @@ const householdFormSchema = z.object({
   electricity_source: z.string().optional(),
   toilet_type: z.string().optional(),
   garbage_disposal: z.string().optional(),
-  remarks: z.string().optional(),
+  remarks: z.string().optional()
 });
-
 type HouseholdFormValues = z.infer<typeof householdFormSchema>;
-
 interface HouseholdFormProps {
   onSubmit: () => void;
   household?: Household;
 }
-
-const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) => {
-  const { toast } = useToast();
+const HouseholdForm: React.FC<HouseholdFormProps> = ({
+  onSubmit,
+  household
+}) => {
+  const {
+    toast
+  } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedResidentId, setSelectedResidentId] = useState<string | null>(
-    household?.head_of_family || null
-  );
+  const [selectedResidentId, setSelectedResidentId] = useState<string | null>(household?.head_of_family || null);
   const queryClient = useQueryClient();
-  const { isAutoFillEnabled, getAutoFillData } = useAutoFillAddress();
-  
+  const {
+    isAutoFillEnabled,
+    getAutoFillData
+  } = useAutoFillAddress();
+
   // Transform household data for the form
   const defaultValues: HouseholdFormValues = household ? {
     name: household.name,
@@ -86,7 +95,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     electricity_source: household.electricity_source || "",
     toilet_type: household.toilet_type || "",
     garbage_disposal: household.garbage_disposal || "",
-    remarks: household.remarks || "",
+    remarks: household.remarks || ""
   } : {
     name: "",
     barangayname: "",
@@ -106,17 +115,17 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     electricity_source: "",
     toilet_type: "",
     garbage_disposal: "",
-    remarks: "",
+    remarks: ""
   };
-  
   const form = useForm<HouseholdFormValues>({
     resolver: zodResolver(householdFormSchema),
-    defaultValues,
+    defaultValues
   });
 
   // Auto-fill address fields when creating a new household
   useEffect(() => {
-    if (!household) { // Only for new households, not editing
+    if (!household) {
+      // Only for new households, not editing
       const autoFillData = getAutoFillData();
       if (autoFillData) {
         form.setValue('barangayname', autoFillData.barangayname);
@@ -127,12 +136,10 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
       }
     }
   }, [getAutoFillData, form, household]);
-
   const handleSubmit = async (values: HouseholdFormValues) => {
     console.log("Form submitted with values:", values);
     console.log("Selected resident ID:", selectedResidentId);
     setIsSubmitting(true);
-    
     try {
       // Create the household data object based on form values
       const householdToSave: Partial<Household> = {
@@ -145,7 +152,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
         country: values.country,
         purok: values.purok,
         head_of_family: selectedResidentId,
-        headname: selectedResidentId ? null : (values.head_of_family_input || null),
+        headname: selectedResidentId ? null : values.head_of_family_input || null,
         contact_number: values.contact_number || null,
         year_established: values.year_established || null,
         status: values.status,
@@ -156,16 +163,13 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
         electricity_source: values.electricity_source || null,
         toilet_type: values.toilet_type || null,
         garbage_disposal: values.garbage_disposal || null,
-        remarks: values.remarks || null,
+        remarks: values.remarks || null
       };
-      
       console.log("Sending to saveHousehold:", householdToSave);
-      
+
       // Use the saveHousehold function
       const result = await saveHousehold(householdToSave);
-      
       console.log("saveHousehold result:", result);
-
       if (!result.success) {
         console.error("Error in saveHousehold:", result.error);
         throw new Error(result.error);
@@ -203,34 +207,26 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     // Close dialog
     onSubmit();
   };
-
-  return (
-    <Form {...form}>
+  return <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <ScrollArea className="pr-4 h-[calc(85vh-180px)]">
           <div className="pr-4 space-y-6">
             <h3 className="text-lg font-medium mb-4">Basic Information</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="name" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Household Name *</FormLabel>
                     <FormControl>
                       <Input placeholder="Dafun Family" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
               
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="status" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Status *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
@@ -246,220 +242,131 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
             
             <h3 className="text-lg font-medium mb-4 pt-4 border-t">Address Information</h3>
             
-            {isAutoFillEnabled && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  📍 Address fields are automatically filled based on your barangay and are read-only for security.
-                </p>
-              </div>
-            )}
+            {isAutoFillEnabled && <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">📍 Address fields are automatically filled and are read-only for security.</p>
+              </div>}
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="barangayname"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="barangayname" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Barangay *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Barangay Mabuhay" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="Barangay Mabuhay" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
               
-              <FormField
-                control={form.control}
-                name="municipality"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="municipality" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Municipality *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Liloy" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="Liloy" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="province"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="province" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Province *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Zamboanga del Norte" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="Zamboanga del Norte" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
               
-              <FormField
-                control={form.control}
-                name="region"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="region" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Region *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Region IX" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="Region IX" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="country" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Country *</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Philippines" 
-                        {...field} 
-                        readOnly={isAutoFillEnabled}
-                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
-                      />
+                      <Input placeholder="Philippines" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
               
-              <FormField
-                control={form.control}
-                name="purok"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="purok" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Purok *</FormLabel>
                     <FormControl>
                       <Input placeholder="Purok 1" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="head_of_family_input"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="head_of_family_input" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Head of Family</FormLabel>
                     <FormControl>
-                      <HeadOfFamilyInput
-                        value={field.value || ""}
-                        onValueChange={field.onChange}
-                        onResidentSelect={setSelectedResidentId}
-                        selectedResidentId={selectedResidentId}
-                        placeholder="Search residents or enter name"
-                      />
+                      <HeadOfFamilyInput value={field.value || ""} onValueChange={field.onChange} onResidentSelect={setSelectedResidentId} selectedResidentId={selectedResidentId} placeholder="Search residents or enter name" />
                     </FormControl>
                     <FormMessage />
-                    {selectedResidentId && (
-                      <p className="text-xs text-green-600">✓ Registered resident selected</p>
-                    )}
-                    {!selectedResidentId && field.value && (
-                      <p className="text-xs text-gray-500">Will be saved as text</p>
-                    )}
-                  </FormItem>
-                )}
-              />
+                    {selectedResidentId && <p className="text-xs text-green-600">✓ Registered resident selected</p>}
+                    {!selectedResidentId && field.value && <p className="text-xs text-gray-500">Will be saved as text</p>}
+                  </FormItem>} />
               
-              <FormField
-                control={form.control}
-                name="contact_number"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="contact_number" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Contact Number</FormLabel>
                     <FormControl>
                       <Input placeholder="09123456789" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
             
-            <FormField
-              control={form.control}
-              name="year_established"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="year_established" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Year Established</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="2010" 
-                      {...field}
-                      value={field.value === undefined ? '' : field.value}
-                      onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                    />
+                    <Input type="number" placeholder="2010" {...field} value={field.value === undefined ? '' : field.value} onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
             
-            <FormField
-              control={form.control}
-              name="monthly_income"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="monthly_income" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Monthly Income</FormLabel>
                   <FormControl>
                     <Input placeholder="20000" {...field} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
             
             <h3 className="text-lg font-medium mb-4 pt-4 border-t">Property Information</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="property_type"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="property_type" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Property Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
@@ -476,15 +383,11 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             
-              <FormField
-                control={form.control}
-                name="house_type"
-                render={({ field }) => (
-                   <FormItem>
+              <FormField control={form.control} name="house_type" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>House Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
@@ -502,17 +405,13 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="water_source"
-                render={({ field }) => (
-                   <FormItem>
+              <FormField control={form.control} name="water_source" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Water Source</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
@@ -530,15 +429,11 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
               
-              <FormField
-                control={form.control}
-                name="electricity_source"
-                render={({ field }) => (
-                   <FormItem>
+              <FormField control={form.control} name="electricity_source" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Electricity Source</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
@@ -555,17 +450,13 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="toilet_type"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="toilet_type" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Toilet Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
@@ -582,15 +473,11 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
               
-              <FormField
-                control={form.control}
-                name="garbage_disposal"
-                render={({ field }) => (
-                   <FormItem>
+              <FormField control={form.control} name="garbage_disposal" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Garbage Disposal</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
@@ -608,39 +495,24 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
             
             <h3 className="text-lg font-medium mb-4 pt-4 border-t">Additional Information</h3>
-            <FormField
-              control={form.control}
-              name="remarks"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="remarks" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Remarks</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Additional notes about this household" 
-                      className="resize-none min-h-[150px]" 
-                      {...field} 
-                    />
+                    <Textarea placeholder="Additional notes about this household" className="resize-none min-h-[150px]" {...field} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
           </div>
         </ScrollArea>
         
         <div className="flex justify-end space-x-4 pt-4 border-t mt-6">
-          <Button
-            variant="outline"
-            type="button"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" type="button" onClick={handleCancel} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
@@ -648,8 +520,6 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
           </Button>
         </div>
       </form>
-    </Form>
-  );
+    </Form>;
 };
-
 export default HouseholdForm;
