@@ -183,9 +183,11 @@ const OfficialsPage = () => {
               Organization
             </Button>
           </div>
-          <Button variant="outline" onClick={() => setShowRankManagement(true)}>
-            <Settings className="h-4 w-4 mr-2" /> Manage Ranks
-          </Button>
+          {viewMode === 'organizational' && (
+            <Button variant="outline" onClick={() => setShowRankManagement(true)}>
+              <Settings className="h-4 w-4 mr-2" /> Manage Ranks
+            </Button>
+          )}
           <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshTerms}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh Terms
           </Button>
@@ -195,23 +197,25 @@ const OfficialsPage = () => {
         </div>
       </div>
 
-      {/* Main tabbed navigation */}
-      <div className="mx-auto max-w-3xl mb-8 bg-card rounded-full p-1 border">
-        <div className="flex justify-center">
-          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'current' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('current')}>
-            Current Officials ({currentCount})
-          </div>
-          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'sk' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('sk')}>
-            SK Officials ({skCount})
-          </div>
-          <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'previous' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('previous')}>
-            Previous Officials ({previousCount})
+      {/* Main tabbed navigation - only show in cards view */}
+      {viewMode === 'cards' && (
+        <div className="mx-auto max-w-3xl mb-8 bg-card rounded-full p-1 border">
+          <div className="flex justify-center">
+            <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'current' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('current')}>
+              Current Officials ({currentCount})
+            </div>
+            <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'sk' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('sk')}>
+              SK Officials ({skCount})
+            </div>
+            <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'previous' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('previous')}>
+              Previous Officials ({previousCount})
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* SK Tab sub-navigation */}
-      {activeTab === 'sk' && (
+      {/* SK Tab sub-navigation - only show in cards view */}
+      {viewMode === 'cards' && activeTab === 'sk' && (
         <div className="mx-auto max-w-xl mb-8 bg-card rounded-full p-1 border">
           <div className="flex justify-center">
             <div className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('current')}>
@@ -226,7 +230,7 @@ const OfficialsPage = () => {
 
       {/* Content based on view mode */}
       {viewMode === 'organizational' ? (
-        <OrganizationalChart officials={filteredOfficials} isLoading={isLoading} error={error} />
+        <OrganizationalChart officials={officialsData || []} isLoading={isLoading} error={error} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {isLoading ?
