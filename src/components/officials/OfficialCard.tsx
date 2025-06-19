@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ const OfficialCard = ({
   official
 }: OfficialCardProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isHovered, setIsHovered] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
@@ -75,7 +76,16 @@ const OfficialCard = ({
   };
   
   const handleViewFullDetails = () => {
-    navigate(`/hub/user-officials/${official.id}`);
+    // Check if we're in the admin context or user context
+    const isUserContext = location.pathname.startsWith('/hub');
+    
+    if (isUserContext) {
+      // User context - navigate to user official details page
+      navigate(`/hub/user-officials/${official.id}`);
+    } else {
+      // Admin context - navigate to admin official details page
+      navigate(`/officials/${official.id}`);
+    }
   };
   
   return (
