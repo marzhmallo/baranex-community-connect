@@ -96,7 +96,7 @@ const OfficialsPage = () => {
     }
   });
 
-  // Filter officials based on the active tab
+  // Filter and sort officials based on the active tab
   const filteredOfficials = officialsData ? officialsData.filter(official => {
     const now = new Date();
     const isSk = Array.isArray(official.is_sk) ? official.is_sk.length > 0 && official.is_sk[0] === true : Boolean(official.is_sk);
@@ -115,6 +115,11 @@ const OfficialsPage = () => {
       return !isSk && official.term_end && new Date(official.term_end) < now;
     }
     return false;
+  }).sort((a, b) => {
+    // Sort by position_no if available, otherwise maintain original order
+    const aPos = a.position_no || 999999; // Put unranked officials at the end
+    const bPos = b.position_no || 999999;
+    return aPos - bPos;
   }) : [];
 
   // Count for each category (excluding SK from current/previous)

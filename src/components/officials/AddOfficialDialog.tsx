@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -62,8 +61,9 @@ const officialSchema = z.object({
   term_end: z.string().optional().or(z.literal('')),
   is_current: z.boolean().optional(),
   photo_url: z.string().optional().or(z.literal('')),
-  rank_number: z.string().optional(), // Changed from number to string
+  rank_number: z.string().optional(),
   rank_label: z.string().optional().or(z.literal('')),
+  position_no: z.number().optional(),
 });
 
 type OfficialFormValues = z.infer<typeof officialSchema>;
@@ -75,6 +75,31 @@ interface AddOfficialDialogProps {
   official?: Official;
   position?: OfficialPosition | null;
 }
+
+// Common position rankings
+const POSITION_RANKINGS = [
+  { value: 1, label: "1 - Barangay Captain" },
+  { value: 2, label: "2 - Vice Captain" },
+  { value: 3, label: "3 - Secretary" },
+  { value: 4, label: "4 - Treasurer" },
+  { value: 5, label: "5 - Kagawad 1" },
+  { value: 6, label: "6 - Kagawad 2" },
+  { value: 7, label: "7 - Kagawad 3" },
+  { value: 8, label: "8 - Kagawad 4" },
+  { value: 9, label: "9 - Kagawad 5" },
+  { value: 10, label: "10 - Kagawad 6" },
+  { value: 11, label: "11 - Kagawad 7" },
+  { value: 12, label: "12 - SK Chairperson" },
+  { value: 13, label: "13 - SK Secretary" },
+  { value: 14, label: "14 - SK Treasurer" },
+  { value: 15, label: "15 - SK Kagawad 1" },
+  { value: 16, label: "16 - SK Kagawad 2" },
+  { value: 17, label: "17 - SK Kagawad 3" },
+  { value: 18, label: "18 - SK Kagawad 4" },
+  { value: 19, label: "19 - SK Kagawad 5" },
+  { value: 20, label: "20 - SK Kagawad 6" },
+  { value: 21, label: "21 - SK Kagawad 7" },
+];
 
 export function AddOfficialDialog({ 
   open, 
@@ -109,6 +134,7 @@ export function AddOfficialDialog({
       photo_url: '',
       rank_number: undefined,
       rank_label: '',
+      position_no: undefined,
     }
   });
   
@@ -196,6 +222,7 @@ export function AddOfficialDialog({
         photo_url: official.photo_url || '',
         rank_number: official.rank_number || undefined, // Now string
         rank_label: official.rank_label || '',
+        position_no: official.position_no || undefined,
       });
     }
   }, [official, position, open, form]);
@@ -245,6 +272,7 @@ export function AddOfficialDialog({
           photo_url: data.photo_url || null,
           rank_number: data.rank_number || null, // Now string
           rank_label: data.rank_label || null,
+          position_no: data.position_no || null,
         };
         
         const { error: officialError } = await supabase
@@ -276,6 +304,7 @@ export function AddOfficialDialog({
           photo_url: data.photo_url || null,
           rank_number: data.rank_number || null, // Now string
           rank_label: data.rank_label || null,
+          position_no: data.position_no || null,
         };
         
         const { data: newOfficial, error: officialError } = await supabase
@@ -360,6 +389,38 @@ export function AddOfficialDialog({
                 )}
               />
 
+              {/* Position Number Section */}
+              <FormField
+                control={form.control}
+                name="position_no"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position Order (Optional)</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
+                      value={field.value?.toString() || ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
+                          <SelectValue placeholder="Select position order..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {POSITION_RANKINGS.map((rank) => (
+                          <SelectItem key={rank.value} value={rank.value.toString()}>
+                            {rank.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-400">
+                      This determines the display order in the officials list
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {/* Rank Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -369,7 +430,7 @@ export function AddOfficialDialog({
                     <FormItem>
                       <FormLabel>Rank Number</FormLabel>
                       <Select 
-                        onValueChange={(value) => field.onChange(value || undefined)} // Keep as string
+                        onValueChange={(value) => field.onChange(value || undefined)}
                         value={field.value || ''}
                       >
                         <FormControl>

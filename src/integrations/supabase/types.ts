@@ -1237,7 +1237,7 @@ export type Database = {
           name: string
           phone: string | null
           photo_url: string | null
-          position: string
+          position_no: number | null
           term_end: string | null
           term_start: string | null
           updated_at: string
@@ -1258,7 +1258,7 @@ export type Database = {
           name: string
           phone?: string | null
           photo_url?: string | null
-          position: string
+          position_no?: number | null
           term_end?: string | null
           term_start?: string | null
           updated_at?: string
@@ -1279,7 +1279,7 @@ export type Database = {
           name?: string
           phone?: string | null
           photo_url?: string | null
-          position?: string
+          position_no?: number | null
           term_end?: string | null
           term_start?: string | null
           updated_at?: string
