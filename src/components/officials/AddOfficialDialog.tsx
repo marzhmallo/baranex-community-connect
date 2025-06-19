@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,8 +40,7 @@ const officialSchema = z.object({
   term_start: z.string().min(1, 'Start date is required').optional(),
   term_end: z.string().optional().or(z.literal('')),
   is_current: z.boolean().optional(),
-  photo_url: z.string().optional().or(z.literal('')),
-  position_no: z.number().optional()
+  photo_url: z.string().optional().or(z.literal(''))
 });
 
 type OfficialFormValues = z.infer<typeof officialSchema>;
@@ -52,72 +52,6 @@ interface AddOfficialDialogProps {
   official?: Official;
   position?: OfficialPosition | null;
 }
-
-// Common position rankings
-const POSITION_RANKINGS = [{
-  value: 1,
-  label: "1 - Barangay Captain"
-}, {
-  value: 2,
-  label: "2 - Vice Captain"
-}, {
-  value: 3,
-  label: "3 - Secretary"
-}, {
-  value: 4,
-  label: "4 - Treasurer"
-}, {
-  value: 5,
-  label: "5 - Kagawad 1"
-}, {
-  value: 6,
-  label: "6 - Kagawad 2"
-}, {
-  value: 7,
-  label: "7 - Kagawad 3"
-}, {
-  value: 8,
-  label: "8 - Kagawad 4"
-}, {
-  value: 9,
-  label: "9 - Kagawad 5"
-}, {
-  value: 10,
-  label: "10 - Kagawad 6"
-}, {
-  value: 11,
-  label: "11 - Kagawad 7"
-}, {
-  value: 12,
-  label: "12 - SK Chairperson"
-}, {
-  value: 13,
-  label: "13 - SK Secretary"
-}, {
-  value: 14,
-  label: "14 - SK Treasurer"
-}, {
-  value: 15,
-  label: "15 - SK Kagawad 1"
-}, {
-  value: 16,
-  label: "16 - SK Kagawad 2"
-}, {
-  value: 17,
-  label: "17 - SK Kagawad 3"
-}, {
-  value: 18,
-  label: "18 - SK Kagawad 4"
-}, {
-  value: 19,
-  label: "19 - SK Kagawad 5"
-}, {
-  value: 20,
-  label: "20 - SK Kagawad 6"
-}, {
-  value: 21,
-  label: "21 - SK Kagawad 7"
-}];
 
 export function AddOfficialDialog({
   open,
@@ -150,8 +84,7 @@ export function AddOfficialDialog({
       term_start: '',
       term_end: '',
       is_current: false,
-      photo_url: '',
-      position_no: undefined
+      photo_url: ''
     }
   });
 
@@ -252,19 +185,21 @@ export function AddOfficialDialog({
         achievements: achievementsArray,
         committees: committeesArray,
         is_sk: official.is_sk?.[0] || false,
-        photo_url: official.photo_url || '',
-        position_no: official.position_no || undefined
+        photo_url: official.photo_url || ''
       });
     }
   }, [official, position, open, form]);
+  
   const handleIsCurrentChange = (checked: boolean) => {
     if (checked) {
       form.setValue('term_end', '');
     }
   };
+  
   const handlePhotoUploaded = (url: string) => {
     form.setValue('photo_url', url);
   };
+  
   const onSubmit = async (data: OfficialFormValues) => {
     try {
       setIsSubmitting(true);
@@ -283,6 +218,7 @@ export function AddOfficialDialog({
       const educArray = data.educ.map(item => item.value).filter(Boolean);
       const achievementsArray = data.achievements.map(item => item.value).filter(Boolean);
       const committeesArray = data.committees.map(item => item.value).filter(Boolean);
+      
       if (isEditing && official) {
         // Update existing official
         const officialData = {
@@ -295,15 +231,17 @@ export function AddOfficialDialog({
           educ: educArray.length > 0 ? educArray : null,
           achievements: achievementsArray.length > 0 ? achievementsArray : null,
           committees: committeesArray.length > 0 ? committeesArray : null,
-          is_sk: data.is_sk ? [true] : [false],
-          // Database expects an array
-          photo_url: data.photo_url || null,
-          position_no: data.position_no || null
+          is_sk: data.is_sk ? [true] : [false], // Database expects an array
+          photo_url: data.photo_url || null
         };
-        const {
-          error: officialError
-        } = await supabase.from('officials').update(officialData).eq('id', official.id);
+        
+        const { error: officialError } = await supabase
+          .from('officials')
+          .update(officialData)
+          .eq('id', official.id);
+        
         if (officialError) throw officialError;
+        
         toast({
           title: 'Official updated',
           description: `${data.name} has been updated successfully.`
@@ -320,19 +258,18 @@ export function AddOfficialDialog({
           educ: educArray.length > 0 ? educArray : null,
           achievements: achievementsArray.length > 0 ? achievementsArray : null,
           committees: committeesArray.length > 0 ? committeesArray : null,
-          is_sk: data.is_sk ? [true] : [false],
-          // Database expects an array
-          position: data.position,
-          // Add position to satisfy type requirements
-          brgyid: userProfile.brgyid,
-          // Use current user's brgyid
-          photo_url: data.photo_url || null,
-          position_no: data.position_no || null
+          is_sk: data.is_sk ? [true] : [false], // Database expects an array
+          position: data.position, // Add position to satisfy type requirements
+          brgyid: userProfile.brgyid, // Use current user's brgyid
+          photo_url: data.photo_url || null
         };
-        const {
-          data: newOfficial,
-          error: officialError
-        } = await supabase.from('officials').insert(officialData).select().single();
+        
+        const { data: newOfficial, error: officialError } = await supabase
+          .from('officials')
+          .insert(officialData)
+          .select()
+          .single();
+        
         if (officialError) throw officialError;
 
         // 2. Insert the position with the new official ID
@@ -341,19 +278,23 @@ export function AddOfficialDialog({
           position: data.position,
           committee: data.committee || null,
           term_start: data.term_start,
-          term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : data.term_end || new Date().toISOString().split('T')[0],
+          term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : (data.term_end || new Date().toISOString().split('T')[0]),
           is_current: !!data.is_current,
           description: null
         };
-        const {
-          error: positionError
-        } = await supabase.from('official_positions').insert(positionData);
+        
+        const { error: positionError } = await supabase
+          .from('official_positions')
+          .insert(positionData);
+        
         if (positionError) throw positionError;
+        
         toast({
           title: 'Official added',
           description: `${data.name} has been added successfully.`
         });
       }
+      
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -367,6 +308,7 @@ export function AddOfficialDialog({
       setIsSubmitting(false);
     }
   };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -398,37 +340,6 @@ export function AddOfficialDialog({
                         className="bg-[#2a3649] border-[#3a4659]"
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="position_no"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Position Rank (optional)</FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value?.toString() || ""}
-                        onValueChange={(value) => field.onChange(value ? Number(value) : undefined)}
-                      >
-                        <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
-                          <SelectValue placeholder="Select position rank" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {POSITION_RANKINGS.map((rank) => (
-                            <SelectItem key={rank.value} value={rank.value.toString()}>
-                              {rank.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <div className="text-xs text-gray-400 mt-1">
-                      Lower numbers appear first (1 = highest priority)
-                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

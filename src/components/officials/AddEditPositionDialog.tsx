@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const positionSchema = z.object({
   position: z.string().min(1, 'Position is required'),
@@ -43,6 +45,72 @@ interface AddEditPositionDialogProps {
   officialId: string | null;
   onSuccess: () => void;
 }
+
+// Common position rankings
+const POSITION_RANKINGS = [{
+  value: 1,
+  label: "1 - Barangay Captain"
+}, {
+  value: 2,
+  label: "2 - Vice Captain"
+}, {
+  value: 3,
+  label: "3 - Secretary"
+}, {
+  value: 4,
+  label: "4 - Treasurer"
+}, {
+  value: 5,
+  label: "5 - Kagawad 1"
+}, {
+  value: 6,
+  label: "6 - Kagawad 2"
+}, {
+  value: 7,
+  label: "7 - Kagawad 3"
+}, {
+  value: 8,
+  label: "8 - Kagawad 4"
+}, {
+  value: 9,
+  label: "9 - Kagawad 5"
+}, {
+  value: 10,
+  label: "10 - Kagawad 6"
+}, {
+  value: 11,
+  label: "11 - Kagawad 7"
+}, {
+  value: 12,
+  label: "12 - SK Chairperson"
+}, {
+  value: 13,
+  label: "13 - SK Secretary"
+}, {
+  value: 14,
+  label: "14 - SK Treasurer"
+}, {
+  value: 15,
+  label: "15 - SK Kagawad 1"
+}, {
+  value: 16,
+  label: "16 - SK Kagawad 2"
+}, {
+  value: 17,
+  label: "17 - SK Kagawad 3"
+}, {
+  value: 18,
+  label: "18 - SK Kagawad 4"
+}, {
+  value: 19,
+  label: "19 - SK Kagawad 5"
+}, {
+  value: 20,
+  label: "20 - SK Kagawad 6"
+}, {
+  value: 21,
+  label: "21 - SK Kagawad 7"
+}];
 
 export function AddEditPositionDialog({ 
   open, 
@@ -211,14 +279,21 @@ export function AddEditPositionDialog({
                 <FormItem>
                   <FormLabel>Position Rank (optional)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="e.g., 1 for Captain, 2 for Vice Captain"
-                      {...field}
-                      value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                      className="bg-[#2a3649] border-[#3a4659]"
-                    />
+                    <Select
+                      value={field.value?.toString() || ""}
+                      onValueChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                    >
+                      <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
+                        <SelectValue placeholder="Select position rank" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {POSITION_RANKINGS.map((rank) => (
+                          <SelectItem key={rank.value} value={rank.value.toString()}>
+                            {rank.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <div className="text-xs text-gray-400 mt-1">
                     Lower numbers appear first (1 = highest priority). This will also update the official's rank.
