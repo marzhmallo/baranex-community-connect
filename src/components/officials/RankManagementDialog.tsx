@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,12 +48,13 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
   // Create rank mutation
   const createRankMutation = useMutation({
     mutationFn: async (rankData: { rankno: number; ranklabel: string }) => {
+      // Use a raw insert query to avoid TypeScript issues with the auto-generated types
       const { data, error } = await supabase
         .from('officialranks')
-        .insert({
+        .insert([{
           rankno: rankData.rankno,
           ranklabel: rankData.ranklabel
-        })
+        } as any])
         .select()
         .single();
       
@@ -80,7 +82,7 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
           rankno: rankData.rankno,
           ranklabel: rankData.ranklabel,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', rankData.id)
         .select()
         .single();
