@@ -217,11 +217,13 @@ const ResidentForm = ({
     mode: "onChange"
   });
   
-  // Auto-fill address fields when creating a new resident
+  // Auto-fill address fields when auto-fill is enabled (for both new residents and edits)
   useEffect(() => {
-    if (!resident) { // Only for new residents, not editing
+    if (isAutoFillEnabled) {
       const autoFillData = getAutoFillData();
       if (autoFillData) {
+        console.log('Auto-filling address fields with admin barangay data:', autoFillData);
+        // Override existing values with admin's barangay data
         form.setValue('barangay', autoFillData.barangayname);
         form.setValue('municipality', autoFillData.municipality);
         form.setValue('province', autoFillData.province);
@@ -229,7 +231,7 @@ const ResidentForm = ({
         form.setValue('country', autoFillData.country);
       }
     }
-  }, [getAutoFillData, form, resident]);
+  }, [getAutoFillData, form, isAutoFillEnabled]);
   
   // Log form validation state changes
   useEffect(() => {
@@ -259,59 +261,76 @@ const ResidentForm = ({
     setIsSubmitting(true);
     
     try {
+      // If auto-fill is enabled, ensure we use the admin's barangay data for address fields
+      let finalValues = { ...values };
+      if (isAutoFillEnabled) {
+        const autoFillData = getAutoFillData();
+        if (autoFillData) {
+          console.log('Overriding address fields with admin barangay data during save:', autoFillData);
+          finalValues = {
+            ...finalValues,
+            barangay: autoFillData.barangayname,
+            municipality: autoFillData.municipality,
+            province: autoFillData.province,
+            region: autoFillData.region,
+            country: autoFillData.country
+          };
+        }
+      }
+      
       // Construct address string from individual components
-      const addressString = `Purok ${values.purok}, ${values.barangay}, ${values.municipality}, ${values.province}, ${values.region}`;
+      const addressString = `Purok ${finalValues.purok}, ${finalValues.barangay}, ${finalValues.municipality}, ${finalValues.province}, ${finalValues.region}`;
       
       // Create the resident data object based on form values
       const residentToSave: Partial<Resident> = {
         id: resident?.id,
-        firstName: values.firstName,
-        lastName: values.lastName,
-        middleName: values.middleName,
-        suffix: values.suffix,
-        gender: values.gender,
-        birthDate: values.birthDate,
+        firstName: finalValues.firstName,
+        lastName: finalValues.lastName,
+        middleName: finalValues.middleName,
+        suffix: finalValues.suffix,
+        gender: finalValues.gender,
+        birthDate: finalValues.birthDate,
         // Setting composite address string to ensure the address field is filled
         address: addressString,
-        contactNumber: values.contactNumber,
-        email: values.email,
-        occupation: values.occupation,
-        civilStatus: values.civilStatus,
-        monthlyIncome: values.monthlyIncome,
-        yearsInBarangay: values.yearsInBarangay,
-        purok: values.purok,
-        barangay: values.barangay,
-        municipality: values.municipality,
-        province: values.province,
-        region: values.region,
-        country: values.country,
-        nationality: values.nationality,
-        isVoter: values.isVoter,
-        hasPhilhealth: values.hasPhilhealth,
-        hasSss: values.hasSss,
-        hasPagibig: values.hasPagibig,
-        hasTin: values.hasTin,
-        classifications: values.classifications,
-        remarks: values.remarks,
-        status: mapFormStatusToDB(values.status),
-        photoUrl: values.photoUrl,
+        contactNumber: finalValues.contactNumber,
+        email: finalValues.email,
+        occupation: finalValues.occupation,
+        civilStatus: finalValues.civilStatus,
+        monthlyIncome: finalValues.monthlyIncome,
+        yearsInBarangay: finalValues.yearsInBarangay,
+        purok: finalValues.purok,
+        barangay: finalValues.barangay,
+        municipality: finalValues.municipality,
+        province: finalValues.province,
+        region: finalValues.region,
+        country: finalValues.country,
+        nationality: finalValues.nationality,
+        isVoter: finalValues.isVoter,
+        hasPhilhealth: finalValues.hasPhilhealth,
+        hasSss: finalValues.hasSss,
+        hasPagibig: finalValues.hasPagibig,
+        hasTin: finalValues.hasTin,
+        classifications: finalValues.classifications,
+        remarks: finalValues.remarks,
+        status: mapFormStatusToDB(finalValues.status),
+        photoUrl: finalValues.photoUrl,
         
         // Emergency contact handling:
         // Only include if any of the fields have content, otherwise set to null
         // This ensures we send null to the database when all fields are empty
         emergencyContact: 
-          values.emergencyContactName || values.emergencyContactRelationship || values.emergencyContactNumber
+          finalValues.emergencyContactName || finalValues.emergencyContactRelationship || finalValues.emergencyContactNumber
             ? {
-                name: values.emergencyContactName || "",
-                relationship: values.emergencyContactRelationship || "",
-                contactNumber: values.emergencyContactNumber || ""
+                name: finalValues.emergencyContactName || "",
+                relationship: finalValues.emergencyContactRelationship || "",
+                contactNumber: finalValues.emergencyContactNumber || ""
               }
             : null,
             
         // Add died_on date if status is Deceased and a date was selected
         // Otherwise explicitly set to null
-        diedOn: values.status === "Deceased" && values.diedOn ? 
-          format(values.diedOn, 'yyyy-MM-dd') : null,
+        diedOn: finalValues.status === "Deceased" && finalValues.diedOn ? 
+          format(finalValues.diedOn, 'yyyy-MM-dd') : null,
       };
       
       console.log("Sending to saveResident:", residentToSave);
@@ -331,7 +350,7 @@ const ResidentForm = ({
       // Show success toast
       toast({
         title: resident ? "Resident updated successfully" : "Resident added successfully",
-        description: `${values.firstName} ${values.lastName} has been ${resident ? 'updated in' : 'added to'} the database.`
+        description: `${finalValues.firstName} ${finalValues.lastName} has been ${resident ? 'updated in' : 'added to'} the database.`
       });
 
       // Invalidate residents query to refresh the list
@@ -516,7 +535,7 @@ const ResidentForm = ({
                     </FormControl>
                     {isAutoFillEnabled && (
                       <FormDescription>
-                        This field is auto-filled and cannot be edited
+                        This field is auto-filled with admin's barangay data
                       </FormDescription>
                     )}
                     <FormMessage />
@@ -536,7 +555,7 @@ const ResidentForm = ({
                     </FormControl>
                     {isAutoFillEnabled && (
                       <FormDescription>
-                        This field is auto-filled and cannot be edited
+                        This field is auto-filled with admin's barangay data
                       </FormDescription>
                     )}
                     <FormMessage />
@@ -556,7 +575,7 @@ const ResidentForm = ({
                     </FormControl>
                     {isAutoFillEnabled && (
                       <FormDescription>
-                        This field is auto-filled and cannot be edited
+                        This field is auto-filled with admin's barangay data
                       </FormDescription>
                     )}
                     <FormMessage />
@@ -576,7 +595,7 @@ const ResidentForm = ({
                     </FormControl>
                     {isAutoFillEnabled && (
                       <FormDescription>
-                        This field is auto-filled and cannot be edited
+                        This field is auto-filled with admin's barangay data
                       </FormDescription>
                     )}
                     <FormMessage />
@@ -596,7 +615,7 @@ const ResidentForm = ({
                     </FormControl>
                     {isAutoFillEnabled && (
                       <FormDescription>
-                        This field is auto-filled and cannot be edited
+                        This field is auto-filled with admin's barangay data
                       </FormDescription>
                     )}
                     <FormMessage />
