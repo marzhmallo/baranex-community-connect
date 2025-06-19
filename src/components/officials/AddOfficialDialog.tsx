@@ -170,7 +170,7 @@ export function AddOfficialDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
               <OfficialPhotoUpload
-                currentPhotoUrl={photoUrl || official?.photo_url}
+                photoUrl={photoUrl || official?.photo_url}
                 onPhotoUploaded={setPhotoUrl}
               />
               
