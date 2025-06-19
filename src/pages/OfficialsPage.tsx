@@ -5,13 +5,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import OfficialCard from '@/components/officials/OfficialCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { RefreshCw, Plus, ArrowLeft } from 'lucide-react';
+import { RefreshCw, Plus, ArrowLeft, LayoutGrid, Users } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
+import { OrganizationalChart } from '@/components/officials/OrganizationalChart';
+
 const OfficialsPage = () => {
   const [activeTab, setActiveTab] = useState('current');
   const [activeSKTab, setActiveSKTab] = useState('current');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'organizational'>('cards');
 
   // Fetch officials data from Supabase with positions
   const {
@@ -110,13 +113,17 @@ const OfficialsPage = () => {
     const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
     return !isSk && o.term_end && new Date(o.term_end) < new Date();
   }).length : 0;
+
   const handleRefreshTerms = () => {
     refetch();
   };
+
   const handleAddSuccess = () => {
     refetch();
   };
-  return <div className="min-h-screen bg-background p-6">
+
+  return (
+    <div className="min-h-screen bg-background p-6">
       {/* Header with title, subtitle, and action buttons */}
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -129,6 +136,26 @@ const OfficialsPage = () => {
           <p className="text-muted-foreground mx-[10px]">Meet the elected officials serving our barangay</p>
         </div>
         <div className="flex gap-3">
+          <div className="flex gap-1 bg-muted p-1 rounded-lg">
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+              className="flex items-center gap-2"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Cards
+            </Button>
+            <Button
+              variant={viewMode === 'organizational' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('organizational')}
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Organization
+            </Button>
+          </div>
           <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshTerms}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh Terms
           </Button>
@@ -154,7 +181,8 @@ const OfficialsPage = () => {
       </div>
 
       {/* SK Tab sub-navigation */}
-      {activeTab === 'sk' && <div className="mx-auto max-w-xl mb-8 bg-card rounded-full p-1 border">
+      {activeTab === 'sk' && (
+        <div className="mx-auto max-w-xl mb-8 bg-card rounded-full p-1 border">
           <div className="flex justify-center">
             <div className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('current')}>
               Current SK ({skCurrentCount})
@@ -163,36 +191,50 @@ const OfficialsPage = () => {
               Previous SK ({skPreviousCount})
             </div>
           </div>
-        </div>}
+        </div>
+      )}
 
-      {/* Officials cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {isLoading ?
-      // Show skeleton loaders while loading
-      Array.from({
-        length: 4
-      }).map((_, i) => <div key={i} className="bg-card rounded-lg overflow-hidden border">
-              <Skeleton className="w-full h-64 bg-muted" />
-              <div className="p-5">
-                <Skeleton className="h-6 w-3/4 mb-2 bg-muted" />
-                <Skeleton className="h-4 w-1/2 mb-4 bg-muted" />
-                <Skeleton className="h-16 w-full mb-4 bg-muted" />
-                <Skeleton className="h-4 w-full mb-2 bg-muted" />
-                <Skeleton className="h-4 w-full mb-4 bg-muted" />
-                <div className="flex justify-between">
-                  <Skeleton className="h-4 w-1/3 bg-muted" />
-                  <Skeleton className="h-8 w-20 bg-muted" />
+      {/* Content based on view mode */}
+      {viewMode === 'organizational' ? (
+        <OrganizationalChart officials={filteredOfficials} isLoading={isLoading} error={error} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {isLoading ?
+            // Show skeleton loaders while loading
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-card rounded-lg overflow-hidden border">
+                <Skeleton className="w-full h-64 bg-muted" />
+                <div className="p-5">
+                  <Skeleton className="h-6 w-3/4 mb-2 bg-muted" />
+                  <Skeleton className="h-4 w-1/2 mb-4 bg-muted" />
+                  <Skeleton className="h-16 w-full mb-4 bg-muted" />
+                  <Skeleton className="h-4 w-full mb-2 bg-muted" />
+                  <Skeleton className="h-4 w-full mb-4 bg-muted" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-1/3 bg-muted" />
+                    <Skeleton className="h-8 w-20 bg-muted" />
+                  </div>
                 </div>
               </div>
-            </div>) : error ? <div className="col-span-full p-6 text-destructive bg-card rounded-lg border">
-            Error loading officials: {error.message}
-          </div> : filteredOfficials.length === 0 ? <div className="col-span-full p-6 text-center text-muted-foreground bg-card rounded-lg border mx-[240px]">
-            No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? activeSKTab === 'current' ? 'current SK' : 'previous SK' : 'previous'} officials found.
-          </div> : filteredOfficials.map(official => <OfficialCard key={official.id} official={official} />)}
-      </div>
+            )) : error ? (
+              <div className="col-span-full p-6 text-destructive bg-card rounded-lg border">
+                Error loading officials: {error.message}
+              </div>
+            ) : filteredOfficials.length === 0 ? (
+              <div className="col-span-full p-6 text-center text-muted-foreground bg-card rounded-lg border mx-[240px]">
+                No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? activeSKTab === 'current' ? 'current SK' : 'previous SK' : 'previous'} officials found.
+              </div>
+            ) : filteredOfficials.map(official => (
+              <OfficialCard key={official.id} official={official} />
+            ))
+          }
+        </div>
+      )}
 
       {/* Add Official Dialog */}
       <AddOfficialDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={handleAddSuccess} />
-    </div>;
+    </div>
+  );
 };
+
 export default OfficialsPage;
