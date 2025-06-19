@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -32,7 +33,7 @@ const OfficialCard = ({
   // Extract short description from bio or generate a default one
   const getShortDescription = () => {
     if (official.bio) {
-      return official.bio.length > 120 ? official.bio.substring(0, 120) + '...' : official.bio;
+      return official.bio.length > 150 ? official.bio.substring(0, 150) + '...' : official.bio;
     }
     return `${official.name} serves as ${official.position || 'an official'} in the barangay administration. They work to ensure the best service for the community.`;
   };
@@ -89,13 +90,13 @@ const OfficialCard = ({
   };
   
   return (
-    <Card className="overflow-hidden bg-card text-card-foreground border-border">
+    <Card className="overflow-hidden bg-card text-card-foreground border-border h-full">
       <div className="relative">
         {/* Photo section with hover effect */}
         <Dialog>
           <DialogTrigger asChild>
             <div 
-              className="relative cursor-pointer h-64 overflow-hidden" 
+              className="relative cursor-pointer h-80 overflow-hidden" 
               onMouseEnter={() => setIsHovered(true)} 
               onMouseLeave={() => setIsHovered(false)}
             >
@@ -107,8 +108,8 @@ const OfficialCard = ({
                 />
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">
-                  <Avatar className="h-24 w-24 bg-secondary text-secondary-foreground">
-                    <span className="text-2xl font-medium">
+                  <Avatar className="h-32 w-32 bg-secondary text-secondary-foreground">
+                    <span className="text-3xl font-medium">
                       {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                     </span>
                   </Avatar>
@@ -154,46 +155,50 @@ const OfficialCard = ({
         </Dialog>
       </div>
 
-      <div className="p-5">
+      <div className="p-6 flex flex-col h-auto min-h-[300px]">
         {/* Official name and position */}
-        <h3 className="font-bold text-xl text-foreground">{official.name}</h3>
-        <p className="text-primary mb-4">{getPosition()}</p>
+        <h3 className="font-bold text-xl text-foreground mb-2 break-words">{official.name}</h3>
+        <p className="text-primary mb-4 text-base break-words">{getPosition()}</p>
         
         {/* Description */}
-        <p className="text-muted-foreground text-sm mb-4">
-          {getShortDescription()}
-        </p>
+        <div className="flex-grow mb-4">
+          <p className="text-muted-foreground text-sm leading-relaxed break-words">
+            {getShortDescription()}
+          </p>
+        </div>
         
         {/* Contact information */}
-        {official.email && (
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <Mail className="w-4 h-4" />
-            <span className="text-sm">{official.email}</span>
-          </div>
-        )}
-        
-        {official.phone && (
-          <div className="flex items-center gap-2 text-muted-foreground mb-4">
-            <Phone className="w-4 h-4" />
-            <span className="text-sm">{official.phone}</span>
-          </div>
-        )}
+        <div className="space-y-3 mb-4">
+          {official.email && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Mail className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm break-all">{official.email}</span>
+            </div>
+          )}
+          
+          {official.phone && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Phone className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm">{official.phone}</span>
+            </div>
+          )}
+        </div>
         
         {/* Term duration */}
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex flex-col gap-3 mt-auto">
           <div className="text-muted-foreground text-sm">
-            Term: {formatDate(getTermStart())} - {formatDate(getTermEnd())}
+            <span className="font-medium">Term:</span> {formatDate(getTermStart())} - {formatDate(getTermEnd())}
           </div>
           
           {/* View and More Details buttons */}
           <div className="flex gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" className="bg-transparent border-border text-foreground hover:bg-accent hover:text-accent-foreground">
+                <Button variant="outline" className="bg-transparent border-border text-foreground hover:bg-accent hover:text-accent-foreground flex-1">
                   <Eye className="w-4 h-4 mr-1" /> View
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-card border-border text-card-foreground">
+              <DialogContent className="bg-card border-border text-card-foreground max-w-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-card-foreground">{official.name}</DialogTitle>
                 </DialogHeader>
@@ -204,8 +209,8 @@ const OfficialCard = ({
                     className="w-full max-h-64 object-cover object-center rounded-md" 
                   />
                   <div>
-                    <h4 className="font-bold">{getPosition()}</h4>
-                    <p className="text-muted-foreground mt-2">{official.bio || getShortDescription()}</p>
+                    <h4 className="font-bold text-lg">{getPosition()}</h4>
+                    <p className="text-muted-foreground mt-2 leading-relaxed">{official.bio || getShortDescription()}</p>
                   </div>
                   
                   <div className="space-y-2">

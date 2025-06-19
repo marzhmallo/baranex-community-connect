@@ -243,16 +243,16 @@ const OfficialsPage = () => {
           <OrganizationalChart officials={officialsData || []} isLoading={isLoading} error={error} />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
           {isLoading ?
             // Show skeleton loaders while loading
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-lg overflow-hidden border">
-                <Skeleton className="w-full h-64 bg-muted" />
-                <div className="p-5">
+              <div key={i} className="bg-card rounded-lg overflow-hidden border h-[700px]">
+                <Skeleton className="w-full h-80 bg-muted" />
+                <div className="p-6">
                   <Skeleton className="h-6 w-3/4 mb-2 bg-muted" />
                   <Skeleton className="h-4 w-1/2 mb-4 bg-muted" />
-                  <Skeleton className="h-16 w-full mb-4 bg-muted" />
+                  <Skeleton className="h-20 w-full mb-4 bg-muted" />
                   <Skeleton className="h-4 w-full mb-2 bg-muted" />
                   <Skeleton className="h-4 w-full mb-4 bg-muted" />
                   <div className="flex justify-between">
