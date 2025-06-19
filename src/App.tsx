@@ -1,6 +1,4 @@
 
-
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,7 +8,7 @@ import { ChatbotSettingsProvider } from "@/components/chatbot/ChatbotSettingsCon
 import FloatingChatButton from "@/components/chatbot/FloatingChatButton";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/components/dashboard/Dashboard";
-import HubPage from "@/pages/HubPage";
+import HomePage from "@/pages/HomePage";
 import SettingsPage from "@/pages/SettingsPage";
 import UserSettingsPage from "@/components/user/UserSettingsPage";
 
@@ -33,7 +31,7 @@ function App() {
                   <Route path="/settings" element={<SettingsPage />} />
 
                   {/* User Routes */}
-                  <Route path="/hub" element={<HubPage />} />
+                  <Route path="/hub" element={<HomePage />} />
                   <Route path="/hub/settings" element={<UserSettingsPage />} />
 
                   {/* Home Route - Redirect based on auth status */}
