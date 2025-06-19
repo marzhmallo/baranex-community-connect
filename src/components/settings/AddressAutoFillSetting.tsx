@@ -57,18 +57,39 @@ const AddressAutoFillSetting = () => {
     }
 
     try {
-      const { error } = await supabase
+      // First, try to check if the setting exists
+      const { data: existingSetting } = await supabase
         .from('settings')
-        .upsert({ 
-          userid: user.id,
-          key: 'auto_fill_address_from_admin_barangay',
-          value: enabled.toString(),
-          description: 'Automatically fill address fields based on admin\'s barangay when adding/editing residents and households'
-        }, {
-          onConflict: 'userid,key'
-        });
+        .select('id')
+        .eq('userid', user.id)
+        .eq('key', 'auto_fill_address_from_admin_barangay')
+        .single();
 
-      if (error) throw error;
+      let result;
+      
+      if (existingSetting) {
+        // Update existing setting
+        result = await supabase
+          .from('settings')
+          .update({ 
+            value: enabled.toString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('userid', user.id)
+          .eq('key', 'auto_fill_address_from_admin_barangay');
+      } else {
+        // Insert new setting
+        result = await supabase
+          .from('settings')
+          .insert({ 
+            userid: user.id,
+            key: 'auto_fill_address_from_admin_barangay',
+            value: enabled.toString(),
+            description: 'Automatically fill address fields based on admin\'s barangay when adding/editing residents and households'
+          });
+      }
+
+      if (result.error) throw result.error;
 
       setIsEnabled(enabled);
       toast({
@@ -79,7 +100,7 @@ const AddressAutoFillSetting = () => {
       console.error('Error updating setting:', error);
       toast({
         title: "Error",
-        description: "Failed to update setting.",
+        description: "Failed to update setting. Please try again.",
         variant: "destructive",
       });
     }
