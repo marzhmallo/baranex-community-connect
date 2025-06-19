@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -63,7 +64,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     household?.head_of_family || null
   );
   const queryClient = useQueryClient();
-  const { getAutoFillData } = useAutoFillAddress();
+  const { isAutoFillEnabled, getAutoFillData } = useAutoFillAddress();
   
   // Transform household data for the form
   const defaultValues: HouseholdFormValues = household ? {
@@ -252,6 +253,14 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
             
             <h3 className="text-lg font-medium mb-4 pt-4 border-t">Address Information</h3>
             
+            {isAutoFillEnabled && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  📍 Address fields are automatically filled based on your barangay and are read-only for security.
+                </p>
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -260,7 +269,12 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                   <FormItem>
                     <FormLabel>Barangay *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Barangay Mabuhay" {...field} />
+                      <Input 
+                        placeholder="Barangay Mabuhay" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,7 +288,12 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                   <FormItem>
                     <FormLabel>Municipality *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Liloy" {...field} />
+                      <Input 
+                        placeholder="Liloy" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -290,7 +309,12 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                   <FormItem>
                     <FormLabel>Province *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Zamboanga del Norte" {...field} />
+                      <Input 
+                        placeholder="Zamboanga del Norte" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -304,7 +328,12 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                   <FormItem>
                     <FormLabel>Region *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Region IX" {...field} />
+                      <Input 
+                        placeholder="Region IX" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -320,7 +349,12 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
                   <FormItem>
                     <FormLabel>Country *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Philippines" {...field} />
+                      <Input 
+                        placeholder="Philippines" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-gray-100 cursor-not-allowed" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
