@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ResidentPhotoUpload from "./ResidentPhotoUpload";
+import { useAutoFillAddress } from "@/hooks/useAutoFillAddress";
 
 // Available resident classifications with capitalized labels
 const residentClassifications = [
@@ -102,6 +103,7 @@ const ResidentForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(resident?.photoUrl);
+  const { getAutoFillData } = useAutoFillAddress();
   
   // Transform resident data for the form
   const transformResidentForForm = (resident: Resident): ResidentFormValues => {
@@ -214,6 +216,20 @@ const ResidentForm = ({
     defaultValues,
     mode: "onChange"
   });
+  
+  // Auto-fill address fields when creating a new resident
+  useEffect(() => {
+    if (!resident) { // Only for new residents, not editing
+      const autoFillData = getAutoFillData();
+      if (autoFillData) {
+        form.setValue('barangay', autoFillData.barangayname);
+        form.setValue('municipality', autoFillData.municipality);
+        form.setValue('province', autoFillData.province);
+        form.setValue('region', autoFillData.region);
+        form.setValue('country', autoFillData.country);
+      }
+    }
+  }, [getAutoFillData, form, resident]);
   
   // Log form validation state changes
   useEffect(() => {

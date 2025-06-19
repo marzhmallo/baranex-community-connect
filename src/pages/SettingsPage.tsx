@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/components/AuthProvider";
+import AddressAutoFillSetting from "@/components/settings/AddressAutoFillSetting";
 
 const SettingsPage = () => {
   const { userProfile } = useAuth();
@@ -70,6 +71,11 @@ const SettingsPage = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-8">
+          {/* Address Auto-Fill Settings */}
+          <div className="mb-6">
+            <AddressAutoFillSetting />
+          </div>
+
           {/* Chatbot Settings */}
           <Card className="mb-6">
             <CardHeader>

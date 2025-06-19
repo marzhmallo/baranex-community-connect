@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { saveHousehold } from "@/lib/api/households";
 import { Household } from "@/lib/types";
 import HeadOfFamilyInput from "./HeadOfFamilyInput";
+import { useAutoFillAddress } from "@/hooks/useAutoFillAddress";
 
 // Define status values as a constant for reuse
 const HOUSEHOLD_STATUSES = ["Permanent", "Temporary", "Relocated", "Abandoned"] as const;
@@ -62,6 +63,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     household?.head_of_family || null
   );
   const queryClient = useQueryClient();
+  const { getAutoFillData } = useAutoFillAddress();
   
   // Transform household data for the form
   const defaultValues: HouseholdFormValues = household ? {
@@ -110,6 +112,20 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ onSubmit, household }) =>
     resolver: zodResolver(householdFormSchema),
     defaultValues,
   });
+
+  // Auto-fill address fields when creating a new household
+  useEffect(() => {
+    if (!household) { // Only for new households, not editing
+      const autoFillData = getAutoFillData();
+      if (autoFillData) {
+        form.setValue('barangayname', autoFillData.barangayname);
+        form.setValue('municipality', autoFillData.municipality);
+        form.setValue('province', autoFillData.province);
+        form.setValue('region', autoFillData.region);
+        form.setValue('country', autoFillData.country);
+      }
+    }
+  }, [getAutoFillData, form, household]);
 
   const handleSubmit = async (values: HouseholdFormValues) => {
     console.log("Form submitted with values:", values);
