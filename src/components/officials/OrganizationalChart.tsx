@@ -1,4 +1,5 @@
 
+
 import { Official } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -335,12 +336,6 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
                 <div>
                   <h3 className="font-semibold">{selectedOfficial.name}</h3>
                   <p className="text-sm text-muted-foreground">{selectedOfficial.position}</p>
-                  {selectedOfficial.rank_number && (
-                    <Badge variant="outline" className="mt-1">
-                      Rank {selectedOfficial.rank_number}
-                      {selectedOfficial.rank_label && `: ${selectedOfficial.rank_label}`}
-                    </Badge>
-                  )}
                 </div>
               </div>
               
@@ -370,3 +365,4 @@ export const OrganizationalChart = ({ officials, isLoading, error }: Organizatio
     </div>
   );
 };
+
