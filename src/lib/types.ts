@@ -1,4 +1,3 @@
-
 // Resident types
 export interface Resident {
   id: string;
@@ -210,24 +209,25 @@ export interface DocumentLog {
 export interface Official {
   id: string;
   name: string;
-  position?: string; // Now may be optional since we get it from official_positions
+  position?: string;
   email?: string;
   phone?: string;
-  photo_url: string;
   bio?: string;
-  address?: string;
+  photo_url?: string;
+  term_start?: string;
+  term_end?: string;
+  created_at?: string;
+  updated_at?: string;
+  brgyid?: string;
+  is_sk?: boolean[];
   birthdate?: string;
+  address?: string;
+  educ?: any;
+  achievements?: any;
+  committees?: any;
   education?: string;
-  educ?: any; // Add the educ field that exists in the database
-  achievements?: any; // Support JSON format from database
-  committees?: any; // Support JSON format from database
-  created_at: string;
-  updated_at: string;
-  term_start?: string; // Now may be optional since we get it from official_positions
-  term_end?: string; // Now may be optional since we get it from official_positions
-  is_sk: boolean | boolean[]; // Handle both potential types
-  brgyid: string;
-  // Added field to store the positions when fetched
+  rank_number?: number;
+  rank_label?: string;
   officialPositions?: OfficialPosition[];
 }
 

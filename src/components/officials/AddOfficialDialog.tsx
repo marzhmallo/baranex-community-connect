@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +23,13 @@ import {
 import {
   Input
 } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,16 +42,16 @@ const officialSchema = z.object({
   email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
   bio: z.string().optional().or(z.literal('')),
-  address: z.string().min(1, 'Address is required'), // Made required
+  address: z.string().min(1, 'Address is required'),
   birthdate: z.string().optional().or(z.literal('')),
   educ: z.array(z.object({
-    value: z.string().optional().or(z.literal('')) // Made optional
+    value: z.string().optional().or(z.literal(''))
   })),
   achievements: z.array(z.object({
-    value: z.string().optional().or(z.literal('')) // Made optional
+    value: z.string().optional().or(z.literal(''))
   })),
   committees: z.array(z.object({
-    value: z.string().optional().or(z.literal('')) // Made optional
+    value: z.string().optional().or(z.literal(''))
   })),
   is_sk: z.boolean().optional(),
   // Only required for creating new officials
@@ -55,6 +61,8 @@ const officialSchema = z.object({
   term_end: z.string().optional().or(z.literal('')),
   is_current: z.boolean().optional(),
   photo_url: z.string().optional().or(z.literal('')),
+  rank_number: z.number().optional(),
+  rank_label: z.string().optional().or(z.literal('')),
 });
 
 type OfficialFormValues = z.infer<typeof officialSchema>;
@@ -98,6 +106,8 @@ export function AddOfficialDialog({
       term_end: '',
       is_current: false,
       photo_url: '',
+      rank_number: undefined,
+      rank_label: '',
     }
   });
   
@@ -183,6 +193,8 @@ export function AddOfficialDialog({
         committees: committeesArray,
         is_sk: official.is_sk?.[0] || false,
         photo_url: official.photo_url || '',
+        rank_number: official.rank_number || undefined,
+        rank_label: official.rank_label || '',
       });
     }
   }, [official, position, open, form]);
@@ -230,6 +242,8 @@ export function AddOfficialDialog({
           committees: committeesArray.length > 0 ? committeesArray : null,
           is_sk: data.is_sk ? [true] : [false], // Database expects an array
           photo_url: data.photo_url || null,
+          rank_number: data.rank_number || null,
+          rank_label: data.rank_label || null,
         };
         
         const { error: officialError } = await supabase
@@ -259,6 +273,8 @@ export function AddOfficialDialog({
           position: data.position, // Add position to satisfy type requirements
           brgyid: userProfile.brgyid, // Use current user's brgyid
           photo_url: data.photo_url || null,
+          rank_number: data.rank_number || null,
+          rank_label: data.rank_label || null,
         };
         
         const { data: newOfficial, error: officialError } = await supabase
@@ -342,6 +358,55 @@ export function AddOfficialDialog({
                   </FormItem>
                 )}
               />
+
+              {/* Rank Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="rank_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rank Number</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
+                        value={field.value?.toString() || ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
+                            <SelectValue placeholder="Select rank..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rank) => (
+                            <SelectItem key={rank} value={rank.toString()}>
+                              Rank {rank}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="rank_label"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rank Label (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Top Executive"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField

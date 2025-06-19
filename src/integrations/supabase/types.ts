@@ -1200,6 +1200,8 @@ export type Database = {
           phone: string | null
           photo_url: string | null
           position: string
+          rank_label: string | null
+          rank_number: number | null
           term_end: string | null
           term_start: string | null
           updated_at: string
@@ -1221,6 +1223,8 @@ export type Database = {
           phone?: string | null
           photo_url?: string | null
           position: string
+          rank_label?: string | null
+          rank_number?: number | null
           term_end?: string | null
           term_start?: string | null
           updated_at?: string
@@ -1242,6 +1246,8 @@ export type Database = {
           phone?: string | null
           photo_url?: string | null
           position?: string
+          rank_label?: string | null
+          rank_number?: number | null
           term_end?: string | null
           term_start?: string | null
           updated_at?: string
