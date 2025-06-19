@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   ChevronDown,
@@ -15,6 +14,7 @@ import {
   Trash2,
   Share,
   FileDown,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -139,77 +139,106 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h2 className="text-xl font-semibold">Recent Announcements</h2>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              type="text"
-              placeholder="Search announcements..."
-              className="pl-9 w-full sm:w-[250px]"
-              value={searchQuery}
-              onChange={handleSearch}
-            />
-          </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" />
-                {selectedCategory || "All Categories"}
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleCategoryFilter(null)}>
-                All Categories
-              </DropdownMenuItem>
-              {categories.map(category => (
-                <DropdownMenuItem 
-                  key={category} 
-                  onClick={() => handleCategoryFilter(category)}
-                >
-                  {category}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                {selectedAudience || "All Audiences"}
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by Audience</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleAudienceFilter(null)}>
-                All Audiences
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAudienceFilter('Public')}>
-                Public
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAudienceFilter('Officials')}>
-                Officials Only
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAudienceFilter('SK')}>
-                SK Members
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAudienceFilter('Internal')}>
-                Internal Staff
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+      {/* Featured Announcements Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {filteredAnnouncements.slice(0, 6).map((announcement) => {
+          const colors = getCategoryColor(announcement.category);
+          return (
+            <div 
+              key={announcement.id}
+              className={`bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border-l-4 ${colors.border} transform hover:-translate-y-1`}
+            >
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className={`w-12 h-12 ${colors.bg} rounded-full flex items-center justify-center mr-4`}>
+                    <span className="text-2xl">{colors.icon}</span>
+                  </div>
+                  <div>
+                    <h3 className={`font-bold text-lg ${colors.text.replace('text-', 'text-').replace('-600', '-700')}`}>
+                      {announcement.title}
+                    </h3>
+                    <span className={`text-xs ${colors.bg} ${colors.text.replace('-600', '-800')} px-2 py-1 rounded-full`}>
+                      {getBadgeText(announcement.category)}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-gray-700 mb-4 line-clamp-3">{announcement.content}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">{formatDate(announcement.created_at)}</span>
+                  <button className={`${colors.button} text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-1`}>
+                    <span>Read More</span>
+                    <ArrowRight className="text-sm" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Latest Announcements List */}
+      <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 className="text-2xl font-bold mb-6 text-primary-800 flex items-center">
+          <span className="mr-3 text-3xl">📢</span>
+          Latest Announcements
+        </h2>
+        <div className="space-y-4">
+          {filteredAnnouncements.slice(0, 3).map((announcement) => {
+            const colors = getCategoryColor(announcement.category);
+            return (
+              <div 
+                key={announcement.id}
+                className="flex items-start p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 group"
+              >
+                <div className={`w-3 h-3 ${colors.button.split(' ')[0].replace('bg-', 'bg-')} rounded-full mt-2 mr-4 flex-shrink-0 group-hover:scale-125 transition-transform`}></div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-semibold text-gray-800">{announcement.title}</h4>
+                    <span className={`text-xs ${colors.bg} ${colors.text.replace('-600', '-800')} px-2 py-1 rounded-full`}>
+                      {getBadgeText(announcement.category)}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm mt-1 line-clamp-2">{announcement.content}</p>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-xs text-gray-500">Posted {formatDate(announcement.created_at)}</span>
+                    <span className="text-xs text-primary-600 cursor-pointer hover:underline">Read full announcement</span>
+                  </div>
+                </div>
+                {userProfile?.role === 'admin' && (
+                  <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Edit className="h-4 w-4 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Share className="h-4 w-4 mr-2" /> Share
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => openDeleteDialog(announcement)} className="text-red-600">
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-6 text-center">
+          <button className="bg-primary-50 text-primary-700 border border-primary-200 px-4 py-2 rounded-lg hover:bg-primary-100 transition-colors duration-200 flex items-center gap-2 mx-auto">
+            <span>View All Announcements</span>
+            <ArrowRight className="text-sm" />
+          </button>
         </div>
       </div>
-      
+
       <Tabs defaultValue="all">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="all">All</TabsTrigger>
@@ -500,6 +529,101 @@ const AnnouncementSkeleton = () => {
       ))}
     </div>
   );
+};
+
+const getCategoryColor = (category: string) => {
+  switch (category.toLowerCase()) {
+    case 'emergency':
+    case 'alert':
+      return {
+        bg: 'bg-red-100',
+        text: 'text-red-600',
+        icon: '🚨',
+        border: 'border-red-500',
+        button: 'bg-red-600 hover:bg-red-700'
+      };
+    case 'health':
+      return {
+        bg: 'bg-blue-100',
+        text: 'text-blue-600',
+        icon: '🏥',
+        border: 'border-blue-500',
+        button: 'bg-blue-600 hover:bg-blue-700'
+      };
+    case 'event':
+    case 'community':
+      return {
+        bg: 'bg-green-100',
+        text: 'text-green-600',
+        icon: '📅',
+        border: 'border-green-500',
+        button: 'bg-green-600 hover:bg-green-700'
+      };
+    case 'service':
+    case 'maintenance':
+      return {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-600',
+        icon: '🔧',
+        border: 'border-yellow-500',
+        button: 'bg-yellow-600 hover:bg-yellow-700'
+      };
+    case 'news':
+    case 'education':
+      return {
+        bg: 'bg-purple-100',
+        text: 'text-purple-600',
+        icon: '🎓',
+        border: 'border-purple-500',
+        button: 'bg-purple-600 hover:bg-purple-700'
+      };
+    default:
+      return {
+        bg: 'bg-orange-100',
+        text: 'text-orange-600',
+        icon: '🗑️',
+        border: 'border-orange-500',
+        button: 'bg-orange-600 hover:bg-orange-700'
+      };
+  }
+};
+
+const getBadgeText = (category: string) => {
+  switch (category.toLowerCase()) {
+    case 'emergency':
+    case 'alert':
+      return 'URGENT';
+    case 'health':
+      return 'IMPORTANT';
+    case 'event':
+    case 'community':
+      return 'UPCOMING';
+    case 'service':
+    case 'maintenance':
+      return 'NOTICE';
+    case 'news':
+    case 'education':
+      return 'ENROLLMENT';
+    default:
+      return 'REMINDER';
+  }
+};
+
+const formatDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffHours < 48) return 'Yesterday';
+    if (diffHours < 168) return `${Math.floor(diffHours / 24)} days ago`;
+    return `${Math.floor(diffHours / 168)} week${Math.floor(diffHours / 168) > 1 ? 's' : ''} ago`;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return dateString;
+  }
 };
 
 export default AnnouncementsList;

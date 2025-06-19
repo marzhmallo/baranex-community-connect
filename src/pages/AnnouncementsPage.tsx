@@ -88,19 +88,52 @@ const AnnouncementsPage = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Barangay Announcements</h1>
-        {userProfile?.role === 'admin' && (
-          <Button 
-            onClick={toggleCreateForm} 
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            {showCreateForm ? 'Cancel' : 'New Announcement'}
-          </Button>
-        )}
+    <div className="w-full max-w-6xl mx-auto p-6 bg-gradient-to-br from-indigo-50 to-emerald-50 min-h-screen">
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-bold text-primary-800 mb-2">Barangay Public Service Announcements</h1>
+        <p className="text-gray-600 text-lg">Stay informed with the latest updates from your local barangay</p>
       </div>
+
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 bg-white rounded-xl shadow-md p-4">
+        <div className="relative w-full">
+          <input 
+            type="text" 
+            placeholder="Search announcements..." 
+            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300" 
+          />
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+        </div>
+        
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <select className="bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option value="">All Categories</option>
+            <option value="emergency">Emergency</option>
+            <option value="health">Health</option>
+            <option value="community">Community</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="education">Education</option>
+            <option value="waste">Waste Management</option>
+          </select>
+          
+          <select className="bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option value="">All Audiences</option>
+            <option value="residents">All Residents</option>
+            <option value="seniors">Senior Citizens</option>
+            <option value="parents">Parents</option>
+            <option value="youth">Youth</option>
+            <option value="businesses">Business Owners</option>
+          </select>
+        </div>
+      </div>
+
+      {userProfile?.role === 'admin' && (
+        <button 
+          onClick={toggleCreateForm}
+          className="fixed bottom-6 right-6 bg-primary-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-primary-700 transition-colors duration-300 group z-10"
+        >
+          <Plus className="text-2xl group-hover:scale-110 transition-transform duration-300" />
+        </button>
+      )}
 
       {error && (
         <Alert variant="destructive" className="mb-6">
@@ -112,11 +145,13 @@ const AnnouncementsPage = () => {
       )}
 
       {showCreateForm && (
-        <div className="mb-8">
-          <CreateAnnouncementForm 
-            onAnnouncementCreated={handleAnnouncementCreated} 
-            onCancel={() => setShowCreateForm(false)} 
-          />
+        <div className="fixed inset-0 bg-black/50 z-20 flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <CreateAnnouncementForm 
+              onAnnouncementCreated={handleAnnouncementCreated} 
+              onCancel={() => setShowCreateForm(false)} 
+            />
+          </div>
         </div>
       )}
 
