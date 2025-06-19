@@ -26,12 +26,16 @@ export const useAutoFillAddress = () => {
 
       try {
         // Fetch the user's auto-fill setting
-        const { data: settingData } = await supabase
+        const { data: settingData, error } = await supabase
           .from('settings')
           .select('value')
           .eq('userid', user.id)
           .eq('key', 'auto_fill_address_from_admin_barangay')
           .single();
+
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
 
         // Default to true if no setting exists
         setIsAutoFillEnabled(settingData?.value === 'true' || !settingData);

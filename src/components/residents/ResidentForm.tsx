@@ -103,7 +103,7 @@ const ResidentForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(resident?.photoUrl);
-  const { getAutoFillData } = useAutoFillAddress();
+  const { getAutoFillData, isAutoFillEnabled } = useAutoFillAddress();
   
   // Transform resident data for the form
   const transformResidentForForm = (resident: Resident): ResidentFormValues => {
@@ -507,8 +507,18 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Barangay *</FormLabel>
                     <FormControl>
-                      <Input placeholder="San Jose" {...field} />
+                      <Input 
+                        placeholder="San Jose" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
+                      />
                     </FormControl>
+                    {isAutoFillEnabled && (
+                      <FormDescription>
+                        This field is auto-filled and cannot be edited
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>} />
 
@@ -517,8 +527,18 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Municipality/City *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Manila" {...field} />
+                      <Input 
+                        placeholder="Manila" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
+                      />
                     </FormControl>
+                    {isAutoFillEnabled && (
+                      <FormDescription>
+                        This field is auto-filled and cannot be edited
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>} />
 
@@ -527,8 +547,18 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Province *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Metro Manila" {...field} />
+                      <Input 
+                        placeholder="Metro Manila" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
+                      />
                     </FormControl>
+                    {isAutoFillEnabled && (
+                      <FormDescription>
+                        This field is auto-filled and cannot be edited
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>} />
 
@@ -537,8 +567,18 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Region *</FormLabel>
                     <FormControl>
-                      <Input placeholder="NCR" {...field} />
+                      <Input 
+                        placeholder="NCR" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
+                      />
                     </FormControl>
+                    {isAutoFillEnabled && (
+                      <FormDescription>
+                        This field is auto-filled and cannot be edited
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>} />
 
@@ -547,8 +587,18 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Country *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Philippines" {...field} />
+                      <Input 
+                        placeholder="Philippines" 
+                        {...field} 
+                        readOnly={isAutoFillEnabled}
+                        className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""}
+                      />
                     </FormControl>
+                    {isAutoFillEnabled && (
+                      <FormDescription>
+                        This field is auto-filled and cannot be edited
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>} />
 

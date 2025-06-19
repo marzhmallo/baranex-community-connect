@@ -64,6 +64,8 @@ const AddressAutoFillSetting = () => {
           key: 'auto_fill_address_from_admin_barangay',
           value: enabled.toString(),
           description: 'Automatically fill address fields based on admin\'s barangay when adding/editing residents and households'
+        }, {
+          onConflict: 'userid,key'
         });
 
       if (error) throw error;
@@ -97,7 +99,7 @@ const AddressAutoFillSetting = () => {
           <div className="space-y-1">
             <Label htmlFor="auto-fill-address">Auto-fill address fields</Label>
             <p className="text-sm text-muted-foreground">
-              Automatically populate address fields based on admin's barangay when adding residents and households
+              Automatically populate address fields based on admin's barangay when adding residents and households. When enabled, address fields become read-only for security.
             </p>
           </div>
           <Switch 
