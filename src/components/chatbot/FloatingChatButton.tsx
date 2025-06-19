@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -94,6 +95,17 @@ const FloatingChatButton = () => {
     }));
     setConversationHistory(history);
   }, [messages]);
+
+  // Listen for settings changes and re-render component
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      // Force re-render when settings change
+      console.log('Chatbot settings changed, re-rendering FloatingChatButton');
+    };
+
+    window.addEventListener('chatbot-settings-changed', handleSettingsChange);
+    return () => window.removeEventListener('chatbot-settings-changed', handleSettingsChange);
+  }, []);
 
   // Handle mouse down for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -290,8 +302,17 @@ const FloatingChatButton = () => {
 
   // Don't render if user is not authenticated OR if chatbot is disabled
   if (!session || !chatbotSettings.enabled) {
+    console.log('FloatingChatButton not rendering:', { 
+      session: !!session, 
+      enabled: chatbotSettings.enabled 
+    });
     return null;
   }
+
+  console.log('FloatingChatButton rendering:', { 
+    session: !!session, 
+    enabled: chatbotSettings.enabled 
+  });
 
   return (
     <>
@@ -352,7 +373,6 @@ const FloatingChatButton = () => {
         </div>
       )}
 
-      {/* Chat Window */}
       {isOpen && !isMinimized && (
         <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4">
           <Card 

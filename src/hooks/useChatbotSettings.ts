@@ -54,6 +54,42 @@ export const useChatbotSettings = () => {
     };
 
     fetchSettings();
+
+    // Set up real-time subscription for settings changes
+    let channel;
+    if (user?.id) {
+      channel = supabase
+        .channel('chatbot-settings-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'settings',
+            filter: `userid=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Settings changed:', payload);
+            // Refetch settings when they change
+            fetchSettings();
+          }
+        )
+        .subscribe();
+    }
+
+    // Listen for custom events from other components
+    const handleSettingsChange = (event: CustomEvent) => {
+      setChatbotSettings(event.detail);
+    };
+
+    window.addEventListener('chatbot-settings-changed', handleSettingsChange as EventListener);
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+      window.removeEventListener('chatbot-settings-changed', handleSettingsChange as EventListener);
+    };
   }, [user?.id]);
 
   const updateChatbotEnabled = async (enabled: boolean) => {
@@ -68,40 +104,22 @@ export const useChatbotSettings = () => {
     }
 
     try {
-      // Check if setting exists
-      const { data: existingSetting } = await supabase
+      // Use upsert to handle both insert and update
+      const { error } = await supabase
         .from('settings')
-        .select('id')
-        .eq('userid', user.id)
-        .eq('key', 'chatbot_enabled')
-        .maybeSingle();
+        .upsert({
+          userid: user.id,
+          key: 'chatbot_enabled',
+          value: enabled.toString(),
+          description: 'Enable or disable the chatbot',
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'userid,key'
+        });
 
-      let result;
-      if (existingSetting) {
-        // Update existing setting
-        result = await supabase
-          .from('settings')
-          .update({ 
-            value: enabled.toString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('userid', user.id)
-          .eq('key', 'chatbot_enabled');
-      } else {
-        // Insert new setting
-        result = await supabase
-          .from('settings')
-          .insert({
-            userid: user.id,
-            key: 'chatbot_enabled',
-            value: enabled.toString(),
-            description: 'Enable or disable the chatbot'
-          });
-      }
-
-      if (result.error) {
-        console.error('Database error:', result.error);
-        throw result.error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
       }
 
       // Update local state immediately
@@ -130,40 +148,22 @@ export const useChatbotSettings = () => {
     }
 
     try {
-      // Check if setting exists
-      const { data: existingSetting } = await supabase
+      // Use upsert to handle both insert and update
+      const { error } = await supabase
         .from('settings')
-        .select('id')
-        .eq('userid', user.id)
-        .eq('key', 'chatbot_mode')
-        .maybeSingle();
+        .upsert({
+          userid: user.id,
+          key: 'chatbot_mode',
+          value: mode,
+          description: 'Chatbot mode: online or offline',
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'userid,key'
+        });
 
-      let result;
-      if (existingSetting) {
-        // Update existing setting
-        result = await supabase
-          .from('settings')
-          .update({ 
-            value: mode,
-            updated_at: new Date().toISOString()
-          })
-          .eq('userid', user.id)
-          .eq('key', 'chatbot_mode');
-      } else {
-        // Insert new setting
-        result = await supabase
-          .from('settings')
-          .insert({
-            userid: user.id,
-            key: 'chatbot_mode',
-            value: mode,
-            description: 'Chatbot mode: online or offline'
-          });
-      }
-
-      if (result.error) {
-        console.error('Database error:', result.error);
-        throw result.error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
       }
 
       // Update local state immediately
