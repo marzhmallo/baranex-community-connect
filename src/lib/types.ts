@@ -226,8 +226,6 @@ export interface Official {
   achievements?: any;
   committees?: any;
   education?: string;
-  rank_number?: string; // Changed from number to string to match database
-  rank_label?: string;
   position_no?: number; // Added position_no for custom sorting
   officialPositions?: OfficialPosition[];
 }

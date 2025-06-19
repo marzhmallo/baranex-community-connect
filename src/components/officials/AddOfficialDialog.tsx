@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -61,8 +62,6 @@ const officialSchema = z.object({
   term_end: z.string().optional().or(z.literal('')),
   is_current: z.boolean().optional(),
   photo_url: z.string().optional().or(z.literal('')),
-  rank_number: z.string().optional(),
-  rank_label: z.string().optional().or(z.literal('')),
   position_no: z.number().optional(),
 });
 
@@ -132,8 +131,6 @@ export function AddOfficialDialog({
       term_end: '',
       is_current: false,
       photo_url: '',
-      rank_number: undefined,
-      rank_label: '',
       position_no: undefined,
     }
   });
@@ -220,8 +217,6 @@ export function AddOfficialDialog({
         committees: committeesArray,
         is_sk: official.is_sk?.[0] || false,
         photo_url: official.photo_url || '',
-        rank_number: official.rank_number || undefined, // Now string
-        rank_label: official.rank_label || '',
         position_no: official.position_no || undefined,
       });
     }
@@ -270,8 +265,6 @@ export function AddOfficialDialog({
           committees: committeesArray.length > 0 ? committeesArray : null,
           is_sk: data.is_sk ? [true] : [false], // Database expects an array
           photo_url: data.photo_url || null,
-          rank_number: data.rank_number || null, // Now string
-          rank_label: data.rank_label || null,
           position_no: data.position_no || null,
         };
         
@@ -302,8 +295,6 @@ export function AddOfficialDialog({
           position: data.position, // Add position to satisfy type requirements
           brgyid: userProfile.brgyid, // Use current user's brgyid
           photo_url: data.photo_url || null,
-          rank_number: data.rank_number || null, // Now string
-          rank_label: data.rank_label || null,
           position_no: data.position_no || null,
         };
         
@@ -420,55 +411,6 @@ export function AddOfficialDialog({
                   </FormItem>
                 )}
               />
-
-              {/* Rank Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="rank_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rank Number</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(value || undefined)}
-                        value={field.value || ''}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
-                            <SelectValue placeholder="Select rank..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rank) => (
-                            <SelectItem key={rank} value={rank.toString()}>
-                              Rank {rank}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="rank_label"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rank Label (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Top Executive"
-                          {...field}
-                          className="bg-[#2a3649] border-[#3a4659]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
