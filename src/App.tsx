@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -5,40 +6,33 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ChatbotSettingsProvider } from "@/components/chatbot/ChatbotSettingsContext";
 import FloatingChatButton from "@/components/chatbot/FloatingChatButton";
-import LoginPage from "@/pages/LoginPage";
-import DashboardPage from "@/pages/DashboardPage";
+import Auth from "@/pages/Auth";
+import Dashboard from "@/components/dashboard/Dashboard";
 import HubPage from "@/pages/HubPage";
-import PublicLayout from "@/layouts/PublicLayout";
-import PrivateLayout from "@/layouts/PrivateLayout";
 import SettingsPage from "@/pages/SettingsPage";
 import UserSettingsPage from "@/components/user/UserSettingsPage";
-import BarangayAdminRoute from "@/routes/BarangayAdminRoute";
-import UserRoute from "@/routes/UserRoute";
-import PublicRoute from "@/routes/PublicRoute";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <Router>
           <AuthProvider>
             <ChatbotSettingsProvider>
               <div className="min-h-screen bg-background">
                 <Routes>
                   {/* Public Routes */}
-                  <Route element={<PublicLayout />}>
-                    <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-                  </Route>
+                  <Route path="/login" element={<Auth />} />
 
                   {/* Admin Routes */}
-                  <Route path="/dashboard" element={<BarangayAdminRoute><PrivateLayout><DashboardPage /></PrivateLayout></BarangayAdminRoute>} />
-                  <Route path="/settings" element={<BarangayAdminRoute><PrivateLayout><SettingsPage /></PrivateLayout></BarangayAdminRoute>} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/settings" element={<SettingsPage />} />
 
                   {/* User Routes */}
-                  <Route path="/hub" element={<UserRoute><PrivateLayout><HubPage /></PrivateLayout></UserRoute>} />
-                  <Route path="/hub/settings" element={<UserRoute><PrivateLayout><UserSettingsPage /></PrivateLayout></UserRoute>} />
+                  <Route path="/hub" element={<HubPage />} />
+                  <Route path="/hub/settings" element={<UserSettingsPage />} />
 
                   {/* Home Route - Redirect based on auth status */}
                   <Route path="/" element={<Navigate to="/login" />} />
