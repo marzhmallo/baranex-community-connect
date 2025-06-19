@@ -9,7 +9,7 @@ import { useAuth } from '@/components/AuthProvider';
 
 const AddressAutoFillSetting = () => {
   const { user } = useAuth();
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(true); // Default to true
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -32,9 +32,12 @@ const AddressAutoFillSetting = () => {
           throw error;
         }
         
-        setIsEnabled(data?.value === 'true');
+        // If no setting exists, default to true (enabled)
+        setIsEnabled(data?.value === 'true' || !data);
       } catch (error) {
         console.error('Error fetching setting:', error);
+        // Default to enabled on error
+        setIsEnabled(true);
       } finally {
         setIsLoading(false);
       }

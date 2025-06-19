@@ -13,7 +13,7 @@ interface BarangayData {
 
 export const useAutoFillAddress = () => {
   const { userProfile, user } = useAuth();
-  const [isAutoFillEnabled, setIsAutoFillEnabled] = useState(false);
+  const [isAutoFillEnabled, setIsAutoFillEnabled] = useState(true); // Default to true
   const [barangayData, setBarangayData] = useState<BarangayData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,9 +33,8 @@ export const useAutoFillAddress = () => {
           .eq('key', 'auto_fill_address_from_admin_barangay')
           .single();
 
-        if (settingData) {
-          setIsAutoFillEnabled(settingData.value === 'true');
-        }
+        // Default to true if no setting exists
+        setIsAutoFillEnabled(settingData?.value === 'true' || !settingData);
 
         // Fetch barangay data if user has brgyid
         if (userProfile?.brgyid) {
@@ -57,6 +56,8 @@ export const useAutoFillAddress = () => {
         }
       } catch (error) {
         console.error('Error fetching auto-fill settings:', error);
+        // Default to enabled on error
+        setIsAutoFillEnabled(true);
       } finally {
         setIsLoading(false);
       }
