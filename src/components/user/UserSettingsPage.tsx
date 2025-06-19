@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,30 +72,6 @@ const UserSettingsPage = () => {
     }
   };
 
-  const handleChatbotEnabledChange = async (enabled: boolean) => {
-    try {
-      await updateChatbotEnabled(enabled);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update setting. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleChatbotModeChange = async (mode: string) => {
-    try {
-      await updateChatbotMode(mode);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update setting. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center gap-3 mb-6">
@@ -125,7 +100,7 @@ const UserSettingsPage = () => {
               <Switch 
                 id="chatbot-enabled" 
                 checked={chatbotSettings.enabled}
-                onCheckedChange={handleChatbotEnabledChange}
+                onCheckedChange={updateChatbotEnabled}
               />
             </div>
             
@@ -134,7 +109,7 @@ const UserSettingsPage = () => {
                 <Label>Chatbot Mode</Label>
                 <RadioGroup 
                   value={chatbotSettings.mode} 
-                  onValueChange={handleChatbotModeChange}
+                  onValueChange={updateChatbotMode}
                   className="grid grid-cols-1 gap-3"
                 >
                   <div className="flex items-center space-x-2">
@@ -194,6 +169,7 @@ const UserSettingsPage = () => {
           </CardContent>
         </Card>
 
+        {/* Security Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -243,6 +219,7 @@ const UserSettingsPage = () => {
           </CardContent>
         </Card>
 
+        {/* Appearance */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -263,6 +240,7 @@ const UserSettingsPage = () => {
           </CardContent>
         </Card>
 
+        {/* Notifications */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

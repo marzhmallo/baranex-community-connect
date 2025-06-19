@@ -95,7 +95,6 @@ export const useChatbotSettings = () => {
     }
 
     try {
-      // Use upsert with proper conflict resolution
       const { error } = await supabase
         .from('settings')
         .upsert({
@@ -105,8 +104,7 @@ export const useChatbotSettings = () => {
           description: 'Enable or disable the chatbot',
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'userid,key',
-          ignoreDuplicates: false
+          onConflict: 'userid,key'
         });
 
       if (error) {
@@ -123,7 +121,6 @@ export const useChatbotSettings = () => {
       console.error('Error updating chatbot enabled setting:', error);
       // Revert local state on error
       setChatbotSettings(prev => ({ ...prev, enabled: !enabled }));
-      throw error; // Re-throw so UI can show error toast
     }
   };
 
@@ -138,7 +135,6 @@ export const useChatbotSettings = () => {
     }
 
     try {
-      // Use upsert with proper conflict resolution
       const { error } = await supabase
         .from('settings')
         .upsert({
@@ -148,8 +144,7 @@ export const useChatbotSettings = () => {
           description: 'Chatbot mode: online or offline',
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'userid,key',
-          ignoreDuplicates: false
+          onConflict: 'userid,key'
         });
 
       if (error) {
@@ -167,7 +162,6 @@ export const useChatbotSettings = () => {
       // Revert local state on error
       const previousMode = chatbotSettings.mode;
       setChatbotSettings(prev => ({ ...prev, mode: previousMode }));
-      throw error; // Re-throw so UI can show error toast
     }
   };
 
