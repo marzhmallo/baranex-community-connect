@@ -1190,6 +1190,7 @@ export type Database = {
       }
       officialranks: {
         Row: {
+          bio: string | null
           brgyid: string
           created_at: string
           id: string
@@ -1199,6 +1200,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          bio?: string | null
           brgyid?: string
           created_at?: string
           id: string
@@ -1208,6 +1210,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          bio?: string | null
           brgyid?: string
           created_at?: string
           id?: string

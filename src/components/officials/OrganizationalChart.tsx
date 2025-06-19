@@ -200,33 +200,33 @@ export const OrganizationalChart = ({
         const official = getOfficialsForRank(rank.id)[0];
         const rankNum = parseInt(rank.rankno);
         
-        // Determine styling based on rank number
+        // Determine styling based on rank number - using theme-aware classes
         let cardStyle = '';
-        let badgeColor = 'bg-gray-500';
+        let badgeColor = 'bg-muted-foreground';
         let statusText = 'Appointed';
         
         if (rankNum === 1) {
-          cardStyle = 'border-2 border-purple-200 bg-purple-50';
+          cardStyle = 'border-2 border-purple-500/20 bg-purple-50 dark:bg-purple-950/20';
           badgeColor = 'bg-purple-500';
           statusText = 'Elected';
         } else if (rankNum >= 2 && rankNum <= 11) {
-          cardStyle = 'border-2 border-blue-200 bg-blue-50';
+          cardStyle = 'border-2 border-blue-500/20 bg-blue-50 dark:bg-blue-950/20';
           badgeColor = 'bg-blue-500';
           statusText = 'Elected';
         } else if (rankNum >= 12 && rankNum <= 14) {
-          cardStyle = 'border-2 border-orange-200 bg-orange-50';
+          cardStyle = 'border-2 border-orange-500/20 bg-orange-50 dark:bg-orange-950/20';
           badgeColor = 'bg-orange-500';
           statusText = 'Elected';
         } else if (rankNum >= 15 && rankNum <= 21) {
-          cardStyle = 'border-2 border-red-200 bg-red-50';
+          cardStyle = 'border-2 border-red-500/20 bg-red-50 dark:bg-red-950/20';
           badgeColor = 'bg-red-500';
           statusText = 'Appointed';
         } else if (rankNum >= 22 && rankNum <= 24) {
-          cardStyle = 'border-2 border-teal-200 bg-teal-50';
+          cardStyle = 'border-2 border-teal-500/20 bg-teal-50 dark:bg-teal-950/20';
           badgeColor = 'bg-teal-500';
           statusText = 'Appointed';
         } else if (rankNum >= 25 && rankNum <= 28) {
-          cardStyle = 'border-2 border-purple-200 bg-purple-50';
+          cardStyle = 'border-2 border-purple-500/20 bg-purple-50 dark:bg-purple-950/20';
           badgeColor = 'bg-purple-600';
           statusText = 'Appointed';
         }
@@ -236,7 +236,7 @@ export const OrganizationalChart = ({
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${badgeColor.replace('bg-', 'bg-').replace('500', '500').replace('600', '600')}`}>
+                  <div className={`p-2 rounded-full ${badgeColor}`}>
                     <Building className="h-5 w-5 text-white" />
                   </div>
                   <div>
@@ -256,7 +256,7 @@ export const OrganizationalChart = ({
             </CardHeader>
             <CardContent>
               {official ? (
-                <div className="flex items-center gap-4 p-6 rounded-lg">
+                <div className="flex items-center gap-4 p-6 rounded-lg bg-card border">
                   <Avatar className="h-16 w-16 ring-2 ring-offset-2 ring-primary">
                     <AvatarImage src={official.photo_url} alt={official.name} />
                     <AvatarFallback className={`${badgeColor} text-white text-lg font-semibold`}>
@@ -264,7 +264,7 @@ export const OrganizationalChart = ({
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-lg truncate">
+                    <h4 className="font-semibold text-lg truncate text-foreground">
                       {official.name}
                     </h4>
                     <p className="text-sm text-muted-foreground truncate">
@@ -281,7 +281,7 @@ export const OrganizationalChart = ({
                   </Button>
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
+                <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg border">
                   <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>No official assigned to this position</p>
                 </div>
@@ -292,29 +292,29 @@ export const OrganizationalChart = ({
       })}
 
       {/* Organization Summary */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
+      <Card className="bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20 border-2 border-blue-500/20">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-700">
+          <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
             <Building className="h-5 w-5" />
             Organization Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-              <div className="text-3xl font-bold text-blue-600 mb-1">{totals.totalOfficials}</div>
+            <div className="text-center p-4 bg-card rounded-lg shadow-sm border">
+              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">{totals.totalOfficials}</div>
               <div className="text-sm text-muted-foreground">Total Officials</div>
             </div>
-            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-              <div className="text-3xl font-bold text-green-600 mb-1">{totals.assignedOfficials}</div>
+            <div className="text-center p-4 bg-card rounded-lg shadow-sm border">
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">{totals.assignedOfficials}</div>
               <div className="text-sm text-muted-foreground">Assigned Officials</div>
             </div>
-            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-              <div className="text-3xl font-bold text-orange-600 mb-1">{totals.unassignedOfficials}</div>
+            <div className="text-center p-4 bg-card rounded-lg shadow-sm border">
+              <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">{totals.unassignedOfficials}</div>
               <div className="text-sm text-muted-foreground">Unassigned Officials</div>
             </div>
-            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-              <div className="text-3xl font-bold text-purple-600 mb-1">{totals.totalRanks}+</div>
+            <div className="text-center p-4 bg-card rounded-lg shadow-sm border">
+              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">{totals.totalRanks}+</div>
               <div className="text-sm text-muted-foreground">Available Ranks</div>
             </div>
           </div>
