@@ -73,18 +73,25 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
         throw new Error('Barangay ID not found');
       }
 
-      const { data, error } = await supabase
+      // Generate a UUID for the id field
+      const { data, error } = await supabase.rpc('gen_random_uuid');
+      if (error) throw error;
+      const newId = data;
+
+      const { data: insertData, error: insertError } = await supabase
         .from('officialranks')
         .insert([{
+          id: newId,
           rankno: rankData.rankno,
           ranklabel: rankData.ranklabel,
-          brgyid: currentUser.brgyid
+          brgyid: currentUser.brgyid,
+          created_at: new Date().toISOString()
         } as any])
         .select()
         .single();
       
-      if (error) throw error;
-      return data;
+      if (insertError) throw insertError;
+      return insertData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['official-ranks'] });

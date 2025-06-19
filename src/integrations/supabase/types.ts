@@ -1189,7 +1189,7 @@ export type Database = {
           id: string
           officialid: string | null
           ranklabel: string | null
-          rankno: number | null
+          rankno: string
           updated_at: string | null
         }
         Insert: {
@@ -1198,7 +1198,7 @@ export type Database = {
           id: string
           officialid?: string | null
           ranklabel?: string | null
-          rankno?: number | null
+          rankno: string
           updated_at?: string | null
         }
         Update: {
@@ -1207,7 +1207,7 @@ export type Database = {
           id?: string
           officialid?: string | null
           ranklabel?: string | null
-          rankno?: number | null
+          rankno?: string
           updated_at?: string | null
         }
         Relationships: [
