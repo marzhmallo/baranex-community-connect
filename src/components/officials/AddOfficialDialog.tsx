@@ -1,11 +1,11 @@
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/components/AuthProvider';
 import {
   Dialog,
   DialogContent,
@@ -21,22 +21,48 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import {
+  Input
+} from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Official } from '@/lib/types';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, Minus } from 'lucide-react';
+import { Official, OfficialPosition } from '@/lib/types';
 import OfficialPhotoUpload from './OfficialPhotoUpload';
 
 const officialSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  bio: z.string().optional(),
-  address: z.string().optional(),
-  birthdate: z.string().min(1, 'Birth date is required'),
-  education: z.string().optional(),
-  is_sk: z.boolean().optional()
+  email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
+  phone: z.string().optional().or(z.literal('')),
+  bio: z.string().optional().or(z.literal('')),
+  address: z.string().min(1, 'Address is required'),
+  birthdate: z.string().optional().or(z.literal('')),
+  educ: z.array(z.object({
+    value: z.string().optional().or(z.literal(''))
+  })),
+  achievements: z.array(z.object({
+    value: z.string().optional().or(z.literal(''))
+  })),
+  committees: z.array(z.object({
+    value: z.string().optional().or(z.literal(''))
+  })),
+  is_sk: z.boolean().optional(),
+  // Only required for creating new officials
+  position: z.string().min(1, 'Position is required').optional(),
+  committee: z.string().optional().or(z.literal('')),
+  term_start: z.string().min(1, 'Start date is required').optional(),
+  term_end: z.string().optional().or(z.literal('')),
+  is_current: z.boolean().optional(),
+  photo_url: z.string().optional().or(z.literal('')),
+  position_no: z.number().optional(),
 });
 
 type OfficialFormValues = z.infer<typeof officialSchema>;
@@ -45,114 +71,271 @@ interface AddOfficialDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  official?: Official | null;
+  official?: Official;
+  position?: OfficialPosition | null;
 }
+
+// Common position rankings
+const POSITION_RANKINGS = [
+  { value: 1, label: "1 - Barangay Captain" },
+  { value: 2, label: "2 - Vice Captain" },
+  { value: 3, label: "3 - Secretary" },
+  { value: 4, label: "4 - Treasurer" },
+  { value: 5, label: "5 - Kagawad 1" },
+  { value: 6, label: "6 - Kagawad 2" },
+  { value: 7, label: "7 - Kagawad 3" },
+  { value: 8, label: "8 - Kagawad 4" },
+  { value: 9, label: "9 - Kagawad 5" },
+  { value: 10, label: "10 - Kagawad 6" },
+  { value: 11, label: "11 - Kagawad 7" },
+  { value: 12, label: "12 - SK Chairperson" },
+  { value: 13, label: "13 - SK Secretary" },
+  { value: 14, label: "14 - SK Treasurer" },
+  { value: 15, label: "15 - SK Kagawad 1" },
+  { value: 16, label: "16 - SK Kagawad 2" },
+  { value: 17, label: "17 - SK Kagawad 3" },
+  { value: 18, label: "18 - SK Kagawad 4" },
+  { value: 19, label: "19 - SK Kagawad 5" },
+  { value: 20, label: "20 - SK Kagawad 6" },
+  { value: 21, label: "21 - SK Kagawad 7" },
+];
 
 export function AddOfficialDialog({ 
   open, 
   onOpenChange, 
-  onSuccess, 
-  official 
+  onSuccess,
+  official,
+  position
 }: AddOfficialDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string>('');
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  const isEditMode = !!official;
-  
-  // Get current user's brgyid
-  const { data: currentUser } = useQuery({
-    queryKey: ['current-user-profile'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('brgyid')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+  const { userProfile } = useAuth();
+  const isEditing = !!official;
   
   const form = useForm<OfficialFormValues>({
     resolver: zodResolver(officialSchema),
     defaultValues: {
-      name: official?.name || '',
-      email: official?.email || '',
-      phone: official?.phone || '',
-      bio: official?.bio || '',
-      address: official?.address || '',
-      birthdate: official?.birthdate || '',
-      education: official?.education || '',
-      is_sk: Array.isArray(official?.is_sk) ? official.is_sk[0] : false
+      name: '',
+      email: '',
+      phone: '',
+      bio: '',
+      address: '',
+      birthdate: '',
+      educ: [{ value: '' }],
+      achievements: [{ value: '' }],
+      committees: [{ value: '' }],
+      is_sk: false,
+      position: '',
+      committee: '',
+      term_start: '',
+      term_end: '',
+      is_current: false,
+      photo_url: '',
+      position_no: undefined,
     }
   });
   
-  const onSubmit = async (data: OfficialFormValues) => {
-    if (!currentUser?.brgyid) {
-      toast({
-        title: 'Error',
-        description: 'User barangay information not found',
-        variant: 'destructive'
-      });
-      return;
+  // Create field arrays for the dynamic fields
+  const { fields: educFields, append: appendEduc, remove: removeEduc } = useFieldArray({
+    control: form.control,
+    name: "educ"
+  });
+  
+  const { fields: achievementFields, append: appendAchievement, remove: removeAchievement } = useFieldArray({
+    control: form.control,
+    name: "achievements"
+  });
+  
+  const { fields: committeeFields, append: appendCommittee, remove: removeCommittee } = useFieldArray({
+    control: form.control,
+    name: "committees"
+  });
+  
+  // Helper function to parse JSONB data from the database
+  const parseJsonField = (field: any, defaultValue = [{ value: '' }]) => {
+    if (!field) return defaultValue;
+    
+    // If it's already an array, format it for our form
+    if (Array.isArray(field)) {
+      return field.map(item => ({ value: String(item) }));
     }
     
+    // If it's an object, try to extract values
+    if (typeof field === 'object') {
+      return Object.values(field).map(item => ({ value: String(item) }));
+    }
+    
+    // If it's a string, try to parse it as JSON
+    if (typeof field === 'string') {
+      try {
+        const parsed = JSON.parse(field);
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => ({ value: String(item) }));
+        } else if (typeof parsed === 'object') {
+          return Object.values(parsed).map(item => ({ value: String(item) }));
+        }
+      } catch {
+        // If parsing fails, just use the string itself
+        return [{ value: field }];
+      }
+    }
+    
+    return defaultValue;
+  };
+  
+  // Effect to populate form when editing
+  useEffect(() => {
+    if (official && open) {
+      console.log("Official data:", official); // Debug log
+      
+      // Parse arrays from JSONB data
+      const educArray = official.educ 
+        ? parseJsonField(official.educ) 
+        : [{ value: '' }];
+        
+      const achievementsArray = official.achievements 
+        ? parseJsonField(official.achievements) 
+        : [{ value: '' }];
+        
+      const committeesArray = official.committees 
+        ? parseJsonField(official.committees) 
+        : [{ value: '' }];
+
+      console.log("Parsed achievements:", achievementsArray); // Debug log
+      console.log("Parsed committees:", committeesArray); // Debug log
+
+      // Reset form with official data
+      form.reset({
+        name: official.name || '',
+        email: official.email || '',
+        phone: official.phone || '',
+        bio: official.bio || '',
+        address: official.address || '',
+        birthdate: official.birthdate || '',
+        educ: educArray,
+        achievements: achievementsArray,
+        committees: committeesArray,
+        is_sk: official.is_sk?.[0] || false,
+        photo_url: official.photo_url || '',
+        position_no: official.position_no || undefined,
+      });
+    }
+  }, [official, position, open, form]);
+  
+  const handleIsCurrentChange = (checked: boolean) => {
+    if (checked) {
+      form.setValue('term_end', '');
+    }
+  };
+
+  const handlePhotoUploaded = (url: string) => {
+    form.setValue('photo_url', url);
+  };
+  
+  const onSubmit = async (data: OfficialFormValues) => {
     try {
       setIsSubmitting(true);
       
-      const officialData = {
-        name: data.name,
-        email: data.email || null,
-        phone: data.phone || null,
-        bio: data.bio || null,
-        address: data.address || null,
-        birthdate: data.birthdate, // Ensure this is always provided
-        education: data.education || null,
-        photo_url: photoUrl || official?.photo_url || null,
-        brgyid: currentUser.brgyid,
-        is_sk: [data.is_sk || false] // Convert boolean to array format
-      };
+      // Check if user has brgyid
+      if (!userProfile?.brgyid) {
+        toast({
+          title: 'Error',
+          description: 'Unable to determine your barangay. Please contact an administrator.',
+          variant: 'destructive'
+        });
+        return;
+      }
       
-      let result;
+      // Format the arrays for JSONB storage - filter out empty values
+      const educArray = data.educ.map(item => item.value).filter(Boolean);
+      const achievementsArray = data.achievements.map(item => item.value).filter(Boolean);
+      const committeesArray = data.committees.map(item => item.value).filter(Boolean);
       
-      if (isEditMode && official) {
+      if (isEditing && official) {
         // Update existing official
-        result = await supabase
+        const officialData = {
+          name: data.name,
+          email: data.email || null,
+          phone: data.phone || null,
+          bio: data.bio || null,
+          address: data.address,
+          birthdate: data.birthdate || null,
+          educ: educArray.length > 0 ? educArray : null,
+          achievements: achievementsArray.length > 0 ? achievementsArray : null,
+          committees: committeesArray.length > 0 ? committeesArray : null,
+          is_sk: data.is_sk ? [true] : [false], // Database expects an array
+          photo_url: data.photo_url || null,
+          position_no: data.position_no || null,
+        };
+        
+        const { error: officialError } = await supabase
           .from('officials')
           .update(officialData)
           .eq('id', official.id);
+        
+        if (officialError) throw officialError;
+        
+        toast({
+          title: 'Official updated',
+          description: `${data.name} has been updated successfully.`
+        });
       } else {
-        // Insert new official
-        result = await supabase
+        // Add new official with current user's brgyid
+        const officialData = {
+          name: data.name,
+          email: data.email || null,
+          phone: data.phone || null,
+          bio: data.bio || null,
+          address: data.address,
+          birthdate: data.birthdate || null,
+          educ: educArray.length > 0 ? educArray : null,
+          achievements: achievementsArray.length > 0 ? achievementsArray : null,
+          committees: committeesArray.length > 0 ? committeesArray : null,
+          is_sk: data.is_sk ? [true] : [false], // Database expects an array
+          position: data.position, // Add position to satisfy type requirements
+          brgyid: userProfile.brgyid, // Use current user's brgyid
+          photo_url: data.photo_url || null,
+          position_no: data.position_no || null,
+        };
+        
+        const { data: newOfficial, error: officialError } = await supabase
           .from('officials')
-          .insert(officialData);
+          .insert(officialData)
+          .select()
+          .single();
+        
+        if (officialError) throw officialError;
+        
+        // 2. Insert the position with the new official ID
+        const positionData = {
+          official_id: newOfficial.id,
+          position: data.position,
+          committee: data.committee || null,
+          term_start: data.term_start,
+          term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : (data.term_end || new Date().toISOString().split('T')[0]),
+          is_current: !!data.is_current,
+          description: null
+        };
+        
+        const { error: positionError } = await supabase
+          .from('official_positions')
+          .insert(positionData);
+        
+        if (positionError) throw positionError;
+        
+        toast({
+          title: 'Official added',
+          description: `${data.name} has been added successfully.`
+        });
       }
       
-      if (result.error) {
-        throw result.error;
-      }
-      
-      toast({
-        title: `Official ${isEditMode ? 'updated' : 'added'} successfully`,
-        description: `${data.name} has been ${isEditMode ? 'updated' : 'added'} successfully.`
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ['officials-with-positions'] });
       onSuccess();
       onOpenChange(false);
-      form.reset();
-      setPhotoUrl('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving official:', error);
       toast({
         title: 'Error',
-        description: `Failed to ${isEditMode ? 'update' : 'add'} official. Please try again.`,
+        description: error.message || 'Failed to save official. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -162,17 +345,21 @@ export function AddOfficialDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Edit Official' : 'Add New Official'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Official' : 'Add New Official'}</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-4">
+              <h3 className="text-lg font-medium">Personal Information</h3>
+              
+              {/* Photo Upload Section */}
               <OfficialPhotoUpload
-                existingPhotoUrl={photoUrl || official?.photo_url}
-                onPhotoUploaded={setPhotoUrl}
+                officialId={official?.id}
+                existingPhotoUrl={form.watch('photo_url')}
+                onPhotoUploaded={handlePhotoUploaded}
               />
               
               <FormField
@@ -180,27 +367,64 @@ export function AddOfficialDialog({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name *</FormLabel>
+                    <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter full name" {...field} />
+                      <Input
+                        placeholder="Enter full name"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {/* Position Number Section */}
+              <FormField
+                control={form.control}
+                name="position_no"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position Order (Optional)</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
+                      value={field.value?.toString() || ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
+                          <SelectValue placeholder="Select position order..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {POSITION_RANKINGS.map((rank) => (
+                          <SelectItem key={rank.value} value={rank.value.toString()}>
+                            {rank.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-400">
+                      This determines the display order in the officials list
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Email (Optional)</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="Enter email address" 
-                          {...field} 
+                        <Input
+                          type="email"
+                          placeholder="email@example.com"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
                         />
                       </FormControl>
                       <FormMessage />
@@ -213,9 +437,13 @@ export function AddOfficialDialog({
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>Phone (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter phone number" {...field} />
+                        <Input
+                          placeholder="Contact number"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -228,9 +456,13 @@ export function AddOfficialDialog({
                 name="birthdate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Birth Date *</FormLabel>
+                    <FormLabel>Birthdate (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -244,38 +476,10 @@ export function AddOfficialDialog({
                   <FormItem>
                     <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="education"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Education</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter educational background" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="bio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Biography</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter biography or description"
-                        className="min-h-[100px]"
-                        {...field} 
+                      <Input
+                        placeholder="Official's address"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -283,11 +487,167 @@ export function AddOfficialDialog({
                 )}
               />
               
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <FormLabel>Education (Optional)</FormLabel>
+                  <Button 
+                    type="button" 
+                    onClick={() => appendEduc({ value: "" })}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {educFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`educ.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Educational background"
+                              className="bg-[#2a3649] border-[#3a4659]"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {educFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50"
+                        onClick={() => removeEduc(index)}
+                      >
+                        <Minus className="h-4 w-4 text-red-400" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bio (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Brief biography"
+                        {...field}
+                        className="bg-[#2a3649] border-[#3a4659] min-h-[100px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <FormLabel>Achievements (Optional)</FormLabel>
+                  <Button 
+                    type="button" 
+                    onClick={() => appendAchievement({ value: "" })}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {achievementFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`achievements.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Notable achievement"
+                              className="bg-[#2a3649] border-[#3a4659]"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {achievementFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50"
+                        onClick={() => removeAchievement(index)}
+                      >
+                        <Minus className="h-4 w-4 text-red-400" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <FormLabel>Committees (Optional)</FormLabel>
+                  <Button 
+                    type="button" 
+                    onClick={() => appendCommittee({ value: "" })}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {committeeFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`committees.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Committee name"
+                              className="bg-[#2a3649] border-[#3a4659]"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {committeeFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full bg-red-900/20 hover:bg-red-900/40 border-red-800/50"
+                        onClick={() => removeCommittee(index)}
+                      >
+                        <Minus className="h-4 w-4 text-red-400" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
               <FormField
                 control={form.control}
                 name="is_sk"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649]">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -295,11 +655,9 @@ export function AddOfficialDialog({
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Sangguniang Kabataan (SK) Official
-                      </FormLabel>
-                      <p className="text-xs text-muted-foreground">
-                        Check if this official is part of the SK
+                      <FormLabel>SK Official</FormLabel>
+                      <p className="text-xs text-gray-400">
+                        Check if this person is an SK official
                       </p>
                     </div>
                   </FormItem>
@@ -307,19 +665,127 @@ export function AddOfficialDialog({
               />
             </div>
             
+            {/* Only show position fields when creating a new official, not when editing */}
+            {!isEditing && (
+              <div className="border-t border-[#3a4659] pt-4 mt-6">
+                <h3 className="text-lg font-medium mb-4">Position Information</h3>
+                
+                <FormField
+                  control={form.control}
+                  name="position"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Position</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Barangay Captain"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="committee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Committee (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Peace & Order"
+                          {...field}
+                          className="bg-[#2a3649] border-[#3a4659]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="term_start"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Term Start Date</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            className="bg-[#2a3649] border-[#3a4659]"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="term_end"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Term End Date (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            disabled={form.watch('is_current')}
+                            className="bg-[#2a3649] border-[#3a4659]"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="is_current"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649] mt-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            handleIsCurrentChange(!!checked);
+                          }}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Current Position</FormLabel>
+                        <p className="text-xs text-gray-400">
+                          Check if this is a current position (no end date)
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+            
             <DialogFooter>
               <Button
                 type="button" 
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
+                className="border-[#3a4659]"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
+                className="bg-blue-600 hover:bg-blue-700"
               >
-                {isSubmitting ? 'Saving...' : isEditMode ? 'Update Official' : 'Add Official'}
+                {isSubmitting ? (isEditing ? 'Updating...' : 'Adding...') : (isEditing ? 'Update Official' : 'Add Official')}
               </Button>
             </DialogFooter>
           </form>

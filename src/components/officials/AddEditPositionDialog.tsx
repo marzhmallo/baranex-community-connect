@@ -31,8 +31,7 @@ const positionSchema = z.object({
   term_start: z.string().min(1, 'Start date is required'),
   term_end: z.string().optional(),
   is_current: z.boolean().optional(),
-  description: z.string().optional(),
-  position_no: z.number().optional()
+  description: z.string().optional()
 });
 
 type PositionFormValues = z.infer<typeof positionSchema>;
@@ -65,8 +64,7 @@ export function AddEditPositionDialog({
       term_start: '',
       term_end: '',
       is_current: false,
-      description: '',
-      position_no: undefined
+      description: ''
     }
   });
   
@@ -86,8 +84,7 @@ export function AddEditPositionDialog({
         term_start: formatDateForInput(position.term_start),
         term_end: formatDateForInput(position.term_end),
         is_current: position.is_current || !position.term_end,
-        description: position.description || '',
-        position_no: position.position_no || undefined
+        description: position.description || ''
       });
     } else if (!position && open) {
       // Clear form when adding a new position
@@ -97,8 +94,7 @@ export function AddEditPositionDialog({
         term_start: '',
         term_end: '',
         is_current: false,
-        description: '',
-        position_no: undefined
+        description: ''
       });
     }
   }, [position, open, form]);
@@ -123,8 +119,7 @@ export function AddEditPositionDialog({
         // Set a far future date for term_end if is_current is true
         term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : (data.term_end || new Date().toISOString().split('T')[0]),
         position: data.position,
-        term_start: data.term_start, // Ensure this field is included
-        position_no: data.position_no || null // Include position_no for ranking
+        term_start: data.term_start // Ensure this field is included
       };
       
       let result;
@@ -188,29 +183,6 @@ export function AddEditPositionDialog({
                     />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="position_no"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Position Rank/Order</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="e.g., 1 for Barangay Captain, 2 for Vice Captain"
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      className="bg-[#2a3649] border-[#3a4659]"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <p className="text-xs text-gray-400">
-                    Lower numbers appear first in the list (1 = highest rank)
-                  </p>
                 </FormItem>
               )}
             />
