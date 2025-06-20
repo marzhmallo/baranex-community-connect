@@ -362,7 +362,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2 mb-1">
+            <div className="flex items-center space-x-2">
               <h4 className={`font-medium text-gray-900 ${isReply ? 'text-xs' : 'text-sm'}`}>
                 {comment.authorName}
               </h4>
@@ -482,9 +482,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
               </Avatar>
               
               <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="font-semibold text-gray-900">{thread.authorName}</h3>
-                </div>
+                <h3 className="font-semibold text-gray-900">{thread.authorName}</h3>
                 <span className="text-gray-500 text-sm">
                   {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
                 </span>
