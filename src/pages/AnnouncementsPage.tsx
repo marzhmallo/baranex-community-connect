@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,8 +5,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import AnnouncementsList from '@/components/announcements/AnnouncementsList';
 import CreateAnnouncementForm from '@/components/announcements/CreateAnnouncementForm';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Search, Users, FolderOpen, SortAsc, Plus, Campaign, CheckCircle, Schedule, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export interface Announcement {
@@ -24,13 +22,16 @@ export interface Announcement {
   created_at: string;
   updated_at: string;
   brgyid: string;
-  authorName: string; // Added for UI display
+  authorName: string;
 }
 
 const AnnouncementsPage = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedAudiences, setSelectedAudiences] = useState<string[]>([]);
 
   // Fetch announcements from Supabase
   const { data: announcements, isLoading, error, refetch } = useQuery({
@@ -87,79 +88,199 @@ const AnnouncementsPage = () => {
     });
   };
 
+  // Calculate stats
+  const totalAnnouncements = announcements?.length || 0;
+  const activeAnnouncements = announcements?.filter(a => a.is_public)?.length || 0;
+  const emergencyAnnouncements = announcements?.filter(a => a.category.toLowerCase() === 'emergency')?.length || 0;
+  const pinnedAnnouncements = announcements?.filter(a => a.is_pinned)?.length || 0;
+
   return (
-    <div className="w-full max-w-6xl mx-auto p-6 bg-gradient-to-br from-indigo-50 to-emerald-50 min-h-screen">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold text-primary-800 mb-2">Barangay Public Service Announcements</h1>
-        <p className="text-gray-600 text-lg">Stay informed with the latest updates from your local barangay</p>
-      </div>
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Barangay Announcements</h1>
+          <p className="text-gray-600">Manage and organize community announcements</p>
+        </div>
 
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 bg-white rounded-xl shadow-md p-4">
-        <div className="relative w-full">
-          <input 
-            type="text" 
-            placeholder="Search announcements..." 
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300" 
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input 
+                  type="text" 
+                  placeholder="Search announcements..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                />
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
+              <details className="relative">
+                <summary className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
+                  <FolderOpen className="text-gray-600 h-4 w-4" />
+                  Category
+                  <span className="text-gray-400">▼</span>
+                </summary>
+                <div className="absolute top-full left-0 mt-2 bg-white border rounded-lg shadow-lg z-10 min-w-[150px]">
+                  <div className="p-2">
+                    {['Emergency', 'Event', 'Health', 'Service', 'News'].map(category => (
+                      <label key={category} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded" 
+                          checked={selectedCategories.includes(category)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedCategories([...selectedCategories, category]);
+                            } else {
+                              setSelectedCategories(selectedCategories.filter(c => c !== category));
+                            }
+                          }}
+                        />
+                        <span>{category}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </details>
+
+              <details className="relative">
+                <summary className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
+                  <Users className="text-gray-600 h-4 w-4" />
+                  Audience
+                  <span className="text-gray-400">▼</span>
+                </summary>
+                <div className="absolute top-full left-0 mt-2 bg-white border rounded-lg shadow-lg z-10 min-w-[150px]">
+                  <div className="p-2">
+                    {['All Residents', 'Senior Citizens', 'Business Owners', 'Students'].map(audience => (
+                      <label key={audience} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded" 
+                          checked={selectedAudiences.includes(audience)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedAudiences([...selectedAudiences, audience]);
+                            } else {
+                              setSelectedAudiences(selectedAudiences.filter(a => a !== audience));
+                            }
+                          }}
+                        />
+                        <span>{audience}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </details>
+
+              <details className="relative">
+                <summary className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
+                  <SortAsc className="text-gray-600 h-4 w-4" />
+                  Sort By
+                  <span className="text-gray-400">▼</span>
+                </summary>
+                <div className="absolute top-full right-0 mt-2 bg-white border rounded-lg shadow-lg z-10 min-w-[150px]">
+                  <div className="p-2">
+                    <button className="w-full text-left p-2 hover:bg-gray-50 rounded">Date Created</button>
+                    <button className="w-full text-left p-2 hover:bg-gray-50 rounded">Priority</button>
+                    <button className="w-full text-left p-2 hover:bg-gray-50 rounded">Category</button>
+                    <button className="w-full text-left p-2 hover:bg-gray-50 rounded">Status</button>
+                  </div>
+                </div>
+              </details>
+
+              {userProfile?.role === 'admin' && (
+                <button 
+                  onClick={toggleCreateForm}
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Announcement
+                </button>
+              )}
+            </div>
+          </div>
+
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                Failed to load announcements. Please try again later.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <AnnouncementsList 
+            announcements={announcements || []} 
+            isLoading={isLoading} 
+            refetch={refetch}
+            searchQuery={searchQuery}
+            selectedCategories={selectedCategories}
+            selectedAudiences={selectedAudiences}
           />
-          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
         </div>
-        
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <select className="bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <option value="">All Categories</option>
-            <option value="emergency">Emergency</option>
-            <option value="health">Health</option>
-            <option value="community">Community</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="education">Education</option>
-            <option value="waste">Waste Management</option>
-          </select>
-          
-          <select className="bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <option value="">All Audiences</option>
-            <option value="residents">All Residents</option>
-            <option value="seniors">Senior Citizens</option>
-            <option value="parents">Parents</option>
-            <option value="youth">Youth</option>
-            <option value="businesses">Business Owners</option>
-          </select>
-        </div>
-      </div>
 
-      {userProfile?.role === 'admin' && (
-        <button 
-          onClick={toggleCreateForm}
-          className="fixed bottom-6 right-6 bg-primary-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-primary-700 transition-colors duration-300 group z-10"
-        >
-          <Plus className="text-2xl group-hover:scale-110 transition-transform duration-300" />
-        </button>
-      )}
-
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            Failed to load announcements. Please try again later.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {showCreateForm && (
-        <div className="fixed inset-0 bg-black/50 z-20 flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <CreateAnnouncementForm 
-              onAnnouncementCreated={handleAnnouncementCreated} 
-              onCancel={() => setShowCreateForm(false)} 
-            />
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Quick Stats</h2>
+            <button className="text-primary-600 hover:text-primary-700 transition-colors duration-200">
+              View Details
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm">Total Announcements</p>
+                  <p className="text-3xl font-bold">{totalAnnouncements}</p>
+                </div>
+                <Campaign className="text-blue-200 h-10 w-10" />
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm">Active</p>
+                  <p className="text-3xl font-bold">{activeAnnouncements}</p>
+                </div>
+                <CheckCircle className="text-green-200 h-10 w-10" />
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-yellow-100 text-sm">Pinned</p>
+                  <p className="text-3xl font-bold">{pinnedAnnouncements}</p>
+                </div>
+                <Schedule className="text-yellow-200 h-10 w-10" />
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-100 text-sm">Emergency</p>
+                  <p className="text-3xl font-bold">{emergencyAnnouncements}</p>
+                </div>
+                <AlertTriangle className="text-red-200 h-10 w-10" />
+              </div>
+            </div>
           </div>
         </div>
-      )}
 
-      <AnnouncementsList 
-        announcements={announcements || []} 
-        isLoading={isLoading} 
-        refetch={refetch}
-      />
+        {showCreateForm && (
+          <div className="fixed inset-0 bg-black/50 z-20 flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+              <CreateAnnouncementForm 
+                onAnnouncementCreated={handleAnnouncementCreated} 
+                onCancel={() => setShowCreateForm(false)} 
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
