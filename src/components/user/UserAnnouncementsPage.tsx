@@ -46,10 +46,10 @@ const UserAnnouncementsPage = () => {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-8 bg-muted rounded w-1/4"></div>
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-48 bg-gray-200 rounded"></div>
+              <div key={i} className="h-48 bg-muted rounded"></div>
             ))}
           </div>
         </div>
@@ -62,7 +62,7 @@ const UserAnnouncementsPage = () => {
       <div className="flex items-center gap-3 mb-6">
         <BellRing className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Barangay Announcements</h1>
+          <h1 className="text-2xl font-bold text-foreground">Barangay Announcements</h1>
           <p className="text-muted-foreground">Stay updated with the latest news and updates</p>
         </div>
       </div>
@@ -77,7 +77,7 @@ const UserAnnouncementsPage = () => {
                     {announcement.is_pinned && (
                       <Pin className="h-4 w-4 text-primary" />
                     )}
-                    <CardTitle className="text-xl">{announcement.title}</CardTitle>
+                    <CardTitle className="text-xl text-foreground">{announcement.title}</CardTitle>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,39 +96,39 @@ const AnnouncementsPage = () => {
   const pinnedAnnouncements = announcements?.filter(a => a.is_pinned)?.length || 0;
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+    <div className="w-full min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Barangay Announcements</h1>
-          <p className="text-gray-600">Manage and organize community announcements</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Barangay Announcements</h1>
+          <p className="text-muted-foreground">Manage and organize community announcements</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-card rounded-xl shadow-lg p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
             <div className="flex-1 max-w-md">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <input 
                   type="text" 
                   placeholder="Search announcements..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 border border-border bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
                 />
               </div>
             </div>
             
             <div className="flex flex-wrap gap-3">
               <details className="relative">
-                <summary className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
-                  <FolderOpen className="text-gray-600 h-4 w-4" />
+                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
+                  <FolderOpen className="text-secondary-foreground h-4 w-4" />
                   Category
-                  <span className="text-gray-400">▼</span>
+                  <span className="text-muted-foreground">▼</span>
                 </summary>
-                <div className="absolute top-full left-0 mt-2 bg-white border rounded-lg shadow-lg z-10 min-w-[150px]">
+                <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
                   <div className="p-2">
                     {['Emergency', 'Event', 'Health', 'Service', 'News'].map(category => (
-                      <label key={category} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                      <label key={category} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer">
                         <input 
                           type="checkbox" 
                           className="rounded" 
@@ -140,7 +141,7 @@ const AnnouncementsPage = () => {
                             }
                           }}
                         />
-                        <span>{category}</span>
+                        <span className="text-popover-foreground">{category}</span>
                       </label>
                     ))}
                   </div>
@@ -148,15 +149,15 @@ const AnnouncementsPage = () => {
               </details>
 
               <details className="relative">
-                <summary className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
-                  <Users className="text-gray-600 h-4 w-4" />
+                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
+                  <Users className="text-secondary-foreground h-4 w-4" />
                   Audience
-                  <span className="text-gray-400">▼</span>
+                  <span className="text-muted-foreground">▼</span>
                 </summary>
-                <div className="absolute top-full left-0 mt-2 bg-white border rounded-lg shadow-lg z-10 min-w-[150px]">
+                <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
                   <div className="p-2">
                     {['All Residents', 'Senior Citizens', 'Business Owners', 'Students'].map(audience => (
-                      <label key={audience} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                      <label key={audience} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer">
                         <input 
                           type="checkbox" 
                           className="rounded" 
@@ -169,7 +170,7 @@ const AnnouncementsPage = () => {
                             }
                           }}
                         />
-                        <span>{audience}</span>
+                        <span className="text-popover-foreground">{audience}</span>
                       </label>
                     ))}
                   </div>
@@ -177,17 +178,17 @@ const AnnouncementsPage = () => {
               </details>
 
               <details className="relative">
-                <summary className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
-                  <SortAsc className="text-gray-600 h-4 w-4" />
+                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
+                  <SortAsc className="text-secondary-foreground h-4 w-4" />
                   Sort By
-                  <span className="text-gray-400">▼</span>
+                  <span className="text-muted-foreground">▼</span>
                 </summary>
-                <div className="absolute top-full right-0 mt-2 bg-white border rounded-lg shadow-lg z-10 min-w-[150px]">
+                <div className="absolute top-full right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
                   <div className="p-2">
-                    <button className="w-full text-left p-2 hover:bg-gray-50 rounded">Date Created</button>
-                    <button className="w-full text-left p-2 hover:bg-gray-50 rounded">Priority</button>
-                    <button className="w-full text-left p-2 hover:bg-gray-50 rounded">Category</button>
-                    <button className="w-full text-left p-2 hover:bg-gray-50 rounded">Status</button>
+                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded">Date Created</button>
+                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded">Priority</button>
+                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded">Category</button>
+                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded">Status</button>
                   </div>
                 </div>
               </details>
@@ -195,7 +196,7 @@ const AnnouncementsPage = () => {
               {userProfile?.role === 'admin' && (
                 <button 
                   onClick={toggleCreateForm}
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   <Plus className="h-4 w-4" />
                   New Announcement
@@ -223,10 +224,10 @@ const AnnouncementsPage = () => {
           />
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-xl shadow-lg p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Quick Stats</h2>
-            <button className="text-primary-600 hover:text-primary-700 transition-colors duration-200">
+            <h2 className="text-2xl font-bold text-foreground">Quick Stats</h2>
+            <button className="text-primary hover:text-primary/80 transition-colors duration-200">
               View Details
             </button>
           </div>
@@ -272,7 +273,7 @@ const AnnouncementsPage = () => {
 
         {showCreateForm && (
           <div className="fixed inset-0 bg-black/50 z-20 flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="w-full max-w-2xl bg-card rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
               <CreateAnnouncementForm 
                 onAnnouncementCreated={handleAnnouncementCreated} 
                 onCancel={() => setShowCreateForm(false)} 
