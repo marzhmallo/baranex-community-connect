@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -103,7 +104,7 @@ const ForumPage = () => {
     return (
       <div 
         key={forum.id}
-        className="bg-card rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+        className="bg-background rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
         onClick={() => handleForumSelected(forum)}
       >
         <div className="flex items-center gap-3 mb-4">
@@ -114,8 +115,8 @@ const ForumPage = () => {
               <Building className="text-blue-600 dark:text-blue-400 h-6 w-6" />
             )}
           </div>
-          <div>
-            <h3 className="font-semibold text-card-foreground">{forum.title}</h3>
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground text-lg">{forum.title}</h3>
             <span className={`text-sm px-2 py-1 rounded-full ${
               isPublic 
                 ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30' 
@@ -125,7 +126,7 @@ const ForumPage = () => {
             </span>
           </div>
         </div>
-        <p className="text-muted-foreground text-sm mb-4">{forum.description || 'No description provided'}</p>
+        <p className="text-muted-foreground text-sm mb-4">{forum.description || 'Open discussions about community topics and general interests'}</p>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>{stats.threads.toLocaleString()} threads</span>
           <span>{stats.posts.toLocaleString()} posts</span>
@@ -142,7 +143,7 @@ const ForumPage = () => {
           {isAdmin && (
             <Button 
               onClick={() => setShowCreateDialog(true)} 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Plus className="h-4 w-4" />
               Create Forum
@@ -167,53 +168,31 @@ const ForumPage = () => {
           />
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="all">All Forums</TabsTrigger>
-            <TabsTrigger value="myBarangay">My Barangay</TabsTrigger>
-            <TabsTrigger value="public">Public Forums</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="all">
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-card rounded-xl shadow-sm border border-border p-6 animate-pulse">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 bg-muted rounded-full"></div>
-                      <div className="space-y-2">
-                        <div className="h-4 bg-muted rounded w-32"></div>
-                        <div className="h-3 bg-muted rounded w-20"></div>
-                      </div>
-                    </div>
-                    <div className="h-3 bg-muted rounded w-full mb-2"></div>
-                    <div className="h-3 bg-muted rounded w-3/4 mb-4"></div>
-                    <div className="flex justify-between">
-                      <div className="h-3 bg-muted rounded w-16"></div>
-                      <div className="h-3 bg-muted rounded w-16"></div>
-                    </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-background rounded-xl shadow-sm border border-border p-6 animate-pulse">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-muted rounded-full"></div>
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-muted rounded w-32"></div>
+                    <div className="h-3 bg-muted rounded w-20"></div>
                   </div>
-                ))}
+                </div>
+                <div className="h-3 bg-muted rounded w-full mb-2"></div>
+                <div className="h-3 bg-muted rounded w-3/4 mb-4"></div>
+                <div className="flex justify-between">
+                  <div className="h-3 bg-muted rounded w-16"></div>
+                  <div className="h-3 bg-muted rounded w-16"></div>
+                </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {forums?.map(renderForumCard)}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="myBarangay">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myBarangayForums?.map(renderForumCard)}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="public">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {publicForums?.map(renderForumCard)}
-            </div>
-          </TabsContent>
-        </Tabs>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {forums?.map(renderForumCard)}
+          </div>
+        )}
       </div>
     </div>
   );
