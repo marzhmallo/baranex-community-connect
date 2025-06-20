@@ -473,14 +473,12 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-2">
                   <h3 className="font-semibold text-gray-900">{thread.authorName}</h3>
-                  <span className="text-gray-500 text-sm">·</span>
-                  <span className="text-gray-500 text-sm">
-                    {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
-                  </span>
                 </div>
+                <span className="text-gray-500 text-sm">
+                  {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
+                </span>
                 
-                <h1 className="text-xl font-bold text-gray-900 mb-2">{thread.title}</h1>
-                <p className="text-gray-800 leading-relaxed mb-4">{thread.content}</p>
+                <p className="text-gray-800 leading-relaxed mb-4 mt-4">{thread.content}</p>
                 
                 <div className="flex items-center space-x-6 text-gray-500 text-sm">
                   <button 
