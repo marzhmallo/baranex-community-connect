@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Plus, PinIcon } from 'lucide-react';
+import { ChevronLeft, Plus, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Forum } from '@/pages/ForumPage';
@@ -10,7 +9,6 @@ import ThreadList from './ThreadList';
 import CreateThreadDialog from './CreateThreadDialog';
 import ThreadDetailView from './ThreadDetailView';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -40,6 +38,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
   const [sortOrder, setSortOrder] = useState<'new' | 'popular'>('new');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isUserFromSameBarangay, setIsUserFromSameBarangay] = useState(false);
 
   useEffect(() => {
@@ -143,30 +142,36 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
     );
   }
 
+  // Filter threads based on search query
+  const filteredThreads = threads?.filter(thread => 
+    thread.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    thread.content.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col space-y-4">
+    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
+      <div className="mb-8">
         <Button 
           variant="ghost" 
-          className="w-fit flex items-center mb-2"
+          className="w-fit flex items-center mb-4"
           onClick={onBack}
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
           Back to Forums
         </Button>
 
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold">{forum.title}</h1>
+            <h1 className="text-3xl font-bold text-foreground">{forum.title}</h1>
             <p className="text-muted-foreground mt-1">{forum.description}</p>
             <div className="mt-2">
               {forum.is_public ? (
-                <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                   Public Forum
                 </Badge>
               ) : (
-                <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                  Private Forum
+                <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                  Barangay Only
                 </Badge>
               )}
             </div>
@@ -182,18 +187,41 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
             </Button>
           )}
         </div>
+      </div>
 
-        <div className="flex justify-between items-center mt-6">
-          <Tabs value={sortOrder} onValueChange={(value) => setSortOrder(value as 'new' | 'popular')} className="w-full max-w-[400px]">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="new">Newest</TabsTrigger>
-              <TabsTrigger value="popular">Popular</TabsTrigger>
-            </TabsList>
-          </Tabs>
+      <div className="bg-card rounded-xl shadow-sm border border-border">
+        <div className="border-b border-border p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <input 
+                type="text" 
+                placeholder="Search threads..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
+              />
+              <Search className="absolute left-3 top-2.5 text-muted-foreground h-4 w-4" />
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant={sortOrder === 'new' ? 'default' : 'outline'}
+                onClick={() => setSortOrder('new')}
+              >
+                Newest
+              </Button>
+              <Button 
+                variant={sortOrder === 'popular' ? 'default' : 'outline'}
+                onClick={() => setSortOrder('popular')}
+              >
+                Popular
+              </Button>
+            </div>
+          </div>
         </div>
 
         {error && (
-          <Alert variant="destructive" className="mt-4">
+          <Alert variant="destructive" className="m-6">
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
               Failed to load threads. Please try again later.
@@ -202,19 +230,24 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         )}
 
         {isLoading ? (
-          <div className="space-y-4 mt-4">
+          <div className="divide-y divide-border">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="p-4 border rounded-md">
-                <Skeleton className="h-6 w-2/3 mb-2" />
-                <Skeleton className="h-4 w-1/3 mb-4" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-full mb-2" />
+              <div key={i} className="p-6">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-6 w-2/3" />
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-4/5" />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         ) : (
           <ThreadList 
-            threads={threads || []} 
+            threads={filteredThreads} 
             onThreadSelect={handleThreadSelected}
           />
         )}

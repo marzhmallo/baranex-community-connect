@@ -7,11 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ForumList from '@/components/forum/ForumList';
 import CreateForumDialog from '@/components/forum/CreateForumDialog';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Public, LocationCity, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
 
 export interface Forum {
   id: string;
@@ -92,69 +91,131 @@ const ForumPage = () => {
     );
   }
 
-  return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Barangay Forums</h1>
-        {isAdmin && (
-          <Button 
-            onClick={() => setShowCreateDialog(true)} 
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Create Forum
-          </Button>
-        )}
+  // Count threads and posts for each forum (mock data for now)
+  const getForumStats = (forumId: string) => ({
+    threads: Math.floor(Math.random() * 2000) + 100,
+    posts: Math.floor(Math.random() * 10000) + 1000
+  });
+
+  const renderForumCard = (forum: Forum) => {
+    const stats = getForumStats(forum.id);
+    const isPublic = forum.is_public;
+    
+    return (
+      <div 
+        key={forum.id}
+        className="bg-card rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+        onClick={() => handleForumSelected(forum)}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className={`w-12 h-12 ${isPublic ? 'bg-green-100 dark:bg-green-900/20' : 'bg-blue-100 dark:bg-blue-900/20'} rounded-full flex items-center justify-center`}>
+            {isPublic ? (
+              <Public className="text-green-600 dark:text-green-400 h-6 w-6" />
+            ) : (
+              <LocationCity className="text-blue-600 dark:text-blue-400 h-6 w-6" />
+            )}
+          </div>
+          <div>
+            <h3 className="font-semibold text-card-foreground">{forum.title}</h3>
+            <span className={`text-sm px-2 py-1 rounded-full ${
+              isPublic 
+                ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30' 
+                : 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30'
+            }`}>
+              {isPublic ? 'Public Forum' : 'Barangay Only'}
+            </span>
+          </div>
+        </div>
+        <p className="text-muted-foreground text-sm mb-4">{forum.description || 'No description provided'}</p>
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>{stats.threads.toLocaleString()} threads</span>
+          <span>{stats.posts.toLocaleString()} posts</span>
+        </div>
       </div>
+    );
+  };
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            Failed to load forums. Please try again later.
-          </AlertDescription>
-        </Alert>
-      )}
+  return (
+    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-foreground">Community Forums</h1>
+          {isAdmin && (
+            <Button 
+              onClick={() => setShowCreateDialog(true)} 
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Forum
+            </Button>
+          )}
+        </div>
 
-      {showCreateDialog && (
-        <CreateForumDialog 
-          open={showCreateDialog} 
-          onOpenChange={setShowCreateDialog} 
-          onForumCreated={handleForumCreated}
-        />
-      )}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load forums. Please try again later.
+            </AlertDescription>
+          </Alert>
+        )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="all">All Forums</TabsTrigger>
-          <TabsTrigger value="myBarangay">My Barangay</TabsTrigger>
-          <TabsTrigger value="public">Public Forums</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all">
-          <ForumList 
-            forums={forums || []} 
-            isLoading={isLoading} 
-            onForumSelect={handleForumSelected}
+        {showCreateDialog && (
+          <CreateForumDialog 
+            open={showCreateDialog} 
+            onOpenChange={setShowCreateDialog} 
+            onForumCreated={handleForumCreated}
           />
-        </TabsContent>
-        
-        <TabsContent value="myBarangay">
-          <ForumList 
-            forums={myBarangayForums || []} 
-            isLoading={isLoading} 
-            onForumSelect={handleForumSelected}
-          />
-        </TabsContent>
-        
-        <TabsContent value="public">
-          <ForumList 
-            forums={publicForums || []} 
-            isLoading={isLoading} 
-            onForumSelect={handleForumSelected}
-          />
-        </TabsContent>
-      </Tabs>
+        )}
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="all">All Forums</TabsTrigger>
+            <TabsTrigger value="myBarangay">My Barangay</TabsTrigger>
+            <TabsTrigger value="public">Public Forums</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-card rounded-xl shadow-sm border border-border p-6 animate-pulse">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-muted rounded-full"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded w-32"></div>
+                        <div className="h-3 bg-muted rounded w-20"></div>
+                      </div>
+                    </div>
+                    <div className="h-3 bg-muted rounded w-full mb-2"></div>
+                    <div className="h-3 bg-muted rounded w-3/4 mb-4"></div>
+                    <div className="flex justify-between">
+                      <div className="h-3 bg-muted rounded w-16"></div>
+                      <div className="h-3 bg-muted rounded w-16"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {forums?.map(renderForumCard)}
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="myBarangay">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {myBarangayForums?.map(renderForumCard)}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="public">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {publicForums?.map(renderForumCard)}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
