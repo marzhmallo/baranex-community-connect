@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -100,7 +99,7 @@ const StatisticsPage = () => {
 
   if (error) {
     return (
-      <div className="w-full max-w-7xl mx-auto p-6 bg-gradient-to-br from-background to-secondary/20 min-h-screen">
+      <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
         <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded">
           Error loading statistics. Please try again later.
         </div>
@@ -112,7 +111,7 @@ const StatisticsPage = () => {
   const femalePercentage = statistics!.totalResidents > 0 ? (statistics!.genderDistribution.female / statistics!.totalResidents) * 100 : 0;
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-gradient-to-br from-background to-secondary/20 min-h-screen">
+    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-foreground mb-2">Barangay Statistics Dashboard</h1>
         <p className="text-lg text-muted-foreground">Comprehensive overview of resident demographics and community data</p>
@@ -125,7 +124,7 @@ const StatisticsPage = () => {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Population</p>
               <p className="text-3xl font-bold text-foreground">{statistics!.totalResidents.toLocaleString()}</p>
-              <p className="text-sm text-green-600 mt-1">Active residents</p>
+              <p className="text-sm text-green-600 dark:text-green-400 mt-1">Active residents</p>
             </div>
             <div className="bg-primary/10 p-3 rounded-full">
               <Users className="text-primary h-6 w-6" />
@@ -138,10 +137,10 @@ const StatisticsPage = () => {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Households</p>
               <p className="text-3xl font-bold text-foreground">{statistics!.totalHouseholds.toLocaleString()}</p>
-              <p className="text-sm text-green-600 mt-1">Avg {statistics!.avgHouseholdSize.toFixed(1)} per household</p>
+              <p className="text-sm text-green-600 dark:text-green-400 mt-1">Avg {statistics!.avgHouseholdSize.toFixed(1)} per household</p>
             </div>
             <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
-              <Home className="text-green-600 h-6 w-6" />
+              <Home className="text-green-600 dark:text-green-400 h-6 w-6" />
             </div>
           </div>
         </div>
@@ -151,10 +150,10 @@ const StatisticsPage = () => {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Registered Voters</p>
               <p className="text-3xl font-bold text-foreground">{statistics!.registeredVoters.toLocaleString()}</p>
-              <p className="text-sm text-blue-600 mt-1">{statistics!.voterPercentage.toFixed(1)}% of total population</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">{statistics!.voterPercentage.toFixed(1)}% of total population</p>
             </div>
             <div className="bg-orange-100 dark:bg-orange-900/20 p-3 rounded-full">
-              <Vote className="text-orange-600 h-6 w-6" />
+              <Vote className="text-orange-600 dark:text-orange-400 h-6 w-6" />
             </div>
           </div>
         </div>
@@ -167,7 +166,7 @@ const StatisticsPage = () => {
               <p className="text-sm text-muted-foreground mt-1">Administrative divisions</p>
             </div>
             <div className="bg-purple-100 dark:bg-purple-900/20 p-3 rounded-full">
-              <MapPin className="text-purple-600 h-6 w-6" />
+              <MapPin className="text-purple-600 dark:text-purple-400 h-6 w-6" />
             </div>
           </div>
         </div>
@@ -212,7 +211,7 @@ const StatisticsPage = () => {
 
         <div className="bg-card rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
-            <UsersIcon className="text-green-600 mr-2 h-5 w-5" />
+            <UsersIcon className="text-green-600 dark:text-green-400 mr-2 h-5 w-5" />
             Household Statistics
           </h3>
           <div className="space-y-4">
@@ -240,13 +239,18 @@ const StatisticsPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <div className="bg-card rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
-            <Baby className="text-orange-600 mr-2 h-5 w-5" />
+            <Baby className="text-orange-600 dark:text-orange-400 mr-2 h-5 w-5" />
             Age Distribution
           </h3>
           <div className="space-y-3">
             {Object.entries(statistics!.ageDistribution).map(([ageGroup, count], index) => {
               const percentage = statistics!.totalResidents > 0 ? (count / statistics!.totalResidents) * 100 : 0;
-              const colors = ['orange-400', 'orange-500', 'orange-600', 'orange-700'];
+              const colorClasses = [
+                'bg-orange-400',
+                'bg-orange-500', 
+                'bg-orange-600',
+                'bg-orange-700'
+              ];
               
               return (
                 <div key={ageGroup}>
@@ -255,7 +259,7 @@ const StatisticsPage = () => {
                     <span className="text-sm font-medium text-foreground">{count.toLocaleString()} ({percentage.toFixed(1)}%)</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
-                    <div className={`bg-${colors[index]} h-2 rounded-full`} style={{width: `${percentage}%`}}></div>
+                    <div className={`${colorClasses[index]} h-2 rounded-full`} style={{width: `${percentage}%`}}></div>
                   </div>
                 </div>
               );
@@ -265,7 +269,7 @@ const StatisticsPage = () => {
 
         <div className="bg-card rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
-            <Briefcase className="text-purple-600 mr-2 h-5 w-5" />
+            <Briefcase className="text-purple-600 dark:text-purple-400 mr-2 h-5 w-5" />
             Employment Overview
           </h3>
           <div className="space-y-3">
@@ -297,7 +301,7 @@ const StatisticsPage = () => {
 
         <div className="bg-card rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
-            <GraduationCap className="text-blue-600 mr-2 h-5 w-5" />
+            <GraduationCap className="text-blue-600 dark:text-blue-400 mr-2 h-5 w-5" />
             Demographics Summary
           </h3>
           <div className="space-y-3">
@@ -331,7 +335,7 @@ const StatisticsPage = () => {
       {/* Purok Distribution */}
       <div className="bg-card rounded-xl shadow-lg p-6 mb-8">
         <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
-          <Map className="text-indigo-600 mr-2 h-5 w-5" />
+          <Map className="text-indigo-600 dark:text-indigo-400 mr-2 h-5 w-5" />
           Purok Distribution
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -347,10 +351,10 @@ const StatisticsPage = () => {
               const color = colors[colorIndex];
               
               return (
-                <div key={purok} className={`bg-gradient-to-br from-${color}-50 to-${color}-100 dark:from-${color}-900/20 dark:to-${color}-800/30 p-4 rounded-lg hover:shadow-md transition-shadow duration-200`}>
-                  <h4 className={`font-semibold text-${color}-800 dark:text-${color}-200`}>{purok}</h4>
-                  <p className={`text-2xl font-bold text-${color}-900 dark:text-${color}-100`}>{count.toLocaleString()}</p>
-                  <p className={`text-sm text-${color}-600 dark:text-${color}-300`}>residents</p>
+                <div key={purok} className="bg-card border border-border p-4 rounded-lg hover:shadow-md transition-shadow duration-200">
+                  <h4 className="font-semibold text-foreground">{purok}</h4>
+                  <p className="text-2xl font-bold text-foreground">{count.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">residents</p>
                 </div>
               );
             })}
@@ -361,50 +365,50 @@ const StatisticsPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-card rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
-            <Heart className="text-red-600 mr-2 h-5 w-5" />
+            <Heart className="text-red-600 dark:text-red-400 mr-2 h-5 w-5" />
             Community Health
           </h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Registered Voters</span>
-              <span className="text-lg font-semibold text-green-600">{statistics!.registeredVoters.toLocaleString()} ({statistics!.voterPercentage.toFixed(1)}%)</span>
+              <span className="text-lg font-semibold text-green-600 dark:text-green-400">{statistics!.registeredVoters.toLocaleString()} ({statistics!.voterPercentage.toFixed(1)}%)</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Male Population</span>
-              <span className="text-lg font-semibold text-blue-600">{statistics!.genderDistribution.male.toLocaleString()} ({malePercentage.toFixed(1)}%)</span>
+              <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">{statistics!.genderDistribution.male.toLocaleString()} ({malePercentage.toFixed(1)}%)</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Female Population</span>
-              <span className="text-lg font-semibold text-pink-600">{statistics!.genderDistribution.female.toLocaleString()} ({femalePercentage.toFixed(1)}%)</span>
+              <span className="text-lg font-semibold text-pink-600 dark:text-pink-400">{statistics!.genderDistribution.female.toLocaleString()} ({femalePercentage.toFixed(1)}%)</span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-foreground">Senior Citizens</span>
-              <span className="text-lg font-semibold text-orange-600">{statistics!.ageDistribution['60+'].toLocaleString()}</span>
+              <span className="text-lg font-semibold text-orange-600 dark:text-orange-400">{statistics!.ageDistribution['60+'].toLocaleString()}</span>
             </div>
           </div>
         </div>
 
         <div className="bg-card rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
-            <TreePine className="text-green-600 mr-2 h-5 w-5" />
+            <TreePine className="text-green-600 dark:text-green-400 mr-2 h-5 w-5" />
             Community Overview
           </h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Active Puroks</span>
-              <span className="text-lg font-semibold text-indigo-600">{statistics!.totalPuroks}</span>
+              <span className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">{statistics!.totalPuroks}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Average per Purok</span>
-              <span className="text-lg font-semibold text-blue-600">{(statistics!.totalResidents / statistics!.totalPuroks).toFixed(0)} residents</span>
+              <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">{(statistics!.totalResidents / statistics!.totalPuroks).toFixed(0)} residents</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Youth Population (15-29)</span>
-              <span className="text-lg font-semibold text-green-600">{statistics!.ageDistribution['15-29'].toLocaleString()}</span>
+              <span className="text-lg font-semibold text-green-600 dark:text-green-400">{statistics!.ageDistribution['15-29'].toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-foreground">Children (0-14)</span>
-              <span className="text-lg font-semibold text-purple-600">{statistics!.ageDistribution['0-14'].toLocaleString()}</span>
+              <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">{statistics!.ageDistribution['0-14'].toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -415,7 +419,7 @@ const StatisticsPage = () => {
 
 const StatisticsSkeleton = () => {
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-gradient-to-br from-background to-secondary/20 min-h-screen">
+    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
       <div className="mb-8">
         <Skeleton className="h-10 w-96 mb-2" />
         <Skeleton className="h-6 w-80" />

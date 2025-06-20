@@ -96,14 +96,14 @@ const AnnouncementsPage = () => {
   const pinnedAnnouncements = announcements?.filter(a => a.is_pinned)?.length || 0;
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
+    <div className="w-full min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Barangay Announcements</h1>
           <p className="text-muted-foreground">Manage and organize community announcements</p>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-card rounded-xl shadow-lg p-6 mb-8 border border-border">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
             <div className="flex-1 max-w-md">
               <div className="relative">
@@ -224,7 +224,7 @@ const AnnouncementsPage = () => {
           />
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-xl shadow-lg p-6 border border-border">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-foreground">Quick Stats</h2>
             <button className="text-primary hover:text-primary/80 transition-colors duration-200">
@@ -273,7 +273,7 @@ const AnnouncementsPage = () => {
 
         {showCreateForm && (
           <div className="fixed inset-0 bg-black/50 z-20 flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-card rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="w-full max-w-2xl bg-card rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto border border-border">
               <CreateAnnouncementForm 
                 onAnnouncementCreated={handleAnnouncementCreated} 
                 onCancel={() => setShowCreateForm(false)} 
