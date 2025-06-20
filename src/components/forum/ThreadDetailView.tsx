@@ -1,19 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, PinIcon, Trash2, MessageSquare, ThumbsUp, ThumbsDown, Heart, Send, Eye, Share, Flag } from 'lucide-react';
+import { ChevronLeft, ThumbsUp, MessageSquare, Share, Send, Heart, Smile } from 'lucide-react';
 import { Thread } from './ThreadsView';
 import { formatDistanceToNow } from 'date-fns';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,8 +56,8 @@ const AVAILABLE_REACTIONS = [
   { emoji: '👍', name: 'thumbs_up' },
   { emoji: '👎', name: 'thumbs_down' },
   { emoji: '❤️', name: 'heart' },
+  { emoji: '😊', name: 'smile' },
   { emoji: '🔥', name: 'fire' },
-  { emoji: '👏', name: 'clap' },
 ];
 
 const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDetailViewProps) => {
@@ -357,116 +352,85 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
     const isCommentOwner = userProfile && comment.created_by === userProfile.id;
     
     return (
-      <div key={comment.id} className={`${isReply ? 'ml-12 mt-3' : 'mt-6'}`}>
-        <div className="flex gap-3">
-          <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+      <div key={comment.id} className={`${isReply ? 'ml-13 mt-3 bg-white rounded-lg p-3 border-l-2 border-primary-200' : 'bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors'}`}>
+        <div className="flex items-start space-x-3">
+          <Avatar className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} flex-shrink-0`}>
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-medium">
               {comment.authorInitials}
             </AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl px-4 py-3 relative">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
-                    {comment.authorName}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                  </span>
-                </div>
-                {isCommentOwner && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600" 
-                    onClick={() => {
-                      setCommentToDelete(comment.id);
-                      setDeleteConfirmOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                )}
-              </div>
-              
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                {comment.content}
-              </p>
+            <div className="flex items-center space-x-2 mb-1">
+              <h4 className={`font-medium text-gray-900 ${isReply ? 'text-xs' : 'text-sm'}`}>
+                {comment.authorName}
+              </h4>
+              <span className={`text-gray-400 ${isReply ? 'text-xs' : 'text-xs'}`}>
+                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+              </span>
             </div>
             
-            {/* Reaction and Reply Actions */}
-            <div className="flex items-center gap-1 mt-2 ml-2">
-              {AVAILABLE_REACTIONS.slice(0, 3).map((reaction) => {
-                const count = comment.reactionCounts?.[reaction.emoji] || 0;
-                const isActive = comment.userReaction === reaction.emoji;
-                
-                return (
-                  <Button 
-                    key={reaction.name}
-                    variant="ghost" 
-                    size="sm"
-                    className={`h-7 px-2 py-0 gap-1 text-xs ${
-                      isActive 
-                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
-                        : 'text-gray-500 hover:bg-gray-100'
-                    }`}
-                    onClick={() => handleReactionClick(reaction.emoji, comment.id)}
-                  >
-                    <span className="text-sm">{reaction.emoji}</span>
-                    {count > 0 && <span>{count}</span>}
-                  </Button>
-                );
-              })}
+            <p className={`text-gray-700 mb-2 ${isReply ? 'text-xs' : 'text-sm'}`}>
+              {comment.content}
+            </p>
+            
+            <div className={`flex items-center ${isReply ? 'space-x-3' : 'space-x-4'}`}>
+              <button 
+                className={`flex items-center space-x-1 ${isReply ? 'text-xs' : 'text-xs'} text-gray-500 hover:text-primary-600 transition-colors group`}
+                onClick={() => handleReactionClick('👍', comment.id)}
+              >
+                <ThumbsUp className={`${isReply ? 'text-xs' : 'text-sm'} group-hover:scale-110 transition-transform`} />
+                <span>{comment.reactionCounts?.['👍'] || 0}</span>
+              </button>
+              
+              <button 
+                className={`flex items-center space-x-1 ${isReply ? 'text-xs' : 'text-xs'} text-gray-500 hover:text-yellow-600 transition-colors group`}
+                onClick={() => handleReactionClick('😊', comment.id)}
+              >
+                <Smile className={`${isReply ? 'text-xs' : 'text-sm'} group-hover:scale-110 transition-transform`} />
+                <span>{comment.reactionCounts?.['😊'] || 0}</span>
+              </button>
               
               {isUserFromSameBarangay && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 px-2 text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                <button 
+                  className={`${isReply ? 'text-xs' : 'text-xs'} text-gray-500 hover:text-primary-600 transition-colors`}
                   onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                 >
                   Reply
-                </Button>
+                </button>
               )}
             </div>
             
             {/* Reply Form */}
             {replyingTo === comment.id && (
-              <div className="mt-3 ml-2">
-                <div className="flex gap-2">
-                  <Avatar className="h-6 w-6 mt-1">
+              <div className="mt-3">
+                <div className="flex items-start space-x-3">
+                  <Avatar className="w-8 h-8 flex-shrink-0">
                     <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
                       {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <Textarea
-                      placeholder="Write a reply..."
+                  <div className="flex-1 bg-gray-50 rounded-full px-4 py-2 hover:bg-gray-100 transition-colors">
+                    <input 
+                      type="text" 
+                      placeholder="Write a reply..." 
                       value={replyContent[comment.id] || ''}
                       onChange={(e) => setReplyContent(prev => ({...prev, [comment.id]: e.target.value}))}
-                      className="min-h-[80px] resize-none border-gray-200 focus:border-blue-500 rounded-xl"
+                      className="w-full bg-transparent text-gray-700 placeholder-gray-500 focus:outline-none text-sm"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSubmitReply(comment.id);
+                        }
+                      }}
                     />
-                    <div className="flex justify-end mt-2 gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setReplyingTo(null)}
-                        className="h-8 px-3 text-xs"
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        size="sm"
-                        onClick={() => handleSubmitReply(comment.id)}
-                        disabled={isSubmitting || !replyContent[comment.id]}
-                        className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700"
-                      >
-                        Reply
-                      </Button>
-                    </div>
                   </div>
+                  <button 
+                    onClick={() => handleSubmitReply(comment.id)}
+                    disabled={isSubmitting || !replyContent[comment.id]}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-full text-sm font-medium hover:bg-primary-700 transition-colors hover:scale-105 transform disabled:opacity-50"
+                  >
+                    Post
+                  </button>
                 </div>
               </div>
             )}
@@ -496,160 +460,123 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
           Back to Forum
         </Button>
         
-        {/* Thread Header */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              {thread.pinned && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
-                  <PinIcon className="h-3 w-3 mr-1" />
-                  Pinned
-                </Badge>
-              )}
-              {thread.tags && thread.tags.length > 0 && (
-                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                  Infrastructure
-                </Badge>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Eye className="h-4 w-4" />
-              <span>156 views</span>
-            </div>
-          </div>
-          
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight">
-            {thread.title}
-          </h1>
-          
-          <div className="flex items-center gap-3 mb-4">
-            <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-gradient-to-br from-orange-500 to-red-600 text-white font-medium">
-                {thread.authorName?.substring(0, 2) || 'UN'}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-semibold text-gray-900 dark:text-gray-100">{thread.authorName}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
-              </p>
-            </div>
-          </div>
-          
-          <div className="prose max-w-none text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-            {thread.content}
-          </div>
-          
-          {/* Thread Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-2">
-              {AVAILABLE_REACTIONS.slice(0, 3).map((reaction) => {
-                const count = threadReactions[reaction.emoji] || 0;
-                const isActive = userThreadReaction === reaction.emoji;
-                
-                return (
-                  <Button 
-                    key={reaction.name}
-                    variant="ghost" 
-                    size="sm"
-                    className={`h-9 px-3 gap-2 ${
-                      isActive 
-                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
-                        : 'text-gray-500 hover:bg-gray-100'
-                    }`}
-                    onClick={() => handleReactionClick(reaction.emoji)}
-                  >
-                    <span>{reaction.emoji}</span>
-                    {count > 0 && <span className="text-sm">{count}</span>}
-                  </Button>
-                );
-              })}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
-                <Share className="h-4 w-4 mr-2" />
-                Share
-              </Button>
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
-                <Flag className="h-4 w-4 mr-2" />
-                Report
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Comments Section */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Comments ({comments?.length || 0})
-          </h2>
-        </div>
-        
-        {/* Add Comment Form */}
-        {isUserFromSameBarangay && (
-          <form onSubmit={handleSubmitComment} className="mb-8">
-            <div className="flex gap-3">
-              <Avatar className="h-8 w-8 mt-1">
-                <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
-                  {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
+        {/* Thread Card */}
+        <div className="w-full mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-start space-x-4">
+              <Avatar className="w-12 h-12">
+                <AvatarFallback className="bg-gradient-to-br from-orange-500 to-red-600 text-white font-medium">
+                  {thread.authorName?.substring(0, 2) || 'UN'}
                 </AvatarFallback>
               </Avatar>
+              
               <div className="flex-1">
-                <Textarea
-                  placeholder="Add a comment..."
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  className="min-h-[100px] resize-none border-gray-200 focus:border-blue-500 rounded-xl"
-                  rows={3}
-                />
-                <div className="flex justify-end mt-3">
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting || !commentContent.trim()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+                <div className="flex items-center space-x-2 mb-2">
+                  <h3 className="font-semibold text-gray-900">{thread.authorName}</h3>
+                  <span className="text-gray-500 text-sm">·</span>
+                  <span className="text-gray-500 text-sm">
+                    {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
+                  </span>
+                </div>
+                
+                <h1 className="text-xl font-bold text-gray-900 mb-2">{thread.title}</h1>
+                <p className="text-gray-800 leading-relaxed mb-4">{thread.content}</p>
+                
+                <div className="flex items-center space-x-6 text-gray-500 text-sm">
+                  <button 
+                    className="flex items-center space-x-1 hover:text-primary-600 transition-colors"
+                    onClick={() => handleReactionClick('👍')}
                   >
-                    <Send className="h-4 w-4 mr-2" />
-                    Post Comment
-                  </Button>
+                    <ThumbsUp className="text-lg" />
+                    <span>{threadReactions['👍'] || 0}</span>
+                  </button>
+                  <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
+                    <MessageSquare className="text-lg" />
+                    <span>{comments?.length || 0}</span>
+                  </button>
+                  <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
+                    <Share className="text-lg" />
+                    <span>Share</span>
+                  </button>
                 </div>
               </div>
             </div>
-          </form>
-        )}
-        
-        {/* Comments List */}
-        {isCommentsLoading ? (
-          <div className="space-y-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex gap-3">
-                <Skeleton className="h-8 w-8 rounded-full" />
-                <div className="flex-1">
-                  <div className="bg-gray-50 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-16" />
+          </div>
+
+          {/* Comments Section */}
+          <div className="max-h-[400px] overflow-y-auto px-6 py-4 space-y-4">
+            {isCommentsLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                        <Skeleton className="h-12 w-full mb-2" />
+                        <div className="flex items-center space-x-4">
+                          <Skeleton className="h-6 w-12" />
+                          <Skeleton className="h-6 w-12" />
+                          <Skeleton className="h-6 w-12" />
+                        </div>
+                      </div>
                     </div>
-                    <Skeleton className="h-12 w-full" />
                   </div>
+                ))}
+              </div>
+            ) : comments && comments.length > 0 ? (
+              comments.map(comment => renderComment(comment))
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium mb-2">No comments yet</p>
+                <p className="text-sm">Be the first to join the discussion!</p>
+              </div>
+            )}
+          </div>
+
+          {/* Comment Input */}
+          {isUserFromSameBarangay && (
+            <div className="border-t border-gray-100 p-4">
+              <div className="flex items-start space-x-3">
+                <Avatar className="w-10 h-10 flex-shrink-0">
+                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
+                    {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 bg-gray-50 rounded-full px-4 py-2 hover:bg-gray-100 transition-colors">
+                  <input 
+                    type="text" 
+                    placeholder="Write a comment..." 
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    className="w-full bg-transparent text-gray-700 placeholder-gray-500 focus:outline-none text-sm"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSubmitComment(e);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button className="p-2 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-all duration-200 hover:scale-105">
+                    <Smile className="text-lg" />
+                  </button>
+                  <button 
+                    onClick={handleSubmitComment}
+                    disabled={isSubmitting || !commentContent.trim()}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-full text-sm font-medium hover:bg-primary-700 transition-colors hover:scale-105 transform disabled:opacity-50"
+                  >
+                    Post
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : comments && comments.length > 0 ? (
-          <div className="space-y-2">
-            {comments.map(comment => renderComment(comment))}
-          </div>
-        ) : (
-          <div className="text-center py-12 text-gray-500">
-            <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">No comments yet</p>
-            <p className="text-sm">Be the first to join the discussion!</p>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}
