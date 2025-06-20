@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -262,54 +263,54 @@ const UserAccountManagement = () => {
   const pendingUsers = filteredUsers?.filter(u => u.status === 'pending') || [];
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">User Management System</h1>
-          <p className="text-slate-600">Manage barangay administrators and system users with role-based permissions</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">User Management System</h1>
+          <p className="text-muted-foreground">Manage barangay administrators and system users with role-based permissions</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300">
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="bg-purple-50 p-3 rounded-full">
-                <Shield className="text-purple-600 h-6 w-6" />
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-full">
+                <Shield className="text-purple-600 dark:text-purple-400 h-6 w-6" />
               </div>
-              <span className="text-2xl font-bold text-slate-800">{adminUsers.length}</span>
+              <span className="text-2xl font-bold text-foreground">{adminUsers.length}</span>
             </div>
-            <h3 className="text-lg font-semibold text-slate-800 mb-1">Admins</h3>
-            <p className="text-slate-600 text-sm">Barangay administrators with privileges</p>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Admins</h3>
+            <p className="text-muted-foreground text-sm">Barangay administrators with privileges</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300">
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="bg-blue-50 p-3 rounded-full">
-                <Users className="text-blue-600 h-6 w-6" />
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-full">
+                <Users className="text-blue-600 dark:text-blue-400 h-6 w-6" />
               </div>
-              <span className="text-2xl font-bold text-slate-800">{regularUsers.length}</span>
+              <span className="text-2xl font-bold text-foreground">{regularUsers.length}</span>
             </div>
-            <h3 className="text-lg font-semibold text-slate-800 mb-1">Users</h3>
-            <p className="text-slate-600 text-sm">Regular users</p>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Users</h3>
+            <p className="text-muted-foreground text-sm">Regular users</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300">
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="bg-amber-50 p-3 rounded-full">
-                <AlertTriangle className="text-amber-600 h-6 w-6" />
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-full">
+                <AlertTriangle className="text-amber-600 dark:text-amber-400 h-6 w-6" />
               </div>
-              <span className="text-2xl font-bold text-slate-800">{pendingUsers.length}</span>
+              <span className="text-2xl font-bold text-foreground">{pendingUsers.length}</span>
             </div>
-            <h3 className="text-lg font-semibold text-slate-800 mb-1">Pending Approval</h3>
-            <p className="text-slate-600 text-sm">Users awaiting verification</p>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Pending Approval</h3>
+            <p className="text-muted-foreground text-sm">Users awaiting verification</p>
           </div>
         </div>
 
         {/* Main Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-200">
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+          <div className="p-6 border-b border-border">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <h2 className="text-xl font-semibold text-slate-800">User Management Dashboard</h2>
+              <h2 className="text-xl font-semibold text-foreground">User Management Dashboard</h2>
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative">
                   <Input
@@ -317,9 +318,9 @@ const UserAccountManagement = () => {
                     placeholder="Search users..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full sm:w-64 border-slate-300"
+                    className="pl-10 w-full sm:w-64"
                   />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 </div>
               </div>
             </div>
@@ -327,28 +328,28 @@ const UserAccountManagement = () => {
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-slate-700">User</th>
-                  <th className="text-left py-4 px-6 font-semibold text-slate-700">Role</th>
-                  <th className="text-left py-4 px-6 font-semibold text-slate-700">Status</th>
-                  <th className="text-left py-4 px-6 font-semibold text-slate-700">Joined</th>
-                  <th className="text-center py-4 px-6 font-semibold text-slate-700">Actions</th>
+                  <th className="text-left py-4 px-6 font-semibold text-foreground">User</th>
+                  <th className="text-left py-4 px-6 font-semibold text-foreground">Role</th>
+                  <th className="text-left py-4 px-6 font-semibold text-foreground">Status</th>
+                  <th className="text-left py-4 px-6 font-semibold text-foreground">Joined</th>
+                  <th className="text-center py-4 px-6 font-semibold text-foreground">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-border">
                 {filteredUsers?.map((user, index) => (
-                  <tr key={user.id} className="hover:bg-slate-50 transition-colors duration-200">
+                  <tr key={user.id} className="hover:bg-muted/50 transition-colors duration-200">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 bg-gradient-to-br ${getGradientColor(index)} rounded-full flex items-center justify-center text-white font-semibold`}>
                           {getInitials(user.firstname, user.lastname)}
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-800">
+                          <div className="font-semibold text-foreground">
                             {user.firstname} {user.lastname}
                           </div>
-                          <div className="text-sm text-slate-600">{user.email}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
                         </div>
                       </div>
                     </td>
@@ -358,7 +359,7 @@ const UserAccountManagement = () => {
                     <td className="py-4 px-6">
                       {getStatusBadge(user.status || 'pending')}
                     </td>
-                    <td className="py-4 px-6 text-slate-600">
+                    <td className="py-4 px-6 text-muted-foreground">
                       {new Date(user.created_at || '').toLocaleDateString()}
                     </td>
                     <td className="py-4 px-6">
@@ -370,7 +371,7 @@ const UserAccountManagement = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => setSelectedUser(user)}
-                              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full"
+                              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -470,7 +471,7 @@ const UserAccountManagement = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => updateUserStatus(user.id, 'approved')}
-                              className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full"
+                              className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-full"
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -478,7 +479,7 @@ const UserAccountManagement = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => updateUserStatus(user.id, 'rejected')}
-                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
+                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -487,7 +488,7 @@ const UserAccountManagement = () => {
                         
                         {/* Protected badge or action buttons */}
                         {user.superior_admin ? (
-                          <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full border border-slate-200">
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
                             Protected
                           </span>
                         ) : canModifyUser(user) ? (
@@ -495,20 +496,20 @@ const UserAccountManagement = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-full"
+                              className="p-2 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full"
+                              className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
                             >
                               <UserX className="h-4 w-4" />
                             </Button>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full border border-slate-200">
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
                             Protected
                           </span>
                         )}
@@ -520,9 +521,9 @@ const UserAccountManagement = () => {
             </table>
           </div>
 
-          <div className="p-6 border-t border-slate-200 bg-slate-50">
+          <div className="p-6 border-t border-border bg-muted/50">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-sm text-slate-600">
+              <div className="text-sm text-muted-foreground">
                 Showing {filteredUsers?.length || 0} users
               </div>
             </div>
@@ -530,14 +531,14 @@ const UserAccountManagement = () => {
         </div>
 
         {/* Guidelines Section */}
-        <div className="mt-8 bg-blue-50 rounded-xl p-6 border border-blue-200">
+        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
           <div className="flex items-start gap-4">
-            <div className="bg-blue-100 p-3 rounded-full flex-shrink-0">
-              <Info className="text-blue-600 h-5 w-5" />
+            <div className="bg-blue-100 dark:bg-blue-800/50 p-3 rounded-full flex-shrink-0">
+              <Info className="text-blue-600 dark:text-blue-400 h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-800 mb-2">User Management Guidelines</h3>
-              <ul className="text-sm text-slate-700 space-y-1">
+              <h3 className="font-semibold text-foreground mb-2">User Management Guidelines</h3>
+              <ul className="text-sm text-muted-foreground space-y-1">
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                   Superior Admins are barangay founders with permanent protection from removal or suspension
@@ -573,7 +574,7 @@ const UserAccountManagement = () => {
                 <h4 className="font-medium">Select new superior admin:</h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {users?.filter(u => (u.role === 'admin' || u.role === 'staff') && !u.superior_admin).map(user => (
-                    <div key={user.id} className="flex items-center justify-between p-2 border rounded">
+                    <div key={user.id} className="flex items-center justify-between p-2 border border-border rounded">
                       <div className="flex items-center space-x-2">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback className="text-xs">
