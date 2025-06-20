@@ -91,14 +91,70 @@ const ForumPage = () => {
     );
   }
 
-  // Count threads and posts for each forum (mock data for now)
-  const getForumStats = (forumId: string) => ({
-    threads: Math.floor(Math.random() * 2000) + 100,
-    posts: Math.floor(Math.random() * 10000) + 1000
-  });
+  // Fetch actual thread and comment counts for each forum
+  const getForumStats = async (forumId: string) => {
+    try {
+      // Get thread count
+      const { count: threadCount, error: threadError } = await supabase
+        .from('threads')
+        .select('*', { count: 'exact', head: true })
+        .eq('forum_id', forumId);
+
+      if (threadError) throw threadError;
+
+      // Get total comment count for all threads in this forum
+      const { data: threads, error: threadsError } = await supabase
+        .from('threads')
+        .select('id')
+        .eq('forum_id', forumId);
+
+      if (threadsError) throw threadsError;
+
+      let totalComments = 0;
+      if (threads && threads.length > 0) {
+        const threadIds = threads.map(t => t.id);
+        const { count: commentCount, error: commentError } = await supabase
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .in('thread_id', threadIds);
+
+        if (commentError) throw commentError;
+        totalComments = commentCount || 0;
+      }
+
+      return {
+        threads: threadCount || 0,
+        posts: totalComments
+      };
+    } catch (error) {
+      console.error('Error fetching forum stats:', error);
+      return {
+        threads: 0,
+        posts: 0
+      };
+    }
+  };
+
+  const [forumStats, setForumStats] = useState<{[key: string]: {threads: number, posts: number}}>({});
+
+  useEffect(() => {
+    const fetchAllStats = async () => {
+      if (!forums) return;
+      
+      const stats: {[key: string]: {threads: number, posts: number}} = {};
+      
+      for (const forum of forums) {
+        stats[forum.id] = await getForumStats(forum.id);
+      }
+      
+      setForumStats(stats);
+    };
+
+    fetchAllStats();
+  }, [forums]);
 
   const renderForumCard = (forum: Forum) => {
-    const stats = getForumStats(forum.id);
+    const stats = forumStats[forum.id] || { threads: 0, posts: 0 };
     const isPublic = forum.is_public;
     
     return (
