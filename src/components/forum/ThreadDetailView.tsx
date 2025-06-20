@@ -350,6 +350,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
 
   const renderComment = (comment: Comment, isReply = false) => {
     const isCommentOwner = userProfile && comment.created_by === userProfile.id;
+    const userHasLiked = comment.userReaction === '👍';
     
     return (
       <div key={comment.id} className={`${isReply ? 'ml-13 mt-3 bg-white rounded-lg p-3 border-l-2 border-primary-200' : 'bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors'}`}>
@@ -376,10 +377,18 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
             
             <div className={`flex items-center ${isReply ? 'space-x-3' : 'space-x-4'}`}>
               <button 
-                className={`flex items-center space-x-1 ${isReply ? 'text-xs' : 'text-xs'} text-gray-500 hover:text-primary-600 transition-colors group`}
+                className={`flex items-center space-x-1 ${isReply ? 'text-xs' : 'text-xs'} transition-colors group ${
+                  userHasLiked 
+                    ? 'text-primary-600' 
+                    : 'text-gray-500 hover:text-primary-600'
+                }`}
                 onClick={() => handleReactionClick('👍', comment.id)}
               >
-                <ThumbsUp className={`${isReply ? 'text-xs' : 'text-sm'} group-hover:scale-110 transition-transform`} />
+                <ThumbsUp 
+                  className={`${isReply ? 'text-xs' : 'text-sm'} group-hover:scale-110 transition-transform ${
+                    userHasLiked ? 'fill-current' : ''
+                  }`} 
+                />
                 <span>{comment.reactionCounts?.['👍'] || 0}</span>
               </button>
               
@@ -447,6 +456,8 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
     );
   };
 
+  const userHasLikedThread = userThreadReaction === '👍';
+
   return (
     <div className="max-w-4xl mx-auto py-6 px-4">
       {/* Header */}
@@ -471,7 +482,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
               </Avatar>
               
               <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-2">
+                <div className="flex items-center space-x-2 mb-1">
                   <h3 className="font-semibold text-gray-900">{thread.authorName}</h3>
                 </div>
                 <span className="text-gray-500 text-sm">
@@ -482,10 +493,16 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                 
                 <div className="flex items-center space-x-6 text-gray-500 text-sm">
                   <button 
-                    className="flex items-center space-x-1 hover:text-primary-600 transition-colors"
+                    className={`flex items-center space-x-1 transition-colors ${
+                      userHasLikedThread 
+                        ? 'text-primary-600' 
+                        : 'hover:text-primary-600'
+                    }`}
                     onClick={() => handleReactionClick('👍')}
                   >
-                    <ThumbsUp className="text-lg" />
+                    <ThumbsUp 
+                      className={`text-lg ${userHasLikedThread ? 'fill-current' : ''}`} 
+                    />
                     <span>{threadReactions['👍'] || 0}</span>
                   </button>
                   <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
