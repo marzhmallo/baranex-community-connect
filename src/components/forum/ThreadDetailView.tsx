@@ -486,32 +486,35 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                 <span className="text-gray-500 text-sm">
                   {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
                 </span>
-                
-                <p className="text-gray-800 leading-relaxed mb-4 mt-4">{thread.content}</p>
-                
-                <div className="flex items-center space-x-6 text-gray-500 text-sm">
-                  <button 
-                    className={`flex items-center space-x-1 transition-colors ${
-                      userHasLikedThread 
-                        ? 'text-primary-600' 
-                        : 'hover:text-primary-600'
-                    }`}
-                    onClick={() => handleReactionClick('👍')}
-                  >
-                    <ThumbsUp 
-                      className={`text-lg ${userHasLikedThread ? 'fill-current' : ''}`} 
-                    />
-                    <span>{threadReactions['👍'] || 0}</span>
-                  </button>
-                  <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
-                    <MessageSquare className="text-lg" />
-                    <span>{comments?.length || 0}</span>
-                  </button>
-                  <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
-                    <Share className="text-lg" />
-                    <span>Share</span>
-                  </button>
-                </div>
+              </div>
+            </div>
+            
+            {/* Thread content aligned with avatar */}
+            <div className="ml-16 mt-4">
+              <p className="text-gray-800 leading-relaxed mb-4">{thread.content}</p>
+              
+              <div className="flex items-center space-x-6 text-gray-500 text-sm">
+                <button 
+                  className={`flex items-center space-x-1 transition-colors ${
+                    userHasLikedThread 
+                      ? 'text-primary-600' 
+                      : 'hover:text-primary-600'
+                  }`}
+                  onClick={() => handleReactionClick('👍')}
+                >
+                  <ThumbsUp 
+                    className={`text-lg ${userHasLikedThread ? 'fill-current' : ''}`} 
+                  />
+                  <span>{threadReactions['👍'] || 0}</span>
+                </button>
+                <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
+                  <MessageSquare className="text-lg" />
+                  <span>{comments?.length || 0}</span>
+                </button>
+                <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
+                  <Share className="text-lg" />
+                  <span>Share</span>
+                </button>
               </div>
             </div>
           </div>
