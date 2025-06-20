@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -238,7 +237,7 @@ const AnnouncementsPage = () => {
                   <p className="text-blue-100 text-sm">Total Announcements</p>
                   <p className="text-3xl font-bold">{totalAnnouncements}</p>
                 </div>
-                <Campaign className="text-blue-200 h-10 w-10" />
+                <Megaphone className="text-blue-200 h-10 w-10" />
               </div>
             </div>
             <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
@@ -256,7 +255,7 @@ const AnnouncementsPage = () => {
                   <p className="text-yellow-100 text-sm">Pinned</p>
                   <p className="text-3xl font-bold">{pinnedAnnouncements}</p>
                 </div>
-                <Schedule className="text-yellow-200 h-10 w-10" />
+                <Calendar className="text-yellow-200 h-10 w-10" />
               </div>
             </div>
             <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white">
