@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ThumbsUp, MessageSquare, Share, Send, Heart, Smile } from 'lucide-react';
@@ -353,7 +354,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
     const userHasLiked = comment.userReaction === '👍';
     
     return (
-      <div key={comment.id} className={`${isReply ? 'ml-13 mt-3 bg-white rounded-lg p-3 border-l-2 border-primary-200' : 'bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors'}`}>
+      <div key={comment.id} className={`${isReply ? 'ml-13 mt-3 bg-card rounded-lg p-3 border-l-2 border-primary/20' : 'bg-accent/30 rounded-lg p-4 hover:bg-accent/50 transition-colors'}`}>
         <div className="flex items-start space-x-3">
           <Avatar className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} flex-shrink-0`}>
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-medium">
@@ -363,15 +364,15 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
-              <h4 className={`font-medium text-gray-900 ${isReply ? 'text-xs' : 'text-sm'}`}>
+              <h4 className={`font-medium text-foreground ${isReply ? 'text-xs' : 'text-sm'}`}>
                 {comment.authorName}
               </h4>
-              <span className={`text-gray-400 ${isReply ? 'text-xs' : 'text-xs'}`}>
+              <span className={`text-muted-foreground ${isReply ? 'text-xs' : 'text-xs'}`}>
                 {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
               </span>
             </div>
             
-            <p className={`text-gray-700 mb-2 ${isReply ? 'text-xs' : 'text-sm'}`}>
+            <p className={`text-foreground mb-2 ${isReply ? 'text-xs' : 'text-sm'}`}>
               {comment.content}
             </p>
             
@@ -379,8 +380,8 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
               <button 
                 className={`flex items-center space-x-1 ${isReply ? 'text-xs' : 'text-xs'} transition-colors group ${
                   userHasLiked 
-                    ? 'text-primary-600' 
-                    : 'text-gray-500 hover:text-primary-600'
+                    ? 'text-primary' 
+                    : 'text-muted-foreground hover:text-primary'
                 }`}
                 onClick={() => handleReactionClick('👍', comment.id)}
               >
@@ -393,7 +394,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
               </button>
               
               <button 
-                className={`flex items-center space-x-1 ${isReply ? 'text-xs' : 'text-xs'} text-gray-500 hover:text-yellow-600 transition-colors group`}
+                className={`flex items-center space-x-1 ${isReply ? 'text-xs' : 'text-xs'} text-muted-foreground hover:text-yellow-600 transition-colors group`}
                 onClick={() => handleReactionClick('😊', comment.id)}
               >
                 <Smile className={`${isReply ? 'text-xs' : 'text-sm'} group-hover:scale-110 transition-transform`} />
@@ -402,7 +403,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
               
               {isUserFromSameBarangay && (
                 <button 
-                  className={`${isReply ? 'text-xs' : 'text-xs'} text-gray-500 hover:text-primary-600 transition-colors`}
+                  className={`${isReply ? 'text-xs' : 'text-xs'} text-muted-foreground hover:text-primary transition-colors`}
                   onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                 >
                   Reply
@@ -419,13 +420,13 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                       {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 bg-gray-50 rounded-full px-4 py-2 hover:bg-gray-100 transition-colors">
+                  <div className="flex-1 bg-accent/30 rounded-full px-4 py-2 hover:bg-accent/50 transition-colors">
                     <input 
                       type="text" 
                       placeholder="Write a reply..." 
                       value={replyContent[comment.id] || ''}
                       onChange={(e) => setReplyContent(prev => ({...prev, [comment.id]: e.target.value}))}
-                      className="w-full bg-transparent text-gray-700 placeholder-gray-500 focus:outline-none text-sm"
+                      className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-sm"
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
                           handleSubmitReply(comment.id);
@@ -436,7 +437,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                   <button 
                     onClick={() => handleSubmitReply(comment.id)}
                     disabled={isSubmitting || !replyContent[comment.id]}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-full text-sm font-medium hover:bg-primary-700 transition-colors hover:scale-105 transform disabled:opacity-50"
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors hover:scale-105 transform disabled:opacity-50"
                   >
                     Post
                   </button>
@@ -464,7 +465,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
       <div className="mb-6">
         <Button 
           variant="ghost" 
-          className="mb-4 text-gray-600 hover:text-gray-900"
+          className="mb-4 text-muted-foreground hover:text-foreground"
           onClick={onBack}
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
@@ -472,8 +473,8 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
         </Button>
         
         {/* Thread Card */}
-        <div className="w-full mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
+        <div className="w-full mx-auto bg-card rounded-xl shadow-lg overflow-hidden border border-border">
+          <div className="p-6 border-b border-border">
             <div className="flex items-start space-x-4">
               <Avatar className="w-12 h-12">
                 <AvatarFallback className="bg-gradient-to-br from-orange-500 to-red-600 text-white font-medium">
@@ -482,23 +483,23 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
               </Avatar>
               
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{thread.authorName}</h3>
-                <span className="text-gray-500 text-sm">
+                <h3 className="font-semibold text-foreground">{thread.authorName}</h3>
+                <span className="text-muted-foreground text-sm">
                   {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
                 </span>
               </div>
             </div>
             
-            <p className="text-gray-800 leading-relaxed mb-4 mt-4">
+            <p className="text-foreground leading-relaxed mb-4 mt-4">
               {thread.content}
             </p>
             
-            <div className="flex items-center space-x-6 text-gray-500 text-sm">
+            <div className="flex items-center space-x-6 text-muted-foreground text-sm">
               <button 
                 className={`flex items-center space-x-1 transition-colors ${
                   userHasLikedThread 
-                    ? 'text-primary-600' 
-                    : 'hover:text-primary-600'
+                    ? 'text-primary' 
+                    : 'hover:text-primary'
                 }`}
                 onClick={() => handleReactionClick('👍')}
               >
@@ -507,11 +508,11 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                 />
                 <span>{threadReactions['👍'] || 0}</span>
               </button>
-              <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
+              <button className="flex items-center space-x-1 hover:text-primary transition-colors">
                 <MessageSquare className="text-lg" />
                 <span>{comments?.length || 0}</span>
               </button>
-              <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
+              <button className="flex items-center space-x-1 hover:text-primary transition-colors">
                 <Share className="text-lg" />
                 <span>Share</span>
               </button>
@@ -523,7 +524,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
             {isCommentsLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-gray-50 rounded-lg p-4">
+                  <div key={i} className="bg-accent/30 rounded-lg p-4">
                     <div className="flex items-start space-x-3">
                       <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -545,7 +546,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
             ) : comments && comments.length > 0 ? (
               comments.map(comment => renderComment(comment))
             ) : (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-muted-foreground">
                 <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium mb-2">No comments yet</p>
                 <p className="text-sm">Be the first to join the discussion!</p>
@@ -555,20 +556,20 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
 
           {/* Comment Input */}
           {isUserFromSameBarangay && (
-            <div className="border-t border-gray-100 p-4">
+            <div className="border-t border-border p-4">
               <div className="flex items-start space-x-3">
                 <Avatar className="w-10 h-10 flex-shrink-0">
                   <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
                     {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 bg-gray-50 rounded-full px-4 py-2 hover:bg-gray-100 transition-colors">
+                <div className="flex-1 bg-accent/30 rounded-full px-4 py-2 hover:bg-accent/50 transition-colors">
                   <input 
                     type="text" 
                     placeholder="Write a comment..." 
                     value={commentContent}
                     onChange={(e) => setCommentContent(e.target.value)}
-                    className="w-full bg-transparent text-gray-700 placeholder-gray-500 focus:outline-none text-sm"
+                    className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-sm"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         handleSubmitComment(e);
@@ -577,13 +578,13 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                   />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button className="p-2 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-all duration-200 hover:scale-105">
+                  <button className="p-2 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-full transition-all duration-200 hover:scale-105">
                     <Smile className="text-lg" />
                   </button>
                   <button 
                     onClick={handleSubmitComment}
                     disabled={isSubmitting || !commentContent.trim()}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-full text-sm font-medium hover:bg-primary-700 transition-colors hover:scale-105 transform disabled:opacity-50"
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors hover:scale-105 transform disabled:opacity-50"
                   >
                     Post
                   </button>

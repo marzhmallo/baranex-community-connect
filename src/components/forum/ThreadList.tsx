@@ -78,14 +78,10 @@ const ThreadList = ({ threads, onThreadSelect }: ThreadListProps) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-auto p-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30"
-                      >
-                        <ThumbsUp className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-1" />
+                      <div className="h-auto p-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded-md flex items-center gap-1 cursor-default">
+                        <ThumbsUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         <span className="text-blue-600 dark:text-blue-400">{thread.reactionCount || 0}</span>
-                      </Button>
+                      </div>
                     </div>
                     
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -97,6 +93,7 @@ const ThreadList = ({ threads, onThreadSelect }: ThreadListProps) => {
                         variant="ghost" 
                         size="sm" 
                         className="h-auto p-1 text-muted-foreground hover:text-primary"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <Share2 className="h-4 w-4 mr-1" />
                         Share
@@ -113,6 +110,7 @@ const ThreadList = ({ threads, onThreadSelect }: ThreadListProps) => {
                       variant="ghost" 
                       size="sm" 
                       className="h-auto p-1 text-red-500 hover:text-red-700"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Flag className="h-4 w-4 mr-1" />
                       Report
