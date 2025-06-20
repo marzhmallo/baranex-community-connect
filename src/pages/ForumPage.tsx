@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ForumList from '@/components/forum/ForumList';
 import CreateForumDialog from '@/components/forum/CreateForumDialog';
 import { Button } from '@/components/ui/button';
-import { Plus, Public, LocationCity, HelpCircle } from 'lucide-react';
+import { Plus, Globe, Building, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -110,9 +109,9 @@ const ForumPage = () => {
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-12 h-12 ${isPublic ? 'bg-green-100 dark:bg-green-900/20' : 'bg-blue-100 dark:bg-blue-900/20'} rounded-full flex items-center justify-center`}>
             {isPublic ? (
-              <Public className="text-green-600 dark:text-green-400 h-6 w-6" />
+              <Globe className="text-green-600 dark:text-green-400 h-6 w-6" />
             ) : (
-              <LocationCity className="text-blue-600 dark:text-blue-400 h-6 w-6" />
+              <Building className="text-blue-600 dark:text-blue-400 h-6 w-6" />
             )}
           </div>
           <div>
