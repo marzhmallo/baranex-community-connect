@@ -29,6 +29,7 @@ const ForumPage = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedForum, setSelectedForum] = useState<Forum | null>(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [forumStats, setForumStats] = useState<{[key: string]: {threads: number, posts: number}}>({});
   
   const fetchForums = async () => {
     try {
@@ -54,42 +55,6 @@ const ForumPage = () => {
     queryKey: ['forums'],
     queryFn: fetchForums
   });
-
-  const handleForumCreated = () => {
-    setShowCreateDialog(false);
-    refetch();
-    toast({
-      title: "Forum Created",
-      description: "Your forum has been created successfully."
-    });
-  };
-
-  const handleForumSelected = (forum: Forum) => {
-    setSelectedForum(forum);
-  };
-
-  const handleBackToForums = () => {
-    setSelectedForum(null);
-  };
-
-  const myBarangayForums = forums?.filter(
-    (forum) => forum.brgyid === userProfile?.brgyid
-  );
-
-  const publicForums = forums?.filter(
-    (forum) => forum.is_public && forum.brgyid !== userProfile?.brgyid
-  );
-
-  const isAdmin = userProfile?.role === 'admin';
-
-  if (selectedForum) {
-    return (
-      <ThreadsView 
-        forum={selectedForum} 
-        onBack={handleBackToForums} 
-      />
-    );
-  }
 
   // Fetch actual thread and comment counts for each forum
   const getForumStats = async (forumId: string) => {
@@ -135,8 +100,6 @@ const ForumPage = () => {
     }
   };
 
-  const [forumStats, setForumStats] = useState<{[key: string]: {threads: number, posts: number}}>({});
-
   useEffect(() => {
     const fetchAllStats = async () => {
       if (!forums) return;
@@ -152,6 +115,42 @@ const ForumPage = () => {
 
     fetchAllStats();
   }, [forums]);
+
+  const handleForumCreated = () => {
+    setShowCreateDialog(false);
+    refetch();
+    toast({
+      title: "Forum Created",
+      description: "Your forum has been created successfully."
+    });
+  };
+
+  const handleForumSelected = (forum: Forum) => {
+    setSelectedForum(forum);
+  };
+
+  const handleBackToForums = () => {
+    setSelectedForum(null);
+  };
+
+  const myBarangayForums = forums?.filter(
+    (forum) => forum.brgyid === userProfile?.brgyid
+  );
+
+  const publicForums = forums?.filter(
+    (forum) => forum.is_public && forum.brgyid !== userProfile?.brgyid
+  );
+
+  const isAdmin = userProfile?.role === 'admin';
+
+  if (selectedForum) {
+    return (
+      <ThreadsView 
+        forum={selectedForum} 
+        onBack={handleBackToForums} 
+      />
+    );
+  }
 
   const renderForumCard = (forum: Forum) => {
     const stats = forumStats[forum.id] || { threads: 0, posts: 0 };
