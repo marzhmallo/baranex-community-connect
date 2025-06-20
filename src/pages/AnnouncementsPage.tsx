@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,7 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import AnnouncementsList from '@/components/announcements/AnnouncementsList';
 import CreateAnnouncementForm from '@/components/announcements/CreateAnnouncementForm';
-import { Search, Users, FolderOpen, SortAsc, Plus, Campaign, CheckCircle, Schedule, AlertTriangle } from 'lucide-react';
+import { Search, Users, FolderOpen, SortAsc, Plus, Megaphone, CheckCircle, Calendar, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export interface Announcement {
