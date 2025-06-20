@@ -183,6 +183,7 @@ const AppContent = () => {
               <Route path="/calendar" element={<AdminRoute><CalendarPage /></AdminRoute>} />
               <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
               <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
+              <Route path="/statistics" element={<AdminRoute><StatisticsPage /></AdminRoute>} />
               <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
               <Route path="/profile" element={<AdminRoute><ProfilePage /></AdminRoute>} />
               <Route path="/management" element={<AdminRoute><UserAccountManagement /></AdminRoute>} />
