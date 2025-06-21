@@ -17,7 +17,7 @@ const OfficialsPage = () => {
   const [showRankDialog, setShowRankDialog] = useState(false);
   const { userProfile } = useAuth();
 
-  const { data: officials, isLoading, refetch } = useQuery({
+  const { data: officials, isLoading, error, refetch } = useQuery({
     queryKey: ['officials', userProfile?.brgyid],
     queryFn: async () => {
       if (!userProfile?.brgyid) return [];
@@ -109,7 +109,7 @@ const OfficialsPage = () => {
               <CardTitle>Organizational Structure</CardTitle>
             </CardHeader>
             <CardContent>
-              <OrganizationalChart officials={officials || []} />
+              <OrganizationalChart officials={officials || []} isLoading={isLoading} error={error} />
             </CardContent>
           </Card>
         </TabsContent>

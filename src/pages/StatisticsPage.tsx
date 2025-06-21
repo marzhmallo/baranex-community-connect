@@ -8,10 +8,10 @@ const StatisticsPage = () => {
   const dashboardData = useDashboardData();
   const isLoading = !dashboardData;
 
-  // Sample data for charts
+  // Sample data for charts - using safe property access
   const populationData = [
-    { name: 'Male', value: dashboardData?.maleCount || 0 },
-    { name: 'Female', value: dashboardData?.femaleCount || 0 },
+    { name: 'Male', value: dashboardData?.maleResidents || 0 },
+    { name: 'Female', value: dashboardData?.femaleResidents || 0 },
   ];
 
   const ageGroupData = [
@@ -97,7 +97,7 @@ const StatisticsPage = () => {
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.totalOfficials || 0}</div>
+            <div className="text-2xl font-bold">{dashboardData?.upcomingEvents || 0}</div>
             <p className="text-xs text-muted-foreground">
               Active positions filled
             </p>

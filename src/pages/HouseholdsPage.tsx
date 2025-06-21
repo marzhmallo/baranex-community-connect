@@ -96,7 +96,7 @@ const HouseholdsPage = () => {
 
       <Card>
         <CardContent className="p-0">
-          <HouseholdList households={filteredHouseholds} isLoading={isLoading} />
+          <HouseholdList />
         </CardContent>
       </Card>
     </div>
