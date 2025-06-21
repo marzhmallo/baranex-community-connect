@@ -1,106 +1,88 @@
-
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
+import HouseholdList from '@/components/households/HouseholdList';
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Home, Plus, Search } from "lucide-react";
-import HouseholdList from "@/components/households/HouseholdList";
-import HouseholdForm from "@/components/households/HouseholdForm";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/AuthProvider";
+import { Home } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import HouseholdForm from '@/components/households/HouseholdForm';
+import { useQueryClient } from '@tanstack/react-query';
+const HouseholdPage = () => {
+  const [isAddHouseholdOpen, setIsAddHouseholdOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const handleCloseDialog = () => {
+    console.log("Dialog close handler triggered");
 
-const HouseholdsPage = () => {
-  const [showForm, setShowForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const { userProfile } = useAuth();
+    // First close the dialog through state
+    setIsAddHouseholdOpen(false);
 
-  const { data: households, isLoading, refetch } = useQuery({
-    queryKey: ['households', userProfile?.brgyid],
-    queryFn: async () => {
-      if (!userProfile?.brgyid) return [];
-      
-      const { data, error } = await supabase
-        .from('households')
-        .select(`
-          *,
-          head_of_family:residents!households_head_of_family_fkey(*)
-        `)
-        .eq('brgyid', userProfile.brgyid)
-        .order('name', { ascending: true });
+    // Then clean up any lingering effects to ensure UI remains interactive
+    setTimeout(() => {
+      document.body.classList.remove('overflow-hidden');
+      document.body.style.pointerEvents = '';
 
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!userProfile?.brgyid
-  });
+      // Remove any focus traps or aria-hidden attributes that might be lingering
+      const elements = document.querySelectorAll('[aria-hidden="true"]');
+      elements.forEach(el => {
+        el.setAttribute('aria-hidden', 'false');
+      });
 
-  const filteredHouseholds = households?.filter(household =>
-    household.name?.toString().includes(searchTerm) ||
-    household.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${household.head_of_family?.first_name || ''} ${household.head_of_family?.last_name || ''}`
-      .toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
-  if (showForm) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Home className="h-8 w-8 text-green-600" />
-          <div>
-            <h1 className="text-3xl font-bold">Households Management</h1>
-            <p className="text-muted-foreground">Manage household records and family units in your barangay</p>
-          </div>
+      // Refresh the households list
+      queryClient.invalidateQueries({
+        queryKey: ['households']
+      });
+      console.log("Dialog cleanup completed");
+    }, 150);
+  };
+  return <div className="p-6 max-w-[1600px] mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Household Registry</h1>
+          <p className="text-muted-foreground mt-2">Track and manage households within the barangay</p>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Add New Household</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <HouseholdForm onClose={() => {
-              setShowForm(false);
-              refetch();
-            }} />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Home className="h-8 w-8 text-green-600" />
-        <div>
-          <h1 className="text-3xl font-bold">Households Management</h1>
-          <p className="text-muted-foreground">Manage household records and family units in your barangay</p>
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search households..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
+        <Button onClick={() => setIsAddHouseholdOpen(true)} className="bg-baranex-primary hover:bg-baranex-primary/90 py-0 mx-0 px-[10px]">
+          <Home className="h-4 w-4 mr-2" />
           Add Household
         </Button>
       </div>
-
-      <Card>
-        <CardContent className="p-0">
-          <HouseholdList />
+      
+      <Card className="shadow-lg border-t-4 border-t-baranex-primary bg-card text-card-foreground">
+        <CardContent className="p-6 px-0 py-0">
+          <ScrollArea className="h-[calc(100vh-200px)]">
+            <HouseholdList />
+          </ScrollArea>
         </CardContent>
       </Card>
-    </div>
-  );
+      
+      {/* Add Household Dialog */}
+      <Dialog open={isAddHouseholdOpen} onOpenChange={isOpen => {
+      console.log("Dialog open state changed to:", isOpen);
+      if (!isOpen) {
+        handleCloseDialog();
+      } else {
+        setIsAddHouseholdOpen(true);
+      }
+    }}>
+        <DialogContent className="sm:max-w-[600px]" onInteractOutside={e => {
+        console.log("Interaction outside dialog detected");
+        e.preventDefault();
+      }} onEscapeKeyDown={e => {
+        console.log("Escape key pressed");
+        e.preventDefault();
+      }}>
+          <DialogHeader>
+            <DialogTitle>Add New Household</DialogTitle>
+            <DialogDescription>
+              Enter the household information below. Required fields are marked with an asterisk (*).
+            </DialogDescription>
+          </DialogHeader>
+          <HouseholdForm onSubmit={handleCloseDialog} />
+        </DialogContent>
+      </Dialog>
+      
+      <Toaster />
+    </div>;
 };
-
-export default HouseholdsPage;
+export default HouseholdPage;
