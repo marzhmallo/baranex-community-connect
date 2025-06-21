@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Award, Plus, Users, BarChart3 } from 'lucide-react';
 import OfficialCard from '@/components/officials/OfficialCard';
-import AddOfficialDialog from '@/components/officials/AddOfficialDialog';
-import OrganizationalChart from '@/components/officials/OrganizationalChart';
-import RankManagementDialog from '@/components/officials/RankManagementDialog';
+import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
+import { OrganizationalChart } from '@/components/officials/OrganizationalChart';
+import { RankManagementDialog } from '@/components/officials/RankManagementDialog';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
@@ -90,7 +90,7 @@ const OfficialsPage = () => {
           ) : officials && officials.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {officials.map((official) => (
-                <OfficialCard key={official.id} official={official} onUpdate={refetch} />
+                <OfficialCard key={official.id} official={official} onRefresh={refetch} />
               ))}
             </div>
           ) : (

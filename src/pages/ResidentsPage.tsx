@@ -54,7 +54,7 @@ const ResidentsPage = () => {
             <CardTitle>Add New Resident</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResidentForm onSuccess={() => {
+            <ResidentForm onClose={() => {
               setShowForm(false);
               refetch();
             }} />

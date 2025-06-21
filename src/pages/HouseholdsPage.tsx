@@ -27,7 +27,7 @@ const HouseholdsPage = () => {
           head_of_family:residents!households_head_of_family_fkey(*)
         `)
         .eq('brgyid', userProfile.brgyid)
-        .order('household_number', { ascending: true });
+        .order('name', { ascending: true });
 
       if (error) throw error;
       return data || [];
@@ -36,7 +36,7 @@ const HouseholdsPage = () => {
   });
 
   const filteredHouseholds = households?.filter(household =>
-    household.household_number?.toString().includes(searchTerm) ||
+    household.name?.toString().includes(searchTerm) ||
     household.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${household.head_of_family?.first_name || ''} ${household.head_of_family?.last_name || ''}`
       .toLowerCase().includes(searchTerm.toLowerCase())
@@ -58,7 +58,7 @@ const HouseholdsPage = () => {
             <CardTitle>Add New Household</CardTitle>
           </CardHeader>
           <CardContent>
-            <HouseholdForm onSuccess={() => {
+            <HouseholdForm onClose={() => {
               setShowForm(false);
               refetch();
             }} />

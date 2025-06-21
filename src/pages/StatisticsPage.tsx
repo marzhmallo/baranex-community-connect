@@ -5,12 +5,13 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
 const StatisticsPage = () => {
-  const { stats, isLoading } = useDashboardData();
+  const dashboardData = useDashboardData();
+  const isLoading = !dashboardData;
 
   // Sample data for charts
   const populationData = [
-    { name: 'Male', value: stats?.maleCount || 0 },
-    { name: 'Female', value: stats?.femaleCount || 0 },
+    { name: 'Male', value: dashboardData?.maleCount || 0 },
+    { name: 'Female', value: dashboardData?.femaleCount || 0 },
   ];
 
   const ageGroupData = [
@@ -68,7 +69,7 @@ const StatisticsPage = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalResidents || 0}</div>
+            <div className="text-2xl font-bold">{dashboardData?.totalResidents || 0}</div>
             <p className="text-xs text-muted-foreground">
               <TrendingUp className="inline h-3 w-3 mr-1" />
               +12% from last month
@@ -82,7 +83,7 @@ const StatisticsPage = () => {
             <Home className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalHouseholds || 0}</div>
+            <div className="text-2xl font-bold">{dashboardData?.totalHouseholds || 0}</div>
             <p className="text-xs text-muted-foreground">
               <TrendingUp className="inline h-3 w-3 mr-1" />
               +5% from last month
@@ -96,7 +97,7 @@ const StatisticsPage = () => {
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalOfficials || 0}</div>
+            <div className="text-2xl font-bold">{dashboardData?.totalOfficials || 0}</div>
             <p className="text-xs text-muted-foreground">
               Active positions filled
             </p>
