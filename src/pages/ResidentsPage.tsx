@@ -1,105 +1,100 @@
 
-import React from 'react';
-import ResidentsList from '@/components/residents/ResidentsList';
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Toaster } from "@/components/ui/toaster";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import ResidentForm from '@/components/residents/ResidentForm';
-import { useQueryClient } from '@tanstack/react-query';
+import { Input } from "@/components/ui/input";
+import { Users, Plus, Search } from "lucide-react";
+import ResidentsList from "@/components/residents/ResidentsList";
+import ResidentForm from "@/components/residents/ResidentForm";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 
 const ResidentsPage = () => {
-  const [isAddResidentOpen, setIsAddResidentOpen] = React.useState(false);
-  const queryClient = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { userProfile } = useAuth();
 
-  const handleCloseDialog = () => {
-    console.log("Dialog close handler triggered");
-    
-    // First close the dialog through state
-    setIsAddResidentOpen(false);
-    
-    // Then clean up any lingering effects to ensure UI remains interactive
-    setTimeout(() => {
-      document.body.classList.remove('overflow-hidden');
-      document.body.style.pointerEvents = '';
+  const { data: residents, isLoading, refetch } = useQuery({
+    queryKey: ['residents', userProfile?.brgyid],
+    queryFn: async () => {
+      if (!userProfile?.brgyid) return [];
       
-      // Remove any focus traps or aria-hidden attributes that might be lingering
-      const elements = document.querySelectorAll('[aria-hidden="true"]');
-      elements.forEach(el => {
-        el.setAttribute('aria-hidden', 'false');
-      });
+      const { data, error } = await supabase
+        .from('residents')
+        .select('*')
+        .eq('brgyid', userProfile.brgyid)
+        .order('last_name', { ascending: true });
 
-      // Refresh the residents list
-      queryClient.invalidateQueries({
-        queryKey: ['residents']
-      });
-      
-      console.log("Dialog cleanup completed");
-    }, 150);
-  };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userProfile?.brgyid
+  });
 
-  return (
-    <div className="p-6 max-w-[1600px] mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Resident Registry</h1>
-          <p className="text-muted-foreground mt-2">Manage and track resident information in your barangay</p>
+  const filteredResidents = residents?.filter(resident =>
+    `${resident.first_name} ${resident.last_name} ${resident.middle_name || ''}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  ) || [];
+
+  if (showForm) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <Users className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-3xl font-bold">Residents Management</h1>
+            <p className="text-muted-foreground">Manage and track all residents in your barangay</p>
+          </div>
         </div>
         
-        <Button 
-          onClick={() => setIsAddResidentOpen(true)}
-          className="bg-baranex-primary hover:bg-baranex-primary/90"
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
+        <Card>
+          <CardHeader>
+            <CardTitle>Add New Resident</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResidentForm onSuccess={() => {
+              setShowForm(false);
+              refetch();
+            }} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <Users className="h-8 w-8 text-blue-600" />
+        <div>
+          <h1 className="text-3xl font-bold">Residents Management</h1>
+          <p className="text-muted-foreground">Manage and track all residents in your barangay</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search residents..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
           Add Resident
         </Button>
       </div>
-      
-      <Card className="shadow-lg border-t-4 border-t-baranex-primary bg-card text-card-foreground">
+
+      <Card>
         <CardContent className="p-0">
-          <ScrollArea className="h-[calc(100vh-200px)]">
-            <ResidentsList />
-          </ScrollArea>
+          <ResidentsList residents={filteredResidents} isLoading={isLoading} />
         </CardContent>
       </Card>
-      
-      {/* Add Resident Dialog */}
-      <Dialog 
-        open={isAddResidentOpen} 
-        onOpenChange={(isOpen) => {
-          console.log("Dialog open state changed to:", isOpen);
-          if (!isOpen) {
-            handleCloseDialog();
-          } else {
-            setIsAddResidentOpen(true);
-          }
-        }}
-      >
-        <DialogContent 
-          className="sm:max-w-[600px]"
-          onInteractOutside={(e) => {
-            console.log("Interaction outside dialog detected");
-            e.preventDefault();
-          }}
-          onEscapeKeyDown={(e) => {
-            console.log("Escape key pressed");
-            e.preventDefault();
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Add New Resident</DialogTitle>
-            <DialogDescription>
-              Enter the resident's information below. Required fields are marked with an asterisk (*).
-            </DialogDescription>
-          </DialogHeader>
-          <ResidentForm onSubmit={handleCloseDialog} />
-        </DialogContent>
-      </Dialog>
-      
-      {/* Make sure Toaster is included on the page */}
-      <Toaster />
     </div>
   );
 };
