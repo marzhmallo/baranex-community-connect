@@ -27,8 +27,9 @@ const CalendarPage = () => {
           </CardHeader>
           <CardContent>
             <EventForm 
-              onSuccess={() => setShowEventForm(false)}
-              initialDate={selectedDate}
+              onClose={() => setShowEventForm(false)}
+              onSubmit={() => setShowEventForm(false)}
+              selectedDate={selectedDate}
             />
           </CardContent>
         </Card>

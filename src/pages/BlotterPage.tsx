@@ -77,6 +77,8 @@ const BlotterPage = () => {
       <FlagIndividualDialog 
         open={showFlagDialog} 
         onOpenChange={setShowFlagDialog}
+        incident={null}
+        onSuccess={() => setShowFlagDialog(false)}
       />
     </div>
   );

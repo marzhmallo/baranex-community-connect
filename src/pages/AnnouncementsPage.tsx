@@ -25,7 +25,7 @@ const AnnouncementsPage = () => {
             <CardTitle>Create New Announcement</CardTitle>
           </CardHeader>
           <CardContent>
-            <CreateAnnouncementForm onSuccess={() => setShowCreateForm(false)} />
+            <CreateAnnouncementForm onClose={() => setShowCreateForm(false)} />
           </CardContent>
         </Card>
       </div>

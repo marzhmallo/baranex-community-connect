@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Event } from "@/pages/CalendarPage";
+import { Event } from "@/lib/types/events";
 import { 
   AlertDialog,
   AlertDialogAction,
