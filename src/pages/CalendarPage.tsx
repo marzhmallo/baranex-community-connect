@@ -54,12 +54,7 @@ const CalendarPage = () => {
         </Button>
       </div>
 
-      <CalendarView 
-        onDateSelect={(date) => {
-          setSelectedDate(date);
-          setShowEventForm(true);
-        }}
-      />
+      <CalendarView />
     </div>
   );
 };

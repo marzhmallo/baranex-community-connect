@@ -5,9 +5,25 @@ import { Button } from "@/components/ui/button";
 import { BellRing, Plus } from "lucide-react";
 import AnnouncementsList from "@/components/announcements/AnnouncementsList";
 import CreateAnnouncementForm from "@/components/announcements/CreateAnnouncementForm";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Announcement } from "@/lib/types/announcements";
 
 const AnnouncementsPage = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+
+  const { data: announcements = [], isLoading, refetch } = useQuery({
+    queryKey: ['announcements'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Announcement[];
+    }
+  });
 
   if (showCreateForm) {
     return (
@@ -49,7 +65,11 @@ const AnnouncementsPage = () => {
         </Button>
       </div>
 
-      <AnnouncementsList />
+      <AnnouncementsList 
+        announcements={announcements}
+        isLoading={isLoading}
+        refetch={refetch}
+      />
     </div>
   );
 };

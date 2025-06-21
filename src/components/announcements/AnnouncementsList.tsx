@@ -30,7 +30,7 @@ import { format } from 'date-fns';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Announcement } from '@/pages/AnnouncementsPage';
+import { Announcement } from '@/lib/types/announcements';
 
 interface AnnouncementListProps {
   announcements: Announcement[];

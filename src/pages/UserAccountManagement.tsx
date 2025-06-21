@@ -1,66 +1,91 @@
-
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Users, Plus, Search, UserCheck, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, Plus, Search, Shield, UserCheck, UserX } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/AuthProvider";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const UserAccountManagement = () => {
+  const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const { userProfile } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const { data: users, isLoading, refetch } = useQuery({
-    queryKey: ['users', userProfile?.brgyid],
-    queryFn: async () => {
-      if (!userProfile?.brgyid) return [];
-      
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('brgyid', userProfile.brgyid)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
-    },
-    enabled: !!userProfile?.brgyid
-  });
-
-  const filteredUsers = users?.filter(user =>
-    `${user.first_name || ''} ${user.last_name || ''} ${user.email || ''}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  ) || [];
-
-  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_active: !currentStatus })
-      .eq('id', userId);
-
-    if (!error) {
-      refetch();
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch users",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          status: currentStatus ? 'inactive' : 'active'
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `User ${currentStatus ? 'deactivated' : 'activated'} successfully`,
+      });
+
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const filteredUsers = users.filter(user =>
+    user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <Users className="h-8 w-8 text-cyan-600" />
+        <Users className="h-8 w-8 text-blue-600" />
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">Manage user accounts and access permissions</p>
+          <h1 className="text-3xl font-bold">User Account Management</h1>
+          <p className="text-muted-foreground">Manage user accounts and permissions</p>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+      <div className="flex justify-between items-center">
+        <div className="relative w-72">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Search users..."
             value={searchTerm}
@@ -68,60 +93,57 @@ const UserAccountManagement = () => {
             className="pl-10"
           />
         </div>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Add User
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>User Accounts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="animate-pulse flex items-center space-x-4 p-4 border rounded">
-                  <div className="h-12 w-12 bg-gray-200 rounded-full"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLoading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="rounded-full bg-gray-300 h-12 w-12"></div>
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-300 rounded w-1/2"></div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : filteredUsers.length > 0 ? (
-            <div className="space-y-4">
-              {filteredUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          filteredUsers.map((user) => (
+            <Card key={user.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={user.avatar_url || ''} />
+                      <AvatarImage src={user.profile_picture_url} />
                       <AvatarFallback>
-                        {`${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`}
+                        {user.firstname?.charAt(0)}{user.lastname?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium">
-                        {user.first_name} {user.last_name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {user.email}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role}
-                        </Badge>
-                        <Badge variant={user.is_active ? 'default' : 'destructive'}>
-                          {user.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </div>
+                      <h3 className="font-semibold">
+                        {user.firstname} {user.lastname}
+                      </h3>
+                      <p className="text-sm text-gray-600">{user.email}</p>
+                      <p className="text-xs text-gray-500">{user.role}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-end space-y-2">
+                    <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                      {user.status === 'active' ? 'Active' : 'Inactive'}
+                    </Badge>
                     <Button
-                      variant={user.is_active ? "destructive" : "default"}
                       size="sm"
-                      onClick={() => handleToggleUserStatus(user.id, user.is_active)}
+                      variant={user.status === 'active' ? 'destructive' : 'default'}
+                      onClick={() => toggleUserStatus(user.id, user.status === 'active')}
                     >
-                      {user.is_active ? (
+                      {user.status === 'active' ? (
                         <>
                           <UserX className="h-4 w-4 mr-1" />
                           Deactivate
@@ -135,16 +157,17 @@ const UserAccountManagement = () => {
                     </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No users found.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {!isLoading && filteredUsers.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No users found matching your search.</p>
+        </div>
+      )}
     </div>
   );
 };
