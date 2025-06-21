@@ -11,11 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileCog, Save, UserCheck } from "lucide-react";
+import { FileCog, Save, UserCheck, X } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { addDays } from "date-fns";
 import { v4 as uuidv4 } from 'uuid';
+
 const issueDocumentSchema = z.object({
   document_type_id: z.string().uuid({
     message: "Please select a document type"
@@ -32,7 +33,12 @@ const issueDocumentSchema = z.object({
   payment_status: z.string(),
   status: z.string()
 });
-const IssueDocumentForm = () => {
+
+interface IssueDocumentFormProps {
+  onClose?: () => void;
+}
+
+const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [documentTypes, setDocumentTypes] = useState([]);
   const [residents, setResidents] = useState([]);
@@ -202,6 +208,11 @@ const IssueDocumentForm = () => {
       form.reset();
       setSelectedDocType(null);
       setDynamicFields({});
+      
+      // Close the modal if onClose is provided
+      if (onClose) {
+        onClose();
+      }
     } catch (error) {
       console.error("Error issuing document:", error);
       toast({
@@ -231,7 +242,23 @@ const IssueDocumentForm = () => {
         </Card>
       </div>;
   }
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
+      {onClose && (
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-2xl font-bold">Issue New Document</h2>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      
       <Card className="mx-[15px]">
         <CardContent className="pt-6">
           <Form {...form}>
@@ -368,7 +395,12 @@ const IssueDocumentForm = () => {
                   This document will be valid for {selectedDocType.validity_days} days from the date of issuance.
                 </p>}
               
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-3">
+                {onClose && (
+                  <Button type="button" variant="outline" onClick={onClose}>
+                    Cancel
+                  </Button>
+                )}
                 <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
                   {isSubmitting ? <>Processing...</> : <>
                       <UserCheck className="mr-2 h-4 w-4" />
@@ -380,6 +412,8 @@ const IssueDocumentForm = () => {
           </Form>
         </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 };
+
 export default IssueDocumentForm;
