@@ -205,7 +205,7 @@ const DocumentsPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-lg shadow-sm min-h-[600px] flex flex-col">
+          <div className="bg-white rounded-lg shadow-sm min-h-[700px] flex flex-col">
             <div className="p-4 border-b border-gray-200">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <h2 className="text-lg font-semibold text-gray-900">Document Library</h2>
@@ -226,7 +226,7 @@ const DocumentsPage = () => {
               </div>
             </div>
 
-            <div className="p-4 flex-1">
+            <div className="p-4 flex-1 flex flex-col">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
                 <div className="flex flex-wrap gap-2">
                   <button className="bg-primary-100 text-primary-700 px-3 py-1.5 rounded-full text-sm hover:bg-primary-200 transition-colors">All</button>
@@ -254,7 +254,7 @@ const DocumentsPage = () => {
                 </div>
               </div>
 
-              <div className="space-y-3 flex-1">
+              <div className="space-y-3 flex-1 mb-4">
                 {mockTemplates.map((template) => (
                   <div key={template.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center justify-between">
@@ -291,29 +291,31 @@ const DocumentsPage = () => {
                 ))}
               </div>
 
-              <div className="mt-4 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <input
-                    id="selectAll"
-                    type="checkbox"
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <label htmlFor="selectAll" className="text-sm text-gray-600">
-                    Select All
-                  </label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                    Previous
-                  </button>
-                  <div className="flex gap-1">
-                    <button className="px-3 py-1 bg-primary-100 text-primary-700 rounded-md text-sm font-medium">1</button>
-                    <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">2</button>
-                    <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">3</button>
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="selectAll"
+                      type="checkbox"
+                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    />
+                    <label htmlFor="selectAll" className="text-sm text-gray-600">
+                      Select All
+                    </label>
                   </div>
-                  <button className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                    Next
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                      Previous
+                    </button>
+                    <div className="flex gap-1">
+                      <button className="px-3 py-1 bg-primary-100 text-primary-700 rounded-md text-sm font-medium">1</button>
+                      <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">2</button>
+                      <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">3</button>
+                    </div>
+                    <button className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                      Next
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
