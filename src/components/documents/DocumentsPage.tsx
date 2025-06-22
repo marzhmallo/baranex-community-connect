@@ -205,7 +205,7 @@ const DocumentsPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-lg shadow-sm min-h-[700px] flex flex-col">
+          <div className="bg-white rounded-lg shadow-sm min-h-[620px] flex flex-col">
             <div className="p-4 border-b border-gray-200">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <h2 className="text-lg font-semibold text-gray-900">Document Library</h2>
