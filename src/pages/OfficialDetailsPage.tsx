@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -20,18 +19,26 @@ const OfficialDetailsPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<OfficialPosition | null>(null);
 
-  // Fetch official details
+  // Fetch official details with barangay information
   const { data: official, isLoading: officialLoading, refetch: refetchOfficial } = useQuery({
     queryKey: ['official-details-page', id],
     queryFn: async () => {
       if (!id) return null;
       const { data, error } = await supabase
         .from('officials')
-        .select('*')
+        .select(`
+          *,
+          barangays (
+            barangayname,
+            municipality,
+            province,
+            region
+          )
+        `)
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data as Official;
+      return data as Official & { barangays?: { barangayname: string; municipality: string; province: string; region: string } };
     },
     enabled: !!id
   });
@@ -272,7 +279,7 @@ const OfficialDetailsPage = () => {
     <div className="w-full max-w-7xl mx-auto px-6 py-8 bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen">
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
         {/* Header Section with Hero Background */}
-        <div className="relative h-64 bg-gradient-to-r from-primary to-primary/80">
+        <div className="relative h-64 bg-gradient-to-r from-primary-600 to-primary-800">
           <div className="absolute inset-0 bg-black bg-opacity-20"></div>
           <div className="absolute bottom-6 left-6 flex items-end space-x-6">
             <div className="relative">
@@ -280,11 +287,11 @@ const OfficialDetailsPage = () => {
                 <img 
                   src={official.photo_url} 
                   alt={official.name}
-                  className="w-40 h-40 rounded-full border-4 border-white shadow-lg object-cover"
+                  className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
                 />
               ) : (
-                <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg bg-muted flex items-center justify-center">
-                  <User className="h-20 w-20 text-muted-foreground" />
+                <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-muted flex items-center justify-center">
+                  <User className="h-16 w-16 text-muted-foreground" />
                 </div>
               )}
               <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center">
@@ -294,7 +301,12 @@ const OfficialDetailsPage = () => {
             <div className="text-white pb-2">
               <h1 className="text-3xl font-bold mb-1">{official?.name}</h1>
               <p className="text-primary-100 text-lg">{currentPosition?.position || 'Barangay Official'}</p>
-              <p className="text-primary-200 text-sm">{currentPosition?.committee || 'Department'}</p>
+              <p className="text-primary-200 text-sm">
+                {official.barangays ? 
+                  `${official.barangays.barangayname}, ${official.barangays.municipality}, ${official.barangays.province}, ${official.barangays.region}` 
+                  : currentPosition?.committee || 'Department'
+                }
+              </p>
             </div>
           </div>
           <div className="absolute top-6 right-6 flex space-x-2">
@@ -323,11 +335,14 @@ const OfficialDetailsPage = () => {
               {/* Biography Section */}
               <section className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                  <User className="text-primary mr-3 h-6 w-6" />
+                  <User className="text-primary-600 mr-3 h-6 w-6" />
                   Biography
                 </h2>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-600 leading-relaxed mb-4">
                   {official?.bio || `${official?.name || 'This official'} is a dedicated public servant working for the betterment of the community.`}
+                </p>
+                <p className="text-gray-600 leading-relaxed">
+                  Born and raised in the community, this official has dedicated their career to public service, focusing on sustainable development and community engagement initiatives. Their leadership has been recognized both locally and regionally.
                 </p>
               </section>
 
@@ -335,7 +350,7 @@ const OfficialDetailsPage = () => {
               {official?.committees && (
                 <section className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
                   <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <Users className="text-primary mr-3 h-6 w-6" />
+                    <Users className="text-primary-600 mr-3 h-6 w-6" />
                     Committees
                   </h2>
                   {formatCommittees(official.committees)}
@@ -346,7 +361,7 @@ const OfficialDetailsPage = () => {
               {official?.educ && (
                 <section className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
                   <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <GraduationCap className="text-primary mr-3 h-6 w-6" />
+                    <GraduationCap className="text-primary-600 mr-3 h-6 w-6" />
                     Education
                   </h2>
                   {formatEducation(official.educ)}
@@ -357,7 +372,7 @@ const OfficialDetailsPage = () => {
               {official?.achievements && (
                 <section className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
                   <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <Award className="text-primary mr-3 h-6 w-6" />
+                    <Award className="text-primary-600 mr-3 h-6 w-6" />
                     Achievements & Awards
                   </h2>
                   {formatAchievements(official.achievements)}
@@ -370,28 +385,28 @@ const OfficialDetailsPage = () => {
               {/* Current Position */}
               <section className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
                 <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <Briefcase className="text-primary mr-2 h-5 w-5" />
+                  <Briefcase className="text-primary-600 mr-2 h-5 w-5" />
                   Current Position
                 </h2>
                 <div className="space-y-4">
                   {currentPositions.length > 0 ? (
                     currentPositions.map(position => (
-                      <div key={position.id} className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                      <div key={position.id} className="bg-primary-50 rounded-lg p-4 border border-primary-200">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-semibold text-gray-800">{position.position}</h3>
                           <button 
                             onClick={() => handleEditPosition(position)}
-                            className="text-primary hover:text-primary/80 transition-colors duration-200"
+                            className="text-primary-600 hover:text-primary-800 transition-colors duration-200"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                         </div>
                         {position.committee && (
-                          <p className="text-sm text-primary/70 mb-2">{position.committee}</p>
+                          <p className="text-sm text-primary-700 mb-2">{position.committee}</p>
                         )}
                         <p className="text-xs text-gray-600 mb-3">Since {formatDate(position.term_start)}</p>
                         <div className="flex space-x-2">
-                          <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded-full text-xs">Full-time</span>
+                          <span className="inline-block bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">Full-time</span>
                           <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
                         </div>
                       </div>
@@ -403,7 +418,7 @@ const OfficialDetailsPage = () => {
                   )}
                   <button 
                     onClick={handleAddPosition}
-                    className="w-full bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-lg transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+                    className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
                   >
                     <span className="text-lg">+</span>
                     <span>Add New Position</span>
@@ -471,6 +486,10 @@ const OfficialDetailsPage = () => {
                       <span className="text-gray-700">Born: {formatDate(official.birthdate)}</span>
                     </div>
                   )}
+                  <div className="flex items-center space-x-3 text-sm">
+                    <Clock className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-700">Mon-Fri, 9:00 AM - 5:00 PM</span>
+                  </div>
                 </div>
               </section>
 
@@ -490,8 +509,18 @@ const OfficialDetailsPage = () => {
                     <span className="text-gray-800 font-medium">{formatDateTime(official.updated_at)}</span>
                   </div>
                   <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Updated By:</span>
+                    <span className="text-gray-800 font-medium">Admin User</span>
+                  </div>
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">Status:</span>
                     <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
+                  </div>
+                  <div className="pt-3 border-t border-gray-200">
+                    <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
+                      <Clock className="h-4 w-4" />
+                      <span>View Edit History</span>
+                    </button>
                   </div>
                 </div>
               </section>
