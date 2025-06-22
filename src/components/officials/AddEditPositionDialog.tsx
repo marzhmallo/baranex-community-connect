@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,26 +5,12 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { OfficialPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/components/ui/form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 const positionSchema = z.object({
   position: z.string().min(1, 'Position is required'),
   committee: z.string().optional(),
@@ -35,9 +20,7 @@ const positionSchema = z.object({
   description: z.string().optional(),
   position_no: z.number().min(1, 'Position number must be at least 1').optional()
 });
-
 type PositionFormValues = z.infer<typeof positionSchema>;
-
 interface AddEditPositionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -111,19 +94,18 @@ const POSITION_RANKINGS = [{
   value: 21,
   label: "21 - SK Kagawad 7"
 }];
-
-export function AddEditPositionDialog({ 
-  open, 
-  onOpenChange, 
-  position, 
-  officialId, 
-  onSuccess 
+export function AddEditPositionDialog({
+  open,
+  onOpenChange,
+  position,
+  officialId,
+  onSuccess
 }: AddEditPositionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
   const isEditMode = !!position;
-  
   const form = useForm<PositionFormValues>({
     resolver: zodResolver(positionSchema),
     defaultValues: {
@@ -136,7 +118,7 @@ export function AddEditPositionDialog({
       position_no: undefined
     }
   });
-  
+
   // Update form values when position changes or dialog opens
   useEffect(() => {
     if (position && open) {
@@ -146,7 +128,6 @@ export function AddEditPositionDialog({
         const date = new Date(dateString);
         return date.toISOString().split('T')[0];
       };
-      
       form.reset({
         position: position.position || '',
         committee: position.committee || '',
@@ -169,68 +150,56 @@ export function AddEditPositionDialog({
       });
     }
   }, [position, open, form]);
-  
   const handleIsCurrentChange = (checked: boolean) => {
     if (checked) {
       form.setValue('term_end', '');
     }
   };
-  
   const onSubmit = async (data: PositionFormValues) => {
     if (!officialId) return;
-    
     try {
       setIsSubmitting(true);
-      
+
       // Ensure term_start is always provided (required by the database)
       const formattedData = {
         ...data,
         official_id: officialId,
         is_current: !!data.is_current,
         // Set a far future date for term_end if is_current is true
-        term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : (data.term_end || new Date().toISOString().split('T')[0]),
+        term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : data.term_end || new Date().toISOString().split('T')[0],
         position: data.position,
-        term_start: data.term_start, // Ensure this field is included
+        term_start: data.term_start,
+        // Ensure this field is included
         position_no: data.position_no || null // Include position_no
       };
-      
       let result;
-      
       if (isEditMode && position) {
         // Update existing position
-        result = await supabase
-          .from('official_positions')
-          .update(formattedData)
-          .eq('id', position.id);
+        result = await supabase.from('official_positions').update(formattedData).eq('id', position.id);
       } else {
         // Insert new position
-        result = await supabase
-          .from('official_positions')
-          .insert(formattedData);
+        result = await supabase.from('official_positions').insert(formattedData);
       }
-      
       if (result.error) {
         throw result.error;
       }
 
       // Update the officials table with the same position_no
       if (data.position_no !== undefined) {
-        const { error: officialError } = await supabase
-          .from('officials')
-          .update({ position_no: data.position_no })
-          .eq('id', officialId);
-
+        const {
+          error: officialError
+        } = await supabase.from('officials').update({
+          position_no: data.position_no
+        }).eq('id', officialId);
         if (officialError) {
           console.error('Error updating official position_no:', officialError);
           // Don't throw here as the position was already saved successfully
         }
       }
-      
       toast({
         title: `Position ${isEditMode ? 'updated' : 'added'} successfully`,
         description: `The position has been ${isEditMode ? 'updated' : 'added'} successfully.`
       });
-      
       onSuccess();
       onOpenChange(false);
     } catch (error) {
@@ -244,9 +213,7 @@ export function AddEditPositionDialog({
       setIsSubmitting(false);
     }
   };
-  
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Position' : 'Add Position'}</DialogTitle>
@@ -254,125 +221,76 @@ export function AddEditPositionDialog({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="position"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="position" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Position</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g., Barangay Captain"
-                      {...field}
-                      className="bg-[#2a3649] border-[#3a4659]"
-                    />
+                    <Input placeholder="e.g., Barangay Captain" {...field} className="bg-[#2a3649] border-[#3a4659]" />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
 
-            <FormField
-              control={form.control}
-              name="position_no"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="position_no" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Position Rank (optional)</FormLabel>
                   <FormControl>
-                    <Select
-                      value={field.value?.toString() || ""}
-                      onValueChange={(value) => field.onChange(value ? Number(value) : undefined)}
-                    >
+                    <Select value={field.value?.toString() || ""} onValueChange={value => field.onChange(value ? Number(value) : undefined)}>
                       <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
                         <SelectValue placeholder="Select position rank" />
                       </SelectTrigger>
                       <SelectContent>
-                        {POSITION_RANKINGS.map((rank) => (
-                          <SelectItem key={rank.value} value={rank.value.toString()}>
+                        {POSITION_RANKINGS.map(rank => <SelectItem key={rank.value} value={rank.value.toString()}>
                             {rank.label}
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
                   </FormControl>
-                  <div className="text-xs text-gray-400 mt-1">
-                    Lower numbers appear first (1 = highest priority). This will also update the official's rank.
-                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Lower numbers appear first (1 = highest priority).</div>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
             
-            <FormField
-              control={form.control}
-              name="committee"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="committee" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Committee (optional)</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g., Peace & Order"
-                      {...field}
-                      className="bg-[#2a3649] border-[#3a4659]"
-                    />
+                    <Input placeholder="e.g., Peace & Order" {...field} className="bg-[#2a3649] border-[#3a4659]" />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
             
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="term_start"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="term_start" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Term Start Date</FormLabel>
                     <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        className="bg-[#2a3649] border-[#3a4659]"
-                      />
+                      <Input type="date" {...field} className="bg-[#2a3649] border-[#3a4659]" />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
               
-              <FormField
-                control={form.control}
-                name="term_end"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="term_end" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Term End Date (optional)</FormLabel>
                     <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        disabled={form.watch('is_current')}
-                        className="bg-[#2a3649] border-[#3a4659]"
-                      />
+                      <Input type="date" {...field} disabled={form.watch('is_current')} className="bg-[#2a3649] border-[#3a4659]" />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
             
-            <FormField
-              control={form.control}
-              name="is_current"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649]">
+            <FormField control={form.control} name="is_current" render={({
+            field
+          }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649]">
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(checked) => {
-                        field.onChange(checked);
-                        handleIsCurrentChange(!!checked);
-                      }}
-                    />
+                    <Checkbox checked={field.value} onCheckedChange={checked => {
+                field.onChange(checked);
+                handleIsCurrentChange(!!checked);
+              }} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>Current Position</FormLabel>
@@ -380,48 +298,28 @@ export function AddEditPositionDialog({
                       Check if this is a current position (no end date)
                     </p>
                   </div>
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
             
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="description" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Brief description of the role"
-                      {...field}
-                      className="bg-[#2a3649] border-[#3a4659]"
-                    />
+                    <Input placeholder="Brief description of the role" {...field} className="bg-[#2a3649] border-[#3a4659]" />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
             
             <DialogFooter>
-              <Button
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                className="border-[#3a4659]"
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="border-[#3a4659]">
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
+              <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
                 {isSubmitting ? 'Saving...' : isEditMode ? 'Update' : 'Add'}
               </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
