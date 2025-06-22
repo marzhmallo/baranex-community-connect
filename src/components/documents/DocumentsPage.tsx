@@ -59,9 +59,9 @@ const DocumentsPage = () => {
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 bg-gray-50 min-h-screen">
+    <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen space-y-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Barangay Document Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Barangay Document Management</h1>
         <p className="text-gray-600">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
 
@@ -70,10 +70,10 @@ const DocumentsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-600">Total Documents</p>
-              <p className="text-xl font-bold text-gray-900">1,247</p>
+              <p className="text-lg font-bold text-gray-900">1,247</p>
             </div>
             <div className="bg-primary-100 p-2 rounded-full">
-              <FileText className="h-5 w-5 text-primary-600" />
+              <FileText className="h-4 w-4 text-primary-600" />
             </div>
           </div>
         </div>
@@ -82,10 +82,10 @@ const DocumentsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-600">Pending Requests</p>
-              <p className="text-xl font-bold text-orange-600">23</p>
+              <p className="text-lg font-bold text-orange-600">23</p>
             </div>
             <div className="bg-orange-100 p-2 rounded-full">
-              <Clock className="h-5 w-5 text-orange-600" />
+              <Clock className="h-4 w-4 text-orange-600" />
             </div>
           </div>
         </div>
@@ -94,10 +94,10 @@ const DocumentsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-600">Issued Today</p>
-              <p className="text-xl font-bold text-green-600">8</p>
+              <p className="text-lg font-bold text-green-600">8</p>
             </div>
             <div className="bg-green-100 p-2 rounded-full">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-green-600" />
             </div>
           </div>
         </div>
@@ -106,36 +106,36 @@ const DocumentsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-600">Active Templates</p>
-              <p className="text-xl font-bold text-blue-600">15</p>
+              <p className="text-lg font-bold text-blue-600">15</p>
             </div>
             <div className="bg-blue-100 p-2 rounded-full">
-              <FileText className="h-5 w-5 text-blue-600" />
+              <FileText className="h-4 w-4 text-blue-600" />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow-sm p-4 col-span-full">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary-600" />
               Document Processing Status
             </h2>
             <div className="flex gap-2">
-              <select className="text-xs border border-gray-300 rounded-md p-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              <select className="text-xs border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                 <option>This Week</option>
                 <option>This Month</option>
                 <option>Last 3 Months</option>
                 <option>Last Year</option>
               </select>
-              <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
+              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
                 <RefreshCw className="h-4 w-4" />
               </button>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
             <div className="rounded-lg bg-green-50 border border-green-100 p-3 flex justify-between items-center">
               <div>
                 <p className="text-xs text-gray-500">Ready for Pickup</p>
@@ -204,13 +204,13 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-lg shadow-sm">
             <div className="p-4 border-b border-gray-200">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <h2 className="text-lg font-semibold text-gray-900">Document Library</h2>
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <input
@@ -228,27 +228,27 @@ const DocumentsPage = () => {
             </div>
 
             <div className="p-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div className="flex flex-wrap gap-2">
-                  <button className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm hover:bg-primary-200 transition-colors">All</button>
-                  <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Certificates</button>
-                  <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Permits</button>
-                  <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Clearances</button>
-                  <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">IDs</button>
+                  <button className="bg-primary-100 text-primary-700 px-3 py-1.5 rounded-full text-sm hover:bg-primary-200 transition-colors">All</button>
+                  <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">Certificates</button>
+                  <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">Permits</button>
+                  <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">Clearances</button>
+                  <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">IDs</button>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button className="flex items-center gap-1 border border-gray-300 rounded px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors">
+                <div className="flex flex-wrap items-center gap-3">
+                  <button className="flex items-center gap-2 border border-gray-300 rounded px-3 py-2 text-sm hover:bg-gray-50 transition-colors">
                     <Filter className="h-4 w-4 text-gray-600" />
                     Advanced Filters
                   </button>
                   <div className="flex items-center border border-gray-300 rounded-lg">
-                    <select className="text-sm px-3 py-1.5 rounded-l-lg border-r border-gray-300 focus:outline-none bg-white text-gray-700">
+                    <select className="text-sm px-3 py-2 rounded-l-lg border-r border-gray-300 focus:outline-none bg-white text-gray-700">
                       <option>Bulk Actions</option>
                       <option>Download Selected</option>
                       <option>Archive Selected</option>
                       <option>Delete Selected</option>
                     </select>
-                    <button className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-r-lg hover:bg-gray-200 transition-colors text-sm">
+                    <button className="px-3 py-2 bg-gray-100 text-gray-700 rounded-r-lg hover:bg-gray-200 transition-colors text-sm">
                       Apply
                     </button>
                   </div>
@@ -257,7 +257,7 @@ const DocumentsPage = () => {
 
               <div className="space-y-3">
                 {mockTemplates.map((template) => (
-                  <div key={template.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                  <div key={template.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center h-5">
@@ -292,7 +292,7 @@ const DocumentsPage = () => {
                 ))}
               </div>
 
-              <div className="mt-4 flex justify-between items-center">
+              <div className="mt-6 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <input
                     id="selectAll"
@@ -307,7 +307,7 @@ const DocumentsPage = () => {
                   <button className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                     Previous
                   </button>
-                  <div className="flex">
+                  <div className="flex gap-1">
                     <button className="px-3 py-1 bg-primary-100 text-primary-700 rounded-md text-sm font-medium">1</button>
                     <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">2</button>
                     <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">3</button>
@@ -320,7 +320,7 @@ const DocumentsPage = () => {
             </div>
           </div>
 
-          <div className="mt-4 bg-white rounded-lg shadow-sm">
+          <div className="bg-white rounded-lg shadow-sm">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Filter className="h-5 w-5" />
@@ -328,10 +328,10 @@ const DocumentsPage = () => {
               </h2>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
-                  <select className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Document Type</label>
+                  <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                     <option value="">All Types</option>
                     <option value="certificate">Certificates</option>
                     <option value="permit">Permits</option>
@@ -340,24 +340,23 @@ const DocumentsPage = () => {
                   </select>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-                  <div className="flex items-center gap-2">
+                <div className="md:col-span-2 xl:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <input 
                       type="date" 
-                      className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
-                    <span className="text-gray-500">to</span>
                     <input 
                       type="date" 
-                      className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                     <option value="">All Statuses</option>
                     <option value="active">Active</option>
                     <option value="archived">Archived</option>
@@ -366,7 +365,7 @@ const DocumentsPage = () => {
                 </div>
               </div>
               
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3">
                 <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                   Reset Filters
                 </button>
@@ -379,8 +378,8 @@ const DocumentsPage = () => {
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="mb-4 bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Activity className="h-5 w-5" />
@@ -390,8 +389,8 @@ const DocumentsPage = () => {
             <div className="p-0">
               <div className="relative">
                 <div className="absolute top-0 bottom-0 left-6 w-0.5 bg-gray-200 z-0"></div>
-                <div className="p-4 relative z-10">
-                  <div className="grid grid-cols-[auto_1fr] gap-3 mb-4">
+                <div className="p-4 relative z-10 space-y-4">
+                  <div className="grid grid-cols-[auto_1fr] gap-3">
                     <div className="mt-1">
                       <div className="h-5 w-5 rounded-full bg-green-500 border-4 border-white shadow"></div>
                     </div>
@@ -408,7 +407,7 @@ const DocumentsPage = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-[auto_1fr] gap-3 mb-4">
+                  <div className="grid grid-cols-[auto_1fr] gap-3">
                     <div className="mt-1">
                       <div className="h-5 w-5 rounded-full bg-yellow-500 border-4 border-white shadow"></div>
                     </div>
@@ -455,7 +454,7 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      <div className="mb-6 bg-white rounded-lg shadow-sm">
+      <div className="bg-white rounded-lg shadow-sm">
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -472,7 +471,7 @@ const DocumentsPage = () => {
           </div>
         </div>
         <div className="p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
@@ -482,10 +481,10 @@ const DocumentsPage = () => {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <button className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm hover:bg-primary-200 transition-colors">All Documents</button>
-              <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">In Progress</button>
-              <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Completed</button>
-              <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Rejected</button>
+              <button className="bg-primary-100 text-primary-700 px-3 py-1.5 rounded-full text-sm hover:bg-primary-200 transition-colors">All Documents</button>
+              <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">In Progress</button>
+              <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">Completed</button>
+              <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">Rejected</button>
             </div>
           </div>
           
@@ -493,12 +492,12 @@ const DocumentsPage = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking ID</th>
-                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document</th>
-                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested By</th>
-                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Update</th>
-                  <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking ID</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested By</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Update</th>
+                  <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -572,7 +571,7 @@ const DocumentsPage = () => {
             </table>
           </div>
           
-          <div className="mt-4 flex justify-between items-center">
+          <div className="mt-6 flex justify-between items-center">
             <div className="text-sm text-gray-600">
               Showing 3 of 42 documents
             </div>
@@ -580,7 +579,7 @@ const DocumentsPage = () => {
               <button className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                 Previous
               </button>
-              <div className="flex">
+              <div className="flex gap-1">
                 <button className="px-3 py-1 bg-primary-100 text-primary-700 rounded-md text-sm font-medium">1</button>
                 <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">2</button>
                 <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">3</button>
@@ -593,7 +592,7 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -602,8 +601,8 @@ const DocumentsPage = () => {
             </h2>
           </div>
           <div className="p-4">
-            <div className="space-y-3">
-              <div className="border-l-4 border-orange-400 bg-orange-50 p-3 rounded-r-lg">
+            <div className="space-y-4">
+              <div className="border-l-4 border-orange-400 bg-orange-50 p-4 rounded-r-lg">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-medium text-gray-900">Maria Santos</p>
@@ -611,17 +610,17 @@ const DocumentsPage = () => {
                     <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
                   </div>
                   <div className="flex gap-2">
-                    <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors">
+                    <button className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700 transition-colors">
                       Approve
                     </button>
-                    <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
+                    <button className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700 transition-colors">
                       Deny
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div className="border-l-4 border-orange-400 bg-orange-50 p-3 rounded-r-lg">
+              <div className="border-l-4 border-orange-400 bg-orange-50 p-4 rounded-r-lg">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-medium text-gray-900">Juan Dela Cruz</p>
@@ -629,17 +628,17 @@ const DocumentsPage = () => {
                     <p className="text-xs text-gray-500 mt-1">5 hours ago</p>
                   </div>
                   <div className="flex gap-2">
-                    <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors">
+                    <button className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700 transition-colors">
                       Approve
                     </button>
-                    <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
+                    <button className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700 transition-colors">
                       Deny
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div className="border-l-4 border-orange-400 bg-orange-50 p-3 rounded-r-lg">
+              <div className="border-l-4 border-orange-400 bg-orange-50 p-4 rounded-r-lg">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-medium text-gray-900">Anna Reyes</p>
@@ -647,17 +646,17 @@ const DocumentsPage = () => {
                     <p className="text-xs text-gray-500 mt-1">1 day ago</p>
                   </div>
                   <div className="flex gap-2">
-                    <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors">
+                    <button className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700 transition-colors">
                       Approve
                     </button>
-                    <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
+                    <button className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700 transition-colors">
                       Deny
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-            <button className="w-full mt-3 text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center justify-center gap-1">
+            <button className="w-full mt-4 text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center justify-center gap-1">
               View All Requests
               <TrendingUp className="h-4 w-4" />
             </button>
@@ -672,7 +671,7 @@ const DocumentsPage = () => {
             </h2>
           </div>
           <div className="p-4">
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 gap-3">
               <button 
                 onClick={() => setShowIssueForm(true)}
                 className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
