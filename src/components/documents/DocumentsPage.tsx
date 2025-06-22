@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,13 +58,13 @@ const DocumentsPage = () => {
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen space-y-6">
-      <div className="mb-6">
+    <div className="w-full max-w-7xl mx-auto p-4 bg-gray-50 min-h-screen space-y-4">
+      <div className="mb-4">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Barangay Document Management</h1>
         <p className="text-gray-600">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
         <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -115,7 +114,7 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-4">
         <div className="bg-white rounded-lg shadow-sm p-4 col-span-full">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -135,7 +134,7 @@ const DocumentsPage = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
             <div className="rounded-lg bg-green-50 border border-green-100 p-3 flex justify-between items-center">
               <div>
                 <p className="text-xs text-gray-500">Ready for Pickup</p>
@@ -204,19 +203,19 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-lg shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="bg-white rounded-lg shadow-sm min-h-[600px] flex flex-col">
             <div className="p-4 border-b border-gray-200">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <h2 className="text-lg font-semibold text-gray-900">Document Library</h2>
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <input
                       type="text"
                       placeholder="Search documents..."
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-64"
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-56"
                     />
                   </div>
                   <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
@@ -227,8 +226,8 @@ const DocumentsPage = () => {
               </div>
             </div>
 
-            <div className="p-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div className="p-4 flex-1">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
                 <div className="flex flex-wrap gap-2">
                   <button className="bg-primary-100 text-primary-700 px-3 py-1.5 rounded-full text-sm hover:bg-primary-200 transition-colors">All</button>
                   <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">Certificates</button>
@@ -236,11 +235,7 @@ const DocumentsPage = () => {
                   <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">Clearances</button>
                   <button className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors">IDs</button>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <button className="flex items-center gap-2 border border-gray-300 rounded px-3 py-2 text-sm hover:bg-gray-50 transition-colors">
-                    <Filter className="h-4 w-4 text-gray-600" />
-                    Advanced Filters
-                  </button>
+                <div className="flex flex-wrap items-center gap-2">
                   <div className="flex items-center border border-gray-300 rounded-lg">
                     <select className="text-sm px-3 py-2 rounded-l-lg border-r border-gray-300 focus:outline-none bg-white text-gray-700">
                       <option>Bulk Actions</option>
@@ -252,12 +247,16 @@ const DocumentsPage = () => {
                       Apply
                     </button>
                   </div>
+                  <button className="flex items-center gap-2 border border-gray-300 rounded px-3 py-2 text-sm hover:bg-gray-50 transition-colors">
+                    <Filter className="h-4 w-4 text-gray-600" />
+                    Advanced Filters
+                  </button>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-3 flex-1">
                 {mockTemplates.map((template) => (
-                  <div key={template.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div key={template.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center h-5">
@@ -292,7 +291,7 @@ const DocumentsPage = () => {
                 ))}
               </div>
 
-              <div className="mt-6 flex justify-between items-center">
+              <div className="mt-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <input
                     id="selectAll"
@@ -319,74 +318,17 @@ const DocumentsPage = () => {
               </div>
             </div>
           </div>
-
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Advanced Filters
-              </h2>
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Document Type</label>
-                  <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">All Types</option>
-                    <option value="certificate">Certificates</option>
-                    <option value="permit">Permits</option>
-                    <option value="clearance">Clearances</option>
-                    <option value="id">IDs</option>
-                  </select>
-                </div>
-                
-                <div className="md:col-span-2 xl:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <input 
-                      type="date" 
-                      className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                    <input 
-                      type="date" 
-                      className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="archived">Archived</option>
-                    <option value="expired">Expired</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-3">
-                <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                  Reset Filters
-                </button>
-                <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  Apply Filters
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden h-[600px] flex flex-col">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Activity className="h-5 w-5" />
                 Document Status Updates
               </h2>
             </div>
-            <div className="p-0">
+            <div className="p-0 flex-1 overflow-y-auto">
               <div className="relative">
                 <div className="absolute top-0 bottom-0 left-6 w-0.5 bg-gray-200 z-0"></div>
                 <div className="p-4 relative z-10 space-y-4">
@@ -450,6 +392,82 @@ const DocumentsPage = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm col-span-full">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Advanced Filters
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Document Type</label>
+              <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                <option value="">All Types</option>
+                <option value="certificate">Certificates</option>
+                <option value="permit">Permits</option>
+                <option value="clearance">Clearances</option>
+                <option value="id">IDs</option>
+              </select>
+            </div>
+            
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input 
+                  type="date" 
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                <input 
+                  type="date" 
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="archived">Archived</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Creator</label>
+              <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                <option value="">All Users</option>
+                <option value="admin">Admin Users</option>
+                <option value="staff">Staff Members</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                <option value="">All Priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              Reset Filters
+            </button>
+            <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Apply Filters
+            </button>
           </div>
         </div>
       </div>
@@ -592,7 +610,7 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
