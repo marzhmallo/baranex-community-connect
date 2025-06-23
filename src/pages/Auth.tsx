@@ -174,9 +174,11 @@ const Auth = () => {
     try {
       console.log("Attempting login with:", values.emailOrUsername);
       
+      // First check if it's an email or username
       const isEmail = values.emailOrUsername.includes('@');
       let email = values.emailOrUsername;
       
+      // If it's not an email, look up the email from username in profiles table
       if (!isEmail) {
         console.log("Looking up email for username:", values.emailOrUsername);
         
@@ -222,6 +224,7 @@ const Auth = () => {
           title: "Login successful",
           description: "Welcome back!",
         });
+        // AuthProvider will handle the redirect based on user role
       }
     } catch (error: any) {
       toast({
@@ -254,6 +257,7 @@ const Auth = () => {
       let brgyId: string | null = null;
       let isSuperiorAdmin = false;
       
+      // Process barangay selection or creation
       if (values.barangayId === "new-barangay") {
         const { data: existingBarangay, error: brgyCheckError } = await supabase
           .from('barangays')
@@ -309,12 +313,14 @@ const Auth = () => {
         
         if (brgyData) {
           brgyId = brgyData.id;
+          // If admin/staff is creating a new barangay, they become superior admin
           if (values.role === "admin" || values.role === "staff") {
             isSuperiorAdmin = true;
           }
         }
       } else {
         brgyId = values.barangayId || null;
+        // If admin/staff is joining existing barangay, they remain regular admin/staff
         isSuperiorAdmin = false;
       }
       
@@ -322,6 +328,7 @@ const Auth = () => {
         ? "active" 
         : "pending";
       
+      // Create user auth account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -345,6 +352,7 @@ const Auth = () => {
       }
       
       if (authData.user) {
+        // Insert into profiles table for all user types
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -435,7 +443,7 @@ const Auth = () => {
                   <Building className="text-white text-2xl" />
                 </div>
                 <h1 className="text-4xl font-bold text-gray-800 mb-2">Baranex</h1>
-                <p className="text-primary-600 font-semibold text-lg">Next-Gen Barangay Management</p>
+                <p className="text-primary-600 font-semibold">Next-Gen Barangay Management</p>
               </div>
               
               <div className="space-y-6">
@@ -487,384 +495,378 @@ const Auth = () => {
               <p className="text-primary-600 font-semibold">Next-Gen Barangay Management</p>
             </div>
             
-            {/* Desktop header */}
-            <div className="hidden lg:block text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                {activeTab === "login" ? "Welcome Back" : "Create Account"}
-              </h2>
-              <p className="text-gray-600">
-                {activeTab === "login" 
-                  ? "Sign in to your barangay management dashboard" 
-                  : "Join the Baranex community today"}
-              </p>
-            </div>
-
-            {/* Mobile tabs */}
-            <div className="lg:hidden mb-6">
-              <div className="grid grid-cols-2 border border-gray-200 rounded-lg p-1 bg-gray-50">
-                <button
-                  onClick={() => setActiveTab("login")}
-                  className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    activeTab === "login"
-                      ? "bg-primary-500 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => setActiveTab("signup")}
-                  className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    activeTab === "signup"
-                      ? "bg-primary-500 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  Sign Up
-                </button>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup")} className="w-full">
+              {/* Desktop header with tabs */}
+              <div className="hidden lg:block text-center mb-6">
+                <TabsList className="inline-flex border border-gray-200 rounded-lg p-1 bg-gray-50 mb-5">
+                  <TabsTrigger value="login" className="px-6 py-2 rounded-lg data-[state=active]:bg-primary-500 data-[state=active]:text-white font-medium transition-all duration-300">
+                    Sign In
+                  </TabsTrigger>
+                  <TabsTrigger value="signup" className="px-6 py-2 rounded-lg data-[state=active]:bg-primary-500 data-[state=active]:text-white font-medium transition-all duration-300">
+                    Sign Up
+                  </TabsTrigger>
+                </TabsList>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  {activeTab === "login" ? "Welcome Back" : "Create Account"}
+                </h2>
+                <p className="text-gray-600">
+                  {activeTab === "login" 
+                    ? "Sign in to your barangay management dashboard" 
+                    : "Join the Baranex community today"}
+                </p>
               </div>
-            </div>
-            
-            {activeTab === "login" ? (
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
-                  <FormField
-                    control={loginForm.control}
-                    name="emailOrUsername"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="block text-sm font-medium text-gray-700 mb-2">Email Address</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                            <Input 
-                              placeholder="your.email@barangay.gov.ph" 
-                              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white" 
-                              {...field} 
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="block text-sm font-medium text-gray-700 mb-2">Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                            <Input 
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Enter your secure password" 
-                              className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white" 
-                              {...field} 
-                            />
-                            <button 
-                              type="button"
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-5 w-5" />
-                              ) : (
-                                <Eye className="h-5 w-5" />
-                              )}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500" />
-                      <span className="text-gray-600">Remember me</span>
-                    </label>
-                    <a href="#" className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200">Forgot password?</a>
-                  </div>
-                  
-                  <div className="flex justify-center my-4">
-                    <HCaptcha
-                      ref={captchaRef}
-                      sitekey={hcaptchaSiteKey}
-                      onVerify={handleCaptchaChange}
-                      onExpire={() => setCaptchaToken(null)}
+              {/* Mobile tabs */}
+              <div className="lg:hidden mb-6">
+                <TabsList className="grid grid-cols-2 mb-4">
+                  <TabsTrigger value="login">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
+              </div>
+              
+              <TabsContent value="login" className="mt-0">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
+                    <FormField
+                      control={loginForm.control}
+                      name="emailOrUsername"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="block text-sm font-medium text-gray-700 mb-2">Email or Username</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                              <Input 
+                                placeholder="your.email@barangay.gov.ph" 
+                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white" 
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl" 
-                    disabled={isLoading || !captchaToken}
-                  >
-                    {isLoading ? "Signing in..." : "Sign In to Dashboard"}
-                  </Button>
-                </form>
-              </Form>
-            ) : (
-              <ScrollArea className="h-[400px] pr-4">
-                <Form {...signupForm}>
-                  <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={signupForm.control}
-                        name="firstname"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>First Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Francis Jay" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                        
-                      <FormField
-                        control={signupForm.control}
-                        name="lastname"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Last Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Pon" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="block text-sm font-medium text-gray-700 mb-2">Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                              <Input 
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Enter your secure password" 
+                                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white" 
+                                {...field} 
+                              />
+                              <button 
+                                type="button"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-5 w-5" />
+                                ) : (
+                                  <Eye className="h-5 w-5" />
+                                )}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex items-center justify-between text-sm">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500" />
+                        <span className="text-gray-600">Remember me</span>
+                      </label>
+                      <a href="#" className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200">Forgot password?</a>
+                    </div>
+                    
+                    <div className="flex justify-center my-4">
+                      <HCaptcha
+                        ref={captchaRef}
+                        sitekey={hcaptchaSiteKey}
+                        onVerify={handleCaptchaChange}
+                        onExpire={() => setCaptchaToken(null)}
                       />
                     </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl" 
+                      disabled={isLoading || !captchaToken}
+                    >
+                      {isLoading ? "Signing in..." : "Sign In to Dashboard"}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+              
+              <TabsContent value="signup" className="mt-0">
+                <ScrollArea className="h-[400px] pr-4">
+                  <Form {...signupForm}>
+                    <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={signupForm.control}
+                          name="firstname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>First Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Francis Jay" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={signupForm.control}
+                          name="lastname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Last Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Pon" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="middlename"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Middle Name (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Jaugin" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                      
-                    <FormField
-                      control={signupForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input placeholder="lordjay01" className="pl-9" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                      
-                    <FormField
-                      control={signupForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input placeholder="francisjaypon@gmail.com" className="pl-9" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                      
-                    <FormField
-                      control={signupForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number (Optional)</FormLabel>
-                          <FormControl>
-                            <Input type="tel" placeholder="+63 912 345 6789" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={signupForm.control}
-                        name="gender"
+                        name="middlename"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Gender</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <FormLabel>Middle Name (Optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Jaugin" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Username</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <Input placeholder="lordjay01" className="pl-9" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <Input placeholder="francisjaypon@gmail.com" className="pl-9" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number (Optional)</FormLabel>
+                            <FormControl>
+                              <Input type="tel" placeholder="+63 912 345 6789" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={signupForm.control}
+                          name="gender"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Gender</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="Male">Male</SelectItem>
+                                  <SelectItem value="Female">Female</SelectItem>
+                                  <SelectItem value="Other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={signupForm.control}
+                          name="purok"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Purok</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Purok 1" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={signupForm.control}
+                        name="bday"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date of Birth</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="role"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Role</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select gender" />
+                                  <SelectValue placeholder="Select role" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="Male">Male</SelectItem>
-                                <SelectItem value="Female">Female</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="staff">Staff</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
-                      <FormField
-                        control={signupForm.control}
-                        name="purok"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Purok</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Purok 1" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={signupForm.control}
-                      name="bday"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date of Birth</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="staff">Staff</SelectItem>
-                              <SelectItem value="user">User</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <Separator className="my-4" />
                       
-                    <Separator className="my-4" />
-                      
-                    <div className="rounded-md bg-blue-50 p-4 mb-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <Building className="h-5 w-5 text-blue-400" aria-hidden="true" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-blue-800">Barangay Information</h3>
+                      <div className="rounded-md bg-blue-50 p-4 mb-4">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <Building className="h-5 w-5 text-blue-400" aria-hidden="true" />
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-blue-800">Barangay Information</h3>
+                          </div>
                         </div>
                       </div>
-                    </div>
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="barangayId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Barangay</FormLabel>
-                          <FormControl>
-                            <div className="relative">
+                      <FormField
+                        control={signupForm.control}
+                        name="barangayId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Barangay</FormLabel>
+                            <FormControl>
                               <div className="relative">
-                                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                <Input
-                                  placeholder="Search for your barangay..."
-                                  value={barangaySearch}
-                                  onChange={(e) => handleBarangaySearchChange(e.target.value)}
-                                  onFocus={() => {
-                                    if (barangaySearch && filteredBarangays.length > 0) {
-                                      setShowBarangaySuggestions(true);
-                                    }
-                                  }}
-                                  className="pl-9"
-                                />
-                              </div>
-                              
-                              {showBarangaySuggestions && (
-                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                                  {filteredBarangays.length > 0 && (
-                                    <>
-                                      {filteredBarangays.map((barangay) => (
-                                        <button
-                                          key={barangay.id}
-                                          type="button"
-                                          onClick={() => handleBarangaySelect(barangay)}
-                                          className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                                        >
-                                          <div className="font-medium">{barangay.name}</div>
-                                          <div className="text-sm text-gray-500">
-                                            {barangay.municipality}, {barangay.province}
-                                          </div>
-                                        </button>
-                                      ))}
-                                      {(selectedRole === "admin" || selectedRole === "staff") && (
-                                        <>
-                                          <div className="border-t border-gray-200 my-1"></div>
+                                <div className="relative">
+                                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Input
+                                    placeholder="Search for your barangay..."
+                                    value={barangaySearch}
+                                    onChange={(e) => handleBarangaySearchChange(e.target.value)}
+                                    onFocus={() => {
+                                      if (barangaySearch && filteredBarangays.length > 0) {
+                                        setShowBarangaySuggestions(true);
+                                      }
+                                    }}
+                                    className="pl-9"
+                                  />
+                                </div>
+                                
+                                {showBarangaySuggestions && (
+                                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                                    {filteredBarangays.length > 0 && (
+                                      <>
+                                        {filteredBarangays.map((barangay) => (
+                                          <button
+                                            key={barangay.id}
+                                            type="button"
+                                            onClick={() => handleBarangaySelect(barangay)}
+                                            className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                                          >
+                                            <div className="font-medium">{barangay.name}</div>
+                                            <div className="text-sm text-gray-500">
+                                              {barangay.municipality}, {barangay.province}
+                                            </div>
+                                          </button>
+                                        ))}
+                                        {(selectedRole === "admin" || selectedRole === "staff") && (
+                                          <>
+                                            <div className="border-t border-gray-200 my-1"></div>
+                                            <button
+                                              type="button"
+                                              onClick={handleNewBarangaySelect}
+                                              className="w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-600 font-medium"
+                                            >
+                                              + Register New Barangay
+                                            </button>
+                                          </>
+                                        )}
+                                      </>
+                                    )}
+                                    
+                                    {filteredBarangays.length === 0 && barangaySearch.trim() !== "" && (
+                                      <div className="px-4 py-2 text-gray-500">
+                                        {(selectedRole === "admin" || selectedRole === "staff") ? (
                                           <button
                                             type="button"
                                             onClick={handleNewBarangaySelect}
-                                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-600 font-medium"
+                                            className="w-full text-left text-blue-600 font-medium hover:bg-blue-50 py-2 px-2 rounded"
                                           >
                                             + Register New Barangay
                                           </button>
-                                        </>
-                                      )}
-                                    </>
-                                  )}
-                                  
-                                  {filteredBarangays.length === 0 && barangaySearch.trim() !== "" && (
-                                    <div className="px-4 py-2 text-gray-500">
-                                      {(selectedRole === "admin" || selectedRole === "staff") ? (
-                                        <button
-                                          type="button"
-                                          onClick={handleNewBarangaySelect}
-                                          className="w-full text-left text-blue-600 font-medium hover:bg-blue-50 py-2 px-2 rounded"
-                                        >
-                                          + Register New Barangay
-                                        </button>
-                                      ) : (
-                                        "No barangays found. Contact an admin to register your barangay."
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
+                                        ) : (
+                                          "No barangays found. Contact an admin to register your barangay."
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1056,39 +1058,39 @@ const Auth = () => {
                     </form>
                   </Form>
                 </ScrollArea>
-              )}
+              </TabsContent>
+            </Tabs>
             
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-4">
-                    {activeTab === "login" ? "New to Baranex?" : "Already have an account?"}
-                    <button 
-                      onClick={() => setActiveTab(activeTab === "login" ? "signup" : "login")}
-                      className="text-primary-600 hover:text-primary-700 font-medium text-sm hover:underline transition-all duration-200 ml-2"
-                    >
-                      {activeTab === "login" ? "Sign Up" : "Sign In"}
-                    </button>
-                  </p>
-                </div>
-              </div>
-              
-              <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Lock className="text-green-500 h-4 w-4" />
-                  SSL Secured
-                </span>
-                <span className="flex items-center gap-1">
-                  <svg className="text-blue-500 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Gov Certified
-                </span>
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-4">
+                  {activeTab === "login" ? "New to Baranex?" : "Already have an account?"}
+                </p>
+                <button 
+                  onClick={() => setActiveTab(activeTab === "login" ? "signup" : "login")}
+                  className="text-primary-600 hover:text-primary-700 font-medium text-sm hover:underline transition-all duration-200"
+                >
+                  {activeTab === "login" ? "Switch to Sign Up tab" : "Switch to Sign In tab"}
+                </button>
               </div>
             </div>
             
-            <div className="mt-6 text-center text-xs text-gray-500">
-              <p>© 2024 Baranex. Empowering Filipino Communities.</p>
+            <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <Lock className="text-green-500 h-4 w-4" />
+                SSL Secured
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="text-blue-500 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Gov Certified
+              </span>
             </div>
+          </div>
+          
+          <div className="mt-6 text-center text-xs text-gray-500">
+            <p>© 2024 Baranex. Empowering Filipino Communities.</p>
           </div>
         </div>
       </div>
