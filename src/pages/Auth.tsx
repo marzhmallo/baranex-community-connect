@@ -174,11 +174,9 @@ const Auth = () => {
     try {
       console.log("Attempting login with:", values.emailOrUsername);
       
-      // First check if it's an email or username
       const isEmail = values.emailOrUsername.includes('@');
       let email = values.emailOrUsername;
       
-      // If it's not an email, look up the email from username in profiles table
       if (!isEmail) {
         console.log("Looking up email for username:", values.emailOrUsername);
         
@@ -224,7 +222,6 @@ const Auth = () => {
           title: "Login successful",
           description: "Welcome back!",
         });
-        // AuthProvider will handle the redirect based on user role
       }
     } catch (error: any) {
       toast({
@@ -257,7 +254,6 @@ const Auth = () => {
       let brgyId: string | null = null;
       let isSuperiorAdmin = false;
       
-      // Process barangay selection or creation
       if (values.barangayId === "new-barangay") {
         const { data: existingBarangay, error: brgyCheckError } = await supabase
           .from('barangays')
@@ -313,14 +309,12 @@ const Auth = () => {
         
         if (brgyData) {
           brgyId = brgyData.id;
-          // If admin/staff is creating a new barangay, they become superior admin
           if (values.role === "admin" || values.role === "staff") {
             isSuperiorAdmin = true;
           }
         }
       } else {
         brgyId = values.barangayId || null;
-        // If admin/staff is joining existing barangay, they remain regular admin/staff
         isSuperiorAdmin = false;
       }
       
@@ -328,7 +322,6 @@ const Auth = () => {
         ? "active" 
         : "pending";
       
-      // Create user auth account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -352,7 +345,6 @@ const Auth = () => {
       }
       
       if (authData.user) {
-        // Insert into profiles table for all user types
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
