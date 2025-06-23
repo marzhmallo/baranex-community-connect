@@ -428,54 +428,54 @@ const Auth = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-100 flex items-center justify-center p-6">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
         {/* Left side - Brand/Info */}
         <div className="hidden lg:block">
           <div className="relative">
-            <div className="absolute -top-4 -left-4 w-72 h-72 bg-indigo-300/40 rounded-full opacity-60 animate-pulse"></div>
-            <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-purple-300/40 rounded-full opacity-40 animate-pulse delay-1000"></div>
+            <div className="absolute -top-4 -left-4 w-72 h-72 bg-indigo-500/20 rounded-full opacity-60 animate-pulse"></div>
+            <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-purple-500/20 rounded-full opacity-40 animate-pulse delay-1000"></div>
             
-            <div className="relative bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/50">
+            <div className="relative bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-slate-700/50">
               <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-4 shadow-lg">
                   <Building className="text-white text-2xl" />
                 </div>
-                <h1 className="text-4xl font-bold text-gray-800 mb-2">Baranex</h1>
-                <p className="text-indigo-600 font-semibold">Next-Gen Barangay Management</p>
+                <h1 className="text-4xl font-bold text-white mb-2">Baranex</h1>
+                <p className="text-indigo-400 font-semibold">Next-Gen Barangay Management</p>
               </div>
               
               <div className="space-y-6">
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/20">
                   <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
                     <User className="text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Community Focused</h3>
-                    <p className="text-sm text-gray-600">Empowering barangays with modern tools</p>
+                    <h3 className="font-semibold text-white">Community Focused</h3>
+                    <p className="text-sm text-gray-300">Empowering barangays with modern tools</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-xl border border-purple-500/20">
                   <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
                     <Lock className="text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Secure & Reliable</h3>
-                    <p className="text-sm text-gray-600">Your data protected with advanced security</p>
+                    <h3 className="font-semibold text-white">Secure & Reliable</h3>
+                    <p className="text-sm text-gray-300">Your data protected with advanced security</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-indigo-50 rounded-xl border border-green-200">
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-500/10 to-indigo-500/10 rounded-xl border border-green-500/20">
                   <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
                     <svg className="text-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M12 8V12L14 14M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Efficient Management</h3>
-                    <p className="text-sm text-gray-600">Streamline operations with smart solutions</p>
+                    <h3 className="font-semibold text-white">Efficient Management</h3>
+                    <p className="text-sm text-gray-300">Streamline operations with smart solutions</p>
                   </div>
                 </div>
               </div>
@@ -485,24 +485,24 @@ const Auth = () => {
         
         {/* Right side - Auth Form */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/50">
+          <div className="bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-slate-700/50">
             {/* Mobile header */}
             <div className="text-center mb-8 lg:hidden">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-4 shadow-lg">
                 <Building className="text-white text-2xl" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Baranex</h1>
-              <p className="text-indigo-600 font-semibold">Next-Gen Barangay Management</p>
+              <h1 className="text-3xl font-bold text-white mb-2">Baranex</h1>
+              <p className="text-indigo-400 font-semibold">Next-Gen Barangay Management</p>
             </div>
             
             {/* Tab buttons */}
-            <div className="flex bg-gray-200 rounded-xl p-1 mb-6">
+            <div className="flex bg-slate-700/50 rounded-xl p-1 mb-6">
               <button
                 onClick={() => setActiveTab("login")}
                 className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeTab === "login"
                     ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    : "text-gray-300 hover:text-white hover:bg-slate-600/50"
                 }`}
               >
                 Sign In
@@ -512,7 +512,7 @@ const Auth = () => {
                 className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeTab === "signup"
                     ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    : "text-gray-300 hover:text-white hover:bg-slate-600/50"
                 }`}
               >
                 Sign Up
@@ -521,10 +521,10 @@ const Auth = () => {
             
             {/* Header text */}
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              <h2 className="text-2xl font-bold text-white mb-2">
                 {activeTab === "login" ? "Welcome Back!" : "Create an Account"}
               </h2>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-300 text-sm">
                 {activeTab === "login" 
                   ? "Sign in to your dashboard" 
                   : "Join Baranex to manage your community"}
@@ -539,13 +539,13 @@ const Auth = () => {
                     name="emailOrUsername"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Email Address</FormLabel>
+                        <FormLabel className="block text-sm font-medium text-gray-200 mb-1">Email Address</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                             <Input 
                               placeholder="you@example.com" 
-                              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white" 
+                              className="w-full pl-11 pr-4 py-3 border border-slate-600 bg-slate-700/50 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400" 
                               {...field} 
                             />
                           </div>
@@ -560,19 +560,19 @@ const Auth = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Password</FormLabel>
+                        <FormLabel className="block text-sm font-medium text-gray-200 mb-1">Password</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                             <Input 
                               type={showPassword ? "text" : "password"}
                               placeholder="Enter your password" 
-                              className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white" 
+                              className="w-full pl-11 pr-12 py-3 border border-slate-600 bg-slate-700/50 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400" 
                               {...field} 
                             />
                             <button 
                               type="button"
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? (
@@ -590,10 +590,10 @@ const Auth = () => {
 
                   <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-                      <span className="text-gray-600">Remember me</span>
+                      <input type="checkbox" className="w-4 h-4 text-indigo-600 border-gray-500 bg-slate-700 rounded focus:ring-indigo-500" />
+                      <span className="text-gray-300">Remember me</span>
                     </label>
-                    <a href="#" className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-200">Forgot password?</a>
+                    <a href="#" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors duration-200">Forgot password?</a>
                   </div>
                   
                   <div className="flex justify-center my-4">
@@ -1064,15 +1064,15 @@ const Auth = () => {
                 </ScrollArea>
               )}
             
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mt-6 pt-6 border-t border-slate-700">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-300">
                     {activeTab === "login" ? (
                       <>
                         New to Baranex?{" "}
                         <button 
                           onClick={() => setActiveTab("signup")}
-                          className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline transition-all duration-200"
+                          className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline transition-all duration-200"
                         >
                           Sign up
                         </button>
@@ -1082,7 +1082,7 @@ const Auth = () => {
                         Already have an account?{" "}
                         <button 
                           onClick={() => setActiveTab("login")}
-                          className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline transition-all duration-200"
+                          className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline transition-all duration-200"
                         >
                           Sign in
                         </button>
@@ -1092,13 +1092,13 @@ const Auth = () => {
                 </div>
               </div>
               
-              <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-500">
+              <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-400">
                 <span className="flex items-center gap-1">
-                  <Lock className="text-green-500 h-4 w-4" />
+                  <Lock className="text-green-400 h-4 w-4" />
                   SSL Secured
                 </span>
                 <span className="flex items-center gap-1">
-                  <svg className="text-indigo-500 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="text-indigo-400 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   Gov Certified
@@ -1106,7 +1106,7 @@ const Auth = () => {
               </div>
             </div>
             
-            <div className="mt-6 text-center text-xs text-gray-500">
+            <div className="mt-6 text-center text-xs text-gray-400">
               <p>© 2025 Baranex. Empowering Filipino Communities.</p>
             </div>
           </div>
