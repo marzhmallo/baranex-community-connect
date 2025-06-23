@@ -875,240 +875,240 @@ const Auth = () => {
                           </FormControl>
                           <FormMessage />
                         </FormItem>
-                      />
-                      
-                      {/* Click outside to close suggestions */}
-                      {showBarangaySuggestions && (
-                        <div 
-                          className="fixed inset-0 z-40"
-                          onClick={() => setShowBarangaySuggestions(false)}
-                        />
                       )}
+                    />
                       
-                      {isNewBarangay && (selectedRole === "admin" || selectedRole === "staff") && (
-                        <>
+                    {/* Click outside to close suggestions */}
+                    {showBarangaySuggestions && (
+                      <div 
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowBarangaySuggestions(false)}
+                      />
+                    )}
+                      
+                    {isNewBarangay && (selectedRole === "admin" || selectedRole === "staff") && (
+                      <>
+                        <FormField
+                          control={signupForm.control}
+                          name="barangayname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Barangay Name</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Input 
+                                    placeholder="Poblacion" 
+                                    className="pl-9" 
+                                    {...field} 
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="grid grid-cols-2 gap-4">
                           <FormField
                             control={signupForm.control}
-                            name="barangayname"
+                            name="municipality"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Barangay Name</FormLabel>
+                                <FormLabel>Municipality/City</FormLabel>
                                 <FormControl>
-                                  <div className="relative">
-                                    <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                    <Input 
-                                      placeholder="Poblacion" 
-                                      className="pl-9" 
-                                      {...field} 
-                                    />
-                                  </div>
+                                  <Input placeholder="Sindangan" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                           
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={signupForm.control}
-                              name="municipality"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Municipality/City</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="Sindangan" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={signupForm.control}
-                              name="province"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Province</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="Zamboanga Del Norte" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
+                          <FormField
+                            control={signupForm.control}
+                            name="province"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Province</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Zamboanga Del Norte" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={signupForm.control}
+                            name="region"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Region (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="IX" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                           
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={signupForm.control}
-                              name="region"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Region (Optional)</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="IX" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={signupForm.control}
-                              name="country"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Country</FormLabel>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Philippines" 
-                                      defaultValue="Philippines"
-                                      {...field} 
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <div className="rounded-md bg-green-50 p-4 mt-2">
-                            <div className="flex">
-                              <div className="ml-3">
-                                <p className="text-sm text-green-700">
-                                  As you're registering a new barangay, your account will be automatically activated as the administrator.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                      
-                      <FormField
-                        control={signupForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                <Input 
-                                  type={showPassword ? "text" : "password"} 
-                                  placeholder="Create a secure password" 
-                                  className="pl-9"
-                                  {...field} 
-                                />
-                                <button 
-                                  type="button"
-                                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                  onClick={() => setShowPassword(!showPassword)}
-                                >
-                                  {showPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                  ) : (
-                                    <Eye className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {!isNewBarangay && selectedRole !== "admin" && (
-                        <div className="rounded-md bg-yellow-50 p-4">
+                          <FormField
+                            control={signupForm.control}
+                            name="country"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Country</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Philippines" 
+                                    defaultValue="Philippines"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="rounded-md bg-green-50 p-4 mt-2">
                           <div className="flex">
-                            <div className="flex-shrink-0">
-                              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </div>
                             <div className="ml-3">
-                              <h3 className="text-sm font-medium text-yellow-800">Account Approval Required</h3>
-                              <div className="mt-2 text-sm text-yellow-700">
-                                <p>
-                                  Your account will require approval from a barangay administrator before you can log in.
-                                </p>
-                              </div>
+                              <p className="text-sm text-green-700">
+                                As you're registering a new barangay, your account will be automatically activated as the administrator.
+                              </p>
                             </div>
                           </div>
                         </div>
-                      )}
-                      
-                      <div className="flex justify-center my-4">
-                        <HCaptcha
-                          ref={captchaRef}
-                          sitekey={hcaptchaSiteKey}
-                          onVerify={handleCaptchaChange}
-                          onExpire={() => setCaptchaToken(null)}
-                        />
-                      </div>
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl" 
-                        disabled={isLoading || !captchaToken}
-                      >
-                        {isLoading ? "Creating Account..." : "Create Account"}
-                      </Button>
-                      
-                      <p className="text-xs text-center text-gray-500 mt-4">
-                        By clicking "Create Account", you agree to our{" "}
-                        <a href="#" className="underline text-blue-600">Terms of Service</a> and{" "}
-                        <a href="#" className="underline text-blue-600">Privacy Policy</a>.
-                      </p>
-                    </form>
-                  </Form>
-                </ScrollArea>
-              )}
-            
-              <div className="mt-6 pt-6 border-t border-slate-700">
-                <div className="text-center">
-                  <p className="text-sm text-gray-300">
-                    {activeTab === "login" ? (
-                      <>
-                        New to Baranex?{" "}
-                        <button 
-                          onClick={() => setActiveTab("signup")}
-                          className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline transition-all duration-200"
-                        >
-                          Sign up
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        Already have an account?{" "}
-                        <button 
-                          onClick={() => setActiveTab("login")}
-                          className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline transition-all duration-200"
-                        >
-                          Sign in
-                        </button>
                       </>
                     )}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-400">
-                <span className="flex items-center gap-1">
-                  <Lock className="text-green-400 h-4 w-4" />
-                  SSL Secured
-                </span>
-                <span className="flex items-center gap-1">
-                  <svg className="text-indigo-400 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Gov Certified
-                </span>
+                      
+                    <FormField
+                      control={signupForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input 
+                                type={showPassword ? "text" : "password"} 
+                                placeholder="Create a secure password" 
+                                className="pl-9"
+                                {...field} 
+                              />
+                              <button 
+                                type="button"
+                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                      
+                    {!isNewBarangay && selectedRole !== "admin" && (
+                      <div className="rounded-md bg-yellow-50 p-4">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-yellow-800">Account Approval Required</h3>
+                            <div className="mt-2 text-sm text-yellow-700">
+                              <p>
+                                Your account will require approval from a barangay administrator before you can log in.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                      
+                    <div className="flex justify-center my-4">
+                      <HCaptcha
+                        ref={captchaRef}
+                        sitekey={hcaptchaSiteKey}
+                        onVerify={handleCaptchaChange}
+                        onExpire={() => setCaptchaToken(null)}
+                      />
+                    </div>
+                      
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl" 
+                      disabled={isLoading || !captchaToken}
+                    >
+                      {isLoading ? "Creating Account..." : "Create Account"}
+                    </Button>
+                      
+                    <p className="text-xs text-center text-gray-500 mt-4">
+                      By clicking "Create Account", you agree to our{" "}
+                      <a href="#" className="underline text-blue-600">Terms of Service</a> and{" "}
+                      <a href="#" className="underline text-blue-600">Privacy Policy</a>.
+                    </p>
+                  </form>
+                </Form>
+              </ScrollArea>
+            )}
+            
+            <div className="mt-6 pt-6 border-t border-slate-700">
+              <div className="text-center">
+                <p className="text-sm text-gray-300">
+                  {activeTab === "login" ? (
+                    <>
+                      New to Baranex?{" "}
+                      <button 
+                        onClick={() => setActiveTab("signup")}
+                        className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline transition-all duration-200"
+                      >
+                        Sign up
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <button 
+                        onClick={() => setActiveTab("login")}
+                        className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline transition-all duration-200"
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
+                </p>
               </div>
             </div>
             
-            <div className="mt-6 text-center text-xs text-gray-400">
-              <p>© 2025 Baranex. Empowering Filipino Communities.</p>
+            <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-400">
+              <span className="flex items-center gap-1">
+                <Lock className="text-green-400 h-4 w-4" />
+                SSL Secured
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="text-indigo-400 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Gov Certified
+              </span>
             </div>
+          </div>
+          
+          <div className="mt-6 text-center text-xs text-gray-400">
+            <p>© 2025 Baranex. Empowering Filipino Communities.</p>
           </div>
         </div>
       </div>
