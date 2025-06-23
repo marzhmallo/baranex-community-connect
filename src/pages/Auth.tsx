@@ -498,14 +498,6 @@ const Auth = () => {
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup")} className="w-full">
               {/* Desktop header with tabs */}
               <div className="hidden lg:block text-center mb-6">
-                <TabsList className="inline-flex border border-gray-200 rounded-lg p-1 bg-gray-50 mb-5">
-                  <TabsTrigger value="login" className="px-6 py-2 rounded-lg data-[state=active]:bg-primary-500 data-[state=active]:text-white font-medium transition-all duration-300">
-                    Sign In
-                  </TabsTrigger>
-                  <TabsTrigger value="signup" className="px-6 py-2 rounded-lg data-[state=active]:bg-primary-500 data-[state=active]:text-white font-medium transition-all duration-300">
-                    Sign Up
-                  </TabsTrigger>
-                </TabsList>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   {activeTab === "login" ? "Welcome Back" : "Create Account"}
                 </h2>
