@@ -428,85 +428,117 @@ const Auth = () => {
   };
 
   return (
-    <div className="h-screen w-full flex lg:flex-row flex-col bg-gradient-to-br from-blue-100 via-white to-blue-50 overflow-hidden">
-      {/* Left side - Brand/Info */}
-      <div className="lg:w-1/2 w-full h-full p-6 flex flex-col justify-center items-center bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden">
-        <div className="max-w-md mx-auto text-center">
-          <h1 className="text-3xl font-bold mb-6">Baranex Management System</h1>
-          <h2 className="text-2xl font-semibold mb-8">Create your account today</h2>
-          
-          <div className="grid grid-cols-2 gap-6 mb-8">
-            <div className="flex flex-col items-center p-3 bg-white/10 rounded-lg">
-              <Mail className="mb-2 h-8 w-8 text-white" />
-              <h3 className="text-sm font-semibold">Efficient Management</h3>
+    <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-white to-primary-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
+        
+        {/* Left side - Brand/Info */}
+        <div className="hidden lg:block">
+          <div className="relative">
+            <div className="absolute -top-4 -left-4 w-72 h-72 bg-primary-100 rounded-full opacity-50 animate-pulse"></div>
+            <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-blue-100 rounded-full opacity-30 animate-pulse delay-1000"></div>
+            
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-500 rounded-full mb-4 shadow-lg">
+                  <Building className="text-white text-2xl" />
+                </div>
+                <h1 className="text-4xl font-bold text-gray-800 mb-2">Baranex</h1>
+                <p className="text-primary-600 font-semibold">Next-Gen Barangay Management</p>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary-50 to-blue-50 rounded-xl">
+                  <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center shadow-md">
+                    <User className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Community Focused</h3>
+                    <p className="text-sm text-gray-600">Empowering barangays with modern tools</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-xl">
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
+                    <Lock className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Secure & Reliable</h3>
+                    <p className="text-sm text-gray-600">Your data protected with advanced security</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-primary-50 rounded-xl">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-md">
+                    <svg className="text-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 8V12L14 14M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Efficient Management</h3>
+                    <p className="text-sm text-gray-600">Streamline operations with smart solutions</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col items-center p-3 bg-white/10 rounded-lg">
-              <User className="mb-2 h-8 w-8 text-white" />
-              <h3 className="text-sm font-semibold">Resident Records</h3>
-            </div>
-            <div className="flex flex-col items-center p-3 bg-white/10 rounded-lg">
-              <svg className="mb-2 h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 8V12L14 14M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <h3 className="text-sm font-semibold">Real-time Updates</h3>
-            </div>
-            <div className="flex flex-col items-center p-3 bg-white/10 rounded-lg">
-              <svg className="mb-2 h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15M9 5C9 6.10457 9.89543 7 11 7H13C14.1046 7 15 6.10457 15 5M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5M12 12H15M12 16H15M9 12H9.01M9 16H9.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              <h3 className="text-sm font-semibold">Document Management</h3>
-            </div>
-          </div>
-          
-          <div className="space-y-2 text-sm opacity-80">
-            <p>• Streamlined barangay administration</p>
-            <p>• Comprehensive household tracking</p>
-            <p>• Integrated document processing</p>
-            <p>• Secure data management</p>
           </div>
         </div>
-      </div>
-      
-      {/* Right side - Auth Form */}
-      <div className="lg:w-1/2 w-full h-full p-6 flex justify-center items-center overflow-hidden">
-        <Card className="w-full max-w-md shadow-lg border-0">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold">
-              {activeTab === "login" ? "Welcome Back" : "Create Account"}
-            </CardTitle>
-            <CardDescription>
-              {activeTab === "login" 
-                ? "Enter your credentials to access your account" 
-                : "Enter your details to create a new account"}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <Tabs 
-              value={activeTab} 
-              onValueChange={(value) => setActiveTab(value as "login" | "signup")}
-              className="w-full"
-            >
-              <TabsList className="grid grid-cols-2 mb-6">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
+        
+        {/* Right side - Auth Form */}
+        <div className="w-full max-w-md mx-auto lg:mx-0">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+            {/* Mobile header */}
+            <div className="text-center mb-8 lg:hidden">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-500 rounded-full mb-4 shadow-lg">
+                <Building className="text-white text-2xl" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Baranex</h1>
+              <p className="text-primary-600 font-semibold">Next-Gen Barangay Management</p>
+            </div>
+            
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup")} className="w-full">
+              {/* Desktop header with tabs */}
+              <div className="hidden lg:block text-center mb-6">
+                <TabsList className="inline-flex border border-gray-200 rounded-lg p-1 bg-gray-50 mb-5">
+                  <TabsTrigger value="login" className="px-6 py-2 rounded-lg data-[state=active]:bg-primary-500 data-[state=active]:text-white font-medium transition-all duration-300">
+                    Sign In
+                  </TabsTrigger>
+                  <TabsTrigger value="signup" className="px-6 py-2 rounded-lg data-[state=active]:bg-primary-500 data-[state=active]:text-white font-medium transition-all duration-300">
+                    Sign Up
+                  </TabsTrigger>
+                </TabsList>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  {activeTab === "login" ? "Welcome Back" : "Create Account"}
+                </h2>
+                <p className="text-gray-600">
+                  {activeTab === "login" 
+                    ? "Sign in to your barangay management dashboard" 
+                    : "Join the Baranex community today"}
+                </p>
+              </div>
+
+              {/* Mobile tabs */}
+              <div className="lg:hidden mb-6">
+                <TabsList className="grid grid-cols-2 mb-4">
+                  <TabsTrigger value="login">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
+              </div>
               
               <TabsContent value="login" className="mt-0">
                 <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
                     <FormField
                       control={loginForm.control}
                       name="emailOrUsername"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email or Username</FormLabel>
+                          <FormLabel className="block text-sm font-medium text-gray-700 mb-2">Email or Username</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                               <Input 
-                                placeholder="Enter email or username" 
-                                className="pl-9" 
+                                placeholder="your.email@barangay.gov.ph" 
+                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white" 
                                 {...field} 
                               />
                             </div>
@@ -521,25 +553,25 @@ const Auth = () => {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel className="block text-sm font-medium text-gray-700 mb-2">Password</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                               <Input 
                                 type={showPassword ? "text" : "password"}
-                                placeholder="••••••••" 
-                                className="pl-9" 
+                                placeholder="Enter your secure password" 
+                                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white" 
                                 {...field} 
                               />
                               <button 
                                 type="button"
-                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                 onClick={() => setShowPassword(!showPassword)}
                               >
                                 {showPassword ? (
-                                  <EyeOff className="h-4 w-4" />
+                                  <EyeOff className="h-5 w-5" />
                                 ) : (
-                                  <Eye className="h-4 w-4" />
+                                  <Eye className="h-5 w-5" />
                                 )}
                               </button>
                             </div>
@@ -548,6 +580,14 @@ const Auth = () => {
                         </FormItem>
                       )}
                     />
+
+                    <div className="flex items-center justify-between text-sm">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500" />
+                        <span className="text-gray-600">Remember me</span>
+                      </label>
+                      <a href="#" className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200">Forgot password?</a>
+                    </div>
                     
                     <div className="flex justify-center my-4">
                       <HCaptcha
@@ -558,8 +598,12 @@ const Auth = () => {
                       />
                     </div>
                     
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading || !captchaToken}>
-                      {isLoading ? "Signing in..." : "Sign In"}
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl" 
+                      disabled={isLoading || !captchaToken}
+                    >
+                      {isLoading ? "Signing in..." : "Sign In to Dashboard"}
                     </Button>
                   </form>
                 </Form>
@@ -947,7 +991,7 @@ const Auth = () => {
                                 <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                 <Input 
                                   type={showPassword ? "text" : "password"} 
-                                  placeholder="••••••••" 
+                                  placeholder="Create a secure password" 
                                   className="pl-9"
                                   {...field} 
                                 />
@@ -998,7 +1042,11 @@ const Auth = () => {
                         />
                       </div>
                       
-                      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading || !captchaToken}>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl" 
+                        disabled={isLoading || !captchaToken}
+                      >
                         {isLoading ? "Creating Account..." : "Create Account"}
                       </Button>
                       
@@ -1012,8 +1060,39 @@ const Auth = () => {
                 </ScrollArea>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
+            
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-4">
+                  {activeTab === "login" ? "New to Baranex?" : "Already have an account?"}
+                </p>
+                <button 
+                  onClick={() => setActiveTab(activeTab === "login" ? "signup" : "login")}
+                  className="text-primary-600 hover:text-primary-700 font-medium text-sm hover:underline transition-all duration-200"
+                >
+                  {activeTab === "login" ? "Switch to Sign Up tab" : "Switch to Sign In tab"}
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <Lock className="text-green-500 h-4 w-4" />
+                SSL Secured
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="text-blue-500 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Gov Certified
+              </span>
+            </div>
+          </div>
+          
+          <div className="mt-6 text-center text-xs text-gray-500">
+            <p>© 2024 Baranex. Empowering Filipino Communities.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
