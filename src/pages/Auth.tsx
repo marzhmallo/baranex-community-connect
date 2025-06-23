@@ -539,12 +539,12 @@ const Auth = () => {
                     name="emailOrUsername"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="block text-sm font-medium text-gray-200 mb-1">Email Address</FormLabel>
+                        <FormLabel className="block text-sm font-medium text-gray-200 mb-1">Email Address or Username</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                             <Input 
-                              placeholder="you@example.com" 
+                              placeholder="Enter your email or username" 
                               className="w-full pl-11 pr-4 py-3 border border-slate-600 bg-slate-700/50 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400" 
                               {...field} 
                             />
