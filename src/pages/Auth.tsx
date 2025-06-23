@@ -1062,7 +1062,7 @@ const Auth = () => {
                   onClick={() => setActiveTab(activeTab === "login" ? "signup" : "login")}
                   className="text-primary-600 hover:text-primary-700 font-medium text-sm hover:underline transition-all duration-200"
                 >
-                  {activeTab === "login" ? "Switch to Sign Up tab" : "Switch to Sign In tab"}
+                  {activeTab === "login" ? "Sign Up" : "Sign In"}
                 </button>
               </div>
             </div>
