@@ -465,7 +465,7 @@ const Auth = () => {
                 }`}>Baranex</h1>
                 <p className={`font-semibold ${
                   theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'
-                }`}>Next-Gen Barangay Management</p>
+                }`}>Barangay Next-Gen Management</p>
               </div>
               
               <div className="space-y-6">
