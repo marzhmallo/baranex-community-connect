@@ -15,6 +15,7 @@ import { Eye, EyeOff, Mail, User, Lock, Building, MapPin } from "lucide-react";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 const loginSchema = z.object({
   emailOrUsername: z.string().min(1, "Please enter your email or username"),
@@ -57,6 +58,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 const Auth = () => {
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -428,54 +430,98 @@ const Auth = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
+    <div className={`w-full min-h-screen flex items-center justify-center p-6 ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' 
+        : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'
+    }`}>
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
         {/* Left side - Brand/Info */}
         <div className="hidden lg:block">
           <div className="relative">
-            <div className="absolute -top-4 -left-4 w-72 h-72 bg-indigo-500/20 rounded-full opacity-60 animate-pulse"></div>
-            <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-purple-500/20 rounded-full opacity-40 animate-pulse delay-1000"></div>
+            <div className={`absolute -top-4 -left-4 w-72 h-72 rounded-full opacity-60 animate-pulse ${
+              theme === 'dark' 
+                ? 'bg-indigo-500/20' 
+                : 'bg-blue-300/30'
+            }`}></div>
+            <div className={`absolute -bottom-8 -right-8 w-48 h-48 rounded-full opacity-40 animate-pulse delay-1000 ${
+              theme === 'dark' 
+                ? 'bg-purple-500/20' 
+                : 'bg-indigo-300/30'
+            }`}></div>
             
-            <div className="relative bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-slate-700/50">
+            <div className={`relative backdrop-blur-sm rounded-3xl p-8 shadow-2xl ${
+              theme === 'dark' 
+                ? 'bg-slate-800/80 border border-slate-700/50' 
+                : 'bg-white/90 border border-blue-200/50'
+            }`}>
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-4 shadow-lg">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4 shadow-lg">
                   <Building className="text-white text-2xl" />
                 </div>
-                <h1 className="text-4xl font-bold text-white mb-2">Baranex</h1>
-                <p className="text-indigo-400 font-semibold">Barangay Next-Gen Management</p>
+                <h1 className={`text-4xl font-bold mb-2 ${
+                  theme === 'dark' ? 'text-white' : 'text-gray-800'
+                }`}>Baranex</h1>
+                <p className={`font-semibold ${
+                  theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'
+                }`}>Next-Gen Barangay Management</p>
               </div>
               
               <div className="space-y-6">
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/20">
-                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
+                <div className={`flex items-center gap-4 p-4 rounded-xl ${
+                  theme === 'dark' 
+                    ? 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20' 
+                    : 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200'
+                }`}>
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
                     <User className="text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Community Focused</h3>
-                    <p className="text-sm text-gray-300">Empowering barangays with modern tools</p>
+                    <h3 className={`font-semibold ${
+                      theme === 'dark' ? 'text-white' : 'text-gray-800'
+                    }`}>Community Focused</h3>
+                    <p className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                    }`}>Empowering barangays with modern tools</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-xl border border-purple-500/20">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                <div className={`flex items-center gap-4 p-4 rounded-xl ${
+                  theme === 'dark' 
+                    ? 'bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20' 
+                    : 'bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200'
+                }`}>
+                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
                     <Lock className="text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Secure & Reliable</h3>
-                    <p className="text-sm text-gray-300">Your data protected with advanced security</p>
+                    <h3 className={`font-semibold ${
+                      theme === 'dark' ? 'text-white' : 'text-gray-800'
+                    }`}>Secure & Reliable</h3>
+                    <p className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                    }`}>Your data protected with advanced security</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-500/10 to-indigo-500/10 rounded-xl border border-green-500/20">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                <div className={`flex items-center gap-4 p-4 rounded-xl ${
+                  theme === 'dark' 
+                    ? 'bg-gradient-to-r from-green-500/10 to-indigo-500/10 border border-green-500/20' 
+                    : 'bg-gradient-to-r from-green-50 to-blue-50 border border-green-200'
+                }`}>
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
                     <svg className="text-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M12 8V12L14 14M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Efficient Management</h3>
-                    <p className="text-sm text-gray-300">Streamline operations with smart solutions</p>
+                    <h3 className={`font-semibold ${
+                      theme === 'dark' ? 'text-white' : 'text-gray-800'
+                    }`}>Efficient Management</h3>
+                    <p className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                    }`}>Streamline operations with smart solutions</p>
                   </div>
                 </div>
               </div>
@@ -485,24 +531,36 @@ const Auth = () => {
         
         {/* Right side - Auth Form */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
-          <div className="bg-slate-800/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-slate-700/50">
+          <div className={`backdrop-blur-sm rounded-3xl shadow-2xl p-8 ${
+            theme === 'dark' 
+              ? 'bg-slate-800/90 border border-slate-700/50' 
+              : 'bg-white/95 border border-blue-200/50'
+          }`}>
             {/* Mobile header */}
             <div className="text-center mb-8 lg:hidden">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-4 shadow-lg">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4 shadow-lg">
                 <Building className="text-white text-2xl" />
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Baranex</h1>
-              <p className="text-indigo-400 font-semibold">Next-Gen Barangay Management</p>
+              <h1 className={`text-3xl font-bold mb-2 ${
+                theme === 'dark' ? 'text-white' : 'text-gray-800'
+              }`}>Baranex</h1>
+              <p className={`font-semibold ${
+                theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'
+              }`}>Next-Gen Barangay Management</p>
             </div>
             
             {/* Tab buttons */}
-            <div className="flex bg-slate-700/50 rounded-xl p-1 mb-6">
+            <div className={`flex rounded-xl p-1 mb-6 ${
+              theme === 'dark' ? 'bg-slate-700/50' : 'bg-blue-50/50'
+            }`}>
               <button
                 onClick={() => setActiveTab("login")}
                 className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeTab === "login"
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg"
-                    : "text-gray-300 hover:text-white hover:bg-slate-600/50"
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg"
+                    : theme === 'dark'
+                    ? "text-gray-300 hover:text-white hover:bg-slate-600/50"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
                 }`}
               >
                 Sign In
@@ -511,8 +569,10 @@ const Auth = () => {
                 onClick={() => setActiveTab("signup")}
                 className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeTab === "signup"
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg"
-                    : "text-gray-300 hover:text-white hover:bg-slate-600/50"
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg"
+                    : theme === 'dark'
+                    ? "text-gray-300 hover:text-white hover:bg-slate-600/50"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
                 }`}
               >
                 Sign Up
@@ -521,10 +581,14 @@ const Auth = () => {
             
             {/* Header text */}
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">
+              <h2 className={`text-2xl font-bold mb-2 ${
+                theme === 'dark' ? 'text-white' : 'text-gray-800'
+              }`}>
                 {activeTab === "login" ? "Welcome Back!" : "Create an Account"}
               </h2>
-              <p className="text-gray-300 text-sm">
+              <p className={`text-sm ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+              }`}>
                 {activeTab === "login" 
                   ? "Sign in to your dashboard" 
                   : "Join Baranex to manage your community"}
@@ -539,13 +603,21 @@ const Auth = () => {
                     name="emailOrUsername"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="block text-sm font-medium text-gray-200 mb-1">Email Address or Username</FormLabel>
+                        <FormLabel className={`block text-sm font-medium mb-1 ${
+                          theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                        }`}>Email Address or Username</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                            <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${
+                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                            }`} />
                             <Input 
                               placeholder="Enter your email or username" 
-                              className="w-full pl-11 pr-4 py-3 border border-slate-600 bg-slate-700/50 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400" 
+                              className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                theme === 'dark' 
+                                  ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                  : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                              }`} 
                               {...field} 
                             />
                           </div>
@@ -560,19 +632,29 @@ const Auth = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="block text-sm font-medium text-gray-200 mb-1">Password</FormLabel>
+                        <FormLabel className={`block text-sm font-medium mb-1 ${
+                          theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                        }`}>Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                            <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${
+                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                            }`} />
                             <Input 
                               type={showPassword ? "text" : "password"}
                               placeholder="Enter your password" 
-                              className="w-full pl-11 pr-12 py-3 border border-slate-600 bg-slate-700/50 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400" 
+                              className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${
+                                theme === 'dark' 
+                                  ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                  : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                              }`} 
                               {...field} 
                             />
                             <button 
                               type="button"
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                              className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
+                                theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                              }`}
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? (
@@ -590,10 +672,18 @@ const Auth = () => {
 
                   <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className="w-4 h-4 text-indigo-600 border-gray-500 bg-slate-700 rounded focus:ring-indigo-500" />
-                      <span className="text-gray-300">Remember me</span>
+                      <input type="checkbox" className={`w-4 h-4 rounded focus:ring-blue-500 ${
+                        theme === 'dark' 
+                          ? 'text-indigo-600 border-gray-500 bg-slate-700' 
+                          : 'text-blue-600 border-gray-300 bg-white'
+                      }`} />
+                      <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
                     </label>
-                    <a href="#" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors duration-200">Forgot password?</a>
+                    <a href="#" className={`font-medium transition-colors duration-200 ${
+                      theme === 'dark' 
+                        ? 'text-indigo-400 hover:text-indigo-300' 
+                        : 'text-blue-600 hover:text-blue-500'
+                    }`}>Forgot password?</a>
                   </div>
                   
                   <div className="flex justify-center my-4">
@@ -607,7 +697,7 @@ const Auth = () => {
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
                     disabled={isLoading || !captchaToken}
                   >
                     {isLoading ? "Signing in..." : "Sign In"}
@@ -670,7 +760,9 @@ const Auth = () => {
                           <FormLabel>Username</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <User className={`absolute left-3 top-3 h-4 w-4 ${
+                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
                               <Input placeholder="lordjay01" className="pl-9" {...field} />
                             </div>
                           </FormControl>
@@ -687,7 +779,9 @@ const Auth = () => {
                           <FormLabel>Email</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Mail className={`absolute left-3 top-3 h-4 w-4 ${
+                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
                               <Input placeholder="francisjaypon@gmail.com" className="pl-9" {...field} />
                             </div>
                           </FormControl>
@@ -808,7 +902,9 @@ const Auth = () => {
                           <FormControl>
                             <div className="relative">
                               <div className="relative">
-                                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <MapPin className={`absolute left-3 top-3 h-4 w-4 ${
+                                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                                }`} />
                                 <Input
                                   placeholder="Search for your barangay..."
                                   value={barangaySearch}
@@ -896,7 +992,9 @@ const Auth = () => {
                               <FormLabel>Barangay Name</FormLabel>
                               <FormControl>
                                 <div className="relative">
-                                  <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Building className={`absolute left-3 top-3 h-4 w-4 ${
+                                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                                  }`} />
                                   <Input 
                                     placeholder="Poblacion" 
                                     className="pl-9" 
@@ -993,7 +1091,9 @@ const Auth = () => {
                           <FormLabel>Password</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Lock className={`absolute left-3 top-3 h-4 w-4 ${
+                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
                               <Input 
                                 type={showPassword ? "text" : "password"} 
                                 placeholder="Create a secure password" 
@@ -1002,7 +1102,9 @@ const Auth = () => {
                               />
                               <button 
                                 type="button"
-                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                                className={`absolute right-3 top-3 ${
+                                  theme === 'dark' ? 'text-gray-400 hover:text-gray-600' : 'text-gray-500 hover:text-gray-700'
+                                }`}
                                 onClick={() => setShowPassword(!showPassword)}
                               >
                                 {showPassword ? (
@@ -1065,15 +1167,23 @@ const Auth = () => {
               </ScrollArea>
             )}
             
-            <div className="mt-6 pt-6 border-t border-slate-700">
+            <div className={`mt-6 pt-6 ${
+              theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'
+            }`}>
               <div className="text-center">
-                <p className="text-sm text-gray-300">
+                <p className={`text-sm ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                }`}>
                   {activeTab === "login" ? (
                     <>
                       New to Baranex?{" "}
                       <button 
                         onClick={() => setActiveTab("signup")}
-                        className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline transition-all duration-200"
+                        className={`font-medium hover:underline transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'text-indigo-400 hover:text-indigo-300' 
+                            : 'text-blue-600 hover:text-blue-500'
+                        }`}
                       >
                         Sign up
                       </button>
@@ -1083,7 +1193,11 @@ const Auth = () => {
                       Already have an account?{" "}
                       <button 
                         onClick={() => setActiveTab("login")}
-                        className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline transition-all duration-200"
+                        className={`font-medium hover:underline transition-all duration-200 ${
+                          theme === 'dark' 
+                            ? 'text-indigo-400 hover:text-indigo-300' 
+                            : 'text-blue-600 hover:text-blue-500'
+                        }`}
                       >
                         Sign in
                       </button>
@@ -1093,13 +1207,19 @@ const Auth = () => {
               </div>
             </div>
             
-            <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-400">
+            <div className={`mt-6 flex items-center justify-center gap-4 text-xs ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+            }`}>
               <span className="flex items-center gap-1">
-                <Lock className="text-green-400 h-4 w-4" />
+                <Lock className={`h-4 w-4 ${
+                  theme === 'dark' ? 'text-green-400' : 'text-green-500'
+                }`} />
                 SSL Secured
               </span>
               <span className="flex items-center gap-1">
-                <svg className="text-indigo-400 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className={`h-4 w-4 ${
+                  theme === 'dark' ? 'text-indigo-400' : 'text-blue-500'
+                }`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 Gov Certified
@@ -1107,7 +1227,9 @@ const Auth = () => {
             </div>
           </div>
           
-          <div className="mt-6 text-center text-xs text-gray-400">
+          <div className={`mt-6 text-center text-xs ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+          }`}>
             <p>© 2025 Baranex. Empowering Filipino Communities.</p>
           </div>
         </div>
