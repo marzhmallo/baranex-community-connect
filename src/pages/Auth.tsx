@@ -495,8 +495,8 @@ const Auth = () => {
               <p className="text-primary-600 font-semibold">Next-Gen Barangay Management</p>
             </div>
             
+            {/* Desktop header */}
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup")} className="w-full">
-              {/* Desktop header with tabs */}
               <div className="hidden lg:block text-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   {activeTab === "login" ? "Welcome Back" : "Create Account"}
@@ -507,8 +507,7 @@ const Auth = () => {
                     : "Join the Baranex community today"}
                 </p>
               </div>
-
-              {/* Mobile tabs */}
+              
               <div className="lg:hidden mb-6">
                 <TabsList className="grid grid-cols-2 mb-4">
                   <TabsTrigger value="login">Sign In</TabsTrigger>
@@ -516,7 +515,7 @@ const Auth = () => {
                 </TabsList>
               </div>
               
-              <TabsContent value="login" className="mt-0">
+              {activeTab === "login" ? (
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
                     <FormField
@@ -599,9 +598,7 @@ const Auth = () => {
                     </Button>
                   </form>
                 </Form>
-              </TabsContent>
-              
-              <TabsContent value="signup" className="mt-0">
+              ) : (
                 <ScrollArea className="h-[400px] pr-4">
                   <Form {...signupForm}>
                     <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
@@ -1050,20 +1047,34 @@ const Auth = () => {
                     </form>
                   </Form>
                 </ScrollArea>
-              </TabsContent>
+              )}
             </Tabs>
             
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-4">
-                  {activeTab === "login" ? "New to Baranex?" : "Already have an account?"}
+                  {activeTab === "login" ? (
+                    <>
+                      New to Baranex?{" "}
+                      <button 
+                        onClick={() => setActiveTab("signup")}
+                        className="text-primary-600 hover:text-primary-700 font-medium hover:underline transition-all duration-200"
+                      >
+                        Sign up
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <button 
+                        onClick={() => setActiveTab("login")}
+                        className="text-primary-600 hover:text-primary-700 font-medium hover:underline transition-all duration-200"
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
                 </p>
-                <button 
-                  onClick={() => setActiveTab(activeTab === "login" ? "signup" : "login")}
-                  className="text-primary-600 hover:text-primary-700 font-medium text-sm hover:underline transition-all duration-200"
-                >
-                  {activeTab === "login" ? "Sign Up" : "Sign In"}
-                </button>
               </div>
             </div>
             
