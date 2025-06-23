@@ -443,7 +443,7 @@ const Auth = () => {
                   <Building className="text-white text-2xl" />
                 </div>
                 <h1 className="text-4xl font-bold text-white mb-2">Baranex</h1>
-                <p className="text-indigo-400 font-semibold">Next-Gen Barangay Management</p>
+                <p className="text-indigo-400 font-semibold">Barangay Next-Gen Management</p>
               </div>
               
               <div className="space-y-6">
