@@ -526,7 +526,7 @@ const HouseholdList: React.FC = () => {
                 }
                 
                 // Show ellipsis for gaps
-                if (pageNum === 2 || pageNum === pageCount - 1) {
+                if (pageNum === 2 || pageNum === totalPages - 1) {
                   return (
                     <PaginationItem key={`ellipsis-${pageNum}`}>
                       <PaginationEllipsis />
