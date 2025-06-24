@@ -5,6 +5,30 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { feedbackAPI } from '@/lib/api/feedback';
 import { FeedbackReport, FeedbackType, FeedbackStatus } from '@/lib/types/feedback';
+import { 
+  FileText, 
+  Clock, 
+  CheckCircle, 
+  Timer, 
+  Search, 
+  Filter, 
+  AlertTriangle, 
+  ThumbsUp, 
+  Construction, 
+  Volume2, 
+  ZoomIn, 
+  Play, 
+  PlusCircle, 
+  Upload, 
+  Download, 
+  BarChart3, 
+  Smartphone, 
+  Trees, 
+  Shield, 
+  Users, 
+  MessageSquare, 
+  User 
+} from 'lucide-react';
 
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
 
@@ -57,7 +81,7 @@ const FeedbackPage = () => {
                 <p className="text-2xl font-bold text-gray-800">{totalReports}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
-                <span className="material-symbols-outlined text-blue-600">description</span>
+                <FileText className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
@@ -69,7 +93,7 @@ const FeedbackPage = () => {
                 <p className="text-2xl font-bold text-orange-600">{pendingReports}</p>
               </div>
               <div className="bg-orange-100 p-3 rounded-full">
-                <span className="material-symbols-outlined text-orange-600">pending_actions</span>
+                <Clock className="h-6 w-6 text-orange-600" />
               </div>
             </div>
           </div>
@@ -81,7 +105,7 @@ const FeedbackPage = () => {
                 <p className="text-2xl font-bold text-green-600">{resolvedReports}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
-                <span className="material-symbols-outlined text-green-600">task_alt</span>
+                <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </div>
@@ -93,7 +117,7 @@ const FeedbackPage = () => {
                 <p className="text-2xl font-bold text-blue-600">{inProgressReports}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
-                <span className="material-symbols-outlined text-blue-600">hourglass_top</span>
+                <Timer className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
@@ -113,11 +137,11 @@ const FeedbackPage = () => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                     />
-                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-sm">search</span>
+                    <Search className="h-4 w-4 absolute left-3 top-2.5 text-gray-400" />
                   </div>
                   <details className="relative">
                     <summary className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                      <span className="material-symbols-outlined text-sm">filter_list</span>
+                      <Filter className="h-4 w-4" />
                       Filter
                     </summary>
                     <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-48">
@@ -145,7 +169,7 @@ const FeedbackPage = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                        <span className="material-symbols-outlined text-red-600 text-lg">report_problem</span>
+                        <AlertTriangle className="h-5 w-5 text-red-600" />
                       </div>
                       <div>
                         <h3 className="font-medium text-gray-800">Street Light Not Working</h3>
@@ -159,13 +183,13 @@ const FeedbackPage = () => {
                     <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
                       <img src="https://images.unsplash.com/photo-1617859047452-8510bcf207fd" alt="Street light photo" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">zoom_in</span>
+                        <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                       </div>
                     </div>
                     <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
                       <img src="https://images.unsplash.com/photo-1628624747186-a941c476b7ef" alt="Street light photo" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">zoom_in</span>
+                        <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                       </div>
                     </div>
                   </div>
@@ -189,7 +213,7 @@ const FeedbackPage = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="material-symbols-outlined text-green-600 text-lg">thumb_up</span>
+                        <ThumbsUp className="h-5 w-5 text-green-600" />
                       </div>
                       <div>
                         <h3 className="font-medium text-gray-800">Excellent Garbage Collection Service</h3>
@@ -219,7 +243,7 @@ const FeedbackPage = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="material-symbols-outlined text-blue-600 text-lg">construction</span>
+                        <Construction className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
                         <h3 className="font-medium text-gray-800">Road Repair Request</h3>
@@ -232,22 +256,22 @@ const FeedbackPage = () => {
                   <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
                     <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                        <span className="material-symbols-outlined text-gray-500">videocam</span>
+                        <Play className="h-6 w-6 text-gray-500" />
                       </div>
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">play_arrow</span>
+                        <Play className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                       </div>
                     </div>
                     <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
                       <img src="https://images.unsplash.com/photo-1636367167117-1c584316f6eb" alt="Pothole photo" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">zoom_in</span>
+                        <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                       </div>
                     </div>
                     <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
                       <img src="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2" alt="Pothole photo" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">zoom_in</span>
+                        <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                       </div>
                     </div>
                   </div>
@@ -271,7 +295,7 @@ const FeedbackPage = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                        <span className="material-symbols-outlined text-purple-600 text-lg">campaign</span>
+                        <Volume2 className="h-5 w-5 text-purple-600" />
                       </div>
                       <div>
                         <h3 className="font-medium text-gray-800">Noise Complaint</h3>
@@ -284,10 +308,10 @@ const FeedbackPage = () => {
                   <div className="mt-3 flex gap-2">
                     <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                        <span className="material-symbols-outlined text-gray-500">mic</span>
+                        <Volume2 className="h-6 w-6 text-gray-500" />
                       </div>
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">play_arrow</span>
+                        <Play className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                       </div>
                     </div>
                   </div>
@@ -321,27 +345,24 @@ const FeedbackPage = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <button className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
-                  <span className="material-symbols-outlined text-purple-600 group-hover:scale-110 transition-transform">add_circle</span>
+                  <PlusCircle className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
                   <span className="text-purple-700 font-medium flex-1 text-left">Create New Report</span>
                   <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">New</span>
                 </button>
                 <button className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group">
-                  <span className="material-symbols-outlined text-blue-600 group-hover:scale-110 transition-transform">upload_file</span>
+                  <Upload className="h-5 w-5 text-blue-600 group-hover:scale-110 transition-transform" />
                   <span className="text-blue-700 font-medium flex-1 text-left">Import Reports</span>
-                  <span className="material-symbols-outlined text-blue-600 text-sm">arrow_forward</span>
                 </button>
                 <button className="w-full flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors group">
-                  <span className="material-symbols-outlined text-green-600 group-hover:scale-110 transition-transform">download</span>
+                  <Download className="h-5 w-5 text-green-600 group-hover:scale-110 transition-transform" />
                   <span className="text-green-700 font-medium flex-1 text-left">Export Data</span>
-                  <span className="material-symbols-outlined text-green-600 text-sm">arrow_forward</span>
                 </button>
                 <button className="w-full flex items-center gap-3 p-3 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors group">
-                  <span className="material-symbols-outlined text-orange-600 group-hover:scale-110 transition-transform">analytics</span>
+                  <BarChart3 className="h-5 w-5 text-orange-600 group-hover:scale-110 transition-transform" />
                   <span className="text-orange-700 font-medium flex-1 text-left">View Analytics</span>
-                  <span className="material-symbols-outlined text-orange-600 text-sm">arrow_forward</span>
                 </button>
                 <button className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
-                  <span className="material-symbols-outlined text-purple-600 group-hover:scale-110 transition-transform">phone_android</span>
+                  <Smartphone className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
                   <span className="text-purple-700 font-medium flex-1 text-left">Download Mobile App</span>
                   <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">New</span>
                 </button>
@@ -354,7 +375,7 @@ const FeedbackPage = () => {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                      <span className="material-symbols-outlined text-red-600 text-sm">report_problem</span>
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
                     </div>
                     <span className="text-gray-700 font-medium">Infrastructure</span>
                   </div>
@@ -363,7 +384,7 @@ const FeedbackPage = () => {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="material-symbols-outlined text-green-600 text-sm">landscape</span>
+                      <Trees className="h-4 w-4 text-green-600" />
                     </div>
                     <span className="text-gray-700 font-medium">Environment</span>
                   </div>
@@ -372,7 +393,7 @@ const FeedbackPage = () => {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="material-symbols-outlined text-blue-600 text-sm">security</span>
+                      <Shield className="h-4 w-4 text-blue-600" />
                     </div>
                     <span className="text-gray-700 font-medium">Safety & Security</span>
                   </div>
@@ -381,7 +402,7 @@ const FeedbackPage = () => {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="material-symbols-outlined text-purple-600 text-sm">groups</span>
+                      <Users className="h-4 w-4 text-purple-600" />
                     </div>
                     <span className="text-gray-700 font-medium">Community</span>
                   </div>
@@ -390,7 +411,7 @@ const FeedbackPage = () => {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <span className="material-symbols-outlined text-yellow-600 text-sm">feedback</span>
+                      <MessageSquare className="h-4 w-4 text-yellow-600" />
                     </div>
                     <span className="text-gray-700 font-medium">General Feedback</span>
                   </div>
@@ -404,7 +425,7 @@ const FeedbackPage = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="material-symbols-outlined text-blue-600">person</span>
+                    <User className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">John Santos</p>
@@ -414,7 +435,7 @@ const FeedbackPage = () => {
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="material-symbols-outlined text-green-600">person</span>
+                    <User className="h-5 w-5 text-green-600" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">Maria Rodriguez</p>
@@ -424,7 +445,7 @@ const FeedbackPage = () => {
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <span className="material-symbols-outlined text-purple-600">person</span>
+                    <User className="h-5 w-5 text-purple-600" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">Robert Lopez</p>
