@@ -1,31 +1,18 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Eye, MessageSquare, FileText, Filter, BarChart3, Users, CheckCircle, Clock, AlertTriangle, Plus, Upload, Download, TrendingUp, Phone } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { feedbackAPI } from '@/lib/api/feedback';
-import { FeedbackReport, FeedbackType, FeedbackStatus, STATUS_COLORS } from '@/lib/types/feedback';
+import { FeedbackReport, FeedbackType, FeedbackStatus } from '@/lib/types/feedback';
 
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
 
 const FeedbackPage = () => {
   const { userProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedReport, setSelectedReport] = useState<FeedbackReport | null>(null);
   const [filterType, setFilterType] = useState<FeedbackType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<FeedbackStatus | 'all'>('all');
-  const [adminNotes, setAdminNotes] = useState('');
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const { data: reports, isLoading, refetch } = useQuery({
     queryKey: ['feedback-reports', userProfile?.brgyid, filterType, filterStatus, searchTerm],
@@ -39,41 +26,6 @@ const FeedbackPage = () => {
     },
     enabled: !!userProfile?.brgyid
   });
-
-  const handleStatusUpdate = async (reportId: string, newStatus: FeedbackStatus) => {
-    setIsUpdating(true);
-    try {
-      await feedbackAPI.updateReportStatus(reportId, newStatus, adminNotes);
-      toast({
-        title: "Status updated",
-        description: `Report status changed to ${newStatus}`
-      });
-      refetch();
-      setSelectedReport(null);
-      setAdminNotes('');
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update status",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const getStatusBadge = (status: FeedbackStatus) => (
-    <Badge className={STATUS_COLORS[status]}>
-      {status.replace('_', ' ').toUpperCase()}
-    </Badge>
-  );
-
-  const getTypeBadge = (type: FeedbackType) => (
-    <Badge variant={type === 'barangay' ? 'default' : 'secondary'}>
-      {type === 'barangay' ? 'Barangay Issue' : 'System Issue'}
-    </Badge>
-  );
 
   // Calculate stats from reports
   const totalReports = reports?.length || 0;
@@ -97,7 +49,6 @@ const FeedbackPage = () => {
           <p className="text-gray-600">Manage community feedback and issue reports efficiently</p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between">
@@ -106,7 +57,7 @@ const FeedbackPage = () => {
                 <p className="text-2xl font-bold text-gray-800">{totalReports}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
-                <FileText className="h-6 w-6 text-blue-600" />
+                <span className="material-symbols-outlined text-blue-600">description</span>
               </div>
             </div>
           </div>
@@ -118,7 +69,7 @@ const FeedbackPage = () => {
                 <p className="text-2xl font-bold text-orange-600">{pendingReports}</p>
               </div>
               <div className="bg-orange-100 p-3 rounded-full">
-                <Clock className="h-6 w-6 text-orange-600" />
+                <span className="material-symbols-outlined text-orange-600">pending_actions</span>
               </div>
             </div>
           </div>
@@ -130,7 +81,7 @@ const FeedbackPage = () => {
                 <p className="text-2xl font-bold text-green-600">{resolvedReports}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <span className="material-symbols-outlined text-green-600">task_alt</span>
               </div>
             </div>
           </div>
@@ -142,7 +93,7 @@ const FeedbackPage = () => {
                 <p className="text-2xl font-bold text-blue-600">{inProgressReports}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
-                <AlertTriangle className="h-6 w-6 text-blue-600" />
+                <span className="material-symbols-outlined text-blue-600">hourglass_top</span>
               </div>
             </div>
           </div>
@@ -150,285 +101,310 @@ const FeedbackPage = () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-6">
-            {/* Reports Management */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                 <h2 className="text-xl font-semibold text-gray-800">Recent Reports & Feedback</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
-                    <Input
-                      placeholder="Search reports..."
+                    <input 
+                      type="text" 
+                      placeholder="Search reports..." 
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-4 py-2 w-64"
+                      className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                     />
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-sm">search</span>
                   </div>
-                  
-                  <Select value={filterType} onValueChange={(value: FeedbackType | 'all') => setFilterType(value)}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="barangay">Barangay</SelectItem>
-                      <SelectItem value="system">System</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={filterStatus} onValueChange={(value: FeedbackStatus | 'all') => setFilterStatus(value)}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <details className="relative">
+                    <summary className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                      <span className="material-symbols-outlined text-sm">filter_list</span>
+                      Filter
+                    </summary>
+                    <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-48">
+                      <div className="p-3">
+                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 rounded px-2">
+                          <input type="checkbox" className="rounded" />
+                          <span className="text-sm">Pending</span>
+                        </label>
+                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 rounded px-2">
+                          <input type="checkbox" className="rounded" />
+                          <span className="text-sm">In Progress</span>
+                        </label>
+                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 rounded px-2">
+                          <input type="checkbox" className="rounded" />
+                          <span className="text-sm">Resolved</span>
+                        </label>
+                      </div>
+                    </div>
+                  </details>
                 </div>
               </div>
 
-              {/* Reports Table */}
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Reporter</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {reports?.map((report) => (
-                      <TableRow key={report.id}>
-                        <TableCell>
-                          <div className="font-medium">{report.user_name}</div>
-                        </TableCell>
-                        <TableCell>{getTypeBadge(report.type)}</TableCell>
-                        <TableCell>{report.category}</TableCell>
-                        <TableCell>{getStatusBadge(report.status)}</TableCell>
-                        <TableCell>
-                          {new Date(report.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedReport(report);
-                                  setAdminNotes(report.admin_notes || '');
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Report Details</DialogTitle>
-                              </DialogHeader>
-                              {selectedReport && (
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <strong>Reporter:</strong> {selectedReport.user_name}
-                                    </div>
-                                    <div>
-                                      <strong>Type:</strong> {getTypeBadge(selectedReport.type)}
-                                    </div>
-                                    <div>
-                                      <strong>Category:</strong> {selectedReport.category}
-                                    </div>
-                                    <div>
-                                      <strong>Status:</strong> {getStatusBadge(selectedReport.status)}
-                                    </div>
-                                  </div>
+              <div className="space-y-4">
+                <div className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 transition-all duration-300">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <span className="material-symbols-outlined text-red-600 text-lg">report_problem</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-800">Street Light Not Working</h3>
+                        <p className="text-sm text-gray-500">Purok 3, Barangay San Miguel</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">Pending</span>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-3">The street light in front of house #45 has been out for 3 days. This creates safety concerns for residents walking at night.</p>
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
+                      <img src="https://images.unsplash.com/photo-1617859047452-8510bcf207fd" alt="Street light photo" className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">zoom_in</span>
+                      </div>
+                    </div>
+                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
+                      <img src="https://images.unsplash.com/photo-1628624747186-a941c476b7ef" alt="Street light photo" className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">zoom_in</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>Reported by: Maria Santos</span>
+                      <span>2 hours ago</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                        Assign
+                      </button>
+                      <button className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-                                  {selectedReport.location && (
-                                    <div>
-                                      <strong>Location:</strong> {selectedReport.location}
-                                    </div>
-                                  )}
+                <div className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 transition-all duration-300">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <span className="material-symbols-outlined text-green-600 text-lg">thumb_up</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-800">Excellent Garbage Collection Service</h3>
+                        <p className="text-sm text-gray-500">Purok 1, Barangay San Miguel</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Positive Feedback</span>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-3">I want to commend the garbage collection team for their consistent and timely service. Our area is always clean thanks to their efforts.</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>Feedback by: Juan Dela Cruz</span>
+                      <span>5 hours ago</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                        Acknowledge
+                      </button>
+                      <button className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                        Share
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-                                  <div>
-                                    <strong>Description:</strong>
-                                    <p className="mt-2 p-3 bg-gray-50 rounded">{selectedReport.description}</p>
-                                  </div>
+                <div className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 transition-all duration-300">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="material-symbols-outlined text-blue-600 text-lg">construction</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-800">Road Repair Request</h3>
+                        <p className="text-sm text-gray-500">Main Road, Barangay San Miguel</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">In Progress</span>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-3">Large potholes on the main road are causing damage to vehicles. Road repair is urgently needed.</p>
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                    <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <span className="material-symbols-outlined text-gray-500">videocam</span>
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">play_arrow</span>
+                      </div>
+                    </div>
+                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
+                      <img src="https://images.unsplash.com/photo-1636367167117-1c584316f6eb" alt="Pothole photo" className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">zoom_in</span>
+                      </div>
+                    </div>
+                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
+                      <img src="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2" alt="Pothole photo" className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">zoom_in</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>Reported by: Carlos Reyes</span>
+                      <span>1 day ago</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                        Update Status
+                      </button>
+                      <button className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                        View Progress
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-                                  {selectedReport.attachments && selectedReport.attachments.length > 0 && (
-                                    <div>
-                                      <strong>Attachments:</strong>
-                                      <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        {selectedReport.attachments.map((attachment, index) => {
-                                          const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
-                                          return (
-                                            <div key={index} className="relative group">
-                                              <img
-                                                src={imageUrl}
-                                                alt={`Attachment ${index + 1}`}
-                                                className="w-full aspect-square object-cover rounded-lg border"
-                                                onError={(e) => {
-                                                  const target = e.target as HTMLImageElement;
-                                                  target.style.display = 'none';
-                                                  const fallback = target.nextElementSibling as HTMLElement;
-                                                  if (fallback) fallback.style.display = 'flex';
-                                                }}
-                                              />
-                                              <div className="hidden w-full aspect-square bg-gray-100 rounded-lg items-center justify-center border">
-                                                <div className="text-center p-2">
-                                                  <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                                                  <span className="text-xs text-gray-600">{attachment}</span>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  )}
+                <div className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 transition-all duration-300">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <span className="material-symbols-outlined text-purple-600 text-lg">campaign</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-800">Noise Complaint</h3>
+                        <p className="text-sm text-gray-500">Purok 2, Barangay San Miguel</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">Pending</span>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-3">Loud music from a nearby establishment is disturbing residents during late hours. Please investigate.</p>
+                  <div className="mt-3 flex gap-2">
+                    <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <span className="material-symbols-outlined text-gray-500">mic</span>
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white scale-0 group-hover:scale-100 transition-all duration-300">play_arrow</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>Reported by: Anna Garcia</span>
+                      <span>3 hours ago</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                        Investigate
+                      </button>
+                      <button className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                        Contact Reporter
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                                  <div>
-                                    <strong>Admin Notes:</strong>
-                                    <Textarea
-                                      value={adminNotes}
-                                      onChange={(e) => setAdminNotes(e.target.value)}
-                                      placeholder="Add notes for this report..."
-                                      className="mt-2"
-                                    />
-                                  </div>
-
-                                  <div className="flex gap-2">
-                                    {selectedReport.status === 'pending' && (
-                                      <Button
-                                        onClick={() => handleStatusUpdate(selectedReport.id, 'in_progress')}
-                                        disabled={isUpdating}
-                                      >
-                                        Mark In Progress
-                                      </Button>
-                                    )}
-                                    {(selectedReport.status === 'pending' || selectedReport.status === 'in_progress') && (
-                                      <>
-                                        <Button
-                                          onClick={() => handleStatusUpdate(selectedReport.id, 'resolved')}
-                                          disabled={isUpdating}
-                                          className="bg-green-600 hover:bg-green-700"
-                                        >
-                                          Mark Resolved
-                                        </Button>
-                                        <Button
-                                          onClick={() => handleStatusUpdate(selectedReport.id, 'rejected')}
-                                          disabled={isUpdating}
-                                          variant="destructive"
-                                        >
-                                          Reject
-                                        </Button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="mt-6 flex justify-center">
+                <button className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                  Load More Reports
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Quick Actions */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
               <div className="space-y-3">
+                <button className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
+                  <span className="material-symbols-outlined text-purple-600 group-hover:scale-110 transition-transform">add_circle</span>
+                  <span className="text-purple-700 font-medium flex-1 text-left">Create New Report</span>
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">New</span>
+                </button>
                 <button className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group">
-                  <Plus className="text-blue-600 group-hover:scale-110 transition-transform h-5 w-5" />
-                  <span className="text-blue-700 font-medium flex-1 text-left">Create New Report</span>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">New</span>
+                  <span className="material-symbols-outlined text-blue-600 group-hover:scale-110 transition-transform">upload_file</span>
+                  <span className="text-blue-700 font-medium flex-1 text-left">Import Reports</span>
+                  <span className="material-symbols-outlined text-blue-600 text-sm">arrow_forward</span>
                 </button>
                 <button className="w-full flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors group">
-                  <Upload className="text-green-600 group-hover:scale-110 transition-transform h-5 w-5" />
-                  <span className="text-green-700 font-medium flex-1 text-left">Import Reports</span>
-                </button>
-                <button className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
-                  <Download className="text-purple-600 group-hover:scale-110 transition-transform h-5 w-5" />
-                  <span className="text-purple-700 font-medium flex-1 text-left">Export Data</span>
+                  <span className="material-symbols-outlined text-green-600 group-hover:scale-110 transition-transform">download</span>
+                  <span className="text-green-700 font-medium flex-1 text-left">Export Data</span>
+                  <span className="material-symbols-outlined text-green-600 text-sm">arrow_forward</span>
                 </button>
                 <button className="w-full flex items-center gap-3 p-3 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors group">
-                  <BarChart3 className="text-orange-600 group-hover:scale-110 transition-transform h-5 w-5" />
+                  <span className="material-symbols-outlined text-orange-600 group-hover:scale-110 transition-transform">analytics</span>
                   <span className="text-orange-700 font-medium flex-1 text-left">View Analytics</span>
+                  <span className="material-symbols-outlined text-orange-600 text-sm">arrow_forward</span>
+                </button>
+                <button className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
+                  <span className="material-symbols-outlined text-purple-600 group-hover:scale-110 transition-transform">phone_android</span>
+                  <span className="text-purple-700 font-medium flex-1 text-left">Download Mobile App</span>
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">New</span>
                 </button>
               </div>
             </div>
 
-            {/* Report Categories */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Report Categories</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                      <AlertTriangle className="text-red-600 h-4 w-4" />
+                      <span className="material-symbols-outlined text-red-600 text-sm">report_problem</span>
                     </div>
                     <span className="text-gray-700 font-medium">Infrastructure</span>
                   </div>
-                  <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">
-                    {reports?.filter(r => r.category.includes('Road') || r.category.includes('Street') || r.category.includes('Water')).length || 0}
-                  </span>
+                  <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">45</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <TrendingUp className="text-green-600 h-4 w-4" />
+                      <span className="material-symbols-outlined text-green-600 text-sm">landscape</span>
                     </div>
                     <span className="text-gray-700 font-medium">Environment</span>
                   </div>
-                  <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">
-                    {reports?.filter(r => r.category.includes('Garbage') || r.category.includes('Drainage')).length || 0}
-                  </span>
+                  <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">32</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <MessageSquare className="text-blue-600 h-4 w-4" />
+                      <span className="material-symbols-outlined text-blue-600 text-sm">security</span>
                     </div>
                     <span className="text-gray-700 font-medium">Safety & Security</span>
                   </div>
-                  <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">
-                    {reports?.filter(r => r.category.includes('Safety') || r.category.includes('Noise')).length || 0}
-                  </span>
+                  <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">28</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Users className="text-purple-600 h-4 w-4" />
+                      <span className="material-symbols-outlined text-purple-600 text-sm">groups</span>
                     </div>
                     <span className="text-gray-700 font-medium">Community</span>
                   </div>
-                  <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">
-                    {reports?.filter(r => r.type === 'system').length || 0}
-                  </span>
+                  <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">21</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <span className="material-symbols-outlined text-yellow-600 text-sm">feedback</span>
+                    </div>
+                    <span className="text-gray-700 font-medium">General Feedback</span>
+                  </div>
+                  <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded">19</span>
                 </div>
               </div>
             </div>
 
-            {/* Assigned Officers */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Assigned Officers</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Users className="text-blue-600 h-5 w-5" />
+                    <span className="material-symbols-outlined text-blue-600">person</span>
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">John Santos</p>
@@ -438,7 +414,7 @@ const FeedbackPage = () => {
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <Users className="text-green-600 h-5 w-5" />
+                    <span className="material-symbols-outlined text-green-600">person</span>
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">Maria Rodriguez</p>
@@ -448,7 +424,7 @@ const FeedbackPage = () => {
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <Users className="text-purple-600 h-5 w-5" />
+                    <span className="material-symbols-outlined text-purple-600">person</span>
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">Robert Lopez</p>
