@@ -529,7 +529,7 @@ const Auth = () => {
           </div>
         </div>
         
-        {/* Right side - Login Form */}
+        {/* Right side - Auth Forms */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
           <div className={`backdrop-blur-sm rounded-3xl shadow-2xl p-8 ${
             theme === 'dark' 
@@ -549,150 +549,631 @@ const Auth = () => {
               }`}>Next-Gen Barangay Management</p>
             </div>
             
-            {/* Header text */}
-            <div className="text-center mb-6">
-              <h2 className={`text-2xl font-bold mb-2 ${
-                theme === 'dark' ? 'text-white' : 'text-gray-800'
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup")}>
+              <TabsList className={`grid w-full grid-cols-2 ${
+                theme === 'dark' 
+                  ? 'bg-slate-700/50 border border-slate-600' 
+                  : 'bg-blue-50 border border-blue-200'
               }`}>
-                Welcome Back!
-              </h2>
-              <p className={`text-sm ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-              }`}>
-                Sign in to your dashboard
-              </p>
-            </div>
-            
-            <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                <FormField
-                  control={loginForm.control}
-                  name="emailOrUsername"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={`block text-sm font-medium mb-1 ${
-                        theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-                      }`}>Email Address or Username</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className={`absolute left-3 top-3 h-4 w-4 ${
-                            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                          }`} />
-                          <Input 
-                            placeholder="Enter your email or username" 
-                            className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
-                              theme === 'dark' 
-                                ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
-                                : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
-                            }`}
-                            {...field} 
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={loginForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={`block text-sm font-medium mb-1 ${
-                        theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-                      }`}>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className={`absolute left-3 top-3 h-4 w-4 ${
-                            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                          }`} />
-                          <Input 
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password" 
-                            className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${
-                              theme === 'dark' 
-                                ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
-                                : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
-                            }`}
-                            {...field} 
-                          />
-                          <button 
-                            type="button"
-                            className={`absolute right-3 top-3 ${
-                              theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex items-center justify-between text-sm">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className={`w-4 h-4 rounded focus:ring-blue-500 ${
-                      theme === 'dark' 
-                        ? 'text-indigo-600 border-gray-500 bg-slate-700' 
-                        : 'text-blue-600 border-gray-300 bg-white'
-                    }`} />
-                    <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
-                  </label>
-                  <a href="#" className={`font-medium transition-colors duration-200 ${
+                <TabsTrigger 
+                  value="login" 
+                  className={`${
                     theme === 'dark' 
-                      ? 'text-indigo-400 hover:text-indigo-300' 
-                      : 'text-blue-600 hover:text-blue-500'
-                  }`}>Forgot password?</a>
-                </div>
-                
-                <div className="flex justify-center my-4">
-                  <HCaptcha
-                    ref={captchaRef}
-                    sitekey={hcaptchaSiteKey}
-                    onVerify={handleCaptchaChange}
-                    onExpire={() => setCaptchaToken(null)}
-                  />
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
-                  disabled={isLoading || !captchaToken}
+                      ? 'data-[state=active]:bg-slate-600 data-[state=active]:text-white text-gray-300' 
+                      : 'data-[state=active]:bg-white data-[state=active]:text-blue-600 text-gray-600'
+                  }`}
                 >
-                  {isLoading ? "Signing in..." : "Sign In"}
-                </Button>
-              </form>
-            </Form>
-            
-            <div className={`mt-6 pt-6 ${
-              theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'
-            }`}>
-              <div className="text-center">
-                <p className={`text-sm ${
-                  theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  New to Baranex?{" "}
-                  <a 
-                    href="/signup"
-                    className={`font-medium hover:underline transition-all duration-200 ${
-                      theme === 'dark' 
-                        ? 'text-indigo-400 hover:text-indigo-300' 
-                        : 'text-blue-600 hover:text-blue-500'
-                    }`}
-                  >
-                    Sign up
-                  </a>
-                </p>
-              </div>
-            </div>
+                  Sign In
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="signup" 
+                  className={`${
+                    theme === 'dark' 
+                      ? 'data-[state=active]:bg-slate-600 data-[state=active]:text-white text-gray-300' 
+                      : 'data-[state=active]:bg-white data-[state=active]:text-blue-600 text-gray-600'
+                  }`}
+                >
+                  Sign Up
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login" className="mt-6">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="emailOrUsername"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${
+                            theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                          }`}>Email Address or Username</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className={`absolute left-3 top-3 h-4 w-4 ${
+                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
+                              <Input 
+                                placeholder="Enter your email or username" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${
+                            theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                          }`}>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className={`absolute left-3 top-3 h-4 w-4 ${
+                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
+                              <Input 
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Enter your password" 
+                                className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                              <button 
+                                type="button"
+                                className={`absolute right-3 top-3 ${
+                                  theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex items-center justify-between text-sm">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className={`w-4 h-4 rounded focus:ring-blue-500 ${
+                          theme === 'dark' 
+                            ? 'text-indigo-600 border-gray-500 bg-slate-700' 
+                            : 'text-blue-600 border-gray-300 bg-white'
+                        }`} />
+                        <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
+                      </label>
+                      <a href="#" className={`font-medium transition-colors duration-200 ${
+                        theme === 'dark' 
+                          ? 'text-indigo-400 hover:text-indigo-300' 
+                          : 'text-blue-600 hover:text-blue-500'
+                      }`}>Forgot password?</a>
+                    </div>
+                    
+                    <div className="flex justify-center my-4">
+                      <HCaptcha
+                        ref={captchaRef}
+                        sitekey={hcaptchaSiteKey}
+                        onVerify={handleCaptchaChange}
+                        onExpire={() => setCaptchaToken(null)}
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
+                      disabled={isLoading || !captchaToken}
+                    >
+                      {isLoading ? "Signing in..." : "Sign In"}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+              
+              <TabsContent value="signup" className="mt-6">
+                <ScrollArea className="h-96">
+                  <Form {...signupForm}>
+                    <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4 pr-4">
+                      <FormField
+                        control={signupForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className={`absolute left-3 top-3 h-4 w-4 ${
+                                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                                }`} />
+                                <Input 
+                                  placeholder="Enter your email" 
+                                  className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                    theme === 'dark' 
+                                      ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                      : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                  }`}
+                                  {...field} 
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Password</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className={`absolute left-3 top-3 h-4 w-4 ${
+                                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                                }`} />
+                                <Input 
+                                  type={showPassword ? "text" : "password"}
+                                  placeholder="Enter your password" 
+                                  className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${
+                                    theme === 'dark' 
+                                      ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                      : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                  }`}
+                                  {...field} 
+                                />
+                                <button 
+                                  type="button"
+                                  className={`absolute right-3 top-3 ${
+                                    theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  {showPassword ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="firstname"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>First Name</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your first name" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="lastname"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Last Name</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your last name" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="middlename"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Middle Name</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your middle name" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Username</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your username" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Phone Number</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your phone number" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="gender"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Gender</FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select your gender" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Male">Male</SelectItem>
+                                  <SelectItem value="Female">Female</SelectItem>
+                                  <SelectItem value="Other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="purok"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Purok</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your purok" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="bday"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Date of Birth</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your date of birth" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="role"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Role</FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select your role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="staff">Staff</SelectItem>
+                                  <SelectItem value="user">User</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="barangayId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Barangay</FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select your barangay" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {filteredBarangays.map(barangay => (
+                                    <SelectItem key={barangay.id} value={barangay.id}>
+                                      {barangay.name}, {barangay.municipality}, {barangay.province}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="barangayname"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Barangay Name</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your barangay name" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="municipality"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Municipality</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your municipality" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="province"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Province</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your province" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="region"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Region</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your region" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={signupForm.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${
+                              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                            }`}>Country</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your country" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
+                                  theme === 'dark' 
+                                    ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
+                                    : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
+                                }`}
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="flex justify-center my-4">
+                        <HCaptcha
+                          ref={captchaRef}
+                          sitekey={hcaptchaSiteKey}
+                          onVerify={handleCaptchaChange}
+                          onExpire={() => setCaptchaToken(null)}
+                        />
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
+                        disabled={isLoading || !captchaToken}
+                      >
+                        {isLoading ? "Creating account..." : "Create Account"}
+                      </Button>
+                    </form>
+                  </Form>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
             
             <div className={`mt-6 flex items-center justify-center gap-4 text-xs ${
               theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
