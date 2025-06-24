@@ -16,12 +16,10 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/components/theme/ThemeProvider";
-
 const loginSchema = z.object({
   emailOrUsername: z.string().min(1, "Please enter your email or username"),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
+  password: z.string().min(6, "Password must be at least 6 characters long")
 });
-
 const signupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters long"),
@@ -31,7 +29,7 @@ const signupSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters long"),
   phone: z.string().min(10, "Please enter a valid phone number").optional(),
   gender: z.enum(["Male", "Female", "Other"], {
-    required_error: "Please select a gender",
+    required_error: "Please select a gender"
   }),
   purok: z.string().min(1, "Please enter your purok"),
   bday: z.string().min(1, "Please enter your date of birth"),
@@ -43,7 +41,7 @@ const signupSchema = z.object({
   municipality: z.string().optional(),
   province: z.string().optional(),
   region: z.string().optional(),
-  country: z.string().default("Philippines").optional(),
+  country: z.string().default("Philippines").optional()
 }).refine(data => {
   if (data.barangayId === "new-barangay" && (data.role === "admin" || data.role === "staff")) {
     return !!data.barangayname && !!data.municipality && !!data.province;
@@ -51,42 +49,47 @@ const signupSchema = z.object({
   return true;
 }, {
   message: "Required barangay information is missing",
-  path: ["barangayname"],
+  path: ["barangayname"]
 });
-
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
-
 const Auth = () => {
-  const { theme } = useTheme();
+  const {
+    theme
+  } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [barangays, setBarangays] = useState<{id: string, name: string, municipality: string, province: string}[]>([]);
+  const [barangays, setBarangays] = useState<{
+    id: string;
+    name: string;
+    municipality: string;
+    province: string;
+  }[]>([]);
   const [barangaySearch, setBarangaySearch] = useState("");
   const [showBarangaySuggestions, setShowBarangaySuggestions] = useState(false);
-  const [filteredBarangays, setFilteredBarangays] = useState<{id: string, name: string, municipality: string, province: string}[]>([]);
+  const [filteredBarangays, setFilteredBarangays] = useState<{
+    id: string;
+    name: string;
+    municipality: string;
+    province: string;
+  }[]>([]);
   const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
-  
   const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "a002bff6-3d98-4db2-8406-166e106c1958";
 
   // Fetch available barangays
   useEffect(() => {
     const fetchBarangays = async () => {
-      const { data, error } = await supabase
-        .from('barangays')
-        .select('id, barangayname, municipality, province')
-        .order('province')
-        .order('municipality')
-        .order('barangayname');
-      
+      const {
+        data,
+        error
+      } = await supabase.from('barangays').select('id, barangayname, municipality, province').order('province').order('municipality').order('barangayname');
       if (error) {
         console.error('Error fetching barangays:', error);
         return;
       }
-
       if (data) {
         setBarangays(data.map(b => ({
           id: b.id,
@@ -96,7 +99,6 @@ const Auth = () => {
         })));
       }
     };
-
     fetchBarangays();
   }, []);
 
@@ -107,25 +109,17 @@ const Auth = () => {
       setShowBarangaySuggestions(false);
       return;
     }
-
-    const filtered = barangays.filter(barangay => 
-      barangay.name.toLowerCase().includes(barangaySearch.toLowerCase()) ||
-      barangay.municipality.toLowerCase().includes(barangaySearch.toLowerCase()) ||
-      barangay.province.toLowerCase().includes(barangaySearch.toLowerCase())
-    );
-    
+    const filtered = barangays.filter(barangay => barangay.name.toLowerCase().includes(barangaySearch.toLowerCase()) || barangay.municipality.toLowerCase().includes(barangaySearch.toLowerCase()) || barangay.province.toLowerCase().includes(barangaySearch.toLowerCase()));
     setFilteredBarangays(filtered.slice(0, 10)); // Limit to 10 suggestions
     setShowBarangaySuggestions(true);
   }, [barangaySearch, barangays]);
-
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       emailOrUsername: "",
-      password: "",
-    },
+      password: ""
+    }
   });
-
   const signupForm = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -145,58 +139,49 @@ const Auth = () => {
       municipality: "",
       province: "",
       region: "",
-      country: "Philippines",
-    },
+      country: "Philippines"
+    }
   });
-
   const selectedRole = signupForm.watch("role");
   const selectedBarangayId = signupForm.watch("barangayId");
   const isNewBarangay = selectedBarangayId === "new-barangay";
-
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
     if (token) {
       console.log("Captcha verified successfully");
     }
   };
-
   const handleLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
-    
     if (!captchaToken) {
       toast({
         title: "CAPTCHA Required",
         description: "Please complete the captcha verification",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsLoading(false);
       return;
     }
-
     try {
       console.log("Attempting login with:", values.emailOrUsername);
-      
+
       // First check if it's an email or username
       const isEmail = values.emailOrUsername.includes('@');
       let email = values.emailOrUsername;
-      
+
       // If it's not an email, look up the email from username in profiles table
       if (!isEmail) {
         console.log("Looking up email for username:", values.emailOrUsername);
-        
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('username', values.emailOrUsername)
-          .maybeSingle();
-        
+        const {
+          data: profileData
+        } = await supabase.from('profiles').select('email').eq('username', values.emailOrUsername).maybeSingle();
         if (profileData?.email) {
           email = profileData.email;
         } else {
           toast({
             title: "User Not Found",
             description: "No user found with that username",
-            variant: "destructive",
+            variant: "destructive"
           });
           setIsLoading(false);
           captchaRef.current?.resetCaptcha();
@@ -204,27 +189,31 @@ const Auth = () => {
           return;
         }
       }
-      
-      const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
+      const {
+        data: {
+          user,
+          session
+        },
+        error
+      } = await supabase.auth.signInWithPassword({
         email: email,
         password: values.password,
         options: {
-          captchaToken,
+          captchaToken
         }
       });
-      
       if (error) {
         console.error("Login error:", error);
         toast({
           title: "Error",
           description: error.message,
-          variant: "destructive",
+          variant: "destructive"
         });
       } else if (user) {
         console.log("Login successful, user authenticated");
         toast({
           title: "Login successful",
-          description: "Welcome back!",
+          description: "Welcome back!"
         });
         // AuthProvider will handle the redirect based on user role
       }
@@ -232,7 +221,7 @@ const Auth = () => {
       toast({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive",
+        variant: "destructive"
       });
       console.error("Authentication error:", error);
     } finally {
@@ -241,78 +230,66 @@ const Auth = () => {
       setCaptchaToken(null);
     }
   };
-
   const handleSignup = async (values: SignupFormValues) => {
     setIsLoading(true);
-    
     if (!captchaToken) {
       toast({
         title: "CAPTCHA Required",
         description: "Please complete the captcha verification",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsLoading(false);
       return;
     }
-
     try {
       let brgyId: string | null = null;
       let isSuperiorAdmin = false;
-      
+
       // Process barangay selection or creation
       if (values.barangayId === "new-barangay") {
-        const { data: existingBarangay, error: brgyCheckError } = await supabase
-          .from('barangays')
-          .select('id')
-          .ilike('barangayname', values.barangayname?.trim() || '')
-          .eq('municipality', values.municipality?.trim() || '')
-          .eq('province', values.province?.trim() || '')
-          .single();
-        
+        const {
+          data: existingBarangay,
+          error: brgyCheckError
+        } = await supabase.from('barangays').select('id').ilike('barangayname', values.barangayname?.trim() || '').eq('municipality', values.municipality?.trim() || '').eq('province', values.province?.trim() || '').single();
         if (brgyCheckError && brgyCheckError.code !== 'PGRST116') {
           toast({
             title: "Database Error",
             description: brgyCheckError.message,
-            variant: "destructive",
+            variant: "destructive"
           });
           setIsLoading(false);
           return;
         }
-        
         if (existingBarangay) {
           toast({
             title: "Barangay Already Exists",
             description: "This barangay is already registered in our system. Please select it from the dropdown instead.",
-            variant: "destructive",
+            variant: "destructive"
           });
           setIsLoading(false);
           return;
         }
-
-        const { data: brgyData, error: brgyError } = await supabase
-          .from('barangays')
-          .insert({
-            barangayname: values.barangayname?.trim() || '',
-            municipality: values.municipality?.trim() || '',
-            province: values.province?.trim() || '',
-            region: values.region?.trim() || '',
-            country: values.country || 'Philippines',
-            created_at: new Date().toISOString(),
-            is_custom: true
-          })
-          .select('id')
-          .single();
-          
+        const {
+          data: brgyData,
+          error: brgyError
+        } = await supabase.from('barangays').insert({
+          barangayname: values.barangayname?.trim() || '',
+          municipality: values.municipality?.trim() || '',
+          province: values.province?.trim() || '',
+          region: values.region?.trim() || '',
+          country: values.country || 'Philippines',
+          created_at: new Date().toISOString(),
+          is_custom: true
+        }).select('id').single();
         if (brgyError) {
           toast({
             title: "Barangay Creation Error",
             description: brgyError.message,
-            variant: "destructive",
+            variant: "destructive"
           });
           setIsLoading(false);
           return;
         }
-        
         if (brgyData) {
           brgyId = brgyData.id;
           // If admin/staff is creating a new barangay, they become superior admin
@@ -325,72 +302,66 @@ const Auth = () => {
         // If admin/staff is joining existing barangay, they remain regular admin/staff
         isSuperiorAdmin = false;
       }
-      
-      const userStatus = (values.role === "admin" || values.role === "staff") && values.barangayId === "new-barangay" 
-        ? "active" 
-        : "pending";
-      
+      const userStatus = (values.role === "admin" || values.role === "staff") && values.barangayId === "new-barangay" ? "active" : "pending";
+
       // Create user auth account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const {
+        data: authData,
+        error: authError
+      } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
           captchaToken,
           data: {
             firstname: values.firstname,
-            lastname: values.lastname,
+            lastname: values.lastname
           }
         }
       });
-      
       if (authError) {
         toast({
           title: "Error",
           description: authError.message,
-          variant: "destructive",
+          variant: "destructive"
         });
         setIsLoading(false);
         return;
       }
-      
       if (authData.user) {
         // Insert into profiles table for all user types
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            adminid: authData.user.id,
-            brgyid: brgyId,
-            username: values.username,
-            firstname: values.firstname,
-            middlename: values.middlename || null,
-            lastname: values.lastname,
-            email: values.email,
-            phone: values.phone || null,
-            gender: values.gender,
-            purok: values.purok,
-            bday: values.bday,
-            role: values.role,
-            status: userStatus,
-            superior_admin: isSuperiorAdmin,
-            created_at: new Date().toISOString()
-          });
-        
+        const {
+          error: profileError
+        } = await supabase.from('profiles').insert({
+          id: authData.user.id,
+          adminid: authData.user.id,
+          brgyid: brgyId,
+          username: values.username,
+          firstname: values.firstname,
+          middlename: values.middlename || null,
+          lastname: values.lastname,
+          email: values.email,
+          phone: values.phone || null,
+          gender: values.gender,
+          purok: values.purok,
+          bday: values.bday,
+          role: values.role,
+          status: userStatus,
+          superior_admin: isSuperiorAdmin,
+          created_at: new Date().toISOString()
+        });
         if (profileError) {
           toast({
             title: "Profile Error",
             description: profileError.message,
-            variant: "destructive",
+            variant: "destructive"
           });
           console.error("Profile creation error:", profileError);
         } else {
-          const successMessage = userStatus === "active"
-            ? "Account created successfully! You can now log in."
-            : "Account created and pending approval from the barangay administrator.";
-
+          const successMessage = userStatus === "active" ? "Account created successfully! You can now log in." : "Account created and pending approval from the barangay administrator.";
           toast({
             title: "Account created",
-            description: successMessage,
+            description: successMessage
           });
           setActiveTab("login");
           signupForm.reset();
@@ -400,7 +371,7 @@ const Auth = () => {
       toast({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive",
+        variant: "destructive"
       });
       console.error("Registration error:", error);
     } finally {
@@ -409,119 +380,75 @@ const Auth = () => {
       setCaptchaToken(null);
     }
   };
-
-  const handleBarangaySelect = (barangay: {id: string, name: string, municipality: string, province: string}) => {
+  const handleBarangaySelect = (barangay: {
+    id: string;
+    name: string;
+    municipality: string;
+    province: string;
+  }) => {
     signupForm.setValue("barangayId", barangay.id);
     setBarangaySearch(`${barangay.name}, ${barangay.municipality}, ${barangay.province}`);
     setShowBarangaySuggestions(false);
   };
-
   const handleNewBarangaySelect = () => {
     signupForm.setValue("barangayId", "new-barangay");
     setBarangaySearch("Register New Barangay");
     setShowBarangaySuggestions(false);
   };
-
   const handleBarangaySearchChange = (value: string) => {
     setBarangaySearch(value);
     if (value === "") {
       signupForm.setValue("barangayId", "");
     }
   };
-
-  return (
-    <div className={`w-full min-h-screen flex items-center justify-center p-6 ${
-      theme === 'dark' 
-        ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' 
-        : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'
-    }`}>
+  return <div className={`w-full min-h-screen flex items-center justify-center p-6 ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'}`}>
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
         {/* Left side - Brand/Info */}
         <div className="hidden lg:block">
           <div className="relative">
-            <div className={`absolute -top-4 -left-4 w-72 h-72 rounded-full opacity-60 animate-pulse ${
-              theme === 'dark' 
-                ? 'bg-indigo-500/20' 
-                : 'bg-blue-300/30'
-            }`}></div>
-            <div className={`absolute -bottom-8 -right-8 w-48 h-48 rounded-full opacity-40 animate-pulse delay-1000 ${
-              theme === 'dark' 
-                ? 'bg-purple-500/20' 
-                : 'bg-indigo-300/30'
-            }`}></div>
+            <div className={`absolute -top-4 -left-4 w-72 h-72 rounded-full opacity-60 animate-pulse ${theme === 'dark' ? 'bg-indigo-500/20' : 'bg-blue-300/30'}`}></div>
+            <div className={`absolute -bottom-8 -right-8 w-48 h-48 rounded-full opacity-40 animate-pulse delay-1000 ${theme === 'dark' ? 'bg-purple-500/20' : 'bg-indigo-300/30'}`}></div>
             
-            <div className={`relative backdrop-blur-sm rounded-3xl p-8 shadow-2xl ${
-              theme === 'dark' 
-                ? 'bg-slate-800/80 border border-slate-700/50' 
-                : 'bg-white/90 border border-blue-200/50'
-            }`}>
+            <div className={`relative backdrop-blur-sm rounded-3xl p-8 shadow-2xl ${theme === 'dark' ? 'bg-slate-800/80 border border-slate-700/50' : 'bg-white/90 border border-blue-200/50'}`}>
               <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4 shadow-lg">
                   <Building className="text-white text-2xl" />
                 </div>
-                <h1 className={`text-4xl font-bold mb-2 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-800'
-                }`}>Baranex</h1>
-                <p className={`font-semibold ${
-                  theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'
-                }`}>Barangay Next-Gen Management</p>
+                <h1 className={`text-4xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Baranex</h1>
+                <p className={`font-semibold ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'}`}>Barangay Next-Gen Management</p>
               </div>
               
               <div className="space-y-6">
-                <div className={`flex items-center gap-4 p-4 rounded-xl ${
-                  theme === 'dark' 
-                    ? 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20' 
-                    : 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200'
-                }`}>
+                <div className={`flex items-center gap-4 p-4 rounded-xl ${theme === 'dark' ? 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200'}`}>
                   <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
                     <User className="text-white" />
                   </div>
                   <div>
-                    <h3 className={`font-semibold ${
-                      theme === 'dark' ? 'text-white' : 'text-gray-800'
-                    }`}>Community Focused</h3>
-                    <p className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>Empowering barangays with modern tools</p>
+                    <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Community Focused</h3>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Empowering barangays with modern tools</p>
                   </div>
                 </div>
                 
-                <div className={`flex items-center gap-4 p-4 rounded-xl ${
-                  theme === 'dark' 
-                    ? 'bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20' 
-                    : 'bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200'
-                }`}>
+                <div className={`flex items-center gap-4 p-4 rounded-xl ${theme === 'dark' ? 'bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20' : 'bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200'}`}>
                   <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
                     <Lock className="text-white" />
                   </div>
                   <div>
-                    <h3 className={`font-semibold ${
-                      theme === 'dark' ? 'text-white' : 'text-gray-800'
-                    }`}>Secure & Reliable</h3>
-                    <p className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>Your data protected with advanced security</p>
+                    <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Secure & Reliable</h3>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Your data protected with advanced security</p>
                   </div>
                 </div>
                 
-                <div className={`flex items-center gap-4 p-4 rounded-xl ${
-                  theme === 'dark' 
-                    ? 'bg-gradient-to-r from-green-500/10 to-indigo-500/10 border border-green-500/20' 
-                    : 'bg-gradient-to-r from-green-50 to-blue-50 border border-green-200'
-                }`}>
+                <div className={`flex items-center gap-4 p-4 rounded-xl ${theme === 'dark' ? 'bg-gradient-to-r from-green-500/10 to-indigo-500/10 border border-green-500/20' : 'bg-gradient-to-r from-green-50 to-blue-50 border border-green-200'}`}>
                   <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
                     <svg className="text-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 8V12L14 14M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M12 8V12L14 14M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className={`font-semibold ${
-                      theme === 'dark' ? 'text-white' : 'text-gray-800'
-                    }`}>Efficient Management</h3>
-                    <p className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>Streamline operations with smart solutions</p>
+                    <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Efficient Management</h3>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Streamline operations with smart solutions</p>
                   </div>
                 </div>
               </div>
@@ -531,285 +458,151 @@ const Auth = () => {
         
         {/* Right side - Auth Form */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
-          <div className={`backdrop-blur-sm rounded-3xl shadow-2xl p-8 ${
-            theme === 'dark' 
-              ? 'bg-slate-800/90 border border-slate-700/50' 
-              : 'bg-white/95 border border-blue-200/50'
-          }`}>
+          <div className={`backdrop-blur-sm rounded-3xl shadow-2xl p-8 ${theme === 'dark' ? 'bg-slate-800/90 border border-slate-700/50' : 'bg-white/95 border border-blue-200/50'}`}>
             {/* Mobile header */}
             <div className="text-center mb-8 lg:hidden">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4 shadow-lg">
                 <Building className="text-white text-2xl" />
               </div>
-              <h1 className={`text-3xl font-bold mb-2 ${
-                theme === 'dark' ? 'text-white' : 'text-gray-800'
-              }`}>Baranex</h1>
-              <p className={`font-semibold ${
-                theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'
-              }`}>Next-Gen Barangay Management</p>
+              <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Baranex</h1>
+              <p className={`font-semibold ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'}`}>Next-Gen Barangay Management</p>
             </div>
             
             {/* Tab buttons */}
-            <div className={`flex rounded-xl p-1 mb-6 ${
-              theme === 'dark' ? 'bg-slate-700/50' : 'bg-blue-50/50'
-            }`}>
-              <button
-                onClick={() => setActiveTab("login")}
-                className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeTab === "login"
-                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg"
-                    : theme === 'dark'
-                    ? "text-gray-300 hover:text-white hover:bg-slate-600/50"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => setActiveTab("signup")}
-                className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeTab === "signup"
-                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg"
-                    : theme === 'dark'
-                    ? "text-gray-300 hover:text-white hover:bg-slate-600/50"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
-                }`}
-              >
-                Sign Up
-              </button>
-            </div>
+            
             
             {/* Header text */}
             <div className="text-center mb-6">
-              <h2 className={`text-2xl font-bold mb-2 ${
-                theme === 'dark' ? 'text-white' : 'text-gray-800'
-              }`}>
+              <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
                 {activeTab === "login" ? "Welcome Back!" : "Create an Account"}
               </h2>
-              <p className={`text-sm ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-              }`}>
-                {activeTab === "login" 
-                  ? "Sign in to your dashboard" 
-                  : "Join Baranex to manage your community"}
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                {activeTab === "login" ? "Sign in to your dashboard" : "Join Baranex to manage your community"}
               </p>
             </div>
             
-            {activeTab === "login" ? (
-              <Form {...loginForm}>
+            {activeTab === "login" ? <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="emailOrUsername"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={`block text-sm font-medium mb-1 ${
-                          theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-                        }`}>Email Address or Username</FormLabel>
+                  <FormField control={loginForm.control} name="emailOrUsername" render={({
+                field
+              }) => <FormItem>
+                        <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email Address or Username</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${
-                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                            }`} />
-                            <Input 
-                              placeholder="Enter your email or username" 
-                              className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${
-                                theme === 'dark' 
-                                  ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
-                                  : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
-                              }`} 
-                              {...field} 
-                            />
+                            <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                            <Input placeholder="Enter your email or username" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
                           </div>
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
                   
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={`block text-sm font-medium mb-1 ${
-                          theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-                        }`}>Password</FormLabel>
+                  <FormField control={loginForm.control} name="password" render={({
+                field
+              }) => <FormItem>
+                        <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${
-                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                            }`} />
-                            <Input 
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Enter your password" 
-                              className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${
-                                theme === 'dark' 
-                                  ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' 
-                                  : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'
-                              }`} 
-                              {...field} 
-                            />
-                            <button 
-                              type="button"
-                              className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
-                                theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
-                              }`}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-5 w-5" />
-                              ) : (
-                                <Eye className="h-5 w-5" />
-                              )}
+                            <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                            <Input type={showPassword ? "text" : "password"} placeholder="Enter your password" className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                            <button type="button" className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setShowPassword(!showPassword)}>
+                              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                             </button>
                           </div>
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
 
                   <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className={`w-4 h-4 rounded focus:ring-blue-500 ${
-                        theme === 'dark' 
-                          ? 'text-indigo-600 border-gray-500 bg-slate-700' 
-                          : 'text-blue-600 border-gray-300 bg-white'
-                      }`} />
+                      <input type="checkbox" className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} />
                       <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
                     </label>
-                    <a href="#" className={`font-medium transition-colors duration-200 ${
-                      theme === 'dark' 
-                        ? 'text-indigo-400 hover:text-indigo-300' 
-                        : 'text-blue-600 hover:text-blue-500'
-                    }`}>Forgot password?</a>
+                    <a href="#" className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</a>
                   </div>
                   
                   <div className="flex justify-center my-4">
-                    <HCaptcha
-                      ref={captchaRef}
-                      sitekey={hcaptchaSiteKey}
-                      onVerify={handleCaptchaChange}
-                      onExpire={() => setCaptchaToken(null)}
-                    />
+                    <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
                   </div>
                   
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
-                    disabled={isLoading || !captchaToken}
-                  >
+                  <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" disabled={isLoading || !captchaToken}>
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </form>
-              </Form>
-            ) : (
-              <ScrollArea className="h-[400px] pr-4">
+              </Form> : <ScrollArea className="h-[400px] pr-4">
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={signupForm.control}
-                        name="firstname"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={signupForm.control} name="firstname" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>First Name</FormLabel>
                             <FormControl>
                               <Input placeholder="Francis Jay" {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
                         
-                      <FormField
-                        control={signupForm.control}
-                        name="lastname"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={signupForm.control} name="lastname" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Last Name</FormLabel>
                             <FormControl>
                               <Input placeholder="Pon" {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
                     </div>
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="middlename"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={signupForm.control} name="middlename" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Middle Name (Optional)</FormLabel>
                           <FormControl>
                             <Input placeholder="Jaugin" {...field} />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={signupForm.control} name="username" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Username</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <User className={`absolute left-3 top-3 h-4 w-4 ${
-                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                              }`} />
+                              <User className={`absolute left-3 top-3 h-4 w-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                               <Input placeholder="lordjay01" className="pl-9" {...field} />
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={signupForm.control} name="email" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Mail className={`absolute left-3 top-3 h-4 w-4 ${
-                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                              }`} />
+                              <Mail className={`absolute left-3 top-3 h-4 w-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                               <Input placeholder="francisjaypon@gmail.com" className="pl-9" {...field} />
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={signupForm.control} name="phone" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Phone Number (Optional)</FormLabel>
                           <FormControl>
                             <Input type="tel" placeholder="+63 912 345 6789" {...field} />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={signupForm.control}
-                        name="gender"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={signupForm.control} name="gender" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Gender</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
@@ -824,44 +617,32 @@ const Auth = () => {
                               </SelectContent>
                             </Select>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
 
-                      <FormField
-                        control={signupForm.control}
-                        name="purok"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={signupForm.control} name="purok" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Purok</FormLabel>
                             <FormControl>
                               <Input placeholder="Purok 1" {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
                     </div>
 
-                    <FormField
-                      control={signupForm.control}
-                      name="bday"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={signupForm.control} name="bday" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Date of Birth</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={signupForm.control} name="role" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Role</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
@@ -876,9 +657,7 @@ const Auth = () => {
                             </SelectContent>
                           </Select>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                       
                     <Separator className="my-4" />
                       
@@ -893,182 +672,107 @@ const Auth = () => {
                       </div>
                     </div>
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="barangayId"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={signupForm.control} name="barangayId" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Barangay</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <div className="relative">
-                                <MapPin className={`absolute left-3 top-3 h-4 w-4 ${
-                                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                                }`} />
-                                <Input
-                                  placeholder="Search for your barangay..."
-                                  value={barangaySearch}
-                                  onChange={(e) => handleBarangaySearchChange(e.target.value)}
-                                  onFocus={() => {
-                                    if (barangaySearch && filteredBarangays.length > 0) {
-                                      setShowBarangaySuggestions(true);
-                                    }
-                                  }}
-                                  className="pl-9"
-                                />
+                                <MapPin className={`absolute left-3 top-3 h-4 w-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                                <Input placeholder="Search for your barangay..." value={barangaySearch} onChange={e => handleBarangaySearchChange(e.target.value)} onFocus={() => {
+                          if (barangaySearch && filteredBarangays.length > 0) {
+                            setShowBarangaySuggestions(true);
+                          }
+                        }} className="pl-9" />
                               </div>
                               
-                              {showBarangaySuggestions && (
-                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                                  {filteredBarangays.length > 0 && (
-                                    <>
-                                      {filteredBarangays.map((barangay) => (
-                                        <button
-                                          key={barangay.id}
-                                          type="button"
-                                          onClick={() => handleBarangaySelect(barangay)}
-                                          className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                                        >
+                              {showBarangaySuggestions && <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                                  {filteredBarangays.length > 0 && <>
+                                      {filteredBarangays.map(barangay => <button key={barangay.id} type="button" onClick={() => handleBarangaySelect(barangay)} className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0">
                                           <div className="font-medium">{barangay.name}</div>
                                           <div className="text-sm text-gray-500">
                                             {barangay.municipality}, {barangay.province}
                                           </div>
-                                        </button>
-                                      ))}
-                                      {(selectedRole === "admin" || selectedRole === "staff") && (
-                                        <>
+                                        </button>)}
+                                      {(selectedRole === "admin" || selectedRole === "staff") && <>
                                           <div className="border-t border-gray-200 my-1"></div>
-                                          <button
-                                            type="button"
-                                            onClick={handleNewBarangaySelect}
-                                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-600 font-medium"
-                                          >
+                                          <button type="button" onClick={handleNewBarangaySelect} className="w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-600 font-medium">
                                             + Register New Barangay
                                           </button>
-                                        </>
-                                      )}
-                                    </>
-                                  )}
+                                        </>}
+                                    </>}
                                   
-                                  {filteredBarangays.length === 0 && barangaySearch.trim() !== "" && (
-                                    <div className="px-4 py-2 text-gray-500">
-                                      {(selectedRole === "admin" || selectedRole === "staff") ? (
-                                        <button
-                                          type="button"
-                                          onClick={handleNewBarangaySelect}
-                                          className="w-full text-left text-blue-600 font-medium hover:bg-blue-50 py-2 px-2 rounded"
-                                        >
+                                  {filteredBarangays.length === 0 && barangaySearch.trim() !== "" && <div className="px-4 py-2 text-gray-500">
+                                      {selectedRole === "admin" || selectedRole === "staff" ? <button type="button" onClick={handleNewBarangaySelect} className="w-full text-left text-blue-600 font-medium hover:bg-blue-50 py-2 px-2 rounded">
                                           + Register New Barangay
-                                        </button>
-                                      ) : (
-                                        "No barangays found. Contact an admin to register your barangay."
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
+                                        </button> : "No barangays found. Contact an admin to register your barangay."}
+                                    </div>}
+                                </div>}
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                       
                     {/* Click outside to close suggestions */}
-                    {showBarangaySuggestions && (
-                      <div 
-                        className="fixed inset-0 z-40"
-                        onClick={() => setShowBarangaySuggestions(false)}
-                      />
-                    )}
+                    {showBarangaySuggestions && <div className="fixed inset-0 z-40" onClick={() => setShowBarangaySuggestions(false)} />}
                       
-                    {isNewBarangay && (selectedRole === "admin" || selectedRole === "staff") && (
-                      <>
-                        <FormField
-                          control={signupForm.control}
-                          name="barangayname"
-                          render={({ field }) => (
-                            <FormItem>
+                    {isNewBarangay && (selectedRole === "admin" || selectedRole === "staff") && <>
+                        <FormField control={signupForm.control} name="barangayname" render={({
+                    field
+                  }) => <FormItem>
                               <FormLabel>Barangay Name</FormLabel>
                               <FormControl>
                                 <div className="relative">
-                                  <Building className={`absolute left-3 top-3 h-4 w-4 ${
-                                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                                  }`} />
-                                  <Input 
-                                    placeholder="Poblacion" 
-                                    className="pl-9" 
-                                    {...field} 
-                                  />
+                                  <Building className={`absolute left-3 top-3 h-4 w-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                                  <Input placeholder="Poblacion" className="pl-9" {...field} />
                                 </div>
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                         
                         <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={signupForm.control}
-                            name="municipality"
-                            render={({ field }) => (
-                              <FormItem>
+                          <FormField control={signupForm.control} name="municipality" render={({
+                      field
+                    }) => <FormItem>
                                 <FormLabel>Municipality/City</FormLabel>
                                 <FormControl>
                                   <Input placeholder="Sindangan" {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                              </FormItem>} />
                           
-                          <FormField
-                            control={signupForm.control}
-                            name="province"
-                            render={({ field }) => (
-                              <FormItem>
+                          <FormField control={signupForm.control} name="province" render={({
+                      field
+                    }) => <FormItem>
                                 <FormLabel>Province</FormLabel>
                                 <FormControl>
                                   <Input placeholder="Zamboanga Del Norte" {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                              </FormItem>} />
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={signupForm.control}
-                            name="region"
-                            render={({ field }) => (
-                              <FormItem>
+                          <FormField control={signupForm.control} name="region" render={({
+                      field
+                    }) => <FormItem>
                                 <FormLabel>Region (Optional)</FormLabel>
                                 <FormControl>
                                   <Input placeholder="IX" {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                              </FormItem>} />
                           
-                          <FormField
-                            control={signupForm.control}
-                            name="country"
-                            render={({ field }) => (
-                              <FormItem>
+                          <FormField control={signupForm.control} name="country" render={({
+                      field
+                    }) => <FormItem>
                                 <FormLabel>Country</FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    placeholder="Philippines" 
-                                    defaultValue="Philippines"
-                                    {...field} 
-                                  />
+                                  <Input placeholder="Philippines" defaultValue="Philippines" {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                              </FormItem>} />
                         </div>
                         
                         <div className="rounded-md bg-green-50 p-4 mt-2">
@@ -1080,48 +784,25 @@ const Auth = () => {
                             </div>
                           </div>
                         </div>
-                      </>
-                    )}
+                      </>}
                       
-                    <FormField
-                      control={signupForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={signupForm.control} name="password" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Lock className={`absolute left-3 top-3 h-4 w-4 ${
-                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                              }`} />
-                              <Input 
-                                type={showPassword ? "text" : "password"} 
-                                placeholder="Create a secure password" 
-                                className="pl-9"
-                                {...field} 
-                              />
-                              <button 
-                                type="button"
-                                className={`absolute right-3 top-3 ${
-                                  theme === 'dark' ? 'text-gray-400 hover:text-gray-600' : 'text-gray-500 hover:text-gray-700'
-                                }`}
-                                onClick={() => setShowPassword(!showPassword)}
-                              >
-                                {showPassword ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
+                              <Lock className={`absolute left-3 top-3 h-4 w-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <Input type={showPassword ? "text" : "password"} placeholder="Create a secure password" className="pl-9" {...field} />
+                              <button type="button" className={`absolute right-3 top-3 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-600' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setShowPassword(!showPassword)}>
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                               </button>
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                       
-                    {!isNewBarangay && selectedRole !== "admin" && (
-                      <div className="rounded-md bg-yellow-50 p-4">
+                    {!isNewBarangay && selectedRole !== "admin" && <div className="rounded-md bg-yellow-50 p-4">
                         <div className="flex">
                           <div className="flex-shrink-0">
                             <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -1137,23 +818,13 @@ const Auth = () => {
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      </div>}
                       
                     <div className="flex justify-center my-4">
-                      <HCaptcha
-                        ref={captchaRef}
-                        sitekey={hcaptchaSiteKey}
-                        onVerify={handleCaptchaChange}
-                        onExpire={() => setCaptchaToken(null)}
-                      />
+                      <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
                     </div>
                       
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl" 
-                      disabled={isLoading || !captchaToken}
-                    >
+                    <Button type="submit" className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl" disabled={isLoading || !captchaToken}>
                       {isLoading ? "Creating Account..." : "Create Account"}
                     </Button>
                       
@@ -1164,78 +835,45 @@ const Auth = () => {
                     </p>
                   </form>
                 </Form>
-              </ScrollArea>
-            )}
+              </ScrollArea>}
             
-            <div className={`mt-6 pt-6 ${
-              theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'
-            }`}>
+            <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'}`}>
               <div className="text-center">
-                <p className={`text-sm ${
-                  theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  {activeTab === "login" ? (
-                    <>
+                <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {activeTab === "login" ? <>
                       New to Baranex?{" "}
-                      <button 
-                        onClick={() => setActiveTab("signup")}
-                        className={`font-medium hover:underline transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'text-indigo-400 hover:text-indigo-300' 
-                            : 'text-blue-600 hover:text-blue-500'
-                        }`}
-                      >
+                      <button onClick={() => setActiveTab("signup")} className={`font-medium hover:underline transition-all duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>
                         Sign up
                       </button>
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       Already have an account?{" "}
-                      <button 
-                        onClick={() => setActiveTab("login")}
-                        className={`font-medium hover:underline transition-all duration-200 ${
-                          theme === 'dark' 
-                            ? 'text-indigo-400 hover:text-indigo-300' 
-                            : 'text-blue-600 hover:text-blue-500'
-                        }`}
-                      >
+                      <button onClick={() => setActiveTab("login")} className={`font-medium hover:underline transition-all duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>
                         Sign in
                       </button>
-                    </>
-                  )}
+                    </>}
                 </p>
               </div>
             </div>
             
-            <div className={`mt-6 flex items-center justify-center gap-4 text-xs ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-            }`}>
+            <div className={`mt-6 flex items-center justify-center gap-4 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               <span className="flex items-center gap-1">
-                <Lock className={`h-4 w-4 ${
-                  theme === 'dark' ? 'text-green-400' : 'text-green-500'
-                }`} />
+                <Lock className={`h-4 w-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'}`} />
                 SSL Secured
               </span>
               <span className="flex items-center gap-1">
-                <svg className={`h-4 w-4 ${
-                  theme === 'dark' ? 'text-indigo-400' : 'text-blue-500'
-                }`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg className={`h-4 w-4 ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-500'}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 Gov Certified
               </span>
             </div>
           </div>
           
-          <div className={`mt-6 text-center text-xs ${
-            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-          }`}>
+          <div className={`mt-6 text-center text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
             <p>© 2025 Baranex. Empowering Filipino Communities.</p>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Auth;
