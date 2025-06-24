@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
@@ -156,19 +157,19 @@ const FeedbackPage = () => {
       </div>;
   }
 
-  return <div className="w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-6 min-h-screen">
+  return <div className="w-full bg-background p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">Barangay Feedback & Reports</h1>
-          <p className="text-gray-600 dark:text-gray-300">Manage community feedback and issue reports efficiently</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Feedback & Reports</h1>
+          <p className="text-muted-foreground">Manage community feedback and issue reports efficiently</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 hover:shadow-md transition-all duration-300">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Total Reports</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{totalReports}</p>
+                <p className="text-muted-foreground text-sm">Total Reports</p>
+                <p className="text-2xl font-bold text-foreground">{totalReports}</p>
               </div>
               <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
                 <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -176,10 +177,10 @@ const FeedbackPage = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 hover:shadow-md transition-all duration-300">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Pending Review</p>
+                <p className="text-muted-foreground text-sm">Pending Review</p>
                 <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{pendingReports}</p>
               </div>
               <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-full">
@@ -188,10 +189,10 @@ const FeedbackPage = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 hover:shadow-md transition-all duration-300">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Resolved</p>
+                <p className="text-muted-foreground text-sm">Resolved</p>
                 <p className="text-2xl font-bold text-green-600 dark:text-green-400">{resolvedReports}</p>
               </div>
               <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
@@ -200,10 +201,10 @@ const FeedbackPage = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 hover:shadow-md transition-all duration-300">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">In Progress</p>
+                <p className="text-muted-foreground text-sm">In Progress</p>
                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{inProgressReports}</p>
               </div>
               <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
@@ -215,9 +216,9 @@ const FeedbackPage = () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
+            <div className="bg-card rounded-xl shadow-sm border border-border p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Recent Reports & Feedback</h2>
+                <h2 className="text-xl font-semibold text-foreground">Recent Reports & Feedback</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
                     <input 
@@ -225,28 +226,28 @@ const FeedbackPage = () => {
                       placeholder="Search reports..." 
                       value={searchTerm} 
                       onChange={e => setSearchTerm(e.target.value)} 
-                      className="pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                      className="pl-10 pr-4 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
                     />
-                    <Search className="h-4 w-4 absolute left-3 top-2.5 text-gray-400 dark:text-gray-500" />
+                    <Search className="h-4 w-4 absolute left-3 top-2.5 text-muted-foreground" />
                   </div>
                   <details className="relative">
-                    <summary className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-gray-100 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors">
+                    <summary className="flex items-center gap-2 px-4 py-2 bg-muted border border-border text-foreground rounded-lg cursor-pointer hover:bg-muted/80 transition-colors">
                       <Filter className="h-4 w-4" />
                       Filter
                     </summary>
-                    <div className="absolute right-0 top-full mt-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg shadow-lg z-10 min-w-48">
+                    <div className="absolute right-0 top-full mt-2 bg-card border border-border rounded-lg shadow-lg z-10 min-w-48">
                       <div className="p-3">
-                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 rounded px-2">
+                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-muted rounded px-2">
                           <input type="checkbox" className="rounded" />
-                          <span className="text-sm text-gray-900 dark:text-gray-100">Pending</span>
+                          <span className="text-sm text-foreground">Pending</span>
                         </label>
-                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 rounded px-2">
+                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-muted rounded px-2">
                           <input type="checkbox" className="rounded" />
-                          <span className="text-sm text-gray-900 dark:text-gray-100">In Progress</span>
+                          <span className="text-sm text-foreground">In Progress</span>
                         </label>
-                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 rounded px-2">
+                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-muted rounded px-2">
                           <input type="checkbox" className="rounded" />
-                          <span className="text-sm text-gray-900 dark:text-gray-100">Resolved</span>
+                          <span className="text-sm text-foreground">Resolved</span>
                         </label>
                       </div>
                     </div>
@@ -255,28 +256,28 @@ const FeedbackPage = () => {
               </div>
 
               <div className="space-y-4">
-                <div className="border border-gray-100 dark:border-slate-600 bg-white dark:bg-slate-750 rounded-lg p-4 hover:border-gray-200 dark:hover:border-slate-500 transition-all duration-300">
+                <div className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
                         <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-800 dark:text-gray-100">Street Light Not Working</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Purok 3, Barangay San Miguel</p>
+                        <h3 className="font-medium text-foreground">Street Light Not Working</h3>
+                        <p className="text-sm text-muted-foreground">Purok 3, Barangay San Miguel</p>
                       </div>
                     </div>
                     <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs font-medium rounded-full">Pending</span>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">The street light in front of house #45 has been out for 3 days. This creates safety concerns for residents walking at night.</p>
+                  <p className="text-muted-foreground text-sm mb-3">The street light in front of house #45 has been out for 3 days. This creates safety concerns for residents walking at night.</p>
                   <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-slate-600">
+                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
                       <img src="https://images.unsplash.com/photo-1617859047452-8510bcf207fd" alt="Street light photo" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                         <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                       </div>
                     </div>
-                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-slate-600">
+                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
                       <img src="https://images.unsplash.com/photo-1628624747186-a941c476b7ef" alt="Street light photo" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                         <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
@@ -284,37 +285,37 @@ const FeedbackPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>Reported by: Maria Santos</span>
                       <span>2 hours ago</span>
                     </div>
                     <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                      <button className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors">
                         Assign
                       </button>
-                      <button className="px-3 py-1 bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-slate-500 transition-colors">
+                      <button className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg hover:bg-muted/80 transition-colors">
                         View Details
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="border border-gray-100 dark:border-slate-600 bg-white dark:bg-slate-750 rounded-lg p-4 hover:border-gray-200 dark:hover:border-slate-500 transition-all duration-300">
+                <div className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                         <ThumbsUp className="h-5 w-5 text-green-600 dark:text-green-400" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-800 dark:text-gray-100">Excellent Garbage Collection Service</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Purok 1, Barangay San Miguel</p>
+                        <h3 className="font-medium text-foreground">Excellent Garbage Collection Service</h3>
+                        <p className="text-sm text-muted-foreground">Purok 1, Barangay San Miguel</p>
                       </div>
                     </div>
                     <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">Positive Feedback</span>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">I want to commend the garbage collection team for their consistent and timely service. Our area is always clean thanks to their efforts.</p>
+                  <p className="text-muted-foreground text-sm mb-3">I want to commend the garbage collection team for their consistent and timely service. Our area is always clean thanks to their efforts.</p>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>Feedback by: Juan Dela Cruz</span>
                       <span>5 hours ago</span>
                     </div>
@@ -322,43 +323,43 @@ const FeedbackPage = () => {
                       <button className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
                         Acknowledge
                       </button>
-                      <button className="px-3 py-1 bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-slate-500 transition-colors">
+                      <button className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg hover:bg-muted/80 transition-colors">
                         Share
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="border border-gray-100 dark:border-slate-600 bg-white dark:bg-slate-750 rounded-lg p-4 hover:border-gray-200 dark:hover:border-slate-500 transition-all duration-300">
+                <div className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                         <Construction className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-800 dark:text-gray-100">Road Repair Request</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Main Road, Barangay San Miguel</p>
+                        <h3 className="font-medium text-foreground">Road Repair Request</h3>
+                        <p className="text-sm text-muted-foreground">Main Road, Barangay San Miguel</p>
                       </div>
                     </div>
                     <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">In Progress</span>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">Large potholes on the main road are causing damage to vehicles. Road repair is urgently needed.</p>
+                  <p className="text-muted-foreground text-sm mb-3">Large potholes on the main road are causing damage to vehicles. Road repair is urgently needed.</p>
                   <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-                    <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-slate-600">
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-slate-700">
-                        <Play className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                    <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-border">
+                      <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                        <Play className="h-6 w-6 text-muted-foreground" />
                       </div>
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                         <Play className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                       </div>
                     </div>
-                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-slate-600">
+                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
                       <img src="https://images.unsplash.com/photo-1636367167117-1c584316f6eb" alt="Pothole photo" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                         <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                       </div>
                     </div>
-                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-slate-600">
+                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
                       <img src="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2" alt="Pothole photo" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                         <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
@@ -366,39 +367,39 @@ const FeedbackPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>Reported by: Carlos Reyes</span>
                       <span>1 day ago</span>
                     </div>
                     <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                      <button className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors">
                         Update Status
                       </button>
-                      <button className="px-3 py-1 bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-slate-500 transition-colors">
+                      <button className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg hover:bg-muted/80 transition-colors">
                         View Progress
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="border border-gray-100 dark:border-slate-600 bg-white dark:bg-slate-750 rounded-lg p-4 hover:border-gray-200 dark:hover:border-slate-500 transition-all duration-300">
+                <div className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
                         <Volume2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-800 dark:text-gray-100">Noise Complaint</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Purok 2, Barangay San Miguel</p>
+                        <h3 className="font-medium text-foreground">Noise Complaint</h3>
+                        <p className="text-sm text-muted-foreground">Purok 2, Barangay San Miguel</p>
                       </div>
                     </div>
                     <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs font-medium rounded-full">Pending</span>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">Loud music from a nearby establishment is disturbing residents during late hours. Please investigate.</p>
+                  <p className="text-muted-foreground text-sm mb-3">Loud music from a nearby establishment is disturbing residents during late hours. Please investigate.</p>
                   <div className="mt-3 flex gap-2">
-                    <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-slate-600">
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-slate-700">
-                        <Mic className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                    <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-border">
+                      <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                        <Mic className="h-6 w-6 text-muted-foreground" />
                       </div>
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                         <Play className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
@@ -406,15 +407,15 @@ const FeedbackPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>Reported by: Anna Garcia</span>
                       <span>3 hours ago</span>
                     </div>
                     <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                      <button className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors">
                         Investigate
                       </button>
-                      <button className="px-3 py-1 bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-slate-500 transition-colors">
+                      <button className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg hover:bg-muted/80 transition-colors">
                         Contact Reporter
                       </button>
                     </div>
@@ -423,7 +424,7 @@ const FeedbackPage = () => {
               </div>
 
               <div className="mt-6 flex justify-center">
-                <button className="px-6 py-2 bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-500 transition-colors">
+                <button className="px-6 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors">
                   Load More Reports
                 </button>
               </div>
@@ -431,8 +432,8 @@ const FeedbackPage = () => {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Quick Actions</h3>
+            <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <button className="w-full flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors group">
                   <PlusCircle className="h-5 w-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
@@ -459,87 +460,87 @@ const FeedbackPage = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Report Categories</h3>
+            <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Report Categories</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
                       <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-200 font-medium">Infrastructure</span>
+                    <span className="text-foreground font-medium">Infrastructure</span>
                   </div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-600 px-2 py-1 rounded">45</span>
+                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">45</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                       <Trees className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-200 font-medium">Environment</span>
+                    <span className="text-foreground font-medium">Environment</span>
                   </div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-600 px-2 py-1 rounded">32</span>
+                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">32</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                       <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-200 font-medium">Safety & Security</span>
+                    <span className="text-foreground font-medium">Safety & Security</span>
                   </div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-600 px-2 py-1 rounded">28</span>
+                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">28</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
                       <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-200 font-medium">Community</span>
+                    <span className="text-foreground font-medium">Community</span>
                   </div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-600 px-2 py-1 rounded">21</span>
+                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">21</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
                       <MessageSquare className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-200 font-medium">General Feedback</span>
+                    <span className="text-foreground font-medium">General Feedback</span>
                   </div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-600 px-2 py-1 rounded">19</span>
+                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">19</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Assigned Officers</h3>
+            <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Assigned Officers</h3>
               <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                     <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-800 dark:text-gray-100">John Santos</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Infrastructure Officer</p>
+                    <p className="font-medium text-foreground">John Santos</p>
+                    <p className="text-sm text-muted-foreground">Infrastructure Officer</p>
                   </div>
                   <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">Active</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                     <User className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-800 dark:text-gray-100">Maria Rodriguez</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Environment Officer</p>
+                    <p className="font-medium text-foreground">Maria Rodriguez</p>
+                    <p className="text-sm text-muted-foreground">Environment Officer</p>
                   </div>
                   <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">Active</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
                     <User className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-800 dark:text-gray-100">Robert Lopez</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Safety Officer</p>
+                    <p className="font-medium text-foreground">Robert Lopez</p>
+                    <p className="text-sm text-muted-foreground">Safety Officer</p>
                   </div>
                   <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">Active</span>
                 </div>
@@ -549,11 +550,11 @@ const FeedbackPage = () => {
         </div>
 
         {/* Analytics Dashboard - Enlarged monthly trends and resolution time charts */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-8 mt-8 w-full">
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-8">Analytics Dashboard</h2>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-8 mt-8 w-full">
+          <h2 className="text-2xl font-semibold text-foreground mb-8">Analytics Dashboard</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-200 dark:border-slate-600 p-6 h-[350px]">
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Reports by Category</h3>
+            <div className="bg-muted/30 rounded-xl border border-border p-6 h-[350px]">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Reports by Category</h3>
               <div className="h-[270px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -574,9 +575,9 @@ const FeedbackPage = () => {
                           if (active && payload && payload.length) {
                             const data = payload[0].payload;
                             return (
-                              <div className="bg-white dark:bg-slate-800 p-3 shadow-lg rounded-lg border border-gray-200 dark:border-slate-600">
-                                <p className="font-semibold text-gray-800 dark:text-gray-100">{data.name}</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">{data.value} reports</p>
+                              <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
+                                <p className="font-semibold text-foreground">{data.name}</p>
+                                <p className="text-sm text-muted-foreground">{data.value} reports</p>
                               </div>
                             );
                           }
@@ -589,28 +590,28 @@ const FeedbackPage = () => {
               </div>
             </div>
             
-            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-200 dark:border-slate-600 p-6 h-[450px]">
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Monthly Report Trends</h3>
+            <div className="bg-muted/30 rounded-xl border border-border p-6 h-[450px]">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Monthly Report Trends</h3>
               <div className="h-[370px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis 
                         dataKey="month" 
-                        tick={{ fontSize: 12, fill: '#6b7280' }}
-                        axisLine={{ stroke: '#d1d5db' }}
+                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
                       />
                       <YAxis 
-                        tick={{ fontSize: 12, fill: '#6b7280' }}
-                        axisLine={{ stroke: '#d1d5db' }}
+                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
                       />
                       <ChartTooltip 
                         content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
                             return (
-                              <div className="bg-white dark:bg-slate-800 p-3 shadow-lg rounded-lg border border-gray-200 dark:border-slate-600">
-                                <p className="font-semibold text-gray-800 dark:text-gray-100 mb-2">{label}</p>
+                              <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
+                                <p className="font-semibold text-foreground mb-2">{label}</p>
                                 {payload.map((entry, index) => (
                                   <p key={index} className="text-sm" style={{ color: entry.color }}>
                                     {entry.name}: {entry.value}
@@ -644,32 +645,32 @@ const FeedbackPage = () => {
               </div>
             </div>
             
-            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-200 dark:border-slate-600 p-6 h-[450px]">
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Avg Resolution Time (Days)</h3>
+            <div className="bg-muted/30 rounded-xl border border-border p-6 h-[450px]">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Avg Resolution Time (Days)</h3>
               <div className="h-[370px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={resolutionTimeData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis 
                         dataKey="category" 
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        axisLine={{ stroke: '#d1d5db' }}
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
                         angle={-45}
                         textAnchor="end"
                         height={60}
                       />
                       <YAxis 
-                        tick={{ fontSize: 12, fill: '#6b7280' }}
-                        axisLine={{ stroke: '#d1d5db' }}
+                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
                       />
                       <ChartTooltip 
                         content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
                             return (
-                              <div className="bg-white dark:bg-slate-800 p-3 shadow-lg rounded-lg border border-gray-200 dark:border-slate-600">
-                                <p className="font-semibold text-gray-800 dark:text-gray-100">{label}</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">{payload[0].value} days avg</p>
+                              <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
+                                <p className="font-semibold text-foreground">{label}</p>
+                                <p className="text-sm text-muted-foreground">{payload[0].value} days avg</p>
                               </div>
                             );
                           }
@@ -688,8 +689,8 @@ const FeedbackPage = () => {
               </div>
             </div>
             
-            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-200 dark:border-slate-600 p-6 h-[350px]">
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Feedback Sentiment</h3>
+            <div className="bg-muted/30 rounded-xl border border-border p-6 h-[350px]">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Feedback Sentiment</h3>
               <div className="h-[190px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -712,9 +713,9 @@ const FeedbackPage = () => {
                           if (active && payload && payload.length) {
                             const data = payload[0].payload;
                             return (
-                              <div className="bg-white dark:bg-slate-800 p-3 shadow-lg rounded-lg border border-gray-200 dark:border-slate-600">
-                                <p className="font-semibold text-gray-800 dark:text-gray-100">{data.name}</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">{data.value}%</p>
+                              <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
+                                <p className="font-semibold text-foreground">{data.name}</p>
+                                <p className="text-sm text-muted-foreground">{data.value}%</p>
                               </div>
                             );
                           }
@@ -734,14 +735,14 @@ const FeedbackPage = () => {
                           className="w-3 h-3 rounded-full" 
                           style={{ backgroundColor: item.color }}
                         ></div>
-                        <span className="font-medium text-gray-700 dark:text-gray-200">{item.name}</span>
+                        <span className="font-medium text-foreground">{item.name}</span>
                       </div>
-                      <span className="text-gray-600 dark:text-gray-300 font-semibold">{item.value}%</span>
+                      <span className="text-muted-foreground font-semibold">{item.value}%</span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-3 pt-2 border-t border-gray-200 dark:border-slate-600">
-                  <p className="text-center text-xs text-gray-600 dark:text-gray-400">Total: 145 responses</p>
+                <div className="mt-3 pt-2 border-t border-border">
+                  <p className="text-center text-xs text-muted-foreground">Total: 145 responses</p>
                 </div>
               </div>
             </div>
