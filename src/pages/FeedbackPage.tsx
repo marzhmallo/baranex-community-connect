@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
@@ -27,8 +26,11 @@ import {
   Shield, 
   Users, 
   MessageSquare, 
-  User 
+  User,
+  Mic
 } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar, ResponsiveContainer } from 'recharts';
 
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
 
@@ -56,6 +58,53 @@ const FeedbackPage = () => {
   const pendingReports = reports?.filter(r => r.status === 'pending').length || 0;
   const resolvedReports = reports?.filter(r => r.status === 'resolved').length || 0;
   const inProgressReports = reports?.filter(r => r.status === 'in_progress').length || 0;
+
+  // Chart data
+  const categoryData = [
+    { name: 'Infrastructure', value: 45, color: '#EF4444' },
+    { name: 'Environment', value: 32, color: '#10B981' },
+    { name: 'Safety & Security', value: 28, color: '#3B82F6' },
+    { name: 'Community', value: 21, color: '#8B5CF6' },
+    { name: 'General Feedback', value: 19, color: '#F59E0B' }
+  ];
+
+  const monthlyData = [
+    { month: 'Jan', reports: 35, resolved: 25 },
+    { month: 'Feb', reports: 41, resolved: 31 },
+    { month: 'Mar', reports: 36, resolved: 31 },
+    { month: 'Apr', reports: 26, resolved: 24 },
+    { month: 'May', reports: 45, resolved: 32 },
+    { month: 'Jun', reports: 48, resolved: 39 },
+    { month: 'Jul', reports: 52, resolved: 42 },
+    { month: 'Aug', reports: 53, resolved: 39 },
+    { month: 'Sep', reports: 41, resolved: 35 },
+    { month: 'Oct', reports: 30, resolved: 30 },
+    { month: 'Nov', reports: 32, resolved: 28 },
+    { month: 'Dec', reports: 34, resolved: 29 }
+  ];
+
+  const resolutionTimeData = [
+    { category: 'Infrastructure', days: 4.3 },
+    { category: 'Environment', days: 2.1 },
+    { category: 'Safety', days: 5.8 },
+    { category: 'Community', days: 3.2 },
+    { category: 'General', days: 1.9 }
+  ];
+
+  const chartConfig = {
+    reports: {
+      label: "Reports",
+      color: "#3B82F6",
+    },
+    resolved: {
+      label: "Resolved",
+      color: "#10B981",
+    },
+    days: {
+      label: "Days",
+      color: "#3B82F6",
+    },
+  };
 
   if (isLoading) {
     return (
@@ -308,7 +357,7 @@ const FeedbackPage = () => {
                   <div className="mt-3 flex gap-2">
                     <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                        <Volume2 className="h-6 w-6 text-gray-500" />
+                        <Mic className="h-6 w-6 text-gray-500" />
                       </div>
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                         <Play className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
@@ -336,6 +385,99 @@ const FeedbackPage = () => {
                 <button className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                   Load More Reports
                 </button>
+              </div>
+            </div>
+
+            {/* Analytics Dashboard */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-6">Analytics Dashboard</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
+                  <h3 className="text-md font-medium text-gray-700 mb-2">Reports by Category</h3>
+                  <div className="h-[240px] w-full">
+                    <ChartContainer config={chartConfig}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={categoryData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {categoryData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
+                  <h3 className="text-md font-medium text-gray-700 mb-2">Monthly Report Trends</h3>
+                  <div className="h-[240px] w-full">
+                    <ChartContainer config={chartConfig}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={monthlyData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Line type="monotone" dataKey="reports" stroke="#3B82F6" strokeWidth={3} />
+                          <Line type="monotone" dataKey="resolved" stroke="#10B981" strokeWidth={3} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
+                  <h3 className="text-md font-medium text-gray-700 mb-2">Resolution Time (Days)</h3>
+                  <div className="h-[240px] w-full">
+                    <ChartContainer config={chartConfig}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={resolutionTimeData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="category" />
+                          <YAxis />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="days" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
+                  <h3 className="text-md font-medium text-gray-700 mb-2">Feedback Sentiment</h3>
+                  <div className="h-[240px] w-full flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="text-center">
+                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2 mx-auto">
+                            <span className="text-2xl font-bold text-green-600">68%</span>
+                          </div>
+                          <p className="text-sm text-gray-600">Positive</p>
+                        </div>
+                        <div className="text-center">
+                          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-2 mx-auto">
+                            <span className="text-2xl font-bold text-yellow-600">22%</span>
+                          </div>
+                          <p className="text-sm text-gray-600">Neutral</p>
+                        </div>
+                        <div className="text-center">
+                          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-2 mx-auto">
+                            <span className="text-2xl font-bold text-red-600">10%</span>
+                          </div>
+                          <p className="text-sm text-gray-600">Negative</p>
+                        </div>
+                      </div>
+                      <p className="text-lg font-semibold text-gray-700">Total: 145 Feedback</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
