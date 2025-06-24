@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -13,7 +12,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationEllipsis, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination";
 
 const HouseholdList: React.FC = () => {
   const { toast } = useToast();
@@ -42,6 +49,7 @@ const HouseholdList: React.FC = () => {
     queryKey: ['households'],
     queryFn: getHouseholds
   });
+  
   const deleteHouseholdMutation = useMutation({
     mutationFn: (id: string) => deleteHousehold(id),
     onSuccess: () => {
@@ -234,6 +242,15 @@ const HouseholdList: React.FC = () => {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentHouseholds = sortedAndFilteredHouseholds.slice(startIndex, endIndex);
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, purokFilter, itemsPerPage]);
@@ -368,22 +385,30 @@ const HouseholdList: React.FC = () => {
       {/* Pagination controls and info */}
       <div className="flex justify-between items-center mb-4 px-4">
         <div className="text-sm text-muted-foreground">
-          Showing {totalItems > 0 ? startIndex + 1 : 0} to {endIndex} of {totalItems} households
+          {isLoading ? (
+            "Loading households..."
+          ) : (
+            <>
+              Showing <span className="font-medium">{totalItems > 0 ? startIndex + 1 : 0}</span>-<span className="font-medium">{endIndex}</span> of{" "}
+              <span className="font-medium">{totalItems}</span> households
+            </>
+          )}
         </div>
         
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show</span>
-          <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="15">15</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-sm text-muted-foreground">per page</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center">
+            <span className="text-sm text-muted-foreground mr-2">Show:</span>
+            <Select value={itemsPerPage.toString()} onValueChange={handlePageSizeChange}>
+              <SelectTrigger className="w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       
@@ -463,44 +488,58 @@ const HouseholdList: React.FC = () => {
         </TableBody>
       </Table>
       
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
+      {/* Enhanced Pagination - matching residents page style */}
+      {totalItems > 0 && (
+        <div className="flex justify-between items-center p-4 border-t">
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} to {endIndex} of {totalItems} households
+          </div>
+          
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious 
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage > 1) setCurrentPage(currentPage - 1);
-                  }}
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
               
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setCurrentPage(page);
-                    }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {Array.from({ length: totalPages }).map((_, i) => {
+                const pageNum = i + 1;
+                
+                // Show first page, last page, and pages around current page
+                if (
+                  pageNum === 1 || 
+                  pageNum === totalPages || 
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                ) {
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        isActive={pageNum === currentPage}
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                }
+                
+                // Show ellipsis for gaps
+                if (pageNum === 2 || pageNum === pageCount - 1) {
+                  return (
+                    <PaginationItem key={`ellipsis-${pageNum}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                
+                return null;
+              })}
               
               <PaginationItem>
                 <PaginationNext 
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                  }}
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                   className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
