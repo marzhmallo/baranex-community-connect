@@ -4,43 +4,22 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { feedbackAPI } from '@/lib/api/feedback';
 import { FeedbackReport, FeedbackType, FeedbackStatus } from '@/lib/types/feedback';
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  Timer, 
-  Search, 
-  Filter, 
-  AlertTriangle, 
-  ThumbsUp, 
-  Construction, 
-  Volume2, 
-  ZoomIn, 
-  Play, 
-  PlusCircle, 
-  Upload, 
-  Download, 
-  BarChart3, 
-  Smartphone, 
-  Trees, 
-  Shield, 
-  Users, 
-  MessageSquare, 
-  User,
-  Mic
-} from 'lucide-react';
+import { FileText, Clock, CheckCircle, Timer, Search, Filter, AlertTriangle, ThumbsUp, Construction, Volume2, ZoomIn, Play, PlusCircle, Upload, Download, BarChart3, Smartphone, Trees, Shield, Users, MessageSquare, User, Mic } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar, ResponsiveContainer } from 'recharts';
-
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
-
 const FeedbackPage = () => {
-  const { userProfile } = useAuth();
+  const {
+    userProfile
+  } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<FeedbackType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<FeedbackStatus | 'all'>('all');
-
-  const { data: reports, isLoading, refetch } = useQuery({
+  const {
+    data: reports,
+    isLoading,
+    refetch
+  } = useQuery({
     queryKey: ['feedback-reports', userProfile?.brgyid, filterType, filterStatus, searchTerm],
     queryFn: async () => {
       if (!userProfile?.brgyid) return [];
@@ -60,62 +39,112 @@ const FeedbackPage = () => {
   const inProgressReports = reports?.filter(r => r.status === 'in_progress').length || 0;
 
   // Chart data
-  const categoryData = [
-    { name: 'Infrastructure', value: 45, color: '#EF4444' },
-    { name: 'Environment', value: 32, color: '#10B981' },
-    { name: 'Safety & Security', value: 28, color: '#3B82F6' },
-    { name: 'Community', value: 21, color: '#8B5CF6' },
-    { name: 'General Feedback', value: 19, color: '#F59E0B' }
-  ];
-
-  const monthlyData = [
-    { month: 'Jan', reports: 35, resolved: 25 },
-    { month: 'Feb', reports: 41, resolved: 31 },
-    { month: 'Mar', reports: 36, resolved: 31 },
-    { month: 'Apr', reports: 26, resolved: 24 },
-    { month: 'May', reports: 45, resolved: 32 },
-    { month: 'Jun', reports: 48, resolved: 39 },
-    { month: 'Jul', reports: 52, resolved: 42 },
-    { month: 'Aug', reports: 53, resolved: 39 },
-    { month: 'Sep', reports: 41, resolved: 35 },
-    { month: 'Oct', reports: 30, resolved: 30 },
-    { month: 'Nov', reports: 32, resolved: 28 },
-    { month: 'Dec', reports: 34, resolved: 29 }
-  ];
-
-  const resolutionTimeData = [
-    { category: 'Infrastructure', days: 4.3 },
-    { category: 'Environment', days: 2.1 },
-    { category: 'Safety', days: 5.8 },
-    { category: 'Community', days: 3.2 },
-    { category: 'General', days: 1.9 }
-  ];
-
+  const categoryData = [{
+    name: 'Infrastructure',
+    value: 45,
+    color: '#EF4444'
+  }, {
+    name: 'Environment',
+    value: 32,
+    color: '#10B981'
+  }, {
+    name: 'Safety & Security',
+    value: 28,
+    color: '#3B82F6'
+  }, {
+    name: 'Community',
+    value: 21,
+    color: '#8B5CF6'
+  }, {
+    name: 'General Feedback',
+    value: 19,
+    color: '#F59E0B'
+  }];
+  const monthlyData = [{
+    month: 'Jan',
+    reports: 35,
+    resolved: 25
+  }, {
+    month: 'Feb',
+    reports: 41,
+    resolved: 31
+  }, {
+    month: 'Mar',
+    reports: 36,
+    resolved: 31
+  }, {
+    month: 'Apr',
+    reports: 26,
+    resolved: 24
+  }, {
+    month: 'May',
+    reports: 45,
+    resolved: 32
+  }, {
+    month: 'Jun',
+    reports: 48,
+    resolved: 39
+  }, {
+    month: 'Jul',
+    reports: 52,
+    resolved: 42
+  }, {
+    month: 'Aug',
+    reports: 53,
+    resolved: 39
+  }, {
+    month: 'Sep',
+    reports: 41,
+    resolved: 35
+  }, {
+    month: 'Oct',
+    reports: 30,
+    resolved: 30
+  }, {
+    month: 'Nov',
+    reports: 32,
+    resolved: 28
+  }, {
+    month: 'Dec',
+    reports: 34,
+    resolved: 29
+  }];
+  const resolutionTimeData = [{
+    category: 'Infrastructure',
+    days: 4.3
+  }, {
+    category: 'Environment',
+    days: 2.1
+  }, {
+    category: 'Safety',
+    days: 5.8
+  }, {
+    category: 'Community',
+    days: 3.2
+  }, {
+    category: 'General',
+    days: 1.9
+  }];
   const chartConfig = {
     reports: {
       label: "Reports",
-      color: "#3B82F6",
+      color: "#3B82F6"
     },
     resolved: {
       label: "Resolved",
-      color: "#10B981",
+      color: "#10B981"
     },
     days: {
       label: "Days",
-      color: "#3B82F6",
-    },
+      color: "#3B82F6"
+    }
   };
-
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
+    return <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="w-full bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+  return <div className="w-full bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Barangay Feedback & Reports</h1>
@@ -179,13 +208,7 @@ const FeedbackPage = () => {
                 <h2 className="text-xl font-semibold text-gray-800">Recent Reports & Feedback</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
-                    <input 
-                      type="text" 
-                      placeholder="Search reports..." 
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                    />
+                    <input type="text" placeholder="Search reports..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                     <Search className="h-4 w-4 absolute left-3 top-2.5 text-gray-400" />
                   </div>
                   <details className="relative">
@@ -398,18 +421,8 @@ const FeedbackPage = () => {
                     <ChartContainer config={chartConfig}>
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie
-                            data={categoryData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {categoryData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
+                          <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                            {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                           </Pie>
                           <ChartTooltip content={<ChartTooltipContent />} />
                         </PieChart>
@@ -503,11 +516,7 @@ const FeedbackPage = () => {
                   <BarChart3 className="h-5 w-5 text-orange-600 group-hover:scale-110 transition-transform" />
                   <span className="text-orange-700 font-medium flex-1 text-left">View Analytics</span>
                 </button>
-                <button className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
-                  <Smartphone className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
-                  <span className="text-purple-700 font-medium flex-1 text-left">Download Mobile App</span>
-                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">New</span>
-                </button>
+                
               </div>
             </div>
 
@@ -600,8 +609,6 @@ const FeedbackPage = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default FeedbackPage;
