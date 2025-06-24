@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
@@ -128,6 +129,13 @@ const FeedbackPage = () => {
     category: 'General',
     days: 1.9
   }];
+
+  const sentimentData = [
+    { name: 'Positive', value: 68, color: '#10B981' },
+    { name: 'Neutral', value: 22, color: '#F59E0B' },
+    { name: 'Negative', value: 10, color: '#EF4444' }
+  ];
+
   const chartConfig = {
     reports: {
       label: "Reports",
@@ -142,11 +150,13 @@ const FeedbackPage = () => {
       color: "#3B82F6"
     }
   };
+
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>;
   }
+
   return <div className="w-full bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
@@ -596,29 +606,54 @@ const FeedbackPage = () => {
             
             <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
               <h3 className="text-md font-medium text-gray-700 mb-2">Feedback Sentiment</h3>
-              <div className="h-[240px] w-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2 mx-auto">
-                        <span className="text-2xl font-bold text-green-600">68%</span>
+              <div className="h-[240px] w-full">
+                <ChartContainer config={chartConfig}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie 
+                        data={sentimentData} 
+                        cx="50%" 
+                        cy="45%" 
+                        innerRadius={40} 
+                        outerRadius={70} 
+                        paddingAngle={2} 
+                        dataKey="value"
+                      >
+                        {sentimentData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip 
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-white p-2 shadow-lg rounded border">
+                                <p className="font-medium">{data.name}</p>
+                                <p className="text-sm text-gray-600">{data.value}% ({Math.round(145 * data.value / 100)} responses)</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+                <div className="mt-2">
+                  <div className="flex justify-center gap-4">
+                    {sentimentData.map((item, index) => (
+                      <div key={index} className="flex items-center gap-1 text-xs">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: item.color }}
+                        ></div>
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-gray-500">({item.value}%)</span>
                       </div>
-                      <p className="text-sm text-gray-600">Positive</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-2 mx-auto">
-                        <span className="text-2xl font-bold text-yellow-600">22%</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Neutral</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-2 mx-auto">
-                        <span className="text-2xl font-bold text-red-600">10%</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Negative</p>
-                    </div>
+                    ))}
                   </div>
-                  <p className="text-lg font-semibold text-gray-700">Total: 145 Feedback</p>
+                  <p className="text-center text-sm text-gray-600 mt-2">Total: 145 Feedback</p>
                 </div>
               </div>
             </div>
