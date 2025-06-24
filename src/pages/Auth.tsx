@@ -468,15 +468,8 @@ const Auth = () => {
               <p className={`font-semibold ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'}`}>Next-Gen Barangay Management</p>
             </div>
             
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup")} className="w-full">
-              <TabsList className={`grid w-full grid-cols-2 mb-6 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-blue-50/80'}`}>
-                <TabsTrigger value="login" className={`rounded-lg font-medium transition-all duration-200 ${theme === 'dark' ? 'data-[state=active]:bg-indigo-600 data-[state=active]:text-white' : 'data-[state=active]:bg-blue-600 data-[state=active]:text-white'}`}>
-                  Sign In
-                </TabsTrigger>
-                <TabsTrigger value="signup" className={`rounded-lg font-medium transition-all duration-200 ${theme === 'dark' ? 'data-[state=active]:bg-indigo-600 data-[state=active]:text-white' : 'data-[state=active]:bg-blue-600 data-[state=active]:text-white'}`}>
-                  Sign Up
-                </TabsTrigger>
-              </TabsList>
+            <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "login" | "signup")} className="w-full">
+              
               
               {/* Header text */}
               <div className="text-center mb-6">
@@ -492,8 +485,8 @@ const Auth = () => {
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                     <FormField control={loginForm.control} name="emailOrUsername" render={({
-                  field
-                }) => <FormItem>
+                    field
+                  }) => <FormItem>
                           <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email Address or Username</FormLabel>
                           <FormControl>
                             <div className="relative">
@@ -505,8 +498,8 @@ const Auth = () => {
                         </FormItem>} />
                   
                   <FormField control={loginForm.control} name="password" render={({
-                  field
-                }) => <FormItem>
+                    field
+                  }) => <FormItem>
                           <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Password</FormLabel>
                           <FormControl>
                             <div className="relative">
@@ -545,8 +538,8 @@ const Auth = () => {
                     <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <FormField control={signupForm.control} name="firstname" render={({
-                      field
-                    }) => <FormItem>
+                        field
+                      }) => <FormItem>
                               <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>First Name</FormLabel>
                               <FormControl>
                                 <Input placeholder="Francis Jay" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
@@ -555,8 +548,8 @@ const Auth = () => {
                             </FormItem>} />
                           
                         <FormField control={signupForm.control} name="lastname" render={({
-                      field
-                    }) => <FormItem>
+                        field
+                      }) => <FormItem>
                               <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Last Name</FormLabel>
                               <FormControl>
                                 <Input placeholder="Pon" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
@@ -566,8 +559,8 @@ const Auth = () => {
                       </div>
                         
                       <FormField control={signupForm.control} name="middlename" render={({
-                    field
-                  }) => <FormItem>
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Middle Name (Optional)</FormLabel>
                             <FormControl>
                               <Input placeholder="Jaugin" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
@@ -576,8 +569,8 @@ const Auth = () => {
                           </FormItem>} />
                         
                       <FormField control={signupForm.control} name="username" render={({
-                    field
-                  }) => <FormItem>
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Username</FormLabel>
                             <FormControl>
                               <div className="relative">
@@ -589,8 +582,8 @@ const Auth = () => {
                           </FormItem>} />
                         
                       <FormField control={signupForm.control} name="email" render={({
-                    field
-                  }) => <FormItem>
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email</FormLabel>
                             <FormControl>
                               <div className="relative">
@@ -602,8 +595,8 @@ const Auth = () => {
                           </FormItem>} />
                         
                       <FormField control={signupForm.control} name="phone" render={({
-                    field
-                  }) => <FormItem>
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Phone Number (Optional)</FormLabel>
                             <FormControl>
                               <Input type="tel" placeholder="+63 912 345 6789" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
@@ -613,8 +606,8 @@ const Auth = () => {
 
                       <div className="grid grid-cols-2 gap-4">
                         <FormField control={signupForm.control} name="gender" render={({
-                      field
-                    }) => <FormItem>
+                        field
+                      }) => <FormItem>
                               <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Gender</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
@@ -632,8 +625,8 @@ const Auth = () => {
                             </FormItem>} />
 
                         <FormField control={signupForm.control} name="purok" render={({
-                      field
-                    }) => <FormItem>
+                        field
+                      }) => <FormItem>
                               <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Purok</FormLabel>
                               <FormControl>
                                 <Input placeholder="Purok 1" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
@@ -643,8 +636,8 @@ const Auth = () => {
                       </div>
 
                       <FormField control={signupForm.control} name="bday" render={({
-                    field
-                  }) => <FormItem>
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Date of Birth</FormLabel>
                             <FormControl>
                               <Input type="date" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`} {...field} />
@@ -653,8 +646,8 @@ const Auth = () => {
                           </FormItem>} />
                         
                       <FormField control={signupForm.control} name="role" render={({
-                    field
-                  }) => <FormItem>
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Role</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
@@ -685,18 +678,18 @@ const Auth = () => {
                       </div>
                         
                       <FormField control={signupForm.control} name="barangayId" render={({
-                    field
-                  }) => <FormItem>
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Barangay</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <div className="relative">
                                   <MapPin className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                                   <Input placeholder="Search for your barangay..." value={barangaySearch} onChange={e => handleBarangaySearchChange(e.target.value)} onFocus={() => {
-                            if (barangaySearch && filteredBarangays.length > 0) {
-                              setShowBarangaySuggestions(true);
-                            }
-                          }} className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} />
+                              if (barangaySearch && filteredBarangays.length > 0) {
+                                setShowBarangaySuggestions(true);
+                              }
+                            }} className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} />
                                 </div>
                                 
                                 {showBarangaySuggestions && <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
@@ -731,8 +724,8 @@ const Auth = () => {
                         
                       {isNewBarangay && (selectedRole === "admin" || selectedRole === "staff") && <>
                           <FormField control={signupForm.control} name="barangayname" render={({
-                      field
-                    }) => <FormItem>
+                        field
+                      }) => <FormItem>
                                 <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Barangay Name</FormLabel>
                                 <FormControl>
                                   <div className="relative">
@@ -745,8 +738,8 @@ const Auth = () => {
                           
                           <div className="grid grid-cols-2 gap-4">
                             <FormField control={signupForm.control} name="municipality" render={({
-                        field
-                      }) => <FormItem>
+                          field
+                        }) => <FormItem>
                                   <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Municipality/City</FormLabel>
                                   <FormControl>
                                     <Input placeholder="Sindangan" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
@@ -755,8 +748,8 @@ const Auth = () => {
                                 </FormItem>} />
                             
                             <FormField control={signupForm.control} name="province" render={({
-                        field
-                      }) => <FormItem>
+                          field
+                        }) => <FormItem>
                                   <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Province</FormLabel>
                                   <FormControl>
                                     <Input placeholder="Zamboanga Del Norte" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
@@ -767,8 +760,8 @@ const Auth = () => {
                           
                           <div className="grid grid-cols-2 gap-4">
                             <FormField control={signupForm.control} name="region" render={({
-                        field
-                      }) => <FormItem>
+                          field
+                        }) => <FormItem>
                                   <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Region (Optional)</FormLabel>
                                   <FormControl>
                                     <Input placeholder="IX" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
@@ -777,8 +770,8 @@ const Auth = () => {
                                 </FormItem>} />
                             
                             <FormField control={signupForm.control} name="country" render={({
-                        field
-                      }) => <FormItem>
+                          field
+                        }) => <FormItem>
                                   <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Country</FormLabel>
                                   <FormControl>
                                     <Input placeholder="Philippines" defaultValue="Philippines" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
@@ -799,8 +792,8 @@ const Auth = () => {
                         </>}
                         
                       <FormField control={signupForm.control} name="password" render={({
-                    field
-                  }) => <FormItem>
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Password</FormLabel>
                             <FormControl>
                               <div className="relative">
