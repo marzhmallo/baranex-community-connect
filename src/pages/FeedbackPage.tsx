@@ -548,7 +548,7 @@ const FeedbackPage = () => {
           </div>
         </div>
 
-        {/* Analytics Dashboard - Adjusted chart heights to prevent overflow */}
+        {/* Analytics Dashboard - Enlarged monthly trends and resolution time charts */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mt-8 w-full">
           <h2 className="text-2xl font-semibold text-gray-800 mb-8">Analytics Dashboard</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -589,20 +589,20 @@ const FeedbackPage = () => {
               </div>
             </div>
             
-            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 h-[350px]">
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 h-[450px]">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Report Trends</h3>
-              <div className="h-[270px] w-full">
+              <div className="h-[370px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis 
                         dataKey="month" 
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
                         axisLine={{ stroke: '#d1d5db' }}
                       />
                       <YAxis 
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
                         axisLine={{ stroke: '#d1d5db' }}
                       />
                       <ChartTooltip 
@@ -626,16 +626,16 @@ const FeedbackPage = () => {
                         type="monotone" 
                         dataKey="reports" 
                         stroke="#3B82F6" 
-                        strokeWidth={2}
-                        dot={{ fill: '#3B82F6', strokeWidth: 2, r: 3 }}
+                        strokeWidth={3}
+                        dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
                         name="Total Reports"
                       />
                       <Line 
                         type="monotone" 
                         dataKey="resolved" 
                         stroke="#10B981" 
-                        strokeWidth={2}
-                        dot={{ fill: '#10B981', strokeWidth: 2, r: 3 }}
+                        strokeWidth={3}
+                        dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
                         name="Resolved"
                       />
                     </LineChart>
@@ -644,23 +644,23 @@ const FeedbackPage = () => {
               </div>
             </div>
             
-            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 h-[350px]">
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 h-[450px]">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Avg Resolution Time (Days)</h3>
-              <div className="h-[270px] w-full">
+              <div className="h-[370px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={resolutionTimeData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                    <BarChart data={resolutionTimeData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis 
                         dataKey="category" 
-                        tick={{ fontSize: 10, fill: '#6b7280' }}
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
                         axisLine={{ stroke: '#d1d5db' }}
                         angle={-45}
                         textAnchor="end"
-                        height={40}
+                        height={60}
                       />
                       <YAxis 
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
                         axisLine={{ stroke: '#d1d5db' }}
                       />
                       <ChartTooltip 
