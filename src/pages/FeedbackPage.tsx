@@ -7,7 +7,9 @@ import { FeedbackReport, FeedbackType, FeedbackStatus } from '@/lib/types/feedba
 import { FileText, Clock, CheckCircle, Timer, Search, Filter, AlertTriangle, ThumbsUp, Construction, Volume2, ZoomIn, Play, PlusCircle, Upload, Download, BarChart3, Smartphone, Trees, Shield, Users, MessageSquare, User, Mic } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar, ResponsiveContainer } from 'recharts';
+
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
+
 const FeedbackPage = () => {
   const {
     userProfile
@@ -15,6 +17,7 @@ const FeedbackPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<FeedbackType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<FeedbackStatus | 'all'>('all');
+
   const {
     data: reports,
     isLoading,
@@ -208,7 +211,13 @@ const FeedbackPage = () => {
                 <h2 className="text-xl font-semibold text-gray-800">Recent Reports & Feedback</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
-                    <input type="text" placeholder="Search reports..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <input 
+                      type="text" 
+                      placeholder="Search reports..." 
+                      value={searchTerm} 
+                      onChange={e => setSearchTerm(e.target.value)} 
+                      className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                    />
                     <Search className="h-4 w-4 absolute left-3 top-2.5 text-gray-400" />
                   </div>
                   <details className="relative">
@@ -410,89 +419,6 @@ const FeedbackPage = () => {
                 </button>
               </div>
             </div>
-
-            {/* Analytics Dashboard */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">Analytics Dashboard</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-                  <h3 className="text-md font-medium text-gray-700 mb-2">Reports by Category</h3>
-                  <div className="h-[240px] w-full">
-                    <ChartContainer config={chartConfig}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                            {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                          </Pie>
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-                  <h3 className="text-md font-medium text-gray-700 mb-2">Monthly Report Trends</h3>
-                  <div className="h-[240px] w-full">
-                    <ChartContainer config={chartConfig}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={monthlyData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line type="monotone" dataKey="reports" stroke="#3B82F6" strokeWidth={3} />
-                          <Line type="monotone" dataKey="resolved" stroke="#10B981" strokeWidth={3} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-                  <h3 className="text-md font-medium text-gray-700 mb-2">Resolution Time (Days)</h3>
-                  <div className="h-[240px] w-full">
-                    <ChartContainer config={chartConfig}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={resolutionTimeData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="category" />
-                          <YAxis />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="days" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-                  <h3 className="text-md font-medium text-gray-700 mb-2">Feedback Sentiment</h3>
-                  <div className="h-[240px] w-full flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="grid grid-cols-3 gap-4 mb-4">
-                        <div className="text-center">
-                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2 mx-auto">
-                            <span className="text-2xl font-bold text-green-600">68%</span>
-                          </div>
-                          <p className="text-sm text-gray-600">Positive</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-2 mx-auto">
-                            <span className="text-2xl font-bold text-yellow-600">22%</span>
-                          </div>
-                          <p className="text-sm text-gray-600">Neutral</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-2 mx-auto">
-                            <span className="text-2xl font-bold text-red-600">10%</span>
-                          </div>
-                          <p className="text-sm text-gray-600">Negative</p>
-                        </div>
-                      </div>
-                      <p className="text-lg font-semibold text-gray-700">Total: 145 Feedback</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="space-y-6">
@@ -516,7 +442,11 @@ const FeedbackPage = () => {
                   <BarChart3 className="h-5 w-5 text-orange-600 group-hover:scale-110 transition-transform" />
                   <span className="text-orange-700 font-medium flex-1 text-left">View Analytics</span>
                 </button>
-                
+                <button className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
+                  <Smartphone className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-purple-700 font-medium flex-1 text-left">Download Mobile App</span>
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">New</span>
+                </button>
               </div>
             </div>
 
@@ -603,6 +533,92 @@ const FeedbackPage = () => {
                     <p className="text-sm text-gray-500">Safety Officer</p>
                   </div>
                   <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Active</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Analytics Dashboard - Full Width */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-8 w-full">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Analytics Dashboard</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
+              <h3 className="text-md font-medium text-gray-700 mb-2">Reports by Category</h3>
+              <div className="h-[240px] w-full">
+                <ChartContainer config={chartConfig}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                        {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
+              <h3 className="text-md font-medium text-gray-700 mb-2">Monthly Report Trends</h3>
+              <div className="h-[240px] w-full">
+                <ChartContainer config={chartConfig}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line type="monotone" dataKey="reports" stroke="#3B82F6" strokeWidth={3} />
+                      <Line type="monotone" dataKey="resolved" stroke="#10B981" strokeWidth={3} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
+              <h3 className="text-md font-medium text-gray-700 mb-2">Resolution Time (Days)</h3>
+              <div className="h-[240px] w-full">
+                <ChartContainer config={chartConfig}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={resolutionTimeData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="category" />
+                      <YAxis />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="days" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
+              <h3 className="text-md font-medium text-gray-700 mb-2">Feedback Sentiment</h3>
+              <div className="h-[240px] w-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2 mx-auto">
+                        <span className="text-2xl font-bold text-green-600">68%</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Positive</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-2 mx-auto">
+                        <span className="text-2xl font-bold text-yellow-600">22%</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Neutral</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-2 mx-auto">
+                        <span className="text-2xl font-bold text-red-600">10%</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Negative</p>
+                    </div>
+                  </div>
+                  <p className="text-lg font-semibold text-gray-700">Total: 145 Feedback</p>
                 </div>
               </div>
             </div>
