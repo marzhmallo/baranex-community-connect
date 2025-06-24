@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
@@ -8,9 +7,7 @@ import { FeedbackReport, FeedbackType, FeedbackStatus } from '@/lib/types/feedba
 import { FileText, Clock, CheckCircle, Timer, Search, Filter, AlertTriangle, ThumbsUp, Construction, Volume2, ZoomIn, Play, PlusCircle, Upload, Download, BarChart3, Smartphone, Trees, Shield, Users, MessageSquare, User, Mic } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar, ResponsiveContainer } from 'recharts';
-
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
-
 const FeedbackPage = () => {
   const {
     userProfile
@@ -18,7 +15,6 @@ const FeedbackPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<FeedbackType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<FeedbackStatus | 'all'>('all');
-
   const {
     data: reports,
     isLoading,
@@ -129,13 +125,19 @@ const FeedbackPage = () => {
     category: 'General',
     days: 1.9
   }];
-
-  const sentimentData = [
-    { name: 'Positive', value: 68, color: '#10B981' },
-    { name: 'Neutral', value: 22, color: '#F59E0B' },
-    { name: 'Negative', value: 10, color: '#EF4444' }
-  ];
-
+  const sentimentData = [{
+    name: 'Positive',
+    value: 68,
+    color: '#10B981'
+  }, {
+    name: 'Neutral',
+    value: 22,
+    color: '#F59E0B'
+  }, {
+    name: 'Negative',
+    value: 10,
+    color: '#EF4444'
+  }];
   const chartConfig = {
     reports: {
       label: "Reports",
@@ -150,13 +152,11 @@ const FeedbackPage = () => {
       color: "#3B82F6"
     }
   };
-
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>;
   }
-
   return <div className="w-full bg-background p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
@@ -221,13 +221,7 @@ const FeedbackPage = () => {
                 <h2 className="text-xl font-semibold text-foreground">Recent Reports & Feedback</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
-                    <input 
-                      type="text" 
-                      placeholder="Search reports..." 
-                      value={searchTerm} 
-                      onChange={e => setSearchTerm(e.target.value)} 
-                      className="pl-10 pr-4 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
-                    />
+                    <input type="text" placeholder="Search reports..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
                     <Search className="h-4 w-4 absolute left-3 top-2.5 text-muted-foreground" />
                   </div>
                   <details className="relative">
@@ -452,11 +446,7 @@ const FeedbackPage = () => {
                   <BarChart3 className="h-5 w-5 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform" />
                   <span className="text-orange-700 dark:text-orange-300 font-medium flex-1 text-left">View Analytics</span>
                 </button>
-                <button className="w-full flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors group">
-                  <Smartphone className="h-5 w-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
-                  <span className="text-purple-700 dark:text-purple-300 font-medium flex-1 text-left">Download Mobile App</span>
-                  <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">New</span>
-                </button>
+                
               </div>
             </div>
 
@@ -559,31 +549,22 @@ const FeedbackPage = () => {
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie 
-                        data={categoryData} 
-                        cx="50%" 
-                        cy="50%" 
-                        innerRadius={60} 
-                        outerRadius={100} 
-                        paddingAngle={5} 
-                        dataKey="value"
-                      >
+                      <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
                         {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                       </Pie>
-                      <ChartTooltip 
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            return (
-                              <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
+                      <ChartTooltip content={({
+                      active,
+                      payload
+                    }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
                                 <p className="font-semibold text-foreground">{data.name}</p>
                                 <p className="text-sm text-muted-foreground">{data.value} reports</p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
+                              </div>;
+                      }
+                      return null;
+                    }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -595,50 +576,52 @@ const FeedbackPage = () => {
               <div className="h-[370px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                    <LineChart data={monthlyData} margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 20
+                  }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis 
-                        dataKey="month" 
-                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={{ stroke: 'hsl(var(--border))' }}
-                      />
-                      <YAxis 
-                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={{ stroke: 'hsl(var(--border))' }}
-                      />
-                      <ChartTooltip 
-                        content={({ active, payload, label }) => {
-                          if (active && payload && payload.length) {
-                            return (
-                              <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
+                      <XAxis dataKey="month" tick={{
+                      fontSize: 12,
+                      fill: 'hsl(var(--muted-foreground))'
+                    }} axisLine={{
+                      stroke: 'hsl(var(--border))'
+                    }} />
+                      <YAxis tick={{
+                      fontSize: 12,
+                      fill: 'hsl(var(--muted-foreground))'
+                    }} axisLine={{
+                      stroke: 'hsl(var(--border))'
+                    }} />
+                      <ChartTooltip content={({
+                      active,
+                      payload,
+                      label
+                    }) => {
+                      if (active && payload && payload.length) {
+                        return <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
                                 <p className="font-semibold text-foreground mb-2">{label}</p>
-                                {payload.map((entry, index) => (
-                                  <p key={index} className="text-sm" style={{ color: entry.color }}>
+                                {payload.map((entry, index) => <p key={index} className="text-sm" style={{
+                            color: entry.color
+                          }}>
                                     {entry.name}: {entry.value}
-                                  </p>
-                                ))}
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="reports" 
-                        stroke="#3B82F6" 
-                        strokeWidth={3}
-                        dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                        name="Total Reports"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="resolved" 
-                        stroke="#10B981" 
-                        strokeWidth={3}
-                        dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                        name="Resolved"
-                      />
+                                  </p>)}
+                              </div>;
+                      }
+                      return null;
+                    }} />
+                      <Line type="monotone" dataKey="reports" stroke="#3B82F6" strokeWidth={3} dot={{
+                      fill: '#3B82F6',
+                      strokeWidth: 2,
+                      r: 4
+                    }} name="Total Reports" />
+                      <Line type="monotone" dataKey="resolved" stroke="#10B981" strokeWidth={3} dot={{
+                      fill: '#10B981',
+                      strokeWidth: 2,
+                      r: 4
+                    }} name="Resolved" />
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -650,39 +633,39 @@ const FeedbackPage = () => {
               <div className="h-[370px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={resolutionTimeData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                    <BarChart data={resolutionTimeData} margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 60
+                  }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis 
-                        dataKey="category" 
-                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={{ stroke: 'hsl(var(--border))' }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis 
-                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={{ stroke: 'hsl(var(--border))' }}
-                      />
-                      <ChartTooltip 
-                        content={({ active, payload, label }) => {
-                          if (active && payload && payload.length) {
-                            return (
-                              <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
+                      <XAxis dataKey="category" tick={{
+                      fontSize: 11,
+                      fill: 'hsl(var(--muted-foreground))'
+                    }} axisLine={{
+                      stroke: 'hsl(var(--border))'
+                    }} angle={-45} textAnchor="end" height={60} />
+                      <YAxis tick={{
+                      fontSize: 12,
+                      fill: 'hsl(var(--muted-foreground))'
+                    }} axisLine={{
+                      stroke: 'hsl(var(--border))'
+                    }} />
+                      <ChartTooltip content={({
+                      active,
+                      payload,
+                      label
+                    }) => {
+                      if (active && payload && payload.length) {
+                        return <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
                                 <p className="font-semibold text-foreground">{label}</p>
                                 <p className="text-sm text-muted-foreground">{payload[0].value} days avg</p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Bar 
-                        dataKey="days" 
-                        fill="#3B82F6" 
-                        radius={[4, 4, 0, 0]}
-                        name="Resolution Time"
-                      />
+                              </div>;
+                      }
+                      return null;
+                    }} />
+                      <Bar dataKey="days" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Resolution Time" />
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -695,51 +678,37 @@ const FeedbackPage = () => {
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie 
-                        data={sentimentData} 
-                        cx="50%" 
-                        cy="50%" 
-                        innerRadius={40} 
-                        outerRadius={80} 
-                        paddingAngle={3} 
-                        dataKey="value"
-                      >
-                        {sentimentData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
+                      <Pie data={sentimentData} cx="50%" cy="50%" innerRadius={40} outerRadius={80} paddingAngle={3} dataKey="value">
+                        {sentimentData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                       </Pie>
-                      <ChartTooltip 
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            return (
-                              <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
+                      <ChartTooltip content={({
+                      active,
+                      payload
+                    }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return <div className="bg-card p-3 shadow-lg rounded-lg border border-border">
                                 <p className="font-semibold text-foreground">{data.name}</p>
                                 <p className="text-sm text-muted-foreground">{data.value}%</p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
+                              </div>;
+                      }
+                      return null;
+                    }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </div>
               <div className="mt-3">
                 <div className="grid grid-cols-1 gap-2">
-                  {sentimentData.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
+                  {sentimentData.map((item, index) => <div key={index} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: item.color }}
-                        ></div>
+                        <div className="w-3 h-3 rounded-full" style={{
+                      backgroundColor: item.color
+                    }}></div>
                         <span className="font-medium text-foreground">{item.name}</span>
                       </div>
                       <span className="text-muted-foreground font-semibold">{item.value}%</span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 <div className="mt-3 pt-2 border-t border-border">
                   <p className="text-center text-xs text-muted-foreground">Total: 145 responses</p>
