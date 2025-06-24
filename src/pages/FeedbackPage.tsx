@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
@@ -549,64 +548,166 @@ const FeedbackPage = () => {
           </div>
         </div>
 
-        {/* Analytics Dashboard - Full Width */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-8 w-full">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">Analytics Dashboard</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-              <h3 className="text-md font-medium text-gray-700 mb-2">Reports by Category</h3>
-              <div className="h-[240px] w-full">
+        {/* Analytics Dashboard - Full Width with Better Layout */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mt-8 w-full">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-8">Analytics Dashboard</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 h-[400px]">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Reports by Category</h3>
+              <div className="h-[320px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                      <Pie 
+                        data={categoryData} 
+                        cx="50%" 
+                        cy="45%" 
+                        innerRadius={80} 
+                        outerRadius={120} 
+                        paddingAngle={5} 
+                        dataKey="value"
+                      >
                         {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                       </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <ChartTooltip 
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-white p-3 shadow-lg rounded-lg border">
+                                <p className="font-semibold text-gray-800">{data.name}</p>
+                                <p className="text-sm text-gray-600">{data.value} reports</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
+                <div className="mt-4">
+                  <div className="grid grid-cols-1 gap-2">
+                    {categoryData.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: item.color }}
+                          ></div>
+                          <span className="font-medium text-gray-700">{item.name}</span>
+                        </div>
+                        <span className="text-gray-600 font-semibold">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-              <h3 className="text-md font-medium text-gray-700 mb-2">Monthly Report Trends</h3>
-              <div className="h-[240px] w-full">
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 h-[400px]">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Report Trends</h3>
+              <div className="h-[320px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line type="monotone" dataKey="reports" stroke="#3B82F6" strokeWidth={3} />
-                      <Line type="monotone" dataKey="resolved" stroke="#10B981" strokeWidth={3} />
+                    <LineChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis 
+                        dataKey="month" 
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        axisLine={{ stroke: '#d1d5db' }}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        axisLine={{ stroke: '#d1d5db' }}
+                      />
+                      <ChartTooltip 
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white p-3 shadow-lg rounded-lg border">
+                                <p className="font-semibold text-gray-800 mb-2">{label}</p>
+                                {payload.map((entry, index) => (
+                                  <p key={index} className="text-sm" style={{ color: entry.color }}>
+                                    {entry.name}: {entry.value}
+                                  </p>
+                                ))}
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="reports" 
+                        stroke="#3B82F6" 
+                        strokeWidth={3}
+                        dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                        name="Total Reports"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="resolved" 
+                        stroke="#10B981" 
+                        strokeWidth={3}
+                        dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                        name="Resolved"
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </div>
             </div>
             
-            <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-              <h3 className="text-md font-medium text-gray-700 mb-2">Resolution Time (Days)</h3>
-              <div className="h-[240px] w-full">
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 h-[400px]">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Average Resolution Time (Days)</h3>
+              <div className="h-[320px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={resolutionTimeData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="category" />
-                      <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="days" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                    <BarChart data={resolutionTimeData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis 
+                        dataKey="category" 
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        axisLine={{ stroke: '#d1d5db' }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        axisLine={{ stroke: '#d1d5db' }}
+                        label={{ value: 'Days', angle: -90, position: 'insideLeft' }}
+                      />
+                      <ChartTooltip 
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white p-3 shadow-lg rounded-lg border">
+                                <p className="font-semibold text-gray-800">{label}</p>
+                                <p className="text-sm text-gray-600">{payload[0].value} days average</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Bar 
+                        dataKey="days" 
+                        fill="#3B82F6" 
+                        radius={[4, 4, 0, 0]}
+                        name="Resolution Time"
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </div>
             </div>
             
-            <div className="bg-white rounded-lg border border-gray-200 p-4 h-[300px]">
-              <h3 className="text-md font-medium text-gray-700 mb-2">Feedback Sentiment</h3>
-              <div className="h-[240px] w-full">
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 h-[400px]">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Feedback Sentiment Analysis</h3>
+              <div className="h-[320px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -614,9 +715,9 @@ const FeedbackPage = () => {
                         data={sentimentData} 
                         cx="50%" 
                         cy="45%" 
-                        innerRadius={40} 
-                        outerRadius={70} 
-                        paddingAngle={2} 
+                        innerRadius={60} 
+                        outerRadius={100} 
+                        paddingAngle={3} 
                         dataKey="value"
                       >
                         {sentimentData.map((entry, index) => (
@@ -627,10 +728,12 @@ const FeedbackPage = () => {
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
                             const data = payload[0].payload;
+                            const totalResponses = 145;
+                            const count = Math.round(totalResponses * data.value / 100);
                             return (
-                              <div className="bg-white p-2 shadow-lg rounded border">
-                                <p className="font-medium">{data.name}</p>
-                                <p className="text-sm text-gray-600">{data.value}% ({Math.round(145 * data.value / 100)} responses)</p>
+                              <div className="bg-white p-3 shadow-lg rounded-lg border">
+                                <p className="font-semibold text-gray-800">{data.name}</p>
+                                <p className="text-sm text-gray-600">{data.value}% ({count} responses)</p>
                               </div>
                             );
                           }
@@ -640,20 +743,24 @@ const FeedbackPage = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
-                <div className="mt-2">
-                  <div className="flex justify-center gap-4">
+                <div className="mt-4">
+                  <div className="grid grid-cols-1 gap-3">
                     {sentimentData.map((item, index) => (
-                      <div key={index} className="flex items-center gap-1 text-xs">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: item.color }}
-                        ></div>
-                        <span className="font-medium">{item.name}</span>
-                        <span className="text-gray-500">({item.value}%)</span>
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-4 h-4 rounded-full" 
+                            style={{ backgroundColor: item.color }}
+                          ></div>
+                          <span className="font-medium text-gray-700">{item.name}</span>
+                        </div>
+                        <span className="text-gray-600 font-semibold">{item.value}%</span>
                       </div>
                     ))}
                   </div>
-                  <p className="text-center text-sm text-gray-600 mt-2">Total: 145 Feedback</p>
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <p className="text-center text-sm text-gray-600 font-medium">Total Feedback: 145 responses</p>
+                  </div>
                 </div>
               </div>
             </div>
