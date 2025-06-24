@@ -853,11 +853,13 @@ export type Database = {
           property_type: string | null
           province: string | null
           purok: string
+          recordedby: string | null
           region: string | null
           remarks: string | null
           status: string
           toilet_type: string | null
           updated_at: string | null
+          updatedby: string | null
           water_source: string | null
           year_established: number | null
         }
@@ -881,11 +883,13 @@ export type Database = {
           property_type?: string | null
           province?: string | null
           purok: string
+          recordedby?: string | null
           region?: string | null
           remarks?: string | null
           status: string
           toilet_type?: string | null
           updated_at?: string | null
+          updatedby?: string | null
           water_source?: string | null
           year_established?: number | null
         }
@@ -909,11 +913,13 @@ export type Database = {
           property_type?: string | null
           province?: string | null
           purok?: string
+          recordedby?: string | null
           region?: string | null
           remarks?: string | null
           status?: string
           toilet_type?: string | null
           updated_at?: string | null
+          updatedby?: string | null
           water_source?: string | null
           year_established?: number | null
         }
@@ -1237,7 +1243,9 @@ export type Database = {
           birthdate: string
           brgyid: string
           committees: Json | null
+          coverurl: string | null
           created_at: string
+          editedby: string | null
           educ: Json | null
           education: string | null
           email: string | null
@@ -1247,6 +1255,7 @@ export type Database = {
           phone: string | null
           photo_url: string | null
           position_no: number | null
+          recordedby: string | null
           term_end: string | null
           term_start: string | null
           updated_at: string
@@ -1258,7 +1267,9 @@ export type Database = {
           birthdate: string
           brgyid?: string
           committees?: Json | null
+          coverurl?: string | null
           created_at?: string
+          editedby?: string | null
           educ?: Json | null
           education?: string | null
           email?: string | null
@@ -1268,6 +1279,7 @@ export type Database = {
           phone?: string | null
           photo_url?: string | null
           position_no?: number | null
+          recordedby?: string | null
           term_end?: string | null
           term_start?: string | null
           updated_at?: string
@@ -1279,7 +1291,9 @@ export type Database = {
           birthdate?: string
           brgyid?: string
           committees?: Json | null
+          coverurl?: string | null
           created_at?: string
+          editedby?: string | null
           educ?: Json | null
           education?: string | null
           email?: string | null
@@ -1289,6 +1303,7 @@ export type Database = {
           phone?: string | null
           photo_url?: string | null
           position_no?: number | null
+          recordedby?: string | null
           term_end?: string | null
           term_start?: string | null
           updated_at?: string
@@ -1519,6 +1534,7 @@ export type Database = {
           countryph: string
           created_at: string | null
           died_on: string | null
+          editedby: string | null
           email: string | null
           emcontact: number | null
           emname: string | null
@@ -1542,6 +1558,7 @@ export type Database = {
           photo_url: string | null
           provinze: string
           purok: string
+          recordedby: string | null
           regional: string
           remarks: string | null
           status: string
@@ -1559,6 +1576,7 @@ export type Database = {
           countryph: string
           created_at?: string | null
           died_on?: string | null
+          editedby?: string | null
           email?: string | null
           emcontact?: number | null
           emname?: string | null
@@ -1582,6 +1600,7 @@ export type Database = {
           photo_url?: string | null
           provinze: string
           purok: string
+          recordedby?: string | null
           regional: string
           remarks?: string | null
           status?: string
@@ -1599,6 +1618,7 @@ export type Database = {
           countryph?: string
           created_at?: string | null
           died_on?: string | null
+          editedby?: string | null
           email?: string | null
           emcontact?: number | null
           emname?: string | null
@@ -1622,6 +1642,7 @@ export type Database = {
           photo_url?: string | null
           provinze?: string
           purok?: string
+          recordedby?: string | null
           regional?: string
           remarks?: string | null
           status?: string
