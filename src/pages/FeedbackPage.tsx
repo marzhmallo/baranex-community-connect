@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { feedbackAPI } from '@/lib/api/feedback';
@@ -7,14 +8,24 @@ import { FeedbackReport, FeedbackType, FeedbackStatus } from '@/lib/types/feedba
 import { FileText, Clock, CheckCircle, Timer, Search, Filter, AlertTriangle, ThumbsUp, Construction, Volume2, ZoomIn, Play, PlusCircle, Upload, Download, BarChart3, Smartphone, Trees, Shield, Users, MessageSquare, User, Mic } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar, ResponsiveContainer } from 'recharts';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
+
 const FeedbackPage = () => {
-  const {
-    userProfile
-  } = useAuth();
+  const { userProfile } = useAuth();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<FeedbackType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<FeedbackStatus | 'all'>('all');
+  const [selectedReport, setSelectedReport] = useState<FeedbackReport | null>(null);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [newStatus, setNewStatus] = useState<FeedbackStatus>('pending');
+  const [adminNotes, setAdminNotes] = useState('');
+
   const {
     data: reports,
     isLoading,
@@ -32,34 +43,71 @@ const FeedbackPage = () => {
     enabled: !!userProfile?.brgyid
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ reportId, status, notes }: { reportId: string; status: FeedbackStatus; notes?: string }) => {
+      return await feedbackAPI.updateReportStatus(reportId, status, notes);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Status updated",
+        description: "Report status has been updated successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ['feedback-reports'] });
+      setShowStatusDialog(false);
+      setSelectedReport(null);
+      setAdminNotes('');
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update status: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleUpdateStatus = (report: FeedbackReport, status: FeedbackStatus) => {
+    setSelectedReport(report);
+    setNewStatus(status);
+    setShowStatusDialog(true);
+  };
+
+  const handleStatusSubmit = () => {
+    if (!selectedReport) return;
+    updateStatusMutation.mutate({
+      reportId: selectedReport.id,
+      status: newStatus,
+      notes: adminNotes
+    });
+  };
+
   // Calculate stats from reports
   const totalReports = reports?.length || 0;
   const pendingReports = reports?.filter(r => r.status === 'pending').length || 0;
   const resolvedReports = reports?.filter(r => r.status === 'resolved').length || 0;
   const inProgressReports = reports?.filter(r => r.status === 'in_progress').length || 0;
 
-  // Chart data
-  const categoryData = [{
-    name: 'Infrastructure',
-    value: 45,
-    color: '#EF4444'
-  }, {
-    name: 'Environment',
-    value: 32,
-    color: '#10B981'
-  }, {
-    name: 'Safety & Security',
-    value: 28,
-    color: '#3B82F6'
-  }, {
-    name: 'Community',
-    value: 21,
-    color: '#8B5CF6'
-  }, {
-    name: 'General Feedback',
-    value: 19,
-    color: '#F59E0B'
-  }];
+  // Calculate category stats from actual data
+  const categoryStats = reports?.reduce((acc, report) => {
+    const category = report.category;
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>) || {};
+
+  // Chart data based on real data
+  const categoryData = Object.entries(categoryStats).map(([name, value]) => ({
+    name,
+    value,
+    color: name === 'Road Maintenance' ? '#EF4444' : 
+           name === 'Garbage Collection' ? '#10B981' :
+           name === 'Street Lighting' ? '#3B82F6' :
+           name === 'Water Supply' ? '#8B5CF6' :
+           name === 'Drainage Issues' ? '#F59E0B' :
+           name === 'Public Safety' ? '#EF4444' :
+           name === 'Noise Complaints' ? '#8B5CF6' :
+           '#6B7280'
+  }));
+
   const monthlyData = [{
     month: 'Jan',
     reports: 35,
@@ -109,6 +157,7 @@ const FeedbackPage = () => {
     reports: 34,
     resolved: 29
   }];
+
   const resolutionTimeData = [{
     category: 'Infrastructure',
     days: 4.3
@@ -125,6 +174,7 @@ const FeedbackPage = () => {
     category: 'General',
     days: 1.9
   }];
+
   const sentimentData = [{
     name: 'Positive',
     value: 68,
@@ -138,6 +188,7 @@ const FeedbackPage = () => {
     value: 10,
     color: '#EF4444'
   }];
+
   const chartConfig = {
     reports: {
       label: "Reports",
@@ -152,11 +203,43 @@ const FeedbackPage = () => {
       color: "#3B82F6"
     }
   };
+
+  const getStatusBadge = (status: FeedbackStatus) => {
+    const colors = {
+      pending: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+      in_progress: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+      resolved: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+      rejected: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+    };
+
+    return (
+      <span className={`px-3 py-1 text-xs font-medium rounded-full ${colors[status]}`}>
+        {status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}
+      </span>
+    );
+  };
+
+  const getTypeIcon = (type: FeedbackType) => {
+    return type === 'barangay' ? AlertTriangle : MessageSquare;
+  };
+
+  const getCategoryIcon = (category: string) => {
+    if (category.toLowerCase().includes('road') || category.toLowerCase().includes('infrastructure')) return Construction;
+    if (category.toLowerCase().includes('garbage') || category.toLowerCase().includes('environment')) return Trees;
+    if (category.toLowerCase().includes('light') || category.toLowerCase().includes('street')) return AlertTriangle;
+    if (category.toLowerCase().includes('water')) return Volume2;
+    if (category.toLowerCase().includes('safety') || category.toLowerCase().includes('security')) return Shield;
+    if (category.toLowerCase().includes('noise')) return Volume2;
+    if (category.toLowerCase().includes('community')) return Users;
+    return MessageSquare;
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>;
   }
+
   return <div className="w-full bg-background p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
@@ -221,207 +304,154 @@ const FeedbackPage = () => {
                 <h2 className="text-xl font-semibold text-foreground">Recent Reports & Feedback</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
-                    <input type="text" placeholder="Search reports..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" />
+                    <input 
+                      type="text" 
+                      placeholder="Search reports..." 
+                      value={searchTerm} 
+                      onChange={e => setSearchTerm(e.target.value)} 
+                      className="pl-10 pr-4 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
+                    />
                     <Search className="h-4 w-4 absolute left-3 top-2.5 text-muted-foreground" />
                   </div>
-                  <details className="relative">
-                    <summary className="flex items-center gap-2 px-4 py-2 bg-muted border border-border text-foreground rounded-lg cursor-pointer hover:bg-muted/80 transition-colors">
-                      <Filter className="h-4 w-4" />
-                      Filter
-                    </summary>
-                    <div className="absolute right-0 top-full mt-2 bg-card border border-border rounded-lg shadow-lg z-10 min-w-48">
-                      <div className="p-3">
-                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-muted rounded px-2">
-                          <input type="checkbox" className="rounded" />
-                          <span className="text-sm text-foreground">Pending</span>
-                        </label>
-                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-muted rounded px-2">
-                          <input type="checkbox" className="rounded" />
-                          <span className="text-sm text-foreground">In Progress</span>
-                        </label>
-                        <label className="flex items-center gap-2 py-2 cursor-pointer hover:bg-muted rounded px-2">
-                          <input type="checkbox" className="rounded" />
-                          <span className="text-sm text-foreground">Resolved</span>
-                        </label>
-                      </div>
-                    </div>
-                  </details>
+                  <div className="flex gap-2">
+                    <Select value={filterType} onValueChange={(value: FeedbackType | 'all') => setFilterType(value)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="barangay">Barangay</SelectItem>
+                        <SelectItem value="system">System</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={filterStatus} onValueChange={(value: FeedbackStatus | 'all') => setFilterStatus(value)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="resolved">Resolved</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                        <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                {reports && reports.length > 0 ? (
+                  reports.map((report) => {
+                    const IconComponent = getCategoryIcon(report.category);
+                    return (
+                      <div key={report.id} className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              report.type === 'barangay' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
+                            }`}>
+                              <IconComponent className={`h-5 w-5 ${
+                                report.type === 'barangay' ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400'
+                              }`} />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-foreground">{report.category}</h3>
+                              <p className="text-sm text-muted-foreground">{report.location || 'No location specified'}</p>
+                            </div>
+                          </div>
+                          {getStatusBadge(report.status)}
+                        </div>
+                        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{report.description}</p>
+                        {report.attachments && report.attachments.length > 0 && (
+                          <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                            {report.attachments.map((attachment, index) => {
+                              const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
+                              return (
+                                <div key={index} className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
+                                  <img 
+                                    src={imageUrl} 
+                                    alt={`Attachment ${index + 1}`} 
+                                    className="h-full w-full object-cover" 
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                                    <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between mt-4">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>By: {report.user_name || 'Anonymous'}</span>
+                            <span>{new Date(report.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            {report.status === 'pending' && (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleUpdateStatus(report, 'in_progress')}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                  Assign
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleUpdateStatus(report, 'rejected')}
+                                >
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            {report.status === 'in_progress' && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleUpdateStatus(report, 'resolved')}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                Mark Resolved
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline">
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-medium text-foreground">Street Light Not Working</h3>
-                        <p className="text-sm text-muted-foreground">Purok 3, Barangay San Miguel</p>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs font-medium rounded-full">Pending</span>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8">
+                    <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2 text-foreground">No reports found</h3>
+                    <p className="text-muted-foreground">
+                      {searchTerm || filterType !== 'all' || filterStatus !== 'all' 
+                        ? 'Try adjusting your search or filters'
+                        : 'No feedback reports have been submitted yet'
+                      }
+                    </p>
                   </div>
-                  <p className="text-muted-foreground text-sm mb-3">The street light in front of house #45 has been out for 3 days. This creates safety concerns for residents walking at night.</p>
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
-                      <img src="https://images.unsplash.com/photo-1617859047452-8510bcf207fd" alt="Street light photo" className="h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
-                      </div>
-                    </div>
-                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
-                      <img src="https://images.unsplash.com/photo-1628624747186-a941c476b7ef" alt="Street light photo" className="h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Reported by: Maria Santos</span>
-                      <span>2 hours ago</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors">
-                        Assign
-                      </button>
-                      <button className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg hover:bg-muted/80 transition-colors">
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                        <ThumbsUp className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-foreground">Excellent Garbage Collection Service</h3>
-                        <p className="text-sm text-muted-foreground">Purok 1, Barangay San Miguel</p>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">Positive Feedback</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm mb-3">I want to commend the garbage collection team for their consistent and timely service. Our area is always clean thanks to their efforts.</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Feedback by: Juan Dela Cruz</span>
-                      <span>5 hours ago</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
-                        Acknowledge
-                      </button>
-                      <button className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg hover:bg-muted/80 transition-colors">
-                        Share
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <Construction className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-foreground">Road Repair Request</h3>
-                        <p className="text-sm text-muted-foreground">Main Road, Barangay San Miguel</p>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">In Progress</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm mb-3">Large potholes on the main road are causing damage to vehicles. Road repair is urgently needed.</p>
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-                    <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-border">
-                      <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                        <Play className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <Play className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
-                      </div>
-                    </div>
-                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
-                      <img src="https://images.unsplash.com/photo-1636367167117-1c584316f6eb" alt="Pothole photo" className="h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
-                      </div>
-                    </div>
-                    <div className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
-                      <img src="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2" alt="Pothole photo" className="h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Reported by: Carlos Reyes</span>
-                      <span>1 day ago</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors">
-                        Update Status
-                      </button>
-                      <button className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg hover:bg-muted/80 transition-colors">
-                        View Progress
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                        <Volume2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-foreground">Noise Complaint</h3>
-                        <p className="text-sm text-muted-foreground">Purok 2, Barangay San Miguel</p>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs font-medium rounded-full">Pending</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm mb-3">Loud music from a nearby establishment is disturbing residents during late hours. Please investigate.</p>
-                  <div className="mt-3 flex gap-2">
-                    <div className="relative group h-16 w-28 flex-shrink-0 rounded-md overflow-hidden border border-border">
-                      <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                        <Mic className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                        <Play className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Reported by: Anna Garcia</span>
-                      <span>3 hours ago</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors">
-                        Investigate
-                      </button>
-                      <button className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg hover:bg-muted/80 transition-colors">
-                        Contact Reporter
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
 
-              <div className="mt-6 flex justify-center">
-                <button className="px-6 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors">
-                  Load More Reports
-                </button>
-              </div>
+              {reports && reports.length > 0 && (
+                <div className="mt-6 flex justify-center">
+                  <Button 
+                    variant="outline"
+                    onClick={() => refetch()}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Loading...' : 'Refresh Reports'}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -446,58 +476,30 @@ const FeedbackPage = () => {
                   <BarChart3 className="h-5 w-5 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform" />
                   <span className="text-orange-700 dark:text-orange-300 font-medium flex-1 text-left">View Analytics</span>
                 </button>
-                
               </div>
             </div>
 
             <div className="bg-card rounded-xl shadow-sm border border-border p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Report Categories</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                      <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                    </div>
-                    <span className="text-foreground font-medium">Infrastructure</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">45</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                      <Trees className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    </div>
-                    <span className="text-foreground font-medium">Environment</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">32</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                      <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <span className="text-foreground font-medium">Safety & Security</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">28</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                      <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <span className="text-foreground font-medium">Community</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">21</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                      <MessageSquare className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                    </div>
-                    <span className="text-foreground font-medium">General Feedback</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">19</span>
-                </div>
+                {Object.entries(categoryStats).length > 0 ? (
+                  Object.entries(categoryStats).map(([category, count]) => {
+                    const IconComponent = getCategoryIcon(category);
+                    return (
+                      <div key={category} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                            <IconComponent className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <span className="text-foreground font-medium">{category}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">{count}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-muted-foreground text-sm">No categories to display</p>
+                )}
               </div>
             </div>
 
@@ -539,9 +541,52 @@ const FeedbackPage = () => {
           </div>
         </div>
 
-        {/* Analytics Dashboard - Enlarged monthly trends and resolution time charts */}
-        
+        {/* Status Update Dialog */}
+        <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Update Report Status</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">New Status</label>
+                <Select value={newStatus} onValueChange={(value: FeedbackStatus) => setNewStatus(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Admin Notes (Optional)</label>
+                <Textarea
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="Add notes about this status change..."
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleStatusSubmit}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  {updateStatusMutation.isPending ? 'Updating...' : 'Update Status'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>;
 };
+
 export default FeedbackPage;
