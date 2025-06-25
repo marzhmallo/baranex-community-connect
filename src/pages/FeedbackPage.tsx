@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
@@ -28,22 +28,44 @@ const FeedbackPage = () => {
   const [newStatus, setNewStatus] = useState<FeedbackStatus>('pending');
   const [adminNotes, setAdminNotes] = useState('');
 
+  // Fetch all reports without filters - we'll filter client-side
   const {
-    data: reports,
-    isLoading,
+    data: allReports,
+    isLoading: isInitialLoading,
     refetch
   } = useQuery({
-    queryKey: ['feedback-reports', userProfile?.brgyid, filterType, filterStatus, searchTerm],
+    queryKey: ['feedback-reports', userProfile?.brgyid],
     queryFn: async () => {
       if (!userProfile?.brgyid) return [];
-      const filters: any = {};
-      if (filterType !== 'all') filters.type = filterType;
-      if (filterStatus !== 'all') filters.status = filterStatus;
-      if (searchTerm) filters.search = searchTerm;
-      return await feedbackAPI.getAllReports(userProfile.brgyid, filters);
+      return await feedbackAPI.getAllReports(userProfile.brgyid);
     },
     enabled: !!userProfile?.brgyid
   });
+
+  // Filter reports client-side to avoid loading states
+  const filteredReports = useMemo(() => {
+    if (!allReports) return [];
+    
+    return allReports.filter(report => {
+      // Type filter
+      if (filterType !== 'all' && report.type !== filterType) return false;
+      
+      // Status filter
+      if (filterStatus !== 'all' && report.status !== filterStatus) return false;
+      
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          report.description.toLowerCase().includes(searchLower) ||
+          report.category.toLowerCase().includes(searchLower) ||
+          (report.user_name && report.user_name.toLowerCase().includes(searchLower))
+        );
+      }
+      
+      return true;
+    });
+  }, [allReports, filterType, filterStatus, searchTerm]);
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ reportId, status, notes }: { reportId: string; status: FeedbackStatus; notes?: string }) => {
@@ -89,14 +111,14 @@ const FeedbackPage = () => {
     setFilterStatus('all');
   };
 
-  // Calculate stats from reports
-  const totalReports = reports?.length || 0;
-  const pendingReports = reports?.filter(r => r.status === 'pending').length || 0;
-  const resolvedReports = reports?.filter(r => r.status === 'resolved').length || 0;
-  const inProgressReports = reports?.filter(r => r.status === 'in_progress').length || 0;
+  // Calculate stats from all reports (not filtered)
+  const totalReports = allReports?.length || 0;
+  const pendingReports = allReports?.filter(r => r.status === 'pending').length || 0;
+  const resolvedReports = allReports?.filter(r => r.status === 'resolved').length || 0;
+  const inProgressReports = allReports?.filter(r => r.status === 'in_progress').length || 0;
 
-  // Calculate category stats from actual data
-  const categoryStats = reports?.reduce((acc, report) => {
+  // Calculate category stats from all reports
+  const categoryStats = allReports?.reduce((acc, report) => {
     const category = report.category;
     acc[category] = (acc[category] || 0) + 1;
     return acc;
@@ -242,7 +264,8 @@ const FeedbackPage = () => {
     return MessageSquare;
   };
 
-  if (isLoading) {
+  // Only show loading for initial data fetch
+  if (isInitialLoading) {
     return <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>;
@@ -370,7 +393,7 @@ const FeedbackPage = () => {
                             Clear All
                           </Button>
                           <Button onClick={() => refetch()} className="flex-1">
-                            Apply Filters
+                            Refresh
                           </Button>
                         </div>
                       </div>
@@ -380,8 +403,8 @@ const FeedbackPage = () => {
               </div>
 
               <div className="space-y-4">
-                {reports && reports.length > 0 ? (
-                  reports.map((report) => {
+                {filteredReports && filteredReports.length > 0 ? (
+                  filteredReports.map((report) => {
                     const IconComponent = getCategoryIcon(report.category);
                     return (
                       <div key={report.id} className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
@@ -480,18 +503,6 @@ const FeedbackPage = () => {
                   </div>
                 )}
               </div>
-
-              {reports && reports.length > 0 && (
-                <div className="mt-6 flex justify-center">
-                  <Button 
-                    variant="outline"
-                    onClick={() => refetch()}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Loading...' : 'Refresh Reports'}
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
 
