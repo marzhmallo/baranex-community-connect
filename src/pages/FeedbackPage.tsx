@@ -4,7 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { feedbackAPI } from '@/lib/api/feedback';
 import { FeedbackReport, FeedbackType, FeedbackStatus } from '@/lib/types/feedback';
-import { FileText, Clock, CheckCircle, Timer, Search, Filter, AlertTriangle, ThumbsUp, Construction, Volume2, ZoomIn, Play, PlusCircle, Upload, Download, BarChart3, Smartphone, Trees, Shield, Users, MessageSquare, User, Mic } from 'lucide-react';
+import { FileText, Clock, CheckCircle, Timer, Search, Filter, AlertTriangle, ThumbsUp, Construction, Volume2, ZoomIn, Play, PlusCircle, Upload, Download, BarChart3, Smartphone, Trees, Shield, Users, MessageSquare, User, Mic, Calendar, MapPin, Eye, X } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar, ResponsiveContainer } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
 
@@ -25,6 +27,7 @@ const FeedbackPage = () => {
   const [filterStatus, setFilterStatus] = useState<FeedbackStatus | 'all'>('all');
   const [selectedReport, setSelectedReport] = useState<FeedbackReport | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [newStatus, setNewStatus] = useState<FeedbackStatus>('pending');
   const [adminNotes, setAdminNotes] = useState('');
 
@@ -94,6 +97,11 @@ const FeedbackPage = () => {
     setSelectedReport(report);
     setNewStatus(status);
     setShowStatusDialog(true);
+  };
+
+  const handleViewDetails = (report: FeedbackReport) => {
+    setSelectedReport(report);
+    setShowDetailsDialog(true);
   };
 
   const handleStatusSubmit = () => {
@@ -482,7 +490,13 @@ const FeedbackPage = () => {
                                 Mark Resolved
                               </Button>
                             )}
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleViewDetails(report)}
+                              className="gap-2"
+                            >
+                              <Eye className="h-4 w-4" />
                               View Details
                             </Button>
                           </div>
@@ -591,6 +605,186 @@ const FeedbackPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Report Details Dialog */}
+        <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    selectedReport?.type === 'barangay' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
+                  }`}>
+                    {selectedReport && (() => {
+                      const IconComponent = getCategoryIcon(selectedReport.category);
+                      return <IconComponent className={`h-6 w-6 ${
+                        selectedReport.type === 'barangay' ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400'
+                      }`} />;
+                    })()}
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-semibold">
+                      {selectedReport?.category}
+                    </DialogTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant={selectedReport?.type === 'barangay' ? 'default' : 'secondary'}>
+                        {selectedReport?.type === 'barangay' ? 'Barangay Issue' : 'System Issue'}
+                      </Badge>
+                      {selectedReport && getStatusBadge(selectedReport.status)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </DialogHeader>
+
+            {selectedReport && (
+              <div className="space-y-6">
+                {/* Report Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Submitted</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(selectedReport.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Reported By</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedReport.user_name || 'Anonymous User'}
+                    </p>
+                  </div>
+
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Location</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedReport.location || 'Not specified'}
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Description */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Description</h3>
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <p className="text-foreground leading-relaxed">
+                      {selectedReport.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Attachments */}
+                {selectedReport.attachments && selectedReport.attachments.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">
+                      Attachments ({selectedReport.attachments.length})
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {selectedReport.attachments.map((attachment, index) => {
+                        const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
+                        return (
+                          <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted/50">
+                            <img
+                              src={imageUrl}
+                              alt={`Attachment ${index + 1}`}
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallback = target.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                            <div className="hidden w-full h-full bg-muted/50 items-center justify-center flex-col p-4">
+                              <FileText className="h-8 w-8 text-muted-foreground mb-2" />
+                              <span className="text-xs text-muted-foreground text-center break-all">
+                                {attachment}
+                              </span>
+                            </div>
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                              <ZoomIn className="h-6 w-6 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Notes */}
+                {selectedReport.admin_notes && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Admin Response</h3>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <p className="text-foreground leading-relaxed">
+                        {selectedReport.admin_notes}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3 justify-end">
+                  {selectedReport.status === 'pending' && (
+                    <>
+                      <Button 
+                        onClick={() => {
+                          setShowDetailsDialog(false);
+                          handleUpdateStatus(selectedReport, 'in_progress');
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Assign & Start Progress
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setShowDetailsDialog(false);
+                          handleUpdateStatus(selectedReport, 'rejected');
+                        }}
+                      >
+                        Reject Report
+                      </Button>
+                    </>
+                  )}
+                  {selectedReport.status === 'in_progress' && (
+                    <Button 
+                      onClick={() => {
+                        setShowDetailsDialog(false);
+                        handleUpdateStatus(selectedReport, 'resolved');
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Mark as Resolved
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Status Update Dialog */}
         <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
