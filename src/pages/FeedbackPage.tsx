@@ -428,6 +428,7 @@ const FeedbackPage = () => {
                         <div className="flex items-center justify-between mt-4">
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>By: {report.user_name || 'Anonymous'}</span>
+                            <span className="text-muted-foreground/50">•</span>
                             <span>{new Date(report.created_at).toLocaleDateString()}</span>
                           </div>
                           <div className="flex gap-2">
