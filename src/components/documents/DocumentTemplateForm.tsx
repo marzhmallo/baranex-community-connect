@@ -17,7 +17,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ArrowLeft, Save } from "lucide-react";
-import TemplateEditor from "./TemplateEditor";
 
 const templateSchema = z.object({
   name: z.string().min(3, { message: "Template name must be at least 3 characters" }),
@@ -186,13 +185,13 @@ const DocumentTemplateForm = ({ template, onClose }) => {
               <FormItem>
                 <FormLabel>Template Content</FormLabel>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Use the rich text editor below. Click the "Field" button to insert data fields that will be automatically filled when issuing documents.
+                  Use placeholders like {"{{resident_name}}"}, {"{{purpose}}"} that will be filled when issuing the document.
                 </p>
                 <FormControl>
-                  <TemplateEditor
-                    value={field.value}
-                    onChange={field.onChange}
+                  <Textarea 
                     placeholder="Enter the document template content here..."
+                    className="font-mono h-60 resize-none"
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
