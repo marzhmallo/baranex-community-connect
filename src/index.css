@@ -97,4 +97,39 @@
   }
 }
 
-/* ... keep existing code (component classes) */
+/* React Quill Custom Styles */
+.ql-toolbar {
+  border-top: 1px solid #ccc !important;
+  border-left: 1px solid #ccc !important;
+  border-right: 1px solid #ccc !important;
+  border-bottom: none !important;
+}
+
+.ql-container {
+  border-bottom: 1px solid #ccc !important;
+  border-left: 1px solid #ccc !important;
+  border-right: 1px solid #ccc !important;
+  border-top: none !important;
+}
+
+.ql-editor {
+  min-height: 200px;
+}
+
+/* Data Field Styling */
+.data-field {
+  background-color: #3b82f6;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0 2px;
+  display: inline-block;
+  cursor: default;
+  user-select: none;
+}
+
+.data-field:hover {
+  background-color: #2563eb;
+}

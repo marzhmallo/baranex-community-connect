@@ -27,7 +27,14 @@ const templateSchema = z.object({
   required_fields: z.string().optional()
 });
 
-const DocumentTemplateForm = ({ template, onClose }) => {
+interface DocumentTemplateFormProps {
+  template?: any;
+  onClose: () => void;
+  customEditor?: React.ReactNode;
+  editorContent?: string;
+}
+
+const DocumentTemplateForm = ({ template, onClose, customEditor, editorContent }: DocumentTemplateFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
@@ -42,6 +49,13 @@ const DocumentTemplateForm = ({ template, onClose }) => {
       required_fields: template?.required_fields ? JSON.stringify(template.required_fields, null, 2) : "{}"
     }
   });
+
+  // Update form when editorContent changes
+  useEffect(() => {
+    if (editorContent !== undefined) {
+      form.setValue("template", editorContent);
+    }
+  }, [editorContent, form]);
   
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -61,11 +75,14 @@ const DocumentTemplateForm = ({ template, onClose }) => {
         return;
       }
       
+      // Use editor content if available, otherwise use form data
+      const templateContent = editorContent || data.template;
+      
       // Prepare data for submission
       const templateData = {
         name: data.name,
         description: data.description,
-        template: data.template,
+        template: templateContent,
         fee: data.fee,
         validity_days: data.validity_days,
         required_fields: parsedRequiredFields
@@ -193,14 +210,16 @@ const DocumentTemplateForm = ({ template, onClose }) => {
                 <FormItem>
                   <FormLabel>Template Content</FormLabel>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Use placeholders like {"{{resident_name}}"}, {"{{purpose}}"} that will be filled when issuing the document.
+                    Use the rich text editor below to create your document template. Use the "Insert Data Field" button to add placeholders.
                   </p>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Enter the document template content here..."
-                      className="font-mono h-60 resize-none"
-                      {...field}
-                    />
+                    {customEditor || (
+                      <Textarea 
+                        placeholder="Enter the document template content here..."
+                        className="font-mono h-60 resize-none"
+                        {...field}
+                      />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
