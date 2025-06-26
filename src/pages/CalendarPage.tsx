@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format, isToday, isEqual, isSameMonth, parse, addDays, subDays, addMonths, subMonths } from "date-fns";
 import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Download, Upload, Edit, Trash2, X, Clock, MapPin, Users, Repeat, Bell } from "lucide-react";
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -244,7 +244,11 @@ const CalendarPage = () => {
   };
 
   const calendarDays = generateCalendarDays();
-  const upcomingEvents = events?.slice(0, 3) || [];
+  
+  // Separate upcoming and past events
+  const now = new Date();
+  const upcomingEvents = events?.filter(event => new Date(event.start_time) >= now) || [];
+  const pastEvents = events?.filter(event => new Date(event.start_time) < now) || [];
 
   return (
     <div className="w-[1200px] mx-auto p-6 bg-background min-h-screen">
@@ -530,48 +534,105 @@ const CalendarPage = () => {
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <div className="bg-card border border-border rounded-lg shadow-lg p-6">
-              <h3 className="text-xl font-bold text-card-foreground mb-4">Upcoming Events</h3>
-              <div className="space-y-4">
-                {upcomingEvents.map((event) => {
-                  const category = eventCategories.find(cat => cat.value === event.event_type);
-                  return (
-                    <div key={event.id} className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 bg-card">
-                      <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
-                        <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-card-foreground">{event.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(event.start_time), "MMMM d, yyyy - h:mm a")}
-                        </p>
-                        {event.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
-                        )}
-                        <div className="flex items-center space-x-2 mt-2">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => handleEventClick(event)}
-                            className="hover:bg-muted"
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => deleteEventMutation.mutate(event.id)}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            Delete
-                          </Button>
+              <h3 className="text-xl font-bold text-card-foreground mb-4">Events</h3>
+              <Tabs defaultValue="upcoming" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upcoming">Upcoming ({upcomingEvents.length})</TabsTrigger>
+                  <TabsTrigger value="past">Past ({pastEvents.length})</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="upcoming" className="space-y-4 mt-4">
+                  {upcomingEvents.length > 0 ? (
+                    upcomingEvents.slice(0, 5).map((event) => {
+                      const category = eventCategories.find(cat => cat.value === event.event_type);
+                      return (
+                        <div key={event.id} className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 bg-card">
+                          <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
+                            <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-card-foreground">{event.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(event.start_time), "MMMM d, yyyy - h:mm a")}
+                            </p>
+                            {event.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                            )}
+                            <div className="flex items-center space-x-2 mt-2">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => handleEventClick(event)}
+                                className="hover:bg-muted"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => deleteEventMutation.mutate(event.id)}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">No upcoming events.</p>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="past" className="space-y-4 mt-4">
+                  {pastEvents.length > 0 ? (
+                    pastEvents.slice(0, 5).map((event) => {
+                      const category = eventCategories.find(cat => cat.value === event.event_type);
+                      return (
+                        <div key={event.id} className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 bg-card opacity-75">
+                          <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
+                            <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-card-foreground">{event.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(event.start_time), "MMMM d, yyyy - h:mm a")}
+                            </p>
+                            {event.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                            )}
+                            <div className="flex items-center space-x-2 mt-2">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => handleEventClick(event)}
+                                className="hover:bg-muted"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                View
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => deleteEventMutation.mutate(event.id)}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">No past events.</p>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
 
