@@ -119,54 +119,54 @@ const StatisticsPage = () => {
 
       {/* Key Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-primary border border-primary/20">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-blue-500 border border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Population</p>
-              <p className="text-3xl font-bold text-foreground">{statistics!.totalResidents.toLocaleString()}</p>
-              <p className="text-sm text-green-600 mt-1">Active residents</p>
+              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Population</p>
+              <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{statistics!.totalResidents.toLocaleString()}</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">Active residents</p>
             </div>
-            <div className="bg-primary/10 p-3 rounded-full">
-              <Users className="text-primary h-6 w-6" />
+            <div className="bg-blue-200 dark:bg-blue-800 p-3 rounded-full">
+              <Users className="text-blue-700 dark:text-blue-300 h-6 w-6" />
             </div>
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-green-500 border border-green-500/20">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-green-500 border border-green-200 dark:border-green-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Households</p>
-              <p className="text-3xl font-bold text-foreground">{statistics!.totalHouseholds.toLocaleString()}</p>
-              <p className="text-sm text-green-600 mt-1">Avg {statistics!.avgHouseholdSize.toFixed(1)} per household</p>
+              <p className="text-sm font-medium text-green-700 dark:text-green-300">Total Households</p>
+              <p className="text-3xl font-bold text-green-900 dark:text-green-100">{statistics!.totalHouseholds.toLocaleString()}</p>
+              <p className="text-sm text-green-600 dark:text-green-400 mt-1">Avg {statistics!.avgHouseholdSize.toFixed(1)} per household</p>
             </div>
-            <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
-              <Home className="text-green-600 h-6 w-6" />
+            <div className="bg-green-200 dark:bg-green-800 p-3 rounded-full">
+              <Home className="text-green-700 dark:text-green-300 h-6 w-6" />
             </div>
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-orange-500 border border-orange-500/20">
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-orange-500 border border-orange-200 dark:border-orange-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Registered Voters</p>
-              <p className="text-3xl font-bold text-foreground">{statistics!.registeredVoters.toLocaleString()}</p>
-              <p className="text-sm text-blue-600 mt-1">{statistics!.voterPercentage.toFixed(1)}% of total population</p>
+              <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Registered Voters</p>
+              <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">{statistics!.registeredVoters.toLocaleString()}</p>
+              <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">{statistics!.voterPercentage.toFixed(1)}% of total population</p>
             </div>
-            <div className="bg-orange-100 dark:bg-orange-900/20 p-3 rounded-full">
-              <Vote className="text-orange-600 h-6 w-6" />
+            <div className="bg-orange-200 dark:bg-orange-800 p-3 rounded-full">
+              <Vote className="text-orange-700 dark:text-orange-300 h-6 w-6" />
             </div>
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-purple-500 border border-purple-500/20">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-purple-500 border border-purple-200 dark:border-purple-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Puroks</p>
-              <p className="text-3xl font-bold text-foreground">{statistics!.totalPuroks}</p>
-              <p className="text-sm text-muted-foreground mt-1">Administrative divisions</p>
+              <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Puroks</p>
+              <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{statistics!.totalPuroks}</p>
+              <p className="text-sm text-purple-600 dark:text-purple-400 mt-1">Administrative divisions</p>
             </div>
-            <div className="bg-purple-100 dark:bg-purple-900/20 p-3 rounded-full">
-              <MapPin className="text-purple-600 h-6 w-6" />
+            <div className="bg-purple-200 dark:bg-purple-800 p-3 rounded-full">
+              <MapPin className="text-purple-700 dark:text-purple-300 h-6 w-6" />
             </div>
           </div>
         </div>
