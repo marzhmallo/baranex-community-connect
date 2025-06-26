@@ -72,7 +72,7 @@ const CreateDocumentTemplatePage = () => {
       if (range) {
         const pillHtml = `<span class="data-field-pill" data-placeholder="${value}" contenteditable="false" style="background-color: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; margin: 0 2px; display: inline-block;">${label}</span>`;
         quill.clipboard.dangerouslyPasteHTML(range.index, pillHtml);
-        quill.setSelection(range.index + 1);
+        quill.setSelection({ index: range.index + 1, length: 0 });
       }
     }
   };
@@ -293,12 +293,6 @@ const CreateDocumentTemplatePage = () => {
                   modules={modules}
                   formats={formats}
                   className="min-h-[300px]"
-                  style={{ 
-                    border: 'none',
-                    '& .ql-editor': {
-                      minHeight: '300px'
-                    }
-                  }}
                 />
               </div>
               {templateContent.length < 10 && (
