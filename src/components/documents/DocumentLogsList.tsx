@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,8 +34,8 @@ const DocumentLogsList = ({
           *,
           issued_documents:document_id (
             document_number,
-            document_type_id,
-            document_types:document_type_id (
+            document_id,
+            document_types:document_id (
               name
             ),
             resident_id,
