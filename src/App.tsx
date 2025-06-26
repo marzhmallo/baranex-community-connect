@@ -20,7 +20,6 @@ import HouseholdPage from "./pages/HouseholdsPage";
 import HouseholdMoreDetailsPage from "./pages/HouseholdMoreDetailsPage";
 import OfficialsPage from "./pages/OfficialsPage"; 
 import DocumentsPage from "./components/documents/DocumentsPage";
-import CreateDocumentTemplatePage from "./pages/CreateDocumentTemplatePage";
 import BlotterPage from "./pages/BlotterPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import UserFeedbackPage from "./pages/UserFeedbackPage";
@@ -178,7 +177,6 @@ const AppContent = () => {
               <Route path="/officials" element={<AdminRoute><OfficialsPage /></AdminRoute>} />
               <Route path="/officials/:id" element={<AdminRoute><OfficialDetailsPage /></AdminRoute>} /> 
               <Route path="/documents" element={<AdminRoute><DocumentsPage /></AdminRoute>} />
-              <Route path="/documents/new" element={<AdminRoute><CreateDocumentTemplatePage /></AdminRoute>} />
               <Route path="/blotter" element={<AdminRoute><BlotterPage /></AdminRoute>} />
               <Route path="/feedback" element={<AdminRoute><FeedbackPage /></AdminRoute>} />
               <Route path="/emergency" element={<AdminRoute><EmergencyResponsePage /></AdminRoute>} />
