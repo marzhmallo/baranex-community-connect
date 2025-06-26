@@ -73,7 +73,7 @@ const TemplateEditor = () => {
       const range = quill.getSelection();
       if (range) {
         quill.insertEmbed(range.index, 'dataField', field);
-        quill.setSelection(range.index + 1);
+        quill.setSelection(range.index + 1, 0);
       }
     }
   }, []);
@@ -121,6 +121,7 @@ const TemplateEditor = () => {
         .insert({
           name: templateName,
           content: convertedContent,
+          template: convertedContent, // Also save to template field for compatibility
           brgyid: userProfile?.brgyid,
         });
 

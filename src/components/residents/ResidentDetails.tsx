@@ -1,242 +1,156 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { format } from 'date-fns';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, X, FileText } from "lucide-react";
+import { MoreVertical, Edit, FileText, User, Mail, Phone, MapPin } from "lucide-react";
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { format } from 'date-fns';
+import IssueDocumentModal from "@/components/documents/IssueDocumentModal";
+import { useState } from "react";
 
 interface Resident {
   id: string;
-  created_at: string;
-  updated_at: string;
   first_name: string;
-  middle_name: string;
   last_name: string;
-  suffix: string;
+  middle_name?: string;
+  suffix?: string;
   birthdate: string;
   gender: string;
-  marital_status: string;
-  occupation: string;
-  email: string;
-  contact_number: string;
-  address: string;
-  barangay: string;
-  province: string;
-  region: string;
-  nationality: string;
-  is_voter: boolean;
-  photo_url: string;
-  status: string;
-  remarks: string;
+  address?: string;
+  contact_number?: string;
+  email?: string;
+  occupation?: string;
+  civil_status: string;
+  is_registered_voter: boolean;
 }
 
-import IssueDocumentModal from "@/components/documents/IssueDocumentModal";
+interface ResidentDetailsProps {
+  resident: Resident;
+  onClose: () => void;
+  onEdit: () => void;
+}
 
-const ResidentDetails = ({ resident, onClose, onEdit }) => {
-  const [activeTab, setActiveTab] = useState("profile");
-  const [age, setAge] = useState(null);
-  const { toast } = useToast();
-  const [showIssueDocument, setShowIssueDocument] = useState(false);
+const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) => {
+  const [issueDocumentOpen, setIssueDocumentOpen] = useState(false);
 
-  useEffect(() => {
-    if (resident?.birthdate) {
-      const birthDate = new Date(resident.birthdate);
-      const today = new Date();
-      let calculatedAge = today.getFullYear() - birthDate.getFullYear();
-      const month = today.getMonth() - birthDate.getMonth();
-      if (month < 0 || (month === 0 && today.getDate() < birthDate.getDate())) {
-        calculatedAge--;
-      }
-      setAge(calculatedAge);
-    }
-  }, [resident]);
+  const getFullName = () => {
+    const parts = [resident.first_name];
+    if (resident.middle_name) parts.push(resident.middle_name);
+    parts.push(resident.last_name);
+    if (resident.suffix) parts.push(resident.suffix);
+    return parts.join(' ');
+  };
 
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'MMMM d, yyyy');
     } catch (error) {
       console.error("Error formatting date:", error);
-      return 'Invalid Date';
+      return 'N/A';
     }
   };
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-          {/* Header */}
-          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                    {resident.first_name?.[0]}{resident.last_name?.[0]}
-                  </div>
-                  {resident.photo_url && (
-                    <img 
-                      src={resident.photo_url} 
-                      alt="Resident"
-                      className="absolute inset-0 w-full h-full rounded-full object-cover"
-                    />
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {resident.first_name} {resident.middle_name} {resident.last_name} {resident.suffix}
-                  </h2>
-                  <p className="text-gray-600">Resident ID: {resident.id?.slice(0, 8)}...</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant={resident.status === 'Active' ? 'default' : 'secondary'}>
-                      {resident.status}
-                    </Badge>
-                    {resident.is_voter && <Badge variant="outline">Voter</Badge>}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={() => setShowIssueDocument(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Issue Document
-                </Button>
-                <Button onClick={onEdit} variant="outline">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-                <Button onClick={onClose} variant="outline" size="icon">
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-            <Tabs defaultValue="profile" className="w-full">
-              <TabsList>
-                <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="additional">Additional Info</TabsTrigger>
-              </TabsList>
-              <TabsContent value="profile">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>Details about the resident's identity.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">Full Name:</p>
-                        <p className="text-gray-900">{resident.first_name} {resident.middle_name} {resident.last_name} {resident.suffix}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">Birthdate:</p>
-                        <p className="text-gray-900">{formatDate(resident.birthdate)} ({age} years old)</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">Gender:</p>
-                        <p className="text-gray-900">{resident.gender}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">Marital Status:</p>
-                        <p className="text-gray-900">{resident.marital_status}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Address:</p>
-                      <p className="text-gray-900">{resident.address}, {resident.barangay}, {resident.province}, {resident.region}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="contact">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Contact Information</CardTitle>
-                    <CardDescription>Details for contacting the resident.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Email:</p>
-                      <p className="text-gray-900">{resident.email || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Contact Number:</p>
-                      <p className="text-gray-900">{resident.contact_number || 'N/A'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="additional">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Additional Information</CardTitle>
-                    <CardDescription>Other relevant details about the resident.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">Occupation:</p>
-                        <p className="text-gray-900">{resident.occupation || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">Nationality:</p>
-                        <p className="text-gray-900">{resident.nationality || 'N/A'}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">Voter Status:</p>
-                        <p className="text-gray-900">{resident.is_voter ? 'Yes' : 'No'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">Status:</p>
-                        <p className="text-gray-900">{resident.status || 'N/A'}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Remarks:</p>
-                      <p className="text-gray-900">{resident.remarks || 'N/A'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+    <div>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-2xl font-bold">{getFullName()}</CardTitle>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={onEdit}>
+              <Edit className="mr-2 h-4 w-4" /> Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIssueDocumentOpen(true)}>
+              <FileText className="mr-2 h-4 w-4" /> Issue Document
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onClose}>
+              Close
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </CardHeader>
+      <CardContent className="grid gap-6">
+        <div className="flex items-center space-x-4">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={`https://avatar.iran.liara.run/public/boy?username=${resident.first_name}`} />
+            <AvatarFallback>{resident.first_name.charAt(0)}{resident.last_name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className="text-lg font-semibold">{getFullName()}</h3>
+            <p className="text-sm text-muted-foreground">
+              {resident.occupation || 'Unemployed'}
+            </p>
           </div>
         </div>
-      </div>
+        <div className="space-y-1">
+          <h4 className="text-sm font-bold">Personal Information</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium">Birthdate:</p>
+              <p className="text-sm text-muted-foreground">{formatDate(resident.birthdate)}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Gender:</p>
+              <p className="text-sm text-muted-foreground">{resident.gender}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Civil Status:</p>
+              <p className="text-sm text-muted-foreground">{resident.civil_status}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Voter Status:</p>
+              <p className="text-sm text-muted-foreground">
+                {resident.is_registered_voter ? <Badge className="bg-green-500 text-white">Registered Voter</Badge> : <Badge className="bg-red-500 text-white">Not Registered</Badge>}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-1">
+          <h4 className="text-sm font-bold">Contact Information</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {resident.address && (
+              <div>
+                <p className="text-sm font-medium flex items-center gap-1"><MapPin className="h-4 w-4 mr-1" /> Address:</p>
+                <p className="text-sm text-muted-foreground">{resident.address}</p>
+              </div>
+            )}
+            {resident.contact_number && (
+              <div>
+                <p className="text-sm font-medium flex items-center gap-1"><Phone className="h-4 w-4 mr-1" /> Contact Number:</p>
+                <p className="text-sm text-muted-foreground">{resident.contact_number}</p>
+              </div>
+            )}
+            {resident.email && (
+              <div>
+                <p className="text-sm font-medium flex items-center gap-1"><Mail className="h-4 w-4 mr-1" /> Email:</p>
+                <p className="text-sm text-muted-foreground">{resident.email}</p>
+              </div>
+            )}
+          </div>
+        </div>
 
       {/* Issue Document Modal */}
       <IssueDocumentModal
-        open={showIssueDocument}
-        onOpenChange={setShowIssueDocument}
         resident={resident}
+        open={issueDocumentOpen}
+        onOpenChange={setIssueDocumentOpen}
       />
-    </>
+    </div>
   );
 };
 

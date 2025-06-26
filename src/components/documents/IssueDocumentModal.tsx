@@ -112,6 +112,13 @@ const IssueDocumentModal = ({ open, onOpenChange, resident }: IssueDocumentModal
       .replace(/\{\{reason\}\}/g, reason);
   };
 
+  const generateDocumentNumber = () => {
+    const date = new Date();
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `DOC-${dateStr}-${randomNum}`;
+  };
+
   const handleGeneratePreview = async () => {
     if (!selectedTemplate) {
       toast({
@@ -137,6 +144,7 @@ const IssueDocumentModal = ({ open, onOpenChange, resident }: IssueDocumentModal
       if (!template) throw new Error('Template not found');
 
       const processedContent = processTemplate(template.content);
+      const documentNumber = generateDocumentNumber();
 
       // Create record in issued_documents table
       const { error } = await supabase
@@ -145,6 +153,7 @@ const IssueDocumentModal = ({ open, onOpenChange, resident }: IssueDocumentModal
           resident_id: resident.id,
           admin_id: userProfile?.id,
           document_id: selectedTemplate,
+          document_number: documentNumber,
           data: { reason },
         });
 

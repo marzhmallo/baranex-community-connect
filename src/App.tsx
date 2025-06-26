@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from "@/components/theme-provider"
-import { QueryClientProvider as QueryClient } from '@tanstack/react-query';
+import { ThemeProvider } from "@/components/theme/ThemeProvider"
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
 import DashboardPage from './pages/DashboardPage';
 import OfficialsPage from './pages/OfficialsPage';
@@ -16,9 +17,11 @@ import DocumentsPage from './components/documents/DocumentsPage';
 import TemplateEditor from "@/components/documents/TemplateEditor";
 import DocumentPreviewPage from "@/pages/DocumentPreviewPage";
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <QueryClient>
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="baranex-ui-theme">
         <Router>
           <AuthProvider>
@@ -41,7 +44,7 @@ function App() {
           </AuthProvider>
         </Router>
       </ThemeProvider>
-    </QueryClient>
+    </QueryClientProvider>
   );
 }
 

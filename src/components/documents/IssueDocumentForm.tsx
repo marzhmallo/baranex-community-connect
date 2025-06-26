@@ -162,9 +162,9 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       // Get logged in user ID (mock for now)
       const userId = uuidv4(); // In a real app, this would come from auth
 
-      // Prepare data for insertion
+      // Prepare data for insertion - use correct field names
       const documentData = {
-        document_type_id: data.document_type_id,
+        document_id: data.document_type_id, // Map document_type_id to document_id
         resident_id: data.resident_id,
         purpose: data.purpose,
         payment_amount: data.payment_amount,
@@ -177,28 +177,30 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       };
 
       // Insert the document
-      const {
-        data: newDocument,
-        error
-      } = await supabase.from('issued_documents').insert(documentData).select();
+      const { data: newDocument, error } = await supabase
+        .from('issued_documents')
+        .insert(documentData)
+        .select();
+      
       if (error) throw error;
 
       // Log the document issuance
-      const {
-        error: logError
-      } = await supabase.from('document_logs').insert({
-        document_id: newDocument[0].id,
-        action: "issued",
-        performed_by: "Admin User",
-        // In a real app, use the actual user name
-        details: {
-          document_number: documentNumber,
-          document_type: selectedDocType?.name,
-          resident_name: getResidentName(data.resident_id),
-          ...dynamicFields
-        }
-      });
+      const { error: logError } = await supabase
+        .from('document_logs')
+        .insert({
+          document_id: newDocument[0].id,
+          action: "issued",
+          performed_by: "Admin User", // In a real app, use the actual user name
+          details: {
+            document_number: documentNumber,
+            document_type: selectedDocType?.name,
+            resident_name: getResidentName(data.resident_id),
+            ...dynamicFields
+          }
+        });
+
       if (logError) throw logError;
+
       toast({
         title: "Document Issued",
         description: `Document has been issued successfully with number: ${documentNumber}`
