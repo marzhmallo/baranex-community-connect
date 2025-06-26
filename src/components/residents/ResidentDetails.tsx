@@ -17,7 +17,25 @@ import { format } from 'date-fns';
 import IssueDocumentModal from "@/components/documents/IssueDocumentModal";
 import { useState } from "react";
 
-interface Resident {
+// Database resident type from Supabase
+interface DatabaseResident {
+  id: string;
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  suffix?: string;
+  birthdate: string;
+  gender: string;
+  address?: string;
+  mobile_number?: string;
+  email?: string;
+  occupation?: string;
+  civil_status: string;
+  is_voter: boolean;
+}
+
+// Expected resident interface
+interface ExpectedResident {
   id: string;
   first_name: string;
   last_name: string;
@@ -35,7 +53,7 @@ interface Resident {
 }
 
 interface ResidentDetailsProps {
-  resident: Resident;
+  resident: DatabaseResident;
   onClose: () => void;
   onEdit: () => void;
 }
@@ -60,8 +78,8 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
     }
   };
 
-  // Convert from ResidentsList format to IssueDocumentModal format
-  const convertResidentForModal = (resident: Resident) => {
+  // Convert from database format to expected format for IssueDocumentModal
+  const convertResidentForModal = (resident: DatabaseResident) => {
     return {
       id: resident.id,
       first_name: resident.first_name,
@@ -129,7 +147,7 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
             <div>
               <p className="text-sm font-medium">Voter Status:</p>
               <p className="text-sm text-muted-foreground">
-                {resident.is_registered_voter ? <Badge className="bg-green-500 text-white">Registered Voter</Badge> : <Badge className="bg-red-500 text-white">Not Registered</Badge>}
+                {resident.is_voter ? <Badge className="bg-green-500 text-white">Registered Voter</Badge> : <Badge className="bg-red-500 text-white">Not Registered</Badge>}
               </p>
             </div>
           </div>
@@ -143,10 +161,10 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
                 <p className="text-sm text-muted-foreground">{resident.address}</p>
               </div>
             )}
-            {(resident.contact_number || resident.mobile_number) && (
+            {resident.mobile_number && (
               <div>
                 <p className="text-sm font-medium flex items-center gap-1"><Phone className="h-4 w-4 mr-1" /> Contact Number:</p>
-                <p className="text-sm text-muted-foreground">{resident.contact_number || resident.mobile_number}</p>
+                <p className="text-sm text-muted-foreground">{resident.mobile_number}</p>
               </div>
             )}
             {resident.email && (
