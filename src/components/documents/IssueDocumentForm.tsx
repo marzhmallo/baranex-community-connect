@@ -147,7 +147,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
   };
 
   // Handle form submission
-  const onSubmit = async (data) => {
+  const onSubmit = async data => {
     setIsSubmitting(true);
     try {
       // Generate a unique document number
@@ -164,7 +164,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
 
       // Prepare data for insertion
       const documentData = {
-        document_id: data.document_type_id, // Use document_id instead of document_type_id
+        document_type_id: data.document_type_id,
         resident_id: data.resident_id,
         purpose: data.purpose,
         payment_amount: data.payment_amount,
@@ -177,30 +177,28 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       };
 
       // Insert the document
-      const { data: newDocument, error } = await supabase
-        .from('issued_documents')
-        .insert(documentData)
-        .select();
-
+      const {
+        data: newDocument,
+        error
+      } = await supabase.from('issued_documents').insert(documentData).select();
       if (error) throw error;
 
       // Log the document issuance
-      const { error: logError } = await supabase
-        .from('document_logs')
-        .insert({
-          document_id: newDocument[0].id,
-          action: "issued",
-          performed_by: "Admin User", // In a real app, use the actual user name
-          details: {
-            document_number: documentNumber,
-            document_type: selectedDocType?.name,
-            resident_name: getResidentName(data.resident_id),
-            ...dynamicFields
-          }
-        });
-
+      const {
+        error: logError
+      } = await supabase.from('document_logs').insert({
+        document_id: newDocument[0].id,
+        action: "issued",
+        performed_by: "Admin User",
+        // In a real app, use the actual user name
+        details: {
+          document_number: documentNumber,
+          document_type: selectedDocType?.name,
+          resident_name: getResidentName(data.resident_id),
+          ...dynamicFields
+        }
+      });
       if (logError) throw logError;
-
       toast({
         title: "Document Issued",
         description: `Document has been issued successfully with number: ${documentNumber}`
@@ -220,7 +218,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       toast({
         title: "Error",
         description: "Failed to issue the document.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
