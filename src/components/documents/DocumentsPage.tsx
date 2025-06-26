@@ -37,6 +37,15 @@ interface DocumentRequest {
   status: 'pending' | 'approved' | 'rejected';
 }
 
+interface DocumentStatusUpdate {
+  id: string;
+  document: string;
+  status: string;
+  timeAgo: string;
+  description: string;
+  trackingId: string;
+}
+
 const DocumentsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -80,6 +89,33 @@ const DocumentsPage = () => {
     { id: "3", name: "Anna Reyes", document: "Business Permit", timeAgo: "1 day ago", status: "pending" }
   ];
 
+  const documentStatusUpdates: DocumentStatusUpdate[] = [
+    {
+      id: "1",
+      document: "Barangay Clearance",
+      status: "Ready for pickup",
+      timeAgo: "10 minutes ago",
+      description: "Document for Maria Santos has been signed and is ready for pickup at the Barangay Hall.",
+      trackingId: "#BRG-2023-0042"
+    },
+    {
+      id: "2", 
+      document: "Certificate of Residency",
+      status: "Processing",
+      timeAgo: "2 hours ago",
+      description: "Juan Dela Cruz's document is being processed. Pending approval from the Barangay Captain.",
+      trackingId: "#BRG-2023-0041"
+    },
+    {
+      id: "3",
+      document: "Business Permit", 
+      status: "For Review",
+      timeAgo: "5 hours ago",
+      description: "Business Permit application for Anna Reyes has been submitted for review. Pending verification of business requirements.",
+      trackingId: "#BRG-2023-0040"
+    }
+  ];
+
   const getStatusBadge = (status: string) => {
     const statusColors = {
       "Ready for pickup": "bg-green-100 text-green-800",
@@ -89,6 +125,17 @@ const DocumentsPage = () => {
       "Rejected": "bg-red-100 text-red-800"
     };
     return statusColors[status as keyof typeof statusColors] || "bg-gray-100 text-gray-800";
+  };
+
+  const getStatusColor = (status: string) => {
+    const statusColors = {
+      "Ready for pickup": "bg-green-500",
+      "Processing": "bg-yellow-500", 
+      "For Review": "bg-blue-500",
+      "Released": "bg-purple-500",
+      "Rejected": "bg-red-500"
+    };
+    return statusColors[status as keyof typeof statusColors] || "bg-gray-500";
   };
 
   const handleApproveRequest = (requestId: string) => {
@@ -380,6 +427,39 @@ const DocumentsPage = () => {
 
         {/* Right Sidebar */}
         <div className="space-y-6">
+          {/* Document Status Updates */}
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              <CardTitle>Document Status Updates</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {documentStatusUpdates.map((update) => (
+                <div key={update.id} className="flex gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-2 ${getStatusColor(update.status)}`} />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="font-medium text-sm">{update.document}</div>
+                      <div className="text-xs text-muted-foreground">{update.timeAgo}</div>
+                    </div>
+                    <Badge className={`${getStatusBadge(update.status)} text-xs mb-2`}>
+                      {update.status}
+                    </Badge>
+                    <div className="text-xs text-muted-foreground mb-1">
+                      {update.description}
+                    </div>
+                    <div className="text-xs text-blue-600 font-medium">
+                      {update.trackingId}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Button variant="link" className="text-blue-600 p-0 text-sm">
+                View All Updates →
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Document Requests */}
           <Card>
             <CardHeader className="flex flex-row items-center gap-2">
