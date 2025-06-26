@@ -4,13 +4,13 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme/ThemeProvider"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
-import DashboardPage from './pages/DashboardPage';
-import OfficialsPage from './pages/OfficialsPage';
-import ResidentsPage from './pages/ResidentsPage';
-import HouseholdsPage from './pages/HouseholdsPage';
-import SettingsPage from './pages/SettingsPage';
-import UserProfilePage from './pages/UserProfilePage';
-import LoginPage from './pages/LoginPage';
+import DashboardPage from '@/pages/DashboardPage';
+import OfficialsPage from '@/pages/OfficialsPage';
+import ResidentsPage from '@/pages/ResidentsPage';
+import HouseholdsPage from '@/pages/HouseholdsPage';
+import SettingsPage from '@/pages/SettingsPage';
+import UserProfilePage from '@/pages/UserProfilePage';
+import LoginPage from '@/pages/Auth';
 import { AuthProvider } from './components/AuthProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import DocumentsPage from './components/documents/DocumentsPage';

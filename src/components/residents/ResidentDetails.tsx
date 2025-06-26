@@ -16,44 +16,10 @@ import {
 import { format } from 'date-fns';
 import IssueDocumentModal from "@/components/documents/IssueDocumentModal";
 import { useState } from "react";
-
-// Database resident type from Supabase
-interface DatabaseResident {
-  id: string;
-  first_name: string;
-  last_name: string;
-  middle_name?: string;
-  suffix?: string;
-  birthdate: string;
-  gender: string;
-  address?: string;
-  mobile_number?: string;
-  email?: string;
-  occupation?: string;
-  civil_status: string;
-  is_voter: boolean;
-}
-
-// Expected resident interface
-interface ExpectedResident {
-  id: string;
-  first_name: string;
-  last_name: string;
-  middle_name?: string;
-  suffix?: string;
-  birthdate: string;
-  gender: string;
-  address?: string;
-  contact_number?: string;
-  email?: string;
-  occupation?: string;
-  civil_status: string;
-  is_registered_voter: boolean;
-  mobile_number?: string;
-}
+import { Resident } from '@/lib/types';
 
 interface ResidentDetailsProps {
-  resident: DatabaseResident;
+  resident: Resident;
   onClose: () => void;
   onEdit: () => void;
 }
@@ -62,9 +28,9 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
   const [issueDocumentOpen, setIssueDocumentOpen] = useState(false);
 
   const getFullName = () => {
-    const parts = [resident.first_name];
-    if (resident.middle_name) parts.push(resident.middle_name);
-    parts.push(resident.last_name);
+    const parts = [resident.firstName];
+    if (resident.middleName) parts.push(resident.middleName);
+    parts.push(resident.lastName);
     if (resident.suffix) parts.push(resident.suffix);
     return parts.join(' ');
   };
@@ -78,15 +44,15 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
     }
   };
 
-  // Convert from database format to expected format for IssueDocumentModal
-  const convertResidentForModal = (resident: DatabaseResident) => {
+  // Convert from ResidentsList format to IssueDocumentModal format
+  const convertResidentForModal = (resident: Resident) => {
     return {
       id: resident.id,
-      first_name: resident.first_name,
-      last_name: resident.last_name,
-      middle_name: resident.middle_name,
+      first_name: resident.firstName,
+      last_name: resident.lastName,
+      middle_name: resident.middleName,
       address: resident.address,
-      birthdate: resident.birthdate,
+      birthdate: resident.birthDate,
     };
   };
 
@@ -119,8 +85,8 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
       <CardContent className="grid gap-6">
         <div className="flex items-center space-x-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={`https://avatar.iran.liara.run/public/boy?username=${resident.first_name}`} />
-            <AvatarFallback>{resident.first_name.charAt(0)}{resident.last_name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={`https://avatar.iran.liara.run/public/boy?username=${resident.firstName}`} />
+            <AvatarFallback>{resident.firstName.charAt(0)}{resident.lastName.charAt(0)}</AvatarFallback>
           </Avatar>
           <div>
             <h3 className="text-lg font-semibold">{getFullName()}</h3>
@@ -134,7 +100,7 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium">Birthdate:</p>
-              <p className="text-sm text-muted-foreground">{formatDate(resident.birthdate)}</p>
+              <p className="text-sm text-muted-foreground">{formatDate(resident.birthDate)}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Gender:</p>
@@ -142,12 +108,12 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
             </div>
             <div>
               <p className="text-sm font-medium">Civil Status:</p>
-              <p className="text-sm text-muted-foreground">{resident.civil_status}</p>
+              <p className="text-sm text-muted-foreground">{resident.civilStatus}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Voter Status:</p>
               <p className="text-sm text-muted-foreground">
-                {resident.is_voter ? <Badge className="bg-green-500 text-white">Registered Voter</Badge> : <Badge className="bg-red-500 text-white">Not Registered</Badge>}
+                {resident.isRegisteredVoter ? <Badge className="bg-green-500 text-white">Registered Voter</Badge> : <Badge className="bg-red-500 text-white">Not Registered</Badge>}
               </p>
             </div>
           </div>
@@ -161,10 +127,10 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
                 <p className="text-sm text-muted-foreground">{resident.address}</p>
               </div>
             )}
-            {resident.mobile_number && (
+            {resident.contactNumber && (
               <div>
                 <p className="text-sm font-medium flex items-center gap-1"><Phone className="h-4 w-4 mr-1" /> Contact Number:</p>
-                <p className="text-sm text-muted-foreground">{resident.mobile_number}</p>
+                <p className="text-sm text-muted-foreground">{resident.contactNumber}</p>
               </div>
             )}
             {resident.email && (
