@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,17 +36,20 @@ interface DocumentType {
   template: string;
   fee: number;
   validity_days: number;
-  required_fields: string[];
-  status: 'active' | 'inactive';
+  required_fields: any;
+  brgyid?: string;
+  content?: string;
+  updated_at?: string;
 }
 
 interface DocumentLog {
   id: string;
   created_at: string;
-  activity_type: string;
+  action: string;
   document_id: string;
-  user_id: string;
+  performed_by: string;
   details: any;
+  brgyid: string;
 }
 
 const DocumentsPage = () => {
@@ -57,48 +61,41 @@ const DocumentsPage = () => {
   const [activityFilter, setActivityFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [showIssueForm, setShowIssueForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentType | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
 
-  const { data: templates, refetch: refetchTemplates } = useQuery(
-    ["documentTemplates", searchQuery, statusFilter],
-    async () => {
+  const { data: templates, refetch: refetchTemplates } = useQuery({
+    queryKey: ["documentTemplates", searchQuery, statusFilter],
+    queryFn: async () => {
       let query = supabase
         .from("document_types")
         .select("*")
         .ilike("name", `%${searchQuery}%`);
 
-      if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter === "active");
-      }
-
       const { data, error } = await query;
       if (error) throw error;
       return data as DocumentType[];
     }
-  );
+  });
 
-  const { data: logs, refetch: refetchLogs } = useQuery(
-    ["documentLogs", searchQuery, activityFilter, dateFilter],
-    async () => {
+  const { data: logs, refetch: refetchLogs } = useQuery({
+    queryKey: ["documentLogs", searchQuery, activityFilter, dateFilter],
+    queryFn: async () => {
       let query = supabase
         .from("document_logs")
         .select("*")
         .ilike("details", `%${searchQuery}%`);
 
       if (activityFilter !== "all") {
-        query = query.eq("activity_type", activityFilter);
+        query = query.eq("action", activityFilter);
       }
-
-      // Implement date filtering logic here based on dateFilter value
 
       const { data, error } = await query;
       if (error) throw error;
       return data as DocumentLog[];
     }
-  );
+  });
 
   const handleIssueDocument = (template: DocumentType) => {
     setSelectedTemplate(template);
@@ -106,8 +103,7 @@ const DocumentsPage = () => {
   };
 
   const handleEditTemplate = (template: DocumentType) => {
-    setSelectedTemplate(template);
-    setShowEditForm(true);
+    navigate("/documents/new", { state: { template } });
   };
 
   const handleDeleteTemplate = (templateId: string) => {
@@ -123,8 +119,7 @@ const DocumentsPage = () => {
         template: template.template,
         fee: template.fee,
         validity_days: template.validity_days,
-        required_fields: template.required_fields,
-        status: template.status
+        required_fields: template.required_fields
       };
 
       const { data, error } = await supabase
@@ -150,56 +145,20 @@ const DocumentsPage = () => {
     }
   };
 
-  const handleToggleTemplateStatus = async (template: DocumentType) => {
-    try {
-      const newStatus = template.status === 'active' ? 'inactive' : 'active';
-
-      const { data, error } = await supabase
-        .from('document_types')
-        .update({ status: newStatus })
-        .eq('id', template.id)
-        .select();
-
-      if (error) throw error;
-
-      toast({
-        title: "Template Status Updated",
-        description: `Document template "${template.name}" has been ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully.`,
-      });
-
-      refetchTemplates();
-    } catch (error) {
-      console.error("Error toggling template status:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update the document template status.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleViewDocument = (documentId: string) => {
-    // Implement view document logic here
     console.log("View document:", documentId);
   };
 
   const handlePrintDocument = (documentId: string) => {
-    // Implement print document logic here
     console.log("Print document:", documentId);
   };
 
   const handleDownloadDocument = (documentId: string) => {
-    // Implement download document logic here
     console.log("Download document:", documentId);
   };
 
   const handleIssueFormClose = () => {
     setShowIssueForm(false);
-    setSelectedTemplate(null);
-  };
-
-  const handleEditFormClose = () => {
-    setShowEditForm(false);
     setSelectedTemplate(null);
   };
 
@@ -237,7 +196,8 @@ const DocumentsPage = () => {
     navigate("/documents/new");
   };
 
-  return <div className="p-6 space-y-6">
+  return (
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Documents Management</h1>
@@ -282,26 +242,11 @@ const DocumentsPage = () => {
                 className="pl-10"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <DocumentTemplatesList 
             searchQuery={searchQuery}
-            statusFilter={statusFilter}
-            onEditTemplate={handleEditTemplate}
-            onDeleteTemplate={handleDeleteTemplate}
-            onDuplicateTemplate={handleDuplicateTemplate}
-            onToggleStatus={handleToggleTemplateStatus}
-            onIssueDocument={handleIssueDocument}
+            onEdit={handleEditTemplate}
           />
         </TabsContent>
 
@@ -343,12 +288,8 @@ const DocumentsPage = () => {
           </div>
 
           <DocumentsList 
+            status="all"
             searchQuery={searchQuery}
-            typeFilter={documentTypeFilter}
-            dateFilter={dateFilter}
-            onViewDocument={handleViewDocument}
-            onPrintDocument={handlePrintDocument}
-            onDownloadDocument={handleDownloadDocument}
           />
         </TabsContent>
 
@@ -391,8 +332,6 @@ const DocumentsPage = () => {
 
           <DocumentLogsList 
             searchQuery={searchQuery}
-            activityFilter={activityFilter}
-            dateFilter={dateFilter}
           />
         </TabsContent>
       </Tabs>
@@ -400,15 +339,7 @@ const DocumentsPage = () => {
       {showIssueForm && selectedTemplate && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <IssueDocumentForm template={selectedTemplate} onClose={handleIssueFormClose} />
-          </div>
-        </div>
-      )}
-
-      {showEditForm && selectedTemplate && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <DocumentTemplateForm template={selectedTemplate} onClose={handleEditFormClose} />
+            <IssueDocumentForm onClose={handleIssueFormClose} />
           </div>
         </div>
       )}
@@ -429,7 +360,8 @@ const DocumentsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>;
+    </div>
+  );
 };
 
 export default DocumentsPage;

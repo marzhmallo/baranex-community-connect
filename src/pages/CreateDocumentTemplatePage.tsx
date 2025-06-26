@@ -1,9 +1,11 @@
 
 import DocumentTemplateForm from "@/components/documents/DocumentTemplateForm";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const CreateDocumentTemplatePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const template = location.state?.template || null;
 
   const handleClose = () => {
     navigate("/documents");
@@ -11,7 +13,7 @@ const CreateDocumentTemplatePage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <DocumentTemplateForm template={null} onClose={handleClose} />
+      <DocumentTemplateForm template={template} onClose={handleClose} />
     </div>
   );
 };
