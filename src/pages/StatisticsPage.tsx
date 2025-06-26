@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -120,7 +119,7 @@ const StatisticsPage = () => {
 
       {/* Key Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-primary">
+        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-primary border border-primary/20">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Population</p>
@@ -133,7 +132,7 @@ const StatisticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-green-500">
+        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-green-500 border border-green-500/20">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Households</p>
@@ -146,7 +145,7 @@ const StatisticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-orange-500">
+        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-orange-500 border border-orange-500/20">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Registered Voters</p>
@@ -159,7 +158,7 @@ const StatisticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-purple-500">
+        <div className="bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-purple-500 border border-purple-500/20">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Puroks</p>
@@ -175,7 +174,7 @@ const StatisticsPage = () => {
 
       {/* Gender and Household Statistics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-card rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
             <PieChart className="text-primary mr-2 h-5 w-5" />
             Population by Gender
@@ -210,7 +209,7 @@ const StatisticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
             <UsersIcon className="text-green-600 mr-2 h-5 w-5" />
             Household Statistics
@@ -238,7 +237,7 @@ const StatisticsPage = () => {
 
       {/* Age Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="bg-card rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
             <Baby className="text-orange-600 mr-2 h-5 w-5" />
             Age Distribution
@@ -263,7 +262,7 @@ const StatisticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
             <Briefcase className="text-purple-600 mr-2 h-5 w-5" />
             Employment Overview
@@ -295,7 +294,7 @@ const StatisticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
             <GraduationCap className="text-blue-600 mr-2 h-5 w-5" />
             Demographics Summary
@@ -329,7 +328,7 @@ const StatisticsPage = () => {
       </div>
 
       {/* Purok Distribution */}
-      <div className="bg-card rounded-xl shadow-lg p-6 mb-8">
+      <div className="bg-card rounded-xl shadow-lg p-6 mb-8 border border-border/50">
         <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
           <Map className="text-indigo-600 mr-2 h-5 w-5" />
           Purok Distribution
@@ -359,7 +358,7 @@ const StatisticsPage = () => {
 
       {/* Additional Statistics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-card rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
             <Heart className="text-red-600 mr-2 h-5 w-5" />
             Community Health
@@ -384,7 +383,7 @@ const StatisticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
             <TreePine className="text-green-600 mr-2 h-5 w-5" />
             Community Overview
