@@ -73,7 +73,7 @@ const TemplateEditor = ({ value, onChange, placeholder }: TemplateEditorProps) =
       const range = quill.getSelection();
       if (range) {
         quill.insertEmbed(range.index, 'dataField', field);
-        quill.setSelection(range.index + 1);
+        quill.setSelection({ index: range.index + 1, length: 0 });
       }
     }
     setShowDropdown(false);
