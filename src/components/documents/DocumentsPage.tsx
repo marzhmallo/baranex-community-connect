@@ -1,45 +1,199 @@
-import { useState } from "react";
+
+import { useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Search, Plus, FileText, Clock, Users, Star, Calendar, Filter, MoreHorizontal, Edit, Trash2, Copy, Download, Eye } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import DocumentTemplatesList from "./DocumentTemplatesList";
-import DocumentTemplateForm from "./DocumentTemplateForm";
 import DocumentsList from "./DocumentsList";
-import IssueDocumentForm from "./IssueDocumentForm";
 import DocumentLogsList from "./DocumentLogsList";
 import DocumentsStats from "./DocumentsStats";
+import IssueDocumentForm from "./IssueDocumentForm";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useNavigate } from "react-router-dom";
+
+interface DocumentType {
+  id: string;
+  created_at: string;
+  name: string;
+  description: string;
+  template: string;
+  fee: number;
+  validity_days: number;
+  required_fields: any;
+  brgyid?: string;
+  content?: string;
+  updated_at?: string;
+}
+
+interface DocumentLog {
+  id: string;
+  created_at: string;
+  action: string;
+  document_id: string;
+  performed_by: string;
+  details: any;
+  brgyid: string;
+}
 
 const DocumentsPage = () => {
   const navigate = useNavigate();
-  const [showCreateTemplate, setShowCreateTemplate] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState(null);
-  const [showIssueDocument, setShowIssueDocument] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [documentTypeFilter, setDocumentTypeFilter] = useState("all");
+  const [activityFilter, setActivityFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [showIssueForm, setShowIssueForm] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<DocumentType | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
 
-  const handleCreateTemplate = () => {
-    navigate("/documents/add");
-  };
+  const { data: templates, refetch: refetchTemplates } = useQuery({
+    queryKey: ["documentTemplates", searchQuery, statusFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from("document_types")
+        .select("*")
+        .ilike("name", `%${searchQuery}%`);
 
-  const handleEditTemplate = (template) => {
-    setEditingTemplate(template);
-    setShowCreateTemplate(true);
-  };
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as DocumentType[];
+    }
+  });
 
-  const handleIssueDocument = (template) => {
+  const { data: logs, refetch: refetchLogs } = useQuery({
+    queryKey: ["documentLogs", searchQuery, activityFilter, dateFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from("document_logs")
+        .select("*")
+        .ilike("details", `%${searchQuery}%`);
+
+      if (activityFilter !== "all") {
+        query = query.eq("action", activityFilter);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as DocumentLog[];
+    }
+  });
+
+  const handleIssueDocument = (template: DocumentType) => {
     setSelectedTemplate(template);
-    setShowIssueDocument(true);
+    setShowIssueForm(true);
   };
 
-  const handleCloseCreateTemplate = () => {
-    setShowCreateTemplate(false);
-    setEditingTemplate(null);
+  const handleEditTemplate = (template: DocumentType) => {
+    navigate("/documents/new", { state: { template } });
   };
 
-  const handleCloseIssueDocument = () => {
-    setShowIssueDocument(false);
+  const handleDeleteTemplate = (templateId: string) => {
+    setTemplateToDelete(templateId);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDuplicateTemplate = async (template: DocumentType) => {
+    try {
+      const templateData = {
+        name: `${template.name} (Copy)`,
+        description: template.description,
+        template: template.template,
+        fee: template.fee,
+        validity_days: template.validity_days,
+        required_fields: template.required_fields
+      };
+
+      const { data, error } = await supabase
+        .from('document_types')
+        .insert(templateData)
+        .select();
+
+      if (error) throw error;
+
+      toast({
+        title: "Template Duplicated",
+        description: `Document template "${template.name}" has been duplicated successfully.`,
+      });
+
+      refetchTemplates();
+    } catch (error) {
+      console.error("Error duplicating template:", error);
+      toast({
+        title: "Error",
+        description: "Failed to duplicate the document template.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewDocument = (documentId: string) => {
+    console.log("View document:", documentId);
+  };
+
+  const handlePrintDocument = (documentId: string) => {
+    console.log("Print document:", documentId);
+  };
+
+  const handleDownloadDocument = (documentId: string) => {
+    console.log("Download document:", documentId);
+  };
+
+  const handleIssueFormClose = () => {
+    setShowIssueForm(false);
     setSelectedTemplate(null);
+  };
+
+  const confirmDeleteTemplate = async () => {
+    if (!templateToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('document_types')
+        .delete()
+        .eq('id', templateToDelete);
+
+      if (error) throw error;
+
+      toast({
+        title: "Template Deleted",
+        description: "Document template has been deleted successfully.",
+      });
+
+      refetchTemplates();
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the document template.",
+        variant: "destructive",
+      });
+    } finally {
+      setShowDeleteDialog(false);
+      setTemplateToDelete(null);
+    }
+  };
+
+  const handleCreateNewTemplate = () => {
+    navigate("/documents/new");
   };
 
   return (
@@ -47,95 +201,165 @@ const DocumentsPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Documents Management</h1>
-          <p className="text-muted-foreground">Manage document templates and issue official documents</p>
+          <p className="text-muted-foreground">
+            Manage document templates, issue certificates, and track document history
+          </p>
         </div>
-        <Button onClick={handleCreateTemplate} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Create Template
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleCreateNewTemplate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Create Template
+          </Button>
+        </div>
       </div>
 
       <DocumentsStats />
 
       <Tabs defaultValue="templates" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="logs">Document Logs</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="templates" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Templates
+          </TabsTrigger>
+          <TabsTrigger value="issued" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Issued Documents
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Activity Logs
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="templates" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Document Templates</CardTitle>
-              <CardDescription>
-                Manage templates for different types of barangay documents
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DocumentTemplatesList onEditTemplate={handleEditTemplate} />
-            </CardContent>
-          </Card>
+        <TabsContent value="templates" className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search templates..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <DocumentTemplatesList 
+            searchQuery={searchQuery}
+            onEdit={handleEditTemplate}
+          />
         </TabsContent>
 
-        <TabsContent value="documents" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <div>
-                <CardTitle>Issued Documents</CardTitle>
-                <CardDescription>
-                  View and manage all issued barangay documents
-                </CardDescription>
-              </div>
-              <Button onClick={() => setShowIssueDocument(true)} variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Issue Document
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <DocumentsList />
-            </CardContent>
-          </Card>
+        <TabsContent value="issued" className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search issued documents..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={documentTypeFilter} onValueChange={setDocumentTypeFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="barangay_clearance">Barangay Clearance</SelectItem>
+                <SelectItem value="certificate">Certificate</SelectItem>
+                <SelectItem value="id">ID</SelectItem>
+                <SelectItem value="permit">Permit</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Date range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DocumentsList 
+            status="all"
+            searchQuery={searchQuery}
+          />
         </TabsContent>
 
-        <TabsContent value="logs" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Document Activity Logs</CardTitle>
-              <CardDescription>
-                Track all document-related activities and changes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DocumentLogsList />
-            </CardContent>
-          </Card>
+        <TabsContent value="logs" className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search activity logs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={activityFilter} onValueChange={setActivityFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by activity" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Activities</SelectItem>
+                <SelectItem value="created">Document Created</SelectItem>
+                <SelectItem value="issued">Document Issued</SelectItem>
+                <SelectItem value="printed">Document Printed</SelectItem>
+                <SelectItem value="downloaded">Document Downloaded</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Date range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DocumentLogsList 
+            searchQuery={searchQuery}
+          />
         </TabsContent>
       </Tabs>
 
-      {/* Template Creation/Edit Modal */}
-      {showCreateTemplate && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-in fade-in-0 duration-300">
-          <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300">
-            <DocumentTemplateForm 
-              template={editingTemplate} 
-              onClose={handleCloseCreateTemplate}
-            />
+      {showIssueForm && selectedTemplate && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <IssueDocumentForm onClose={handleIssueFormClose} />
           </div>
         </div>
       )}
 
-      {/* Issue Document Modal */}
-      {showIssueDocument && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-in fade-in-0 duration-300">
-          <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300">
-            <IssueDocumentForm 
-              template={selectedTemplate}
-              onClose={handleCloseIssueDocument}
-            />
-          </div>
-        </div>
-      )}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Template</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this template? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteTemplate} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
