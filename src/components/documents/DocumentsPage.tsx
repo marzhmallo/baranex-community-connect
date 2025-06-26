@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,25 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, FileText, Clock, Users, Star, Calendar, Filter, MoreHorizontal, Edit, Trash2, Copy, Download, Eye } from "lucide-react";
+import { Search, Plus, FileText, Clock, Users, Star, Calendar, Filter, MoreHorizontal, Edit, Trash2, Copy, Download, Eye, BarChart3, Settings, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import DocumentTemplatesList from "./DocumentTemplatesList";
-import DocumentsList from "./DocumentsList";
-import DocumentLogsList from "./DocumentLogsList";
-import DocumentsStats from "./DocumentsStats";
-import IssueDocumentForm from "./IssueDocumentForm";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 
 interface DocumentType {
@@ -42,324 +29,443 @@ interface DocumentType {
   updated_at?: string;
 }
 
-interface DocumentLog {
+interface DocumentRequest {
   id: string;
-  created_at: string;
-  action: string;
-  document_id: string;
-  performed_by: string;
-  details: any;
-  brgyid: string;
+  name: string;
+  document: string;
+  timeAgo: string;
+  status: 'pending' | 'approved' | 'rejected';
 }
 
 const DocumentsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [documentTypeFilter, setDocumentTypeFilter] = useState("all");
-  const [activityFilter, setActivityFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
-  const [showIssueForm, setShowIssueForm] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<DocumentType | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState("All");
+  const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
+  const [trackingFilter, setTrackingFilter] = useState("All Documents");
 
-  const { data: templates, refetch: refetchTemplates } = useQuery({
-    queryKey: ["documentTemplates", searchQuery, statusFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from("document_types")
-        .select("*")
-        .ilike("name", `%${searchQuery}%`);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as DocumentType[];
-    }
-  });
-
-  const { data: logs, refetch: refetchLogs } = useQuery({
-    queryKey: ["documentLogs", searchQuery, activityFilter, dateFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from("document_logs")
-        .select("*")
-        .ilike("details", `%${searchQuery}%`);
-
-      if (activityFilter !== "all") {
-        query = query.eq("action", activityFilter);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as DocumentLog[];
-    }
-  });
-
-  const handleIssueDocument = (template: DocumentType) => {
-    setSelectedTemplate(template);
-    setShowIssueForm(true);
+  // Mock data for demonstration
+  const documentStats = {
+    totalDocuments: 1247,
+    pendingRequests: 23,
+    issuedToday: 8,
+    activeTemplates: 5
   };
 
-  const handleEditTemplate = (template: DocumentType) => {
-    navigate("/documents/new", { state: { template } });
+  const processingStatus = {
+    readyForPickup: 18,
+    processing: 12,
+    forReview: 7,
+    released: 42,
+    rejected: 3
   };
 
-  const handleDeleteTemplate = (templateId: string) => {
-    setTemplateToDelete(templateId);
-    setShowDeleteDialog(true);
+  const documentTemplates = [
+    { id: 1, name: "Barangay Certification", description: "General certification of residency with personal information", fee: "₱50", status: "Active" },
+    { id: 2, name: "Barangay Clearance", description: "General purpose clearance for residents", fee: "₱50", status: "Active" },
+    { id: 3, name: "Certificate of Residency", description: "Certifies that a person is a resident of the barangay", fee: "₱30", status: "Active" },
+    { id: 4, name: "Business Permit", description: "Permit for operating a business within the barangay", fee: "₱100", status: "Active" }
+  ];
+
+  const trackingDocuments = [
+    { id: "#BRG-2023-0042", document: "Barangay Clearance", requestedBy: "Maria Santos", status: "Ready for pickup", lastUpdate: "Today, 10:45 AM" },
+    { id: "#BRG-2023-0041", document: "Certificate of Residency", requestedBy: "Juan Dela Cruz", status: "Processing", lastUpdate: "Today, 9:20 AM" },
+    { id: "#BRG-2023-0040", document: "Business Permit", requestedBy: "Anna Reyes", status: "For Review", lastUpdate: "Yesterday, 4:30 PM" }
+  ];
+
+  const documentRequests: DocumentRequest[] = [
+    { id: "1", name: "Maria Santos", document: "Barangay Clearance", timeAgo: "2 hours ago", status: "pending" },
+    { id: "2", name: "Juan Dela Cruz", document: "Certificate of Residency", timeAgo: "5 hours ago", status: "pending" },
+    { id: "3", name: "Anna Reyes", document: "Business Permit", timeAgo: "1 day ago", status: "pending" }
+  ];
+
+  const getStatusBadge = (status: string) => {
+    const statusColors = {
+      "Ready for pickup": "bg-green-100 text-green-800",
+      "Processing": "bg-yellow-100 text-yellow-800",
+      "For Review": "bg-blue-100 text-blue-800",
+      "Released": "bg-purple-100 text-purple-800",
+      "Rejected": "bg-red-100 text-red-800"
+    };
+    return statusColors[status as keyof typeof statusColors] || "bg-gray-100 text-gray-800";
   };
 
-  const handleDuplicateTemplate = async (template: DocumentType) => {
-    try {
-      const templateData = {
-        name: `${template.name} (Copy)`,
-        description: template.description,
-        template: template.template,
-        fee: template.fee,
-        validity_days: template.validity_days,
-        required_fields: template.required_fields
-      };
-
-      const { data, error } = await supabase
-        .from('document_types')
-        .insert(templateData)
-        .select();
-
-      if (error) throw error;
-
-      toast({
-        title: "Template Duplicated",
-        description: `Document template "${template.name}" has been duplicated successfully.`,
-      });
-
-      refetchTemplates();
-    } catch (error) {
-      console.error("Error duplicating template:", error);
-      toast({
-        title: "Error",
-        description: "Failed to duplicate the document template.",
-        variant: "destructive",
-      });
-    }
+  const handleApproveRequest = (requestId: string) => {
+    toast({
+      title: "Request Approved",
+      description: "Document request has been approved successfully.",
+    });
   };
 
-  const handleViewDocument = (documentId: string) => {
-    console.log("View document:", documentId);
-  };
-
-  const handlePrintDocument = (documentId: string) => {
-    console.log("Print document:", documentId);
-  };
-
-  const handleDownloadDocument = (documentId: string) => {
-    console.log("Download document:", documentId);
-  };
-
-  const handleIssueFormClose = () => {
-    setShowIssueForm(false);
-    setSelectedTemplate(null);
-  };
-
-  const confirmDeleteTemplate = async () => {
-    if (!templateToDelete) return;
-
-    try {
-      const { error } = await supabase
-        .from('document_types')
-        .delete()
-        .eq('id', templateToDelete);
-
-      if (error) throw error;
-
-      toast({
-        title: "Template Deleted",
-        description: "Document template has been deleted successfully.",
-      });
-
-      refetchTemplates();
-    } catch (error) {
-      console.error("Error deleting template:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete the document template.",
-        variant: "destructive",
-      });
-    } finally {
-      setShowDeleteDialog(false);
-      setTemplateToDelete(null);
-    }
-  };
-
-  const handleCreateNewTemplate = () => {
-    navigate("/documents/new");
+  const handleDenyRequest = (requestId: string) => {
+    toast({
+      title: "Request Denied",
+      description: "Document request has been denied.",
+      variant: "destructive",
+    });
   };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Documents Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Barangay Document Management</h1>
           <p className="text-muted-foreground">
-            Manage document templates, issue certificates, and track document history
+            Manage official documents, requests, and issuances for the barangay community
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleCreateNewTemplate} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Template
-          </Button>
         </div>
       </div>
 
-      <DocumentsStats />
+      {/* Document Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-card hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
+            <FileText className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{documentStats.totalDocuments.toLocaleString()}</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
+            <Clock className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{documentStats.pendingRequests}</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Issued Today</CardTitle>
+            <Users className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{documentStats.issuedToday}</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Templates</CardTitle>
+            <Star className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{documentStats.activeTemplates}</div>
+          </CardContent>
+        </Card>
+      </div>
 
-      <Tabs defaultValue="templates" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="templates" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Templates
-          </TabsTrigger>
-          <TabsTrigger value="issued" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Issued Documents
-          </TabsTrigger>
-          <TabsTrigger value="logs" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Activity Logs
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="templates" className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search templates..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+      {/* Document Processing Status */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            <CardTitle>Document Processing Status</CardTitle>
+          </div>
+          <Select defaultValue="This Week">
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="This Week">This Week</SelectItem>
+              <SelectItem value="This Month">This Month</SelectItem>
+              <SelectItem value="Last Month">Last Month</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-5 gap-4 mb-6">
+            <Card className="border-green-200 bg-green-50">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-green-700">{processingStatus.readyForPickup}</div>
+                <div className="text-sm text-green-600">Ready for Pickup</div>
+              </CardContent>
+            </Card>
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-yellow-700">{processingStatus.processing}</div>
+                <div className="text-sm text-yellow-600">Processing</div>
+              </CardContent>
+            </Card>
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-blue-700">{processingStatus.forReview}</div>
+                <div className="text-sm text-blue-600">For Review</div>
+              </CardContent>
+            </Card>
+            <Card className="border-purple-200 bg-purple-50">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-purple-700">{processingStatus.released}</div>
+                <div className="text-sm text-purple-600">Released</div>
+              </CardContent>
+            </Card>
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-red-700">{processingStatus.rejected}</div>
+                <div className="text-sm text-red-600">Rejected</div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Processing Time (Average)</span>
+              <span>Updated: Today, 11:30 AM</span>
+            </div>
+            <Progress value={75} className="h-2" />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>0 days</span>
+              <span>1.5 days</span>
+              <span>3 days (target)</span>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <DocumentTemplatesList 
-            searchQuery={searchQuery}
-            onEdit={handleEditTemplate}
-          />
-        </TabsContent>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Document Templates */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Document Templates</CardTitle>
+              <Button onClick={() => navigate("/documents/new")} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Document Template
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search templates..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  {["All", "Certificates", "Permits", "Clearances", "IDs"].map((filter) => (
+                    <Button
+                      key={filter}
+                      variant={selectedFilter === filter ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedFilter(filter)}
+                    >
+                      {filter}
+                    </Button>
+                  ))}
+                </div>
+                <Select>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Bulk Actions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="activate">Activate Selected</SelectItem>
+                    <SelectItem value="deactivate">Deactivate Selected</SelectItem>
+                    <SelectItem value="delete">Delete Selected</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Advanced Filters
+                </Button>
+              </div>
 
-        <TabsContent value="issued" className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search issued documents..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={documentTypeFilter} onValueChange={setDocumentTypeFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="barangay_clearance">Barangay Clearance</SelectItem>
-                <SelectItem value="certificate">Certificate</SelectItem>
-                <SelectItem value="id">ID</SelectItem>
-                <SelectItem value="permit">Permit</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Date range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-3">
+                {documentTemplates.map((template) => (
+                  <div key={template.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Checkbox />
+                      <FileText className="h-5 w-5 text-red-500" />
+                      <div>
+                        <div className="font-medium">{template.name}</div>
+                        <div className="text-sm text-muted-foreground">{template.description}</div>
+                        <div className="text-sm">Fee: {template.fee}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-green-100 text-green-800">{template.status}</Badge>
+                      <Button variant="ghost" size="icon">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-          <DocumentsList 
-            status="all"
-            searchQuery={searchQuery}
-          />
-        </TabsContent>
+          {/* Document Tracking System */}
+          <Card className="mt-6">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                <CardTitle>Document Tracking System</CardTitle>
+              </div>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Issue Document
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search by tracking ID..."
+                    value={trackingSearchQuery}
+                    onChange={(e) => setTrackingSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  {["All Documents", "In Progress", "Completed", "Rejected"].map((filter) => (
+                    <Button
+                      key={filter}
+                      variant={trackingFilter === filter ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTrackingFilter(filter)}
+                    >
+                      {filter}
+                    </Button>
+                  ))}
+                </div>
+              </div>
 
-        <TabsContent value="logs" className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search activity logs..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={activityFilter} onValueChange={setActivityFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by activity" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Activities</SelectItem>
-                <SelectItem value="created">Document Created</SelectItem>
-                <SelectItem value="issued">Document Issued</SelectItem>
-                <SelectItem value="printed">Document Printed</SelectItem>
-                <SelectItem value="downloaded">Document Downloaded</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Date range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <DocumentLogsList 
-            searchQuery={searchQuery}
-          />
-        </TabsContent>
-      </Tabs>
-
-      {showIssueForm && selectedTemplate && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <IssueDocumentForm onClose={handleIssueFormClose} />
-          </div>
+              <div className="space-y-3">
+                {trackingDocuments.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="font-medium text-blue-600">{doc.id}</div>
+                        <div className="text-sm">{doc.document}</div>
+                        <div className="text-xs text-muted-foreground">{doc.requestedBy}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <Badge className={getStatusBadge(doc.status)}>{doc.status}</Badge>
+                      <div className="text-sm text-muted-foreground">{doc.lastUpdate}</div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-sm text-muted-foreground mt-4">
+                Showing 3 of 42 documents
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      )}
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this template? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteTemplate} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Right Sidebar */}
+        <div className="space-y-6">
+          {/* Document Requests */}
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <Clock className="h-5 w-5" />
+              <CardTitle>Document Requests</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {documentRequests.map((request) => (
+                <div key={request.id} className="border-l-4 border-orange-400 pl-4 py-2">
+                  <div className="font-medium">{request.name}</div>
+                  <div className="text-sm text-muted-foreground">{request.document}</div>
+                  <div className="text-xs text-muted-foreground">{request.timeAgo}</div>
+                  <div className="flex gap-2 mt-2">
+                    <Button 
+                      size="sm" 
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => handleApproveRequest(request.id)}
+                    >
+                      Approve
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="destructive"
+                      onClick={() => handleDenyRequest(request.id)}
+                    >
+                      Deny
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button variant="link" className="text-blue-600 p-0">
+                View All Requests →
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <Plus className="h-5 w-5" />
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button variant="outline" className="w-full justify-start gap-3">
+                <div className="bg-blue-100 p-1 rounded">
+                  <Plus className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium">Issue New Document</div>
+                  <div className="text-xs text-muted-foreground">Create and issue documents</div>
+                </div>
+              </Button>
+              
+              <Button variant="outline" className="w-full justify-start gap-3">
+                <div className="bg-purple-100 p-1 rounded">
+                  <Download className="h-4 w-4 text-purple-600" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium">Add Document Template</div>
+                  <div className="text-xs text-muted-foreground">Create new document templates</div>
+                </div>
+              </Button>
+              
+              <Button variant="outline" className="w-full justify-start gap-3">
+                <div className="bg-green-100 p-1 rounded">
+                  <BarChart3 className="h-4 w-4 text-green-600" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium">View Reports</div>
+                  <div className="text-xs text-muted-foreground">Document statistics and analytics</div>
+                </div>
+              </Button>
+              
+              <Button variant="outline" className="w-full justify-start gap-3">
+                <div className="bg-orange-100 p-1 rounded">
+                  <Settings className="h-4 w-4 text-orange-600" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium">System Settings</div>
+                  <div className="text-xs text-muted-foreground">Configure document settings</div>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
