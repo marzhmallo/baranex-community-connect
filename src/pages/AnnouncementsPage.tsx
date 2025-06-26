@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -103,7 +102,7 @@ const AnnouncementsPage = () => {
           <p className="text-muted-foreground">Manage and organize community announcements</p>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-card border border-border rounded-xl shadow-lg p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
             <div className="flex-1 max-w-md">
               <div className="relative">
@@ -120,7 +119,7 @@ const AnnouncementsPage = () => {
             
             <div className="flex flex-wrap gap-3">
               <details className="relative">
-                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
+                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
                   <FolderOpen className="text-secondary-foreground h-4 w-4" />
                   Category
                   <span className="text-muted-foreground">▼</span>
@@ -128,7 +127,7 @@ const AnnouncementsPage = () => {
                 <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
                   <div className="p-2">
                     {['Emergency', 'Event', 'Health', 'Service', 'News'].map(category => (
-                      <label key={category} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer">
+                      <label key={category} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer border-b border-border/50 last:border-b-0">
                         <input 
                           type="checkbox" 
                           className="rounded" 
@@ -149,7 +148,7 @@ const AnnouncementsPage = () => {
               </details>
 
               <details className="relative">
-                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
+                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
                   <Users className="text-secondary-foreground h-4 w-4" />
                   Audience
                   <span className="text-muted-foreground">▼</span>
@@ -157,7 +156,7 @@ const AnnouncementsPage = () => {
                 <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
                   <div className="p-2">
                     {['All Residents', 'Senior Citizens', 'Business Owners', 'Students'].map(audience => (
-                      <label key={audience} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer">
+                      <label key={audience} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer border-b border-border/50 last:border-b-0">
                         <input 
                           type="checkbox" 
                           className="rounded" 
@@ -178,16 +177,16 @@ const AnnouncementsPage = () => {
               </details>
 
               <details className="relative">
-                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2">
+                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
                   <SortAsc className="text-secondary-foreground h-4 w-4" />
                   Sort By
                   <span className="text-muted-foreground">▼</span>
                 </summary>
                 <div className="absolute top-full right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
                   <div className="p-2">
-                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded">Date Created</button>
-                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded">Priority</button>
-                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded">Category</button>
+                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50">Date Created</button>
+                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50">Priority</button>
+                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50">Category</button>
                     <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded">Status</button>
                   </div>
                 </div>
@@ -196,7 +195,7 @@ const AnnouncementsPage = () => {
               {userProfile?.role === 'admin' && (
                 <button 
                   onClick={toggleCreateForm}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border border-primary/20"
                 >
                   <Plus className="h-4 w-4" />
                   New Announcement
@@ -206,7 +205,7 @@ const AnnouncementsPage = () => {
           </div>
 
           {error && (
-            <Alert variant="destructive" className="mb-6">
+            <Alert variant="destructive" className="mb-6 border border-destructive/20">
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>
                 Failed to load announcements. Please try again later.
@@ -224,48 +223,56 @@ const AnnouncementsPage = () => {
           />
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-card border border-border rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
             <h2 className="text-2xl font-bold text-foreground">Quick Stats</h2>
-            <button className="text-primary hover:text-primary/80 transition-colors duration-200">
+            <button className="text-primary hover:text-primary/80 transition-colors duration-200 px-3 py-1 rounded border border-border hover:bg-muted/50">
               View Details
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white border border-blue-400/30">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm">Total Announcements</p>
                   <p className="text-3xl font-bold">{totalAnnouncements}</p>
                 </div>
-                <Megaphone className="text-blue-200 h-10 w-10" />
+                <div className="p-2 bg-blue-400/20 rounded-lg border border-blue-300/30">
+                  <Megaphone className="text-blue-200 h-10 w-10" />
+                </div>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
+            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white border border-green-400/30">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100 text-sm">Active</p>
                   <p className="text-3xl font-bold">{activeAnnouncements}</p>
                 </div>
-                <CheckCircle className="text-green-200 h-10 w-10" />
+                <div className="p-2 bg-green-400/20 rounded-lg border border-green-300/30">
+                  <CheckCircle className="text-green-200 h-10 w-10" />
+                </div>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-6 text-white">
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-6 text-white border border-yellow-400/30">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-yellow-100 text-sm">Pinned</p>
                   <p className="text-3xl font-bold">{pinnedAnnouncements}</p>
                 </div>
-                <Calendar className="text-yellow-200 h-10 w-10" />
+                <div className="p-2 bg-yellow-400/20 rounded-lg border border-yellow-300/30">
+                  <Calendar className="text-yellow-200 h-10 w-10" />
+                </div>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white">
+            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white border border-red-400/30">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-red-100 text-sm">Emergency</p>
                   <p className="text-3xl font-bold">{emergencyAnnouncements}</p>
                 </div>
-                <AlertTriangle className="text-red-200 h-10 w-10" />
+                <div className="p-2 bg-red-400/20 rounded-lg border border-red-300/30">
+                  <AlertTriangle className="text-red-200 h-10 w-10" />
+                </div>
               </div>
             </div>
           </div>
@@ -273,7 +280,7 @@ const AnnouncementsPage = () => {
 
         {showCreateForm && (
           <div className="fixed inset-0 bg-black/50 z-20 flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-card rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
               <CreateAnnouncementForm 
                 onAnnouncementCreated={handleAnnouncementCreated} 
                 onCancel={() => setShowCreateForm(false)} 
