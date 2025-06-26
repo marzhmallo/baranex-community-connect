@@ -8,7 +8,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import IssueDocumentForm from "@/components/documents/IssueDocumentForm";
 import DocumentTemplateForm from "@/components/documents/DocumentTemplateForm";
 import { FileText, Clock, CheckCircle, AlertTriangle, Search, Plus, Upload, BarChart3, Settings, Filter, Download, Edit, Trash2, Eye, TrendingUp, RefreshCw, Calendar, Users, Activity, X } from "lucide-react";
-
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
@@ -18,14 +17,19 @@ const DocumentsPage = () => {
   } = useAuth();
 
   // Fetch document templates from the database
-  const { data: documentTemplates, isLoading, refetch } = useQuery({
+  const {
+    data: documentTemplates,
+    isLoading,
+    refetch
+  } = useQuery({
     queryKey: ['document-templates'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('document_types')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
+      const {
+        data,
+        error
+      } = await supabase.from('document_types').select('*').order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
       return data || [];
     }
@@ -54,12 +58,10 @@ const DocumentsPage = () => {
 
   // Use real templates if available, otherwise fallback to mock data
   const templatesData = documentTemplates && documentTemplates.length > 0 ? documentTemplates : mockTemplates;
-
   const handleTemplateFormClose = () => {
     setShowTemplateForm(false);
     refetch(); // Refresh the templates list
   };
-
   return <div className="w-full max-w-7xl mx-auto p-4 bg-background min-h-screen space-y-4">
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-foreground mb-2">Barangay Document Management</h1>
@@ -218,10 +220,7 @@ const DocumentsPage = () => {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <input type="text" placeholder="Search templates..." className="pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-56 bg-background text-foreground" />
                   </div>
-                  <button 
-                    onClick={() => setShowTemplateForm(true)}
-                    className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 border border-border"
-                  >
+                  <button onClick={() => setShowTemplateForm(true)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 border border-border">
                     <Plus className="h-4 w-4" />
                     Add Document Template
                   </button>
@@ -327,12 +326,9 @@ const DocumentsPage = () => {
               </div>
 
               <div className="space-y-3 flex-1 mb-4">
-                {isLoading ? (
-                  <div className="text-center py-8">
+                {isLoading ? <div className="text-center py-8">
                     <p className="text-muted-foreground">Loading templates...</p>
-                  </div>
-                ) : (
-                  templatesData.map(template => <div key={template.id} className="border border-border rounded-lg p-3 hover:bg-muted/50 transition-colors">
+                  </div> : templatesData.map(template => <div key={template.id} className="border border-border rounded-lg p-3 hover:bg-muted/50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="flex items-center h-5">
@@ -344,9 +340,7 @@ const DocumentsPage = () => {
                           <div>
                             <h3 className="font-medium text-foreground">{template.name}</h3>
                             <p className="text-sm text-muted-foreground">{template.description}</p>
-                            {template.fee !== undefined && (
-                              <p className="text-xs text-muted-foreground">Fee: ₱{template.fee}</p>
-                            )}
+                            {template.fee !== undefined && <p className="text-xs text-muted-foreground">Fee: ₱{template.fee}</p>}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -362,8 +356,7 @@ const DocumentsPage = () => {
                           </button>
                         </div>
                       </div>
-                    </div>)
-                )}
+                    </div>)}
               </div>
 
               <div className="border-t border-border pt-4">
@@ -730,7 +723,7 @@ const DocumentsPage = () => {
           </div>
         </div>}
 
-      {showTemplateForm && <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+      {showTemplateForm && <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 py-[26px] mx-0 my-0">
           <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <div className="p-6">
               <DocumentTemplateForm template={null} onClose={handleTemplateFormClose} />
@@ -739,5 +732,4 @@ const DocumentsPage = () => {
         </div>}
     </div>;
 };
-
 export default DocumentsPage;
