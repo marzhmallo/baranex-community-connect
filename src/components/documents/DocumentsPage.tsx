@@ -718,14 +718,17 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      {showIssueForm && <div className="fixed inset-0 z-50 overflow-auto bg-black/50 flex items-center justify-center p-4">
+      {/* Modals without background overlay */}
+      {showIssueForm && (
+        <div className="fixed inset-0 z-50 overflow-auto flex items-center justify-center p-4">
           <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <IssueDocumentForm onClose={() => setShowIssueForm(false)} />
           </div>
-        </div>}
+        </div>
+      )}
 
       {showTemplateForm && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <DocumentTemplateForm template={null} onClose={handleTemplateFormClose} />
           </div>
