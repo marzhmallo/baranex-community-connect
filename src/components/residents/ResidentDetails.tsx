@@ -1,411 +1,242 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { format } from 'date-fns';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Resident } from "@/lib/types";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import ResidentForm from "./ResidentForm";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ZoomIn, X, Clock, History, Skull, Home } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { Button } from "@/components/ui/button";
+import { Edit, X, FileText } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
-type ResidentDetailsProps = {
-  resident: Resident | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-};
+interface Resident {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  suffix: string;
+  birthdate: string;
+  gender: string;
+  marital_status: string;
+  occupation: string;
+  email: string;
+  contact_number: string;
+  address: string;
+  barangay: string;
+  province: string;
+  region: string;
+  nationality: string;
+  is_voter: boolean;
+  photo_url: string;
+  status: string;
+  remarks: string;
+}
 
-const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps) => {
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [showFullPhoto, setShowFullPhoto] = useState(false);
-  const navigate = useNavigate();
-  
-  // Fetch household information
-  const { data: household } = useQuery({
-    queryKey: ['resident-household', resident?.householdId],
-    queryFn: async () => {
-      if (!resident?.householdId) return null;
-      
-      const { data, error } = await supabase
-        .from('households')
-        .select('id, name, address, purok, status')
-        .eq('id', resident.householdId)
-        .single();
+import IssueDocumentModal from "@/components/documents/IssueDocumentModal";
 
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!resident?.householdId,
-  });
-  
-  if (!resident) return null;
+const ResidentDetails = ({ resident, onClose, onEdit }) => {
+  const [activeTab, setActiveTab] = useState("profile");
+  const [age, setAge] = useState(null);
+  const { toast } = useToast();
+  const [showIssueDocument, setShowIssueDocument] = useState(false);
 
-  // Calculate age
-  const birthDate = new Date(resident.birthDate);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const m = today.getMonth() - birthDate.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Permanent':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Permanent</Badge>;
-      case 'Temporary':
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Temporary</Badge>;
-      case 'Deceased':
-        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Deceased</Badge>;
-      case 'Relocated':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Relocated</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const handleClose = () => {
-    console.log("ResidentDetails - handling close");
-    
-    // Reset edit mode when closing
-    setIsEditMode(false);
-    
-    // First close the dialog through state
-    onOpenChange(false);
-    
-    // Then clean up any lingering effects to ensure UI remains interactive
-    setTimeout(() => {
-      document.body.classList.remove('overflow-hidden');
-      document.body.style.pointerEvents = '';
-      
-      // Remove any focus traps or aria-hidden attributes that might be lingering
-      const elements = document.querySelectorAll('[aria-hidden="true"]');
-      elements.forEach(el => {
-        el.setAttribute('aria-hidden', 'false');
-      });
-    }, 150);
-  };
-
-  const handleFormSubmit = () => {
-    console.log("ResidentDetails - form submitted, resetting edit mode");
-    setIsEditMode(false);
-    handleClose();
-  };
-
-  // Generate full address display
-  const fullAddress = resident.purok ? 
-    `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}` : 
-    resident.address || 'Address not provided';
-    
-  // Navigate to the resident details page
-  const handleViewMoreDetails = () => {
-    handleClose();
-    navigate(`/residents/${resident.id}`);
-  };
-
-  // Navigate to household details page
-  const handleViewHousehold = () => {
-    if (household) {
-      handleClose();
-      navigate(`/households/${household.id}`);
-    }
-  };
-
-  // Format dates for display
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Not available";
-    
-    try {
-      const date = new Date(dateString);
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        console.error("Invalid date in ResidentDetails:", dateString);
-        return "Invalid date";
+  useEffect(() => {
+    if (resident?.birthdate) {
+      const birthDate = new Date(resident.birthdate);
+      const today = new Date();
+      let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+      const month = today.getMonth() - birthDate.getMonth();
+      if (month < 0 || (month === 0 && today.getDate() < birthDate.getDate())) {
+        calculatedAge--;
       }
-      
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric'
-      });
+      setAge(calculatedAge);
+    }
+  }, [resident]);
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMMM d, yyyy');
     } catch (error) {
-      console.error("Error formatting date in ResidentDetails:", error, "Date string:", dateString);
-      return "Date error";
+      console.error("Error formatting date:", error);
+      return 'Invalid Date';
     }
   };
-
-  // Log to debug the resident data
-  console.log("ResidentDetails - resident data:", resident);
-  console.log("ResidentDetails - creation date:", resident?.created_at);
-  console.log("ResidentDetails - death date:", resident?.diedOn || resident?.died_on);
 
   return (
-    <Dialog 
-      open={open} 
-      onOpenChange={() => handleClose()}
-    >
-      <DialogContent 
-        className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col"
-        onInteractOutside={(e) => {
-          console.log("Interaction outside dialog detected in ResidentDetails");
-          e.preventDefault();
-        }}
-        onEscapeKeyDown={(e) => {
-          console.log("Escape key pressed in ResidentDetails");
-          e.preventDefault();
-        }}
-      >
-        {isEditMode ? (
-          <>
-            <DialogHeader className="shrink-0">
-              <DialogTitle>Edit Resident</DialogTitle>
-              <DialogDescription>
-                Update information for {resident.firstName} {resident.lastName}
-              </DialogDescription>
-            </DialogHeader>
-            <ResidentForm onSubmit={handleFormSubmit} resident={resident} />
-          </>
-        ) : (
-          <>
-            <DialogHeader className="shrink-0">
-              <DialogTitle className="flex items-center justify-between">
-                <span>Resident Details</span>
-              </DialogTitle>
-              <DialogDescription>
-                Complete profile information for {resident.firstName} {resident.lastName}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <ScrollArea className="flex-1 overflow-y-auto">
-              <div className="grid gap-6 pr-4 pb-4">
-                {/* Personal Information */}
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col md:flex-row gap-6 items-start">
-                      {/* Avatar/Photo using the Avatar component with click to enlarge */}
-                      {resident.photoUrl ? (
-                        <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
-                          <Avatar className="w-24 h-24">
-                            <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
-                            <AvatarFallback className="text-2xl">
-                              {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <ZoomIn className="text-white h-8 w-8" />
-                          </div>
-                        </div>
-                      ) : (
-                        <Avatar className="w-24 h-24">
-                          <AvatarFallback className="text-2xl">
-                            {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                      
-                      {/* Full screen photo dialog */}
-                      {resident.photoUrl && (
-                        <Dialog open={showFullPhoto} onOpenChange={setShowFullPhoto}>
-                          <DialogContent 
-                            className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center"
-                            hideCloseButton={true}
-                          >
-                            <div 
-                              className="relative w-full h-full flex items-center justify-center bg-black/70 p-2 rounded-lg"
-                              onClick={() => setShowFullPhoto(false)}
-                            >
-                              <img 
-                                src={resident.photoUrl} 
-                                alt={`${resident.firstName} ${resident.lastName}`} 
-                                className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
-                              />
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="absolute top-2 right-2 bg-black/40 hover:bg-black/60 text-white"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowFullPhoto(false);
-                                }}
-                              >
-                                <span className="sr-only">Close</span>
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                      
-                      <div className="space-y-2 flex-1">
-                        <h3 className="text-xl font-semibold">
-                          {resident.firstName} {resident.lastName}
-                          <span className="ml-2">{getStatusBadge(resident.status)}</span>
-                        </h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm text-gray-500">Age</p>
-                            <p>{age} years old</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Gender</p>
-                            <p>{resident.gender}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Birth Date</p>
-                            <p>{formatDate(resident.birthDate)}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Civil Status</p>
-                            <p>{resident.civilStatus || "Not specified"}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Classifications</p>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {resident.classifications?.length ? 
-                                resident.classifications.map((classification, index) => (
-                                  <Badge key={index} variant="outline" className="bg-blue-50 text-blue-800 border-blue-100">
-                                    {classification}
-                                  </Badge>
-                                )) 
-                                : "None specified"}
-                            </div>
-                          </div>
-                          {resident.status === "Deceased" && (resident.diedOn || resident.died_on) && (
-                            <div>
-                              <p className="text-sm text-gray-500">Date of Death <Skull className="inline h-4 w-4 text-red-500 ml-1" /></p>
-                              <p>{formatDate(resident.diedOn || resident.died_on)}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Contact Information */}
-                <Card>
-                  <CardContent className="pt-6">
-                    <h3 className="text-lg font-medium mb-4">Contact Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Address</p>
-                        <p>{fullAddress}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Contact Number</p>
-                        <p>{resident.contactNumber || "Not provided"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Email</p>
-                        <p>{resident.email || "Not provided"}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Household Information */}
-                {household && (
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center mb-4">
-                        <div className="bg-purple-100 p-2 rounded-full">
-                          <Home className="h-5 w-5 text-purple-700" />
-                        </div>
-                        <h3 className="text-lg font-medium ml-2">Household Information</h3>
-                      </div>
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-500">Household Name</p>
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium">{household.name}</p>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={handleViewHousehold}
-                            >
-                              View Household
-                            </Button>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Household Address</p>
-                          <p>{household.address}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Household Status</p>
-                          <Badge variant="outline">{household.status}</Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {/* Additional Information */}
-                <Card>
-                  <CardContent className="pt-6">
-                    <h3 className="text-lg font-medium mb-4">Additional Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Occupation</p>
-                        <p>{resident.occupation || "Not specified"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Years in Barangay</p>
-                        <p>{resident.yearsInBarangay || "Not specified"}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Record Information - New card for created/updated dates */}
-                <Card>
-                  <CardContent className="pt-6">
-                    <h3 className="text-lg font-medium mb-4 flex items-center">
-                      <History className="mr-2 h-4 w-4" />
-                      Record Information
-                    </h3>
-                    <div className="grid grid-cols-1 gap-2">
-                      <div>
-                        <p className="text-sm text-gray-500">Created</p>
-                        <p className="flex items-center">
-                          <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                          {resident.created_at ? formatDate(resident.created_at) : "Not available"}
-                        </p>
-                      </div>
-                      {resident.updated_at && (
-                        <div>
-                          <p className="text-sm text-gray-500">Last Updated</p>
-                          <p className="flex items-center">
-                            <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                            {formatDate(resident.updated_at)}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+    <>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          {/* Header */}
+          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                    {resident.first_name?.[0]}{resident.last_name?.[0]}
+                  </div>
+                  {resident.photo_url && (
+                    <img 
+                      src={resident.photo_url} 
+                      alt="Resident"
+                      className="absolute inset-0 w-full h-full rounded-full object-cover"
+                    />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {resident.first_name} {resident.middle_name} {resident.last_name} {resident.suffix}
+                  </h2>
+                  <p className="text-gray-600">Resident ID: {resident.id?.slice(0, 8)}...</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant={resident.status === 'Active' ? 'default' : 'secondary'}>
+                      {resident.status}
+                    </Badge>
+                    {resident.is_voter && <Badge variant="outline">Voter</Badge>}
+                  </div>
+                </div>
               </div>
-            </ScrollArea>
-            
-            <div className="flex justify-end gap-2 pt-4 border-t mt-4 w-full shrink-0">
-              <Button onClick={handleViewMoreDetails}>More Details</Button>
-              <Button variant="ghost" onClick={handleClose}>Close</Button>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => setShowIssueDocument(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Issue Document
+                </Button>
+                <Button onClick={onEdit} variant="outline">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button onClick={onClose} variant="outline" size="icon">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+            <Tabs defaultValue="profile" className="w-full">
+              <TabsList>
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="contact">Contact</TabsTrigger>
+                <TabsTrigger value="additional">Additional Info</TabsTrigger>
+              </TabsList>
+              <TabsContent value="profile">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Personal Information</CardTitle>
+                    <CardDescription>Details about the resident's identity.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Full Name:</p>
+                        <p className="text-gray-900">{resident.first_name} {resident.middle_name} {resident.last_name} {resident.suffix}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Birthdate:</p>
+                        <p className="text-gray-900">{formatDate(resident.birthdate)} ({age} years old)</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Gender:</p>
+                        <p className="text-gray-900">{resident.gender}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Marital Status:</p>
+                        <p className="text-gray-900">{resident.marital_status}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Address:</p>
+                      <p className="text-gray-900">{resident.address}, {resident.barangay}, {resident.province}, {resident.region}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="contact">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Contact Information</CardTitle>
+                    <CardDescription>Details for contacting the resident.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Email:</p>
+                      <p className="text-gray-900">{resident.email || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Contact Number:</p>
+                      <p className="text-gray-900">{resident.contact_number || 'N/A'}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="additional">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Additional Information</CardTitle>
+                    <CardDescription>Other relevant details about the resident.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Occupation:</p>
+                        <p className="text-gray-900">{resident.occupation || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Nationality:</p>
+                        <p className="text-gray-900">{resident.nationality || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Voter Status:</p>
+                        <p className="text-gray-900">{resident.is_voter ? 'Yes' : 'No'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Status:</p>
+                        <p className="text-gray-900">{resident.status || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Remarks:</p>
+                      <p className="text-gray-900">{resident.remarks || 'N/A'}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </div>
+
+      {/* Issue Document Modal */}
+      <IssueDocumentModal
+        open={showIssueDocument}
+        onOpenChange={setShowIssueDocument}
+        resident={resident}
+      />
+    </>
   );
 };
 

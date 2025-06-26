@@ -420,6 +420,7 @@ export type Database = {
       document_types: {
         Row: {
           brgyid: string | null
+          content: string | null
           created_at: string | null
           description: string | null
           fee: number | null
@@ -432,6 +433,7 @@ export type Database = {
         }
         Insert: {
           brgyid?: string | null
+          content?: string | null
           created_at?: string | null
           description?: string | null
           fee?: number | null
@@ -444,6 +446,7 @@ export type Database = {
         }
         Update: {
           brgyid?: string | null
+          content?: string | null
           created_at?: string | null
           description?: string | null
           fee?: number | null
@@ -1057,10 +1060,11 @@ export type Database = {
       }
       issued_documents: {
         Row: {
+          admin_id: string | null
           created_at: string | null
           data: Json
+          document_id: string
           document_number: string
-          document_type_id: string
           expiry_date: string | null
           household_id: string | null
           id: string
@@ -1075,10 +1079,11 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          admin_id?: string | null
           created_at?: string | null
           data?: Json
+          document_id: string
           document_number: string
-          document_type_id: string
           expiry_date?: string | null
           household_id?: string | null
           id?: string
@@ -1093,10 +1098,11 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          admin_id?: string | null
           created_at?: string | null
           data?: Json
+          document_id?: string
           document_number?: string
-          document_type_id?: string
           expiry_date?: string | null
           household_id?: string | null
           id?: string
@@ -1112,8 +1118,8 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "issued_documents_document_type_id_fkey"
-            columns: ["document_type_id"]
+            foreignKeyName: "issued_documents_document_id_fkey"
+            columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "document_types"
             referencedColumns: ["id"]
