@@ -6,15 +6,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import IssueDocumentForm from "@/components/documents/IssueDocumentForm";
+import DocumentTemplateForm from "@/components/documents/DocumentTemplateForm";
 import { FileText, Clock, CheckCircle, AlertTriangle, Search, Plus, Upload, BarChart3, Settings, Filter, Download, Edit, Trash2, Eye, TrendingUp, RefreshCw, Calendar, Users, Activity, X } from "lucide-react";
+
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
   const {
     userProfile
   } = useAuth();
 
-  // For now, show a simple message about document services
+  // Fetch document templates from the database
+  const { data: documentTemplates, isLoading, refetch } = useQuery({
+    queryKey: ['document-templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('document_types')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // For display purposes, we'll still show some mock data if no real templates exist
   const mockTemplates = [{
     id: '1',
     name: 'Barangay Clearance',
@@ -34,6 +51,15 @@ const DocumentsPage = () => {
     fee: 200,
     requirements: 'Valid ID, Business registration, Location map'
   }];
+
+  // Use real templates if available, otherwise fallback to mock data
+  const templatesData = documentTemplates && documentTemplates.length > 0 ? documentTemplates : mockTemplates;
+
+  const handleTemplateFormClose = () => {
+    setShowTemplateForm(false);
+    refetch(); // Refresh the templates list
+  };
+
   return <div className="w-full max-w-7xl mx-auto p-4 bg-background min-h-screen space-y-4">
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-foreground mb-2">Barangay Document Management</h1>
@@ -81,7 +107,7 @@ const DocumentsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-muted-foreground">Active Templates</p>
-              <p className="text-lg font-bold text-blue-600">15</p>
+              <p className="text-lg font-bold text-blue-600">{templatesData.length}</p>
             </div>
             <div className="bg-blue-100 dark:bg-blue-500/20 p-2 rounded-full">
               <FileText className="h-4 w-4 text-blue-600" />
@@ -186,15 +212,18 @@ const DocumentsPage = () => {
           <div className="bg-card rounded-lg shadow-sm border border-border min-h-[620px] flex flex-col">
             <div className="p-4 border-b border-border">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <h2 className="text-lg font-semibold text-foreground">Document Library</h2>
+                <h2 className="text-lg font-semibold text-foreground">Document Templates</h2>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <input type="text" placeholder="Search documents..." className="pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-56 bg-background text-foreground" />
+                    <input type="text" placeholder="Search templates..." className="pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-56 bg-background text-foreground" />
                   </div>
-                  <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 border border-border">
+                  <button 
+                    onClick={() => setShowTemplateForm(true)}
+                    className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 border border-border"
+                  >
                     <Plus className="h-4 w-4" />
-                    Add Document
+                    Add Document Template
                   </button>
                 </div>
               </div>
@@ -298,34 +327,43 @@ const DocumentsPage = () => {
               </div>
 
               <div className="space-y-3 flex-1 mb-4">
-                {mockTemplates.map(template => <div key={template.id} className="border border-border rounded-lg p-3 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center h-5">
-                          <input id={`doc${template.id}`} type="checkbox" className="w-4 h-4 text-primary border-input rounded focus:ring-primary" />
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading templates...</p>
+                  </div>
+                ) : (
+                  templatesData.map(template => <div key={template.id} className="border border-border rounded-lg p-3 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center h-5">
+                            <input id={`doc${template.id}`} type="checkbox" className="w-4 h-4 text-primary border-input rounded focus:ring-primary" />
+                          </div>
+                          <div className="bg-red-100 dark:bg-red-500/20 p-2 rounded-lg">
+                            <FileText className="h-4 w-4 text-red-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-foreground">{template.name}</h3>
+                            <p className="text-sm text-muted-foreground">{template.description}</p>
+                            {template.fee !== undefined && (
+                              <p className="text-xs text-muted-foreground">Fee: ₱{template.fee}</p>
+                            )}
+                          </div>
                         </div>
-                        <div className="bg-red-100 dark:bg-red-500/20 p-2 rounded-lg">
-                          <FileText className="h-4 w-4 text-red-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-foreground">{template.name}</h3>
-                          <p className="text-sm text-muted-foreground">{template.description}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-500/20 text-green-600 rounded-full">Active</span>
+                          <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-500/20 text-green-600 rounded-full">Active</span>
-                        <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
-                          <Download className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>)}
+                    </div>)
+                )}
               </div>
 
               <div className="border-t border-border pt-4">
@@ -430,8 +468,6 @@ const DocumentsPage = () => {
           </div>
         </div>
       </div>
-
-      
 
       <div className="bg-card rounded-lg shadow-sm border">
         <div className="p-4 border-b border-border">
@@ -654,13 +690,13 @@ const DocumentsPage = () => {
                 </div>
               </button>
 
-              <button className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors text-left">
+              <button onClick={() => setShowTemplateForm(true)} className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors text-left">
                 <div className="bg-blue-100 dark:bg-blue-500/20 p-2 rounded-lg">
                   <Upload className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Upload Template</p>
-                  <p className="text-sm text-muted-foreground">Add new document templates</p>
+                  <p className="font-medium text-foreground">Add Document Template</p>
+                  <p className="text-sm text-muted-foreground">Create new document templates</p>
                 </div>
               </button>
 
@@ -691,6 +727,14 @@ const DocumentsPage = () => {
       {showIssueForm && <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <IssueDocumentForm onClose={() => setShowIssueForm(false)} />
+          </div>
+        </div>}
+
+      {showTemplateForm && <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6">
+              <DocumentTemplateForm onClose={handleTemplateFormClose} />
+            </div>
           </div>
         </div>}
     </div>;
