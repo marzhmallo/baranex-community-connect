@@ -718,22 +718,29 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      {/* Modals without background overlay */}
+      {/* Modals with background overlay */}
       {showIssueForm && (
-        <div className="fixed inset-0 z-50 overflow-auto flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <IssueDocumentForm onClose={() => setShowIssueForm(false)} />
+        <>
+          <div className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <div className="fixed inset-0 z-50 overflow-auto flex items-center justify-center p-4">
+            <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              <IssueDocumentForm onClose={() => setShowIssueForm(false)} />
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {showTemplateForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <DocumentTemplateForm template={null} onClose={handleTemplateFormClose} />
+        <>
+          <div className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              <DocumentTemplateForm template={null} onClose={handleTemplateFormClose} />
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>;
 };
+
 export default DocumentsPage;
