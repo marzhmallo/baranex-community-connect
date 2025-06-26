@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,24 +10,25 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-const DocumentLogsList = ({
-  searchQuery
-}) => {
+
+const DocumentLogsList = ({ searchQuery }: { searchQuery: string }) => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
     fetchLogs();
   }, [searchQuery]);
+
   const fetchLogs = async () => {
     setLoading(true);
     try {
       // Create a query to join document_logs with issued_documents and document_types
-      let query = supabase.from('document_logs').select(`
+      let query = supabase
+        .from('document_logs')
+        .select(`
           *,
           issued_documents:document_id (
             document_number,
@@ -42,13 +44,11 @@ const DocumentLogsList = ({
               suffix
             )
           )
-        `).order('created_at', {
-        ascending: false
-      });
-      const {
-        data,
-        error
-      } = await query;
+        `)
+        .order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+
       if (error) {
         throw error;
       }
@@ -81,23 +81,26 @@ const DocumentLogsList = ({
           return false;
         });
       }
+
       setLogs(filteredLogs);
     } catch (error) {
       console.error("Error fetching document logs:", error);
       toast({
         title: "Error",
         description: "Failed to load document logs.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
-  const handleViewDetails = log => {
+
+  const handleViewDetails = (log) => {
     setSelectedLog(log);
     setDetailsOpen(true);
   };
-  const getActionColor = action => {
+
+  const getActionColor = (action) => {
     switch (action) {
       case 'issued':
         return 'bg-green-500 hover:bg-green-600';
@@ -111,18 +114,26 @@ const DocumentLogsList = ({
         return 'bg-gray-500 hover:bg-gray-600';
     }
   };
-  const getResidentName = resident => {
+
+  const getResidentName = (resident) => {
     if (!resident) return "—";
     const middleInitial = resident.middle_name ? ` ${resident.middle_name.charAt(0)}.` : "";
     return `${resident.first_name}${middleInitial} ${resident.last_name}${resident.suffix ? ` ${resident.suffix}` : ""}`;
   };
+
   if (loading) {
-    return <div className="space-y-4">
-        {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
-      </div>;
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    );
   }
+
   if (logs.length === 0) {
-    return <Card className="mx-0 px-0">
+    return (
+      <Card className="mx-0 px-0">
         <CardContent className="flex flex-col items-center justify-center py-12">
           <FileSearch className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-xl font-semibold mb-2">No document logs found</h3>
@@ -130,9 +141,12 @@ const DocumentLogsList = ({
             {searchQuery ? "Try a different search query" : "Document activity will appear here"}
           </p>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
           <Table>
@@ -147,7 +161,8 @@ const DocumentLogsList = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {logs.map(log => <TableRow key={log.id}>
+              {logs.map((log) => (
+                <TableRow key={log.id}>
                   <TableCell className="font-medium">
                     {format(new Date(log.created_at), "MMM d, yyyy h:mm a")}
                   </TableCell>
@@ -167,11 +182,16 @@ const DocumentLogsList = ({
                   </TableCell>
                   <TableCell>{log.performed_by || "System"}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => handleViewDetails(log)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetails(log)}
+                    >
                       View
                     </Button>
                   </TableCell>
-                </TableRow>)}
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>
@@ -182,13 +202,16 @@ const DocumentLogsList = ({
           <DialogHeader>
             <DialogTitle>Log Details</DialogTitle>
             <DialogDescription>
-              {selectedLog && <span>
+              {selectedLog && (
+                <span>
                   Activity logged on {format(new Date(selectedLog.created_at), "MMMM d, yyyy 'at' h:mm a")}
-                </span>}
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedLog && <div className="space-y-4">
+          {selectedLog && (
+            <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h4 className="text-sm font-semibold">Document</h4>
@@ -222,13 +245,16 @@ const DocumentLogsList = ({
                   </CardContent>
                 </Card>
               </div>
-            </div>}
+            </div>
+          )}
           
           <DialogFooter>
             <Button onClick={() => setDetailsOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 };
+
 export default DocumentLogsList;

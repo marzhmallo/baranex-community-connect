@@ -83,7 +83,7 @@ const DocumentTemplateEditorPage = () => {
         const spanHtml = `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-md font-medium border border-blue-200" data-placeholder="${field.key}" contenteditable="false">${field.label}</span>&nbsp;`;
         
         quill.clipboard.dangerouslyPasteHTML(range.index, spanHtml);
-        quill.setSelection(range.index + 1);
+        quill.setSelection(range.index + spanHtml.length);
       }
     }
     setShowDropdown(false);
