@@ -162,9 +162,9 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       // Get logged in user ID (mock for now)
       const userId = uuidv4(); // In a real app, this would come from auth
 
-      // Prepare data for insertion
+      // Prepare data for insertion - using correct field names
       const documentData = {
-        document_type_id: data.document_type_id,
+        document_id: data.document_type_id, // This should be document_id, not document_type_id
         resident_id: data.resident_id,
         purpose: data.purpose,
         payment_amount: data.payment_amount,
@@ -199,6 +199,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
         }
       });
       if (logError) throw logError;
+      
       toast({
         title: "Document Issued",
         description: `Document has been issued successfully with number: ${documentNumber}`

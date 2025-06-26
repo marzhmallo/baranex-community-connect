@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
 const DocumentLogsList = ({
   searchQuery
 }) => {
@@ -19,9 +20,11 @@ const DocumentLogsList = ({
   const {
     toast
   } = useToast();
+
   useEffect(() => {
     fetchLogs();
   }, [searchQuery]);
+
   const fetchLogs = async () => {
     setLoading(true);
     try {
@@ -45,10 +48,12 @@ const DocumentLogsList = ({
         `).order('created_at', {
         ascending: false
       });
+
       const {
         data,
         error
       } = await query;
+
       if (error) {
         throw error;
       }
@@ -93,10 +98,12 @@ const DocumentLogsList = ({
       setLoading(false);
     }
   };
+
   const handleViewDetails = log => {
     setSelectedLog(log);
     setDetailsOpen(true);
   };
+
   const getActionColor = action => {
     switch (action) {
       case 'issued':
@@ -111,16 +118,19 @@ const DocumentLogsList = ({
         return 'bg-gray-500 hover:bg-gray-600';
     }
   };
+
   const getResidentName = resident => {
     if (!resident) return "—";
     const middleInitial = resident.middle_name ? ` ${resident.middle_name.charAt(0)}.` : "";
     return `${resident.first_name}${middleInitial} ${resident.last_name}${resident.suffix ? ` ${resident.suffix}` : ""}`;
   };
+
   if (loading) {
     return <div className="space-y-4">
         {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
       </div>;
   }
+
   if (logs.length === 0) {
     return <Card className="mx-0 px-0">
         <CardContent className="flex flex-col items-center justify-center py-12">
@@ -132,6 +142,7 @@ const DocumentLogsList = ({
         </CardContent>
       </Card>;
   }
+
   return <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
@@ -231,4 +242,5 @@ const DocumentLogsList = ({
       </Dialog>
     </div>;
 };
+
 export default DocumentLogsList;

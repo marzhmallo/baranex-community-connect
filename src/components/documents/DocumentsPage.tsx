@@ -733,10 +733,11 @@ const DocumentsPage = () => {
       {showTemplateForm && <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <div className="p-6">
-              <DocumentTemplateForm onClose={handleTemplateFormClose} />
+              <DocumentTemplateForm template={null} onClose={handleTemplateFormClose} />
             </div>
           </div>
         </div>}
     </div>;
 };
+
 export default DocumentsPage;
