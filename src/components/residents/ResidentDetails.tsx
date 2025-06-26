@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -143,6 +144,7 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
             )}
           </div>
         </div>
+      </CardContent>
 
       {/* Issue Document Modal */}
       <IssueDocumentModal
