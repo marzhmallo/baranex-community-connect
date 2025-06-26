@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format, isToday, isEqual, isSameMonth, parse, addDays, subDays, addMonths, subMonths } from "date-fns";
-import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Download, Upload, Edit, Trash2, X, Clock, MapPin, Users, Repeat, Bell } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Download, Upload, Edit, Trash2, X, Clock, MapPin, Users, Repeat, Bell, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,6 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -63,7 +73,9 @@ const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -140,6 +152,47 @@ const CalendarPage = () => {
     }
   });
 
+  // Update event mutation
+  const updateEventMutation = useMutation({
+    mutationFn: async (eventData: EventFormData & { id: string }) => {
+      const startDateTime = new Date(`${eventData.start_date}T${eventData.start_time}`);
+      const endDateTime = new Date(`${eventData.end_date}T${eventData.end_time}`);
+
+      const { error } = await supabase
+        .from('events')
+        .update({
+          title: eventData.title,
+          description: eventData.description,
+          location: eventData.location,
+          start_time: startDateTime.toISOString(),
+          end_time: endDateTime.toISOString(),
+          event_type: eventData.event_type,
+          target_audience: eventData.target_audience,
+          is_public: eventData.is_public,
+        })
+        .eq('id', eventData.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      setShowEditForm(false);
+      setSelectedEvent(null);
+      reset();
+      toast({
+        title: "Success",
+        description: "Event updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating event",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   // Delete event mutation
   const deleteEventMutation = useMutation({
     mutationFn: async (eventId: string) => {
@@ -192,8 +245,46 @@ const CalendarPage = () => {
     setShowEventDetails(true);
   };
 
+  const handleEditEvent = (event: Event) => {
+    setSelectedEvent(event);
+    // Populate form with event data
+    const startDate = new Date(event.start_time);
+    const endDate = new Date(event.end_time);
+    
+    setValue("title", event.title);
+    setValue("description", event.description || "");
+    setValue("location", event.location || "");
+    setValue("start_date", format(startDate, "yyyy-MM-dd"));
+    setValue("start_time", format(startDate, "HH:mm"));
+    setValue("end_date", format(endDate, "yyyy-MM-dd"));
+    setValue("end_time", format(endDate, "HH:mm"));
+    setValue("event_type", event.event_type || "");
+    setValue("target_audience", event.target_audience || "");
+    setValue("is_public", event.is_public);
+    
+    setShowEditForm(true);
+    setShowEventDetails(false);
+  };
+
+  const handleDeleteEvent = (eventId: string) => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedEvent) {
+      deleteEventMutation.mutate(selectedEvent.id);
+    }
+    setShowDeleteDialog(false);
+  };
+
   const onSubmit = (data: EventFormData) => {
     createEventMutation.mutate(data);
+  };
+
+  const onEditSubmit = (data: EventFormData) => {
+    if (selectedEvent) {
+      updateEventMutation.mutate({ ...data, id: selectedEvent.id });
+    }
   };
 
   // Generate calendar days
@@ -565,13 +656,25 @@ const CalendarPage = () => {
                                 onClick={() => handleEventClick(event)}
                                 className="hover:bg-muted"
                               >
+                                <Eye className="h-3 w-3 mr-1" />
+                                View
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => handleEditEvent(event)}
+                                className="hover:bg-muted"
+                              >
                                 <Edit className="h-3 w-3 mr-1" />
                                 Edit
                               </Button>
                               <Button 
                                 size="sm" 
                                 variant="ghost" 
-                                onClick={() => deleteEventMutation.mutate(event.id)}
+                                onClick={() => {
+                                  setSelectedEvent(event);
+                                  handleDeleteEvent(event.id);
+                                }}
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
@@ -611,13 +714,16 @@ const CalendarPage = () => {
                                 onClick={() => handleEventClick(event)}
                                 className="hover:bg-muted"
                               >
-                                <Edit className="h-3 w-3 mr-1" />
+                                <Eye className="h-3 w-3 mr-1" />
                                 View
                               </Button>
                               <Button 
                                 size="sm" 
                                 variant="ghost" 
-                                onClick={() => deleteEventMutation.mutate(event.id)}
+                                onClick={() => {
+                                  setSelectedEvent(event);
+                                  handleDeleteEvent(event.id);
+                                }}
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
@@ -689,49 +795,123 @@ const CalendarPage = () => {
         </div>
       </div>
 
-      {/* Event Details Modal */}
+      {/* Enhanced Event Details Modal */}
       <Dialog open={showEventDetails} onOpenChange={setShowEventDetails}>
-        <DialogContent className="max-w-md bg-card border-border">
+        <DialogContent className="max-w-2xl bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-card-foreground">
+            <DialogTitle className="text-xl font-bold text-card-foreground flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5" />
               {selectedEvent ? selectedEvent.title : `Events for ${selectedDate ? format(selectedDate, "MMMM d, yyyy") : ""}`}
             </DialogTitle>
           </DialogHeader>
           {selectedEvent ? (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-card-foreground">
-                  {format(new Date(selectedEvent.start_time), "h:mm a")} - {format(new Date(selectedEvent.end_time), "h:mm a")}
-                </span>
-              </div>
-              {selectedEvent.location && (
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-card-foreground">{selectedEvent.location}</span>
+            <div className="space-y-6">
+              {/* Event Category Badge */}
+              {selectedEvent.event_type && (
+                <div className="flex justify-start">
+                  {(() => {
+                    const category = eventCategories.find(cat => cat.value === selectedEvent.event_type);
+                    return (
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                        ${category ? `${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}` : 'bg-muted text-muted-foreground'}
+                      `}>
+                        {selectedEvent.event_type.charAt(0).toUpperCase() + selectedEvent.event_type.slice(1)}
+                      </span>
+                    );
+                  })()}
                 </div>
               )}
-              {selectedEvent.target_audience && (
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-card-foreground">{selectedEvent.target_audience}</span>
-                </div>
-              )}
+
+              {/* Event Description */}
               {selectedEvent.description && (
-                <div>
-                  <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
+                <div className="bg-muted/30 p-4 rounded-lg">
+                  <p className="text-card-foreground leading-relaxed">{selectedEvent.description}</p>
                 </div>
               )}
-              <div className="flex justify-end space-x-2 pt-4">
+
+              {/* Event Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Clock className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground">Date & Time</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(selectedEvent.start_time), "EEEE, MMMM d, yyyy")}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(selectedEvent.start_time), "h:mm a")} - {format(new Date(selectedEvent.end_time), "h:mm a")}
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedEvent.location && (
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <MapPin className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-card-foreground">Location</p>
+                        <p className="text-sm text-muted-foreground">{selectedEvent.location}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  {selectedEvent.target_audience && (
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Users className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-card-foreground">Target Audience</p>
+                        <p className="text-sm text-muted-foreground">{selectedEvent.target_audience}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-start space-x-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Eye className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground">Visibility</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedEvent.is_public ? "Public Event" : "Private Event"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between pt-6 border-t">
                 <Button variant="outline" onClick={() => setShowEventDetails(false)} className="border-border">
                   Close
                 </Button>
-                <Button 
-                  variant="destructive" 
-                  onClick={() => deleteEventMutation.mutate(selectedEvent.id)}
-                >
-                  Delete Event
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleEditEvent(selectedEvent)}
+                    className="border-border"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Event
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => {
+                      setShowEventDetails(false);
+                      handleDeleteEvent(selectedEvent.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Event
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
@@ -756,6 +936,148 @@ const CalendarPage = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Event Dialog */}
+      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-card-foreground">Edit Event</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title" className="text-card-foreground">Event Title</Label>
+                <Input
+                  {...register("title", { required: "Title is required" })}
+                  placeholder="Enter event title"
+                  className="bg-background border-border text-foreground"
+                />
+                {errors.title && <p className="text-destructive text-sm mt-1">{errors.title.message}</p>}
+              </div>
+              <div>
+                <Label htmlFor="event_type" className="text-card-foreground">Category</Label>
+                <Select onValueChange={(value) => setValue("event_type", value)}>
+                  <SelectTrigger className="bg-background border-border text-foreground">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border">
+                    {eventCategories.map(category => (
+                      <SelectItem key={category.value} value={category.value} className="text-popover-foreground hover:bg-accent">
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="description" className="text-card-foreground">Description</Label>
+              <Textarea
+                {...register("description")}
+                placeholder="Enter event description"
+                rows={3}
+                className="bg-background border-border text-foreground"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="location" className="text-card-foreground">Location</Label>
+              <Input
+                {...register("location")}
+                placeholder="Enter event location"
+                className="bg-background border-border text-foreground"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="start_date" className="text-card-foreground">Start Date</Label>
+                <Input
+                  type="date"
+                  {...register("start_date", { required: "Start date is required" })}
+                  className="bg-background border-border text-foreground"
+                />
+                {errors.start_date && <p className="text-destructive text-sm mt-1">{errors.start_date.message}</p>}
+              </div>
+              <div>
+                <Label htmlFor="start_time" className="text-card-foreground">Start Time</Label>
+                <Input
+                  type="time"
+                  {...register("start_time", { required: "Start time is required" })}
+                  className="bg-background border-border text-foreground"
+                />
+                {errors.start_time && <p className="text-destructive text-sm mt-1">{errors.start_time.message}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="end_date" className="text-card-foreground">End Date</Label>
+                <Input
+                  type="date"
+                  {...register("end_date", { required: "End date is required" })}
+                  className="bg-background border-border text-foreground"
+                />
+                {errors.end_date && <p className="text-destructive text-sm mt-1">{errors.end_date.message}</p>}
+              </div>
+              <div>
+                <Label htmlFor="end_time" className="text-card-foreground">End Time</Label>
+                <Input
+                  type="time"
+                  {...register("end_time", { required: "End time is required" })}
+                  className="bg-background border-border text-foreground"
+                />
+                {errors.end_time && <p className="text-destructive text-sm mt-1">{errors.end_time.message}</p>}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="target_audience" className="text-card-foreground">Target Audience</Label>
+              <Input
+                {...register("target_audience")}
+                placeholder="e.g., All residents, Youth, Seniors"
+                className="bg-background border-border text-foreground"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox {...register("is_public")} />
+              <Label className="text-card-foreground">Public Event</Label>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowEditForm(false)} className="border-border">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateEventMutation.isPending}>
+                {updateEventMutation.isPending ? "Updating..." : "Update Event"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-card-foreground">Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will permanently delete the event "{selectedEvent?.title}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-border">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              Delete Event
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
