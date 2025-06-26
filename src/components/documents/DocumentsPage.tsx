@@ -723,7 +723,7 @@ const DocumentsPage = () => {
           </div>
         </div>}
 
-      {showTemplateForm && <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+      {showTemplateForm && <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center mx-0 py-0 my-[2px]">
           <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full mx-4 max-h-[95vh] overflow-hidden flex flex-col">
             <DocumentTemplateForm template={null} onClose={handleTemplateFormClose} />
           </div>
