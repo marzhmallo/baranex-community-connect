@@ -31,6 +31,7 @@ interface Resident {
   occupation?: string;
   civil_status: string;
   is_registered_voter: boolean;
+  mobile_number?: string;
 }
 
 interface ResidentDetailsProps {
@@ -57,6 +58,18 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
       console.error("Error formatting date:", error);
       return 'N/A';
     }
+  };
+
+  // Convert from ResidentsList format to IssueDocumentModal format
+  const convertResidentForModal = (resident: Resident) => {
+    return {
+      id: resident.id,
+      first_name: resident.first_name,
+      last_name: resident.last_name,
+      middle_name: resident.middle_name,
+      address: resident.address,
+      birthdate: resident.birthdate,
+    };
   };
 
   return (
@@ -130,10 +143,10 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
                 <p className="text-sm text-muted-foreground">{resident.address}</p>
               </div>
             )}
-            {resident.contact_number && (
+            {(resident.contact_number || resident.mobile_number) && (
               <div>
                 <p className="text-sm font-medium flex items-center gap-1"><Phone className="h-4 w-4 mr-1" /> Contact Number:</p>
-                <p className="text-sm text-muted-foreground">{resident.contact_number}</p>
+                <p className="text-sm text-muted-foreground">{resident.contact_number || resident.mobile_number}</p>
               </div>
             )}
             {resident.email && (
@@ -148,7 +161,7 @@ const ResidentDetails = ({ resident, onClose, onEdit }: ResidentDetailsProps) =>
 
       {/* Issue Document Modal */}
       <IssueDocumentModal
-        resident={resident}
+        resident={convertResidentForModal(resident)}
         open={issueDocumentOpen}
         onOpenChange={setIssueDocumentOpen}
       />
