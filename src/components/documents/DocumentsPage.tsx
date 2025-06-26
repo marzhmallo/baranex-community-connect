@@ -230,7 +230,13 @@ const DocumentsPage = () => {
 
             <div className="p-4 flex-1 flex flex-col">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
-                
+                <div className="flex flex-wrap gap-2">
+                  <button className="bg-primary/20 text-primary px-3 py-1.5 rounded-full text-sm hover:bg-primary/30 transition-colors border border-border">All</button>
+                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors border border-border">Certificates</button>
+                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors border border-border">Permits</button>
+                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors border border-border">Clearances</button>
+                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors border border-border">IDs</button>
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex items-center border border-input rounded-lg">
                     <select className="text-sm px-3 py-2 rounded-l-lg border-r border-input focus:outline-none bg-background text-foreground">
