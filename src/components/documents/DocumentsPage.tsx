@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import IssueDocumentForm from "@/components/documents/IssueDocumentForm";
 import { 
   FileText, 
@@ -206,7 +207,7 @@ const DocumentsPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-card rounded-lg shadow-sm border min-h-[620px] flex flex-col">
+          <div className="bg-card rounded-lg shadow-sm border border-border min-h-[620px] flex flex-col">
             <div className="p-4 border-b border-border">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <h2 className="text-lg font-semibold text-foreground">Document Library</h2>
@@ -219,7 +220,7 @@ const DocumentsPage = () => {
                       className="pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-56 bg-background text-foreground"
                     />
                   </div>
-                  <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
+                  <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 border border-border">
                     <Plus className="h-4 w-4" />
                     Add Document
                   </button>
@@ -230,11 +231,11 @@ const DocumentsPage = () => {
             <div className="p-4 flex-1 flex flex-col">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
                 <div className="flex flex-wrap gap-2">
-                  <button className="bg-primary/20 text-primary px-3 py-1.5 rounded-full text-sm hover:bg-primary/30 transition-colors">All</button>
-                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors">Certificates</button>
-                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors">Permits</button>
-                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors">Clearances</button>
-                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors">IDs</button>
+                  <button className="bg-primary/20 text-primary px-3 py-1.5 rounded-full text-sm hover:bg-primary/30 transition-colors border border-border">All</button>
+                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors border border-border">Certificates</button>
+                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors border border-border">Permits</button>
+                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors border border-border">Clearances</button>
+                  <button className="bg-muted text-muted-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/80 transition-colors border border-border">IDs</button>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex items-center border border-input rounded-lg">
@@ -244,14 +245,89 @@ const DocumentsPage = () => {
                       <option>Archive Selected</option>
                       <option>Delete Selected</option>
                     </select>
-                    <button className="px-3 py-2 bg-muted text-foreground rounded-r-lg hover:bg-muted/80 transition-colors text-sm">
+                    <button className="px-3 py-2 bg-muted text-foreground rounded-r-lg hover:bg-muted/80 transition-colors text-sm border-l border-border">
                       Apply
                     </button>
                   </div>
-                  <button className="flex items-center gap-2 border border-input rounded px-3 py-2 text-sm hover:bg-muted transition-colors">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
-                    Advanced Filters
-                  </button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="flex items-center gap-2 border border-input rounded px-3 py-2 text-sm hover:bg-muted transition-colors">
+                        <Filter className="h-4 w-4 text-muted-foreground" />
+                        Advanced Filters
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-96 p-6" align="end">
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-foreground">Advanced Filters</h3>
+                        
+                        <div className="grid grid-cols-1 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">Document Type</label>
+                            <select className="w-full border border-input rounded-lg p-2.5 focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground">
+                              <option value="">All Types</option>
+                              <option value="certificate">Certificates</option>
+                              <option value="permit">Permits</option>
+                              <option value="clearance">Clearances</option>
+                              <option value="id">IDs</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">Date Range</label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <input 
+                                type="date" 
+                                className="w-full border border-input rounded-lg p-2.5 focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                              />
+                              <input 
+                                type="date" 
+                                className="w-full border border-input rounded-lg p-2.5 focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">Status</label>
+                            <select className="w-full border border-input rounded-lg p-2.5 focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground">
+                              <option value="">All Statuses</option>
+                              <option value="active">Active</option>
+                              <option value="archived">Archived</option>
+                              <option value="expired">Expired</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">Creator</label>
+                            <select className="w-full border border-input rounded-lg p-2.5 focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground">
+                              <option value="">All Users</option>
+                              <option value="admin">Admin Users</option>
+                              <option value="staff">Staff Members</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">Priority</label>
+                            <select className="w-full border border-input rounded-lg p-2.5 focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground">
+                              <option value="">All Priority</option>
+                              <option value="high">High</option>
+                              <option value="medium">Medium</option>
+                              <option value="low">Low</option>
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-3 pt-4">
+                          <button className="px-4 py-2 border border-input text-foreground rounded-lg hover:bg-muted transition-colors">
+                            Reset Filters
+                          </button>
+                          <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
+                            <Filter className="h-4 w-4" />
+                            Apply Filters
+                          </button>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
@@ -742,7 +818,7 @@ const DocumentsPage = () => {
 
       {showIssueForm && (
         <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl shadow-xl border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <IssueDocumentForm onClose={() => setShowIssueForm(false)} />
           </div>
         </div>
