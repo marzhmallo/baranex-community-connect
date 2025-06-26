@@ -8,7 +8,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import IssueDocumentForm from "@/components/documents/IssueDocumentForm";
 import DocumentTemplateForm from "@/components/documents/DocumentTemplateForm";
 import { FileText, Clock, CheckCircle, AlertTriangle, Search, Plus, Upload, BarChart3, Settings, Filter, Download, Edit, Trash2, Eye, TrendingUp, RefreshCw, Calendar, Users, Activity, X } from "lucide-react";
-
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
@@ -719,28 +718,23 @@ const DocumentsPage = () => {
       </div>
 
       {/* Modals with background overlay */}
-      {showIssueForm && (
-        <>
+      {showIssueForm && <>
           <div className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
           <div className="fixed inset-0 z-50 overflow-auto flex items-center justify-center p-4">
             <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
               <IssueDocumentForm onClose={() => setShowIssueForm(false)} />
             </div>
           </div>
-        </>
-      )}
+        </>}
 
-      {showTemplateForm && (
-        <>
+      {showTemplateForm && <>
           <div className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 py-0 px-0">
             <div className="bg-card rounded-xl shadow-xl border border-border max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
               <DocumentTemplateForm template={null} onClose={handleTemplateFormClose} />
             </div>
           </div>
-        </>
-      )}
+        </>}
     </div>;
 };
-
 export default DocumentsPage;
