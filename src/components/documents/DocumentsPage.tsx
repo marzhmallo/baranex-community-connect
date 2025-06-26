@@ -7,9 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import IssueDocumentForm from "@/components/documents/IssueDocumentForm";
 import { FileText, Clock, CheckCircle, AlertTriangle, Search, Plus, Upload, BarChart3, Settings, Filter, Download, Edit, Trash2, Eye, TrendingUp, RefreshCw, Calendar, Users, Activity, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
+  const navigate = useNavigate();
   const {
     userProfile
   } = useAuth();
@@ -192,7 +195,10 @@ const DocumentsPage = () => {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <input type="text" placeholder="Search documents..." className="pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-56 bg-background text-foreground" />
                   </div>
-                  <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 border border-border">
+                  <button 
+                    onClick={() => navigate('/documents/new')}
+                    className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 border border-border"
+                  >
                     <Plus className="h-4 w-4" />
                     Add Document
                   </button>
