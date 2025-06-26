@@ -104,9 +104,9 @@ const DocumentTemplateForm = ({ template, onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border bg-card">
+    <>
+      {/* Header - Fixed */}
+      <div className="flex items-center justify-between p-6 border-b border-border bg-card flex-shrink-0">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-muted">
             <ArrowLeft className="h-4 w-4" />
@@ -118,7 +118,7 @@ const DocumentTemplateForm = ({ template, onClose }) => {
         </Button>
       </div>
       
-      {/* Form Content */}
+      {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -231,8 +231,8 @@ const DocumentTemplateForm = ({ template, onClose }) => {
         </Form>
       </div>
       
-      {/* Footer with Action Buttons */}
-      <div className="border-t border-border bg-card p-6">
+      {/* Footer with Action Buttons - Fixed */}
+      <div className="border-t border-border bg-card p-6 flex-shrink-0">
         <div className="flex justify-end gap-4">
           <Button 
             type="button" 
@@ -258,7 +258,7 @@ const DocumentTemplateForm = ({ template, onClose }) => {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
