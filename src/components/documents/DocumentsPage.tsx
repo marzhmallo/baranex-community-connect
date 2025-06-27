@@ -1,346 +1,485 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DocumentsList from "./DocumentsList";
-import DocumentTemplatesList from "./DocumentTemplatesList";
-import DocumentLogsList from "./DocumentLogsList";
-import DocumentsStats from "./DocumentsStats";
-import DocumentIssueForm from "./DocumentIssueForm";
+import { 
+  FileText, 
+  Download, 
+  Edit, 
+  Trash2, 
+  Search, 
+  Plus,
+  Filter,
+  MoreHorizontal,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  Eye
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("requests");
-  const [showIssueForm, setShowIssueForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
 
-  const handleEditTemplate = (template: any) => {
-    // Handle template editing logic here
-    console.log("Edit template:", template);
+  // Mock data for documents
+  const documents = [
+    {
+      id: "1",
+      name: "Barangay Clearance Template",
+      type: "template",
+      status: "Active",
+      size: "45 kB",
+      updatedAt: "2 hours ago",
+      icon: FileText,
+      color: "text-red-500"
+    },
+    {
+      id: "2",
+      name: "Certificate of Residency",
+      type: "template",
+      status: "Active", 
+      size: "32 kB",
+      updatedAt: "1 day ago",
+      icon: FileText,
+      color: "text-blue-500"
+    },
+    {
+      id: "3",
+      name: "Business Permit Form",
+      type: "template",
+      status: "Active",
+      size: "28 kB", 
+      updatedAt: "3 days ago",
+      icon: FileText,
+      color: "text-green-500"
+    },
+    {
+      id: "4",
+      name: "Barangay ID Application",
+      type: "template",
+      status: "Active",
+      size: "41 kB",
+      updatedAt: "1 week ago",
+      icon: FileText,
+      color: "text-purple-500"
+    }
+  ];
+
+  // Mock data for document status updates
+  const statusUpdates = [
+    {
+      id: "1",
+      title: "Barangay Clearance - Ready for Pickup",
+      description: "Document for Maria Santos has been signed and is ready for pickup at the Barangay Hall.",
+      time: "10 minutes ago",
+      status: "ready",
+      trackingId: "#BRG-2023-0042"
+    },
+    {
+      id: "2", 
+      title: "Certificate of Residency - Processing",
+      description: "Juan Dela Cruz's document is being processed. Pending approval from the Barangay Captain.",
+      time: "2 hours ago",
+      status: "processing",
+      trackingId: "#BRG-2023-0041"
+    },
+    {
+      id: "3",
+      title: "Business Permit - For Review", 
+      description: "Business Permit application for Anna Reyes has been submitted for review. Pending verification of business requirements.",
+      time: "5 hours ago",
+      status: "review",
+      trackingId: "#BRG-2023-0040"
+    },
+    {
+      id: "4",
+      title: "Barangay ID - Rejected",
+      description: "Carlos Mendoza's application for Barangay ID was rejected. Reason: insufficient supporting documents.",
+      time: "Yesterday, 2:15 PM",
+      status: "rejected", 
+      trackingId: "#BRG-2023-0039"
+    }
+  ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "ready":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "processing":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+      case "review":
+        return "text-blue-600 bg-blue-50 border-blue-200";
+      case "rejected":
+        return "text-red-600 bg-red-50 border-red-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "ready":
+        return <CheckCircle className="h-4 w-4" />;
+      case "processing":
+        return <Clock className="h-4 w-4" />;
+      case "review":
+        return <Eye className="h-4 w-4" />;
+      case "rejected":
+        return <XCircle className="h-4 w-4" />;
+      default:
+        return <AlertCircle className="h-4 w-4" />;
+    }
   };
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Document Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Barangay Document Management</h1>
         <p className="text-gray-600">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Documents</p>
-              <p className="text-2xl font-bold text-gray-900">1,247</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Documents</p>
+                <p className="text-2xl font-bold text-gray-900">1,247</p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FileText className="h-6 w-6 text-blue-600" />
+              </div>
             </div>
-            <div className="bg-primary-100 p-3 rounded-full">
-              <span className="material-symbols-outlined text-primary-600">description</span>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Requests</p>
-              <p className="text-2xl font-bold text-orange-600">23</p>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending Requests</p>
+                <p className="text-2xl font-bold text-orange-600">23</p>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-full">
+                <Clock className="h-6 w-6 text-orange-600" />
+              </div>
             </div>
-            <div className="bg-orange-100 p-3 rounded-full">
-              <span className="material-symbols-outlined text-orange-600">pending_actions</span>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Issued Today</p>
-              <p className="text-2xl font-bold text-green-600">8</p>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Issued Today</p>
+                <p className="text-2xl font-bold text-green-600">8</p>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <span className="material-symbols-outlined text-green-600">task_alt</span>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Templates</p>
-              <p className="text-2xl font-bold text-blue-600">15</p>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Templates</p>
+                <p className="text-2xl font-bold text-blue-600">15</p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FileText className="h-6 w-6 text-blue-600" />
+              </div>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <span className="material-symbols-outlined text-blue-600">landscape</span>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm p-4 col-span-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary-600">trending_up</span>
-              Document Processing Status
-            </h2>
-            <div className="flex gap-2">
-              <select className="text-xs border border-gray-300 rounded-md p-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                <option>This Week</option>
-                <option>This Month</option>
-                <option>Last 3 Months</option>
-                <option>Last Year</option>
-              </select>
-              <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
-                <span className="material-symbols-outlined text-sm">refresh</span>
-              </button>
+      {/* Document Processing Status */}
+      <Card className="mb-8">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium">DIV</div>
+              <CardTitle className="text-lg">Document Processing Status</CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select defaultValue="week">
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="quarter">Last 3 Months</SelectItem>
+                  <SelectItem value="year">Last Year</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-            <div className="rounded-lg bg-green-50 border border-green-100 p-3 flex justify-between items-center">
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500">Ready for Pickup</p>
-                <p className="text-xl font-bold text-green-600">18</p>
+                <p className="text-sm text-gray-600">Ready for Pickup</p>
+                <p className="text-2xl font-bold text-green-600">18</p>
               </div>
-              <div className="bg-green-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-green-600">inventory</span>
-              </div>
+              <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
             
-            <div className="rounded-lg bg-yellow-50 border border-yellow-100 p-3 flex justify-between items-center">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500">Processing</p>
-                <p className="text-xl font-bold text-yellow-600">12</p>
+                <p className="text-sm text-gray-600">Processing</p>
+                <p className="text-2xl font-bold text-yellow-600">12</p>
               </div>
-              <div className="bg-yellow-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-yellow-600">hourglass_top</span>
-              </div>
+              <Clock className="h-8 w-8 text-yellow-500" />
             </div>
             
-            <div className="rounded-lg bg-blue-50 border border-blue-100 p-3 flex justify-between items-center">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500">For Review</p>
-                <p className="text-xl font-bold text-blue-600">7</p>
+                <p className="text-sm text-gray-600">For Review</p>
+                <p className="text-2xl font-bold text-blue-600">7</p>
               </div>
-              <div className="bg-blue-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-blue-600">rate_review</span>
-              </div>
+              <Eye className="h-8 w-8 text-blue-500" />
             </div>
             
-            <div className="rounded-lg bg-purple-50 border border-purple-100 p-3 flex justify-between items-center">
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500">Released</p>
-                <p className="text-xl font-bold text-purple-600">42</p>
+                <p className="text-sm text-gray-600">Released</p>
+                <p className="text-2xl font-bold text-purple-600">42</p>
               </div>
-              <div className="bg-purple-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-purple-600">task_alt</span>
-              </div>
+              <CheckCircle className="h-8 w-8 text-purple-500" />
             </div>
             
-            <div className="rounded-lg bg-red-50 border border-red-100 p-3 flex justify-between items-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500">Rejected</p>
-                <p className="text-xl font-bold text-red-600">3</p>
+                <p className="text-sm text-gray-600">Rejected</p>
+                <p className="text-2xl font-bold text-red-600">3</p>
               </div>
-              <div className="bg-red-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-red-600">cancel</span>
-              </div>
+              <XCircle className="h-8 w-8 text-red-500" />
             </div>
           </div>
-          
-          <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
-            <span>Processing Time (Average)</span>
-            <span>Updated: Today, 11:30 AM</span>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>Processing Time (Average)</span>
+              <span>Updated: Today, 11:30 AM</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-purple-600 h-2 rounded-full" style={{ width: '70%' }}></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>0 days</span>
+              <span className="font-medium text-purple-600">1.2 days</span>
+              <span>3 days (target)</span>
+            </div>
           </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-            <div className="bg-primary-600 h-2.5 rounded-full" style={{ width: '70%' }}></div>
-          </div>
-          
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-500">0 days</span>
-            <span className="font-medium text-primary-600">1.2 days</span>
-            <span className="text-gray-500">3 days (target)</span>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Document Library */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Document Library</h2>
-                <div className="flex flex-col sm:flex-row gap-3">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <CardTitle>Document Library</CardTitle>
+                <div className="flex items-center gap-3">
                   <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
-                    <input
-                      type="text"
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
                       placeholder="Search documents..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-64"
+                      className="pl-10 w-64"
                     />
                   </div>
-                  <button 
-                    onClick={() => setShowIssueForm(true)}
-                    className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined">add</span>
+                  <Button className="bg-purple-600 hover:bg-purple-700">
+                    <Plus className="h-4 w-4 mr-2" />
                     Add Document
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            <div className="p-6">
+            </CardHeader>
+            <CardContent className="p-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="requests">Requests</TabsTrigger>
-                  <TabsTrigger value="templates">Templates</TabsTrigger>
-                  <TabsTrigger value="logs">Activity Logs</TabsTrigger>
-                  <TabsTrigger value="stats">Statistics</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="requests" className="mt-6">
-                  <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                    <div className="flex flex-wrap gap-2">
-                      <button className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm hover:bg-primary-200 transition-colors">All</button>
-                      <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Pending</button>
-                      <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Approved</button>
-                      <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Rejected</button>
+                <div className="px-6 border-b">
+                  <TabsList className="bg-transparent h-auto p-0">
+                    <TabsTrigger value="all" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 rounded-none">
+                      All
+                    </TabsTrigger>
+                    <TabsTrigger value="certificates" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 rounded-none">
+                      Certificates
+                    </TabsTrigger>
+                    <TabsTrigger value="permits" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 rounded-none">
+                      Permits
+                    </TabsTrigger>
+                    <TabsTrigger value="clearances" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 rounded-none">
+                      Clearances
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value={activeTab} className="mt-0">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Filter className="h-4 w-4 mr-2" />
+                          Advanced Filters
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          Bulk Actions
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Apply
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {documents.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <input type="checkbox" className="rounded" />
+                            <div className={`p-2 rounded ${doc.color.includes('red') ? 'bg-red-100' : doc.color.includes('blue') ? 'bg-blue-100' : doc.color.includes('green') ? 'bg-green-100' : 'bg-purple-100'}`}>
+                              <doc.icon className={`h-5 w-5 ${doc.color}`} />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-900">{doc.name}</h4>
+                              <p className="text-sm text-gray-500">Updated {doc.updatedAt} • {doc.size}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="bg-green-100 text-green-800">
+                              {doc.status}
+                            </Badge>
+                            <Button variant="ghost" size="sm">
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" />
+                        <span className="text-sm text-gray-600">Select All</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">Previous</Button>
+                        <div className="flex gap-1">
+                          <Button variant="outline" size="sm" className="bg-purple-600 text-white">1</Button>
+                          <Button variant="outline" size="sm">2</Button>
+                          <Button variant="outline" size="sm">3</Button>
+                        </div>
+                        <Button variant="outline" size="sm">Next</Button>
+                      </div>
                     </div>
                   </div>
-                  <DocumentsList status="all" searchQuery={searchQuery} />
-                </TabsContent>
-                
-                <TabsContent value="templates" className="mt-6">
-                  <DocumentTemplatesList searchQuery={searchQuery} onEdit={handleEditTemplate} />
-                </TabsContent>
-                
-                <TabsContent value="logs" className="mt-6">
-                  <DocumentLogsList searchQuery={searchQuery} />
-                </TabsContent>
-                
-                <TabsContent value="stats" className="mt-6">
-                  <DocumentsStats />
                 </TabsContent>
               </Tabs>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="space-y-6">
-          <div className="mb-6 bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <span className="material-symbols-outlined">history</span>
-                Recent Activity
-              </h2>
-            </div>
-            <div className="p-0">
-              <div className="relative">
-                <div className="absolute top-0 bottom-0 left-8 w-0.5 bg-gray-200 z-0"></div>
-                <div className="p-6 relative z-10">
-                  <div className="grid grid-cols-[auto_1fr] gap-4 mb-6">
-                    <div className="mt-1">
-                      <div className="h-6 w-6 rounded-full bg-green-500 border-4 border-white shadow"></div>
-                    </div>
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                        <h3 className="font-medium text-gray-900">Barangay Clearance - Approved</h3>
-                        <span className="text-xs text-gray-500">10 minutes ago</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Document for Maria Santos has been approved and is ready for pickup.</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-[auto_1fr] gap-4 mb-6">
-                    <div className="mt-1">
-                      <div className="h-6 w-6 rounded-full bg-yellow-500 border-4 border-white shadow"></div>
-                    </div>
-                    <div className="bg-yellow-50 p-4 rounded-lg">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                        <h3 className="font-medium text-gray-900">Certificate of Residency - Processing</h3>
-                        <span className="text-xs text-gray-500">2 hours ago</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Juan Dela Cruz's document is being processed.</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-[auto_1fr] gap-4">
-                    <div className="mt-1">
-                      <div className="h-6 w-6 rounded-full bg-blue-500 border-4 border-white shadow"></div>
-                    </div>
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                        <h3 className="font-medium text-gray-900">Business Permit - New Request</h3>
-                        <span className="text-xs text-gray-500">5 hours ago</span>
-                      </div>
-                      <p className="text-sm text-gray-600">New business permit application submitted by Anna Reyes.</p>
-                    </div>
-                  </div>
+        {/* Document Status Updates Sidebar */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="bg-green-100 p-1 rounded">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                 </div>
+                Document Status Updates
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="space-y-0">
+                {statusUpdates.map((update, index) => (
+                  <div key={update.id} className={`p-4 border-b border-gray-100 ${index === statusUpdates.length - 1 ? 'border-b-0' : ''}`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`p-1 rounded-full border-2 ${getStatusColor(update.status)}`}>
+                        {getStatusIcon(update.status)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 text-sm">{update.title}</h4>
+                        <p className="text-xs text-gray-600 mt-1">{update.description}</p>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-xs text-gray-500">{update.time}</span>
+                          <Badge variant="outline" className="text-xs px-1 py-0">
+                            {update.trackingId}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <span className="material-symbols-outlined">add_circle</span>
-                Quick Actions
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 gap-3">
-                <button 
-                  onClick={() => setShowIssueForm(true)}
-                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
-                >
-                  <div className="bg-primary-100 p-2 rounded-lg">
-                    <span className="material-symbols-outlined text-primary-600">add_circle</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Issue New Document</p>
-                    <p className="text-sm text-gray-500">Create and issue documents</p>
-                  </div>
-                </button>
-
-                <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                  <div className="bg-blue-100 p-2 rounded-lg">
-                    <span className="material-symbols-outlined text-blue-600">upload_file</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Upload Template</p>
-                    <p className="text-sm text-gray-500">Add new document templates</p>
-                  </div>
-                </button>
-
-                <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <span className="material-symbols-outlined text-green-600">analytics</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">View Reports</p>
-                    <p className="text-sm text-gray-500">Document statistics and analytics</p>
-                  </div>
-                </button>
+              <div className="p-4 border-t">
+                <Button variant="outline" className="w-full text-sm">
+                  View All Updates →
+                </Button>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+
+          {/* Document Requests Card */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <AlertCircle className="h-4 w-4" />
+                Document Requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <Button className="w-full bg-green-100 text-green-800 hover:bg-green-200 justify-start">
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Reports
+                  <span className="text-xs ml-auto">Document statistics and analytics</span>
+                </Button>
+                <Button className="w-full bg-orange-100 text-orange-800 hover:bg-orange-200 justify-start">
+                  <FileText className="h-4 w-4 mr-2" />
+                  System Settings
+                  <span className="text-xs ml-auto">Configure document settings</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      {showIssueForm && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <DocumentIssueForm onClose={() => setShowIssueForm(false)} />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
