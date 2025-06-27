@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,11 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  Eye
+  Eye,
+  Upload,
+  BarChart3,
+  Settings,
+  FileCheck
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -33,11 +36,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+  const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
+  const [trackingFilter, setTrackingFilter] = useState("All Documents");
 
   // Mock data for documents
   const documents = [
@@ -83,6 +90,108 @@ const DocumentsPage = () => {
     }
   ];
 
+  // Mock data for document requests
+  const documentRequests = [
+    {
+      id: "1",
+      name: "Maria Santos",
+      document: "Barangay Clearance",
+      timeAgo: "2 hours ago",
+      status: "Approve",
+      statusColor: "bg-green-500"
+    },
+    {
+      id: "2", 
+      name: "Juan Dela Cruz",
+      document: "Certificate of Residency",
+      timeAgo: "5 hours ago",
+      status: "Deny",
+      statusColor: "bg-red-500"
+    },
+    {
+      id: "3",
+      name: "Anna Reyes", 
+      document: "Business Permit",
+      timeAgo: "1 day ago",
+      status: "Approve",
+      statusColor: "bg-green-500"
+    }
+  ];
+
+  // Mock data for document tracking
+  const documentTracking = [
+    {
+      id: "#BRG-2023-0042",
+      document: "Barangay Clearance",
+      requestedBy: "Maria Santos",
+      status: "Ready for pickup",
+      statusColor: "bg-green-500",
+      lastUpdate: "Today, 10:45 AM"
+    },
+    {
+      id: "#BRG-2023-0041",
+      document: "Certificate of Residency", 
+      requestedBy: "Juan Dela Cruz",
+      status: "Processing",
+      statusColor: "bg-yellow-500",
+      lastUpdate: "Today, 9:20 AM"
+    },
+    {
+      id: "#BRG-2023-0040",
+      document: "Business Permit",
+      requestedBy: "Anna Reyes", 
+      status: "For Review",
+      statusColor: "bg-blue-500",
+      lastUpdate: "Yesterday, 4:30 PM"
+    },
+    {
+      id: "#BRG-2023-0039",
+      document: "Barangay ID",
+      requestedBy: "Carlos Mendoza",
+      status: "Rejected", 
+      statusColor: "bg-red-500",
+      lastUpdate: "2 days ago"
+    },
+    {
+      id: "#BRG-2023-0038",
+      document: "Indigency Certificate",
+      requestedBy: "Elena Garcia",
+      status: "Released",
+      statusColor: "bg-purple-500", 
+      lastUpdate: "3 days ago"
+    }
+  ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "ready":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "processing":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+      case "review":
+        return "text-blue-600 bg-blue-50 border-blue-200";
+      case "rejected":
+        return "text-red-600 bg-red-50 border-red-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "ready":
+        return <CheckCircle className="h-4 w-4" />;
+      case "processing":
+        return <Clock className="h-4 w-4" />;
+      case "review":
+        return <Eye className="h-4 w-4" />;
+      case "rejected":
+        return <XCircle className="h-4 w-4" />;
+      default:
+        return <AlertCircle className="h-4 w-4" />;
+    }
+  };
+
   // Mock data for document status updates
   const statusUpdates = [
     {
@@ -118,36 +227,6 @@ const DocumentsPage = () => {
       trackingId: "#BRG-2023-0039"
     }
   ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ready":
-        return "text-green-600 bg-green-50 border-green-200";
-      case "processing":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200";
-      case "review":
-        return "text-blue-600 bg-blue-50 border-blue-200";
-      case "rejected":
-        return "text-red-600 bg-red-50 border-red-200";
-      default:
-        return "text-gray-600 bg-gray-50 border-gray-200";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "ready":
-        return <CheckCircle className="h-4 w-4" />;
-      case "processing":
-        return <Clock className="h-4 w-4" />;
-      case "review":
-        return <Eye className="h-4 w-4" />;
-      case "rejected":
-        return <XCircle className="h-4 w-4" />;
-      default:
-        return <AlertCircle className="h-4 w-4" />;
-    }
-  };
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
@@ -215,6 +294,190 @@ const DocumentsPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Document Requests Section */}
+      <Card className="mb-8">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <FileCheck className="h-5 w-5" />
+            <CardTitle>Document Requests</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {documentRequests.map((request) => (
+              <div key={request.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium">{request.name.split(' ').map(n => n[0]).join('')}</span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium">{request.name}</h4>
+                    <p className="text-sm text-gray-500">{request.document}</p>
+                    <p className="text-xs text-gray-400">{request.timeAgo}</p>
+                  </div>
+                </div>
+                <Badge className={`${request.statusColor} text-white hover:${request.statusColor}/80`}>
+                  {request.status}
+                </Badge>
+              </div>
+            ))}
+            <div className="flex justify-center pt-4">
+              <Button variant="link" className="text-purple-600">
+                View All Requests →
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions Section */}
+      <Card className="mb-8">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" />
+            <CardTitle>Quick Actions</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-purple-100 text-purple-800 hover:bg-purple-200">
+              <Plus className="h-4 w-4" />
+              <div className="text-left">
+                <div className="font-medium">Issue New Document</div>
+                <div className="text-xs">Create and issue documents</div>
+              </div>
+            </Button>
+            
+            <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-blue-100 text-blue-800 hover:bg-blue-200">
+              <Upload className="h-4 w-4" />
+              <div className="text-left">
+                <div className="font-medium">Upload Template</div>
+                <div className="text-xs">Add new document templates</div>
+              </div>
+            </Button>
+            
+            <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-green-100 text-green-800 hover:bg-green-200">
+              <BarChart3 className="h-4 w-4" />
+              <div className="text-left">
+                <div className="font-medium">View Reports</div>
+                <div className="text-xs">Document statistics and analytics</div>
+              </div>
+            </Button>
+            
+            <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-orange-100 text-orange-800 hover:bg-orange-200">
+              <Settings className="h-4 w-4" />
+              <div className="text-left">
+                <div className="font-medium">System Settings</div>
+                <div className="text-xs">Configure document settings</div>
+              </div>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Document Tracking System */}
+      <Card className="mb-8">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              <CardTitle>Document Tracking System</CardTitle>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search by tracking ID..."
+                value={trackingSearchQuery}
+                onChange={(e) => setTrackingSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex gap-2">
+              {["All Documents", "In Progress", "Completed", "Rejected"].map((filter) => (
+                <Button
+                  key={filter}
+                  variant={trackingFilter === filter ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setTrackingFilter(filter)}
+                  className={trackingFilter === filter ? "bg-purple-600 hover:bg-purple-700" : ""}
+                >
+                  {filter}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tracking ID</TableHead>
+                <TableHead>Document</TableHead>
+                <TableHead>Requested By</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Last Update</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {documentTracking.map((doc) => (
+                <TableRow key={doc.id}>
+                  <TableCell>
+                    <span className="text-purple-600 font-medium">{doc.id}</span>
+                  </TableCell>
+                  <TableCell>{doc.document}</TableCell>
+                  <TableCell>{doc.requestedBy}</TableCell>
+                  <TableCell>
+                    <Badge className={`${doc.statusColor} text-white`}>
+                      {doc.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-gray-500">{doc.lastUpdate}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-gray-500">
+              Showing 5 of 42 documents
+            </div>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious href="#" />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#" isActive>1</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#">2</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#">3</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext href="#" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Document Processing Status */}
       <Card className="mb-8">
