@@ -16,6 +16,11 @@ const DocumentsPage = () => {
   const [activeTab, setActiveTab] = useState("requests");
   const [showIssueForm, setShowIssueForm] = useState(false);
 
+  const handleEditTemplate = (template: any) => {
+    // Handle template editing logic here
+    console.log("Edit template:", template);
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       <div className="mb-8">
@@ -212,11 +217,11 @@ const DocumentsPage = () => {
                 </TabsContent>
                 
                 <TabsContent value="templates" className="mt-6">
-                  <DocumentTemplatesList />
+                  <DocumentTemplatesList searchQuery={searchQuery} onEdit={handleEditTemplate} />
                 </TabsContent>
                 
                 <TabsContent value="logs" className="mt-6">
-                  <DocumentLogsList />
+                  <DocumentLogsList searchQuery={searchQuery} />
                 </TabsContent>
                 
                 <TabsContent value="stats" className="mt-6">
