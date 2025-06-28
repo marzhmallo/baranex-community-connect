@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import DocumentRequestForm from "./DocumentRequestForm";
+import DocumentTemplateForm from "./DocumentTemplateForm";
 import IssueDocumentForm from "./IssueDocumentForm";
 
 const DocumentsPage = () => {
@@ -195,7 +195,6 @@ const DocumentsPage = () => {
         return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
-  
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "ready":
@@ -246,7 +245,7 @@ const DocumentsPage = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Barangay Document Management</h1>
-        <p className="text-gray-600">Central hub for managing document requests and tracking their status</p>
+        <p className="text-gray-600">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
 
       {/* Stats Cards */}
@@ -255,7 +254,7 @@ const DocumentsPage = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Requests</p>
+                <p className="text-sm font-medium text-gray-600">Total Documents</p>
                 <p className="text-2xl font-bold text-gray-900">1,247</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
@@ -283,7 +282,7 @@ const DocumentsPage = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Completed Today</p>
+                <p className="text-sm font-medium text-gray-600">Issued Today</p>
                 <p className="text-2xl font-bold text-green-600">8</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
@@ -297,8 +296,8 @@ const DocumentsPage = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Ready for Pickup</p>
-                <p className="text-2xl font-bold text-blue-600">{processingStats?.readyForPickup || 18}</p>
+                <p className="text-sm font-medium text-gray-600">Active Templates</p>
+                <p className="text-2xl font-bold text-blue-600">{documentTypes?.length || 0}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
                 <FileText className="h-6 w-6 text-blue-600" />
@@ -308,6 +307,7 @@ const DocumentsPage = () => {
         </Card>
       </div>
 
+      {/* Document Processing Status */}
       <Card className="mb-8">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -440,27 +440,24 @@ const DocumentsPage = () => {
             <div className="grid grid-cols-1 gap-4">
               <Button 
                 className="flex items-center gap-2 justify-start h-auto p-4 bg-purple-100 text-purple-800 hover:bg-purple-200"
-                onClick={() => setIsAddDocumentOpen(true)}
+                onClick={() => setIsIssueDocumentOpen(true)}
               >
                 <Plus className="h-4 w-4" />
                 <div className="text-left">
-                  <div className="font-medium">Log Document Request</div>
-                  <div className="text-xs">Record new document requests from residents</div>
-                </div>
-              </Button>
-              
-              <Button 
-                className="flex items-center gap-2 justify-start h-auto p-4 bg-green-100 text-green-800 hover:bg-green-200"
-                onClick={() => setIsIssueDocumentOpen(true)}
-              >
-                <FileCheck className="h-4 w-4" />
-                <div className="text-left">
-                  <div className="font-medium">Update Request Status</div>
-                  <div className="text-xs">Update status of existing requests</div>
+                  <div className="font-medium">Issue New Document</div>
+                  <div className="text-xs">Create and issue documents</div>
                 </div>
               </Button>
               
               <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-blue-100 text-blue-800 hover:bg-blue-200">
+                <Upload className="h-4 w-4" />
+                <div className="text-left">
+                  <div className="font-medium">Upload Template</div>
+                  <div className="text-xs">Add new document templates</div>
+                </div>
+              </Button>
+              
+              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-green-100 text-green-800 hover:bg-green-200">
                 <BarChart3 className="h-4 w-4" />
                 <div className="text-left">
                   <div className="font-medium">View Reports</div>
@@ -480,6 +477,7 @@ const DocumentsPage = () => {
         </Card>
       </div>
 
+      {/* Document Tracking System */}
       <Card className="mb-8">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -568,54 +566,125 @@ const DocumentsPage = () => {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Document Request Management */}
+        {/* Document Library */}
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <CardTitle>Document Request Management</CardTitle>
-                  <p className="text-sm text-gray-500 mt-1">Manage and track all document requests from residents</p>
-                </div>
+                <CardTitle>Document Library</CardTitle>
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input placeholder="Search requests..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64" />
+                    <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64" />
                   </div>
                   <Button 
                     className="bg-purple-600 hover:bg-purple-700"
                     onClick={() => setIsAddDocumentOpen(true)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    New Request
+                    Add Document
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="p-6">
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-amber-800">Document Creation Outside System</h4>
-                      <p className="text-sm text-amber-700 mt-1">
-                        This system tracks document requests only. Actual certificates and documents must be created outside the system by administrators.
-                      </p>
-                    </div>
-                  </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <div className="px-6 border-b">
+                  <TabsList className="bg-transparent h-auto p-0">
+                    <TabsTrigger value="all" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 rounded-none">
+                      All
+                    </TabsTrigger>
+                    <TabsTrigger value="certificates" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 rounded-none">
+                      Certificates
+                    </TabsTrigger>
+                    <TabsTrigger value="permits" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 rounded-none">
+                      Permits
+                    </TabsTrigger>
+                    <TabsTrigger value="clearances" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 rounded-none">
+                      Clearances
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
 
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Requests</h3>
-                  <p className="text-gray-500 mb-4">Start by logging a new document request from a resident.</p>
-                  <Button onClick={() => setIsAddDocumentOpen(true)} className="bg-purple-600 hover:bg-purple-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Log First Request
-                  </Button>
-                </div>
-              </div>
+                <TabsContent value={activeTab} className="mt-0">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Filter className="h-4 w-4 mr-2" />
+                          Advanced Filters
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          Bulk Actions
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Apply
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {isLoadingDocuments ? (
+                        <div className="text-center py-8">Loading document templates...</div>
+                      ) : documentTypes && documentTypes.length > 0 ? (
+                        documentTypes.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center gap-4">
+                              <input type="checkbox" className="rounded" />
+                              <div className="p-2 rounded bg-blue-100">
+                                <FileText className="h-5 w-5 text-blue-500" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-900">{doc.name}</h4>
+                                <p className="text-sm text-gray-500">
+                                  {doc.description ? `${doc.description} • ` : ''}
+                                  Fee: ₱{doc.fee || 0}
+                                  {doc.validity_days ? ` • Valid for ${doc.validity_days} days` : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                Active
+                              </Badge>
+                              <Button variant="ghost" size="sm">
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>)
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No document templates found.</p>
+                          <p className="text-sm text-gray-400">Add a new template to get started.</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" />
+                        <span className="text-sm text-gray-600">Select All</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">Previous</Button>
+                        <div className="flex gap-1">
+                          <Button variant="outline" size="sm" className="bg-purple-600 text-white">1</Button>
+                          <Button variant="outline" size="sm">2</Button>
+                          <Button variant="outline" size="sm">3</Button>
+                        </div>
+                        <Button variant="outline" size="sm">Next</Button>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </div>
@@ -661,10 +730,10 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      {/* Log Document Request Dialog */}
+      {/* Add Document Template Dialog */}
       <Dialog open={isAddDocumentOpen} onOpenChange={setIsAddDocumentOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DocumentRequestForm onClose={() => setIsAddDocumentOpen(false)} />
+          <DocumentTemplateForm onClose={() => setIsAddDocumentOpen(false)} />
         </DialogContent>
       </Dialog>
 
