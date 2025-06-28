@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import IssueDocumentForm from "./IssueDocumentForm";
+import DocumentTemplateForm from "./DocumentTemplateForm";
 
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,7 +20,7 @@ const DocumentsPage = () => {
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
   const [trackingFilter, setTrackingFilter] = useState("All Documents");
-  const [isIssueDocumentOpen, setIsIssueDocumentOpen] = useState(false);
+  const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
 
   // Fetch document types from the database
   const { data: documentTypes, isLoading: isLoadingDocuments } = useQuery({
@@ -574,7 +574,7 @@ const DocumentsPage = () => {
                   </div>
                   <Button 
                     className="bg-purple-600 hover:bg-purple-700"
-                    onClick={() => setIsIssueDocumentOpen(true)}
+                    onClick={() => setIsAddDocumentOpen(true)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Document
@@ -725,10 +725,10 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      {/* Issue Document Dialog */}
-      <Dialog open={isIssueDocumentOpen} onOpenChange={setIsIssueDocumentOpen}>
+      {/* Add Document Template Dialog */}
+      <Dialog open={isAddDocumentOpen} onOpenChange={setIsAddDocumentOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <IssueDocumentForm onClose={() => setIsIssueDocumentOpen(false)} />
+          <DocumentTemplateForm onClose={() => setIsAddDocumentOpen(false)} />
         </DialogContent>
       </Dialog>
     </div>;
