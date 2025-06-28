@@ -23,6 +23,7 @@ const DocumentsPage = () => {
   const [trackingFilter, setTrackingFilter] = useState("All Documents");
   const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
   const [isIssueDocumentOpen, setIsIssueDocumentOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
 
   // Fetch document types from the database
   const { data: documentTypes, isLoading: isLoadingDocuments } = useQuery({
@@ -240,6 +241,43 @@ const DocumentsPage = () => {
     status: "rejected",
     trackingId: "#BRG-2023-0039"
   }];
+
+  const handleEditTemplate = (template) => {
+    setEditingTemplate(template);
+    setIsAddDocumentOpen(true);
+  };
+
+  const handleDeleteTemplate = async (templateId) => {
+    try {
+      const { error } = await supabase
+        .from('document_types')
+        .delete()
+        .eq('id', templateId);
+        
+      if (error) throw error;
+      
+      // Trigger refetch of document types
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting template:", error);
+    }
+  };
+
+  const handleViewTemplate = (template) => {
+    // For now, just show an alert with template details
+    alert(`Template: ${template.name}\nDescription: ${template.description || 'No description'}\nFee: ₱${template.fee || 0}`);
+  };
+
+  const handleTemplateSuccess = () => {
+    setEditingTemplate(null);
+    // Trigger refetch of document types
+    window.location.reload();
+  };
+
+  const handleCloseAddDocument = () => {
+    setIsAddDocumentOpen(false);
+    setEditingTemplate(null);
+  };
 
   return <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -648,13 +686,13 @@ const DocumentsPage = () => {
                               <Badge variant="secondary" className="bg-green-100 text-green-800">
                                 Active
                               </Badge>
-                              <Button variant="ghost" size="sm">
-                                <Download className="h-4 w-4" />
+                              <Button variant="ghost" size="sm" onClick={() => handleViewTemplate(doc)}>
+                                <Eye className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" onClick={() => handleEditTemplate(doc)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" onClick={() => handleDeleteTemplate(doc.id)}>
                                 <Trash2 className="h-4 w-4 text-red-500" />
                               </Button>
                             </div>
@@ -733,7 +771,11 @@ const DocumentsPage = () => {
       {/* Add Document Template Dialog */}
       <Dialog open={isAddDocumentOpen} onOpenChange={setIsAddDocumentOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DocumentTemplateForm onClose={() => setIsAddDocumentOpen(false)} />
+          <DocumentTemplateForm 
+            template={editingTemplate}
+            onClose={handleCloseAddDocument} 
+            onSuccess={handleTemplateSuccess}
+          />
         </DialogContent>
       </Dialog>
 

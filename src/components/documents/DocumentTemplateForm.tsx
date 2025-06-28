@@ -29,9 +29,10 @@ const templateSchema = z.object({
 interface DocumentTemplateFormProps {
   template?: any;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) => {
+const DocumentTemplateForm = ({ template, onClose, onSuccess }: DocumentTemplateFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
@@ -49,17 +50,15 @@ const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) 
     setIsSubmitting(true);
     
     try {
-      // Prepare data for submission
       const templateData = {
         name: data.name,
         description: data.description,
-        template: "", // Empty template content as requested
+        template: "",
         fee: data.fee,
         validity_days: data.validity_days,
-        required_fields: {} // Empty required fields as requested
+        required_fields: {}
       };
       
-      // Update or insert based on whether we're editing or creating
       const { data: result, error } = template 
         ? await supabase
             .from('document_types')
@@ -78,6 +77,7 @@ const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) 
         description: `Document template has been ${template ? "updated" : "created"} successfully.`,
       });
       
+      if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
       console.error("Error submitting template:", error);
@@ -93,7 +93,6 @@ const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) 
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-blue-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -115,11 +114,9 @@ const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) 
         </div>
       </DialogHeader>
       
-      {/* Content */}
       <div className="flex-1 p-6 overflow-y-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Document Name */}
             <div className="space-y-2">
               <FormField
                 control={form.control}
@@ -142,7 +139,6 @@ const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) 
               />
             </div>
 
-            {/* Description */}
             <div className="space-y-2">
               <FormField
                 control={form.control}
@@ -165,7 +161,6 @@ const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) 
               />
             </div>
             
-            {/* Fee and Validity */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -213,7 +208,6 @@ const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) 
               />
             </div>
 
-            {/* Info Card */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <div className="p-1 bg-blue-100 rounded-full mt-0.5">
@@ -233,7 +227,6 @@ const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) 
         </Form>
       </div>
       
-      {/* Footer */}
       <div className="border-t bg-gray-50 px-6 py-4">
         <div className="flex justify-end gap-3">
           <Button 
