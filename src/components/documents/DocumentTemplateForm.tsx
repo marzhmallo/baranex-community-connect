@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,25 +16,22 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { ArrowLeft, Save, X } from "lucide-react";
+import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FileText, Save, X } from "lucide-react";
 
 const templateSchema = z.object({
   name: z.string().min(3, { message: "Template name must be at least 3 characters" }),
   description: z.string().optional(),
-  template: z.string().min(10, { message: "Template content must be at least 10 characters" }),
   fee: z.coerce.number().min(0, { message: "Fee cannot be negative" }),
   validity_days: z.coerce.number().int().min(0, { message: "Validity days must be a positive integer or zero" }).optional(),
-  required_fields: z.string().optional()
 });
 
 interface DocumentTemplateFormProps {
   template?: any;
   onClose: () => void;
-  customEditor?: React.ReactNode;
-  editorContent?: string;
 }
 
-const DocumentTemplateForm = ({ template, onClose, customEditor, editorContent }: DocumentTemplateFormProps) => {
+const DocumentTemplateForm = ({ template, onClose }: DocumentTemplateFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
@@ -43,49 +40,23 @@ const DocumentTemplateForm = ({ template, onClose, customEditor, editorContent }
     defaultValues: {
       name: template?.name || "",
       description: template?.description || "",
-      template: template?.template || "",
       fee: template?.fee || 0,
       validity_days: template?.validity_days || 30,
-      required_fields: template?.required_fields ? JSON.stringify(template.required_fields, null, 2) : "{}"
     }
   });
-
-  // Update form when editorContent changes
-  useEffect(() => {
-    if (editorContent !== undefined) {
-      form.setValue("template", editorContent);
-    }
-  }, [editorContent, form]);
   
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     
     try {
-      // Parse the JSON string to an object
-      let parsedRequiredFields;
-      try {
-        parsedRequiredFields = JSON.parse(data.required_fields);
-      } catch (e) {
-        toast({
-          title: "Invalid JSON format",
-          description: "The required fields must be in valid JSON format.",
-          variant: "destructive"
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Use editor content if available, otherwise use form data
-      const templateContent = editorContent || data.template;
-      
       // Prepare data for submission
       const templateData = {
         name: data.name,
         description: data.description,
-        template: templateContent,
+        template: "", // Empty template content as requested
         fee: data.fee,
         validity_days: data.validity_days,
-        required_fields: parsedRequiredFields
+        required_fields: {} // Empty required fields as requested
       };
       
       // Update or insert based on whether we're editing or creating
@@ -121,138 +92,150 @@ const DocumentTemplateForm = ({ template, onClose, customEditor, editorContent }
   };
 
   return (
-    <>
-      {/* Header - Fixed */}
-      <div className="flex items-center justify-between p-6 border-b border-border bg-card flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-muted">
-            <ArrowLeft className="h-4 w-4" />
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-blue-50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <FileText className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-semibold text-gray-900">
+                {template ? "Edit Document Template" : "Add Document Template"}
+              </DialogTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                Create a new document type that residents can request
+              </p>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-white/50">
+            <X className="h-4 w-4" />
           </Button>
-          <h2 className="text-2xl font-bold text-foreground">{template ? "Edit" : "Create"} Document Template</h2>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-muted">
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+      </DialogHeader>
       
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      {/* Content */}
+      <div className="flex-1 p-6 overflow-y-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Document Name */}
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Template Name</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-900">
+                      Document Name *
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Barangay Clearance" {...field} />
+                      <Input 
+                        placeholder="e.g., Barangay Clearance, Certificate of Residency" 
+                        className="h-11"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-900">
+                      Description
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Brief description of this document type and its purpose..."
+                        className="resize-none h-20"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Fee and Validity */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="fee"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-900">
+                      Processing Fee (₱)
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        step="0.01" 
+                        placeholder="0.00"
+                        className="h-11"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <div className="flex gap-4">
-                <FormField
-                  control={form.control}
-                  name="fee"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Fee (PHP)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="0" step="0.01" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="validity_days"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Validity (days)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="0" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="validity_days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-900">
+                      Validity Period (days)
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        placeholder="30"
+                        className="h-11"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Info Card */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-1 bg-blue-100 rounded-full mt-0.5">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-blue-900 mb-1">
+                    Document Processing Note
+                  </h4>
+                  <p className="text-sm text-blue-700">
+                    Once created, residents can request this document type. Actual certificates will be created manually outside the system by admins.
+                  </p>
+                </div>
               </div>
             </div>
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Enter a brief description of this document template"
-                      className="resize-none h-20"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="template"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Template Content</FormLabel>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Use the rich text editor below to create your document template. Use the "Insert Data Field" button to add placeholders.
-                  </p>
-                  <FormControl>
-                    {customEditor || (
-                      <Textarea 
-                        placeholder="Enter the document template content here..."
-                        className="font-mono h-60 resize-none"
-                        {...field}
-                      />
-                    )}
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="required_fields"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Required Fields (JSON)</FormLabel>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Define required fields as a JSON object. These will generate a form when issuing documents.
-                  </p>
-                  <FormControl>
-                    <Textarea 
-                      placeholder='{"resident_name": "string", "purpose": "string"}'
-                      className="font-mono h-40 resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </form>
         </Form>
       </div>
       
-      {/* Footer with Action Buttons - Fixed */}
-      <div className="border-t border-border bg-card p-6 flex-shrink-0">
-        <div className="flex justify-end gap-4">
+      {/* Footer */}
+      <div className="border-t bg-gray-50 px-6 py-4">
+        <div className="flex justify-end gap-3">
           <Button 
             type="button" 
             variant="outline" 
@@ -264,10 +247,13 @@ const DocumentTemplateForm = ({ template, onClose, customEditor, editorContent }
           <Button 
             onClick={form.handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="min-w-[120px]"
+            className="min-w-[120px] bg-purple-600 hover:bg-purple-700"
           >
             {isSubmitting ? (
-              <>Saving...</>
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Saving...
+              </>
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
@@ -277,7 +263,7 @@ const DocumentTemplateForm = ({ template, onClose, customEditor, editorContent }
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
