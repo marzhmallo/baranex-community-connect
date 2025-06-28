@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Download, Edit, Trash2, Search, Plus, Filter, MoreHorizontal, Clock, CheckCircle, AlertCircle, XCircle, Eye, Upload, BarChart3, Settings, FileCheck, TrendingUp } from "lucide-react";
+import { FileText, Download, Edit, Trash2, Search, Plus, Filter, MoreHorizontal, Clock, CheckCircle, AlertCircle, XCircle, Eye, Upload, BarChart3, Settings, FileCheck, TrendingUp, Check, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,6 +16,7 @@ import DocumentTemplateForm from "./DocumentTemplateForm";
 import IssueDocumentForm from "./IssueDocumentForm";
 import DocumentViewDialog from "./DocumentViewDialog";
 import DocumentDeleteDialog from "./DocumentDeleteDialog";
+import { useToast } from "@/hooks/use-toast";
 
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,6 +32,7 @@ const DocumentsPage = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
+  const { toast } = useToast();
 
   // Fetch document types from the database
   const { data: documentTypes, isLoading: isLoadingDocuments, refetch: refetchDocuments } = useQuery({
@@ -135,22 +136,22 @@ const DocumentsPage = () => {
     name: "Maria Santos",
     document: "Barangay Clearance",
     timeAgo: "2 hours ago",
-    status: "Approve",
-    statusColor: "bg-green-500"
+    status: "pending",
+    statusColor: "bg-yellow-500"
   }, {
     id: "2",
     name: "Juan Dela Cruz",
     document: "Certificate of Residency",
     timeAgo: "5 hours ago",
-    status: "Deny",
-    statusColor: "bg-red-500"
+    status: "pending",
+    statusColor: "bg-yellow-500"
   }, {
     id: "3",
     name: "Anna Reyes",
     document: "Business Permit",
     timeAgo: "1 day ago",
-    status: "Approve",
-    statusColor: "bg-green-500"
+    status: "pending",
+    statusColor: "bg-yellow-500"
   }];
 
   // Mock data for document tracking
@@ -249,6 +250,24 @@ const DocumentsPage = () => {
     status: "rejected",
     trackingId: "#BRG-2023-0039"
   }];
+
+  // Add new handlers for approve/deny actions
+  const handleApproveRequest = (requestId: string, requestorName: string) => {
+    toast({
+      title: "Document Request Approved",
+      description: `${requestorName}'s document request has been approved and is now being processed.`,
+    });
+    console.log(`Approved request ${requestId} for ${requestorName}`);
+  };
+
+  const handleDenyRequest = (requestId: string, requestorName: string) => {
+    toast({
+      title: "Document Request Denied",
+      description: `${requestorName}'s document request has been denied.`,
+      variant: "destructive",
+    });
+    console.log(`Denied request ${requestId} for ${requestorName}`);
+  };
 
   const handleEditTemplate = (template) => {
     setEditingTemplate(template);
@@ -445,7 +464,7 @@ const DocumentsPage = () => {
 
       {/* Document Requests and Quick Actions Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Document Requests Section */}
+        {/* Document Requests Section with improved buttons */}
         <Card className="border-border">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -455,7 +474,8 @@ const DocumentsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {documentRequests.map(request => <div key={request.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
+              {documentRequests.map(request => 
+                <div key={request.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                       <span className="text-sm font-medium text-foreground">{request.name.split(' ').map(n => n[0]).join('')}</span>
@@ -466,10 +486,28 @@ const DocumentsPage = () => {
                       <p className="text-xs text-muted-foreground">{request.timeAgo}</p>
                     </div>
                   </div>
-                  <Badge className={`${request.statusColor} text-white hover:${request.statusColor}/80`}>
-                    {request.status}
-                  </Badge>
-                </div>)}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleApproveRequest(request.id, request.name)}
+                      className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:text-green-300"
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDenyRequest(request.id, request.name)}
+                      className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Deny
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-center pt-4">
                 <Button variant="link" className="text-purple-600 dark:text-purple-400">
                   View All Requests →
