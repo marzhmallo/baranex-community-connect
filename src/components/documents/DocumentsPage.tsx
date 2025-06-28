@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,8 @@ import {
   Upload,
   BarChart3,
   Settings,
-  FileCheck
+  FileCheck,
+  TrendingUp
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -296,6 +296,89 @@ const DocumentsPage = () => {
         </Card>
       </div>
 
+      {/* Document Processing Status */}
+      <Card className="mb-8">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-orange-500" />
+              <CardTitle className="text-lg">Document Processing Status</CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select defaultValue="week">
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="quarter">Last 3 Months</SelectItem>
+                  <SelectItem value="year">Last Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Ready for Pickup</p>
+                <p className="text-2xl font-bold text-green-600">18</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-500" />
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Processing</p>
+                <p className="text-2xl font-bold text-yellow-600">12</p>
+              </div>
+              <Clock className="h-8 w-8 text-yellow-500" />
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">For Review</p>
+                <p className="text-2xl font-bold text-blue-600">7</p>
+              </div>
+              <Eye className="h-8 w-8 text-blue-500" />
+            </div>
+            
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Released</p>
+                <p className="text-2xl font-bold text-purple-600">42</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-purple-500" />
+            </div>
+            
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Rejected</p>
+                <p className="text-2xl font-bold text-red-600">3</p>
+              </div>
+              <XCircle className="h-8 w-8 text-red-500" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>Processing Time (Average)</span>
+              <span>Updated: Today, 11:30 AM</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-purple-600 h-2 rounded-full" style={{ width: '70%' }}></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>0 days</span>
+              <span className="font-medium text-purple-600">1.2 days</span>
+              <span>3 days (target)</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Document Requests and Quick Actions Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Document Requests Section */}
@@ -479,89 +562,6 @@ const DocumentsPage = () => {
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Document Processing Status */}
-      <Card className="mb-8">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium">DIV</div>
-              <CardTitle className="text-lg">Document Processing Status</CardTitle>
-            </div>
-            <div className="flex items-center gap-2">
-              <Select defaultValue="week">
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="quarter">Last 3 Months</SelectItem>
-                  <SelectItem value="year">Last Year</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Ready for Pickup</p>
-                <p className="text-2xl font-bold text-green-600">18</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-            
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Processing</p>
-                <p className="text-2xl font-bold text-yellow-600">12</p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-500" />
-            </div>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">For Review</p>
-                <p className="text-2xl font-bold text-blue-600">7</p>
-              </div>
-              <Eye className="h-8 w-8 text-blue-500" />
-            </div>
-            
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Released</p>
-                <p className="text-2xl font-bold text-purple-600">42</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-purple-500" />
-            </div>
-            
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Rejected</p>
-                <p className="text-2xl font-bold text-red-600">3</p>
-              </div>
-              <XCircle className="h-8 w-8 text-red-500" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Processing Time (Average)</span>
-              <span>Updated: Today, 11:30 AM</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-purple-600 h-2 rounded-full" style={{ width: '70%' }}></div>
-            </div>
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>0 days</span>
-              <span className="font-medium text-purple-600">1.2 days</span>
-              <span>3 days (target)</span>
-            </div>
           </div>
         </CardContent>
       </Card>
