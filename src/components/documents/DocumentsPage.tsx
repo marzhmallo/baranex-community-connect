@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DocumentTemplateForm from "./DocumentTemplateForm";
+import IssueDocumentForm from "./IssueDocumentForm";
 
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,6 +22,7 @@ const DocumentsPage = () => {
   const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
   const [trackingFilter, setTrackingFilter] = useState("All Documents");
   const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
+  const [isIssueDocumentOpen, setIsIssueDocumentOpen] = useState(false);
 
   // Fetch document types from the database
   const { data: documentTypes, isLoading: isLoadingDocuments } = useQuery({
@@ -436,7 +438,10 @@ const DocumentsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-4">
-              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-purple-100 text-purple-800 hover:bg-purple-200">
+              <Button 
+                className="flex items-center gap-2 justify-start h-auto p-4 bg-purple-100 text-purple-800 hover:bg-purple-200"
+                onClick={() => setIsIssueDocumentOpen(true)}
+              >
                 <Plus className="h-4 w-4" />
                 <div className="text-left">
                   <div className="font-medium">Issue New Document</div>
@@ -729,6 +734,13 @@ const DocumentsPage = () => {
       <Dialog open={isAddDocumentOpen} onOpenChange={setIsAddDocumentOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DocumentTemplateForm onClose={() => setIsAddDocumentOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Issue Document Dialog */}
+      <Dialog open={isIssueDocumentOpen} onOpenChange={setIsIssueDocumentOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <IssueDocumentForm onClose={() => setIsIssueDocumentOpen(false)} />
         </DialogContent>
       </Dialog>
     </div>;
