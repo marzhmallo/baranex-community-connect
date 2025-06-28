@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -295,86 +296,89 @@ const DocumentsPage = () => {
         </Card>
       </div>
 
-      {/* Document Requests Section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <FileCheck className="h-5 w-5" />
-            <CardTitle>Document Requests</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {documentRequests.map((request) => (
-              <div key={request.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium">{request.name.split(' ').map(n => n[0]).join('')}</span>
+      {/* Document Requests and Quick Actions Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Document Requests Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <FileCheck className="h-5 w-5" />
+              <CardTitle>Document Requests</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {documentRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium">{request.name.split(' ').map(n => n[0]).join('')}</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">{request.name}</h4>
+                      <p className="text-sm text-gray-500">{request.document}</p>
+                      <p className="text-xs text-gray-400">{request.timeAgo}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium">{request.name}</h4>
-                    <p className="text-sm text-gray-500">{request.document}</p>
-                    <p className="text-xs text-gray-400">{request.timeAgo}</p>
-                  </div>
+                  <Badge className={`${request.statusColor} text-white hover:${request.statusColor}/80`}>
+                    {request.status}
+                  </Badge>
                 </div>
-                <Badge className={`${request.statusColor} text-white hover:${request.statusColor}/80`}>
-                  {request.status}
-                </Badge>
+              ))}
+              <div className="flex justify-center pt-4">
+                <Button variant="link" className="text-purple-600">
+                  View All Requests →
+                </Button>
               </div>
-            ))}
-            <div className="flex justify-center pt-4">
-              <Button variant="link" className="text-purple-600">
-                View All Requests →
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              <CardTitle>Quick Actions</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4">
+              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-purple-100 text-purple-800 hover:bg-purple-200">
+                <Plus className="h-4 w-4" />
+                <div className="text-left">
+                  <div className="font-medium">Issue New Document</div>
+                  <div className="text-xs">Create and issue documents</div>
+                </div>
+              </Button>
+              
+              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-blue-100 text-blue-800 hover:bg-blue-200">
+                <Upload className="h-4 w-4" />
+                <div className="text-left">
+                  <div className="font-medium">Upload Template</div>
+                  <div className="text-xs">Add new document templates</div>
+                </div>
+              </Button>
+              
+              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-green-100 text-green-800 hover:bg-green-200">
+                <BarChart3 className="h-4 w-4" />
+                <div className="text-left">
+                  <div className="font-medium">View Reports</div>
+                  <div className="text-xs">Document statistics and analytics</div>
+                </div>
+              </Button>
+              
+              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-orange-100 text-orange-800 hover:bg-orange-200">
+                <Settings className="h-4 w-4" />
+                <div className="text-left">
+                  <div className="font-medium">System Settings</div>
+                  <div className="text-xs">Configure document settings</div>
+                </div>
               </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions Section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <CardTitle>Quick Actions</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-purple-100 text-purple-800 hover:bg-purple-200">
-              <Plus className="h-4 w-4" />
-              <div className="text-left">
-                <div className="font-medium">Issue New Document</div>
-                <div className="text-xs">Create and issue documents</div>
-              </div>
-            </Button>
-            
-            <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-blue-100 text-blue-800 hover:bg-blue-200">
-              <Upload className="h-4 w-4" />
-              <div className="text-left">
-                <div className="font-medium">Upload Template</div>
-                <div className="text-xs">Add new document templates</div>
-              </div>
-            </Button>
-            
-            <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-green-100 text-green-800 hover:bg-green-200">
-              <BarChart3 className="h-4 w-4" />
-              <div className="text-left">
-                <div className="font-medium">View Reports</div>
-                <div className="text-xs">Document statistics and analytics</div>
-              </div>
-            </Button>
-            
-            <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-orange-100 text-orange-800 hover:bg-orange-200">
-              <Settings className="h-4 w-4" />
-              <div className="text-left">
-                <div className="font-medium">System Settings</div>
-                <div className="text-xs">Configure document settings</div>
-              </div>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Document Tracking System */}
       <Card className="mb-8">
