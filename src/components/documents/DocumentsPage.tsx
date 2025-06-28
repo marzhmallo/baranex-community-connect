@@ -14,6 +14,8 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DocumentTemplateForm from "./DocumentTemplateForm";
 import IssueDocumentForm from "./IssueDocumentForm";
+import DocumentViewDialog from "./DocumentViewDialog";
+import DocumentDeleteDialog from "./DocumentDeleteDialog";
 
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,6 +26,9 @@ const DocumentsPage = () => {
   const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
   const [isIssueDocumentOpen, setIsIssueDocumentOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // Fetch document types from the database
   const { data: documentTypes, isLoading: isLoadingDocuments } = useQuery({
@@ -247,6 +252,16 @@ const DocumentsPage = () => {
     setIsAddDocumentOpen(true);
   };
 
+  const handleDeleteClick = (template) => {
+    setSelectedTemplate(template);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSuccess = () => {
+    // Trigger refetch of document types
+    window.location.reload();
+  };
+
   const handleDeleteTemplate = async (templateId) => {
     try {
       const { error } = await supabase
@@ -264,8 +279,8 @@ const DocumentsPage = () => {
   };
 
   const handleViewTemplate = (template) => {
-    // For now, just show an alert with template details
-    alert(`Template: ${template.name}\nDescription: ${template.description || 'No description'}\nFee: ₱${template.fee || 0}`);
+    setSelectedTemplate(template);
+    setViewDialogOpen(true);
   };
 
   const handleTemplateSuccess = () => {
@@ -692,7 +707,7 @@ const DocumentsPage = () => {
                               <Button variant="ghost" size="sm" onClick={() => handleEditTemplate(doc)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleDeleteTemplate(doc.id)}>
+                              <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(doc)}>
                                 <Trash2 className="h-4 w-4 text-red-500" />
                               </Button>
                             </div>
@@ -785,6 +800,21 @@ const DocumentsPage = () => {
           <IssueDocumentForm onClose={() => setIsIssueDocumentOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* View Document Template Dialog */}
+      <DocumentViewDialog 
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        template={selectedTemplate}
+      />
+
+      {/* Delete Document Template Dialog */}
+      <DocumentDeleteDialog 
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        template={selectedTemplate}
+        onDeleteSuccess={handleDeleteSuccess}
+      />
     </div>;
 };
 
