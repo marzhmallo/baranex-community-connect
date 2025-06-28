@@ -4,42 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  FileText, 
-  Download, 
-  Edit, 
-  Trash2, 
-  Search, 
-  Plus,
-  Filter,
-  MoreHorizontal,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
-  Eye,
-  Upload,
-  BarChart3,
-  Settings,
-  FileCheck,
-  TrendingUp
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FileText, Download, Edit, Trash2, Search, Plus, Filter, MoreHorizontal, Clock, CheckCircle, AlertCircle, XCircle, Eye, Upload, BarChart3, Settings, FileCheck, TrendingUp } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -48,121 +17,105 @@ const DocumentsPage = () => {
   const [trackingFilter, setTrackingFilter] = useState("All Documents");
 
   // Mock data for documents
-  const documents = [
-    {
-      id: "1",
-      name: "Barangay Clearance Template",
-      type: "template",
-      status: "Active",
-      size: "45 kB",
-      updatedAt: "2 hours ago",
-      icon: FileText,
-      color: "text-red-500"
-    },
-    {
-      id: "2",
-      name: "Certificate of Residency",
-      type: "template",
-      status: "Active", 
-      size: "32 kB",
-      updatedAt: "1 day ago",
-      icon: FileText,
-      color: "text-blue-500"
-    },
-    {
-      id: "3",
-      name: "Business Permit Form",
-      type: "template",
-      status: "Active",
-      size: "28 kB", 
-      updatedAt: "3 days ago",
-      icon: FileText,
-      color: "text-green-500"
-    },
-    {
-      id: "4",
-      name: "Barangay ID Application",
-      type: "template",
-      status: "Active",
-      size: "41 kB",
-      updatedAt: "1 week ago",
-      icon: FileText,
-      color: "text-purple-500"
-    }
-  ];
+  const documents = [{
+    id: "1",
+    name: "Barangay Clearance Template",
+    type: "template",
+    status: "Active",
+    size: "45 kB",
+    updatedAt: "2 hours ago",
+    icon: FileText,
+    color: "text-red-500"
+  }, {
+    id: "2",
+    name: "Certificate of Residency",
+    type: "template",
+    status: "Active",
+    size: "32 kB",
+    updatedAt: "1 day ago",
+    icon: FileText,
+    color: "text-blue-500"
+  }, {
+    id: "3",
+    name: "Business Permit Form",
+    type: "template",
+    status: "Active",
+    size: "28 kB",
+    updatedAt: "3 days ago",
+    icon: FileText,
+    color: "text-green-500"
+  }, {
+    id: "4",
+    name: "Barangay ID Application",
+    type: "template",
+    status: "Active",
+    size: "41 kB",
+    updatedAt: "1 week ago",
+    icon: FileText,
+    color: "text-purple-500"
+  }];
 
   // Mock data for document requests
-  const documentRequests = [
-    {
-      id: "1",
-      name: "Maria Santos",
-      document: "Barangay Clearance",
-      timeAgo: "2 hours ago",
-      status: "Approve",
-      statusColor: "bg-green-500"
-    },
-    {
-      id: "2", 
-      name: "Juan Dela Cruz",
-      document: "Certificate of Residency",
-      timeAgo: "5 hours ago",
-      status: "Deny",
-      statusColor: "bg-red-500"
-    },
-    {
-      id: "3",
-      name: "Anna Reyes", 
-      document: "Business Permit",
-      timeAgo: "1 day ago",
-      status: "Approve",
-      statusColor: "bg-green-500"
-    }
-  ];
+  const documentRequests = [{
+    id: "1",
+    name: "Maria Santos",
+    document: "Barangay Clearance",
+    timeAgo: "2 hours ago",
+    status: "Approve",
+    statusColor: "bg-green-500"
+  }, {
+    id: "2",
+    name: "Juan Dela Cruz",
+    document: "Certificate of Residency",
+    timeAgo: "5 hours ago",
+    status: "Deny",
+    statusColor: "bg-red-500"
+  }, {
+    id: "3",
+    name: "Anna Reyes",
+    document: "Business Permit",
+    timeAgo: "1 day ago",
+    status: "Approve",
+    statusColor: "bg-green-500"
+  }];
 
   // Mock data for document tracking
-  const documentTracking = [
-    {
-      id: "#BRG-2023-0042",
-      document: "Barangay Clearance",
-      requestedBy: "Maria Santos",
-      status: "Ready for pickup",
-      statusColor: "bg-green-500",
-      lastUpdate: "Today, 10:45 AM"
-    },
-    {
-      id: "#BRG-2023-0041",
-      document: "Certificate of Residency", 
-      requestedBy: "Juan Dela Cruz",
-      status: "Processing",
-      statusColor: "bg-yellow-500",
-      lastUpdate: "Today, 9:20 AM"
-    },
-    {
-      id: "#BRG-2023-0040",
-      document: "Business Permit",
-      requestedBy: "Anna Reyes", 
-      status: "For Review",
-      statusColor: "bg-blue-500",
-      lastUpdate: "Yesterday, 4:30 PM"
-    },
-    {
-      id: "#BRG-2023-0039",
-      document: "Barangay ID",
-      requestedBy: "Carlos Mendoza",
-      status: "Rejected", 
-      statusColor: "bg-red-500",
-      lastUpdate: "2 days ago"
-    },
-    {
-      id: "#BRG-2023-0038",
-      document: "Indigency Certificate",
-      requestedBy: "Elena Garcia",
-      status: "Released",
-      statusColor: "bg-purple-500", 
-      lastUpdate: "3 days ago"
-    }
-  ];
-
+  const documentTracking = [{
+    id: "#BRG-2023-0042",
+    document: "Barangay Clearance",
+    requestedBy: "Maria Santos",
+    status: "Ready for pickup",
+    statusColor: "bg-green-500",
+    lastUpdate: "Today, 10:45 AM"
+  }, {
+    id: "#BRG-2023-0041",
+    document: "Certificate of Residency",
+    requestedBy: "Juan Dela Cruz",
+    status: "Processing",
+    statusColor: "bg-yellow-500",
+    lastUpdate: "Today, 9:20 AM"
+  }, {
+    id: "#BRG-2023-0040",
+    document: "Business Permit",
+    requestedBy: "Anna Reyes",
+    status: "For Review",
+    statusColor: "bg-blue-500",
+    lastUpdate: "Yesterday, 4:30 PM"
+  }, {
+    id: "#BRG-2023-0039",
+    document: "Barangay ID",
+    requestedBy: "Carlos Mendoza",
+    status: "Rejected",
+    statusColor: "bg-red-500",
+    lastUpdate: "2 days ago"
+  }, {
+    id: "#BRG-2023-0038",
+    document: "Indigency Certificate",
+    requestedBy: "Elena Garcia",
+    status: "Released",
+    statusColor: "bg-purple-500",
+    lastUpdate: "3 days ago"
+  }];
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ready":
@@ -177,7 +130,6 @@ const DocumentsPage = () => {
         return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "ready":
@@ -194,43 +146,36 @@ const DocumentsPage = () => {
   };
 
   // Mock data for document status updates
-  const statusUpdates = [
-    {
-      id: "1",
-      title: "Barangay Clearance - Ready for Pickup",
-      description: "Document for Maria Santos has been signed and is ready for pickup at the Barangay Hall.",
-      time: "10 minutes ago",
-      status: "ready",
-      trackingId: "#BRG-2023-0042"
-    },
-    {
-      id: "2", 
-      title: "Certificate of Residency - Processing",
-      description: "Juan Dela Cruz's document is being processed. Pending approval from the Barangay Captain.",
-      time: "2 hours ago",
-      status: "processing",
-      trackingId: "#BRG-2023-0041"
-    },
-    {
-      id: "3",
-      title: "Business Permit - For Review", 
-      description: "Business Permit application for Anna Reyes has been submitted for review. Pending verification of business requirements.",
-      time: "5 hours ago",
-      status: "review",
-      trackingId: "#BRG-2023-0040"
-    },
-    {
-      id: "4",
-      title: "Barangay ID - Rejected",
-      description: "Carlos Mendoza's application for Barangay ID was rejected. Reason: insufficient supporting documents.",
-      time: "Yesterday, 2:15 PM",
-      status: "rejected", 
-      trackingId: "#BRG-2023-0039"
-    }
-  ];
-
-  return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+  const statusUpdates = [{
+    id: "1",
+    title: "Barangay Clearance - Ready for Pickup",
+    description: "Document for Maria Santos has been signed and is ready for pickup at the Barangay Hall.",
+    time: "10 minutes ago",
+    status: "ready",
+    trackingId: "#BRG-2023-0042"
+  }, {
+    id: "2",
+    title: "Certificate of Residency - Processing",
+    description: "Juan Dela Cruz's document is being processed. Pending approval from the Barangay Captain.",
+    time: "2 hours ago",
+    status: "processing",
+    trackingId: "#BRG-2023-0041"
+  }, {
+    id: "3",
+    title: "Business Permit - For Review",
+    description: "Business Permit application for Anna Reyes has been submitted for review. Pending verification of business requirements.",
+    time: "5 hours ago",
+    status: "review",
+    trackingId: "#BRG-2023-0040"
+  }, {
+    id: "4",
+    title: "Barangay ID - Rejected",
+    description: "Carlos Mendoza's application for Barangay ID was rejected. Reason: insufficient supporting documents.",
+    time: "Yesterday, 2:15 PM",
+    status: "rejected",
+    trackingId: "#BRG-2023-0039"
+  }];
+  return <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Barangay Document Management</h1>
@@ -368,7 +313,9 @@ const DocumentsPage = () => {
               <span>Updated: Today, 11:30 AM</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-purple-600 h-2 rounded-full" style={{ width: '70%' }}></div>
+              <div className="bg-purple-600 h-2 rounded-full" style={{
+              width: '70%'
+            }}></div>
             </div>
             <div className="flex justify-between text-xs text-gray-500">
               <span>0 days</span>
@@ -391,8 +338,7 @@ const DocumentsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {documentRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
+              {documentRequests.map(request => <div key={request.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                       <span className="text-sm font-medium">{request.name.split(' ').map(n => n[0]).join('')}</span>
@@ -406,8 +352,7 @@ const DocumentsPage = () => {
                   <Badge className={`${request.statusColor} text-white hover:${request.statusColor}/80`}>
                     {request.status}
                   </Badge>
-                </div>
-              ))}
+                </div>)}
               <div className="flex justify-center pt-4">
                 <Button variant="link" className="text-purple-600">
                   View All Requests →
@@ -477,25 +422,12 @@ const DocumentsPage = () => {
           <div className="flex items-center gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search by tracking ID..."
-                value={trackingSearchQuery}
-                onChange={(e) => setTrackingSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10" />
             </div>
             <div className="flex gap-2">
-              {["All Documents", "In Progress", "Completed", "Rejected"].map((filter) => (
-                <Button
-                  key={filter}
-                  variant={trackingFilter === filter ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTrackingFilter(filter)}
-                  className={trackingFilter === filter ? "bg-purple-600 hover:bg-purple-700" : ""}
-                >
+              {["All Documents", "In Progress", "Completed", "Rejected"].map(filter => <Button key={filter} variant={trackingFilter === filter ? "default" : "outline"} size="sm" onClick={() => setTrackingFilter(filter)} className={trackingFilter === filter ? "bg-purple-600 hover:bg-purple-700" : ""}>
                   {filter}
-                </Button>
-              ))}
+                </Button>)}
             </div>
           </div>
 
@@ -511,8 +443,7 @@ const DocumentsPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {documentTracking.map((doc) => (
-                <TableRow key={doc.id}>
+              {documentTracking.map(doc => <TableRow key={doc.id}>
                   <TableCell>
                     <span className="text-purple-600 font-medium">{doc.id}</span>
                   </TableCell>
@@ -534,8 +465,7 @@ const DocumentsPage = () => {
                       </Button>
                     </div>
                   </TableCell>
-                </TableRow>
-              ))}
+                </TableRow>)}
             </TableBody>
           </Table>
 
@@ -576,12 +506,7 @@ const DocumentsPage = () => {
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search documents..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 w-64"
-                    />
+                    <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64" />
                   </div>
                   <Button className="bg-purple-600 hover:bg-purple-700">
                     <Plus className="h-4 w-4 mr-2" />
@@ -629,8 +554,7 @@ const DocumentsPage = () => {
                     </div>
 
                     <div className="space-y-3">
-                      {documents.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                      {documents.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                           <div className="flex items-center gap-4">
                             <input type="checkbox" className="rounded" />
                             <div className={`p-2 rounded ${doc.color.includes('red') ? 'bg-red-100' : doc.color.includes('blue') ? 'bg-blue-100' : doc.color.includes('green') ? 'bg-green-100' : 'bg-purple-100'}`}>
@@ -655,8 +579,7 @@ const DocumentsPage = () => {
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
                           </div>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
 
                     <div className="flex items-center justify-between mt-6 pt-4 border-t">
@@ -694,8 +617,7 @@ const DocumentsPage = () => {
             </CardHeader>
             <CardContent className="p-0">
               <div className="space-y-0">
-                {statusUpdates.map((update, index) => (
-                  <div key={update.id} className={`p-4 border-b border-gray-100 ${index === statusUpdates.length - 1 ? 'border-b-0' : ''}`}>
+                {statusUpdates.map((update, index) => <div key={update.id} className={`p-4 border-b border-gray-100 ${index === statusUpdates.length - 1 ? 'border-b-0' : ''}`}>
                     <div className="flex items-start gap-3">
                       <div className={`p-1 rounded-full border-2 ${getStatusColor(update.status)}`}>
                         {getStatusIcon(update.status)}
@@ -711,8 +633,7 @@ const DocumentsPage = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
               <div className="p-4 border-t">
                 <Button variant="outline" className="w-full text-sm">
@@ -723,32 +644,9 @@ const DocumentsPage = () => {
           </Card>
 
           {/* Document Requests Card */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <AlertCircle className="h-4 w-4" />
-                Document Requests
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Button className="w-full bg-green-100 text-green-800 hover:bg-green-200 justify-start">
-                  <FileText className="h-4 w-4 mr-2" />
-                  View Reports
-                  <span className="text-xs ml-auto">Document statistics and analytics</span>
-                </Button>
-                <Button className="w-full bg-orange-100 text-orange-800 hover:bg-orange-200 justify-start">
-                  <FileText className="h-4 w-4 mr-2" />
-                  System Settings
-                  <span className="text-xs ml-auto">Configure document settings</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DocumentsPage;
