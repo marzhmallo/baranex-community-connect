@@ -19,6 +19,25 @@ const DocumentsPage = () => {
   const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
   const [trackingFilter, setTrackingFilter] = useState("All Documents");
 
+  // Fetch document types from the database
+  const { data: documentTypes, isLoading: isLoadingDocuments } = useQuery({
+    queryKey: ['document-types', searchQuery],
+    queryFn: async () => {
+      let query = supabase
+        .from('document_types')
+        .select('*');
+      
+      if (searchQuery) {
+        query = query.ilike('name', `%${searchQuery}%`);
+      }
+      
+      const { data, error } = await query.order('name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   // Fetch document processing status data
   const { data: processingStats } = useQuery({
     queryKey: ['document-processing-stats'],
@@ -273,7 +292,7 @@ const DocumentsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Templates</p>
-                <p className="text-2xl font-bold text-blue-600">15</p>
+                <p className="text-2xl font-bold text-blue-600">{documentTypes?.length || 0}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
                 <FileText className="h-6 w-6 text-blue-600" />
@@ -596,32 +615,45 @@ const DocumentsPage = () => {
                     </div>
 
                     <div className="space-y-3">
-                      {documents.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                          <div className="flex items-center gap-4">
-                            <input type="checkbox" className="rounded" />
-                            <div className={`p-2 rounded ${doc.color.includes('red') ? 'bg-red-100' : doc.color.includes('blue') ? 'bg-blue-100' : doc.color.includes('green') ? 'bg-green-100' : 'bg-purple-100'}`}>
-                              <doc.icon className={`h-5 w-5 ${doc.color}`} />
+                      {isLoadingDocuments ? (
+                        <div className="text-center py-8">Loading document templates...</div>
+                      ) : documentTypes && documentTypes.length > 0 ? (
+                        documentTypes.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center gap-4">
+                              <input type="checkbox" className="rounded" />
+                              <div className="p-2 rounded bg-blue-100">
+                                <FileText className="h-5 w-5 text-blue-500" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-900">{doc.name}</h4>
+                                <p className="text-sm text-gray-500">
+                                  {doc.description ? `${doc.description} • ` : ''}
+                                  Fee: ₱{doc.fee || 0}
+                                  {doc.validity_days ? ` • Valid for ${doc.validity_days} days` : ''}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium text-gray-900">{doc.name}</h4>
-                              <p className="text-sm text-gray-500">Updated {doc.updatedAt} • {doc.size}</p>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                Active
+                              </Badge>
+                              <Button variant="ghost" size="sm">
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="bg-green-100 text-green-800">
-                              {doc.status}
-                            </Badge>
-                            <Button variant="ghost" size="sm">
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </div>)}
+                          </div>)
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No document templates found.</p>
+                          <p className="text-sm text-gray-400">Add a new template to get started.</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between mt-6 pt-4 border-t">
@@ -688,4 +720,5 @@ const DocumentsPage = () => {
       </div>
     </div>;
 };
+
 export default DocumentsPage;
