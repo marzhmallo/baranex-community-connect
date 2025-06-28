@@ -419,7 +419,7 @@ export type Database = {
       }
       document_types: {
         Row: {
-          brgyid: string | null
+          brgyid: string
           content: string | null
           created_at: string | null
           description: string | null
@@ -432,7 +432,7 @@ export type Database = {
           validity_days: number | null
         }
         Insert: {
-          brgyid?: string | null
+          brgyid: string
           content?: string | null
           created_at?: string | null
           description?: string | null
@@ -445,7 +445,7 @@ export type Database = {
           validity_days?: number | null
         }
         Update: {
-          brgyid?: string | null
+          brgyid?: string
           content?: string | null
           created_at?: string | null
           description?: string | null

@@ -29,6 +29,8 @@ const DocumentsPage = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
 
   // Fetch document types from the database
   const { data: documentTypes, isLoading: isLoadingDocuments } = useQuery({
@@ -293,6 +295,15 @@ const DocumentsPage = () => {
     setIsAddDocumentOpen(false);
     setEditingTemplate(null);
   };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Calculate pagination for document types
+  const totalPages = Math.ceil((documentTypes?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
   return <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -681,8 +692,8 @@ const DocumentsPage = () => {
                     <div className="space-y-3">
                       {isLoadingDocuments ? (
                         <div className="text-center py-8">Loading document templates...</div>
-                      ) : documentTypes && documentTypes.length > 0 ? (
-                        documentTypes.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                      ) : paginatedDocumentTypes && paginatedDocumentTypes.length > 0 ? (
+                        paginatedDocumentTypes.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                             <div className="flex items-center gap-4">
                               <input type="checkbox" className="rounded" />
                               <div className="p-2 rounded bg-blue-100">
@@ -726,13 +737,33 @@ const DocumentsPage = () => {
                         <span className="text-sm text-gray-600">Select All</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">Previous</Button>
-                        <div className="flex gap-1">
-                          <Button variant="outline" size="sm" className="bg-purple-600 text-white">1</Button>
-                          <Button variant="outline" size="sm">2</Button>
-                          <Button variant="outline" size="sm">3</Button>
-                        </div>
-                        <Button variant="outline" size="sm">Next</Button>
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious 
+                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                              <PaginationItem key={page}>
+                                <PaginationLink 
+                                  onClick={() => handlePageChange(page)}
+                                  isActive={currentPage === page}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                              <PaginationNext 
+                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
                       </div>
                     </div>
                   </div>
