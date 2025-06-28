@@ -23,12 +23,19 @@ const DocumentDeleteDialog = ({ open, onOpenChange, template, onDeleteSuccess }:
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
+      console.log("Attempting to delete template with ID:", template.id);
+      
       const { error } = await supabase
         .from('document_types')
         .delete()
         .eq('id', template.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase delete error:", error);
+        throw error;
+      }
+
+      console.log("Template deleted successfully");
 
       toast({
         title: "Template Deleted",
@@ -40,7 +47,7 @@ const DocumentDeleteDialog = ({ open, onOpenChange, template, onDeleteSuccess }:
     } catch (error) {
       console.error("Error deleting template:", error);
       toast({
-        title: "Error",
+        title: "Error", 
         description: "Failed to delete the template. Please try again.",
         variant: "destructive",
       });

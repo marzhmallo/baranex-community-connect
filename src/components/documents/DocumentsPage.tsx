@@ -33,7 +33,7 @@ const DocumentsPage = () => {
   const itemsPerPage = 3;
 
   // Fetch document types from the database
-  const { data: documentTypes, isLoading: isLoadingDocuments } = useQuery({
+  const { data: documentTypes, isLoading: isLoadingDocuments, refetch: refetchDocuments } = useQuery({
     queryKey: ['document-types', searchQuery],
     queryFn: async () => {
       let query = supabase
@@ -260,24 +260,9 @@ const DocumentsPage = () => {
   };
 
   const handleDeleteSuccess = () => {
-    // Trigger refetch of document types
-    window.location.reload();
-  };
-
-  const handleDeleteTemplate = async (templateId) => {
-    try {
-      const { error } = await supabase
-        .from('document_types')
-        .delete()
-        .eq('id', templateId);
-        
-      if (error) throw error;
-      
-      // Trigger refetch of document types
-      window.location.reload();
-    } catch (error) {
-      console.error("Error deleting template:", error);
-    }
+    // Refetch the data instead of reloading the page
+    refetchDocuments();
+    setSelectedTemplate(null);
   };
 
   const handleViewTemplate = (template) => {
@@ -287,8 +272,8 @@ const DocumentsPage = () => {
 
   const handleTemplateSuccess = () => {
     setEditingTemplate(null);
-    // Trigger refetch of document types
-    window.location.reload();
+    // Refetch the data instead of reloading the page
+    refetchDocuments();
   };
 
   const handleCloseAddDocument = () => {
@@ -305,7 +290,8 @@ const DocumentsPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
-  return <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+  return (
+    <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Barangay Document Management</h1>
@@ -846,7 +832,8 @@ const DocumentsPage = () => {
         template={selectedTemplate}
         onDeleteSuccess={handleDeleteSuccess}
       />
-    </div>;
+    </div>
+  );
 };
 
 export default DocumentsPage;
