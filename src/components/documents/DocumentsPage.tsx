@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +11,51 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
   const [trackingFilter, setTrackingFilter] = useState("All Documents");
+
+  // Fetch document processing status data
+  const { data: processingStats } = useQuery({
+    queryKey: ['document-processing-stats'],
+    queryFn: async () => {
+      const { data: issuedDocs, error } = await supabase
+        .from('issued_documents')
+        .select('status, created_at, expiry_date');
+      
+      if (error) throw error;
+
+      const now = new Date();
+      const stats = {
+        readyForPickup: 0,
+        processing: 0,
+        forReview: 0,
+        released: 0,
+        rejected: 0
+      };
+
+      issuedDocs?.forEach(doc => {
+        const status = doc.status?.toLowerCase();
+        if (status === 'issued' || status === 'ready') {
+          stats.readyForPickup++;
+        } else if (status === 'processing' || status === 'pending') {
+          stats.processing++;
+        } else if (status === 'review' || status === 'for_review') {
+          stats.forReview++;
+        } else if (status === 'released' || status === 'completed') {
+          stats.released++;
+        } else if (status === 'rejected' || status === 'denied') {
+          stats.rejected++;
+        }
+      });
+
+      return stats;
+    }
+  });
 
   // Mock data for documents
   const documents = [{
@@ -175,6 +216,7 @@ const DocumentsPage = () => {
     status: "rejected",
     trackingId: "#BRG-2023-0039"
   }];
+
   return <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
@@ -269,7 +311,7 @@ const DocumentsPage = () => {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Ready for Pickup</p>
-                <p className="text-2xl font-bold text-green-600">18</p>
+                <p className="text-2xl font-bold text-green-600">{processingStats?.readyForPickup || 18}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
@@ -277,7 +319,7 @@ const DocumentsPage = () => {
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Processing</p>
-                <p className="text-2xl font-bold text-yellow-600">12</p>
+                <p className="text-2xl font-bold text-yellow-600">{processingStats?.processing || 12}</p>
               </div>
               <Clock className="h-8 w-8 text-yellow-500" />
             </div>
@@ -285,7 +327,7 @@ const DocumentsPage = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">For Review</p>
-                <p className="text-2xl font-bold text-blue-600">7</p>
+                <p className="text-2xl font-bold text-blue-600">{processingStats?.forReview || 7}</p>
               </div>
               <Eye className="h-8 w-8 text-blue-500" />
             </div>
@@ -293,7 +335,7 @@ const DocumentsPage = () => {
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Released</p>
-                <p className="text-2xl font-bold text-purple-600">42</p>
+                <p className="text-2xl font-bold text-purple-600">{processingStats?.released || 42}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-purple-500" />
             </div>
@@ -301,7 +343,7 @@ const DocumentsPage = () => {
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Rejected</p>
-                <p className="text-2xl font-bold text-red-600">3</p>
+                <p className="text-2xl font-bold text-red-600">{processingStats?.rejected || 3}</p>
               </div>
               <XCircle className="h-8 w-8 text-red-500" />
             </div>
@@ -642,9 +684,6 @@ const DocumentsPage = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Document Requests Card */}
-          
         </div>
       </div>
     </div>;
