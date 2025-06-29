@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Household } from '@/lib/types';
 
@@ -123,6 +122,31 @@ export const getCurrentUserBarangayId = async (): Promise<string | null> => {
   }
 };
 
+// Function to get the current admin's profile ID
+const getCurrentAdminProfileId = async (): Promise<string | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return null;
+    
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+      
+    if (error) {
+      console.error('Error fetching admin profile:', error);
+      return null;
+    }
+    
+    return profile?.id || null;
+  } catch (error) {
+    console.error('Error getting current admin profile ID:', error);
+    return null;
+  }
+};
+
 // Alias for getHouseholds for consistency with existing code
 export const fetchHouseholds = getHouseholds;
 
@@ -180,6 +204,15 @@ export const saveHousehold = async (household: Partial<Household>) => {
       return { success: false, error: "User's barangay ID not found" };
     }
 
+    // Get the current admin's profile ID
+    const adminProfileId = await getCurrentAdminProfileId();
+    console.log("Current admin's profile ID:", adminProfileId);
+    
+    if (!adminProfileId) {
+      console.error("Failed to get current admin's profile ID");
+      return { success: false, error: "Admin's profile ID not found" };
+    }
+
     // Create a fallback address from the new address fields
     const fallbackAddress = [
       household.barangayname,
@@ -217,6 +250,7 @@ export const saveHousehold = async (household: Partial<Household>) => {
           garbage_disposal: household.garbage_disposal,
           remarks: household.remarks,
           updated_at: new Date().toISOString(), // Set current timestamp
+          updatedby: adminProfileId, // Set updatedby to current admin's profile ID
         })
         .eq('id', household.id)
         .select();
@@ -251,7 +285,8 @@ export const saveHousehold = async (household: Partial<Household>) => {
           toilet_type: household.toilet_type || null,
           garbage_disposal: household.garbage_disposal || null,
           remarks: household.remarks || null,
-          brgyid: brgyid
+          brgyid: brgyid,
+          recordedby: adminProfileId, // Set recordedby to current admin's profile ID
         })
         .select();
       

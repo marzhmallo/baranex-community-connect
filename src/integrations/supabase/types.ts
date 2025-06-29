@@ -196,64 +196,6 @@ export type Database = {
           },
         ]
       }
-      certificates: {
-        Row: {
-          brgyid: string
-          created_at: string | null
-          id: string
-          issued_at: string | null
-          purpose: string
-          resident_id: string | null
-          status: string
-          type: string
-          updated_at: string | null
-        }
-        Insert: {
-          brgyid?: string
-          created_at?: string | null
-          id?: string
-          issued_at?: string | null
-          purpose: string
-          resident_id?: string | null
-          status?: string
-          type: string
-          updated_at?: string | null
-        }
-        Update: {
-          brgyid?: string
-          created_at?: string | null
-          id?: string
-          issued_at?: string | null
-          purpose?: string
-          resident_id?: string | null
-          status?: string
-          type?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "certificates_brgyid_fkey"
-            columns: ["brgyid"]
-            isOneToOne: false
-            referencedRelation: "barangays"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "certificates_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: false
-            referencedRelation: "admin_residents_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "certificates_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: false
-            referencedRelation: "residents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       chatbot_faq: {
         Row: {
           answer_text: Json[] | null
@@ -375,6 +317,76 @@ export type Database = {
             columns: ["brgyid"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      docrequests: {
+        Row: {
+          brgyid: string
+          created_at: string
+          docnumber: string
+          id: string
+          issued_at: string
+          notes: string | null
+          processedby: string
+          purpose: string
+          receiver: Json | null
+          resident_id: string | null
+          status: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          brgyid?: string
+          created_at?: string
+          docnumber: string
+          id?: string
+          issued_at: string
+          notes?: string | null
+          processedby?: string
+          purpose: string
+          receiver?: Json | null
+          resident_id?: string | null
+          status?: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          brgyid?: string
+          created_at?: string
+          docnumber?: string
+          id?: string
+          issued_at?: string
+          notes?: string | null
+          processedby?: string
+          purpose?: string
+          receiver?: Json | null
+          resident_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
             referencedColumns: ["id"]
           },
         ]

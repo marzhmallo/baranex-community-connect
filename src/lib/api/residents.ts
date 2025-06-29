@@ -46,6 +46,31 @@ export const getCurrentUserBarangayId = async (): Promise<string | null> => {
   }
 };
 
+// Function to get the current admin's profile ID
+const getCurrentAdminProfileId = async (): Promise<string | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return null;
+    
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+      
+    if (error) {
+      console.error('Error fetching admin profile:', error);
+      return null;
+    }
+    
+    return profile?.id || null;
+  } catch (error) {
+    console.error('Error getting current admin profile ID:', error);
+    return null;
+  }
+};
+
 // Function to fetch all residents
 export const getResidents = async (): Promise<Resident[]> => {
   const { data, error } = await supabase
@@ -178,6 +203,15 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       console.error("Failed to get current user's barangay ID");
       return { success: false, error: "User's barangay ID not found" };
     }
+
+    // Get the current admin's profile ID
+    const adminProfileId = await getCurrentAdminProfileId();
+    console.log("Current admin's profile ID:", adminProfileId);
+    
+    if (!adminProfileId) {
+      console.error("Failed to get current admin's profile ID");
+      return { success: false, error: "Admin's profile ID not found" };
+    }
     
     // Define the expected database schema fields for Supabase
     interface ResidentDatabaseFields {
@@ -216,6 +250,8 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       died_on?: string | null;
       brgyid?: string | null;
       photo_url?: string | null;
+      recordedby?: string | null;
+      editedby?: string | null;
     }
     
     // Map from our application model to database model
@@ -286,6 +322,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
     if (residentData.id) {
       console.log("Updating existing resident:", residentData.id);
       databaseFields.updated_at = new Date().toISOString();
+      databaseFields.editedby = adminProfileId; // Set editedby to current admin's profile ID
       
       // Log the died_on value before sending to Supabase
       console.log("died_on value being sent to Supabase:", databaseFields.died_on);
@@ -343,6 +380,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
         nationality: databaseFields.nationality || "Filipino",  // Add missing required field
         brgyid: brgyid, // Add the barangay ID of the currently logged in user
         photo_url: databaseFields.photo_url || null, // Add photo URL
+        recordedby: adminProfileId, // Set recordedby to current admin's profile ID
         // Include all other fields from databaseFields
         middle_name: databaseFields.middle_name,
         suffix: databaseFields.suffix,
