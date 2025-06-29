@@ -1,12 +1,12 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, User, X, AlertTriangle } from "lucide-react";
+import { Check, ChevronsUpDown, User, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { searchResidents } from "@/lib/api/households";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Resident {
   id: string;
@@ -16,8 +16,6 @@ interface Resident {
   suffix?: string;
   purok: string;
   full_name: string;
-  household_id?: string;
-  household_name?: string;
 }
 
 interface HeadOfFamilyInputProps {
@@ -26,7 +24,6 @@ interface HeadOfFamilyInputProps {
   onResidentSelect: (residentId: string | null) => void;
   selectedResidentId?: string | null;
   placeholder?: string;
-  currentHouseholdId?: string;
 }
 
 const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
@@ -34,8 +31,7 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
   onValueChange,
   onResidentSelect,
   selectedResidentId,
-  placeholder = "Enter head of family name or search residents...",
-  currentHouseholdId
+  placeholder = "Enter head of family name or search residents..."
 }) => {
   const [open, setOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Resident[]>([]);
@@ -48,33 +44,7 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
         setIsLoading(true);
         const result = await searchResidents(value);
         if (result.success) {
-          // Check household membership for each resident
-          const residentsWithHouseholds = await Promise.all(
-            result.data.map(async (resident) => {
-              try {
-                // Query households table directly using the resident's household_id
-                let household_name = null;
-                if (resident.household_id) {
-                  const { data: householdData } = await supabase
-                    .from('households')
-                    .select('name')
-                    .eq('id', resident.household_id)
-                    .maybeSingle();
-                  
-                  household_name = householdData?.name;
-                }
-
-                return {
-                  ...resident,
-                  household_name
-                };
-              } catch (error) {
-                console.error('Error checking household membership:', error);
-                return resident;
-              }
-            })
-          );
-          setSearchResults(residentsWithHouseholds);
+          setSearchResults(result.data);
         }
         setIsLoading(false);
       } else {
@@ -87,12 +57,6 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
   }, [value]);
 
   const handleResidentSelect = (resident: Resident) => {
-    // Check if resident is already a member of another household
-    if (resident.household_id && resident.household_id !== currentHouseholdId) {
-      // Don't select the resident, but keep the popover open to show the warning
-      return;
-    }
-
     onValueChange(resident.full_name);
     onResidentSelect(resident.id);
     setOpen(false);
@@ -217,46 +181,26 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
                 </CommandEmpty>
               ) : (
                 <CommandGroup heading="Registered Residents">
-                  {searchResults.map((resident) => {
-                    const isAlreadyMember = resident.household_id && resident.household_id !== currentHouseholdId;
-                    
-                    return (
-                      <CommandItem
-                        key={resident.id}
-                        value={resident.full_name}
-                        onSelect={() => handleResidentSelect(resident)}
+                  {searchResults.map((resident) => (
+                    <CommandItem
+                      key={resident.id}
+                      value={resident.full_name}
+                      onSelect={() => handleResidentSelect(resident)}
+                      className="flex items-center justify-between cursor-pointer"
+                      onMouseDown={(e) => e.preventDefault()} // Prevent input blur
+                    >
+                      <div>
+                        <div className="font-medium">{resident.full_name}</div>
+                        <div className="text-sm text-muted-foreground">Purok {resident.purok}</div>
+                      </div>
+                      <Check
                         className={cn(
-                          "flex items-center justify-between cursor-pointer",
-                          isAlreadyMember && "opacity-60 cursor-not-allowed"
+                          "ml-auto h-4 w-4",
+                          selectedResidentId === resident.id ? "opacity-100" : "opacity-0"
                         )}
-                        onMouseDown={(e) => e.preventDefault()} // Prevent input blur
-                        disabled={isAlreadyMember}
-                      >
-                        <div className="flex-1">
-                          <div className="font-medium flex items-center gap-2">
-                            {resident.full_name}
-                            {isAlreadyMember && (
-                              <AlertTriangle className="h-4 w-4 text-amber-500" />
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Purok {resident.purok}
-                            {isAlreadyMember && (
-                              <span className="text-amber-600 ml-2">
-                                Already member of "{resident.household_name}"
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <Check
-                          className={cn(
-                            "ml-auto h-4 w-4",
-                            selectedResidentId === resident.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                      </CommandItem>
-                    );
-                  })}
+                      />
+                    </CommandItem>
+                  ))}
                 </CommandGroup>
               )}
             </CommandList>
