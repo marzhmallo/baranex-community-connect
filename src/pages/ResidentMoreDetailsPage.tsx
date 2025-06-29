@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -106,30 +105,71 @@ const ResidentMoreDetailsPage = () => {
     enabled: !!residentId,
   });
 
+  // Fetch admin profiles for recordedby and editedby
+  const { data: createdByAdmin } = useQuery({
+    queryKey: ['admin-profile', resident?.recordedby],
+    queryFn: async () => {
+      if (!resident?.recordedby) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('firstname, lastname, middlename')
+        .eq('id', resident.recordedby)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching created by admin:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!resident?.recordedby,
+  });
+
+  const { data: updatedByAdmin } = useQuery({
+    queryKey: ['admin-profile', resident?.editedby],
+    queryFn: async () => {
+      if (!resident?.editedby) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('firstname, lastname, middlename')
+        .eq('id', resident.editedby)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching updated by admin:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!resident?.editedby,
+  });
+
   // Fetch household information if resident has a household_id
   const { data: household } = useQuery({
-    queryKey: ['resident-household', resident?.householdId],
+    queryKey: ['resident-household', resident?.household_id],
     queryFn: async () => {
-      if (!resident?.householdId) return null;
+      if (!resident?.household_id) return null;
       
       const { data, error } = await supabase
         .from('households')
         .select('id, name, address, purok, status, head_of_family, headname')
-        .eq('id', resident.householdId)
+        .eq('id', resident.household_id)
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!resident?.householdId,
+    enabled: !!resident?.household_id,
   });
   
   // Log to debug what we're receiving from the API
   console.log("Resident data:", resident);
-  console.log("Birth date:", resident?.birthDate);
-  console.log("Created at value:", resident?.created_at);
-  console.log("Updated at value:", resident?.updated_at);
-  console.log("Died on value:", resident?.diedOn || resident?.died_on);
+  console.log("Created by admin:", createdByAdmin);
+  console.log("Updated by admin:", updatedByAdmin);
   
   if (isLoading) {
     return (
@@ -174,12 +214,21 @@ const ResidentMoreDetailsPage = () => {
     );
   }
 
+  // Helper function to format admin name
+  const formatAdminName = (admin: any) => {
+    if (!admin) return null;
+    const firstName = admin.firstname || '';
+    const middleName = admin.middlename ? ` ${admin.middlename} ` : ' ';
+    const lastName = admin.lastname || '';
+    return `${firstName}${middleName}${lastName}`.trim();
+  };
+
   // Generate full address display - removing region from this string
   const fullAddress = resident.purok 
-    ? `Purok ${resident.purok}, ${resident.barangay}, ${resident.municipality}, ${resident.province}` 
+    ? `Purok ${resident.purok}, ${resident.barangaydb}, ${resident.municipalitycity}, ${resident.provinze}` 
     : resident.address || 'Address not provided';
 
-  const residentFullName = `${resident.firstName} ${resident.middleName ? `${resident.middleName} ` : ''}${resident.lastName}${resident.suffix ? ` ${resident.suffix}` : ''}`;
+  const residentFullName = `${resident.first_name} ${resident.middle_name ? `${resident.middle_name} ` : ''}${resident.last_name}${resident.suffix ? ` ${resident.suffix}` : ''}`;
 
   // Navigate to household details page
   const handleViewHousehold = () => {
@@ -206,7 +255,7 @@ const ResidentMoreDetailsPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Resident Profile</h1>
           <p className="text-muted-foreground mt-1">
-            Complete details for {resident.firstName} {resident.lastName}
+            Complete details for {resident.first_name} {resident.last_name}
           </p>
         </div>
       </div>
@@ -218,12 +267,12 @@ const ResidentMoreDetailsPage = () => {
             <CardContent className="pt-6 pb-6">
               <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
                 {/* Photo/Avatar with click to enlarge */}
-                {resident.photoUrl ? (
+                {resident.photo_url ? (
                   <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
                     <Avatar className="w-32 h-32 border-4 border-gray-100">
-                      <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
+                      <AvatarImage src={resident.photo_url} alt={`${resident.first_name} ${resident.last_name}`} />
                       <AvatarFallback className="text-4xl">
-                        {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
+                        {resident.first_name.charAt(0)}{resident.last_name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -233,7 +282,7 @@ const ResidentMoreDetailsPage = () => {
                 ) : (
                   <Avatar className="w-32 h-32 border-4 border-gray-100">
                     <AvatarFallback className="text-4xl">
-                      {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
+                      {resident.first_name.charAt(0)}{resident.last_name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                 )}
@@ -242,7 +291,7 @@ const ResidentMoreDetailsPage = () => {
                 <div className="space-y-2 text-center md:text-left flex-1">
                   <div className="flex flex-col md:flex-row md:items-center gap-2">
                     <h2 className="text-2xl font-bold">
-                      {resident.firstName} {resident.middleName ? `${resident.middleName.charAt(0)}. ` : ''}{resident.lastName} {resident.suffix || ''}
+                      {resident.first_name} {resident.middle_name ? `${resident.middle_name.charAt(0)}. ` : ''}{resident.last_name} {resident.suffix || ''}
                     </h2>
                     <div className="flex items-center">
                       {getStatusBadge(resident.status)}
@@ -255,7 +304,7 @@ const ResidentMoreDetailsPage = () => {
                   <div className="flex flex-col md:flex-row gap-4 text-muted-foreground">
                     <div className="flex items-center">
                       <UserCheck className="mr-2 h-4 w-4" />
-                      <span>{resident.gender}, {calculateAge(resident.birthDate)} years old</span>
+                      <span>{resident.gender}, {calculateAge(resident.birthdate)} years old</span>
                     </div>
                     <div className="flex items-center">
                       <MapPin className="mr-2 h-4 w-4" />
@@ -275,7 +324,7 @@ const ResidentMoreDetailsPage = () => {
                         {classification}
                       </Badge>
                     ))}
-                    {resident.isVoter && (
+                    {resident.is_voter && (
                       <Badge variant="outline" className="bg-green-50 text-green-800 border-green-100">Voter</Badge>
                     )}
                   </div>
@@ -309,18 +358,18 @@ const ResidentMoreDetailsPage = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">First Name</p>
-                      <p className="font-medium">{resident.firstName}</p>
+                      <p className="font-medium">{resident.first_name}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Last Name</p>
-                      <p className="font-medium">{resident.lastName}</p>
+                      <p className="font-medium">{resident.last_name}</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Middle Name</p>
-                      <p className="font-medium">{resident.middleName || "Not specified"}</p>
+                      <p className="font-medium">{resident.middle_name || "Not specified"}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Suffix</p>
@@ -335,18 +384,18 @@ const ResidentMoreDetailsPage = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Civil Status</p>
-                      <p className="font-medium">{resident.civilStatus || "Not specified"}</p>
+                      <p className="font-medium">{resident.civil_status || "Not specified"}</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Birth Date</p>
-                      <p className="font-medium">{formatSimpleDate(resident.birthDate)}</p>
+                      <p className="font-medium">{formatSimpleDate(resident.birthdate)}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Age</p>
-                      <p className="font-medium">{calculateAge(resident.birthDate)} years old</p>
+                      <p className="font-medium">{calculateAge(resident.birthdate)} years old</p>
                     </div>
                   </div>
                   
@@ -379,13 +428,13 @@ const ResidentMoreDetailsPage = () => {
                     </div>
                   </div>
 
-                  {/* Display date of death if resident is deceased - moved back to original position */}
+                  {/* Display date of death if resident is deceased */}
                   {resident.status === 'Deceased' && (
                     <div>
                       <p className="text-sm text-gray-500">Date of Death <Skull className="inline h-4 w-4 text-red-500 ml-1" /></p>
                       <p className="font-medium">
-                        {(resident.diedOn || resident.died_on)
-                          ? formatSimpleDate(resident.diedOn || resident.died_on) 
+                        {resident.died_on
+                          ? formatSimpleDate(resident.died_on) 
                           : "Date not recorded"}
                       </p>
                     </div>
@@ -416,35 +465,35 @@ const ResidentMoreDetailsPage = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Barangay</p>
-                      <p className="font-medium">{resident.barangay || "Not specified"}</p>
+                      <p className="font-medium">{resident.barangaydb || "Not specified"}</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Municipality/City</p>
-                      <p className="font-medium">{resident.municipality || "Not specified"}</p>
+                      <p className="font-medium">{resident.municipalitycity || "Not specified"}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Province</p>
-                      <p className="font-medium">{resident.province || "Not specified"}</p>
+                      <p className="font-medium">{resident.provinze || "Not specified"}</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Region</p>
-                      <p className="font-medium">{resident.region || "Not specified"}</p>
+                      <p className="font-medium">{resident.regional || "Not specified"}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Country</p>
-                      <p className="font-medium">{resident.country || "Philippines"}</p>
+                      <p className="font-medium">{resident.countryph || "Philippines"}</p>
                     </div>
                   </div>
                   
                   <div>
                     <p className="text-sm text-gray-500">Years in Barangay</p>
-                    <p className="font-medium">{resident.yearsInBarangay || "Not specified"}</p>
+                    <p className="font-medium">{resident.years_in_barangay || "Not specified"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -465,7 +514,7 @@ const ResidentMoreDetailsPage = () => {
                 <div className="grid grid-cols-1 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Contact Number</p>
-                    <p className="font-medium">{resident.contactNumber || "Not provided"}</p>
+                    <p className="font-medium">{resident.mobile_number || "Not provided"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Email</p>
@@ -487,15 +536,15 @@ const ResidentMoreDetailsPage = () => {
                 <div className="grid grid-cols-1 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Name</p>
-                    <p className="font-medium">{resident.emergencyContact?.name || "Not provided"}</p>
+                    <p className="font-medium">{resident.emname || "Not provided"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Relationship</p>
-                    <p className="font-medium">{resident.emergencyContact?.relationship || "Not provided"}</p>
+                    <p className="font-medium">{resident.emrelation || "Not provided"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Contact Number</p>
-                    <p className="font-medium">{resident.emergencyContact?.contactNumber || "Not provided"}</p>
+                    <p className="font-medium">{resident.emcontact || "Not provided"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -517,8 +566,8 @@ const ResidentMoreDetailsPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Monthly Income</p>
-                    <p className="font-medium">{resident.monthlyIncome 
-                      ? `₱${resident.monthlyIncome.toLocaleString()}`
+                    <p className="font-medium">{resident.monthly_income 
+                      ? `₱${resident.monthly_income.toLocaleString()}`
                       : "Not specified"}</p>
                   </div>
                 </div>
@@ -554,28 +603,28 @@ const ResidentMoreDetailsPage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Voter Status</p>
-                    <p className="font-medium">{resident.isVoter ? "Registered Voter" : "Non-Voter"}</p>
+                    <p className="font-medium">{resident.is_voter ? "Registered Voter" : "Non-Voter"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">PhilHealth</p>
-                    <p className="font-medium">{resident.hasPhilhealth ? "Member" : "Non-Member"}</p>
+                    <p className="font-medium">{resident.has_philhealth ? "Member" : "Non-Member"}</p>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">SSS</p>
-                    <p className="font-medium">{resident.hasSss ? "Member" : "Non-Member"}</p>
+                    <p className="font-medium">{resident.has_sss ? "Member" : "Non-Member"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Pag-IBIG</p>
-                    <p className="font-medium">{resident.hasPagibig ? "Member" : "Non-Member"}</p>
+                    <p className="font-medium">{resident.has_pagibig ? "Member" : "Non-Member"}</p>
                   </div>
                 </div>
                 
                 <div>
                   <p className="text-sm text-gray-500">TIN</p>
-                  <p className="font-medium">{resident.hasTin ? "Has TIN" : "No TIN"}</p>
+                  <p className="font-medium">{resident.has_tin ? "Has TIN" : "No TIN"}</p>
                 </div>
               </div>
             </CardContent>
@@ -598,7 +647,7 @@ const ResidentMoreDetailsPage = () => {
                 <HouseholdSelector
                   residentId={resident.id}
                   residentName={residentFullName}
-                  currentHouseholdId={resident.householdId}
+                  currentHouseholdId={resident.household_id}
                   onHouseholdUpdate={handleHouseholdUpdate}
                 />
               </CardTitle>
@@ -649,7 +698,7 @@ const ResidentMoreDetailsPage = () => {
             </CardContent>
           </Card>
 
-          {/* Record Information - New card for created and updated dates */}
+          {/* Record Information - Updated card with admin names */}
           <Card>
             <CardHeader>
               <CardTitle className="text-xl flex items-center">
@@ -663,14 +712,28 @@ const ResidentMoreDetailsPage = () => {
                   <Clock className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Created</p>
-                    <p className="mt-1">{formatDate(resident.created_at)}</p>
+                    <p className="mt-1">
+                      {formatDate(resident.created_at)}
+                      {createdByAdmin && formatAdminName(createdByAdmin) && (
+                        <span className="text-sm text-muted-foreground block">
+                          by {formatAdminName(createdByAdmin)}
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <RefreshCw className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
-                    <p className="mt-1">{formatDate(resident.updated_at)}</p>
+                    <p className="mt-1">
+                      {formatDate(resident.updated_at)}
+                      {updatedByAdmin && formatAdminName(updatedByAdmin) && (
+                        <span className="text-sm text-muted-foreground block">
+                          by {formatAdminName(updatedByAdmin)}
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -680,7 +743,7 @@ const ResidentMoreDetailsPage = () => {
       </ScrollArea>
 
       {/* Full screen photo dialog */}
-      {resident.photoUrl && (
+      {resident.photo_url && (
         <Dialog open={showFullPhoto} onOpenChange={setShowFullPhoto}>
           <DialogContent 
             className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center"
@@ -691,8 +754,8 @@ const ResidentMoreDetailsPage = () => {
               onClick={() => setShowFullPhoto(false)}
             >
               <img 
-                src={resident.photoUrl} 
-                alt={`${resident.firstName} ${resident.lastName}`} 
+                src={resident.photo_url} 
+                alt={`${resident.first_name} ${resident.last_name}`} 
                 className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
               />
               <Button 
@@ -719,7 +782,7 @@ const ResidentMoreDetailsPage = () => {
             <div>
               <h2 className="text-lg font-semibold">Edit Resident</h2>
               <p className="text-sm text-muted-foreground">
-                Update information for {resident.firstName} {resident.lastName}
+                Update information for {resident.first_name} {resident.last_name}
               </p>
             </div>
           </div>
