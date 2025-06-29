@@ -38,6 +38,8 @@ export interface Resident {
   householdId?: string | null;
   updated_at?: string; // Added updated_at to match the database column name
   brgyId?: string;
+  recordedby?: string | null; // Admin who created the record
+  editedby?: string | null; // Admin who last updated the record
   emergencyContact?: {
     name: string;
     relationship: string;
@@ -162,6 +164,8 @@ export interface Household {
   created_at?: string | null;
   updated_at?: string | null;
   brgyid?: string | null;
+  recordedby?: string | null; // Admin who created the record
+  updatedby?: string | null; // Admin who last updated the record
 }
 
 // Document types
