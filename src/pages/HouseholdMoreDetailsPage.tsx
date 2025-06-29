@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import HouseholdForm from '@/components/households/HouseholdForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import HouseholdMembersManager from '@/components/households/HouseholdMembersManager';
-import { useProfileData } from '@/hooks/useProfileData';
 
 const HouseholdMoreDetailsPage = () => {
   const { householdId } = useParams<{ householdId: string }>();
@@ -28,10 +28,6 @@ const HouseholdMoreDetailsPage = () => {
   });
 
   const household = householdData?.data;
-
-  // Fetch profile data for recordedby and updatedby
-  const { displayName: createdByName, isLoading: isCreatedByLoading } = useProfileData(household?.recordedby || null);
-  const { displayName: updatedByName, isLoading: isUpdatedByLoading } = useProfileData(household?.updatedby || null);
 
   const handleEditSuccess = () => {
     setIsEditMode(false);
@@ -283,26 +279,12 @@ const HouseholdMoreDetailsPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Created At</p>
-                  <p className="font-medium">
-                    {formatDate(household.created_at)}
-                    {household.recordedby && (
-                      <span className="text-sm text-gray-600 ml-1">
-                        by {isCreatedByLoading ? 'Loading...' : createdByName}
-                      </span>
-                    )}
-                  </p>
+                  <p className="font-medium">{formatDate(household.created_at)}</p>
                 </div>
                 
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Last Updated</p>
-                  <p className="font-medium">
-                    {formatDate(household.updated_at)}
-                    {household.updatedby && (
-                      <span className="text-sm text-gray-600 ml-1">
-                        by {isUpdatedByLoading ? 'Loading...' : updatedByName}
-                      </span>
-                    )}
-                  </p>
+                  <p className="font-medium">{formatDate(household.updated_at)}</p>
                 </div>
               </div>
             </CardContent>

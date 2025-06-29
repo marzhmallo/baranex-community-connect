@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -17,7 +18,6 @@ import { ZoomIn, X, Clock, History, Skull, Home } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useProfileData } from '@/hooks/useProfileData';
 
 type ResidentDetailsProps = {
   resident: Resident | null;
@@ -47,10 +47,6 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     },
     enabled: !!resident?.householdId,
   });
-
-  // Fetch profile data for recordedby and editedby
-  const { displayName: createdByName, isLoading: isCreatedByLoading } = useProfileData(resident?.recordedby || null);
-  const { displayName: updatedByName, isLoading: isUpdatedByLoading } = useProfileData(resident?.editedby || null);
   
   if (!resident) return null;
 
@@ -385,11 +381,6 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                         <p className="flex items-center">
                           <Clock className="mr-2 h-3 w-3 text-gray-400" />
                           {resident.created_at ? formatDate(resident.created_at) : "Not available"}
-                          {resident.recordedby && (
-                            <span className="text-sm text-gray-600 ml-1">
-                              by {isCreatedByLoading ? 'Loading...' : createdByName}
-                            </span>
-                          )}
                         </p>
                       </div>
                       {resident.updated_at && (
@@ -398,11 +389,6 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                           <p className="flex items-center">
                             <Clock className="mr-2 h-3 w-3 text-gray-400" />
                             {formatDate(resident.updated_at)}
-                            {resident.editedby && (
-                              <span className="text-sm text-gray-600 ml-1">
-                                by {isUpdatedByLoading ? 'Loading...' : updatedByName}
-                              </span>
-                            )}
                           </p>
                         </div>
                       )}
