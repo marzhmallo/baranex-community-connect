@@ -161,9 +161,10 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
         description: "The resident has been added to this household.",
       });
 
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
-      queryClient.invalidateQueries({ queryKey: ['resident', residentId] });
+      // Refresh data - use refetch to ensure immediate update
+      await queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
+      await queryClient.invalidateQueries({ queryKey: ['household', householdId] });
+      await queryClient.invalidateQueries({ queryKey: ['resident', residentId] });
       
       // Clear search and close dialog
       setSearchTerm('');
@@ -195,13 +196,18 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
   const removeMemberFromHousehold = async (residentId: string, residentName: string, removeAsHead = false) => {
     try {
+      console.log('Removing member from household:', { residentId, householdId, removeAsHead });
+      
       // Remove from household
       const { error: residentError } = await supabase
         .from('residents')
         .update({ household_id: null })
         .eq('id', residentId);
 
-      if (residentError) throw residentError;
+      if (residentError) {
+        console.error('Error updating resident:', residentError);
+        throw residentError;
+      }
 
       // If this person was the head of family, also remove them as head
       if (removeAsHead) {
@@ -210,7 +216,10 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
           .update({ head_of_family: null, headname: null })
           .eq('id', householdId);
 
-        if (householdError) throw householdError;
+        if (householdError) {
+          console.error('Error updating household:', householdError);
+          throw householdError;
+        }
       }
 
       toast({
@@ -220,15 +229,23 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
           : `${residentName} has been removed from this household.`,
       });
 
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
-      queryClient.invalidateQueries({ queryKey: ['household', householdId] });
-      queryClient.invalidateQueries({ queryKey: ['resident', residentId] });
+      // Refresh data with proper invalidation and refetch
+      console.log('Refreshing queries after member removal');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['household-members', householdId] }),
+        queryClient.invalidateQueries({ queryKey: ['household', householdId] }),
+        queryClient.invalidateQueries({ queryKey: ['resident', residentId] }),
+        queryClient.invalidateQueries({ queryKey: ['households'] }), // Also refresh households list
+      ]);
+
+      // Force refetch household data to ensure it's still accessible
+      await queryClient.refetchQueries({ queryKey: ['household', householdId] });
+      
     } catch (error: any) {
       console.error('Error removing member:', error);
       toast({
         title: "Error removing member",
-        description: error.message,
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     }
