@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Edit, Users, Calendar, DollarSign, MapPin, Home, Droplet, Zap, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, Users, Calendar, DollarSign, MapPin, Home, Droplet, Zap, Trash2, Clock, RefreshCcw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getHouseholdById } from '@/lib/api/households';
 import { Badge } from '@/components/ui/badge';
@@ -83,20 +82,24 @@ const HouseholdMoreDetailsPage = () => {
   };
 
   // Format dates for display with admin names
-  const formatDateWithAdmin = (dateString?: string, adminId?: string, action: 'Created' | 'Last Updated' = 'Created') => {
-    if (!dateString) return "Not available";
+  const formatDateWithAdmin = (dateString?: string, adminId?: string) => {
+    if (!dateString) return { date: "Not available", admin: "" };
     
     try {
       const date = new Date(dateString);
       // Check if date is valid
       if (isNaN(date.getTime())) {
-        return "Invalid date";
+        return { date: "Invalid date", admin: "" };
       }
       
       const formattedDate = date.toLocaleDateString('en-US', {
         year: 'numeric', 
         month: 'long', 
         day: 'numeric'
+      }) + ' at ' + date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
       });
 
       // Get admin name if available
@@ -106,13 +109,9 @@ const HouseholdMoreDetailsPage = () => {
         adminName = `${admin.firstname} ${admin.lastname}`.trim();
       }
 
-      if (adminName) {
-        return `${action} at ${formattedDate} by ${adminName}`;
-      } else {
-        return `${action} at ${formattedDate}`;
-      }
+      return { date: formattedDate, admin: adminName };
     } catch (error) {
-      return "Date error";
+      return { date: "Date error", admin: "" };
     }
   };
 
@@ -324,17 +323,46 @@ const HouseholdMoreDetailsPage = () => {
               
               <Separator className="my-4" />
               
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Record Information</p>
-                  <div className="space-y-2">
-                    <p className="font-medium text-sm">
-                      {formatDateWithAdmin(household.created_at, household.recordedby, 'Created')}
-                    </p>
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Record Information</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Created Section */}
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-blue-100 p-2 rounded-full mt-1">
+                        <Clock className="h-4 w-4 text-blue-700" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 mb-1">Created</p>
+                        <p className="text-sm text-gray-700">
+                          {formatDateWithAdmin(household.created_at, household.recordedby).date}
+                        </p>
+                        {formatDateWithAdmin(household.created_at, household.recordedby).admin && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            by {formatDateWithAdmin(household.created_at, household.recordedby).admin}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Last Updated Section */}
                     {household.updated_at && (
-                      <p className="font-medium text-sm">
-                        {formatDateWithAdmin(household.updated_at, household.updatedby, 'Last Updated')}
-                      </p>
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-green-100 p-2 rounded-full mt-1">
+                          <RefreshCcw className="h-4 w-4 text-green-700" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 mb-1">Last Updated</p>
+                          <p className="text-sm text-gray-700">
+                            {formatDateWithAdmin(household.updated_at, household.updatedby).date}
+                          </p>
+                          {formatDateWithAdmin(household.updated_at, household.updatedby).admin && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              by {formatDateWithAdmin(household.updated_at, household.updatedby).admin}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
