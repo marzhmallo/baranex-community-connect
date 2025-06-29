@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -113,7 +112,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
   // Get non-registered members from the household's members JSONB column with proper type conversion
   const nonRegisteredMembers: NonRegisteredMember[] = Array.isArray(householdData?.members) 
-    ? (householdData.members as NonRegisteredMember[])
+    ? (householdData.members as unknown as NonRegisteredMember[])
     : [];
 
   // Search for residents to add
@@ -230,7 +229,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
       const { error } = await supabase
         .from('households')
-        .update({ members: updatedMembers as any })
+        .update({ members: updatedMembers as unknown as any })
         .eq('id', householdId);
 
       if (error) throw error;
@@ -307,7 +306,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
       const { error } = await supabase
         .from('households')
-        .update({ members: updatedMembers as any })
+        .update({ members: updatedMembers as unknown as any })
         .eq('id', householdId);
 
       if (error) throw error;
