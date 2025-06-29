@@ -497,13 +497,20 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Nationality *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Japanese" {...field} />
+                      <Input placeholder="Filipino" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
             </div>
 
-            <h3 className="text-lg font-medium mb-4 pt-4 border-t">Address</h3>
+            <h3 className="text-lg font-medium mb-4 pt-4 border-t">Contact Information</h3>
+            
+            {isAutoFillEnabled && (
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">📍 Address fields are automatically filled and are read-only for security.</p>
+              </div>
+            )}
+            
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <FormField control={form.control} name="purok" render={({
               field
@@ -520,9 +527,8 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Barangay *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Mabuhay" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
+                      <Input placeholder="San Jose" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -531,9 +537,8 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Municipality/City *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Liloy" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
+                      <Input placeholder="Manila" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -542,9 +547,8 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Province *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Zamboanga Del Norte" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
+                      <Input placeholder="Metro Manila" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -553,9 +557,8 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Region *</FormLabel>
                     <FormControl>
-                      <Input placeholder="IX" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
+                      <Input placeholder="NCR" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -564,9 +567,8 @@ const ResidentForm = ({
             }) => <FormItem>
                     <FormLabel>Country *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Philippines" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted cursor-not-allowed" : ""} />
+                      <Input placeholder="Philippines" {...field} readOnly={isAutoFillEnabled} className={isAutoFillEnabled ? "bg-muted text-muted-foreground cursor-not-allowed" : ""} />
                     </FormControl>
-                    {isAutoFillEnabled && <FormDescription>This field is auto-filled with and cannot be edited</FormDescription>}
                     <FormMessage />
                   </FormItem>} />
 
@@ -581,7 +583,6 @@ const ResidentForm = ({
                   </FormItem>} />
             </div>
 
-            <h3 className="text-lg font-medium mb-4 pt-4 border-t">Contact Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField control={form.control} name="contactNumber" render={({
               field
