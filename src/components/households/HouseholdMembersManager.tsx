@@ -13,12 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Plus, X, Search, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { syncAllHouseholdsHeadOfFamily } from '@/lib/api/households';
-
 interface HouseholdMembersManagerProps {
   householdId: string;
   householdName: string;
 }
-
 interface NonRegisteredMember {
   id: string;
   first_name: string;
@@ -29,14 +27,16 @@ interface NonRegisteredMember {
   birthdate: string;
   relationship?: string;
 }
-
-const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMembersManagerProps) => {
+const HouseholdMembersManager = ({
+  householdId,
+  householdName
+}: HouseholdMembersManagerProps) => {
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState('registered');
-  
+
   // Non-registered member form state
   const [nonRegisteredForm, setNonRegisteredForm] = useState({
     first_name: '',
@@ -47,8 +47,9 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
     birthdate: '',
     relationship: ''
   });
-
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -58,39 +59,45 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
       try {
         console.log('Syncing head of family for household:', householdId);
         await syncAllHouseholdsHeadOfFamily();
-        
+
         // Refresh the members list after sync
-        queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
+        queryClient.invalidateQueries({
+          queryKey: ['household-members', householdId]
+        });
       } catch (error) {
         console.error('Error syncing head of family:', error);
       }
     };
-
     syncHeadOfFamily();
   }, [householdId, queryClient]);
 
   // Fetch current household with members data
-  const { data: householdData, isLoading: isHouseholdLoading } = useQuery({
+  const {
+    data: householdData,
+    isLoading: isHouseholdLoading
+  } = useQuery({
     queryKey: ['household-with-members', householdId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('households')
-        .select('members, head_of_family, headname')
-        .eq('id', householdId)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('households').select('members, head_of_family, headname').eq('id', householdId).single();
       if (error) throw error;
       return data;
-    },
+    }
   });
 
   // Fetch current household registered members
-  const { data: registeredMembers, isLoading: isMembersLoading } = useQuery({
+  const {
+    data: registeredMembers,
+    isLoading: isMembersLoading
+  } = useQuery({
     queryKey: ['household-members', householdId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('residents')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('residents').select(`
           id,
           first_name,
           middle_name,
@@ -101,19 +108,14 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
           purok,
           gender,
           birthdate
-        `)
-        .eq('household_id', householdId)
-        .order('first_name');
-
+        `).eq('household_id', householdId).order('first_name');
       if (error) throw error;
       return data || [];
-    },
+    }
   });
 
   // Get non-registered members from the household's members JSONB column with proper type conversion
-  const nonRegisteredMembers: NonRegisteredMember[] = Array.isArray(householdData?.members) 
-    ? (householdData.members as unknown as NonRegisteredMember[])
-    : [];
+  const nonRegisteredMembers: NonRegisteredMember[] = Array.isArray(householdData?.members) ? householdData.members as unknown as NonRegisteredMember[] : [];
 
   // Parse unregistered head of family from headname column
   const unregisteredHeadOfFamily = React.useMemo(() => {
@@ -124,11 +126,9 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
     // Parse the headname string to extract name components
     const nameParts = householdData.headname.trim().split(' ');
     if (nameParts.length === 0) return null;
-
     const firstName = nameParts[0];
     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
     const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : undefined;
-
     return {
       id: 'unregistered-head',
       first_name: firstName,
@@ -136,7 +136,8 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
       last_name: lastName,
       suffix: undefined,
       gender: 'Unknown',
-      birthdate: '1900-01-01', // Default birthdate for age calculation
+      birthdate: '1900-01-01',
+      // Default birthdate for age calculation
       relationship: 'Head of Family'
     } as NonRegisteredMember;
   }, [householdData?.headname, householdData?.head_of_family]);
@@ -144,22 +145,22 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
   // Helper function to handle database errors with specific toast messages
   const handleDatabaseError = (error: any, defaultMessage: string) => {
     console.error('Database error:', error);
-    
+
     // Check for specific constraint violations
     if (error.message && error.message.includes('households_head_of_family_key')) {
       toast({
         title: "Head of Family Already Assigned",
         description: "This resident is already the head of another household. A person can only be the head of one household at a time.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-    
+
     // Default error handling
     toast({
       title: "Error",
       description: error.message || defaultMessage,
-      variant: "destructive",
+      variant: "destructive"
     });
   };
 
@@ -170,12 +171,12 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
       setSearchResults([]);
       return;
     }
-
     setIsSearching(true);
     try {
-      const { data, error } = await supabase
-        .from('residents')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('residents').select(`
           id,
           first_name,
           middle_name,
@@ -186,33 +187,27 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
           purok,
           gender,
           birthdate
-        `)
-        .or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,middle_name.ilike.%${term}%`)
-        .is('household_id', null)
-        .order('first_name');
-
+        `).or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,middle_name.ilike.%${term}%`).is('household_id', null).order('first_name');
       if (error) {
         console.error('Error searching residents:', error);
         toast({
           title: "Search error",
           description: "Failed to search for residents.",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
       const formattedResults = data?.map(resident => ({
         ...resident,
         full_name: `${resident.first_name} ${resident.middle_name ? resident.middle_name + ' ' : ''}${resident.last_name}${resident.suffix ? ' ' + resident.suffix : ''}`
       })) || [];
-
       setSearchResults(formattedResults);
     } catch (error) {
       console.error('Error searching residents:', error);
       toast({
         title: "Search error",
         description: "An unexpected error occurred while searching.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSearching(false);
@@ -222,21 +217,22 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
   // Add registered resident to household
   const handleAddRegisteredMember = async (residentId: string) => {
     try {
-      const { error } = await supabase
-        .from('residents')
-        .update({ household_id: householdId })
-        .eq('id', residentId);
-
+      const {
+        error
+      } = await supabase.from('residents').update({
+        household_id: householdId
+      }).eq('id', residentId);
       if (error) throw error;
-
       toast({
         title: "Member added successfully",
-        description: "The resident has been added to this household.",
+        description: "The resident has been added to this household."
       });
-
-      queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
-      queryClient.invalidateQueries({ queryKey: ['resident', residentId] });
-      
+      queryClient.invalidateQueries({
+        queryKey: ['household-members', householdId]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['resident', residentId]
+      });
       setSearchTerm('');
       setSearchResults([]);
       setIsAddMemberOpen(false);
@@ -252,11 +248,10 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
         toast({
           title: "Missing required fields",
           description: "Please fill in first name, last name, and birthdate.",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
       const newMember: NonRegisteredMember = {
         id: crypto.randomUUID(),
         first_name: nonRegisteredForm.first_name,
@@ -267,23 +262,21 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
         birthdate: nonRegisteredForm.birthdate,
         relationship: nonRegisteredForm.relationship || undefined
       };
-
       const updatedMembers = [...nonRegisteredMembers, newMember];
-
-      const { error } = await supabase
-        .from('households')
-        .update({ members: updatedMembers as unknown as any })
-        .eq('id', householdId);
-
+      const {
+        error
+      } = await supabase.from('households').update({
+        members: updatedMembers as unknown as any
+      }).eq('id', householdId);
       if (error) throw error;
-
       toast({
         title: "Non-registered member added",
-        description: "The member has been added to this household.",
+        description: "The member has been added to this household."
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['household-with-members', householdId]
       });
 
-      queryClient.invalidateQueries({ queryKey: ['household-with-members', householdId] });
-      
       // Reset form
       setNonRegisteredForm({
         first_name: '',
@@ -300,7 +293,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
       toast({
         title: "Error adding member",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -313,25 +306,26 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
         toast({
           title: "Cannot remove household head",
           description: "This person is the head of family. Please change the head of family first before removing them from the household.",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
-      const { error } = await supabase
-        .from('residents')
-        .update({ household_id: null })
-        .eq('id', residentId);
-
+      const {
+        error
+      } = await supabase.from('residents').update({
+        household_id: null
+      }).eq('id', residentId);
       if (error) throw error;
-
       toast({
         title: "Member removed successfully",
-        description: `${residentName} has been removed from this household.`,
+        description: `${residentName} has been removed from this household.`
       });
-
-      queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
-      queryClient.invalidateQueries({ queryKey: ['resident', residentId] });
+      queryClient.invalidateQueries({
+        queryKey: ['household-members', householdId]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['resident', residentId]
+      });
     } catch (error: any) {
       handleDatabaseError(error, "Failed to remove member from household.");
     }
@@ -341,46 +335,41 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
   const handleRemoveNonRegisteredMember = async (memberId: string, memberName: string) => {
     try {
       const updatedMembers = nonRegisteredMembers.filter(member => member.id !== memberId);
-
-      const { error } = await supabase
-        .from('households')
-        .update({ members: updatedMembers as unknown as any })
-        .eq('id', householdId);
-
+      const {
+        error
+      } = await supabase.from('households').update({
+        members: updatedMembers as unknown as any
+      }).eq('id', householdId);
       if (error) throw error;
-
       toast({
         title: "Member removed successfully",
-        description: `${memberName} has been removed from this household.`,
+        description: `${memberName} has been removed from this household.`
       });
-
-      queryClient.invalidateQueries({ queryKey: ['household-with-members', householdId] });
+      queryClient.invalidateQueries({
+        queryKey: ['household-with-members', householdId]
+      });
     } catch (error: any) {
       console.error('Error removing non-registered member:', error);
       toast({
         title: "Error removing member",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const formatAge = (birthdate: string) => {
     if (birthdate === '1900-01-01') return 'Unknown'; // Handle default birthdate
     const birth = new Date(birthdate);
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    if (m < 0 || m === 0 && today.getDate() < birth.getDate()) {
       age--;
     }
     return age;
   };
-
   const isLoading = isMembersLoading || isHouseholdLoading;
-
-  return (
-    <Card>
+  return <Card>
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
@@ -411,25 +400,14 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                 <TabsContent value="registered" className="space-y-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search residents by name..."
-                      value={searchTerm}
-                      onChange={(e) => handleSearch(e.target.value)}
-                      className="pl-10"
-                    />
+                    <Input placeholder="Search residents by name..." value={searchTerm} onChange={e => handleSearch(e.target.value)} className="pl-10" />
                   </div>
                   
-                  {isSearching && (
-                    <p className="text-sm text-gray-500">Searching...</p>
-                  )}
+                  {isSearching && <p className="text-sm text-gray-500">Searching...</p>}
                   
                   <ScrollArea className="h-[300px]">
                     <div className="space-y-2">
-                      {searchResults.map((resident) => (
-                        <div
-                          key={resident.id}
-                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                        >
+                      {searchResults.map(resident => <div key={resident.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-10 h-10">
                               <AvatarImage src={resident.photo_url} />
@@ -442,26 +420,18 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                               <p className="text-sm text-gray-500">Purok {resident.purok}</p>
                             </div>
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={() => handleAddRegisteredMember(resident.id)}
-                          >
+                          <Button size="sm" onClick={() => handleAddRegisteredMember(resident.id)}>
                             Add
                           </Button>
-                        </div>
-                      ))}
+                        </div>)}
                       
-                      {searchTerm.length >= 2 && !isSearching && searchResults.length === 0 && (
-                        <p className="text-sm text-gray-500 text-center py-4">
+                      {searchTerm.length >= 2 && !isSearching && searchResults.length === 0 && <p className="text-sm text-gray-500 text-center py-4">
                           No available residents found matching your search.
-                        </p>
-                      )}
+                        </p>}
                       
-                      {searchTerm.length < 2 && (
-                        <p className="text-sm text-gray-500 text-center py-4">
+                      {searchTerm.length < 2 && <p className="text-sm text-gray-500 text-center py-4">
                           Type at least 2 characters to search for residents.
-                        </p>
-                      )}
+                        </p>}
                     </div>
                   </ScrollArea>
                 </TabsContent>
@@ -470,62 +440,55 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">First Name *</label>
-                      <Input
-                        value={nonRegisteredForm.first_name}
-                        onChange={(e) => setNonRegisteredForm(prev => ({ ...prev, first_name: e.target.value }))}
-                        placeholder="First name"
-                      />
+                      <Input value={nonRegisteredForm.first_name} onChange={e => setNonRegisteredForm(prev => ({
+                      ...prev,
+                      first_name: e.target.value
+                    }))} placeholder="First name" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Middle Name</label>
-                      <Input
-                        value={nonRegisteredForm.middle_name}
-                        onChange={(e) => setNonRegisteredForm(prev => ({ ...prev, middle_name: e.target.value }))}
-                        placeholder="Middle name"
-                      />
+                      <Input value={nonRegisteredForm.middle_name} onChange={e => setNonRegisteredForm(prev => ({
+                      ...prev,
+                      middle_name: e.target.value
+                    }))} placeholder="Middle name" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Last Name *</label>
-                      <Input
-                        value={nonRegisteredForm.last_name}
-                        onChange={(e) => setNonRegisteredForm(prev => ({ ...prev, last_name: e.target.value }))}
-                        placeholder="Last name"
-                      />
+                      <Input value={nonRegisteredForm.last_name} onChange={e => setNonRegisteredForm(prev => ({
+                      ...prev,
+                      last_name: e.target.value
+                    }))} placeholder="Last name" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Suffix</label>
-                      <Input
-                        value={nonRegisteredForm.suffix}
-                        onChange={(e) => setNonRegisteredForm(prev => ({ ...prev, suffix: e.target.value }))}
-                        placeholder="Jr., Sr., III, etc."
-                      />
+                      <Input value={nonRegisteredForm.suffix} onChange={e => setNonRegisteredForm(prev => ({
+                      ...prev,
+                      suffix: e.target.value
+                    }))} placeholder="Jr., Sr., III, etc." />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Gender</label>
-                      <select
-                        value={nonRegisteredForm.gender}
-                        onChange={(e) => setNonRegisteredForm(prev => ({ ...prev, gender: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
+                      <select value={nonRegisteredForm.gender} onChange={e => setNonRegisteredForm(prev => ({
+                      ...prev,
+                      gender: e.target.value
+                    }))} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Birthdate *</label>
-                      <Input
-                        type="date"
-                        value={nonRegisteredForm.birthdate}
-                        onChange={(e) => setNonRegisteredForm(prev => ({ ...prev, birthdate: e.target.value }))}
-                      />
+                      <Input type="date" value={nonRegisteredForm.birthdate} onChange={e => setNonRegisteredForm(prev => ({
+                      ...prev,
+                      birthdate: e.target.value
+                    }))} />
                     </div>
                     <div className="col-span-2">
                       <label className="block text-sm font-medium mb-1">Relationship to Head</label>
-                      <Input
-                        value={nonRegisteredForm.relationship}
-                        onChange={(e) => setNonRegisteredForm(prev => ({ ...prev, relationship: e.target.value }))}
-                        placeholder="Son, Daughter, Spouse, etc."
-                      />
+                      <Input value={nonRegisteredForm.relationship} onChange={e => setNonRegisteredForm(prev => ({
+                      ...prev,
+                      relationship: e.target.value
+                    }))} placeholder="Son, Daughter, Spouse, etc." />
                     </div>
                   </div>
                   
@@ -541,20 +504,12 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
           </Dialog>
         </div>
         
-        {isLoading ? (
-          <p className="text-center py-10">Loading members...</p>
-        ) : (
-          <div className="space-y-6">
+        {isLoading ? <p className="text-center py-10">Loading members...</p> : <div className="space-y-6">
             {/* Registered Members Section */}
-            {registeredMembers && registeredMembers.length > 0 && (
-              <div>
+            {registeredMembers && registeredMembers.length > 0 && <div>
                 <h3 className="text-lg font-medium mb-3 text-blue-700">Registered Members</h3>
                 <div className="space-y-3">
-                  {registeredMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                    >
+                  {registeredMembers.map(member => <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                       <div className="flex items-center space-x-4">
                         <Avatar className="w-12 h-12">
                           <AvatarImage src={member.photo_url} />
@@ -568,11 +523,9 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                               {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
                               {member.suffix ? ' ' + member.suffix : ''}
                             </p>
-                            {householdData?.head_of_family === member.id && (
-                              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                            {householdData?.head_of_family === member.id && <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
                                 👑 Head of Family
-                              </Badge>
-                            )}
+                              </Badge>}
                           </div>
                           <div className="flex items-center space-x-2 text-sm text-gray-500">
                             <span>{member.gender}</span>
@@ -587,36 +540,23 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/residents/${member.id}`)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/residents/${member.id}`)}>
                           View Profile
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveRegisteredMember(member.id, `${member.first_name} ${member.last_name}`)}
-                          disabled={householdData?.head_of_family === member.id}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleRemoveRegisteredMember(member.id, `${member.first_name} ${member.last_name}`)} disabled={householdData?.head_of_family === member.id}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
-              </div>
-            )}
+              </div>}
             
             {/* Non-Registered Members Section */}
-            {(nonRegisteredMembers.length > 0 || unregisteredHeadOfFamily) && (
-              <div>
+            {(nonRegisteredMembers.length > 0 || unregisteredHeadOfFamily) && <div>
                 <h3 className="text-lg font-medium mb-3 text-green-700">Non-Registered Members</h3>
                 <div className="space-y-3">
                   {/* Show unregistered head of family first if exists */}
-                  {unregisteredHeadOfFamily && (
-                    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 bg-yellow-50 border-yellow-200">
+                  {unregisteredHeadOfFamily && <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 bg-yellow-50 border-yellow-200">
                       <div className="flex items-center space-x-4">
                         <Avatar className="w-12 h-12">
                           <AvatarFallback>
@@ -637,12 +577,10 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                             <span>{unregisteredHeadOfFamily.gender}</span>
                             <span>•</span>
                             <span>{formatAge(unregisteredHeadOfFamily.birthdate)} years old</span>
-                            {unregisteredHeadOfFamily.relationship && (
-                              <>
+                            {unregisteredHeadOfFamily.relationship && <>
                                 <span>•</span>
                                 <span>{unregisteredHeadOfFamily.relationship}</span>
-                              </>
-                            )}
+                              </>}
                             <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
                               Non-Registered Head
                             </Badge>
@@ -651,19 +589,12 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="text-xs text-gray-500">
-                          From Headname
-                        </Badge>
+                        
                       </div>
-                    </div>
-                  )}
+                    </div>}
                   
                   {/* Show other non-registered members */}
-                  {nonRegisteredMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 bg-green-50"
-                    >
+                  {nonRegisteredMembers.map(member => <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 bg-green-50">
                       <div className="flex items-center space-x-4">
                         <Avatar className="w-12 h-12">
                           <AvatarFallback>
@@ -679,12 +610,10 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                             <span>{member.gender}</span>
                             <span>•</span>
                             <span>{formatAge(member.birthdate)} years old</span>
-                            {member.relationship && (
-                              <>
+                            {member.relationship && <>
                                 <span>•</span>
                                 <span>{member.relationship}</span>
-                              </>
-                            )}
+                              </>}
                             <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
                               Non-Registered
                             </Badge>
@@ -693,33 +622,20 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveNonRegisteredMember(member.id, `${member.first_name} ${member.last_name}`)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleRemoveNonRegisteredMember(member.id, `${member.first_name} ${member.last_name}`)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
-              </div>
-            )}
+              </div>}
             
             {/* No members message */}
-            {(!registeredMembers || registeredMembers.length === 0) && 
-             nonRegisteredMembers.length === 0 && 
-             !unregisteredHeadOfFamily && (
-              <p className="text-muted-foreground text-center py-10">
+            {(!registeredMembers || registeredMembers.length === 0) && nonRegisteredMembers.length === 0 && !unregisteredHeadOfFamily && <p className="text-muted-foreground text-center py-10">
                 No household members assigned yet. Click "Add Member" to assign residents or add non-registered members to this household.
-              </p>
-            )}
-          </div>
-        )}
+              </p>}
+          </div>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default HouseholdMembersManager;
