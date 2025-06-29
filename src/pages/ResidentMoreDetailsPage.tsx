@@ -47,9 +47,20 @@ const ResidentMoreDetailsPage = () => {
 
   const resident = residentData;
 
+  // Debug logging
+  console.log('Resident data:', resident);
+  console.log('Recorded by:', resident?.recordedby);
+  console.log('Edited by:', resident?.editedby);
+
   // Fetch profile data for recordedby and editedby
-  const { displayName: createdByName, isLoading: isCreatedByLoading } = useProfileData(resident?.recordedby || null);
-  const { displayName: updatedByName, isLoading: isUpdatedByLoading } = useProfileData(resident?.editedby || null);
+  const { displayName: createdByName, isLoading: isCreatedByLoading, profileData: createdByProfile } = useProfileData(resident?.recordedby || null);
+  const { displayName: updatedByName, isLoading: isUpdatedByLoading, profileData: updatedByProfile } = useProfileData(resident?.editedby || null);
+
+  // Debug logging for profile data
+  console.log('Created by profile:', createdByProfile);
+  console.log('Created by name:', createdByName);
+  console.log('Updated by profile:', updatedByProfile);
+  console.log('Updated by name:', updatedByName);
 
   const handleEditSuccess = () => {
     setIsEditMode(false);
@@ -409,24 +420,24 @@ const ResidentMoreDetailsPage = () => {
                   <p className="text-sm text-gray-500 mb-1">Created At</p>
                   <p className="font-medium">
                     {formatDate(resident.created_at)}
-                    {resident.recordedby && (
-                      <span className="text-sm text-gray-600 block">
-                        by {isCreatedByLoading ? 'Loading...' : createdByName}
-                      </span>
-                    )}
                   </p>
+                  {resident.recordedby && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      <span className="text-gray-500">Created by:</span> {isCreatedByLoading ? 'Loading...' : (createdByName || 'Unknown Admin')}
+                    </p>
+                  )}
                 </div>
                 
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Last Updated</p>
                   <p className="font-medium">
                     {formatDate(resident.updated_at)}
-                    {resident.editedby && (
-                      <span className="text-sm text-gray-600 block">
-                        by {isUpdatedByLoading ? 'Loading...' : updatedByName}
-                      </span>
-                    )}
                   </p>
+                  {resident.editedby && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      <span className="text-gray-500">Updated by:</span> {isUpdatedByLoading ? 'Loading...' : (updatedByName || 'Unknown Admin')}
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
