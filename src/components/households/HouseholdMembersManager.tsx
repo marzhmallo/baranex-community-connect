@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Plus, X, Search } from 'lucide-react';
+import { Users, Plus, X, Search, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { syncAllHouseholdsHeadOfFamily } from '@/lib/api/households';
 
@@ -43,6 +44,21 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
     syncHeadOfFamily();
   }, [householdId, queryClient]);
+
+  // Fetch current household with head of family info
+  const { data: householdData } = useQuery({
+    queryKey: ['household', householdId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('households')
+        .select('head_of_family')
+        .eq('id', householdId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // Fetch current household members
   const { data: members, isLoading: isMembersLoading } = useQuery({
@@ -161,8 +177,18 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
     }
   };
 
-  // Remove resident from household
+  // Remove resident from household with head of family protection
   const handleRemoveMember = async (residentId: string, residentName: string) => {
+    // Check if this resident is the head of family
+    if (householdData?.head_of_family === residentId) {
+      toast({
+        title: "Cannot remove head of family",
+        description: "This person is the head of family. Please assign a new head of family first before removing them from the household.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('residents')
@@ -198,6 +224,11 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
       age--;
     }
     return age;
+  };
+
+  // Check if a member is the head of family
+  const isHeadOfFamily = (memberId: string) => {
+    return householdData?.head_of_family === memberId;
   };
 
   return (
@@ -301,10 +332,18 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">
-                      {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
-                      {member.suffix ? ' ' + member.suffix : ''}
-                    </p>
+                    <div className="flex items-center space-x-2">
+                      <p className="font-medium">
+                        {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
+                        {member.suffix ? ' ' + member.suffix : ''}
+                      </p>
+                      {isHeadOfFamily(member.id) && (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                          <Crown className="w-3 h-3 mr-1" />
+                          Head of Family
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-500">
                       <span>{member.gender}</span>
                       <span>•</span>
@@ -329,8 +368,10 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRemoveMember(member.id, `${member.first_name} ${member.last_name}`)}
+                    disabled={isHeadOfFamily(member.id)}
+                    title={isHeadOfFamily(member.id) ? "Cannot remove head of family" : "Remove member"}
                   >
-                    <X className="h-4 w-4" />
+                    <X className={`h-4 w-4 ${isHeadOfFamily(member.id) ? 'text-gray-400' : ''}`} />
                   </Button>
                 </div>
               </div>
