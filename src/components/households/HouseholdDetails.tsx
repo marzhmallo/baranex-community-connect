@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -15,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import HouseholdForm from "./HouseholdForm";
 import { ZoomIn, X, Clock, History } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import { useProfileData } from '@/hooks/useProfileData';
 
 type HouseholdDetailsProps = {
   household: Household | null;
@@ -26,6 +26,10 @@ type HouseholdDetailsProps = {
 const HouseholdDetails = ({ household, open, onOpenChange, initialEditMode = false }: HouseholdDetailsProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
+  
+  // Fetch profile data for recordedby and updatedby
+  const { displayName: createdByName, isLoading: isCreatedByLoading } = useProfileData(household?.recordedby || null);
+  const { displayName: updatedByName, isLoading: isUpdatedByLoading } = useProfileData(household?.updatedby || null);
   
   // Set edit mode when dialog opens based on initialEditMode prop
   useEffect(() => {
@@ -287,6 +291,11 @@ const HouseholdDetails = ({ household, open, onOpenChange, initialEditMode = fal
                         <p className="flex items-center">
                           <Clock className="mr-2 h-3 w-3 text-gray-400" />
                           {household.created_at ? formatDate(household.created_at) : "Not available"}
+                          {household.recordedby && (
+                            <span className="text-sm text-gray-600 ml-1">
+                              by {isCreatedByLoading ? 'Loading...' : createdByName}
+                            </span>
+                          )}
                         </p>
                       </div>
                       {household.updated_at && (
@@ -295,6 +304,11 @@ const HouseholdDetails = ({ household, open, onOpenChange, initialEditMode = fal
                           <p className="flex items-center">
                             <Clock className="mr-2 h-3 w-3 text-gray-400" />
                             {formatDate(household.updated_at)}
+                            {household.updatedby && (
+                              <span className="text-sm text-gray-600 ml-1">
+                                by {isUpdatedByLoading ? 'Loading...' : updatedByName}
+                              </span>
+                            )}
                           </p>
                         </div>
                       )}
