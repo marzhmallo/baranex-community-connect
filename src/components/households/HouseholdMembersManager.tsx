@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -142,6 +141,28 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
     } as NonRegisteredMember;
   }, [householdData?.headname, householdData?.head_of_family]);
 
+  // Helper function to handle database errors with specific toast messages
+  const handleDatabaseError = (error: any, defaultMessage: string) => {
+    console.error('Database error:', error);
+    
+    // Check for specific constraint violations
+    if (error.message && error.message.includes('households_head_of_family_key')) {
+      toast({
+        title: "Head of Family Already Assigned",
+        description: "This resident is already the head of another household. A person can only be the head of one household at a time.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Default error handling
+    toast({
+      title: "Error",
+      description: error.message || defaultMessage,
+      variant: "destructive",
+    });
+  };
+
   // Search for residents to add
   const handleSearch = async (term: string) => {
     setSearchTerm(term);
@@ -220,12 +241,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
       setSearchResults([]);
       setIsAddMemberOpen(false);
     } catch (error: any) {
-      console.error('Error adding member:', error);
-      toast({
-        title: "Error adding member",
-        description: error.message,
-        variant: "destructive",
-      });
+      handleDatabaseError(error, "Failed to add member to household.");
     }
   };
 
@@ -317,12 +333,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
       queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
       queryClient.invalidateQueries({ queryKey: ['resident', residentId] });
     } catch (error: any) {
-      console.error('Error removing member:', error);
-      toast({
-        title: "Error removing member",
-        description: error.message,
-        variant: "destructive",
-      });
+      handleDatabaseError(error, "Failed to remove member from household.");
     }
   };
 

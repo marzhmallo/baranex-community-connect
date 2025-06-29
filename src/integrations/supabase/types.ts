@@ -952,14 +952,14 @@ export type Database = {
           {
             foreignKeyName: "households_head_of_family_fkey"
             columns: ["head_of_family"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "admin_residents_view"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "households_head_of_family_fkey"
             columns: ["head_of_family"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "residents"
             referencedColumns: ["id"]
           },

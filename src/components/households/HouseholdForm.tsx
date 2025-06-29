@@ -75,6 +75,28 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
     getAutoFillData
   } = useAutoFillAddress();
 
+  // Helper function to handle database errors with specific toast messages
+  const handleDatabaseError = (error: any) => {
+    console.error('Database error:', error);
+    
+    // Check for specific constraint violations
+    if (error.message && error.message.includes('households_head_of_family_key')) {
+      toast({
+        title: "Head of Family Already Assigned",
+        description: "This resident is already the head of another household. Please select a different person or clear the current head of family assignment.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Default error handling
+    toast({
+      title: "Error saving household",
+      description: error.message || "There was a problem saving the household.",
+      variant: "destructive"
+    });
+  };
+
   // Transform household data for the form
   const defaultValues: HouseholdFormValues = household ? {
     name: household.name,
@@ -196,12 +218,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
       // Close the dialog
       onSubmit();
     } catch (error: any) {
-      console.error('Error saving household:', error);
-      toast({
-        title: "Error saving household",
-        description: error.message || "There was a problem saving the household.",
-        variant: "destructive"
-      });
+      handleDatabaseError(error);
     } finally {
       setIsSubmitting(false);
     }
