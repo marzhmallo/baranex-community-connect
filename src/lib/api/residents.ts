@@ -379,6 +379,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
     // For existing residents, update
     if (residentData.id) {
       console.log("Updating existing resident:", residentData.id);
+      // Only set updated_at and editedby when updating existing residents
       databaseFields.updated_at = new Date().toISOString();
       databaseFields.editedby = adminProfileId; // Set editedby to current admin's profile ID
       
@@ -417,11 +418,11 @@ export const saveResident = async (residentData: Partial<Resident>) => {
       const newId = crypto.randomUUID();
       
       // Create a complete database record with required fields
-      // Fix: Ensure all required fields from the database schema are provided
+      // For new residents, DO NOT set updated_at or editedby - only created_at and recordedby
       const completeRecord = {
         id: newId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        // DO NOT set updated_at for new residents
         first_name: databaseFields.first_name || "Unknown",
         last_name: databaseFields.last_name || "Unknown",
         birthdate: databaseFields.birthdate || new Date().toISOString().split('T')[0],
@@ -439,6 +440,7 @@ export const saveResident = async (residentData: Partial<Resident>) => {
         brgyid: brgyid, // Add the barangay ID of the currently logged in user
         photo_url: databaseFields.photo_url || null, // Add photo URL
         recordedby: adminProfileId, // Set recordedby to current admin's profile ID
+        // DO NOT set editedby for new residents
         // Include all other fields from databaseFields
         middle_name: databaseFields.middle_name,
         suffix: databaseFields.suffix,
