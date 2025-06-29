@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, User, X } from "lucide-react";
+import { Check, ChevronsUpDown, User, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { searchResidents } from "@/lib/api/households";
+import { supabase } from '@/integrations/supabase/client';
 
 interface Resident {
   id: string;
@@ -16,6 +16,7 @@ interface Resident {
   suffix?: string;
   purok: string;
   full_name: string;
+  household_id?: string | null;
 }
 
 interface HeadOfFamilyInputProps {
@@ -24,6 +25,8 @@ interface HeadOfFamilyInputProps {
   onResidentSelect: (residentId: string | null) => void;
   selectedResidentId?: string | null;
   placeholder?: string;
+  currentHouseholdId?: string | null;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
 const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
@@ -31,12 +34,52 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
   onValueChange,
   onResidentSelect,
   selectedResidentId,
-  placeholder = "Enter head of family name or search residents..."
+  placeholder = "Enter head of family name or search residents...",
+  currentHouseholdId,
+  onValidationChange
 }) => {
   const [open, setOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Resident[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Check if a resident is already a member of another household
+  const checkResidentHousehold = async (residentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('residents')
+        .select('household_id')
+        .eq('id', residentId)
+        .single();
+
+      if (error) {
+        console.error('Error checking resident household:', error);
+        return null;
+      }
+
+      return data?.household_id || null;
+    } catch (error) {
+      console.error('Error in checkResidentHousehold:', error);
+      return null;
+    }
+  };
+
+  const validateResidentSelection = async (residentId: string) => {
+    const residentHouseholdId = await checkResidentHousehold(residentId);
+    
+    // If resident has a household_id and it's different from current household
+    if (residentHouseholdId && residentHouseholdId !== currentHouseholdId) {
+      const errorMessage = "This resident is already a member of another household and cannot be selected as head of family.";
+      setValidationError(errorMessage);
+      onValidationChange?.(false);
+      return false;
+    }
+
+    setValidationError(null);
+    onValidationChange?.(true);
+    return true;
+  };
 
   useEffect(() => {
     const searchForResidents = async () => {
@@ -44,7 +87,14 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
         setIsLoading(true);
         const result = await searchResidents(value);
         if (result.success) {
-          setSearchResults(result.data);
+          // Include household_id in the results for validation
+          const residentsWithHousehold = await Promise.all(
+            result.data.map(async (resident) => {
+              const householdId = await checkResidentHousehold(resident.id);
+              return { ...resident, household_id: householdId };
+            })
+          );
+          setSearchResults(residentsWithHousehold);
         }
         setIsLoading(false);
       } else {
@@ -56,21 +106,37 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
     return () => clearTimeout(debounceTimer);
   }, [value]);
 
-  const handleResidentSelect = (resident: Resident) => {
-    onValueChange(resident.full_name);
-    onResidentSelect(resident.id);
-    setOpen(false);
-    // Keep focus on input after selection
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 50);
+  // Validate when selectedResidentId changes
+  useEffect(() => {
+    if (selectedResidentId) {
+      validateResidentSelection(selectedResidentId);
+    } else {
+      setValidationError(null);
+      onValidationChange?.(true);
+    }
+  }, [selectedResidentId, currentHouseholdId]);
+
+  const handleResidentSelect = async (resident: Resident) => {
+    const isValid = await validateResidentSelection(resident.id);
+    
+    if (isValid) {
+      onValueChange(resident.full_name);
+      onResidentSelect(resident.id);
+      setOpen(false);
+      // Keep focus on input after selection
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    }
   };
 
   const handleInputChange = (newValue: string) => {
     onValueChange(newValue);
-    // If user is typing freely, clear any selected resident
+    // If user is typing freely, clear any selected resident and validation error
     if (selectedResidentId) {
       onResidentSelect(null);
+      setValidationError(null);
+      onValidationChange?.(true);
     }
     if (newValue.length >= 2) {
       setOpen(true);
@@ -82,6 +148,8 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
   const handleClearSelection = () => {
     onValueChange("");
     onResidentSelect(null);
+    setValidationError(null);
+    onValidationChange?.(true);
     setOpen(false);
     inputRef.current?.focus();
   };
@@ -135,11 +203,15 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
               placeholder={placeholder}
               className={cn(
                 "w-full pr-20",
-                selectedResidentId && "border-green-500 bg-green-50 dark:bg-green-950"
+                selectedResidentId && !validationError && "border-green-500 bg-green-50 dark:bg-green-950",
+                validationError && "border-red-500 bg-red-50 dark:bg-red-950"
               )}
             />
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-              {selectedResidentId && (
+              {validationError && (
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+              )}
+              {selectedResidentId && !validationError && (
                 <User className="h-4 w-4 text-green-600" />
               )}
               {value && (
@@ -181,32 +253,57 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
                 </CommandEmpty>
               ) : (
                 <CommandGroup heading="Registered Residents">
-                  {searchResults.map((resident) => (
-                    <CommandItem
-                      key={resident.id}
-                      value={resident.full_name}
-                      onSelect={() => handleResidentSelect(resident)}
-                      className="flex items-center justify-between cursor-pointer"
-                      onMouseDown={(e) => e.preventDefault()} // Prevent input blur
-                    >
-                      <div>
-                        <div className="font-medium">{resident.full_name}</div>
-                        <div className="text-sm text-muted-foreground">Purok {resident.purok}</div>
-                      </div>
-                      <Check
+                  {searchResults.map((resident) => {
+                    const isAlreadyMember = resident.household_id && resident.household_id !== currentHouseholdId;
+                    return (
+                      <CommandItem
+                        key={resident.id}
+                        value={resident.full_name}
+                        onSelect={() => handleResidentSelect(resident)}
                         className={cn(
-                          "ml-auto h-4 w-4",
-                          selectedResidentId === resident.id ? "opacity-100" : "opacity-0"
+                          "flex items-center justify-between cursor-pointer",
+                          isAlreadyMember && "opacity-50 cursor-not-allowed"
                         )}
-                      />
-                    </CommandItem>
-                  ))}
+                        onMouseDown={(e) => e.preventDefault()} // Prevent input blur
+                        disabled={isAlreadyMember}
+                      >
+                        <div>
+                          <div className="font-medium">{resident.full_name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Purok {resident.purok}
+                            {isAlreadyMember && (
+                              <span className="text-red-500 ml-2">
+                                (Already a household member)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isAlreadyMember && (
+                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                          )}
+                          <Check
+                            className={cn(
+                              "h-4 w-4",
+                              selectedResidentId === resident.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                        </div>
+                      </CommandItem>
+                    );
+                  })}
                 </CommandGroup>
               )}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
+      {validationError && (
+        <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" />
+          {validationError}
+        </p>
+      )}
     </div>
   );
 };

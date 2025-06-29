@@ -69,6 +69,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
   } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedResidentId, setSelectedResidentId] = useState<string | null>(household?.head_of_family || null);
+  const [isHeadOfFamilyValid, setIsHeadOfFamilyValid] = useState(true);
   const queryClient = useQueryClient();
   const {
     isAutoFillEnabled,
@@ -166,6 +167,16 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
   };
 
   const handleSubmit = async (values: HouseholdFormValues) => {
+    // Check if head of family validation is valid before proceeding
+    if (!isHeadOfFamilyValid) {
+      toast({
+        title: "Cannot save household",
+        description: "Please resolve the head of family validation error before saving.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     console.log("Form submitted with values:", values);
     console.log("Selected resident ID:", selectedResidentId);
     setIsSubmitting(true);
@@ -340,10 +351,18 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
             }) => <FormItem>
                     <FormLabel>Head of Family</FormLabel>
                     <FormControl>
-                      <HeadOfFamilyInput value={field.value || ""} onValueChange={field.onChange} onResidentSelect={setSelectedResidentId} selectedResidentId={selectedResidentId} placeholder="Search residents or enter name" />
+                      <HeadOfFamilyInput 
+                        value={field.value || ""} 
+                        onValueChange={field.onChange} 
+                        onResidentSelect={setSelectedResidentId} 
+                        selectedResidentId={selectedResidentId} 
+                        placeholder="Search residents or enter name"
+                        currentHouseholdId={household?.id || null}
+                        onValidationChange={setIsHeadOfFamilyValid}
+                      />
                     </FormControl>
                     <FormMessage />
-                    {selectedResidentId && <p className="text-xs text-green-600">✓ Registered resident selected</p>}
+                    {selectedResidentId && isHeadOfFamilyValid && <p className="text-xs text-green-600">✓ Registered resident selected</p>}
                     {!selectedResidentId && field.value && <p className="text-xs text-gray-500">Will be saved as text</p>}
                   </FormItem>} />
               
@@ -532,7 +551,11 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
           <Button variant="outline" type="button" onClick={handleCancel} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            disabled={isSubmitting || !isHeadOfFamilyValid}
+            className={!isHeadOfFamilyValid ? "opacity-50 cursor-not-allowed" : ""}
+          >
             {isSubmitting ? "Saving..." : household ? "Update Household" : "Save Household"}
           </Button>
         </div>
