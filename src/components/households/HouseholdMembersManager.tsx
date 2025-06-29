@@ -4,13 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Plus, X, Search, AlertTriangle } from 'lucide-react';
+import { Users, Plus, X, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { syncAllHouseholdsHeadOfFamily } from '@/lib/api/households';
 
@@ -24,8 +23,6 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [memberToRemove, setMemberToRemove] = useState<any>(null);
-  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -46,21 +43,6 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
     syncHeadOfFamily();
   }, [householdId, queryClient]);
-
-  // Fetch current household data to get head of family
-  const { data: householdData } = useQuery({
-    queryKey: ['household', householdId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('households')
-        .select('head_of_family')
-        .eq('id', householdId)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-  });
 
   // Fetch current household members
   const { data: members, isLoading: isMembersLoading } = useQuery({
@@ -161,10 +143,9 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
         description: "The resident has been added to this household.",
       });
 
-      // Refresh data - use refetch to ensure immediate update
-      await queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
-      await queryClient.invalidateQueries({ queryKey: ['household', householdId] });
-      await queryClient.invalidateQueries({ queryKey: ['resident', residentId] });
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
+      queryClient.invalidateQueries({ queryKey: ['resident', residentId] });
       
       // Clear search and close dialog
       setSearchTerm('');
@@ -180,82 +161,31 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
     }
   };
 
-  // Updated remove member function with confirmation
+  // Remove resident from household
   const handleRemoveMember = async (residentId: string, residentName: string) => {
-    const isHeadOfFamily = householdData?.head_of_family === residentId;
-    
-    if (isHeadOfFamily) {
-      // Show confirmation dialog for head of family
-      setMemberToRemove({ id: residentId, name: residentName, isHeadOfFamily: true });
-      setIsRemoveDialogOpen(true);
-    } else {
-      // Remove normally for regular members
-      await removeMemberFromHousehold(residentId, residentName);
-    }
-  };
-
-  const removeMemberFromHousehold = async (residentId: string, residentName: string, removeAsHead = false) => {
     try {
-      console.log('Removing member from household:', { residentId, householdId, removeAsHead });
-      
-      // Remove from household
-      const { error: residentError } = await supabase
+      const { error } = await supabase
         .from('residents')
         .update({ household_id: null })
         .eq('id', residentId);
 
-      if (residentError) {
-        console.error('Error updating resident:', residentError);
-        throw residentError;
-      }
-
-      // If this person was the head of family, also remove them as head
-      if (removeAsHead) {
-        const { error: householdError } = await supabase
-          .from('households')
-          .update({ head_of_family: null, headname: null })
-          .eq('id', householdId);
-
-        if (householdError) {
-          console.error('Error updating household:', householdError);
-          throw householdError;
-        }
-      }
+      if (error) throw error;
 
       toast({
         title: "Member removed successfully",
-        description: removeAsHead 
-          ? `${residentName} has been removed from this household and is no longer the head of family.`
-          : `${residentName} has been removed from this household.`,
+        description: `${residentName} has been removed from this household.`,
       });
 
-      // Refresh data with proper invalidation and refetch
-      console.log('Refreshing queries after member removal');
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['household-members', householdId] }),
-        queryClient.invalidateQueries({ queryKey: ['household', householdId] }),
-        queryClient.invalidateQueries({ queryKey: ['resident', residentId] }),
-        queryClient.invalidateQueries({ queryKey: ['households'] }), // Also refresh households list
-      ]);
-
-      // Force refetch household data to ensure it's still accessible
-      await queryClient.refetchQueries({ queryKey: ['household', householdId] });
-      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
+      queryClient.invalidateQueries({ queryKey: ['resident', residentId] });
     } catch (error: any) {
       console.error('Error removing member:', error);
       toast({
         title: "Error removing member",
-        description: error.message || "An unexpected error occurred",
+        description: error.message,
         variant: "destructive",
       });
-    }
-  };
-
-  const confirmRemoveMember = async () => {
-    if (memberToRemove) {
-      await removeMemberFromHousehold(memberToRemove.id, memberToRemove.name, memberToRemove.isHeadOfFamily);
-      setMemberToRemove(null);
-      setIsRemoveDialogOpen(false);
     }
   };
 
@@ -271,191 +201,148 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
   };
 
   return (
-    <>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center">
-              <div className="bg-blue-100 p-2 rounded-full mr-2">
-                <Users className="h-5 w-5 text-blue-700" />
-              </div>
-              <h2 className="text-xl font-semibold">Household Members</h2>
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            <div className="bg-blue-100 p-2 rounded-full mr-2">
+              <Users className="h-5 w-5 text-blue-700" />
             </div>
-            
-            <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Member
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Add Member to {householdName}</DialogTitle>
-                </DialogHeader>
-                
-                <div className="space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search residents by name..."
-                      value={searchTerm}
-                      onChange={(e) => handleSearch(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  
-                  {isSearching && (
-                    <p className="text-sm text-gray-500">Searching...</p>
-                  )}
-                  
-                  <ScrollArea className="h-[300px]">
-                    <div className="space-y-2">
-                      {searchResults.map((resident) => (
-                        <div
-                          key={resident.id}
-                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="w-10 h-10">
-                              <AvatarImage src={resident.photo_url} />
-                              <AvatarFallback>
-                                {resident.first_name.charAt(0)}{resident.last_name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{resident.full_name}</p>
-                              <p className="text-sm text-gray-500">Purok {resident.purok}</p>
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            onClick={() => handleAddMember(resident.id)}
-                          >
-                            Add
-                          </Button>
-                        </div>
-                      ))}
-                      
-                      {searchTerm.length >= 2 && !isSearching && searchResults.length === 0 && (
-                        <p className="text-sm text-gray-500 text-center py-4">
-                          No available residents found matching your search. All residents may already be assigned to households.
-                        </p>
-                      )}
-                      
-                      {searchTerm.length < 2 && (
-                        <p className="text-sm text-gray-500 text-center py-4">
-                          Type at least 2 characters to search for residents.
-                        </p>
-                      )}
-                    </div>
-                  </ScrollArea>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <h2 className="text-xl font-semibold">Household Members</h2>
           </div>
           
-          {isMembersLoading ? (
-            <p className="text-center py-10">Loading members...</p>
-          ) : members && members.length > 0 ? (
-            <div className="space-y-3">
-              {members.map((member) => {
-                const isHeadOfFamily = householdData?.head_of_family === member.id;
+          <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Member
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Add Member to {householdName}</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search residents by name..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
                 
-                return (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={member.photo_url} />
-                        <AvatarFallback>
-                          {member.first_name.charAt(0)}{member.last_name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <p className="font-medium">
-                            {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
-                            {member.suffix ? ' ' + member.suffix : ''}
-                          </p>
-                          {isHeadOfFamily && (
-                            <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
-                              Head of Family
-                            </Badge>
-                          )}
+                {isSearching && (
+                  <p className="text-sm text-gray-500">Searching...</p>
+                )}
+                
+                <ScrollArea className="h-[300px]">
+                  <div className="space-y-2">
+                    {searchResults.map((resident) => (
+                      <div
+                        key={resident.id}
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={resident.photo_url} />
+                            <AvatarFallback>
+                              {resident.first_name.charAt(0)}{resident.last_name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{resident.full_name}</p>
+                            <p className="text-sm text-gray-500">Purok {resident.purok}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
-                          <span>{member.gender}</span>
-                          <span>•</span>
-                          <span>{formatAge(member.birthdate)} years old</span>
-                          <span>•</span>
-                          <Badge variant="outline" className="text-xs">
-                            {member.status}
-                          </Badge>
-                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddMember(resident.id)}
+                        >
+                          Add
+                        </Button>
                       </div>
-                    </div>
+                    ))}
                     
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/residents/${member.id}`)}
-                      >
-                        View Profile
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveMember(member.id, `${member.first_name} ${member.last_name}`)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                    {searchTerm.length >= 2 && !isSearching && searchResults.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No available residents found matching your search. All residents may already be assigned to households.
+                      </p>
+                    )}
+                    
+                    {searchTerm.length < 2 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Type at least 2 characters to search for residents.
+                      </p>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+        
+        {isMembersLoading ? (
+          <p className="text-center py-10">Loading members...</p>
+        ) : members && members.length > 0 ? (
+          <div className="space-y-3">
+            {members.map((member) => (
+              <div
+                key={member.id}
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+              >
+                <div className="flex items-center space-x-4">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={member.photo_url} />
+                    <AvatarFallback>
+                      {member.first_name.charAt(0)}{member.last_name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">
+                      {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
+                      {member.suffix ? ' ' + member.suffix : ''}
+                    </p>
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <span>{member.gender}</span>
+                      <span>•</span>
+                      <span>{formatAge(member.birthdate)} years old</span>
+                      <span>•</span>
+                      <Badge variant="outline" className="text-xs">
+                        {member.status}
+                      </Badge>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-center py-10">
-              No household members assigned yet. Click "Add Member" to assign residents to this household.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Confirmation Dialog for removing head of family */}
-      <AlertDialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              <AlertDialogTitle>Remove Head of Family</AlertDialogTitle>
-            </div>
-            <AlertDialogDescription>
-              You are about to remove <strong>{memberToRemove?.name}</strong> from this household. 
-              Since they are currently the <strong>Head of Family</strong>, removing them will also 
-              remove them from their head of family role, leaving this household without a designated head.
-              <br /><br />
-              Are you sure you want to continue?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsRemoveDialogOpen(false)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmRemoveMember}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Remove Member & Head Role
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/residents/${member.id}`)}
+                  >
+                    View Profile
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveMember(member.id, `${member.first_name} ${member.last_name}`)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-center py-10">
+            No household members assigned yet. Click "Add Member" to assign residents to this household.
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
