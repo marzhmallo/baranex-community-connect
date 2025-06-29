@@ -52,19 +52,21 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
           const residentsWithHouseholds = await Promise.all(
             result.data.map(async (resident) => {
               try {
-                const { data: householdData } = await supabase
-                  .from('residents')
-                  .select(`
-                    household_id,
-                    households:household_id(name)
-                  `)
-                  .eq('id', resident.id)
-                  .maybeSingle();
+                // Query households table directly using the resident's household_id
+                let household_name = null;
+                if (resident.household_id) {
+                  const { data: householdData } = await supabase
+                    .from('households')
+                    .select('name')
+                    .eq('id', resident.household_id)
+                    .maybeSingle();
+                  
+                  household_name = householdData?.name;
+                }
 
                 return {
                   ...resident,
-                  household_id: householdData?.household_id,
-                  household_name: householdData?.households?.name
+                  household_name
                 };
               } catch (error) {
                 console.error('Error checking household membership:', error);
