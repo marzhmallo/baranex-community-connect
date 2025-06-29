@@ -410,7 +410,7 @@ const ResidentMoreDetailsPage = () => {
                   <p className="font-medium">
                     {formatDate(resident.created_at)}
                     {resident.recordedby && (
-                      <span className="text-sm text-gray-600 ml-1">
+                      <span className="text-sm text-gray-600 block">
                         by {isCreatedByLoading ? 'Loading...' : createdByName}
                       </span>
                     )}
@@ -422,7 +422,7 @@ const ResidentMoreDetailsPage = () => {
                   <p className="font-medium">
                     {formatDate(resident.updated_at)}
                     {resident.editedby && (
-                      <span className="text-sm text-gray-600 ml-1">
+                      <span className="text-sm text-gray-600 block">
                         by {isUpdatedByLoading ? 'Loading...' : updatedByName}
                       </span>
                     )}
