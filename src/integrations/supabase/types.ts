@@ -861,6 +861,7 @@ export type Database = {
           headname: string | null
           house_type: string | null
           id: string
+          members: Json | null
           monthly_income: string | null
           municipality: string | null
           name: string
@@ -891,6 +892,7 @@ export type Database = {
           headname?: string | null
           house_type?: string | null
           id: string
+          members?: Json | null
           monthly_income?: string | null
           municipality?: string | null
           name: string
@@ -921,6 +923,7 @@ export type Database = {
           headname?: string | null
           house_type?: string | null
           id?: string
+          members?: Json | null
           monthly_income?: string | null
           municipality?: string | null
           name?: string
