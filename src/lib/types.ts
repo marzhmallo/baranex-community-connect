@@ -1,26 +1,57 @@
 // Resident types
 export interface Resident {
   id: string;
-  firstName: string;
-  lastName: string;
-  middleName?: string;
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
   suffix?: string;
   gender: string;
-  birthDate: string; // ISO format date string
+  birthdate: string; // ISO format date string
   address: string;
-  contactNumber?: string;
+  mobile_number?: string;
   email?: string;
   status: 'Permanent' | 'Temporary' | 'Deceased' | 'Relocated';
-  civilStatus?: string;
+  civil_status?: string;
   occupation?: string;
-  yearsInBarangay?: number;
+  years_in_barangay?: number;
   classifications?: string[];
   educationLevel?: string;
   familySize?: number;
-  created_at?: string; // Added created_at to match the database column name
+  created_at?: string;
   nationality?: string;
-  monthlyIncome?: number;
+  monthly_income?: number;
   purok?: string;
+  barangaydb?: string;
+  municipalitycity?: string;
+  provinze?: string;
+  regional?: string;
+  countryph?: string;
+  is_voter?: boolean;
+  has_philhealth?: boolean;
+  has_sss?: boolean;
+  has_pagibig?: boolean;
+  has_tin?: boolean;
+  remarks?: string;
+  photo_url?: string;
+  died_on?: string | null;
+  household_id?: string | null;
+  updated_at?: string;
+  brgyid?: string;
+  recordedby?: string; // Added recordedby field
+  editedby?: string; // Added editedby field
+  emname?: string; // Emergency contact name
+  emrelation?: string; // Emergency contact relationship
+  emcontact?: string; // Emergency contact number
+  
+  // Keep legacy camelCase for backward compatibility
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  birthDate?: string;
+  contactNumber?: string;
+  civilStatus?: string;
+  yearsInBarangay?: number;
+  monthlyIncome?: number;
   barangay?: string;
   municipality?: string;
   province?: string;
@@ -31,13 +62,9 @@ export interface Resident {
   hasSss?: boolean;
   hasPagibig?: boolean;
   hasTin?: boolean;
-  remarks?: string;
   photoUrl?: string;
-  diedOn?: string | null; // Date of death for deceased residents
-  died_on?: string | null; // Database field name for date of death
+  diedOn?: string | null;
   householdId?: string | null;
-  updated_at?: string; // Added updated_at to match the database column name
-  brgyId?: string;
   emergencyContact?: {
     name: string;
     relationship: string;
