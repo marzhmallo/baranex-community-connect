@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import HouseholdForm from '@/components/households/HouseholdForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import HouseholdMembersManager from '@/components/households/HouseholdMembersManager';
+import { supabase } from '@/integrations/supabase/client';
 
 const HouseholdMoreDetailsPage = () => {
   const { householdId } = useParams<{ householdId: string }>();
@@ -25,6 +26,40 @@ const HouseholdMoreDetailsPage = () => {
     queryKey: ['household', householdId],
     queryFn: () => getHouseholdById(householdId || ''),
     enabled: !!householdId,
+  });
+
+  // Fetch admin profiles for recordedby and updatedby
+  const { data: adminProfiles } = useQuery({
+    queryKey: ['admin-profiles', householdData?.data?.recordedby, householdData?.data?.updatedby],
+    queryFn: async () => {
+      const household = householdData?.data;
+      if (!household) return null;
+
+      const adminIds = [household.recordedby, household.updatedby].filter(Boolean);
+      if (adminIds.length === 0) return {};
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, firstname, lastname')
+        .in('id', adminIds);
+
+      if (error) {
+        console.error('Error fetching admin profiles:', error);
+        return {};
+      }
+
+      // Convert array to object with id as key
+      const profileMap: Record<string, { firstname: string; lastname: string }> = {};
+      data?.forEach(profile => {
+        profileMap[profile.id] = {
+          firstname: profile.firstname || '',
+          lastname: profile.lastname || ''
+        };
+      });
+
+      return profileMap;
+    },
+    enabled: !!householdData?.data && (!!householdData.data.recordedby || !!householdData.data.updatedby),
   });
 
   const household = householdData?.data;
@@ -47,8 +82,8 @@ const HouseholdMoreDetailsPage = () => {
     }
   };
 
-  // Format dates for display
-  const formatDate = (dateString?: string) => {
+  // Format dates for display with admin names
+  const formatDateWithAdmin = (dateString?: string, adminId?: string, action: 'Created' | 'Last Updated' = 'Created') => {
     if (!dateString) return "Not available";
     
     try {
@@ -58,11 +93,24 @@ const HouseholdMoreDetailsPage = () => {
         return "Invalid date";
       }
       
-      return date.toLocaleDateString('en-US', {
+      const formattedDate = date.toLocaleDateString('en-US', {
         year: 'numeric', 
         month: 'long', 
         day: 'numeric'
       });
+
+      // Get admin name if available
+      let adminName = '';
+      if (adminId && adminProfiles?.[adminId]) {
+        const admin = adminProfiles[adminId];
+        adminName = `${admin.firstname} ${admin.lastname}`.trim();
+      }
+
+      if (adminName) {
+        return `${action} at ${formattedDate} by ${adminName}`;
+      } else {
+        return `${action} at ${formattedDate}`;
+      }
     } catch (error) {
       return "Date error";
     }
@@ -276,15 +324,19 @@ const HouseholdMoreDetailsPage = () => {
               
               <Separator className="my-4" />
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Created At</p>
-                  <p className="font-medium">{formatDate(household.created_at)}</p>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Last Updated</p>
-                  <p className="font-medium">{formatDate(household.updated_at)}</p>
+                  <p className="text-sm text-gray-500 mb-1">Record Information</p>
+                  <div className="space-y-2">
+                    <p className="font-medium text-sm">
+                      {formatDateWithAdmin(household.created_at, household.recordedby, 'Created')}
+                    </p>
+                    {household.updated_at && (
+                      <p className="font-medium text-sm">
+                        {formatDateWithAdmin(household.updated_at, household.updatedby, 'Last Updated')}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>

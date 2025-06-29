@@ -1,3 +1,4 @@
+
 // Resident types
 export interface Resident {
   id: string;
@@ -189,6 +190,8 @@ export interface Household {
   created_at?: string | null;
   updated_at?: string | null;
   brgyid?: string | null;
+  recordedby?: string | null; // Added recordedby field
+  updatedby?: string | null; // Added updatedby field
 }
 
 // Document types
