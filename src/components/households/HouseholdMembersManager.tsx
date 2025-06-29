@@ -115,6 +115,32 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
     ? (householdData.members as unknown as NonRegisteredMember[])
     : [];
 
+  // Parse unregistered head of family from headname column
+  const unregisteredHeadOfFamily = React.useMemo(() => {
+    if (!householdData?.headname || householdData?.head_of_family) {
+      return null; // If there's a registered head or no headname, don't show unregistered head
+    }
+
+    // Parse the headname string to extract name components
+    const nameParts = householdData.headname.trim().split(' ');
+    if (nameParts.length === 0) return null;
+
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+    const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : undefined;
+
+    return {
+      id: 'unregistered-head',
+      first_name: firstName,
+      middle_name: middleName,
+      last_name: lastName,
+      suffix: undefined,
+      gender: 'Unknown',
+      birthdate: '1900-01-01', // Default birthdate for age calculation
+      relationship: 'Head of Family'
+    } as NonRegisteredMember;
+  }, [householdData?.headname, householdData?.head_of_family]);
+
   // Search for residents to add
   const handleSearch = async (term: string) => {
     setSearchTerm(term);
@@ -328,6 +354,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
   };
 
   const formatAge = (birthdate: string) => {
+    if (birthdate === '1900-01-01') return 'Unknown'; // Handle default birthdate
     const birth = new Date(birthdate);
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
@@ -571,10 +598,55 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
             )}
             
             {/* Non-Registered Members Section */}
-            {nonRegisteredMembers.length > 0 && (
+            {(nonRegisteredMembers.length > 0 || unregisteredHeadOfFamily) && (
               <div>
                 <h3 className="text-lg font-medium mb-3 text-green-700">Non-Registered Members</h3>
                 <div className="space-y-3">
+                  {/* Show unregistered head of family first if exists */}
+                  {unregisteredHeadOfFamily && (
+                    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 bg-yellow-50 border-yellow-200">
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="w-12 h-12">
+                          <AvatarFallback>
+                            {unregisteredHeadOfFamily.first_name.charAt(0)}{unregisteredHeadOfFamily.last_name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <p className="font-medium">
+                              {unregisteredHeadOfFamily.first_name} {unregisteredHeadOfFamily.middle_name ? unregisteredHeadOfFamily.middle_name + ' ' : ''}{unregisteredHeadOfFamily.last_name}
+                              {unregisteredHeadOfFamily.suffix ? ' ' + unregisteredHeadOfFamily.suffix : ''}
+                            </p>
+                            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                              👑 Head of Family
+                            </Badge>
+                          </div>
+                          <div className="flex items-center space-x-2 text-sm text-gray-500">
+                            <span>{unregisteredHeadOfFamily.gender}</span>
+                            <span>•</span>
+                            <span>{formatAge(unregisteredHeadOfFamily.birthdate)} years old</span>
+                            {unregisteredHeadOfFamily.relationship && (
+                              <>
+                                <span>•</span>
+                                <span>{unregisteredHeadOfFamily.relationship}</span>
+                              </>
+                            )}
+                            <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                              Non-Registered Head
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline" className="text-xs text-gray-500">
+                          From Headname
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Show other non-registered members */}
                   {nonRegisteredMembers.map((member) => (
                     <div
                       key={member.id}
@@ -624,7 +696,9 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
             )}
             
             {/* No members message */}
-            {(!registeredMembers || registeredMembers.length === 0) && nonRegisteredMembers.length === 0 && (
+            {(!registeredMembers || registeredMembers.length === 0) && 
+             nonRegisteredMembers.length === 0 && 
+             !unregisteredHeadOfFamily && (
               <p className="text-muted-foreground text-center py-10">
                 No household members assigned yet. Click "Add Member" to assign residents or add non-registered members to this household.
               </p>
