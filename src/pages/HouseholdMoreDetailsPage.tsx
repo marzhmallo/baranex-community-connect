@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -200,53 +201,53 @@ const HouseholdMoreDetailsPage = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center mb-4">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Home className="h-5 w-5 text-blue-700" />
+                <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
+                  <Home className="h-5 w-5 text-blue-700 dark:text-blue-300" />
                 </div>
                 <h2 className="text-xl font-semibold ml-2">Basic Information</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Name</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Name</p>
                   <p className="font-medium">{household.name}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Head of Family</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Head of Family</p>
                   <p className="font-medium">{household.head_of_family_name || "Not specified"}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Contact Number</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Contact Number</p>
                   <p className="font-medium">{household.contact_number || "Not specified"}</p>
                 </div>
                 
                 <div className="col-span-1 md:col-span-2">
-                  <p className="text-sm text-gray-500 mb-1">Address</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Address</p>
                   <div className="flex items-start">
-                    <MapPin className="h-4 w-4 text-gray-400 mr-1 mt-1 flex-shrink-0" />
+                    <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1 mt-1 flex-shrink-0" />
                     <p className="font-medium">{household.address}</p>
                   </div>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Purok</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Purok</p>
                   <p className="font-medium">{household.purok}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Year Established</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Year Established</p>
                   <div className="flex items-center">
-                    <Calendar className="h-4 w-4 text-gray-400 mr-1" />
+                    <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
                     <p className="font-medium">{household.year_established || "Not specified"}</p>
                   </div>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Monthly Income</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Monthly Income</p>
                   <div className="flex items-center">
-                    <DollarSign className="h-4 w-4 text-gray-400 mr-1" />
+                    <DollarSign className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
                     <p className="font-medium">
                       {household.monthly_income ? `₱${household.monthly_income}` : "Not specified"}
                     </p>
@@ -260,46 +261,46 @@ const HouseholdMoreDetailsPage = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center mb-4">
-                <div className="bg-green-100 p-2 rounded-full">
-                  <Home className="h-5 w-5 text-green-700" />
+                <div className="bg-green-100 dark:bg-green-900 p-2 rounded-full">
+                  <Home className="h-5 w-5 text-green-700 dark:text-green-300" />
                 </div>
                 <h2 className="text-xl font-semibold ml-2">Property Information</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Property Type</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Property Type</p>
                   <p className="font-medium">{household.property_type || "Not specified"}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">House Type</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">House Type</p>
                   <p className="font-medium">{household.house_type || "Not specified"}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Water Source</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Water Source</p>
                   <div className="flex items-center">
-                    <Droplet className="h-4 w-4 text-gray-400 mr-1" />
+                    <Droplet className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
                     <p className="font-medium">{household.water_source || "Not specified"}</p>
                   </div>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Electricity Source</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Electricity Source</p>
                   <div className="flex items-center">
-                    <Zap className="h-4 w-4 text-gray-400 mr-1" />
+                    <Zap className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
                     <p className="font-medium">{household.electricity_source || "Not specified"}</p>
                   </div>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Toilet Type</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Toilet Type</p>
                   <p className="font-medium">{household.toilet_type || "Not specified"}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Garbage Disposal</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Garbage Disposal</p>
                   <p className="font-medium">{household.garbage_disposal || "Not specified"}</p>
                 </div>
               </div>
@@ -310,14 +311,14 @@ const HouseholdMoreDetailsPage = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center mb-4">
-                <div className="bg-purple-100 p-2 rounded-full">
-                  <Users className="h-5 w-5 text-purple-700" />
+                <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-full">
+                  <Users className="h-5 w-5 text-purple-700 dark:text-purple-300" />
                 </div>
                 <h2 className="text-xl font-semibold ml-2">Additional Information</h2>
               </div>
               
               <div>
-                <p className="text-sm text-gray-500 mb-1">Remarks</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Remarks</p>
                 <p className="font-medium whitespace-pre-line">{household.remarks || "No remarks added"}</p>
               </div>
               
@@ -325,20 +326,20 @@ const HouseholdMoreDetailsPage = () => {
               
               <div>
                 <h3 className="text-lg font-semibold mb-4">Record Information</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-muted/50 dark:bg-muted/30 rounded-lg p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Created Section */}
                     <div className="flex items-start space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full mt-1">
-                        <Clock className="h-4 w-4 text-blue-700" />
+                      <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full mt-1">
+                        <Clock className="h-4 w-4 text-blue-700 dark:text-blue-300" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 mb-1">Created</p>
-                        <p className="text-sm text-gray-700">
+                        <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">Created</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                           {formatDateWithAdmin(household.created_at, household.recordedby).date}
                         </p>
                         {formatDateWithAdmin(household.created_at, household.recordedby).admin && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             by {formatDateWithAdmin(household.created_at, household.recordedby).admin}
                           </p>
                         )}
@@ -348,16 +349,16 @@ const HouseholdMoreDetailsPage = () => {
                     {/* Last Updated Section */}
                     {household.updated_at && (
                       <div className="flex items-start space-x-3">
-                        <div className="bg-green-100 p-2 rounded-full mt-1">
-                          <RefreshCcw className="h-4 w-4 text-green-700" />
+                        <div className="bg-green-100 dark:bg-green-900 p-2 rounded-full mt-1">
+                          <RefreshCcw className="h-4 w-4 text-green-700 dark:text-green-300" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 mb-1">Last Updated</p>
-                          <p className="text-sm text-gray-700">
+                          <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">Last Updated</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
                             {formatDateWithAdmin(household.updated_at, household.updatedby).date}
                           </p>
                           {formatDateWithAdmin(household.updated_at, household.updatedby).admin && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               by {formatDateWithAdmin(household.updated_at, household.updatedby).admin}
                             </p>
                           )}
