@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Plus, X, Search, Crown } from 'lucide-react';
+import { Users, Plus, X, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { syncAllHouseholdsHeadOfFamily } from '@/lib/api/households';
 
@@ -45,27 +44,6 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
     syncHeadOfFamily();
   }, [householdId, queryClient]);
 
-  // Fetch current household with head of family info
-  const { data: householdData } = useQuery({
-    queryKey: ['household', householdId],
-    queryFn: async () => {
-      console.log('Fetching household data for ID:', householdId);
-      const { data, error } = await supabase
-        .from('households')
-        .select('head_of_family')
-        .eq('id', householdId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching household:', error);
-        throw error;
-      }
-      
-      console.log('Household data fetched:', data);
-      return data;
-    },
-  });
-
   // Fetch current household members
   const { data: members, isLoading: isMembersLoading } = useQuery({
     queryKey: ['household-members', householdId],
@@ -88,21 +66,9 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
         .order('first_name');
 
       if (error) throw error;
-      console.log('Members fetched:', data);
       return data || [];
     },
   });
-
-  // Debug logging for head of family matching
-  useEffect(() => {
-    if (householdData && members) {
-      console.log('Household head of family ID:', householdData.head_of_family);
-      console.log('Member IDs:', members.map(m => ({ id: m.id, name: `${m.first_name} ${m.last_name}` })));
-      
-      const headMember = members.find(m => m.id === householdData.head_of_family);
-      console.log('Head member found:', headMember);
-    }
-  }, [householdData, members]);
 
   // Search for residents to add
   const handleSearch = async (term: string) => {
@@ -195,22 +161,8 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
     }
   };
 
-  // Remove resident from household with head of family protection
+  // Remove resident from household
   const handleRemoveMember = async (residentId: string, residentName: string) => {
-    console.log('Attempting to remove resident:', residentId);
-    console.log('Household head of family:', householdData?.head_of_family);
-    
-    // Check if this resident is the head of family
-    if (householdData?.head_of_family === residentId) {
-      console.log('Blocking removal: This person is the head of family');
-      toast({
-        title: "Cannot remove head of family",
-        description: "This person is the head of family. Please assign a new head of family first before removing them from the household.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('residents')
@@ -246,13 +198,6 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
       age--;
     }
     return age;
-  };
-
-  // Check if a member is the head of family
-  const isHeadOfFamily = (memberId: string) => {
-    const isHead = householdData?.head_of_family === memberId;
-    console.log(`Member ${memberId} is head of family:`, isHead);
-    return isHead;
   };
 
   return (
@@ -356,18 +301,10 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="flex items-center space-x-2">
-                      <p className="font-medium">
-                        {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
-                        {member.suffix ? ' ' + member.suffix : ''}
-                      </p>
-                      {isHeadOfFamily(member.id) && (
-                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                          <Crown className="w-3 h-3 mr-1" />
-                          Head of Family
-                        </Badge>
-                      )}
-                    </div>
+                    <p className="font-medium">
+                      {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
+                      {member.suffix ? ' ' + member.suffix : ''}
+                    </p>
                     <div className="flex items-center space-x-2 text-sm text-gray-500">
                       <span>{member.gender}</span>
                       <span>•</span>
@@ -392,10 +329,8 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRemoveMember(member.id, `${member.first_name} ${member.last_name}`)}
-                    disabled={isHeadOfFamily(member.id)}
-                    title={isHeadOfFamily(member.id) ? "Cannot remove head of family" : "Remove member"}
                   >
-                    <X className={`h-4 w-4 ${isHeadOfFamily(member.id) ? 'text-gray-400' : ''}`} />
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
