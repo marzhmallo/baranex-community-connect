@@ -111,8 +111,10 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
     },
   });
 
-  // Get non-registered members from the household's members JSONB column
-  const nonRegisteredMembers: NonRegisteredMember[] = householdData?.members || [];
+  // Get non-registered members from the household's members JSONB column with proper type conversion
+  const nonRegisteredMembers: NonRegisteredMember[] = Array.isArray(householdData?.members) 
+    ? (householdData.members as NonRegisteredMember[])
+    : [];
 
   // Search for residents to add
   const handleSearch = async (term: string) => {
@@ -228,7 +230,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
       const { error } = await supabase
         .from('households')
-        .update({ members: updatedMembers })
+        .update({ members: updatedMembers as any })
         .eq('id', householdId);
 
       if (error) throw error;
@@ -305,7 +307,7 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
       const { error } = await supabase
         .from('households')
-        .update({ members: updatedMembers })
+        .update({ members: updatedMembers as any })
         .eq('id', householdId);
 
       if (error) throw error;
