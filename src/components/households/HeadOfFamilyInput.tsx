@@ -54,7 +54,10 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
               try {
                 const { data: householdData } = await supabase
                   .from('residents')
-                  .select('household_id, households:household_id(name)')
+                  .select(`
+                    household_id,
+                    households:household_id(name)
+                  `)
                   .eq('id', resident.id)
                   .maybeSingle();
 
