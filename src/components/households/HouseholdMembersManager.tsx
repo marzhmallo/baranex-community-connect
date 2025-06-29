@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Plus, X, Search, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { syncAllHouseholdsHeadOfFamily } from '@/lib/api/households';
+
 interface HouseholdMembersManagerProps {
   householdId: string;
   householdName: string;
@@ -373,8 +374,8 @@ const HouseholdMembersManager = ({
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
-            <div className="bg-blue-100 p-2 rounded-full mr-2">
-              <Users className="h-5 w-5 text-blue-700" />
+            <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full mr-2">
+              <Users className="h-5 w-5 text-blue-700 dark:text-blue-300" />
             </div>
             <h2 className="text-xl font-semibold">Household Members</h2>
           </div>
@@ -399,15 +400,15 @@ const HouseholdMembersManager = ({
                 
                 <TabsContent value="registered" className="space-y-4">
                   <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search residents by name..." value={searchTerm} onChange={e => handleSearch(e.target.value)} className="pl-10" />
                   </div>
                   
-                  {isSearching && <p className="text-sm text-gray-500">Searching...</p>}
+                  {isSearching && <p className="text-sm text-muted-foreground">Searching...</p>}
                   
                   <ScrollArea className="h-[300px]">
                     <div className="space-y-2">
-                      {searchResults.map(resident => <div key={resident.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                      {searchResults.map(resident => <div key={resident.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 dark:hover:bg-muted/50">
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-10 h-10">
                               <AvatarImage src={resident.photo_url} />
@@ -417,7 +418,7 @@ const HouseholdMembersManager = ({
                             </Avatar>
                             <div>
                               <p className="font-medium">{resident.full_name}</p>
-                              <p className="text-sm text-gray-500">Purok {resident.purok}</p>
+                              <p className="text-sm text-muted-foreground">Purok {resident.purok}</p>
                             </div>
                           </div>
                           <Button size="sm" onClick={() => handleAddRegisteredMember(resident.id)}>
@@ -425,11 +426,11 @@ const HouseholdMembersManager = ({
                           </Button>
                         </div>)}
                       
-                      {searchTerm.length >= 2 && !isSearching && searchResults.length === 0 && <p className="text-sm text-gray-500 text-center py-4">
+                      {searchTerm.length >= 2 && !isSearching && searchResults.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">
                           No available residents found matching your search.
                         </p>}
                       
-                      {searchTerm.length < 2 && <p className="text-sm text-gray-500 text-center py-4">
+                      {searchTerm.length < 2 && <p className="text-sm text-muted-foreground text-center py-4">
                           Type at least 2 characters to search for residents.
                         </p>}
                     </div>
@@ -471,7 +472,7 @@ const HouseholdMembersManager = ({
                       <select value={nonRegisteredForm.gender} onChange={e => setNonRegisteredForm(prev => ({
                       ...prev,
                       gender: e.target.value
-                    }))} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    }))} className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring">
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                       </select>
@@ -504,12 +505,12 @@ const HouseholdMembersManager = ({
           </Dialog>
         </div>
         
-        {isLoading ? <p className="text-center py-10">Loading members...</p> : <div className="space-y-6">
+        {isLoading ? <p className="text-center py-10 text-muted-foreground">Loading members...</p> : <div className="space-y-6">
             {/* Registered Members Section */}
             {registeredMembers && registeredMembers.length > 0 && <div>
-                <h3 className="text-lg font-medium mb-3 text-blue-700">Registered Members</h3>
+                <h3 className="text-lg font-medium mb-3 text-blue-700 dark:text-blue-400">Registered Members</h3>
                 <div className="space-y-3">
-                  {registeredMembers.map(member => <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                  {registeredMembers.map(member => <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 dark:hover:bg-muted/50">
                       <div className="flex items-center space-x-4">
                         <Avatar className="w-12 h-12">
                           <AvatarImage src={member.photo_url} />
@@ -523,11 +524,11 @@ const HouseholdMembersManager = ({
                               {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
                               {member.suffix ? ' ' + member.suffix : ''}
                             </p>
-                            {householdData?.head_of_family === member.id && <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                            {householdData?.head_of_family === member.id && <Badge variant="outline" className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700">
                                 👑 Head of Family
                               </Badge>}
                           </div>
-                          <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <span>{member.gender}</span>
                             <span>•</span>
                             <span>{formatAge(member.birthdate)} years old</span>
@@ -553,10 +554,10 @@ const HouseholdMembersManager = ({
             
             {/* Non-Registered Members Section */}
             {(nonRegisteredMembers.length > 0 || unregisteredHeadOfFamily) && <div>
-                <h3 className="text-lg font-medium mb-3 text-green-700">Non-Registered Members</h3>
+                <h3 className="text-lg font-medium mb-3 text-green-700 dark:text-green-400">Non-Registered Members</h3>
                 <div className="space-y-3">
                   {/* Show unregistered head of family first if exists */}
-                  {unregisteredHeadOfFamily && <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 bg-yellow-50 border-yellow-200">
+                  {unregisteredHeadOfFamily && <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 dark:hover:bg-muted/50 bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
                       <div className="flex items-center space-x-4">
                         <Avatar className="w-12 h-12">
                           <AvatarFallback>
@@ -569,11 +570,11 @@ const HouseholdMembersManager = ({
                               {unregisteredHeadOfFamily.first_name} {unregisteredHeadOfFamily.middle_name ? unregisteredHeadOfFamily.middle_name + ' ' : ''}{unregisteredHeadOfFamily.last_name}
                               {unregisteredHeadOfFamily.suffix ? ' ' + unregisteredHeadOfFamily.suffix : ''}
                             </p>
-                            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                            <Badge variant="outline" className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700">
                               👑 Head of Family
                             </Badge>
                           </div>
-                          <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <span>{unregisteredHeadOfFamily.gender}</span>
                             <span>•</span>
                             <span>{formatAge(unregisteredHeadOfFamily.birthdate)} years old</span>
@@ -581,7 +582,7 @@ const HouseholdMembersManager = ({
                                 <span>•</span>
                                 <span>{unregisteredHeadOfFamily.relationship}</span>
                               </>}
-                            <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                            <Badge variant="outline" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                               Non-Registered Head
                             </Badge>
                           </div>
@@ -594,7 +595,7 @@ const HouseholdMembersManager = ({
                     </div>}
                   
                   {/* Show other non-registered members */}
-                  {nonRegisteredMembers.map(member => <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 bg-green-50">
+                  {nonRegisteredMembers.map(member => <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 dark:hover:bg-muted/50 bg-green-50 dark:bg-green-950">
                       <div className="flex items-center space-x-4">
                         <Avatar className="w-12 h-12">
                           <AvatarFallback>
@@ -606,7 +607,7 @@ const HouseholdMembersManager = ({
                             {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
                             {member.suffix ? ' ' + member.suffix : ''}
                           </p>
-                          <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <span>{member.gender}</span>
                             <span>•</span>
                             <span>{formatAge(member.birthdate)} years old</span>
@@ -614,7 +615,7 @@ const HouseholdMembersManager = ({
                                 <span>•</span>
                                 <span>{member.relationship}</span>
                               </>}
-                            <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                            <Badge variant="outline" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                               Non-Registered
                             </Badge>
                           </div>
