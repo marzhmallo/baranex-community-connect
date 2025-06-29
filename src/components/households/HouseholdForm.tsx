@@ -340,7 +340,14 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
             }) => <FormItem>
                     <FormLabel>Head of Family</FormLabel>
                     <FormControl>
-                      <HeadOfFamilyInput value={field.value || ""} onValueChange={field.onChange} onResidentSelect={setSelectedResidentId} selectedResidentId={selectedResidentId} placeholder="Search residents or enter name" />
+                      <HeadOfFamilyInput 
+                        value={field.value || ""} 
+                        onValueChange={field.onChange} 
+                        onResidentSelect={setSelectedResidentId} 
+                        selectedResidentId={selectedResidentId} 
+                        placeholder="Search residents or enter name"
+                        currentHouseholdId={household?.id}
+                      />
                     </FormControl>
                     <FormMessage />
                     {selectedResidentId && <p className="text-xs text-green-600">✓ Registered resident selected</p>}
