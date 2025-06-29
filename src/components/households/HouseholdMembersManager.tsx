@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Plus, X, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { syncAllHouseholdsHeadOfFamily } from '@/lib/api/households';
 
 interface HouseholdMembersManagerProps {
   householdId: string;
@@ -26,6 +26,23 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  // Sync household head of family on component mount
+  useEffect(() => {
+    const syncHeadOfFamily = async () => {
+      try {
+        console.log('Syncing head of family for household:', householdId);
+        await syncAllHouseholdsHeadOfFamily();
+        
+        // Refresh the members list after sync
+        queryClient.invalidateQueries({ queryKey: ['household-members', householdId] });
+      } catch (error) {
+        console.error('Error syncing head of family:', error);
+      }
+    };
+
+    syncHeadOfFamily();
+  }, [householdId, queryClient]);
 
   // Fetch current household members
   const { data: members, isLoading: isMembersLoading } = useQuery({

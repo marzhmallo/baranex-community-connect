@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Household } from '@/lib/types';
 
@@ -147,6 +148,35 @@ const getCurrentAdminProfileId = async (): Promise<string | null> => {
   }
 };
 
+// Function to sync head of family as household member
+const syncHeadOfFamilyAsMember = async (householdId: string, headOfFamilyId: string | null) => {
+  try {
+    if (!headOfFamilyId) {
+      console.log('No head of family to sync for household:', householdId);
+      return { success: true };
+    }
+
+    console.log('Syncing head of family as member:', { householdId, headOfFamilyId });
+
+    // Update the resident's household_id to match the household
+    const { error } = await supabase
+      .from('residents')
+      .update({ household_id: householdId })
+      .eq('id', headOfFamilyId);
+
+    if (error) {
+      console.error('Error syncing head of family as member:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log('Successfully synced head of family as household member');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in syncHeadOfFamilyAsMember:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Alias for getHouseholds for consistency with existing code
 export const fetchHouseholds = getHouseholds;
 
@@ -187,7 +217,7 @@ export const getHouseholdById = async (id: string) => {
   }
 };
 
-// Save household (create or update)
+// Save household (create or update) with automatic head of family sync
 export const saveHousehold = async (household: Partial<Household>) => {
   try {
     // Ensure required fields are present
@@ -257,6 +287,11 @@ export const saveHousehold = async (household: Partial<Household>) => {
       
       if (error) throw new Error(error.message);
       result = data;
+
+      // Sync head of family as household member after successful update
+      if (household.head_of_family) {
+        await syncHeadOfFamilyAsMember(household.id, household.head_of_family);
+      }
     } else {
       // Create new household with UUID generated on the client side
       const newHouseholdId = crypto.randomUUID();
@@ -292,11 +327,72 @@ export const saveHousehold = async (household: Partial<Household>) => {
       
       if (error) throw new Error(error.message);
       result = data;
+
+      // Sync head of family as household member after successful creation
+      if (household.head_of_family) {
+        await syncHeadOfFamilyAsMember(newHouseholdId, household.head_of_family);
+      }
     }
     
     return { success: true, data: result };
   } catch (error: any) {
     console.error('Error saving household:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Function to sync all existing households and ensure heads of family are members
+export const syncAllHouseholdsHeadOfFamily = async () => {
+  try {
+    console.log('Starting sync of all household heads of family...');
+
+    // Get all households that have a head_of_family set
+    const { data: households, error: householdError } = await supabase
+      .from('households')
+      .select('id, head_of_family')
+      .not('head_of_family', 'is', null);
+
+    if (householdError) {
+      throw new Error(householdError.message);
+    }
+
+    if (!households || households.length === 0) {
+      console.log('No households with head of family found');
+      return { success: true, synced: 0 };
+    }
+
+    console.log(`Found ${households.length} households with head of family to sync`);
+
+    let syncedCount = 0;
+    const errors = [];
+
+    // Process each household
+    for (const household of households) {
+      try {
+        const syncResult = await syncHeadOfFamilyAsMember(household.id, household.head_of_family);
+        if (syncResult.success) {
+          syncedCount++;
+        } else {
+          errors.push(`Household ${household.id}: ${syncResult.error}`);
+        }
+      } catch (error: any) {
+        errors.push(`Household ${household.id}: ${error.message}`);
+      }
+    }
+
+    console.log(`Sync completed. Synced: ${syncedCount}, Errors: ${errors.length}`);
+
+    if (errors.length > 0) {
+      console.error('Sync errors:', errors);
+    }
+
+    return { 
+      success: true, 
+      synced: syncedCount, 
+      errors: errors.length > 0 ? errors : undefined 
+    };
+  } catch (error: any) {
+    console.error('Error in syncAllHouseholdsHeadOfFamily:', error);
     return { success: false, error: error.message };
   }
 };
