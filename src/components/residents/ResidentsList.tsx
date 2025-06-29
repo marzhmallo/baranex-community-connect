@@ -45,10 +45,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Resident } from '@/lib/types';
-import { getResidents } from '@/lib/api/residents';
-import { useQuery } from '@tanstack/react-query';
+import { getResidents, deleteResident } from '@/lib/api/residents';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ResidentForm from './ResidentForm';
 import ResidentStatusCard from './ResidentStatusCard';
 import ClassificationStatusCard from './ClassificationStatusCard';
@@ -81,11 +91,13 @@ const capitalizeFirstLetter = (string: string): string => {
 const ResidentRow = ({ 
   resident, 
   onViewDetails, 
-  onEditResident 
+  onEditResident,
+  onDeleteResident 
 }: { 
   resident: Resident; 
   onViewDetails: (resident: Resident) => void; 
   onEditResident: (resident: Resident) => void; 
+  onDeleteResident: (resident: Resident) => void;
 }) => {
   // Calculate age from birthDate
   const calculateAge = (birthDate: string): number => {
@@ -162,7 +174,10 @@ const ResidentRow = ({
               Edit
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">
+            <DropdownMenuItem 
+              className="text-red-600 focus:text-red-600"
+              onClick={() => onDeleteResident(resident)}
+            >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete
             </DropdownMenuItem>
@@ -188,6 +203,11 @@ const ResidentsList: React.FC = () => {
   const [isEditResidentOpen, setIsEditResidentOpen] = useState(false);
   const [residentToEdit, setResidentToEdit] = useState<Resident | null>(null);
   
+  // Add state for delete confirmation dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [residentToDelete, setResidentToDelete] = useState<Resident | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   // Sorting state
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -201,6 +221,8 @@ const ResidentsList: React.FC = () => {
     queryKey: ['residents'],
     queryFn: getResidents,
   });
+  
+  const queryClient = useQueryClient();
   
   // Show error toast if there's an error fetching data
   useEffect(() => {
@@ -472,21 +494,56 @@ const ResidentsList: React.FC = () => {
   };
 
   // Mock implementation for deleteResident since it's imported but not provided
-  const handleDeleteResident = async (id: string) => {
+  const handleDeleteResident = (resident: Resident) => {
+    setResidentToDelete(resident);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!residentToDelete) return;
+    
+    setIsDeleting(true);
+    
     try {
-      toast({
-        title: "Deleting resident",
-        description: "This functionality is not yet implemented.",
-        variant: "default",
-      });
-      // Note: Actual deletion will require implementation in residents.ts API
+      const result = await deleteResident(residentToDelete.id);
+      
+      if (result.success) {
+        toast({
+          title: "Resident deleted",
+          description: `${residentToDelete.firstName} ${residentToDelete.lastName} has been successfully deleted.`,
+          variant: "default",
+        });
+        
+        // Refresh the residents list
+        queryClient.invalidateQueries({
+          queryKey: ['residents']
+        });
+        
+        // Close the dialog
+        setIsDeleteDialogOpen(false);
+        setResidentToDelete(null);
+      } else {
+        toast({
+          title: "Error deleting resident",
+          description: result.error || "There was a problem deleting the resident.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
+      console.error('Error deleting resident:', error);
       toast({
         title: "Error deleting resident",
-        description: "There was a problem deleting the resident.",
+        description: "An unexpected error occurred while deleting the resident.",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setResidentToDelete(null);
   };
 
   return (
@@ -879,6 +936,7 @@ const ResidentsList: React.FC = () => {
                           resident={resident} 
                           onViewDetails={handleViewDetails}
                           onEditResident={handleEditResident}
+                          onDeleteResident={handleDeleteResident}
                         />
                       ))}
                     </TableBody>
@@ -992,6 +1050,53 @@ const ResidentsList: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Delete Resident
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Are you sure you want to permanently delete{' '}
+                <span className="font-semibold text-foreground">
+                  {residentToDelete?.firstName} {residentToDelete?.lastName}
+                </span>
+                ?
+              </p>
+              <p className="text-sm text-muted-foreground">
+                This action cannot be undone. All resident data, including personal information, 
+                documents, and related records will be permanently removed from the system.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete} disabled={isDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {isDeleting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Resident
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

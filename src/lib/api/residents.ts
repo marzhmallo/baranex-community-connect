@@ -512,6 +512,8 @@ export const createResident = async (residentData: any): Promise<{ success: bool
 // Function to delete a resident by ID
 export const deleteResident = async (id: string): Promise<{success: boolean, error?: string}> => {
   try {
+    console.log("Deleting resident with ID:", id);
+    
     const { error } = await supabase
       .from('residents')
       .delete()
@@ -522,6 +524,7 @@ export const deleteResident = async (id: string): Promise<{success: boolean, err
       return { success: false, error: error.message };
     }
 
+    console.log("Resident deleted successfully");
     return { success: true };
   } catch (error: any) {
     console.error('Unexpected error deleting resident:', error);
