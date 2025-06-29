@@ -49,13 +49,19 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
   const { data: householdData } = useQuery({
     queryKey: ['household', householdId],
     queryFn: async () => {
+      console.log('Fetching household data for ID:', householdId);
       const { data, error } = await supabase
         .from('households')
         .select('head_of_family')
         .eq('id', householdId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching household:', error);
+        throw error;
+      }
+      
+      console.log('Household data fetched:', data);
       return data;
     },
   });
@@ -82,9 +88,21 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
         .order('first_name');
 
       if (error) throw error;
+      console.log('Members fetched:', data);
       return data || [];
     },
   });
+
+  // Debug logging for head of family matching
+  useEffect(() => {
+    if (householdData && members) {
+      console.log('Household head of family ID:', householdData.head_of_family);
+      console.log('Member IDs:', members.map(m => ({ id: m.id, name: `${m.first_name} ${m.last_name}` })));
+      
+      const headMember = members.find(m => m.id === householdData.head_of_family);
+      console.log('Head member found:', headMember);
+    }
+  }, [householdData, members]);
 
   // Search for residents to add
   const handleSearch = async (term: string) => {
@@ -179,8 +197,12 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
   // Remove resident from household with head of family protection
   const handleRemoveMember = async (residentId: string, residentName: string) => {
+    console.log('Attempting to remove resident:', residentId);
+    console.log('Household head of family:', householdData?.head_of_family);
+    
     // Check if this resident is the head of family
     if (householdData?.head_of_family === residentId) {
+      console.log('Blocking removal: This person is the head of family');
       toast({
         title: "Cannot remove head of family",
         description: "This person is the head of family. Please assign a new head of family first before removing them from the household.",
@@ -228,7 +250,9 @@ const HouseholdMembersManager = ({ householdId, householdName }: HouseholdMember
 
   // Check if a member is the head of family
   const isHeadOfFamily = (memberId: string) => {
-    return householdData?.head_of_family === memberId;
+    const isHead = householdData?.head_of_family === memberId;
+    console.log(`Member ${memberId} is head of family:`, isHead);
+    return isHead;
   };
 
   return (
