@@ -1,3 +1,4 @@
+
 import { Resident } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -80,7 +81,7 @@ export const getResidents = async (): Promise<Resident[]> => {
 
   if (error) throw error;
 
-  // Map database fields to our application model
+  // Map database fields to our application model - using snake_case as primary
   return data.map(resident => {
     // Create emergency contact object without default placeholder texts
     const emergencyContact = resident.emname || resident.emrelation || resident.emcontact
@@ -89,43 +90,72 @@ export const getResidents = async (): Promise<Resident[]> => {
           relationship: resident.emrelation || '',
           contactNumber: resident.emcontact ? resident.emcontact.toString() : ''
         }
-      : null;
+      : undefined;
 
     return {
       id: resident.id,
-      firstName: resident.first_name,
-      lastName: resident.last_name,
-      middleName: resident.middle_name || '',
+      first_name: resident.first_name,
+      last_name: resident.last_name,
+      middle_name: resident.middle_name || '',
       suffix: resident.suffix || '',
       gender: resident.gender,
-      birthDate: resident.birthdate,
-      address: resident.address || '',  // Ensure address is never null
-      contactNumber: resident.mobile_number,
+      birthdate: resident.birthdate,
+      address: resident.address || '',
+      mobile_number: resident.mobile_number,
       email: resident.email || '',
       occupation: resident.occupation || '',
       status: resident.status as ResidentStatus,
-      civilStatus: resident.civil_status,
-      monthlyIncome: resident.monthly_income || 0,
-      yearsInBarangay: resident.years_in_barangay || 0,
+      civil_status: resident.civil_status,
+      monthly_income: resident.monthly_income || 0,
+      years_in_barangay: resident.years_in_barangay || 0,
       purok: resident.purok,
+      barangaydb: resident.barangaydb,
+      municipalitycity: resident.municipalitycity,
+      provinze: resident.provinze,
+      regional: resident.regional,
+      countryph: resident.countryph || '',
+      nationality: resident.nationality || '',
+      is_voter: resident.is_voter,
+      has_philhealth: resident.has_philhealth,
+      has_sss: resident.has_sss,
+      has_pagibig: resident.has_pagibig,
+      has_tin: resident.has_tin,
+      classifications: resident.classifications || [],
+      remarks: resident.remarks || '',
+      photo_url: resident.photo_url || '',
+      died_on: resident.died_on || null,
+      household_id: resident.household_id || null,
+      created_at: resident.created_at || null,
+      updated_at: resident.updated_at || null,
+      brgyid: resident.brgyid,
+      recordedby: resident.recordedby,
+      editedby: resident.editedby,
+      emname: resident.emname,
+      emrelation: resident.emrelation,
+      emcontact: resident.emcontact ? resident.emcontact.toString() : undefined,
+      emergencyContact,
+      // Legacy camelCase for backward compatibility
+      firstName: resident.first_name,
+      lastName: resident.last_name,
+      middleName: resident.middle_name || '',
+      birthDate: resident.birthdate,
+      contactNumber: resident.mobile_number,
+      civilStatus: resident.civil_status,
+      yearsInBarangay: resident.years_in_barangay || 0,
+      monthlyIncome: resident.monthly_income || 0,
       barangay: resident.barangaydb,
       municipality: resident.municipalitycity,
       province: resident.provinze,
       region: resident.regional,
       country: resident.countryph || '',
-      nationality: resident.nationality || '',
       isVoter: resident.is_voter,
       hasPhilhealth: resident.has_philhealth,
       hasSss: resident.has_sss,
       hasPagibig: resident.has_pagibig,
       hasTin: resident.has_tin,
-      classifications: resident.classifications || [], // Ensure classifications is an array
-      remarks: resident.remarks || '',
       photoUrl: resident.photo_url || '',
-      emergencyContact,
-      diedOn: resident.died_on || null, // Add died_on field
-      created_at: resident.created_at || null, // Add created_at field
-      updated_at: resident.updated_at || null // Add updated_at field
+      diedOn: resident.died_on || null,
+      householdId: resident.household_id || null
     };
   });
 };
@@ -148,45 +178,73 @@ export const getResidentById = async (id: string): Promise<Resident | null> => {
         relationship: data.emrelation || '',
         contactNumber: data.emcontact ? data.emcontact.toString() : ''
       }
-    : null;
+    : undefined;
 
-  // Map database fields to our application model
+  // Map database fields to our application model - using snake_case as primary
   return {
     id: data.id,
-    firstName: data.first_name,
-    lastName: data.last_name,
-    middleName: data.middle_name || '',
+    first_name: data.first_name,
+    last_name: data.last_name,
+    middle_name: data.middle_name || '',
     suffix: data.suffix || '',
     gender: data.gender,
-    birthDate: data.birthdate,
-    address: data.address || '', // Ensure address is never null
-    contactNumber: data.mobile_number,
+    birthdate: data.birthdate,
+    address: data.address || '',
+    mobile_number: data.mobile_number,
     email: data.email || '',
     occupation: data.occupation || '',
     status: data.status as ResidentStatus,
-    civilStatus: data.civil_status,
-    monthlyIncome: data.monthly_income || 0,
-    yearsInBarangay: data.years_in_barangay || 0,
+    civil_status: data.civil_status,
+    monthly_income: data.monthly_income || 0,
+    years_in_barangay: data.years_in_barangay || 0,
     purok: data.purok,
+    barangaydb: data.barangaydb,
+    municipalitycity: data.municipalitycity,
+    provinze: data.provinze,
+    regional: data.regional,
+    countryph: data.countryph || '',
+    nationality: data.nationality || '',
+    is_voter: data.is_voter,
+    has_philhealth: data.has_philhealth,
+    has_sss: data.has_sss,
+    has_pagibig: data.has_pagibig,
+    has_tin: data.has_tin,
+    classifications: data.classifications || [],
+    remarks: data.remarks || '',
+    photo_url: data.photo_url || '',
+    died_on: data.died_on || null,
+    household_id: data.household_id || null,
+    created_at: data.created_at || null,
+    updated_at: data.updated_at || null,
+    brgyid: data.brgyid,
+    recordedby: data.recordedby,
+    editedby: data.editedby,
+    emname: data.emname,
+    emrelation: data.emrelation,
+    emcontact: data.emcontact ? data.emcontact.toString() : undefined,
+    emergencyContact,
+    // Legacy camelCase for backward compatibility
+    firstName: data.first_name,
+    lastName: data.last_name,
+    middleName: data.middle_name || '',
+    birthDate: data.birthdate,
+    contactNumber: data.mobile_number,
+    civilStatus: data.civil_status,
+    yearsInBarangay: data.years_in_barangay || 0,
+    monthlyIncome: data.monthly_income || 0,
     barangay: data.barangaydb,
     municipality: data.municipalitycity,
     province: data.provinze,
     region: data.regional,
     country: data.countryph || '',
-    nationality: data.nationality || '',
     isVoter: data.is_voter,
     hasPhilhealth: data.has_philhealth,
     hasSss: data.has_sss,
     hasPagibig: data.has_pagibig,
     hasTin: data.has_tin,
-    classifications: data.classifications || [], // Ensure classifications is an array
-    remarks: data.remarks || '',
     photoUrl: data.photo_url || '',
-    emergencyContact,
-    diedOn: data.died_on || null, // Add died_on field
-    created_at: data.created_at || null, // Add created_at field
-    updated_at: data.updated_at || null, // Add updated_at field
-    householdId: data.household_id || null // Add household_id field mapping
+    diedOn: data.died_on || null,
+    householdId: data.household_id || null
   };
 };
 
