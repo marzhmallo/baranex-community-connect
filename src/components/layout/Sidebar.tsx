@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSquare, AlertTriangle, ChevronLeft, ChevronRight, Home, Award, Briefcase, BellRing, Settings, Sun, Moon, X, Menu, Shield, Users } from 'lucide-react';
+import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSquare, AlertTriangle, ChevronLeft, ChevronRight, Home, Award, Briefcase, BellRing, Settings, Sun, Moon, X, Menu, Shield, Users, Network } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -44,10 +45,12 @@ const Sidebar = () => {
   return <aside className={cn("fixed left-0 top-0 bottom-0 z-40 h-screen bg-sidebar transition-all duration-300 ease-in-out", isCollapsed ? "w-16" : "w-64")}>
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between p-4">
-          {!isCollapsed && <Link to="/dashboard" className="text-xl font-bold tracking-tight flex items-center">
+          {!isCollapsed && (
+            <Link to="/dashboard" className="text-xl font-bold tracking-tight flex items-center">
               <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Bara</span>
               <span className="text-baranex-accent">NEX</span>
-            </Link>}
+            </Link>
+          )}
           <Button variant="sidebar" size="icon" onClick={() => setIsCollapsed(!isCollapsed)} className="ml-auto">
             {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
@@ -77,6 +80,11 @@ const Sidebar = () => {
           <Link to="/management" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/management") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
             <Users className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">User Management</span>}
+          </Link>
+
+          <Link to="/nexus" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/nexus") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
+            <Network className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">The Nexus</span>}
           </Link>
 
           <Link to="/documents" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/documents") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>

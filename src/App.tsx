@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,6 +33,7 @@ import StatisticsPage from "./pages/StatisticsPage";
 import OfficialDetailsPage from './pages/OfficialDetailsPage';
 import EmergencyResponsePage from "./pages/EmergencyResponsePage";
 import UserAccountManagement from "./pages/UserAccountManagement";
+import NexusPage from "./pages/NexusPage";
 import UserCalendarPage from "./components/user/UserCalendarPage";
 import UserAnnouncementsPage from "./components/user/UserAnnouncementsPage";
 import UserOfficialsPage from "./components/user/UserOfficialsPage";
@@ -186,6 +188,7 @@ const AppContent = () => {
               <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
               <Route path="/profile" element={<AdminRoute><ProfilePage /></AdminRoute>} />
               <Route path="/management" element={<AdminRoute><UserAccountManagement /></AdminRoute>} />
+              <Route path="/nexus" element={<AdminRoute><NexusPage /></AdminRoute>} />
             </>
           )}
           
