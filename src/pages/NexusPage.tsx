@@ -17,6 +17,7 @@ const NexusPage = () => {
   const [dataItems, setDataItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [transferMode, setTransferMode] = useState<'single' | 'bulk'>('single');
+  const [currentUserBarangay, setCurrentUserBarangay] = useState<string>('');
 
   const dataTypes = [
     { value: 'residents', label: 'Residents', icon: Users },
@@ -29,6 +30,7 @@ const NexusPage = () => {
 
   useEffect(() => {
     fetchBarangays();
+    getCurrentUserBarangay();
   }, []);
 
   useEffect(() => {
@@ -36,6 +38,25 @@ const NexusPage = () => {
       fetchDataItems();
     }
   }, [selectedDataType]);
+
+  const getCurrentUserBarangay = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('brgyid')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.brgyid) {
+          setCurrentUserBarangay(profile.brgyid);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user barangay:', error);
+    }
+  };
 
   const fetchBarangays = async () => {
     try {
@@ -124,7 +145,7 @@ const NexusPage = () => {
   };
 
   const handleTransfer = async () => {
-    if (!selectedDataType || !targetBarangay || selectedItems.length === 0) {
+    if (!selectedDataType || !targetBarangay || selectedItems.length === 0 || !currentUserBarangay) {
       toast({
         title: 'Error',
         description: 'Please select data type, target barangay, and items to transfer',
@@ -135,17 +156,20 @@ const NexusPage = () => {
 
     try {
       setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
-      // Create transfer request
+      // Create transfer request using the existing dnexus table
       const { data: transferRequest, error: transferError } = await supabase
-        .from('data_transfer_requests')
+        .from('dnexus')
         .insert({
-          source_brgyid: (await supabase.auth.getUser()).data.user?.user_metadata?.brgyid,
-          target_brgyid: targetBarangay,
-          data_type: selectedDataType,
-          item_ids: selectedItems,
+          source: currentUserBarangay,
+          destination: targetBarangay,
+          datatype: selectedDataType,
+          dataid: selectedItems,
           status: 'pending',
-          transfer_mode: transferMode,
+          initiator: user.id,
+          notes: `Transfer request for ${selectedItems.length} ${selectedDataType} record(s) in ${transferMode} mode`,
         })
         .select()
         .single();
@@ -255,7 +279,9 @@ const NexusPage = () => {
                   <SelectValue placeholder="Select target barangay" />
                 </SelectTrigger>
                 <SelectContent>
-                  {barangays.map((barangay) => (
+                  {barangays
+                    .filter(barangay => barangay.id !== currentUserBarangay)
+                    .map((barangay) => (
                     <SelectItem key={barangay.id} value={barangay.id}>
                       {barangay.barangayname}, {barangay.municipality}, {barangay.province}
                     </SelectItem>

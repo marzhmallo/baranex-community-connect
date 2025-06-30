@@ -321,6 +321,45 @@ export type Database = {
           },
         ]
       }
+      dnexus: {
+        Row: {
+          created_at: string
+          dataid: string[]
+          datatype: string | null
+          destination: string
+          id: string
+          initiator: string
+          notes: string | null
+          reviewer: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          dataid?: string[]
+          datatype?: string | null
+          destination?: string
+          id?: string
+          initiator?: string
+          notes?: string | null
+          reviewer?: string | null
+          source?: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          dataid?: string[]
+          datatype?: string | null
+          destination?: string
+          id?: string
+          initiator?: string
+          notes?: string | null
+          reviewer?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       docrequests: {
         Row: {
           brgyid: string
