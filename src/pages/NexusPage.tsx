@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -95,32 +94,80 @@ const NexusPage = () => {
   const fetchTransferRequests = async () => {
     try {
       // Fetch incoming requests (where current barangay is destination)
-      const { data: incoming, error: incomingError } = await supabase
+      const { data: incomingData, error: incomingError } = await supabase
         .from('dnexus')
-        .select(`
-          *,
-          source_barangay:source(barangayname, municipality, province),
-          initiator_profile:initiator(firstname, lastname)
-        `)
+        .select('*')
         .eq('destination', currentUserBarangay)
         .order('created_at', { ascending: false });
 
       if (incomingError) throw incomingError;
-      setIncomingRequests(incoming || []);
+
+      // Fetch additional data for incoming requests
+      const incomingWithDetails = await Promise.all(
+        (incomingData || []).map(async (request) => {
+          // Get source barangay info
+          const { data: sourceBarangay } = await supabase
+            .from('barangays')
+            .select('barangayname, municipality, province')
+            .eq('id', request.source)
+            .single();
+
+          // Get initiator profile info
+          const { data: initiatorProfile } = await supabase
+            .from('profiles')
+            .select('firstname, lastname')
+            .eq('id', request.initiator)
+            .single();
+
+          return {
+            ...request,
+            source_barangay: sourceBarangay,
+            initiator_profile: initiatorProfile
+          };
+        })
+      );
+
+      setIncomingRequests(incomingWithDetails);
 
       // Fetch outgoing requests (where current barangay is source)
-      const { data: outgoing, error: outgoingError } = await supabase
+      const { data: outgoingData, error: outgoingError } = await supabase
         .from('dnexus')
-        .select(`
-          *,
-          destination_barangay:destination(barangayname, municipality, province),
-          reviewer_profile:reviewer(firstname, lastname)
-        `)
+        .select('*')
         .eq('source', currentUserBarangay)
         .order('created_at', { ascending: false });
 
       if (outgoingError) throw outgoingError;
-      setOutgoingRequests(outgoing || []);
+
+      // Fetch additional data for outgoing requests
+      const outgoingWithDetails = await Promise.all(
+        (outgoingData || []).map(async (request) => {
+          // Get destination barangay info
+          const { data: destinationBarangay } = await supabase
+            .from('barangays')
+            .select('barangayname, municipality, province')
+            .eq('id', request.destination)
+            .single();
+
+          // Get reviewer profile info if exists
+          let reviewerProfile = null;
+          if (request.reviewer) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('firstname, lastname')
+              .eq('id', request.reviewer)
+              .single();
+            reviewerProfile = data;
+          }
+
+          return {
+            ...request,
+            destination_barangay: destinationBarangay,
+            reviewer_profile: reviewerProfile
+          };
+        })
+      );
+
+      setOutgoingRequests(outgoingWithDetails);
     } catch (error) {
       console.error('Error fetching transfer requests:', error);
       toast({
