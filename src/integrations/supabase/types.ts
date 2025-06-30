@@ -358,7 +358,22 @@ export type Database = {
           source?: string
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "dnexus_destination_fkey"
+            columns: ["destination"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dnexus_source_fkey"
+            columns: ["source"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       docrequests: {
         Row: {
