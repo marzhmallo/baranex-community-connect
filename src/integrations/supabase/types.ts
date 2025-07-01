@@ -1603,7 +1603,7 @@ export type Database = {
           address: string | null
           barangaydb: string
           birthdate: string
-          brgyid: string | null
+          brgyid: string
           civil_status: string
           classifications: string[] | null
           countryph: string
@@ -1645,7 +1645,7 @@ export type Database = {
           address?: string | null
           barangaydb: string
           birthdate: string
-          brgyid?: string | null
+          brgyid?: string
           civil_status: string
           classifications?: string[] | null
           countryph: string
@@ -1687,7 +1687,7 @@ export type Database = {
           address?: string | null
           barangaydb?: string
           birthdate?: string
-          brgyid?: string | null
+          brgyid?: string
           civil_status?: string
           classifications?: string[] | null
           countryph?: string

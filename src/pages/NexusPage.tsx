@@ -328,14 +328,22 @@ const NexusPage = () => {
         if (updateError) throw updateError;
       }
 
+      // Get current user's profile ID for reviewer field
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
       // Update the request status
       const { error: statusError } = await supabase
         .from('dnexus')
         .update({
           status: approve ? 'accepted' : 'rejected',
-          reviewer: user.id,
+          reviewer: profile?.id || user.id,
         })
-        .eq('id', selectedRequest.id);
+        .eq('id', selectedRequest.id)
+        .eq('destination', currentUserBarangay); // Add this condition to match RLS policy
 
       if (statusError) throw statusError;
 
