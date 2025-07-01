@@ -318,34 +318,43 @@ const NexusPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      console.log('Processing transfer request:', selectedRequest.id, 'Approve:', approve);
+      console.log('Current user barangay:', currentUserBarangay);
+      console.log('Request destination:', selectedRequest.destination);
+
       if (approve) {
         // Update the brgyid of the transferred data
+        console.log('Updating data brgyid for items:', selectedRequest.dataid);
         const { error: updateError } = await supabase
           .from(selectedRequest.datatype)
           .update({ brgyid: currentUserBarangay })
           .in('id', selectedRequest.dataid);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Error updating data brgyid:', updateError);
+          throw updateError;
+        }
+        console.log('Successfully updated data brgyid');
       }
 
-      // Get current user's profile ID for reviewer field
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-
-      // Update the request status
+      // Update the request status with proper conditions
+      console.log('Updating request status to:', approve ? 'accepted' : 'rejected');
       const { error: statusError } = await supabase
         .from('dnexus')
         .update({
           status: approve ? 'accepted' : 'rejected',
-          reviewer: profile?.id || user.id,
+          reviewer: user.id, // Set the reviewer to current user
         })
         .eq('id', selectedRequest.id)
-        .eq('destination', currentUserBarangay); // Add this condition to match RLS policy
+        .eq('destination', currentUserBarangay) // Ensure we can only update requests for our barangay
+        .eq('status', 'pending'); // Additional safety check
 
-      if (statusError) throw statusError;
+      if (statusError) {
+        console.error('Error updating request status:', statusError);
+        throw statusError;
+      }
+
+      console.log('Successfully updated request status');
 
       toast({
         title: approve ? 'Transfer Approved' : 'Transfer Rejected',
@@ -361,7 +370,7 @@ const NexusPage = () => {
       console.error('Error processing request:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process transfer request',
+        description: 'Failed to process transfer request: ' + (error as Error).message,
         variant: 'destructive',
       });
     } finally {
