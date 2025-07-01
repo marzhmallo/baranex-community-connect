@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -267,13 +268,24 @@ const processGenderDistribution = (data: Array<{ gender: string }>, totalResiden
   
   // Count each gender
   data.forEach(resident => {
-    const gender = resident.gender || 'Unknown';
+    let gender = resident.gender || 'Unknown';
+    // Normalize gender values
+    gender = gender.toLowerCase();
+    if (gender === 'male' || gender === 'm') {
+      gender = 'Male';
+    } else if (gender === 'female' || gender === 'f') {
+      gender = 'Female';
+    } else if (gender === 'other' || gender === 'o') {
+      gender = 'Other';
+    } else {
+      gender = 'Unknown';
+    }
     genderCount[gender] = (genderCount[gender] || 0) + 1;
   });
 
   // Convert to array format with percentages
   return Object.entries(genderCount).map(([gender, count]) => ({
-    gender: gender.charAt(0).toUpperCase() + gender.slice(1),
+    gender,
     count,
     percentage: totalResidents > 0 ? Math.round((count / totalResidents) * 100) : 0
   }));

@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'react-router-dom';
 import { FileText, Users, Home, ChevronRight, UserX, MapPin } from 'lucide-react';
 import { useDashboardData } from "@/hooks/useDashboardData";
+
 const DashboardCharts = () => {
   const {
     totalResidents,
@@ -19,37 +20,40 @@ const DashboardCharts = () => {
   } = useDashboardData();
 
   // Recent activities - this could be enhanced to come from an activity log table
-  const recentActivities = [{
-    id: 1,
-    type: 'resident',
-    name: 'New Resident',
-    action: 'registered',
-    date: '2 hours ago'
-  }, {
-    id: 2,
-    type: 'document',
-    name: 'Barangay Clearance',
-    action: 'issued',
-    date: '5 hours ago'
-  }, {
-    id: 3,
-    type: 'household',
-    name: 'New Household',
-    action: 'registered',
-    date: '1 day ago'
-  }, {
-    id: 4,
-    type: 'resident',
-    name: 'Resident Info',
-    action: 'updated',
-    date: '2 days ago'
-  }];
+  const recentActivities = [
+    {
+      id: 1,
+      type: 'resident',
+      name: 'New Resident',
+      action: 'registered',
+      date: '2 hours ago'
+    }, {
+      id: 2,
+      type: 'document',
+      name: 'Barangay Clearance',
+      action: 'issued',
+      date: '5 hours ago'
+    }, {
+      id: 3,
+      type: 'household',
+      name: 'New Household',
+      action: 'registered',
+      date: '1 day ago'
+    }, {
+      id: 4,
+      type: 'resident',
+      name: 'Resident Info',
+      action: 'updated',
+      date: '2 days ago'
+    }
+  ];
+
   const formatGrowthRate = (rate: number) => {
     const sign = rate >= 0 ? '+' : '';
     return `${sign}${rate.toFixed(1)}%`;
   };
 
-  // Colors for pie chart
+  // Colors for pie chart - expanded to include more colors for gender diversity
   const pieColors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
   if (error) {
     return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -226,37 +230,54 @@ const DashboardCharts = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] pt-0">
-            {isLoading ? <div className="flex items-center justify-center h-full">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div> : genderDistribution.length > 0 ? <div className="space-y-4">
+              </div>
+            ) : genderDistribution.length > 0 ? (
+              <div className="space-y-4">
                 <ChartContainer config={{}} className="h-[200px] w-full">
                   <PieChart>
-                    <Pie data={genderDistribution} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="count" label={({
-                  gender,
-                  percentage
-                }) => `${gender}: ${percentage}%`}>
-                      {genderDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />)}
+                    <Pie 
+                      data={genderDistribution} 
+                      cx="50%" 
+                      cy="50%" 
+                      outerRadius={80} 
+                      fill="#8884d8" 
+                      dataKey="count" 
+                      label={({ gender, percentage }) => `${gender}: ${percentage}%`}
+                    >
+                      {genderDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                      ))}
                     </Pie>
                     <Tooltip formatter={(value, name) => [value, 'Count']} />
                   </PieChart>
                 </ChartContainer>
                 <div className="space-y-2">
-                  {genderDistribution.map((item, index) => <div key={item.gender} className="flex items-center justify-between text-sm">
+                  {genderDistribution.map((item, index) => (
+                    <div key={item.gender} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{
-                    backgroundColor: pieColors[index % pieColors.length]
-                  }} />
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: pieColors[index % pieColors.length] }} 
+                        />
                         <span>{item.gender}</span>
                       </div>
                       <span className="font-medium">{item.count} ({item.percentage}%)</span>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
-              </div> : <div className="flex items-center justify-center h-full text-muted-foreground">
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
                 No gender data available
-              </div>}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
     </div>;
 };
+
 export default DashboardCharts;
