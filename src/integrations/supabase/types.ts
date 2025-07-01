@@ -2091,6 +2091,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_data_transfer: {
+        Args: { transferid: string }
+        Returns: string
+      }
       airtable_fdw_handler: {
         Args: Record<PropertyKey, never>
         Returns: unknown

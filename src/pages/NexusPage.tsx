@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -323,38 +324,38 @@ const NexusPage = () => {
       console.log('Request destination:', selectedRequest.destination);
 
       if (approve) {
-        // Update the brgyid of the transferred data
-        console.log('Updating data brgyid for items:', selectedRequest.dataid);
-        const { error: updateError } = await supabase
-          .from(selectedRequest.datatype)
-          .update({ brgyid: currentUserBarangay })
-          .in('id', selectedRequest.dataid);
+        // Use the secure accept_data_transfer function
+        console.log('Calling accept_data_transfer function for request:', selectedRequest.id);
+        const { data, error: transferError } = await supabase.rpc('accept_data_transfer', {
+          transferid: selectedRequest.id
+        });
 
-        if (updateError) {
-          console.error('Error updating data brgyid:', updateError);
-          throw updateError;
+        if (transferError) {
+          console.error('Error calling accept_data_transfer:', transferError);
+          throw transferError;
         }
-        console.log('Successfully updated data brgyid');
+
+        console.log('Transfer function result:', data);
+      } else {
+        // For rejection, only update the status
+        console.log('Rejecting transfer request');
+        const { error: statusError } = await supabase
+          .from('dnexus')
+          .update({
+            status: 'rejected',
+            reviewer: user.id,
+          })
+          .eq('id', selectedRequest.id)
+          .eq('destination', currentUserBarangay)
+          .eq('status', 'pending');
+
+        if (statusError) {
+          console.error('Error updating request status:', statusError);
+          throw statusError;
+        }
+
+        console.log('Successfully rejected transfer request');
       }
-
-      // Update the request status with proper conditions
-      console.log('Updating request status to:', approve ? 'accepted' : 'rejected');
-      const { error: statusError } = await supabase
-        .from('dnexus')
-        .update({
-          status: approve ? 'accepted' : 'rejected',
-          reviewer: user.id, // Set the reviewer to current user
-        })
-        .eq('id', selectedRequest.id)
-        .eq('destination', currentUserBarangay) // Ensure we can only update requests for our barangay
-        .eq('status', 'pending'); // Additional safety check
-
-      if (statusError) {
-        console.error('Error updating request status:', statusError);
-        throw statusError;
-      }
-
-      console.log('Successfully updated request status');
 
       toast({
         title: approve ? 'Transfer Approved' : 'Transfer Rejected',
