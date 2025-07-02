@@ -121,7 +121,8 @@ const DisasterZonesManager = () => {
 
     const map = mapInstanceRef.current;
     
-    polygonDrawerRef.current = new L.Draw.Polygon(map, {
+    // Cast the map to any to avoid TypeScript issues with leaflet-draw
+    polygonDrawerRef.current = new L.Draw.Polygon(map as any, {
       allowIntersection: false,
       drawError: {
         color: '#b00b00',
