@@ -6,8 +6,15 @@ import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Save } from 'lucide-react';
-import { Loader } from '@googlemaps/js-api-loader';
-import GoogleMapsKeyInput from './GoogleMapsKeyInput';
+import L from 'leaflet';
+
+// Fix for default markers in Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 interface BarangayLocationMapProps {
   barangayName?: string;
@@ -15,14 +22,12 @@ interface BarangayLocationMapProps {
 
 const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [mapLoaded, setMapLoaded] = useState(false);
   const { userProfile } = useAuth();
 
   // Default location (Philippines center)
@@ -34,44 +39,22 @@ const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName 
   }, [userProfile?.brgyid]);
 
   useEffect(() => {
-    if (apiKey && !mapLoaded) {
-      loadGoogleMaps();
-    }
-  }, [apiKey, mapLoaded]);
-
-  const handleApiKeySet = (key: string) => {
-    setApiKey(key);
-  };
-
-  const loadGoogleMaps = async () => {
-    if (!apiKey) return;
-    
-    setIsLoading(true);
-    try {
-      const loader = new Loader({
-        apiKey: apiKey,
-        version: 'weekly',
-        libraries: ['places']
-      });
-
-      await loader.load();
-      setMapLoaded(true);
+    if (mapRef.current && !mapInstanceRef.current) {
       initializeMap();
-    } catch (error) {
-      console.error('Error loading Google Maps:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load Google Maps. Please check your API key.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
-  };
+    
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [currentLocation]);
 
   const fetchCurrentLocation = async () => {
     if (!userProfile?.brgyid) return;
 
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('barangays')
@@ -86,68 +69,88 @@ const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName 
       }
     } catch (error) {
       console.error('Error fetching current location:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const initializeMap = () => {
-    if (!mapRef.current || !window.google) return;
+    if (!mapRef.current) return;
 
     const mapCenter = currentLocation || defaultLocation;
 
-    const map = new google.maps.Map(mapRef.current, {
-      zoom: currentLocation ? 17 : 10,
-      center: mapCenter,
-      mapTypeId: google.maps.MapTypeId.ROADMAP,
-      streetViewControl: false,
-      mapTypeControl: true,
-      fullscreenControl: false,
-    });
+    // Create the map
+    const map = L.map(mapRef.current).setView(
+      [mapCenter.lat, mapCenter.lng], 
+      currentLocation ? 17 : 10
+    );
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
     mapInstanceRef.current = map;
 
-    // Create marker
-    const marker = new google.maps.Marker({
-      position: mapCenter,
-      map: map,
-      draggable: true,
-      title: `${barangayName || 'Barangay'} Hall Location`,
-      icon: {
-        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg fill="#ef4444" height="40" width="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
-        `),
-        scaledSize: new google.maps.Size(40, 40),
-        anchor: new google.maps.Point(20, 40),
-      }
+    // Create custom marker icon
+    const customIcon = L.divIcon({
+      html: `
+        <div style="
+          background-color: #ef4444;
+          width: 24px;
+          height: 24px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        ">
+          <div style="
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+          "></div>
+        </div>
+      `,
+      className: 'custom-div-icon',
+      iconSize: [24, 24],
+      iconAnchor: [12, 24],
     });
+
+    // Add marker
+    const marker = L.marker([mapCenter.lat, mapCenter.lng], { 
+      icon: customIcon,
+      draggable: true 
+    }).addTo(map);
 
     markerRef.current = marker;
 
-    // Add drag listener
-    marker.addListener('dragend', () => {
-      const newPosition = marker.getPosition();
-      if (newPosition) {
-        setCurrentLocation({
-          lat: newPosition.lat(),
-          lng: newPosition.lng()
-        });
-        setHasUnsavedChanges(true);
-      }
+    // Add drag event listener
+    marker.on('dragend', () => {
+      const newPosition = marker.getLatLng();
+      setCurrentLocation({
+        lat: newPosition.lat,
+        lng: newPosition.lng
+      });
+      setHasUnsavedChanges(true);
     });
 
-    // Add click listener to map
-    map.addListener('click', (event: google.maps.MapMouseEvent) => {
-      if (event.latLng) {
-        const newPosition = {
-          lat: event.latLng.lat(),
-          lng: event.latLng.lng()
-        };
-        marker.setPosition(event.latLng);
-        setCurrentLocation(newPosition);
-        setHasUnsavedChanges(true);
-      }
+    // Add click event listener to map
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      const newPosition = {
+        lat: e.latlng.lat,
+        lng: e.latlng.lng
+      };
+      marker.setLatLng(e.latlng);
+      setCurrentLocation(newPosition);
+      setHasUnsavedChanges(true);
     });
+
+    // Add popup to marker
+    marker.bindPopup(`${barangayName || 'Barangay'} Hall Location`).openPopup();
   };
 
   const saveLocation = async () => {
@@ -182,10 +185,6 @@ const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName 
       setIsSaving(false);
     }
   };
-
-  if (!apiKey) {
-    return <GoogleMapsKeyInput onApiKeySet={handleApiKeySet} />;
-  }
 
   if (isLoading) {
     return (
