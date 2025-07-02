@@ -92,8 +92,8 @@ const EvacuationCentersManager = () => {
       const drawnItems = L.featureGroup();
       map.addLayer(drawnItems);
 
-      // Fix the L.Draw.Marker instantiation
-      const drawControl = L.control.draw({
+      // Fix the L.Control.Draw instantiation
+      const drawControl = new L.Control.Draw({
         edit: {
           featureGroup: drawnItems,
           remove: true,
@@ -134,8 +134,6 @@ const EvacuationCentersManager = () => {
         console.log("Marker created at:", latlng);
       });
 
-      // You can add other map event handlers here if needed
-
       mapInstanceRef.current = map;
       drawnItemsRef.current = drawnItems;
       setMapInitialized(true);
@@ -169,16 +167,32 @@ const EvacuationCentersManager = () => {
     e.preventDefault();
     if (!userProfile?.brgyid) return;
 
+    // Validate required fields
+    if (!formData.name || !formData.address) {
+      toast({
+        title: "Error",
+        description: "Name and address are required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from("evacuation_centers")
-        .insert([
-          {
-            ...formData,
-            brgyid: userProfile.brgyid,
-          },
-        ]);
+        .insert({
+          name: formData.name,
+          address: formData.address,
+          capacity: formData.capacity || 0,
+          status: formData.status || 'available',
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          contact_person: formData.contact_person,
+          contact_phone: formData.contact_phone,
+          current_occupancy: formData.current_occupancy || 0,
+          brgyid: userProfile.brgyid,
+        });
 
       if (error) throw error;
 
