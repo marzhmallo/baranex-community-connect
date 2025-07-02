@@ -75,29 +75,41 @@ const UnifiedEmergencyMap = () => {
     }
   }, [userProfile?.brgyid]);
 
-  // Initialize map with proper container handling
+  // Initialize map with proper timing and error handling
   useEffect(() => {
     if (!mapRef.current || mapInitialized) return;
 
-    // Ensure the container has proper dimensions before initializing
     const container = mapRef.current;
-    if (container.offsetWidth === 0 || container.offsetHeight === 0) {
-      // Wait for container to have dimensions
-      const observer = new ResizeObserver(() => {
-        if (container.offsetWidth > 0 && container.offsetHeight > 0) {
-          observer.disconnect();
+    
+    // Add delay to ensure DOM is fully ready
+    const initWithDelay = () => {
+      setTimeout(() => {
+        if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+          // Use ResizeObserver as fallback
+          const observer = new ResizeObserver(() => {
+            if (container.offsetWidth > 0 && container.offsetHeight > 0) {
+              observer.disconnect();
+              initializeMap();
+            }
+          });
+          observer.observe(container);
+          return () => observer.disconnect();
+        } else {
           initializeMap();
         }
-      });
-      observer.observe(container);
-      return () => observer.disconnect();
-    } else {
-      initializeMap();
-    }
+      }, 100);
+    };
+
+    initWithDelay();
 
     function initializeMap() {
       try {
-        const map = L.map(mapRef.current!, {
+        console.log('Initializing map with container dimensions:', {
+          width: container.offsetWidth,
+          height: container.offsetHeight
+        });
+
+        const map = L.map(container, {
           center: [defaultLocation.lat, defaultLocation.lng],
           zoom: 6,
           zoomControl: true,
@@ -107,7 +119,8 @@ const UnifiedEmergencyMap = () => {
           keyboard: true,
           dragging: true,
           touchZoom: true,
-          attributionControl: true
+          attributionControl: true,
+          preferCanvas: false
         });
 
         // Add OpenStreetMap tiles
@@ -122,36 +135,21 @@ const UnifiedEmergencyMap = () => {
         const centersLayer = L.layerGroup().addTo(map);
         const routesLayer = L.layerGroup().addTo(map);
 
+        // Store references
         mapInstanceRef.current = map;
         zonesLayerRef.current = zonesLayer;
         centersLayerRef.current = centersLayer;
         routesLayerRef.current = routesLayer;
-        setMapInitialized(true);
-
-        console.log('Unified map initialized successfully');
         
-        // Handle map resize
-        const handleResize = () => {
-          setTimeout(() => {
-            if (mapInstanceRef.current) {
-              mapInstanceRef.current.invalidateSize(true);
-            }
-          }, 100);
-        };
-
-        window.addEventListener('resize', handleResize);
-        
-        return () => {
-          window.removeEventListener('resize', handleResize);
+        // Force resize after initialization
+        setTimeout(() => {
           if (mapInstanceRef.current) {
-            mapInstanceRef.current.remove();
-            mapInstanceRef.current = null;
-            zonesLayerRef.current = null;
-            centersLayerRef.current = null;
-            routesLayerRef.current = null;
-            setMapInitialized(false);
+            mapInstanceRef.current.invalidateSize(true);
           }
-        };
+        }, 200);
+
+        setMapInitialized(true);
+        console.log('Unified map initialized successfully with layers');
         
       } catch (error) {
         console.error('Error initializing unified map:', error);
@@ -162,7 +160,23 @@ const UnifiedEmergencyMap = () => {
         });
       }
     }
-  }, [mapRef.current, mapInitialized]);
+
+    // Cleanup function
+    return () => {
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
+          zonesLayerRef.current = null;
+          centersLayerRef.current = null;
+          routesLayerRef.current = null;
+          setMapInitialized(false);
+        } catch (error) {
+          console.error('Error cleaning up map:', error);
+        }
+      }
+    };
+  }, []);
 
   // Render map layers when data changes
   useEffect(() => {
