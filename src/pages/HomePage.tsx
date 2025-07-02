@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useAuth } from '@/components/AuthProvider';
+import { useData } from '@/context/DataContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
@@ -35,6 +36,7 @@ interface OfficialWithPosition {
 
 const HomePage = () => {
   const { userProfile } = useAuth();
+  const { residents, households, loading: dataLoading } = useData();
   const [barangayName, setBarangayName] = useState<string>('');
   const [currentDate, setCurrentDate] = useState('');
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
@@ -216,6 +218,22 @@ const HomePage = () => {
         return 'border-blue-200 dark:border-blue-800';
     }
   };
+
+  // Show loading state if data is still loading
+  if (dataLoading) {
+    return (
+      <div className="p-6 bg-background min-h-screen">
+        <div className="animate-pulse">
+          <div className="bg-gray-200 rounded-2xl h-32 mb-6"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-gray-200 rounded-lg h-64"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-background min-h-screen">
