@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,17 +12,67 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Settings, User, Shield, Bell, Eye, Bot } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useChatbotSettings } from '@/hooks/useChatbotSettings';
 
 const UserSettingsPage = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, loading } = useAuth();
   const { toast } = useToast();
-  const { chatbotSettings, updateChatbotEnabled, updateChatbotMode } = useChatbotSettings();
   
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Get chatbot settings from user profile, with fallback defaults
+  const chatbotEnabled = userProfile?.chatbot_enabled ?? true;
+  const chatbotMode = userProfile?.chatbot_mode ?? 'offline';
+
+  const updateChatbotEnabled = async (enabled: boolean) => {
+    if (!userProfile?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ chatbot_enabled: enabled })
+        .eq('id', userProfile.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Chatbot setting updated successfully"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update chatbot setting",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updateChatbotMode = async (mode: string) => {
+    if (!userProfile?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ chatbot_mode: mode })
+        .eq('id', userProfile.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Chatbot mode updated successfully"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update chatbot mode",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -97,18 +148,22 @@ const UserSettingsPage = () => {
                 <Label htmlFor="chatbot-enabled">Enable Chatbot</Label>
                 <p className="text-sm text-muted-foreground">Show or hide the floating chatbot button</p>
               </div>
-              <Switch 
-                id="chatbot-enabled" 
-                checked={chatbotSettings.enabled}
-                onCheckedChange={updateChatbotEnabled}
-              />
+              {loading ? (
+                <div className="w-11 h-6 bg-muted rounded-full animate-pulse" />
+              ) : (
+                <Switch 
+                  id="chatbot-enabled" 
+                  checked={chatbotEnabled}
+                  onCheckedChange={updateChatbotEnabled}
+                />
+              )}
             </div>
             
-            {chatbotSettings.enabled && (
+            {!loading && chatbotEnabled && (
               <div className="space-y-3 pt-2 border-t">
                 <Label>Chatbot Mode</Label>
                 <RadioGroup 
-                  value={chatbotSettings.mode} 
+                  value={chatbotMode} 
                   onValueChange={updateChatbotMode}
                   className="grid grid-cols-1 gap-3"
                 >
