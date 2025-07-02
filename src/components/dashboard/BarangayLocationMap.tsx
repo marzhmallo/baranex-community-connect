@@ -28,152 +28,74 @@ const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName 
   const [isSaving, setIsSaving] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [mapInitialized, setMapInitialized] = useState(false);
   const { userProfile } = useAuth();
 
   // Default location (Philippines center)
   const defaultLocation = { lat: 12.8797, lng: 121.7740 };
 
+  // Fetch current location from database
   useEffect(() => {
     if (!userProfile?.brgyid) return;
     fetchCurrentLocation();
   }, [userProfile?.brgyid]);
 
+  // Initialize map only once
   useEffect(() => {
-    // Initialize map when component mounts and mapRef is available
-    const initMap = () => {
-      if (!mapRef.current || mapInstanceRef.current) return;
+    if (!mapRef.current || mapInitialized) return;
 
-      try {
-        const mapCenter = currentLocation || defaultLocation;
-        
-        // Create the map with proper initialization
-        const map = L.map(mapRef.current, {
-          center: [mapCenter.lat, mapCenter.lng],
-          zoom: currentLocation ? 15 : 6,
-          zoomControl: true,
-          scrollWheelZoom: true,
-          doubleClickZoom: true,
-          boxZoom: true,
-          keyboard: true,
-          dragging: true,
-          touchZoom: true
-        });
+    try {
+      const mapCenter = currentLocation || defaultLocation;
+      
+      // Create the map with proper initialization
+      const map = L.map(mapRef.current, {
+        center: [mapCenter.lat, mapCenter.lng],
+        zoom: currentLocation ? 15 : 6,
+        zoomControl: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true,
+        keyboard: true,
+        dragging: true,
+        touchZoom: true
+      });
 
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19
-        }).addTo(map);
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
 
-        mapInstanceRef.current = map;
+      mapInstanceRef.current = map;
+      setMapInitialized(true);
 
-        // Create custom marker icon for barangay hall
-        const customIcon = L.divIcon({
-          html: `
-            <div style="
-              background-color: #ef4444;
-              width: 24px;
-              height: 24px;
-              border-radius: 50% 50% 50% 0;
-              transform: rotate(-45deg);
-              border: 2px solid white;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-              position: relative;
-            ">
-              <div style="
-                width: 8px;
-                height: 8px;
-                background-color: white;
-                border-radius: 50%;
-                position: absolute;
-                top: 4px;
-                left: 4px;
-              "></div>
-            </div>
-          `,
-          className: 'custom-div-icon',
-          iconSize: [24, 24],
-          iconAnchor: [12, 24],
-        });
+      // Add click event listener to map for placing/moving marker
+      map.on('click', (e: L.LeafletMouseEvent) => {
+        handleMapClick(e.latlng);
+      });
 
-        // Add marker if we have a current location
-        if (currentLocation) {
-          const marker = L.marker([currentLocation.lat, currentLocation.lng], { 
-            icon: customIcon,
-            draggable: true 
-          }).addTo(map);
-          
-          markerRef.current = marker;
-          
-          // Add drag event listener
-          marker.on('dragend', () => {
-            const newPosition = marker.getLatLng();
-            setCurrentLocation({
-              lat: newPosition.lat,
-              lng: newPosition.lng
-            });
-            setHasUnsavedChanges(true);
-          });
-
-          // Add popup to marker
-          marker.bindPopup(`${barangayName || 'Barangay'} Hall Location`);
-        }
-
-        // Add click event listener to map for placing/moving marker
-        map.on('click', (e: L.LeafletMouseEvent) => {
-          const newPosition = {
-            lat: e.latlng.lat,
-            lng: e.latlng.lng
-          };
-
-          // Remove existing marker if any
-          if (markerRef.current) {
-            map.removeLayer(markerRef.current);
-          }
-
-          // Create new marker at clicked position
-          const marker = L.marker([e.latlng.lat, e.latlng.lng], { 
-            icon: customIcon,
-            draggable: true 
-          }).addTo(map);
-          
-          markerRef.current = marker;
-          setCurrentLocation(newPosition);
-          setHasUnsavedChanges(true);
-
-          // Add drag event listener to new marker
-          marker.on('dragend', () => {
-            const draggedPosition = marker.getLatLng();
-            setCurrentLocation({
-              lat: draggedPosition.lat,
-              lng: draggedPosition.lng
-            });
-            setHasUnsavedChanges(true);
-          });
-
-          // Add popup to marker
-          marker.bindPopup(`${barangayName || 'Barangay'} Hall Location`).openPopup();
-        });
-
-        console.log('Map initialized successfully');
-        
-      } catch (error) {
-        console.error('Error initializing map:', error);
-      }
-    };
-
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(initMap, 100);
+      console.log('Map initialized successfully');
+      
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
 
     return () => {
-      clearTimeout(timer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
         markerRef.current = null;
+        setMapInitialized(false);
       }
     };
-  }, [currentLocation, barangayName]);
+  }, [mapRef.current]); // Only depend on mapRef.current, not currentLocation
+
+  // Update marker when currentLocation changes (but don't reinitialize map)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapInitialized) return;
+
+    updateMarker();
+  }, [currentLocation, mapInitialized]);
 
   const fetchCurrentLocation = async () => {
     if (!userProfile?.brgyid) return;
@@ -196,6 +118,81 @@ const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName 
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const createCustomIcon = () => {
+    return L.divIcon({
+      html: `
+        <div style="
+          background-color: #ef4444;
+          width: 24px;
+          height: 24px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          position: relative;
+        ">
+          <div style="
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+          "></div>
+        </div>
+      `,
+      className: 'custom-div-icon',
+      iconSize: [24, 24],
+      iconAnchor: [12, 24],
+    });
+  };
+
+  const updateMarker = () => {
+    if (!mapInstanceRef.current || !currentLocation) return;
+
+    // Remove existing marker if any
+    if (markerRef.current) {
+      mapInstanceRef.current.removeLayer(markerRef.current);
+    }
+
+    // Create new marker at current location
+    const marker = L.marker([currentLocation.lat, currentLocation.lng], { 
+      icon: createCustomIcon(),
+      draggable: true 
+    }).addTo(mapInstanceRef.current);
+    
+    markerRef.current = marker;
+
+    // Add drag event listener
+    marker.on('dragend', () => {
+      const newPosition = marker.getLatLng();
+      setCurrentLocation({
+        lat: newPosition.lat,
+        lng: newPosition.lng
+      });
+      setHasUnsavedChanges(true);
+    });
+
+    // Add popup to marker
+    marker.bindPopup(`${barangayName || 'Barangay'} Hall Location`);
+
+    // Center map on marker if it's the first time
+    if (mapInstanceRef.current.getZoom() === 6) {
+      mapInstanceRef.current.setView([currentLocation.lat, currentLocation.lng], 15);
+    }
+  };
+
+  const handleMapClick = (latlng: L.LatLng) => {
+    const newPosition = {
+      lat: latlng.lat,
+      lng: latlng.lng
+    };
+
+    setCurrentLocation(newPosition);
+    setHasUnsavedChanges(true);
   };
 
   const saveLocation = async () => {
