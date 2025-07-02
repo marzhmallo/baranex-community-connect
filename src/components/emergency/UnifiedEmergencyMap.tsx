@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,50 +74,60 @@ const UnifiedEmergencyMap = () => {
     }
   }, [userProfile?.brgyid]);
 
-  // Initialize map
+  // Initialize map with proper size handling
   useEffect(() => {
     if (!mapRef.current || mapInitialized) return;
 
-    try {
-      const map = L.map(mapRef.current, {
-        center: [defaultLocation.lat, defaultLocation.lng],
-        zoom: 6,
-        zoomControl: true,
-        scrollWheelZoom: true,
-        doubleClickZoom: true,
-        boxZoom: true,
-        keyboard: true,
-        dragging: true,
-        touchZoom: true
-      });
+    // Use setTimeout to ensure DOM is fully rendered
+    const initTimer = setTimeout(() => {
+      try {
+        const map = L.map(mapRef.current!, {
+          center: [defaultLocation.lat, defaultLocation.lng],
+          zoom: 6,
+          zoomControl: true,
+          scrollWheelZoom: true,
+          doubleClickZoom: true,
+          boxZoom: true,
+          keyboard: true,
+          dragging: true,
+          touchZoom: true
+        });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        }).addTo(map);
 
-      // Initialize layer groups
-      const zonesLayer = L.layerGroup();
-      const centersLayer = L.layerGroup();
-      const routesLayer = L.layerGroup();
+        // Initialize layer groups
+        const zonesLayer = L.layerGroup();
+        const centersLayer = L.layerGroup();
+        const routesLayer = L.layerGroup();
 
-      map.addLayer(zonesLayer);
-      map.addLayer(centersLayer);
-      map.addLayer(routesLayer);
+        map.addLayer(zonesLayer);
+        map.addLayer(centersLayer);
+        map.addLayer(routesLayer);
 
-      mapInstanceRef.current = map;
-      zonesLayerRef.current = zonesLayer;
-      centersLayerRef.current = centersLayer;
-      routesLayerRef.current = routesLayer;
-      setMapInitialized(true);
+        mapInstanceRef.current = map;
+        zonesLayerRef.current = zonesLayer;
+        centersLayerRef.current = centersLayer;
+        routesLayerRef.current = routesLayer;
+        setMapInitialized(true);
 
-      console.log('Unified map initialized successfully');
-      
-    } catch (error) {
-      console.error('Error initializing unified map:', error);
-    }
+        // Force map size invalidation after initialization
+        setTimeout(() => {
+          map.invalidateSize(true);
+          console.log('Map size invalidated after initialization');
+        }, 100);
+
+        console.log('Unified map initialized successfully');
+        
+      } catch (error) {
+        console.error('Error initializing unified map:', error);
+      }
+    }, 100);
 
     return () => {
+      clearTimeout(initTimer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -130,12 +139,46 @@ const UnifiedEmergencyMap = () => {
     };
   }, [mapRef.current]);
 
-  // Update map layers when data changes
+  // Force map resize when data changes and map is ready
   useEffect(() => {
-    if (mapInitialized) {
-      renderAllMapLayers();
+    if (mapInitialized && mapInstanceRef.current) {
+      // Small delay to ensure rendering is complete
+      const resizeTimer = setTimeout(() => {
+        mapInstanceRef.current!.invalidateSize(true);
+        renderAllMapLayers();
+        console.log('Map resized and layers rendered');
+      }, 150);
+
+      return () => clearTimeout(resizeTimer);
     }
   }, [disasterZones, evacuationCenters, evacuationRoutes, mapInitialized, showZones, showCenters, showRoutes]);
+
+  // Force resize on window resize or visibility change
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapInstanceRef.current) {
+        setTimeout(() => {
+          mapInstanceRef.current!.invalidateSize(true);
+        }, 100);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && mapInstanceRef.current) {
+        setTimeout(() => {
+          mapInstanceRef.current!.invalidateSize(true);
+        }, 200);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   const fetchAllData = async () => {
     try {
@@ -493,6 +536,7 @@ const UnifiedEmergencyMap = () => {
             <div 
               ref={mapRef} 
               className="w-full h-full bg-gray-100"
+              style={{ minHeight: '400px' }}
             />
           </main>
         </div>
