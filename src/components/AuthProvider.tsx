@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +22,8 @@ interface UserProfile {
   online?: boolean;
   last_login?: string;
   profile_picture?: string;
+  chatbot_enabled?: boolean;
+  chatbot_mode?: string;
 }
 
 interface AuthContextType {
