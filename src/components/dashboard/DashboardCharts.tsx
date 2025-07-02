@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -8,9 +7,24 @@ import { Link } from 'react-router-dom';
 import { FileText, Users, Home, ChevronRight, UserX, MapPin } from 'lucide-react';
 import { useData } from "@/context/DataContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from 'react';
+
+interface ActivityLog {
+  id: string;
+  action: string;
+  details: any;
+  created_at: string;
+  user_id: string;
+}
 
 const DashboardCharts = () => {
   const { residents, households, loading: dataLoading } = useData();
+  const { userProfile } = useAuth();
+  const [recentActivities, setRecentActivities] = useState<ActivityLog[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+  
   const {
     monthlyResidents,
     genderDistribution,
@@ -25,34 +39,64 @@ const DashboardCharts = () => {
   const totalResidents = residents.length;
   const isLoading = dataLoading || dashboardLoading;
 
-  // Recent activities - this could be enhanced to come from an activity log table
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'resident',
-      name: 'New Resident',
-      action: 'registered',
-      date: '2 hours ago'
-    }, {
-      id: 2,
-      type: 'document',
-      name: 'Barangay Clearance',
-      action: 'issued',
-      date: '5 hours ago'
-    }, {
-      id: 3,
-      type: 'household',
-      name: 'New Household',
-      action: 'registered',
-      date: '1 day ago'
-    }, {
-      id: 4,
-      type: 'resident',
-      name: 'Resident Info',
-      action: 'updated',
-      date: '2 days ago'
+  // Fetch recent activities from activity_logs table
+  useEffect(() => {
+    const fetchRecentActivities = async () => {
+      if (!userProfile?.brgyid) return;
+      
+      try {
+        setActivitiesLoading(true);
+        const { data, error } = await supabase
+          .from('activity_logs')
+          .select('*')
+          .eq('brgyid', userProfile.brgyid)
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        if (error) {
+          console.error('Error fetching activity logs:', error);
+          return;
+        }
+
+        setRecentActivities(data || []);
+      } catch (err) {
+        console.error('Error in fetchRecentActivities:', err);
+      } finally {
+        setActivitiesLoading(false);
+      }
+    };
+
+    fetchRecentActivities();
+  }, [userProfile?.brgyid]);
+
+  // Helper function to get icon based on action type
+  const getActivityIcon = (action: string) => {
+    if (action.toLowerCase().includes('resident')) {
+      return <Users className="h-4 w-4 text-primary" />;
+    } else if (action.toLowerCase().includes('document')) {
+      return <FileText className="h-4 w-4 text-primary" />;
+    } else if (action.toLowerCase().includes('household')) {
+      return <Home className="h-4 w-4 text-primary" />;
+    } else {
+      return <FileText className="h-4 w-4 text-primary" />;
     }
-  ];
+  };
+
+  // Helper function to format time ago
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      return 'Just now';
+    } else if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    }
+  };
 
   const formatGrowthRate = (rate: number) => {
     const sign = rate >= 0 ? '+' : '';
@@ -203,24 +247,34 @@ const DashboardCharts = () => {
           </CardHeader>
           <CardContent className="px-2">
             <div className="space-y-4">
-              {recentActivities.map(activity => <div key={activity.id} className="flex items-start gap-3 p-2 hover:bg-muted/50 rounded-md transition-colors">
-                  <div className="rounded-full bg-primary/10 p-2 mt-1">
-                    {activity.type === 'resident' && <Users className="h-4 w-4 text-primary" />}
-                    {activity.type === 'document' && <FileText className="h-4 w-4 text-primary" />}
-                    {activity.type === 'household' && <Home className="h-4 w-4 text-primary" />}
+              {activitiesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                </div>
+              ) : recentActivities.length > 0 ? (
+                recentActivities.map(activity => (
+                  <div key={activity.id} className="flex items-start gap-3 p-2 hover:bg-muted/50 rounded-md transition-colors">
+                    <div className="rounded-full bg-primary/10 p-2 mt-1">
+                      {getActivityIcon(activity.action)}
+                    </div>
+                    <div className="space-y-1 flex-1">
+                      <p className="text-sm font-medium leading-none">
+                        {activity.action}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {activity.details?.description || 'System activity'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatTimeAgo(activity.created_at)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-1 flex-1">
-                    <p className="text-sm font-medium leading-none">
-                      {activity.name} 
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {activity.action}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {activity.date}
-                    </p>
-                  </div>
-                </div>)}
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  No recent activity found
+                </p>
+              )}
 
               <Link to="/residents" className="flex items-center justify-center text-sm text-primary hover:underline mt-2 py-2">
                 View all residents
