@@ -31,7 +31,7 @@ const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName 
   const { userProfile } = useAuth();
 
   // Default location (Philippines center)
-  const defaultLocation = { lat: 14.5995, lng: 120.9842 };
+  const defaultLocation = { lat: 12.8797, lng: 121.7740 };
 
   useEffect(() => {
     if (!userProfile?.brgyid) return;
@@ -39,17 +39,141 @@ const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName 
   }, [userProfile?.brgyid]);
 
   useEffect(() => {
-    if (mapRef.current && !mapInstanceRef.current) {
-      initializeMap();
-    }
-    
+    // Initialize map when component mounts and mapRef is available
+    const initMap = () => {
+      if (!mapRef.current || mapInstanceRef.current) return;
+
+      try {
+        const mapCenter = currentLocation || defaultLocation;
+        
+        // Create the map with proper initialization
+        const map = L.map(mapRef.current, {
+          center: [mapCenter.lat, mapCenter.lng],
+          zoom: currentLocation ? 15 : 6,
+          zoomControl: true,
+          scrollWheelZoom: true,
+          doubleClickZoom: true,
+          boxZoom: true,
+          keyboard: true,
+          dragging: true,
+          touchZoom: true
+        });
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        }).addTo(map);
+
+        mapInstanceRef.current = map;
+
+        // Create custom marker icon for barangay hall
+        const customIcon = L.divIcon({
+          html: `
+            <div style="
+              background-color: #ef4444;
+              width: 24px;
+              height: 24px;
+              border-radius: 50% 50% 50% 0;
+              transform: rotate(-45deg);
+              border: 2px solid white;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              position: relative;
+            ">
+              <div style="
+                width: 8px;
+                height: 8px;
+                background-color: white;
+                border-radius: 50%;
+                position: absolute;
+                top: 4px;
+                left: 4px;
+              "></div>
+            </div>
+          `,
+          className: 'custom-div-icon',
+          iconSize: [24, 24],
+          iconAnchor: [12, 24],
+        });
+
+        // Add marker if we have a current location
+        if (currentLocation) {
+          const marker = L.marker([currentLocation.lat, currentLocation.lng], { 
+            icon: customIcon,
+            draggable: true 
+          }).addTo(map);
+          
+          markerRef.current = marker;
+          
+          // Add drag event listener
+          marker.on('dragend', () => {
+            const newPosition = marker.getLatLng();
+            setCurrentLocation({
+              lat: newPosition.lat,
+              lng: newPosition.lng
+            });
+            setHasUnsavedChanges(true);
+          });
+
+          // Add popup to marker
+          marker.bindPopup(`${barangayName || 'Barangay'} Hall Location`);
+        }
+
+        // Add click event listener to map for placing/moving marker
+        map.on('click', (e: L.LeafletMouseEvent) => {
+          const newPosition = {
+            lat: e.latlng.lat,
+            lng: e.latlng.lng
+          };
+
+          // Remove existing marker if any
+          if (markerRef.current) {
+            map.removeLayer(markerRef.current);
+          }
+
+          // Create new marker at clicked position
+          const marker = L.marker([e.latlng.lat, e.latlng.lng], { 
+            icon: customIcon,
+            draggable: true 
+          }).addTo(map);
+          
+          markerRef.current = marker;
+          setCurrentLocation(newPosition);
+          setHasUnsavedChanges(true);
+
+          // Add drag event listener to new marker
+          marker.on('dragend', () => {
+            const draggedPosition = marker.getLatLng();
+            setCurrentLocation({
+              lat: draggedPosition.lat,
+              lng: draggedPosition.lng
+            });
+            setHasUnsavedChanges(true);
+          });
+
+          // Add popup to marker
+          marker.bindPopup(`${barangayName || 'Barangay'} Hall Location`).openPopup();
+        });
+
+        console.log('Map initialized successfully');
+        
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
+    };
+
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(initMap, 100);
+
     return () => {
+      clearTimeout(timer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        markerRef.current = null;
       }
     };
-  }, [currentLocation]);
+  }, [currentLocation, barangayName]);
 
   const fetchCurrentLocation = async () => {
     if (!userProfile?.brgyid) return;
@@ -72,85 +196,6 @@ const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName 
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const initializeMap = () => {
-    if (!mapRef.current) return;
-
-    const mapCenter = currentLocation || defaultLocation;
-
-    // Create the map
-    const map = L.map(mapRef.current).setView(
-      [mapCenter.lat, mapCenter.lng], 
-      currentLocation ? 17 : 10
-    );
-
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    mapInstanceRef.current = map;
-
-    // Create custom marker icon
-    const customIcon = L.divIcon({
-      html: `
-        <div style="
-          background-color: #ef4444;
-          width: 24px;
-          height: 24px;
-          border-radius: 50% 50% 50% 0;
-          transform: rotate(-45deg);
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        ">
-          <div style="
-            width: 8px;
-            height: 8px;
-            background-color: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 4px;
-            left: 4px;
-          "></div>
-        </div>
-      `,
-      className: 'custom-div-icon',
-      iconSize: [24, 24],
-      iconAnchor: [12, 24],
-    });
-
-    // Add marker
-    const marker = L.marker([mapCenter.lat, mapCenter.lng], { 
-      icon: customIcon,
-      draggable: true 
-    }).addTo(map);
-
-    markerRef.current = marker;
-
-    // Add drag event listener
-    marker.on('dragend', () => {
-      const newPosition = marker.getLatLng();
-      setCurrentLocation({
-        lat: newPosition.lat,
-        lng: newPosition.lng
-      });
-      setHasUnsavedChanges(true);
-    });
-
-    // Add click event listener to map
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      const newPosition = {
-        lat: e.latlng.lat,
-        lng: e.latlng.lng
-      };
-      marker.setLatLng(e.latlng);
-      setCurrentLocation(newPosition);
-      setHasUnsavedChanges(true);
-    });
-
-    // Add popup to marker
-    marker.bindPopup(`${barangayName || 'Barangay'} Hall Location`).openPopup();
   };
 
   const saveLocation = async () => {
@@ -231,7 +276,8 @@ const BarangayLocationMap: React.FC<BarangayLocationMapProps> = ({ barangayName 
       <CardContent>
         <div 
           ref={mapRef} 
-          className="w-full h-[400px] rounded-lg border border-border"
+          className="w-full h-[400px] rounded-lg border border-border bg-gray-100"
+          style={{ minHeight: '400px' }}
         />
         {currentLocation && (
           <div className="mt-3 text-sm text-muted-foreground">
