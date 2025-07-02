@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,12 +6,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/components/AuthProvider";
-import AddressAutoFillSetting from "@/components/settings/AddressAutoFillSetting";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const SettingsPage = () => {
-  const { userProfile, loading } = useAuth();
+  const { userProfile, userSettings, loading, refreshSettings } = useAuth();
   const { toast } = useToast();
   
   const [notifications, setNotifications] = useState({
@@ -56,6 +56,8 @@ const SettingsPage = () => {
 
       if (error) throw error;
 
+      await refreshSettings();
+
       toast({
         title: "Success",
         description: "Chatbot setting updated successfully"
@@ -88,6 +90,8 @@ const SettingsPage = () => {
 
       if (error) throw error;
 
+      await refreshSettings();
+
       toast({
         title: "Success",
         description: "Chatbot mode updated successfully"
@@ -102,6 +106,40 @@ const SettingsPage = () => {
     }
   };
 
+  const updateAddressAutoFill = async (enabled: boolean) => {
+    if (!userProfile?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert(
+          {
+            userid: userProfile.id,
+            key: 'auto_fill_address_from_admin_barangay',
+            value: enabled.toString(),
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'userid,key' }
+        );
+
+      if (error) throw error;
+
+      await refreshSettings();
+
+      toast({
+        title: "Setting updated",
+        description: `Address auto-fill has been ${enabled ? 'enabled' : 'disabled'}.`,
+      });
+    } catch (error) {
+      console.error('Error updating address auto-fill setting:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update setting. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 px-4">
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
@@ -109,9 +147,30 @@ const SettingsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-8">
           {/* Address Auto-Fill Settings */}
-          <div className="mb-6">
-            <AddressAutoFillSetting />
-          </div>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Address Auto-Fill</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="auto-fill-address">Auto-fill address fields</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically populate address fields based on admin's barangay when adding residents and households. When enabled, address fields become read-only for security.
+                  </p>
+                </div>
+                {loading ? (
+                  <div className="w-11 h-6 bg-muted rounded-full animate-pulse" />
+                ) : (
+                  <Switch 
+                    id="auto-fill-address" 
+                    checked={userSettings?.auto_fill_address_from_admin_barangay ?? true}
+                    onCheckedChange={updateAddressAutoFill}
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Chatbot Settings */}
           <Card className="mb-6">
@@ -130,17 +189,17 @@ const SettingsPage = () => {
                 ) : (
                   <Switch 
                     id="chatbot-enabled" 
-                    checked={userProfile?.chatbot_enabled ?? true}
+                    checked={userSettings?.chatbot_enabled ?? true}
                     onCheckedChange={updateChatbotEnabled}
                   />
                 )}
               </div>
               
-              {!loading && (userProfile?.chatbot_enabled ?? true) && (
+              {!loading && (userSettings?.chatbot_enabled ?? true) && (
                 <div className="space-y-3 pt-2 border-t">
                   <Label>Chatbot Mode</Label>
                   <RadioGroup 
-                    value={userProfile?.chatbot_mode ?? 'offline'} 
+                    value={userSettings?.chatbot_mode ?? 'offline'} 
                     onValueChange={updateChatbotMode}
                     className="grid grid-cols-2 gap-4"
                   >

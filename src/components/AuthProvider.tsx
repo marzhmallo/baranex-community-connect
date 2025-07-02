@@ -26,26 +26,37 @@ interface UserProfile {
   chatbot_mode?: string;
 }
 
+interface UserSettings {
+  chatbot_enabled: boolean;
+  chatbot_mode: string;
+  auto_fill_address_from_admin_barangay: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   userProfile: UserProfile | null;
+  userSettings: UserSettings | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshSettings: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   userProfile: null,
+  userSettings: null,
   loading: true,
   signOut: async () => {},
+  refreshSettings: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasHandledInitialAuth, setHasHandledInitialAuth] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(!document.hidden);
@@ -75,6 +86,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (err) {
       console.error('Error in updateUserOnlineStatus:', err);
+    }
+  };
+
+  // Fetch user settings from settings table
+  const fetchUserSettings = async (userId: string) => {
+    try {
+      const { data: settings, error } = await supabase
+        .from('settings')
+        .select('key, value')
+        .eq('userid', userId)
+        .in('key', ['chatbot_enabled', 'chatbot_mode', 'auto_fill_address_from_admin_barangay']);
+
+      if (error) {
+        console.error('Error loading settings:', error);
+        // Set defaults on error
+        setUserSettings({
+          chatbot_enabled: true,
+          chatbot_mode: 'offline',
+          auto_fill_address_from_admin_barangay: true,
+        });
+        return;
+      }
+
+      // Process settings data
+      const settingsMap = settings.reduce((acc, setting) => {
+        acc[setting.key] = setting.value;
+        return acc;
+      }, {} as Record<string, string>);
+
+      setUserSettings({
+        chatbot_enabled: settingsMap.chatbot_enabled === 'true' || settingsMap.chatbot_enabled === undefined,
+        chatbot_mode: settingsMap.chatbot_mode || 'offline',
+        auto_fill_address_from_admin_barangay: settingsMap.auto_fill_address_from_admin_barangay === 'true' || settingsMap.auto_fill_address_from_admin_barangay === undefined,
+      });
+    } catch (error) {
+      console.error('Error in fetchUserSettings:', error);
+      // Set defaults on error
+      setUserSettings({
+        chatbot_enabled: true,
+        chatbot_mode: 'offline',
+        auto_fill_address_from_admin_barangay: true,
+      });
+    }
+  };
+
+  const refreshSettings = async () => {
+    if (user?.id) {
+      await fetchUserSettings(user.id);
     }
   };
 
@@ -114,6 +173,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Set user to ONLINE when successfully fetching profile (login)
         await updateUserOnlineStatus(userId, true);
         setUserProfile(profileData as UserProfile);
+        
+        // Fetch user settings after profile is loaded
+        await fetchUserSettings(userId);
         
         if (profileData.brgyid) {
           fetchBarangayData(profileData.brgyid);
@@ -173,6 +235,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setUserSettings(null);
       setHasHandledInitialAuth(false);
       
       // Update user to OFFLINE status if we have a user ID
@@ -206,6 +269,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setUserSettings(null);
       setHasHandledInitialAuth(false);
       
       // Force clear storage
@@ -270,6 +334,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setSession(null);
         setUserProfile(null);
+        setUserSettings(null);
         setHasHandledInitialAuth(false);
         setLoading(false);
         return;
@@ -381,7 +446,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [location.pathname, isPageVisible]); // Include dependencies for proper tracking
 
   return (
-    <AuthContext.Provider value={{ user, session, userProfile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, userProfile, userSettings, loading, signOut, refreshSettings }}>
       {!loading && children}
     </AuthContext.Provider>
   );
