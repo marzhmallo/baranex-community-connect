@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Phone, MapPin, Users, AlertTriangle, Navigation, Shield } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import BarangayLocationMap from "@/components/dashboard/BarangayLocationMap";
+import UnifiedEmergencyMap from "./UnifiedEmergencyMap";
 
 interface DashboardStats {
   emergencyContacts: number;
@@ -184,8 +184,8 @@ const EmergencyDashboard = () => {
         </Card>
       </div>
 
-      {/* Emergency Map */}
-      <BarangayLocationMap barangayName="Emergency" />
+      {/* Unified Emergency Map */}
+      <UnifiedEmergencyMap />
 
       {/* Quick Emergency Contacts */}
       <Card>
@@ -262,11 +262,9 @@ const EmergencyDashboard = () => {
               <AlertTriangle className="h-4 w-4 mr-2" />
               Send Emergency Alert
             </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <a href="/riskmap">
-                <MapPin className="h-4 w-4 mr-2" />
-                View Risk Map
-              </a>
+            <Button variant="outline" className="w-full justify-start">
+              <MapPin className="h-4 w-4 mr-2" />
+              View Risk Map
             </Button>
             <Button variant="outline" className="w-full justify-start">
               <Navigation className="h-4 w-4 mr-2" />
