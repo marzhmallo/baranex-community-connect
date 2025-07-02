@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -34,92 +35,67 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
   const mapInstanceRef = useRef<L.Map | null>(null);
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [mapInitialized, setMapInitialized] = useState(false);
 
-  // Initialize map when dialog opens
+  // Default location (Philippines center)
+  const defaultLocation = { lat: 12.8797, lng: 121.7740 };
+
+  // Initialize map only once when dialog opens
   useEffect(() => {
-    if (!open) {
-      // Cleanup when dialog closes
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        drawnItemsRef.current = null;
-      }
-      return;
-    }
-
-    // Initialize map when dialog opens
-    if (open && mapRef.current && !mapInstanceRef.current) {
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        initializeMap();
-      }, 200);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [open]);
-
-  // Load existing zone polygon when zone changes
-  useEffect(() => {
-    if (mapInstanceRef.current && zone && zone.polygon_coords) {
-      loadExistingPolygon();
-    }
-  }, [zone, mapInstanceRef.current]);
-
-  const initializeMap = () => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    if (!mapRef.current || mapInitialized || !open) return;
 
     try {
-      console.log('Initializing map...');
+      const mapCenter = defaultLocation;
       
-      // Create map with proper center and zoom
-      const map = L.map(mapRef.current).setView([12.8797, 121.7740], 6);
+      // Create the map with proper initialization
+      const map = L.map(mapRef.current, {
+        center: [mapCenter.lat, mapCenter.lng],
+        zoom: 6,
+        zoomControl: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true,
+        keyboard: true,
+        dragging: true,
+        touchZoom: true
+      });
 
-      // Add tile layer with error handling
-      const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
-      });
-
-      tileLayer.on('loading', () => {
-        console.log('Tiles loading...');
-      });
-
-      tileLayer.on('load', () => {
-        console.log('Tiles loaded successfully');
-      });
-
-      tileLayer.on('tileerror', (e) => {
-        console.error('Tile loading error:', e);
-      });
-
-      tileLayer.addTo(map);
+      }).addTo(map);
 
       // Initialize feature group for drawn items
       const drawnItems = new L.FeatureGroup();
       map.addLayer(drawnItems);
 
-      // Store references
       mapInstanceRef.current = map;
       drawnItemsRef.current = drawnItems;
-
-      // Force map to invalidate size after initialization
-      setTimeout(() => {
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.invalidateSize();
-          console.log('Map size invalidated');
-        }
-      }, 300);
+      setMapInitialized(true);
 
       console.log('Map initialized successfully');
+      
     } catch (error) {
       console.error('Error initializing map:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initialize map",
-        variant: "destructive",
-      });
     }
-  };
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        drawnItemsRef.current = null;
+        setMapInitialized(false);
+      }
+    };
+  }, [open]); // Only depend on open state
+
+  // Load existing zone polygon when zone changes
+  useEffect(() => {
+    if (mapInstanceRef.current && zone && zone.polygon_coords && mapInitialized) {
+      loadExistingPolygon();
+    }
+  }, [zone, mapInitialized]);
 
   const loadExistingPolygon = () => {
     if (!mapInstanceRef.current || !drawnItemsRef.current || !zone?.polygon_coords) return;
@@ -282,13 +258,8 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
           {/* Map Container */}
           <div 
             ref={mapRef} 
-            className="flex-1 w-full rounded-lg border border-gray-300"
-            style={{ 
-              minHeight: '400px', 
-              height: 'calc(100% - 80px)',
-              position: 'relative',
-              zIndex: 1
-            }}
+            className="flex-1 w-full rounded-lg border border-border bg-gray-100"
+            style={{ minHeight: '400px' }}
           />
 
           {/* Instructions */}
