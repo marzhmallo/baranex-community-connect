@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,12 +75,27 @@ const UnifiedEmergencyMap = () => {
     }
   }, [userProfile?.brgyid]);
 
-  // Initialize map with proper size handling
+  // Initialize map with proper container handling
   useEffect(() => {
     if (!mapRef.current || mapInitialized) return;
 
-    // Use setTimeout to ensure DOM is fully rendered
-    const initTimer = setTimeout(() => {
+    // Ensure the container has proper dimensions before initializing
+    const container = mapRef.current;
+    if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+      // Wait for container to have dimensions
+      const observer = new ResizeObserver(() => {
+        if (container.offsetWidth > 0 && container.offsetHeight > 0) {
+          observer.disconnect();
+          initializeMap();
+        }
+      });
+      observer.observe(container);
+      return () => observer.disconnect();
+    } else {
+      initializeMap();
+    }
+
+    function initializeMap() {
       try {
         const map = L.map(mapRef.current!, {
           center: [defaultLocation.lat, defaultLocation.lng],
@@ -90,22 +106,21 @@ const UnifiedEmergencyMap = () => {
           boxZoom: true,
           keyboard: true,
           dragging: true,
-          touchZoom: true
+          touchZoom: true,
+          attributionControl: true
         });
 
+        // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19
+          maxZoom: 19,
+          minZoom: 1
         }).addTo(map);
 
         // Initialize layer groups
-        const zonesLayer = L.layerGroup();
-        const centersLayer = L.layerGroup();
-        const routesLayer = L.layerGroup();
-
-        map.addLayer(zonesLayer);
-        map.addLayer(centersLayer);
-        map.addLayer(routesLayer);
+        const zonesLayer = L.layerGroup().addTo(map);
+        const centersLayer = L.layerGroup().addTo(map);
+        const routesLayer = L.layerGroup().addTo(map);
 
         mapInstanceRef.current = map;
         zonesLayerRef.current = zonesLayer;
@@ -113,43 +128,46 @@ const UnifiedEmergencyMap = () => {
         routesLayerRef.current = routesLayer;
         setMapInitialized(true);
 
-        // Force map size invalidation after initialization
-        setTimeout(() => {
-          map.invalidateSize(true);
-          console.log('Map size invalidated after initialization');
-        }, 100);
-
         console.log('Unified map initialized successfully');
+        
+        // Handle map resize
+        const handleResize = () => {
+          setTimeout(() => {
+            if (mapInstanceRef.current) {
+              mapInstanceRef.current.invalidateSize(true);
+            }
+          }, 100);
+        };
+
+        window.addEventListener('resize', handleResize);
+        
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.remove();
+            mapInstanceRef.current = null;
+            zonesLayerRef.current = null;
+            centersLayerRef.current = null;
+            routesLayerRef.current = null;
+            setMapInitialized(false);
+          }
+        };
         
       } catch (error) {
         console.error('Error initializing unified map:', error);
+        toast({
+          title: "Map Error",
+          description: "Failed to initialize map. Please refresh the page.",
+          variant: "destructive",
+        });
       }
-    }, 100);
+    }
+  }, [mapRef.current, mapInitialized]);
 
-    return () => {
-      clearTimeout(initTimer);
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        zonesLayerRef.current = null;
-        centersLayerRef.current = null;
-        routesLayerRef.current = null;
-        setMapInitialized(false);
-      }
-    };
-  }, [mapRef.current]);
-
-  // Force map resize when data changes and map is ready
+  // Render map layers when data changes
   useEffect(() => {
     if (mapInitialized && mapInstanceRef.current) {
-      // Small delay to ensure rendering is complete
-      const resizeTimer = setTimeout(() => {
-        mapInstanceRef.current!.invalidateSize(true);
-        renderAllMapLayers();
-        console.log('Map resized and layers rendered');
-      }, 150);
-
-      return () => clearTimeout(resizeTimer);
+      renderAllMapLayers();
     }
   }, [disasterZones, evacuationCenters, evacuationRoutes, mapInitialized, showZones, showCenters, showRoutes]);
 
@@ -238,12 +256,19 @@ const UnifiedEmergencyMap = () => {
         if (zone.polygon_coords) {
           try {
             const color = zone.risk_level === 'high' ? 'red' : zone.risk_level === 'medium' ? 'orange' : 'yellow';
-            const polygon = L.polygon(zone.polygon_coords, { color, fillColor: color, fillOpacity: 0.3 });
+            const polygon = L.polygon(zone.polygon_coords, { 
+              color, 
+              fillColor: color, 
+              fillOpacity: 0.3,
+              weight: 2
+            });
             polygon.bindPopup(`
-              <strong>${zone.zone_name}</strong><br>
-              Type: ${zone.zone_type}<br>
-              Risk Level: ${zone.risk_level}<br>
-              ${zone.notes ? `Notes: ${zone.notes}` : ''}
+              <div class="p-2">
+                <strong>${zone.zone_name}</strong><br>
+                <span class="text-sm">Type: ${zone.zone_type}</span><br>
+                <span class="text-sm">Risk Level: ${zone.risk_level}</span><br>
+                ${zone.notes ? `<span class="text-sm">Notes: ${zone.notes}</span>` : ''}
+              </div>
             `);
             zonesLayerRef.current!.addLayer(polygon);
           } catch (error) {
@@ -259,11 +284,13 @@ const UnifiedEmergencyMap = () => {
         if (center.latitude && center.longitude) {
           const marker = L.marker([center.latitude, center.longitude]);
           marker.bindPopup(`
-            <strong>${center.name}</strong><br>
-            Address: ${center.address}<br>
-            Capacity: ${center.capacity}<br>
-            Status: ${center.status}<br>
-            ${center.contact_person ? `Contact: ${center.contact_person}` : ''}
+            <div class="p-2">
+              <strong>${center.name}</strong><br>
+              <span class="text-sm">Address: ${center.address}</span><br>
+              <span class="text-sm">Capacity: ${center.capacity}</span><br>
+              <span class="text-sm">Status: ${center.status}</span><br>
+              ${center.contact_person ? `<span class="text-sm">Contact: ${center.contact_person}</span>` : ''}
+            </div>
           `);
           centersLayerRef.current!.addLayer(marker);
         }
@@ -275,11 +302,17 @@ const UnifiedEmergencyMap = () => {
       evacuationRoutes.forEach(route => {
         if (route.route_coords) {
           try {
-            const polyline = L.polyline(route.route_coords, { color: 'blue', weight: 4 });
+            const polyline = L.polyline(route.route_coords, { 
+              color: 'blue', 
+              weight: 4,
+              opacity: 0.7
+            });
             polyline.bindPopup(`
-              <strong>${route.route_name}</strong><br>
-              ${route.distance_km ? `Distance: ${route.distance_km} km` : ''}<br>
-              ${route.estimated_time_minutes ? `Est. Time: ${route.estimated_time_minutes} min` : ''}
+              <div class="p-2">
+                <strong>${route.route_name}</strong><br>
+                ${route.distance_km ? `<span class="text-sm">Distance: ${route.distance_km} km</span><br>` : ''}
+                ${route.estimated_time_minutes ? `<span class="text-sm">Est. Time: ${route.estimated_time_minutes} min</span>` : ''}
+              </div>
             `);
             routesLayerRef.current!.addLayer(polyline);
           } catch (error) {
@@ -289,7 +322,7 @@ const UnifiedEmergencyMap = () => {
       });
     }
 
-    // Fit map to show all layers
+    // Fit map to show all layers if any exist
     const allLayers = [
       ...zonesLayerRef.current.getLayers(),
       ...centersLayerRef.current.getLayers(),
@@ -297,9 +330,12 @@ const UnifiedEmergencyMap = () => {
     ];
 
     if (allLayers.length > 0) {
-      const group = L.featureGroup(allLayers);
       try {
-        mapInstanceRef.current.fitBounds(group.getBounds(), { padding: [20, 20] });
+        const group = L.featureGroup(allLayers);
+        mapInstanceRef.current.fitBounds(group.getBounds(), { 
+          padding: [20, 20],
+          maxZoom: 15
+        });
       } catch (error) {
         console.error('Error fitting bounds:', error);
       }
@@ -535,9 +571,21 @@ const UnifiedEmergencyMap = () => {
           <main className="flex-1 relative">
             <div 
               ref={mapRef} 
-              className="w-full h-full bg-gray-100"
-              style={{ minHeight: '400px' }}
+              className="w-full h-full"
+              style={{ 
+                minHeight: '400px',
+                minWidth: '300px',
+                backgroundColor: '#f3f4f6'
+              }}
             />
+            {!mapInitialized && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">Loading map...</p>
+                </div>
+              </div>
+            )}
           </main>
         </div>
       </CardContent>
