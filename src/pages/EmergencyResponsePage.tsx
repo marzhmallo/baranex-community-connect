@@ -63,7 +63,7 @@ const EmergencyResponsePage = () => {
         <TabsContent value="zones" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Disaster Zones</CardTitle>
+              <CardTitle>Disaster Risk Zones</CardTitle>
               <CardDescription>
                 Map and manage hazard-prone areas in your barangay
               </CardDescription>

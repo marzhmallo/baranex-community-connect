@@ -1,29 +1,18 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
-import { Plus, MapPin, Edit, Trash2, AlertTriangle, Save, X } from "lucide-react";
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
-import 'leaflet-draw';
-
-// Fix for default markers
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import { Plus, MapPin, Edit, Trash2, AlertTriangle } from "lucide-react";
 
 interface DisasterZone {
   id: string;
@@ -46,15 +35,8 @@ const DisasterZonesManager = () => {
   const { userProfile } = useAuth();
   const [zones, setZones] = useState<DisasterZone[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedZone, setSelectedZone] = useState<DisasterZone | null>(null);
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
-  const currentPolygonRef = useRef<L.Polygon | null>(null);
-  const polygonDrawerRef = useRef<L.Draw.Polygon | null>(null);
-  const [mapInitialized, setMapInitialized] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingZone, setEditingZone] = useState<DisasterZone | null>(null);
 
   const form = useForm<ZoneFormData>({
     defaultValues: {
@@ -65,120 +47,11 @@ const DisasterZonesManager = () => {
     },
   });
 
-  // Default location (Philippines center)
-  const defaultLocation = { lat: 12.8797, lng: 121.7740 };
-
   useEffect(() => {
     if (userProfile?.brgyid) {
       fetchZones();
     }
   }, [userProfile?.brgyid]);
-
-  // Initialize map only once
-  useEffect(() => {
-    if (!mapRef.current || mapInitialized) return;
-
-    try {
-      // Create the map with proper initialization
-      const map = L.map(mapRef.current, {
-        center: [defaultLocation.lat, defaultLocation.lng],
-        zoom: 6,
-        zoomControl: true,
-        scrollWheelZoom: true,
-        doubleClickZoom: true,
-        boxZoom: true,
-        keyboard: true,
-        dragging: true,
-        touchZoom: true
-      });
-
-      // Add OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      }).addTo(map);
-
-      const drawnItems = new L.FeatureGroup();
-      map.addLayer(drawnItems);
-
-      mapInstanceRef.current = map;
-      drawnItemsRef.current = drawnItems;
-      setMapInitialized(true);
-
-      // Add click event listener to map for placing/moving marker
-      map.on('click', (e: L.LeafletMouseEvent) => {
-        if (isAddingNew || isEditing) {
-          handleMapClick(e.latlng);
-        }
-      });
-
-      // Handle polygon drawing
-      map.on(L.Draw.Event.CREATED, (e: any) => {
-        const layer = e.layer;
-        if (currentPolygonRef.current) {
-          drawnItems.removeLayer(currentPolygonRef.current);
-        }
-        drawnItems.addLayer(layer);
-        currentPolygonRef.current = layer;
-      });
-
-      console.log('Map initialized successfully');
-      
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        drawnItemsRef.current = null;
-        currentPolygonRef.current = null;
-        setMapInitialized(false);
-      }
-    };
-  }, [mapRef.current]);
-
-  // Update zones on map when zones change
-  useEffect(() => {
-    if (mapInitialized && zones.length > 0) {
-      loadZonesOnMap(zones);
-    }
-  }, [zones, mapInitialized]);
-
-  const enableDrawingMode = () => {
-    if (!mapInstanceRef.current || !drawnItemsRef.current) return;
-
-    const map = mapInstanceRef.current;
-    
-    // Cast the map to any to avoid TypeScript issues with leaflet-draw
-    polygonDrawerRef.current = new L.Draw.Polygon(map as any, {
-      allowIntersection: false,
-      drawError: {
-        color: '#b00b00',
-        timeout: 1000
-      },
-      shapeOptions: {
-        color: '#97009c'
-      }
-    });
-    
-    polygonDrawerRef.current.enable();
-  };
-
-  const disableDrawingMode = () => {
-    if (polygonDrawerRef.current) {
-      polygonDrawerRef.current.disable();
-      polygonDrawerRef.current = null;
-    }
-  };
-
-  const handleMapClick = (latlng: L.LatLng) => {
-    if (!isAddingNew && !isEditing) return;
-    
-    // For now, just log the click - the drawing will be handled by leaflet-draw
-    console.log('Map clicked at:', latlng);
-  };
 
   const fetchZones = async () => {
     try {
@@ -191,7 +64,6 @@ const DisasterZonesManager = () => {
 
       if (error) throw error;
       setZones(data || []);
-      
     } catch (error) {
       console.error('Error fetching disaster zones:', error);
       toast({
@@ -204,74 +76,23 @@ const DisasterZonesManager = () => {
     }
   };
 
-  const loadZonesOnMap = (zonesToLoad: DisasterZone[]) => {
-    if (!mapInstanceRef.current || !drawnItemsRef.current) return;
-
-    const drawnItems = drawnItemsRef.current;
-    drawnItems.clearLayers();
-
-    zonesToLoad.forEach(zone => {
-      if (zone.polygon_coords && zone.polygon_coords.coordinates) {
-        try {
-          const coordinates = zone.polygon_coords.coordinates[0];
-          const latlngs = coordinates.map((coord: number[]) => [coord[1], coord[0]]);
-          
-          const polygon = L.polygon(latlngs, {
-            color: getRiskColor(zone.risk_level),
-            fillColor: getRiskColor(zone.risk_level),
-            fillOpacity: 0.3
-          });
-          
-          polygon.bindPopup(`
-            <strong>${zone.zone_name}</strong><br>
-            Type: ${zone.zone_type}<br>
-            Risk: ${zone.risk_level}
-          `);
-          
-          drawnItems.addLayer(polygon);
-        } catch (error) {
-          console.error('Error loading zone polygon:', error);
-        }
-      }
-    });
-  };
-
-  const focusOnZone = (zone: DisasterZone) => {
-    if (!mapInstanceRef.current || !zone.polygon_coords) return;
-
-    try {
-      const coordinates = zone.polygon_coords.coordinates[0];
-      const latlngs = coordinates.map((coord: number[]) => [coord[1], coord[0]]);
-      const bounds = L.latLngBounds(latlngs);
-      mapInstanceRef.current.fitBounds(bounds, { padding: [20, 20] });
-    } catch (error) {
-      console.error('Error focusing on zone:', error);
-    }
-  };
-
   const onSubmit = async (data: ZoneFormData) => {
     if (!userProfile?.id || !userProfile?.brgyid || !data.zone_type) return;
-    if (!currentPolygonRef.current) {
-      toast({
-        title: "Error",
-        description: "Please draw a zone on the map",
-        variant: "destructive",
-      });
-      return;
-    }
 
     try {
-      const polygon = currentPolygonRef.current;
-      const latlngs = polygon.getLatLngs()[0] as L.LatLng[];
-      const coordinates = latlngs.map(latlng => [latlng.lng, latlng.lat]);
-      coordinates.push(coordinates[0]); // Close the polygon
-      
-      const polygonGeoJSON = {
+      // For now, create a simple polygon placeholder
+      const defaultPolygon = {
         type: "Polygon",
-        coordinates: [coordinates]
+        coordinates: [[
+          [121.0244, 14.5995], // Manila coordinates as example
+          [121.0344, 14.5995],
+          [121.0344, 14.6095],
+          [121.0244, 14.6095],
+          [121.0244, 14.5995]
+        ]]
       };
 
-      if (isEditing && selectedZone) {
+      if (editingZone) {
         const { error } = await supabase
           .from('disaster_zones')
           .update({
@@ -279,9 +100,8 @@ const DisasterZonesManager = () => {
             zone_type: data.zone_type as 'flood' | 'fire' | 'landslide' | 'earthquake' | 'typhoon' | 'other',
             notes: data.notes || null,
             risk_level: data.risk_level,
-            polygon_coords: polygonGeoJSON,
           })
-          .eq('id', selectedZone.id);
+          .eq('id', editingZone.id);
 
         if (error) throw error;
         toast({ title: "Success", description: "Disaster zone updated successfully" });
@@ -291,7 +111,7 @@ const DisasterZonesManager = () => {
           .insert({
             zone_name: data.zone_name,
             zone_type: data.zone_type as 'flood' | 'fire' | 'landslide' | 'earthquake' | 'typhoon' | 'other',
-            polygon_coords: polygonGeoJSON,
+            polygon_coords: defaultPolygon,
             notes: data.notes || null,
             risk_level: data.risk_level,
             brgyid: userProfile.brgyid,
@@ -302,7 +122,9 @@ const DisasterZonesManager = () => {
         toast({ title: "Success", description: "Disaster zone added successfully" });
       }
 
-      cancelAddEdit();
+      form.reset();
+      setIsDialogOpen(false);
+      setEditingZone(null);
       fetchZones();
     } catch (error) {
       console.error('Error saving disaster zone:', error);
@@ -325,7 +147,6 @@ const DisasterZonesManager = () => {
 
       if (error) throw error;
       toast({ title: "Success", description: "Disaster zone deleted successfully" });
-      setSelectedZone(null);
       fetchZones();
     } catch (error) {
       console.error('Error deleting disaster zone:', error);
@@ -337,47 +158,21 @@ const DisasterZonesManager = () => {
     }
   };
 
-  const startAddNew = () => {
-    setIsAddingNew(true);
-    setIsEditing(false);
-    setSelectedZone(null);
-    form.reset();
-    enableDrawingMode();
-  };
-
-  const startEdit = (zone: DisasterZone) => {
-    setIsEditing(true);
-    setIsAddingNew(false);
-    setSelectedZone(zone);
+  const openEditDialog = (zone: DisasterZone) => {
+    setEditingZone(zone);
     form.reset({
       zone_name: zone.zone_name,
       zone_type: zone.zone_type,
       notes: zone.notes || "",
       risk_level: zone.risk_level,
     });
-    enableDrawingMode();
-    focusOnZone(zone);
+    setIsDialogOpen(true);
   };
 
-  const cancelAddEdit = () => {
-    setIsAddingNew(false);
-    setIsEditing(false);
-    setSelectedZone(null);
+  const openAddDialog = () => {
+    setEditingZone(null);
     form.reset();
-    disableDrawingMode();
-    
-    if (currentPolygonRef.current && drawnItemsRef.current) {
-      drawnItemsRef.current.removeLayer(currentPolygonRef.current);
-      currentPolygonRef.current = null;
-    }
-    
-    fetchZones(); // Reload zones on map
-  };
-
-  const handleZoneClick = (zone: DisasterZone) => {
-    if (isAddingNew || isEditing) return;
-    setSelectedZone(zone);
-    focusOnZone(zone);
+    setIsDialogOpen(true);
   };
 
   const getTypeIcon = (type: string) => {
@@ -392,15 +187,6 @@ const DisasterZonesManager = () => {
   };
 
   const getRiskColor = (level: string) => {
-    switch (level) {
-      case 'low': return '#22c55e';
-      case 'medium': return '#f59e0b';
-      case 'high': return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
-
-  const getRiskBadgeVariant = (level: string) => {
     switch (level) {
       case 'low': return 'default';
       case 'medium': return 'secondary';
@@ -418,221 +204,187 @@ const DisasterZonesManager = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-200px)] overflow-hidden">
-      {/* Left Panel - Zone List or Form */}
-      <aside className="w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-semibold">
-              {isAddingNew ? 'Add New Zone' : isEditing ? 'Edit Zone' : `Disaster Zones (${zones.length})`}
-            </h3>
-          </div>
-          {!isAddingNew && !isEditing && (
-            <Button onClick={startAddNew} size="sm" className="w-full">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Disaster Risk Zones ({zones.length})</h3>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openAddDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Zone
+              Add Risk Zone
             </Button>
-          )}
-        </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>
+                {editingZone ? 'Edit Disaster Zone' : 'Add Disaster Zone'}
+              </DialogTitle>
+              <DialogDescription>
+                {editingZone ? 'Update the disaster zone information.' : 'Add a new disaster risk zone for your barangay.'}
+              </DialogDescription>
+            </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
-          {isAddingNew || isEditing ? (
-            // Form Panel
-            <div className="p-4 space-y-4 overflow-y-auto h-full">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="zone_name"
-                    rules={{ required: "Zone name is required" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Zone Name</FormLabel>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="zone_name"
+                  rules={{ required: "Zone name is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Zone Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Creek Side Area" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="zone_type"
+                  rules={{ required: "Zone type is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Disaster Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <Input placeholder="e.g., Creek Side Area" {...field} />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select disaster type" />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <SelectContent>
+                          <SelectItem value="flood">🌊 Flood Zone</SelectItem>
+                          <SelectItem value="fire">🔥 Fire Hazard</SelectItem>
+                          <SelectItem value="landslide">⛰️ Landslide Risk</SelectItem>
+                          <SelectItem value="earthquake">🌍 Earthquake Fault</SelectItem>
+                          <SelectItem value="typhoon">🌀 Typhoon Path</SelectItem>
+                          <SelectItem value="other">⚠️ Other Hazard</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="zone_type"
-                    rules={{ required: "Zone type is required" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Disaster Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select disaster type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="flood">🌊 Flood Zone</SelectItem>
-                            <SelectItem value="fire">🔥 Fire Hazard</SelectItem>
-                            <SelectItem value="landslide">⛰️ Landslide Risk</SelectItem>
-                            <SelectItem value="earthquake">🌍 Earthquake Fault</SelectItem>
-                            <SelectItem value="typhoon">🌀 Typhoon Path</SelectItem>
-                            <SelectItem value="other">⚠️ Other Hazard</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="risk_level"
-                    rules={{ required: "Risk level is required" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Risk Level</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="low">Low Risk</SelectItem>
-                            <SelectItem value="medium">Medium Risk</SelectItem>
-                            <SelectItem value="high">High Risk</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notes (Optional)</FormLabel>
+                <FormField
+                  control={form.control}
+                  name="risk_level"
+                  rules={{ required: "Risk level is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Risk Level</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Additional information about this risk zone"
-                            className="min-h-[80px]"
-                            {...field} 
-                          />
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <SelectContent>
+                          <SelectItem value="low">Low Risk</SelectItem>
+                          <SelectItem value="medium">Medium Risk</SelectItem>
+                          <SelectItem value="high">High Risk</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <div className="flex gap-2 pt-4">
-                    <Button type="submit" className="flex-1">
-                      <Save className="h-4 w-4 mr-2" />
-                      {isEditing ? 'Update' : 'Save'}
-                    </Button>
-                    <Button type="button" variant="outline" onClick={cancelAddEdit}>
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-              
-              <div className="text-sm text-muted-foreground mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="font-medium mb-1">Drawing Instructions:</p>
-                <p>Click on the map to start drawing points for the disaster zone boundary. Click the first point again to complete the polygon.</p>
-              </div>
-            </div>
-          ) : (
-            // Zone List Panel
-            <div className="overflow-y-auto h-full">
-              {zones.length > 0 ? (
-                zones.map((zone) => (
-                  <div 
-                    key={zone.id} 
-                    className={`p-4 border-b cursor-pointer hover:bg-gray-100 transition-colors ${
-                      selectedZone?.id === zone.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                    }`}
-                    onClick={() => handleZoneClick(zone)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{getTypeIcon(zone.zone_type)}</span>
-                        <Badge variant={getRiskBadgeVariant(zone.risk_level) as any}>
-                          {zone.risk_level}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            startEdit(zone);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteZone(zone.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <h4 className="font-medium text-sm mb-1">{zone.zone_name}</h4>
-                    <p className="text-xs text-muted-foreground capitalize mb-2">
-                      {zone.zone_type.replace('_', ' ')} zone
-                    </p>
-                    {zone.notes && (
-                      <p className="text-xs text-muted-foreground">{zone.notes}</p>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center">
-                  <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Risk Zones Mapped</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start by identifying and mapping disaster-prone areas in your barangay.
-                  </p>
-                  <Button onClick={startAddNew}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add First Zone
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Additional information about this risk zone"
+                          className="min-h-[80px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
                   </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </aside>
+                  <Button type="submit">
+                    {editingZone ? 'Update Zone' : 'Add Zone'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-      {/* Right Panel - Map */}
-      <main className="flex-1 relative">
-        <div className="h-full bg-gray-100">
-          <div 
-            ref={mapRef} 
-            className="w-full h-full rounded-lg border border-border bg-gray-100"
-            style={{ minHeight: '400px' }}
-          />
-          
-          {/* Instructions overlay */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-lg text-center text-sm text-gray-700 z-[1000]">
-            {isAddingNew || isEditing ? (
-              <p>Drawing mode active - Click to draw zone boundaries</p>
-            ) : selectedZone ? (
-              <p>Viewing: <strong>{selectedZone.zone_name}</strong></p>
-            ) : (
-              <p>Select a zone from the list or click "Add Zone" to start</p>
-            )}
-          </div>
+      {zones.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {zones.map((zone) => (
+            <Card key={zone.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getTypeIcon(zone.zone_type)}</span>
+                    <Badge variant={getRiskColor(zone.risk_level) as any}>
+                      {zone.risk_level} risk
+                    </Badge>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEditDialog(zone)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteZone(zone.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <CardTitle className="text-lg">{zone.zone_name}</CardTitle>
+                <CardDescription className="capitalize">
+                  {zone.zone_type.replace('_', ' ')} zone
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {zone.notes && (
+                  <p className="text-sm text-muted-foreground">{zone.notes}</p>
+                )}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="h-3 w-3" />
+                  <span>Click to view on map (coming soon)</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </main>
+      ) : (
+        <Card>
+          <CardContent className="text-center py-8">
+            <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Risk Zones Mapped</h3>
+            <p className="text-muted-foreground mb-4">
+              Start by identifying and mapping disaster-prone areas in your barangay.
+            </p>
+            <Button onClick={openAddDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add First Zone
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

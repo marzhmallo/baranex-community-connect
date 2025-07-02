@@ -1,43 +1,60 @@
-
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import "leaflet-draw/dist/leaflet.draw.css";
-import "leaflet-draw"; // Import leaflet-draw plugin
+import { Plus, Users, Edit, Trash2, Phone, MapPin } from "lucide-react";
 
 interface EvacuationCenter {
   id: string;
   name: string;
   address: string;
   capacity: number;
-  status: string;
-  latitude?: number;
-  longitude?: number;
+  current_occupancy: number;
+  status: 'available' | 'full' | 'closed' | 'maintenance';
   contact_person?: string;
   contact_phone?: string;
-  current_occupancy?: number;
+  facilities?: string[];
+  notes?: string;
+  created_at: string;
+}
+
+interface CenterFormData {
+  name: string;
+  address: string;
+  capacity: number;
+  contact_person?: string;
+  contact_phone?: string;
+  facilities?: string;
+  notes?: string;
 }
 
 const EvacuationCentersManager = () => {
   const { userProfile } = useAuth();
   const [centers, setCenters] = useState<EvacuationCenter[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mapInitialized, setMapInitialized] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState<Partial<EvacuationCenter>>({});
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingCenter, setEditingCenter] = useState<EvacuationCenter | null>(null);
 
-  // Default location (Philippines center)
-  const defaultLocation = { lat: 12.8797, lng: 121.7740 };
+  const form = useForm<CenterFormData>({
+    defaultValues: {
+      name: "",
+      address: "",
+      capacity: 0,
+      contact_person: "",
+      contact_phone: "",
+      facilities: "",
+      notes: "",
+    },
+  });
 
   useEffect(() => {
     if (userProfile?.brgyid) {
@@ -49,14 +66,15 @@ const EvacuationCentersManager = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from("evacuation_centers")
-        .select("*")
-        .eq("brgyid", userProfile?.brgyid);
+        .from('evacuation_centers')
+        .select('*')
+        .eq('brgyid', userProfile?.brgyid)
+        .order('name', { ascending: true });
 
       if (error) throw error;
       setCenters(data || []);
     } catch (error) {
-      console.error("Error fetching evacuation centers:", error);
+      console.error('Error fetching evacuation centers:', error);
       toast({
         title: "Error",
         description: "Failed to load evacuation centers",
@@ -67,156 +85,151 @@ const EvacuationCentersManager = () => {
     }
   };
 
-  // Initialize map with proper error handling
-  useEffect(() => {
-    if (!mapRef.current || mapInitialized) return;
-
-    try {
-      const map = L.map(mapRef.current, {
-        center: [defaultLocation.lat, defaultLocation.lng],
-        zoom: 6,
-        zoomControl: true,
-        scrollWheelZoom: true,
-        doubleClickZoom: true,
-        boxZoom: true,
-        keyboard: true,
-        dragging: true,
-        touchZoom: true,
-      });
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(map);
-
-      const drawnItems = L.featureGroup();
-      map.addLayer(drawnItems);
-
-      // Fix the L.Control.Draw instantiation
-      const drawControl = new L.Control.Draw({
-        edit: {
-          featureGroup: drawnItems,
-          remove: true,
-        },
-        draw: {
-          polygon: false,
-          polyline: false,
-          rectangle: false,
-          circle: false,
-          circlemarker: false,
-          marker: {
-            icon: L.divIcon({
-              className:
-                "bg-green-500 rounded-full w-6 h-6 flex items-center justify-center",
-              html: '<div class="w-3 h-3 bg-white rounded-full"></div>',
-              iconSize: [24, 24],
-              iconAnchor: [12, 12],
-            }),
-          },
-        },
-      });
-
-      map.addControl(drawControl);
-
-      map.on(L.Draw.Event.CREATED, (event: any) => {
-        const layer = event.layer;
-        const latlng = layer.getLatLng();
-
-        // Set temporary coordinates for the form
-        setFormData((prev) => ({
-          ...prev,
-          latitude: latlng.lat,
-          longitude: latlng.lng,
-        }));
-
-        drawnItems.addLayer(layer);
-        setShowForm(true);
-        console.log("Marker created at:", latlng);
-      });
-
-      mapInstanceRef.current = map;
-      drawnItemsRef.current = drawnItems;
-      setMapInitialized(true);
-
-      console.log("Evacuation centers map initialized successfully");
-    } catch (error) {
-      console.error("Error initializing evacuation centers map:", error);
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        drawnItemsRef.current = null;
-        setMapInitialized(false);
-      }
-    };
-  }, [mapRef.current]);
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "capacity" || name === "current_occupancy" ? Number(value) : value,
-    }));
-  };
-
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: CenterFormData) => {
     if (!userProfile?.brgyid) return;
 
-    // Validate required fields
-    if (!formData.address) {
+    try {
+      const facilitiesArray = data.facilities 
+        ? data.facilities.split(',').map(f => f.trim()).filter(f => f.length > 0)
+        : [];
+
+      if (editingCenter) {
+        const { error } = await supabase
+          .from('evacuation_centers')
+          .update({
+            name: data.name,
+            address: data.address,
+            capacity: data.capacity,
+            contact_person: data.contact_person || null,
+            contact_phone: data.contact_phone || null,
+            facilities: facilitiesArray,
+            notes: data.notes || null,
+          })
+          .eq('id', editingCenter.id);
+
+        if (error) throw error;
+        toast({ title: "Success", description: "Evacuation center updated successfully" });
+      } else {
+        const { error } = await supabase
+          .from('evacuation_centers')
+          .insert({
+            name: data.name,
+            address: data.address,
+            capacity: data.capacity,
+            contact_person: data.contact_person || null,
+            contact_phone: data.contact_phone || null,
+            facilities: facilitiesArray,
+            notes: data.notes || null,
+            brgyid: userProfile.brgyid,
+          });
+
+        if (error) throw error;
+        toast({ title: "Success", description: "Evacuation center added successfully" });
+      }
+
+      form.reset();
+      setIsDialogOpen(false);
+      setEditingCenter(null);
+      fetchCenters();
+    } catch (error) {
+      console.error('Error saving evacuation center:', error);
       toast({
         title: "Error",
-        description: "Address is required",
+        description: "Failed to save evacuation center",
         variant: "destructive",
       });
-      return;
     }
+  };
 
+  const updateCenterStatus = async (id: string, status: 'available' | 'full' | 'closed' | 'maintenance') => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("evacuation_centers")
-        .insert({
-          name: formData.name,
-          address: formData.address,
-          capacity: formData.capacity || 0,
-          status: (formData.status as "available" | "full" | "closed" | "maintenance") || 'available',
-          latitude: formData.latitude,
-          longitude: formData.longitude,
-          contact_person: formData.contact_person,
-          contact_phone: formData.contact_phone,
-          current_occupancy: formData.current_occupancy || 0,
-          brgyid: userProfile.brgyid,
-        });
+      const { error } = await supabase
+        .from('evacuation_centers')
+        .update({ status })
+        .eq('id', id);
 
       if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Evacuation center added successfully",
-      });
-
-      setShowForm(false);
-      setFormData({});
+      toast({ title: "Success", description: "Center status updated" });
       fetchCenters();
-      if (drawnItemsRef.current) {
-        drawnItemsRef.current.clearLayers();
-      }
     } catch (error) {
-      console.error("Error adding evacuation center:", error);
+      console.error('Error updating status:', error);
       toast({
         title: "Error",
-        description: "Failed to add evacuation center",
+        description: "Failed to update center status",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const deleteCenter = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this evacuation center?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('evacuation_centers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast({ title: "Success", description: "Evacuation center deleted successfully" });
+      fetchCenters();
+    } catch (error) {
+      console.error('Error deleting evacuation center:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete evacuation center",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openEditDialog = (center: EvacuationCenter) => {
+    setEditingCenter(center);
+    form.reset({
+      name: center.name,
+      address: center.address,
+      capacity: center.capacity,
+      contact_person: center.contact_person || "",
+      contact_phone: center.contact_phone || "",
+      facilities: center.facilities?.join(', ') || "",
+      notes: center.notes || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const openAddDialog = () => {
+    setEditingCenter(null);
+    form.reset();
+    setIsDialogOpen(true);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'available': return 'default';
+      case 'full': return 'destructive';
+      case 'closed': return 'secondary';
+      case 'maintenance': return 'outline';
+      default: return 'outline';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'available': return '✅';
+      case 'full': return '🔴';
+      case 'closed': return '🚫';
+      case 'maintenance': return '🔧';
+      default: return '❓';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'available': return 'Available';
+      case 'full': return 'Full';
+      case 'closed': return 'Closed';
+      case 'maintenance': return 'Maintenance';
+      default: return status;
     }
   };
 
@@ -229,156 +242,266 @@ const EvacuationCentersManager = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Evacuation Centers</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <Button onClick={() => setShowForm((prev) => !prev)}>
-              {showForm ? "Cancel" : "Add New Center"}
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Evacuation Centers ({centers.length})</h3>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openAddDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Center
             </Button>
-          </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>
+                {editingCenter ? 'Edit Evacuation Center' : 'Add Evacuation Center'}
+              </DialogTitle>
+              <DialogDescription>
+                {editingCenter ? 'Update the evacuation center information.' : 'Add a new evacuation center for your barangay.'}
+              </DialogDescription>
+            </DialogHeader>
 
-          {showForm && (
-            <form onSubmit={handleFormSubmit} className="space-y-4 mb-6">
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
                   name="name"
-                  value={formData.name || ""}
-                  onChange={handleInputChange}
-                  required
+                  rules={{ required: "Center name is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Center Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Barangay Gymnasium" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
+
+                <FormField
+                  control={form.control}
                   name="address"
-                  value={formData.address || ""}
-                  onChange={handleInputChange}
-                  required
+                  rules={{ required: "Address is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Full address of the center" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <Label htmlFor="capacity">Capacity</Label>
-                <Input
-                  id="capacity"
+
+                <FormField
+                  control={form.control}
                   name="capacity"
-                  type="number"
-                  min={0}
-                  value={formData.capacity || ""}
-                  onChange={handleInputChange}
-                  required
+                  rules={{ 
+                    required: "Capacity is required",
+                    min: { value: 1, message: "Capacity must be at least 1" }
+                  }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Capacity (Number of People)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="e.g., 100" 
+                          {...field}
+                          onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <Label htmlFor="current_occupancy">Current Occupancy</Label>
-                <Input
-                  id="current_occupancy"
-                  name="current_occupancy"
-                  type="number"
-                  min={0}
-                  value={formData.current_occupancy || ""}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status || "available"}
-                  onChange={handleInputChange}
-                  className="w-full border rounded px-2 py-1"
-                  required
-                >
-                  <option value="available">Available</option>
-                  <option value="full">Full</option>
-                  <option value="closed">Closed</option>
-                  <option value="maintenance">Maintenance</option>
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="contact_person">Contact Person</Label>
-                <Input
-                  id="contact_person"
+
+                <FormField
+                  control={form.control}
                   name="contact_person"
-                  value={formData.contact_person || ""}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Person (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Name of responsible person" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <Label htmlFor="contact_phone">Contact Phone</Label>
-                <Input
-                  id="contact_phone"
+
+                <FormField
+                  control={form.control}
                   name="contact_phone"
-                  value={formData.contact_phone || ""}
-                  onChange={handleInputChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Phone (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <Label>Latitude</Label>
-                <Input
-                  name="latitude"
-                  type="number"
-                  step="any"
-                  value={formData.latitude || ""}
-                  onChange={handleInputChange}
-                  readOnly
-                />
-              </div>
-              <div>
-                <Label>Longitude</Label>
-                <Input
-                  name="longitude"
-                  type="number"
-                  step="any"
-                  value={formData.longitude || ""}
-                  onChange={handleInputChange}
-                  readOnly
-                />
-              </div>
-              <Button type="submit" disabled={loading}>
-                Save Center
-              </Button>
-            </form>
-          )}
 
-          <div
-            ref={mapRef}
-            className="w-full h-[400px] rounded border border-gray-300"
-            style={{ minHeight: "400px" }}
-          />
+                <FormField
+                  control={form.control}
+                  name="facilities"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Facilities (Optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g., Kitchen, Toilets, First Aid (comma-separated)" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <div className="mt-6 space-y-4">
-            {centers.length === 0 && (
-              <p className="text-center text-muted-foreground">
-                No evacuation centers found.
-              </p>
-            )}
-            {centers.map((center) => (
-              <Card key={center.id} className="p-4">
-                <p>{center.address}</p>
-                <p>
-                  Capacity: {center.capacity} | Current Occupancy:{" "}
-                  {center.current_occupancy || 0}
-                </p>
-                <p>Status: {center.status}</p>
-                {center.contact_person && (
-                  <p>
-                    Contact: {center.contact_person}{" "}
-                    {center.contact_phone && `(${center.contact_phone})`}
-                  </p>
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Additional information about this center"
+                          className="min-h-[80px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {editingCenter ? 'Update Center' : 'Add Center'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {centers.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {centers.map((center) => (
+            <Card key={center.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getStatusIcon(center.status)}</span>
+                    <Badge variant={getStatusColor(center.status) as any}>
+                      {getStatusLabel(center.status)}
+                    </Badge>
+                  </div>
+                  <div className="flex gap-1">
+                    <Select 
+                      value={center.status} 
+                      onValueChange={(value: 'available' | 'full' | 'closed' | 'maintenance') => updateCenterStatus(center.id, value)}
+                    >
+                      <SelectTrigger className="w-auto h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="available">Available</SelectItem>
+                        <SelectItem value="full">Full</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEditDialog(center)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteCenter(center.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <CardTitle className="text-lg">{center.name}</CardTitle>
+                <CardDescription className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {center.address}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Capacity:</span>
+                  <span className="font-medium">
+                    {center.current_occupancy || 0} / {center.capacity} people
+                  </span>
+                </div>
+                
+                {center.facilities && center.facilities.length > 0 && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Facilities:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {center.facilities.map((facility, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {facility}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+
+                {center.contact_person && (
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{center.contact_person}</span>
+                    {center.contact_phone && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(`tel:${center.contact_phone}`)}
+                      >
+                        <Phone className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {center.notes && (
+                  <p className="text-sm text-muted-foreground">{center.notes}</p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="text-center py-8">
+            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Evacuation Centers</h3>
+            <p className="text-muted-foreground mb-4">
+              Start by adding evacuation centers for your barangay.
+            </p>
+            <Button onClick={openAddDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add First Center
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

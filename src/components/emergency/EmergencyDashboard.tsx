@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Phone, MapPin, Users, AlertTriangle, Navigation, Shield } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import UnifiedEmergencyMap from "./UnifiedEmergencyMap";
 
 interface DashboardStats {
   emergencyContacts: number;
@@ -183,9 +183,6 @@ const EmergencyDashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Unified Emergency Map */}
-      <UnifiedEmergencyMap />
 
       {/* Quick Emergency Contacts */}
       <Card>
