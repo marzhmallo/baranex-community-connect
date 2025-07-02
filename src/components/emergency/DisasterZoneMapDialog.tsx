@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Save, Trash2, Edit } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
+import 'leaflet-draw';
 
 // Fix for default markers in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -35,6 +38,7 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
   const mapInstanceRef = useRef<L.Map | null>(null);
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const polygonDrawerRef = useRef<any>(null);
 
   // Default location (Philippines center)
   const defaultLocation = { lat: 12.8797, lng: 121.7740 };
@@ -42,10 +46,14 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
   // Initialize map only when dialog opens
   useEffect(() => {
     if (open && mapRef.current && !mapInstanceRef.current) {
-      // Initialize map after a small delay to ensure the modal is fully rendered
+      // Initialize map after dialog is fully rendered
+      initializeMap();
+      // More generous timeout to ensure all animations and rendering are complete
       setTimeout(() => {
-        initializeMap();
-      }, 100);
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 150);
     }
 
     // Cleanup when dialog closes
@@ -54,6 +62,7 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
         drawnItemsRef.current = null;
+        polygonDrawerRef.current = null;
       }
     };
   }, [open]);
@@ -69,11 +78,9 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
     if (!mapRef.current || mapInstanceRef.current) return;
 
     try {
-      const mapCenter = defaultLocation;
-      
       // Create the map
       const map = L.map(mapRef.current, {
-        center: [mapCenter.lat, mapCenter.lng],
+        center: [defaultLocation.lat, defaultLocation.lng],
         zoom: 6,
         zoomControl: true,
         scrollWheelZoom: true,
@@ -97,13 +104,17 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
       mapInstanceRef.current = map;
       drawnItemsRef.current = drawnItems;
 
-      // *** THE CRITICAL FIX ***
-      // Force Leaflet to re-check its size after the browser has rendered the modal
-      setTimeout(() => {
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.invalidateSize();
-        }
-      }, 10);
+      // Event listener for when a shape is created by the draw tool
+      map.on((L.Draw as any).Event.CREATED, function (e: any) {
+        const layer = e.layer;
+        layer.options.customData = { type: 'disaster_zone' };
+        drawnItems.addLayer(layer);
+        
+        toast({
+          title: "Zone Created",
+          description: "Disaster zone boundary has been drawn. Click Save to save it.",
+        });
+      });
 
       console.log('Map initialized successfully');
       
@@ -153,54 +164,13 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
     drawnItemsRef.current.clearLayers();
     setIsDrawing(true);
 
-    // Create drawing handler
-    const polygon = new L.Polygon([]);
-    let isDrawingPolygon = false;
-    let currentPoints: L.LatLng[] = [];
-
-    const drawingHandler = (e: L.LeafletMouseEvent) => {
-      if (!isDrawingPolygon) {
-        // Start drawing
-        isDrawingPolygon = true;
-        currentPoints = [e.latlng];
-        polygon.setLatLngs([currentPoints]);
-        polygon.addTo(drawnItemsRef.current!);
-      } else {
-        // Add point
-        currentPoints.push(e.latlng);
-        polygon.setLatLngs([currentPoints]);
-      }
-    };
-
-    const finishDrawing = (e: L.LeafletMouseEvent) => {
-      if (isDrawingPolygon && currentPoints.length >= 3) {
-        // Finish polygon (right-click or double-click)
-        mapInstanceRef.current!.off('click', drawingHandler);
-        mapInstanceRef.current!.off('dblclick', finishDrawing);
-        mapInstanceRef.current!.off('contextmenu', finishDrawing);
-        setIsDrawing(false);
-        
-        // Set final styling
-        polygon.setStyle({
-          color: zone ? getZoneColor(zone.zone_type) : '#6b7280',
-          fillColor: zone ? getZoneColor(zone.zone_type) : '#6b7280',
-          fillOpacity: 0.3
-        });
-
-        toast({
-          title: "Polygon Complete",
-          description: "Right-click or double-click to finish drawing. Click Save to save the zone.",
-        });
-      }
-    };
-
-    mapInstanceRef.current.on('click', drawingHandler);
-    mapInstanceRef.current.on('dblclick', finishDrawing);
-    mapInstanceRef.current.on('contextmenu', finishDrawing);
+    // Initialize the polygon drawer from Leaflet.draw
+    polygonDrawerRef.current = new (L.Draw as any).Polygon(mapInstanceRef.current);
+    polygonDrawerRef.current.enable();
 
     toast({
       title: "Drawing Mode",
-      description: "Click on the map to start drawing the zone boundary. Right-click or double-click to finish.",
+      description: "Click on the map to start drawing the zone boundary.",
     });
   };
 
@@ -208,6 +178,10 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
     if (drawnItemsRef.current) {
       drawnItemsRef.current.clearLayers();
       setIsDrawing(false);
+    }
+    if (polygonDrawerRef.current) {
+      polygonDrawerRef.current.disable();
+      polygonDrawerRef.current = null;
     }
   };
 
@@ -273,11 +247,12 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
           {/* Map Container */}
           <div 
             ref={mapRef} 
-            className="flex-1 w-full rounded-lg border border-border"
+            className="flex-1 w-full rounded-lg border border-gray-300"
             style={{ 
               minHeight: '400px',
               height: '500px',
-              backgroundColor: '#e5e7eb' // Light gray background like the example
+              backgroundColor: '#e5e7eb', // Light gray background
+              cursor: 'default'
             }}
           />
 
@@ -287,7 +262,7 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
             <ul className="list-disc list-inside space-y-1">
               <li>Click "Draw Zone" to start drawing the disaster zone boundary</li>
               <li>Click on the map to add points to your polygon</li>
-              <li>Right-click or double-click to finish drawing</li>
+              <li>Double-click to finish drawing the polygon</li>
               <li>Click "Save Zone" to save the boundary</li>
             </ul>
           </div>
