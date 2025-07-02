@@ -97,6 +97,8 @@ export type Database = {
           barangayname: string
           country: string | null
           created_at: string
+          halllat: number | null
+          halllong: number | null
           id: string
           is_custom: boolean | null
           logo_url: string | null
@@ -109,6 +111,8 @@ export type Database = {
           barangayname: string
           country?: string | null
           created_at: string
+          halllat?: number | null
+          halllong?: number | null
           id?: string
           is_custom?: boolean | null
           logo_url?: string | null
@@ -121,6 +125,8 @@ export type Database = {
           barangayname?: string
           country?: string | null
           created_at?: string
+          halllat?: number | null
+          halllong?: number | null
           id?: string
           is_custom?: boolean | null
           logo_url?: string | null

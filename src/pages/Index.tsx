@@ -13,8 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
+import BarangayLocationMap from "@/components/dashboard/BarangayLocationMap";
+import { useData } from "@/context/DataContext";
 
 const Index = () => {
+  const { barangayName } = useData();
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Main content */}
@@ -25,6 +29,7 @@ const Index = () => {
             <DashboardHeader />
             <DashboardStats />
             <DashboardCharts />
+            <BarangayLocationMap barangayName={barangayName} />
           </div>
         </main>
       </div>
