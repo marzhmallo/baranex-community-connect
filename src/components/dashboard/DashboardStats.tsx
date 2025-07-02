@@ -3,23 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useState, useEffect } from "react";
 import { Users, Home, Calendar, TrendingUp, TrendingDown, Megaphone } from "lucide-react";
-import { useDashboardData } from "@/hooks/useDashboardData";
+import { useDashboardDataContext } from "@/contexts/DashboardDataContext";
 
 const DashboardStats = () => {
-  const { 
-    totalResidents, 
-    totalHouseholds, 
-    activeAnnouncements, 
-    upcomingEvents,
-    residentGrowthRate,
-    householdGrowthRate,
-    newResidentsThisMonth,
-    newHouseholdsThisMonth,
-    newAnnouncementsThisWeek,
-    nextEventDays,
-    isLoading 
-  } = useDashboardData();
-  
+  const { data, isLoading } = useDashboardDataContext();
   const [progress, setProgress] = useState(13);
 
   useEffect(() => {
@@ -33,28 +20,30 @@ const DashboardStats = () => {
   };
 
   const formatAnnouncementText = () => {
-    if (newAnnouncementsThisWeek === 0) {
+    if (!data) return "Loading...";
+    if (data.newAnnouncementsThisWeek === 0) {
       return "No new announcements this week";
-    } else if (newAnnouncementsThisWeek === 1) {
+    } else if (data.newAnnouncementsThisWeek === 1) {
       return "1 new this week";
     } else {
-      return `${newAnnouncementsThisWeek} new this week`;
+      return `${data.newAnnouncementsThisWeek} new this week`;
     }
   };
 
   const formatEventText = () => {
-    if (nextEventDays === null || upcomingEvents === 0) {
+    if (!data) return "Loading...";
+    if (data.nextEventDays === null || data.upcomingEvents === 0) {
       return "No upcoming events";
-    } else if (nextEventDays === 0) {
+    } else if (data.nextEventDays === 0) {
       return "Event today";
-    } else if (nextEventDays === 1) {
+    } else if (data.nextEventDays === 1) {
       return "Next event tomorrow";
     } else {
-      return `Next event in ${nextEventDays} days`;
+      return `Next event in ${data.nextEventDays} days`;
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
@@ -82,15 +71,15 @@ const DashboardStats = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Residents</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">{totalResidents.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{data.totalResidents.toLocaleString()}</div>
               <div className="flex items-center mt-1">
-                {residentGrowthRate >= 0 ? (
+                {data.residentGrowthRate >= 0 ? (
                   <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
                 ) : (
                   <TrendingDown className="text-red-500 h-3 w-3 mr-1" />
                 )}
-                <p className={`text-xs ${residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
-                  {formatGrowthRate(residentGrowthRate)} ({newResidentsThisMonth} this month)
+                <p className={`text-xs ${data.residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
+                  {formatGrowthRate(data.residentGrowthRate)} ({data.newResidentsThisMonth} this month)
                 </p>
               </div>
               <Progress value={progress} className="mt-3 h-1.5" />
@@ -109,15 +98,15 @@ const DashboardStats = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Registered Households</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">{totalHouseholds.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{data.totalHouseholds.toLocaleString()}</div>
               <div className="flex items-center mt-1">
-                {householdGrowthRate >= 0 ? (
+                {data.householdGrowthRate >= 0 ? (
                   <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
                 ) : (
                   <TrendingDown className="text-red-500 h-3 w-3 mr-1" />
                 )}
-                <p className={`text-xs ${householdGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
-                  {formatGrowthRate(householdGrowthRate)} ({newHouseholdsThisMonth} this month)
+                <p className={`text-xs ${data.householdGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
+                  {formatGrowthRate(data.householdGrowthRate)} ({data.newHouseholdsThisMonth} this month)
                 </p>
               </div>
               <Progress value={35} className="mt-3 h-1.5" />
@@ -136,7 +125,7 @@ const DashboardStats = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Announcements</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">{activeAnnouncements}</div>
+              <div className="text-2xl font-bold">{data.activeAnnouncements}</div>
               <div className="flex items-center mt-1">
                 <Megaphone className="text-baranex-warning h-3 w-3 mr-1" />
                 <p className="text-xs text-baranex-warning">
@@ -159,7 +148,7 @@ const DashboardStats = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Events</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">{upcomingEvents}</div>
+              <div className="text-2xl font-bold">{data.upcomingEvents}</div>
               <div className="flex items-center mt-1">
                 <Calendar className="text-baranex-accent h-3 w-3 mr-1" />
                 <p className="text-xs text-accent-foreground">
