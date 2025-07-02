@@ -35,41 +35,54 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
   const mapInstanceRef = useRef<L.Map | null>(null);
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [mapInitialized, setMapInitialized] = useState(false);
 
   // Initialize map when dialog opens
   useEffect(() => {
-    if (open && mapRef.current && !mapInitialized) {
-      initializeMap();
-    }
-    
-    return () => {
-      if (mapInstanceRef.current && !open) {
+    if (!open) {
+      // Cleanup when dialog closes
+      if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
         drawnItemsRef.current = null;
-        setMapInitialized(false);
       }
-    };
+      return;
+    }
+
+    // Initialize map when dialog opens
+    if (open && mapRef.current && !mapInstanceRef.current) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        initializeMap();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
   }, [open]);
 
-  // Load existing zone polygon when zone prop changes
+  // Load existing zone polygon when zone changes
   useEffect(() => {
-    if (mapInitialized && zone && zone.polygon_coords) {
+    if (mapInstanceRef.current && zone && zone.polygon_coords) {
       loadExistingPolygon();
     }
-  }, [mapInitialized, zone]);
+  }, [zone, mapInstanceRef.current]);
 
   const initializeMap = () => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
 
     try {
-      // Create map
+      console.log('Initializing map...');
+      
+      // Create map with proper center and zoom
       const map = L.map(mapRef.current, {
         center: [12.8797, 121.7740], // Philippines center
         zoom: 6,
         zoomControl: true,
-        scrollWheelZoom: true
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true,
+        keyboard: true,
+        dragging: true,
+        touchZoom: true
       });
 
       // Add tile layer
@@ -85,7 +98,13 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
       // Store references
       mapInstanceRef.current = map;
       drawnItemsRef.current = drawnItems;
-      setMapInitialized(true);
+
+      // Force map to invalidate size after initialization
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 100);
 
       console.log('Map initialized successfully');
     } catch (error) {
@@ -259,8 +278,12 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
           {/* Map Container */}
           <div 
             ref={mapRef} 
-            className="flex-1 w-full rounded-lg border border-border bg-gray-100"
-            style={{ minHeight: '400px', height: 'calc(100% - 80px)' }}
+            className="flex-1 w-full rounded-lg border border-border"
+            style={{ 
+              minHeight: '400px', 
+              height: 'calc(100% - 80px)',
+              backgroundColor: '#f3f4f6'
+            }}
           />
 
           {/* Instructions */}
