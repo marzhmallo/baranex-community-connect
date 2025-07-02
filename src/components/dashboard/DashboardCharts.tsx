@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -6,10 +5,19 @@ import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'react-router-dom';
 import { FileText, Users, Home, ChevronRight, UserX, MapPin } from 'lucide-react';
-import { useDashboardDataContext } from "@/contexts/DashboardDataContext";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardCharts = () => {
-  const { data, isLoading, error } = useDashboardDataContext();
+  const {
+    totalResidents,
+    monthlyResidents,
+    genderDistribution,
+    residentGrowthRate,
+    totalDeceased,
+    totalRelocated,
+    isLoading,
+    error
+  } = useDashboardData();
 
   // Recent activities - this could be enhanced to come from an activity log table
   const recentActivities = [
@@ -47,10 +55,8 @@ const DashboardCharts = () => {
 
   // Colors for pie chart - expanded to include more colors for gender diversity
   const pieColors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-
   if (error) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-3">
           <CardContent className="p-6">
             <div className="text-center text-red-500">
@@ -58,27 +64,9 @@ const DashboardCharts = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>;
   }
-
-  if (!data) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-3">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-muted-foreground">Loading dashboard data...</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Main chart area - takes up 2 columns on md screens */}
       <Card className="md:col-span-2">
         <CardHeader>
@@ -93,64 +81,56 @@ const DashboardCharts = () => {
             </TabsList>
             <TabsContent value="line" className="mt-4">
               <ChartContainer config={{
-                residents: {
-                  theme: {
-                    dark: '#3b82f6',
-                    light: '#3b82f6'
-                  }
+              residents: {
+                theme: {
+                  dark: '#3b82f6',
+                  light: '#3b82f6'
                 }
-              }} className="h-[350px] w-full">
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-full">
+              }
+            }} className="h-[350px] w-full">
+                {isLoading ? <div className="flex items-center justify-center h-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : (
-                  <LineChart data={data.monthlyResidents} margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 20
-                  }}>
+                  </div> : <LineChart data={monthlyResidents} margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 20
+              }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip content={<ChartTooltipContent nameKey="month" />} />
                     <Legend />
                     <Line type="monotone" dataKey="residents" name="Active Residents" stroke="var(--color-residents, #3b82f6)" strokeWidth={2} activeDot={{
-                      r: 8
-                    }} />
-                  </LineChart>
-                )}
+                  r: 8
+                }} />
+                  </LineChart>}
               </ChartContainer>
             </TabsContent>
             <TabsContent value="bar" className="mt-4">
               <ChartContainer config={{
-                residents: {
-                  theme: {
-                    dark: '#3b82f6',
-                    light: '#3b82f6'
-                  }
+              residents: {
+                theme: {
+                  dark: '#3b82f6',
+                  light: '#3b82f6'
                 }
-              }} className="h-[350px] w-full">
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-full">
+              }
+            }} className="h-[350px] w-full">
+                {isLoading ? <div className="flex items-center justify-center h-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : (
-                  <BarChart data={data.monthlyResidents} margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 20
-                  }}>
+                  </div> : <BarChart data={monthlyResidents} margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 20
+              }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip content={<ChartTooltipContent nameKey="month" />} />
                     <Legend />
                     <Bar dataKey="residents" name="Active Residents" fill="var(--color-residents, #3b82f6)" />
-                  </BarChart>
-                )}
+                  </BarChart>}
               </ChartContainer>
             </TabsContent>
           </Tabs>
@@ -161,15 +141,15 @@ const DashboardCharts = () => {
               <CardContent className="p-4 flex flex-col items-center">
                 <div className="text-xs uppercase text-muted-foreground mb-1">Active Population</div>
                 <div className="text-2xl font-bold text-center">
-                  {isLoading ? '...' : data.totalResidents.toLocaleString()}
+                  {isLoading ? '...' : totalResidents.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 flex flex-col items-center">
                 <div className="text-xs uppercase text-muted-foreground mb-1">Growth Rate</div>
-                <div className={`text-2xl font-bold text-center ${data.residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
-                  {isLoading ? '...' : formatGrowthRate(data.residentGrowthRate)}
+                <div className={`text-2xl font-bold text-center ${residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
+                  {isLoading ? '...' : formatGrowthRate(residentGrowthRate)}
                 </div>
               </CardContent>
             </Card>
@@ -177,7 +157,7 @@ const DashboardCharts = () => {
               <CardContent className="p-4 flex flex-col items-center">
                 <div className="text-xs uppercase text-muted-foreground mb-1">New this Month</div>
                 <div className="text-2xl font-bold text-center">
-                  {isLoading ? '...' : data.monthlyResidents[data.monthlyResidents.length - 1]?.residents || 0}
+                  {isLoading ? '...' : monthlyResidents[monthlyResidents.length - 1]?.residents || 0}
                 </div>
               </CardContent>
             </Card>
@@ -188,7 +168,7 @@ const DashboardCharts = () => {
                   Deceased
                 </div>
                 <div className="text-2xl font-bold text-center text-red-500">
-                  {isLoading ? '...' : data.totalDeceased.toLocaleString()}
+                  {isLoading ? '...' : totalDeceased.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
@@ -199,7 +179,7 @@ const DashboardCharts = () => {
                   Relocated
                 </div>
                 <div className="text-2xl font-bold text-center text-orange-500">
-                  {isLoading ? '...' : data.totalRelocated.toLocaleString()}
+                  {isLoading ? '...' : totalRelocated.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
@@ -215,8 +195,7 @@ const DashboardCharts = () => {
           </CardHeader>
           <CardContent className="px-2">
             <div className="space-y-4">
-              {recentActivities.map(activity => (
-                <div key={activity.id} className="flex items-start gap-3 p-2 hover:bg-muted/50 rounded-md transition-colors">
+              {recentActivities.map(activity => <div key={activity.id} className="flex items-start gap-3 p-2 hover:bg-muted/50 rounded-md transition-colors">
                   <div className="rounded-full bg-primary/10 p-2 mt-1">
                     {activity.type === 'resident' && <Users className="h-4 w-4 text-primary" />}
                     {activity.type === 'document' && <FileText className="h-4 w-4 text-primary" />}
@@ -233,8 +212,7 @@ const DashboardCharts = () => {
                       {activity.date}
                     </p>
                   </div>
-                </div>
-              ))}
+                </div>)}
 
               <Link to="/residents" className="flex items-center justify-center text-sm text-primary hover:underline mt-2 py-2">
                 View all residents
@@ -248,7 +226,7 @@ const DashboardCharts = () => {
           <CardHeader>
             <CardTitle>Gender Distribution</CardTitle>
             <CardDescription>
-              {isLoading ? "Loading..." : `${data.genderDistribution.length} gender categories found (active residents only)`}
+              {isLoading ? "Loading..." : `${genderDistribution.length} gender categories found (active residents only)`}
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] pt-0">
@@ -256,12 +234,12 @@ const DashboardCharts = () => {
               <div className="flex items-center justify-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ) : data.genderDistribution.length > 0 ? (
+            ) : genderDistribution.length > 0 ? (
               <div className="space-y-4">
                 <ChartContainer config={{}} className="h-[200px] w-full">
                   <PieChart>
                     <Pie 
-                      data={data.genderDistribution} 
+                      data={genderDistribution} 
                       cx="50%" 
                       cy="50%" 
                       outerRadius={80} 
@@ -269,7 +247,7 @@ const DashboardCharts = () => {
                       dataKey="count" 
                       label={({ gender, percentage }) => `${gender}: ${percentage}%`}
                     >
-                      {data.genderDistribution.map((entry, index) => (
+                      {genderDistribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
                       ))}
                     </Pie>
@@ -277,7 +255,7 @@ const DashboardCharts = () => {
                   </PieChart>
                 </ChartContainer>
                 <div className="space-y-2">
-                  {data.genderDistribution.map((item, index) => (
+                  {genderDistribution.map((item, index) => (
                     <div key={item.gender} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <div 
@@ -299,8 +277,7 @@ const DashboardCharts = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
 
 export default DashboardCharts;

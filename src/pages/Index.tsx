@@ -16,13 +16,19 @@ import DashboardCharts from "@/components/dashboard/DashboardCharts";
 
 const Index = () => {
   return (
-    <main className="flex-1 p-6 overflow-auto">
-      <div className="space-y-6">
-        <DashboardHeader />
-        <DashboardStats />
-        <DashboardCharts />
+    <div className="flex min-h-screen bg-background">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col">
+        {/* Page content */}
+        <main className="flex-1 p-6 overflow-auto">
+          <div className="space-y-6">
+            <DashboardHeader />
+            <DashboardStats />
+            <DashboardCharts />
+          </div>
+        </main>
       </div>
-    </main>
+    </div>
   );
 };
 
