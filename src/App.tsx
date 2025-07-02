@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,6 +30,7 @@ import ProfilePage from "./pages/ProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
 import UserAccountManagement from "./pages/UserAccountManagement";
 import UserFeedbackPage from "./pages/UserFeedbackPage";
+import Sidebar from "./components/layout/Sidebar";
 
 const queryClient = new QueryClient();
 
@@ -42,31 +44,36 @@ function App() {
           <BrowserRouter>
             <AuthProvider>
               <DashboardDataProvider>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/residents" element={<ResidentsPage />} />
-                  <Route path="/residents/:id" element={<ResidentMoreDetailsPage />} />
-                  <Route path="/households" element={<HouseholdsPage />} />
-                  <Route path="/households/:id" element={<HouseholdMoreDetailsPage />} />
-                  <Route path="/announcements" element={<AnnouncementsPage />} />
-                  <Route path="/calendar" element={<CalendarPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/statistics" element={<StatisticsPage />} />
-                  <Route path="/hub" element={<HomePage />} />
-                  <Route path="/officials" element={<OfficialsPage />} />
-                  <Route path="/officials/:id" element={<OfficialDetailsPage />} />
-                  <Route path="/blotter" element={<BlotterPage />} />
-                  <Route path="/emergency" element={<EmergencyResponsePage />} />
-                  <Route path="/feedback" element={<FeedbackPage />} />
-                  <Route path="/forum" element={<ForumPage />} />
-                  <Route path="/nexus" element={<NexusPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/user-profile" element={<UserProfilePage />} />
-                  <Route path="/user-accounts" element={<UserAccountManagement />} />
-                  <Route path="/user-feedback" element={<UserFeedbackPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <div className="flex min-h-screen">
+                  <Sidebar />
+                  <div className="flex-1 ml-64">
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/residents" element={<ResidentsPage />} />
+                      <Route path="/residents/:id" element={<ResidentMoreDetailsPage />} />
+                      <Route path="/households" element={<HouseholdsPage />} />
+                      <Route path="/households/:id" element={<HouseholdMoreDetailsPage />} />
+                      <Route path="/announcements" element={<AnnouncementsPage />} />
+                      <Route path="/calendar" element={<CalendarPage />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/statistics" element={<StatisticsPage />} />
+                      <Route path="/hub" element={<Index />} />
+                      <Route path="/officials" element={<OfficialsPage />} />
+                      <Route path="/officials/:id" element={<OfficialDetailsPage />} />
+                      <Route path="/blotter" element={<BlotterPage />} />
+                      <Route path="/emergency" element={<EmergencyResponsePage />} />
+                      <Route path="/feedback" element={<FeedbackPage />} />
+                      <Route path="/forum" element={<ForumPage />} />
+                      <Route path="/nexus" element={<NexusPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/user-profile" element={<UserProfilePage />} />
+                      <Route path="/user-accounts" element={<UserAccountManagement />} />
+                      <Route path="/user-feedback" element={<UserFeedbackPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </div>
+                </div>
               </DashboardDataProvider>
             </AuthProvider>
           </BrowserRouter>
