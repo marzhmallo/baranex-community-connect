@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -53,7 +52,7 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
       // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         initializeMap();
-      }, 100);
+      }, 200);
       
       return () => clearTimeout(timer);
     }
@@ -73,23 +72,27 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
       console.log('Initializing map...');
       
       // Create map with proper center and zoom
-      const map = L.map(mapRef.current, {
-        center: [12.8797, 121.7740], // Philippines center
-        zoom: 6,
-        zoomControl: true,
-        scrollWheelZoom: true,
-        doubleClickZoom: true,
-        boxZoom: true,
-        keyboard: true,
-        dragging: true,
-        touchZoom: true
-      });
+      const map = L.map(mapRef.current).setView([12.8797, 121.7740], 6);
 
-      // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // Add tile layer with error handling
+      const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
-      }).addTo(map);
+      });
+
+      tileLayer.on('loading', () => {
+        console.log('Tiles loading...');
+      });
+
+      tileLayer.on('load', () => {
+        console.log('Tiles loaded successfully');
+      });
+
+      tileLayer.on('tileerror', (e) => {
+        console.error('Tile loading error:', e);
+      });
+
+      tileLayer.addTo(map);
 
       // Initialize feature group for drawn items
       const drawnItems = new L.FeatureGroup();
@@ -103,8 +106,9 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
       setTimeout(() => {
         if (mapInstanceRef.current) {
           mapInstanceRef.current.invalidateSize();
+          console.log('Map size invalidated');
         }
-      }, 100);
+      }, 300);
 
       console.log('Map initialized successfully');
     } catch (error) {
@@ -278,11 +282,12 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
           {/* Map Container */}
           <div 
             ref={mapRef} 
-            className="flex-1 w-full rounded-lg border border-border"
+            className="flex-1 w-full rounded-lg border border-gray-300"
             style={{ 
               minHeight: '400px', 
               height: 'calc(100% - 80px)',
-              backgroundColor: '#f3f4f6'
+              position: 'relative',
+              zIndex: 1
             }}
           />
 
