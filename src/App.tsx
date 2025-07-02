@@ -30,6 +30,7 @@ import ProfilePage from "./pages/ProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
 import UserAccountManagement from "./pages/UserAccountManagement";
 import UserFeedbackPage from "./pages/UserFeedbackPage";
+import UserDashboard from "./pages/UserDashboard";
 import Sidebar from "./components/layout/Sidebar";
 import PublicSidebar from "./components/layout/PublicSidebar";
 
@@ -58,7 +59,7 @@ const AppContent = () => {
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/statistics" element={<StatisticsPage />} />
-          <Route path="/hub" element={<Index />} />
+          <Route path="/hub" element={<UserDashboard />} />
           <Route path="/officials" element={<OfficialsPage />} />
           <Route path="/officials/:id" element={<OfficialDetailsPage />} />
           <Route path="/blotter" element={<BlotterPage />} />
