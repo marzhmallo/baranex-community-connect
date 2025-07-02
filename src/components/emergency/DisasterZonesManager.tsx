@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
 import { Plus, MapPin, Edit, Trash2, AlertTriangle } from "lucide-react";
-import DisasterZoneMapDialog from "./DisasterZoneMapDialog";
 
 interface DisasterZone {
   id: string;
@@ -36,9 +36,7 @@ const DisasterZonesManager = () => {
   const [zones, setZones] = useState<DisasterZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isMapDialogOpen, setIsMapDialogOpen] = useState(false);
   const [editingZone, setEditingZone] = useState<DisasterZone | null>(null);
-  const [selectedZone, setSelectedZone] = useState<DisasterZone | null>(null);
 
   const form = useForm<ZoneFormData>({
     defaultValues: {
@@ -175,38 +173,6 @@ const DisasterZonesManager = () => {
     setEditingZone(null);
     form.reset();
     setIsDialogOpen(true);
-  };
-
-  const openMapDialog = (zone: DisasterZone) => {
-    setSelectedZone(zone);
-    setIsMapDialogOpen(true);
-  };
-
-  const handleSavePolygon = async (polygonCoords: any) => {
-    if (!selectedZone) return;
-
-    try {
-      const { error } = await supabase
-        .from('disaster_zones')
-        .update({ polygon_coords: polygonCoords })
-        .eq('id', selectedZone.id);
-
-      if (error) throw error;
-      
-      toast({ 
-        title: "Success", 
-        description: "Zone boundary updated successfully" 
-      });
-      
-      fetchZones();
-    } catch (error) {
-      console.error('Error updating zone boundary:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update zone boundary",
-        variant: "destructive",
-      });
-    }
   };
 
   const getTypeIcon = (type: string) => {
@@ -398,12 +364,7 @@ const DisasterZonesManager = () => {
                 )}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-3 w-3" />
-                  <button 
-                    onClick={() => openMapDialog(zone)}
-                    className="text-primary hover:underline cursor-pointer"
-                  >
-                    Click to view on map
-                  </button>
+                  <span>Click to view on map (coming soon)</span>
                 </div>
               </CardContent>
             </Card>
@@ -424,14 +385,6 @@ const DisasterZonesManager = () => {
           </CardContent>
         </Card>
       )}
-
-      {/* Map Dialog */}
-      <DisasterZoneMapDialog
-        open={isMapDialogOpen}
-        onOpenChange={setIsMapDialogOpen}
-        zone={selectedZone}
-        onSave={handleSavePolygon}
-      />
     </div>
   );
 };
