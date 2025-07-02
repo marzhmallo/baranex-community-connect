@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,34 +14,80 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const UserSettingsPage = () => {
-  const { userProfile, loading } = useAuth();
+  const { userProfile, loading: authLoading } = useAuth();
   const { toast } = useToast();
   
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // Settings state
+  const [chatbotEnabled, setChatbotEnabled] = useState(true);
+  const [chatbotMode, setChatbotMode] = useState('offline');
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
-  // Get chatbot settings from user profile, with fallback defaults
-  const chatbotEnabled = userProfile?.chatbot_enabled ?? true;
-  const chatbotMode = userProfile?.chatbot_mode ?? 'offline';
+  // Load chatbot settings from settings table
+  useEffect(() => {
+    const loadChatbotSettings = async () => {
+      if (!userProfile?.id) return;
+
+      try {
+        const { data: settings, error } = await supabase
+          .from('settings')
+          .select('key, value')
+          .eq('userid', userProfile.id)
+          .in('key', ['chatbot_enabled', 'chatbot_mode']);
+
+        if (error) {
+          console.error('Error loading settings:', error);
+        } else {
+          // Process settings data
+          const settingsMap = settings.reduce((acc, setting) => {
+            acc[setting.key] = setting.value;
+            return acc;
+          }, {} as Record<string, string>);
+
+          setChatbotEnabled(settingsMap.chatbot_enabled === 'true' || settingsMap.chatbot_enabled === undefined);
+          setChatbotMode(settingsMap.chatbot_mode || 'offline');
+        }
+      } catch (error) {
+        console.error('Error in loadChatbotSettings:', error);
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+
+    if (!authLoading && userProfile?.id) {
+      loadChatbotSettings();
+    }
+  }, [userProfile?.id, authLoading]);
 
   const updateChatbotEnabled = async (enabled: boolean) => {
     if (!userProfile?.id) return;
 
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({ chatbot_enabled: enabled })
-        .eq('id', userProfile.id);
+        .from('settings')
+        .upsert(
+          {
+            userid: userProfile.id,
+            key: 'chatbot_enabled',
+            value: enabled.toString(),
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'userid,key' }
+        );
 
       if (error) throw error;
 
+      setChatbotEnabled(enabled);
       toast({
         title: "Success",
         description: "Chatbot setting updated successfully"
       });
     } catch (error) {
+      console.error('Error updating chatbot enabled:', error);
       toast({
         title: "Error",
         description: "Failed to update chatbot setting",
@@ -55,17 +101,26 @@ const UserSettingsPage = () => {
 
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({ chatbot_mode: mode })
-        .eq('id', userProfile.id);
+        .from('settings')
+        .upsert(
+          {
+            userid: userProfile.id,
+            key: 'chatbot_mode',
+            value: mode,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'userid,key' }
+        );
 
       if (error) throw error;
 
+      setChatbotMode(mode);
       toast({
         title: "Success",
         description: "Chatbot mode updated successfully"
       });
     } catch (error) {
+      console.error('Error updating chatbot mode:', error);
       toast({
         title: "Error",
         description: "Failed to update chatbot mode",
@@ -123,6 +178,8 @@ const UserSettingsPage = () => {
     }
   };
 
+  const isLoading = authLoading || settingsLoading;
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center gap-3 mb-6">
@@ -148,7 +205,7 @@ const UserSettingsPage = () => {
                 <Label htmlFor="chatbot-enabled">Enable Chatbot</Label>
                 <p className="text-sm text-muted-foreground">Show or hide the floating chatbot button</p>
               </div>
-              {loading ? (
+              {isLoading ? (
                 <div className="w-11 h-6 bg-muted rounded-full animate-pulse" />
               ) : (
                 <Switch 
@@ -159,7 +216,7 @@ const UserSettingsPage = () => {
               )}
             </div>
             
-            {!loading && chatbotEnabled && (
+            {!isLoading && chatbotEnabled && (
               <div className="space-y-3 pt-2 border-t">
                 <Label>Chatbot Mode</Label>
                 <RadioGroup 
