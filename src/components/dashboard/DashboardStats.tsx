@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useState, useEffect } from "react";
 import { Users, Home, Calendar, TrendingUp, TrendingDown, Megaphone } from "lucide-react";
+import { useData } from "@/context/DataContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardStats = () => {
+  const { residents, households, loading: dataLoading } = useData();
   const { 
-    totalResidents, 
-    totalHouseholds, 
     activeAnnouncements, 
     upcomingEvents,
     residentGrowthRate,
@@ -17,7 +17,7 @@ const DashboardStats = () => {
     newHouseholdsThisMonth,
     newAnnouncementsThisWeek,
     nextEventDays,
-    isLoading 
+    isLoading: dashboardLoading 
   } = useDashboardData();
   
   const [progress, setProgress] = useState(13);
@@ -26,6 +26,11 @@ const DashboardStats = () => {
     const timer = setTimeout(() => setProgress(66), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Use data from context for totals
+  const totalResidents = residents.length;
+  const totalHouseholds = households.length;
+  const isLoading = dataLoading || dashboardLoading;
 
   const formatGrowthRate = (rate: number) => {
     const sign = rate >= 0 ? '+' : '';

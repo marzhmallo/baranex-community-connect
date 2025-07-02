@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -5,19 +6,24 @@ import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'react-router-dom';
 import { FileText, Users, Home, ChevronRight, UserX, MapPin } from 'lucide-react';
+import { useData } from "@/context/DataContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardCharts = () => {
+  const { residents, households, loading: dataLoading } = useData();
   const {
-    totalResidents,
     monthlyResidents,
     genderDistribution,
     residentGrowthRate,
     totalDeceased,
     totalRelocated,
-    isLoading,
+    isLoading: dashboardLoading,
     error
   } = useDashboardData();
+
+  // Use data from context for totals
+  const totalResidents = residents.length;
+  const isLoading = dataLoading || dashboardLoading;
 
   // Recent activities - this could be enhanced to come from an activity log table
   const recentActivities = [
@@ -55,6 +61,7 @@ const DashboardCharts = () => {
 
   // Colors for pie chart - expanded to include more colors for gender diversity
   const pieColors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  
   if (error) {
     return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-3">
@@ -66,6 +73,7 @@ const DashboardCharts = () => {
         </Card>
       </div>;
   }
+  
   return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Main chart area - takes up 2 columns on md screens */}
       <Card className="md:col-span-2">
