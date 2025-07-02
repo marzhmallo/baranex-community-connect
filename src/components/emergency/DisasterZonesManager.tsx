@@ -54,6 +54,7 @@ const DisasterZonesManager = () => {
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
   const currentPolygonRef = useRef<L.Polygon | null>(null);
   const polygonDrawerRef = useRef<L.Draw.Polygon | null>(null);
+  const [mapInitialized, setMapInitialized] = useState(false);
 
   const form = useForm<ZoneFormData>({
     defaultValues: {
@@ -64,57 +65,86 @@ const DisasterZonesManager = () => {
     },
   });
 
+  // Default location (Philippines center)
+  const defaultLocation = { lat: 12.8797, lng: 121.7740 };
+
   useEffect(() => {
     if (userProfile?.brgyid) {
       fetchZones();
     }
   }, [userProfile?.brgyid]);
 
+  // Initialize map only once
   useEffect(() => {
-    // Initialize map after component mounts
-    const timer = setTimeout(() => {
-      initializeMap();
-    }, 100);
-    
+    if (!mapRef.current || mapInitialized) return;
+
+    try {
+      // Create the map with proper initialization
+      const map = L.map(mapRef.current, {
+        center: [defaultLocation.lat, defaultLocation.lng],
+        zoom: 6,
+        zoomControl: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true,
+        keyboard: true,
+        dragging: true,
+        touchZoom: true
+      });
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      const drawnItems = new L.FeatureGroup();
+      map.addLayer(drawnItems);
+
+      mapInstanceRef.current = map;
+      drawnItemsRef.current = drawnItems;
+      setMapInitialized(true);
+
+      // Add click event listener to map for placing/moving marker
+      map.on('click', (e: L.LeafletMouseEvent) => {
+        if (isAddingNew || isEditing) {
+          handleMapClick(e.latlng);
+        }
+      });
+
+      // Handle polygon drawing
+      map.on(L.Draw.Event.CREATED, (e: any) => {
+        const layer = e.layer;
+        if (currentPolygonRef.current) {
+          drawnItems.removeLayer(currentPolygonRef.current);
+        }
+        drawnItems.addLayer(layer);
+        currentPolygonRef.current = layer;
+      });
+
+      console.log('Map initialized successfully');
+      
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+
     return () => {
-      clearTimeout(timer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        drawnItemsRef.current = null;
+        currentPolygonRef.current = null;
+        setMapInitialized(false);
       }
     };
-  }, []);
+  }, [mapRef.current]);
 
-  const initializeMap = () => {
-    if (!mapRef.current || mapInstanceRef.current) return;
-
-    const map = L.map(mapRef.current).setView([14.5995, 121.0244], 13);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    const drawnItems = new L.FeatureGroup();
-    map.addLayer(drawnItems);
-
-    mapInstanceRef.current = map;
-    drawnItemsRef.current = drawnItems;
-
-    // Handle polygon drawing
-    map.on(L.Draw.Event.CREATED, (e: any) => {
-      const layer = e.layer;
-      if (currentPolygonRef.current) {
-        drawnItems.removeLayer(currentPolygonRef.current);
-      }
-      drawnItems.addLayer(layer);
-      currentPolygonRef.current = layer;
-    });
-
-    // Force map resize
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 200);
-  };
+  // Update zones on map when zones change
+  useEffect(() => {
+    if (mapInitialized && zones.length > 0) {
+      loadZonesOnMap(zones);
+    }
+  }, [zones, mapInitialized]);
 
   const enableDrawingMode = () => {
     if (!mapInstanceRef.current || !drawnItemsRef.current) return;
@@ -143,6 +173,13 @@ const DisasterZonesManager = () => {
     }
   };
 
+  const handleMapClick = (latlng: L.LatLng) => {
+    if (!isAddingNew && !isEditing) return;
+    
+    // For now, just log the click - the drawing will be handled by leaflet-draw
+    console.log('Map clicked at:', latlng);
+  };
+
   const fetchZones = async () => {
     try {
       setLoading(true);
@@ -155,10 +192,6 @@ const DisasterZonesManager = () => {
       if (error) throw error;
       setZones(data || []);
       
-      // Load all zones on the map
-      if (data && data.length > 0) {
-        loadZonesOnMap(data);
-      }
     } catch (error) {
       console.error('Error fetching disaster zones:', error);
       toast({
@@ -584,7 +617,7 @@ const DisasterZonesManager = () => {
         <div className="h-full bg-gray-100">
           <div 
             ref={mapRef} 
-            className="w-full h-full"
+            className="w-full h-full rounded-lg border border-border bg-gray-100"
             style={{ minHeight: '400px' }}
           />
           
