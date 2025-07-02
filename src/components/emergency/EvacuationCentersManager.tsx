@@ -14,6 +14,7 @@ import "leaflet-draw"; // Import leaflet-draw plugin
 
 interface EvacuationCenter {
   id: string;
+  name: string;
   address: string;
   capacity: number;
   status: string;
@@ -168,10 +169,10 @@ const EvacuationCentersManager = () => {
     if (!userProfile?.brgyid) return;
 
     // Validate required fields
-    if (!formData.address) {
+    if (!formData.name || !formData.address) {
       toast({
         title: "Error",
-        description: "Address is required",
+        description: "Name and address are required",
         variant: "destructive",
       });
       return;
@@ -182,6 +183,7 @@ const EvacuationCentersManager = () => {
       const { data, error } = await supabase
         .from("evacuation_centers")
         .insert({
+          name: formData.name,
           address: formData.address,
           capacity: formData.capacity || 0,
           status: (formData.status as "available" | "full" | "closed" | "maintenance") || 'available',
@@ -241,6 +243,16 @@ const EvacuationCentersManager = () => {
 
           {showForm && (
             <form onSubmit={handleFormSubmit} className="space-y-4 mb-6">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name || ""}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
               <div>
                 <Label htmlFor="address">Address</Label>
                 <Input
@@ -350,6 +362,7 @@ const EvacuationCentersManager = () => {
             )}
             {centers.map((center) => (
               <Card key={center.id} className="p-4">
+                <p><strong>{center.name}</strong></p>
                 <p>{center.address}</p>
                 <p>
                   Capacity: {center.capacity} | Current Occupancy:{" "}

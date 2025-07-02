@@ -262,9 +262,11 @@ const EmergencyDashboard = () => {
               <AlertTriangle className="h-4 w-4 mr-2" />
               Send Emergency Alert
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <MapPin className="h-4 w-4 mr-2" />
-              View Risk Map
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <a href="/riskmap">
+                <MapPin className="h-4 w-4 mr-2" />
+                View Risk Map
+              </a>
             </Button>
             <Button variant="outline" className="w-full justify-start">
               <Navigation className="h-4 w-4 mr-2" />
