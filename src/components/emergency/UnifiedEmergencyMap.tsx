@@ -74,9 +74,11 @@ const UnifiedEmergencyMap = () => {
     }
   }, [userProfile?.brgyid]);
 
-  // Initialize map with proper size handling
+  // Initialize map with ResizeObserver for proper size handling
   useEffect(() => {
     if (!mapRef.current || mapInitialized) return;
+
+    let resizeObserver: ResizeObserver | null = null;
 
     // Use setTimeout to ensure DOM is fully rendered
     const initTimer = setTimeout(() => {
@@ -113,13 +115,31 @@ const UnifiedEmergencyMap = () => {
         routesLayerRef.current = routesLayer;
         setMapInitialized(true);
 
-        // Force map size invalidation after initialization
+        // Set up ResizeObserver to watch container size changes
+        resizeObserver = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+              // Container has proper dimensions, invalidate map size
+              setTimeout(() => {
+                if (mapInstanceRef.current) {
+                  mapInstanceRef.current.invalidateSize(true);
+                  console.log('Map resized via ResizeObserver:', entry.contentRect);
+                }
+              }, 10);
+            }
+          }
+        });
+
+        // Start observing the map container
+        resizeObserver.observe(mapRef.current!);
+
+        // Initial size invalidation
         setTimeout(() => {
           map.invalidateSize(true);
           console.log('Map size invalidated after initialization');
         }, 100);
 
-        console.log('Unified map initialized successfully');
+        console.log('Unified map initialized successfully with ResizeObserver');
         
       } catch (error) {
         console.error('Error initializing unified map:', error);
@@ -128,6 +148,9 @@ const UnifiedEmergencyMap = () => {
 
     return () => {
       clearTimeout(initTimer);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
