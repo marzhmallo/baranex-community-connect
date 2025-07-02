@@ -245,7 +245,7 @@ const StatisticsPage = () => {
           <div className="space-y-3">
             {Object.entries(statistics!.ageDistribution).map(([ageGroup, count], index) => {
               const percentage = statistics!.totalResidents > 0 ? (count / statistics!.totalResidents) * 100 : 0;
-              const colors = ['orange-400', 'orange-500', 'orange-600', 'orange-700'];
+              const colors = ['bg-orange-600', 'bg-orange-500', 'bg-orange-700', 'bg-orange-800'];
               
               return (
                 <div key={ageGroup}>
@@ -254,7 +254,7 @@ const StatisticsPage = () => {
                     <span className="text-sm font-medium text-foreground">{count.toLocaleString()} ({percentage.toFixed(1)}%)</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
-                    <div className={`bg-${colors[index]} h-2 rounded-full`} style={{width: `${percentage}%`}}></div>
+                    <div className={`${colors[index]} h-2 rounded-full`} style={{width: `${percentage}%`}}></div>
                   </div>
                 </div>
               );
@@ -338,18 +338,30 @@ const StatisticsPage = () => {
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([purok, count], index) => {
               const colors = [
-                'indigo', 'blue', 'teal', 'green', 'yellow',
-                'orange', 'red', 'pink', 'purple', 'cyan',
-                'emerald', 'lime', 'amber', 'violet', 'rose'
+                { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-900 dark:text-indigo-100', accent: 'text-indigo-700 dark:text-indigo-300' },
+                { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-900 dark:text-blue-100', accent: 'text-blue-700 dark:text-blue-300' },
+                { bg: 'bg-teal-100 dark:bg-teal-900/30', text: 'text-teal-900 dark:text-teal-100', accent: 'text-teal-700 dark:text-teal-300' },
+                { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-900 dark:text-green-100', accent: 'text-green-700 dark:text-green-300' },
+                { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-900 dark:text-yellow-100', accent: 'text-yellow-700 dark:text-yellow-300' },
+                { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-900 dark:text-orange-100', accent: 'text-orange-700 dark:text-orange-300' },
+                { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-900 dark:text-red-100', accent: 'text-red-700 dark:text-red-300' },
+                { bg: 'bg-pink-100 dark:bg-pink-900/30', text: 'text-pink-900 dark:text-pink-100', accent: 'text-pink-700 dark:text-pink-300' },
+                { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-900 dark:text-purple-100', accent: 'text-purple-700 dark:text-purple-300' },
+                { bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-900 dark:text-cyan-100', accent: 'text-cyan-700 dark:text-cyan-300' },
+                { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-900 dark:text-emerald-100', accent: 'text-emerald-700 dark:text-emerald-300' },
+                { bg: 'bg-lime-100 dark:bg-lime-900/30', text: 'text-lime-900 dark:text-lime-100', accent: 'text-lime-700 dark:text-lime-300' },
+                { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-900 dark:text-amber-100', accent: 'text-amber-700 dark:text-amber-300' },
+                { bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-900 dark:text-violet-100', accent: 'text-violet-700 dark:text-violet-300' },
+                { bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-900 dark:text-rose-100', accent: 'text-rose-700 dark:text-rose-300' }
               ];
               const colorIndex = index % colors.length;
-              const color = colors[colorIndex];
+              const colorScheme = colors[colorIndex];
               
               return (
-                <div key={purok} className={`bg-gradient-to-br from-${color}-50 to-${color}-100 dark:from-${color}-900/20 dark:to-${color}-800/30 p-4 rounded-lg hover:shadow-md transition-shadow duration-200`}>
-                  <h4 className={`font-semibold text-${color}-800 dark:text-${color}-200`}>{purok}</h4>
-                  <p className={`text-2xl font-bold text-${color}-900 dark:text-${color}-100`}>{count.toLocaleString()}</p>
-                  <p className={`text-sm text-${color}-600 dark:text-${color}-300`}>residents</p>
+                <div key={purok} className={`${colorScheme.bg} p-4 rounded-lg hover:shadow-md transition-shadow duration-200 border border-border/20`}>
+                  <h4 className={`font-semibold ${colorScheme.text}`}>{purok}</h4>
+                  <p className={`text-2xl font-bold ${colorScheme.text}`}>{count.toLocaleString()}</p>
+                  <p className={`text-sm ${colorScheme.accent}`}>residents</p>
                 </div>
               );
             })}
