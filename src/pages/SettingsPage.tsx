@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/components/AuthProvider";
 import AddressAutoFillSetting from "@/components/settings/AddressAutoFillSetting";
-import { useChatbotSettings } from "@/hooks/useChatbotSettings";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const SettingsPage = () => {
-  const { userProfile } = useAuth();
-  const { chatbotSettings, updateChatbotEnabled, updateChatbotMode } = useChatbotSettings();
+  const { userProfile, loading } = useAuth();
+  const { toast } = useToast();
   
   const [notifications, setNotifications] = useState({
     email: true,
@@ -37,6 +38,70 @@ const SettingsPage = () => {
     }));
   };
 
+  const updateChatbotEnabled = async (enabled: boolean) => {
+    if (!userProfile?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert(
+          {
+            userid: userProfile.id,
+            key: 'chatbot_enabled',
+            value: enabled.toString(),
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'userid,key' }
+        );
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Chatbot setting updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating chatbot enabled:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update chatbot setting",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updateChatbotMode = async (mode: string) => {
+    if (!userProfile?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert(
+          {
+            userid: userProfile.id,
+            key: 'chatbot_mode',
+            value: mode,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'userid,key' }
+        );
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Chatbot mode updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating chatbot mode:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update chatbot mode",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 px-4">
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
@@ -60,18 +125,22 @@ const SettingsPage = () => {
                   <Label htmlFor="chatbot-enabled">Enable Chatbot</Label>
                   <p className="text-sm text-muted-foreground">Show or hide the floating chatbot button</p>
                 </div>
-                <Switch 
-                  id="chatbot-enabled" 
-                  checked={chatbotSettings.enabled}
-                  onCheckedChange={updateChatbotEnabled}
-                />
+                {loading ? (
+                  <div className="w-11 h-6 bg-muted rounded-full animate-pulse" />
+                ) : (
+                  <Switch 
+                    id="chatbot-enabled" 
+                    checked={userProfile?.chatbot_enabled ?? true}
+                    onCheckedChange={updateChatbotEnabled}
+                  />
+                )}
               </div>
               
-              {chatbotSettings.enabled && (
+              {!loading && (userProfile?.chatbot_enabled ?? true) && (
                 <div className="space-y-3 pt-2 border-t">
                   <Label>Chatbot Mode</Label>
                   <RadioGroup 
-                    value={chatbotSettings.mode} 
+                    value={userProfile?.chatbot_mode ?? 'offline'} 
                     onValueChange={updateChatbotMode}
                     className="grid grid-cols-2 gap-4"
                   >
