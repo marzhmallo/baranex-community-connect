@@ -35,19 +35,43 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
   const mapInstanceRef = useRef<L.Map | null>(null);
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [mapInitialized, setMapInitialized] = useState(false);
 
   // Default location (Philippines center)
   const defaultLocation = { lat: 12.8797, lng: 121.7740 };
 
-  // Initialize map only once when dialog opens
+  // Initialize map only when dialog opens
   useEffect(() => {
-    if (!mapRef.current || mapInitialized || !open) return;
+    if (open && mapRef.current && !mapInstanceRef.current) {
+      // Initialize map after a small delay to ensure the modal is fully rendered
+      setTimeout(() => {
+        initializeMap();
+      }, 100);
+    }
+
+    // Cleanup when dialog closes
+    return () => {
+      if (!open && mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        drawnItemsRef.current = null;
+      }
+    };
+  }, [open]);
+
+  // Load existing zone polygon when zone changes
+  useEffect(() => {
+    if (mapInstanceRef.current && zone && zone.polygon_coords) {
+      loadExistingPolygon();
+    }
+  }, [zone, mapInstanceRef.current]);
+
+  const initializeMap = () => {
+    if (!mapRef.current || mapInstanceRef.current) return;
 
     try {
       const mapCenter = defaultLocation;
       
-      // Create the map with proper initialization
+      // Create the map
       const map = L.map(mapRef.current, {
         center: [mapCenter.lat, mapCenter.lng],
         zoom: 6,
@@ -72,30 +96,21 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
 
       mapInstanceRef.current = map;
       drawnItemsRef.current = drawnItems;
-      setMapInitialized(true);
+
+      // *** THE CRITICAL FIX ***
+      // Force Leaflet to re-check its size after the browser has rendered the modal
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 10);
 
       console.log('Map initialized successfully');
       
     } catch (error) {
       console.error('Error initializing map:', error);
     }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        drawnItemsRef.current = null;
-        setMapInitialized(false);
-      }
-    };
-  }, [open]); // Only depend on open state
-
-  // Load existing zone polygon when zone changes
-  useEffect(() => {
-    if (mapInstanceRef.current && zone && zone.polygon_coords && mapInitialized) {
-      loadExistingPolygon();
-    }
-  }, [zone, mapInitialized]);
+  };
 
   const loadExistingPolygon = () => {
     if (!mapInstanceRef.current || !drawnItemsRef.current || !zone?.polygon_coords) return;
@@ -258,8 +273,12 @@ const DisasterZoneMapDialog = ({ open, onOpenChange, zone, onSave }: DisasterZon
           {/* Map Container */}
           <div 
             ref={mapRef} 
-            className="flex-1 w-full rounded-lg border border-border bg-gray-100"
-            style={{ minHeight: '400px' }}
+            className="flex-1 w-full rounded-lg border border-border"
+            style={{ 
+              minHeight: '400px',
+              height: '500px',
+              backgroundColor: '#e5e7eb' // Light gray background like the example
+            }}
           />
 
           {/* Instructions */}
