@@ -42,9 +42,41 @@ interface Household {
   updated_at: string;
 }
 
+interface Event {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  event_type: string;
+  target_audience: string;
+}
+
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  created_at: string;
+  created_by: string;
+}
+
+interface OfficialWithPosition {
+  id: string;
+  name: string;
+  photo_url: string;
+  position: string;
+  term_start: string;
+  term_end: string;
+}
+
 interface DataContextType {
   residents: Resident[];
   households: Household[];
+  upcomingEvents: Event[];
+  latestAnnouncements: Announcement[];
+  barangayOfficials: OfficialWithPosition[];
+  barangayName: string;
   loading: boolean;
   refetchData: () => void;
 }
@@ -67,6 +99,10 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const { userProfile } = useAuth();
   const [residents, setResidents] = useState<Resident[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [latestAnnouncements, setLatestAnnouncements] = useState<Announcement[]>([]);
+  const [barangayOfficials, setBarangayOfficials] = useState<OfficialWithPosition[]>([]);
+  const [barangayName, setBarangayName] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
@@ -102,6 +138,78 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       } else {
         setHouseholds(householdsData || []);
       }
+
+      // Fetch barangay name
+      const { data: barangayData, error: barangayError } = await supabase
+        .from('barangays')
+        .select('barangayname')
+        .eq('id', userProfile.brgyid)
+        .single();
+      
+      if (barangayData && !barangayError) {
+        setBarangayName(barangayData.barangayname);
+      }
+
+      // Fetch upcoming events
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('brgyid', userProfile.brgyid)
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+        .limit(3);
+      
+      if (eventsData && !eventsError) {
+        setUpcomingEvents(eventsData);
+      }
+
+      // Fetch latest announcements
+      const { data: announcementsData, error: announcementsError } = await supabase
+        .from('announcements')
+        .select('*')
+        .eq('brgyid', userProfile.brgyid)
+        .order('created_at', { ascending: false })
+        .limit(2);
+      
+      if (announcementsData && !announcementsError) {
+        setLatestAnnouncements(announcementsData);
+      }
+
+      // Fetch barangay officials with positions
+      const { data: officialsData, error: officialsError } = await supabase
+        .from('official_positions')
+        .select(`
+          id,
+          position,
+          term_start,
+          term_end,
+          is_current,
+          officials (
+            id,
+            name,
+            photo_url
+          )
+        `)
+        .eq('officials.brgyid', userProfile.brgyid)
+        .eq('is_current', true)
+        .order('term_start', { ascending: true })
+        .limit(5);
+      
+      if (officialsData && !officialsError) {
+        // Transform the data to match our interface
+        const officialsWithPositions: OfficialWithPosition[] = officialsData
+          .filter(item => item.officials) // Only include items with valid officials data
+          .map(item => ({
+            id: item.officials.id,
+            name: item.officials.name,
+            photo_url: item.officials.photo_url,
+            position: item.position,
+            term_start: item.term_start,
+            term_end: item.term_end
+          }));
+        
+        setBarangayOfficials(officialsWithPositions);
+      }
     } catch (error) {
       console.error('Error in fetchData:', error);
     } finally {
@@ -118,6 +226,10 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const value: DataContextType = {
     residents,
     households,
+    upcomingEvents,
+    latestAnnouncements,
+    barangayOfficials,
+    barangayName,
     loading,
     refetchData: fetchData,
   };

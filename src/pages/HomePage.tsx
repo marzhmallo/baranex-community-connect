@@ -1,47 +1,24 @@
-import React, { useState, useEffect, useContext } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { useData } from '@/context/DataContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-interface Event {
-  id: string;
-  title: string;
-  start_time: string;
-  end_time: string;
-  location: string;
-  event_type: string;
-  target_audience: string;
-}
-
-interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  created_at: string;
-  created_by: string;
-}
-
-interface OfficialWithPosition {
-  id: string;
-  name: string;
-  photo_url: string;
-  position: string;
-  term_start: string;
-  term_end: string;
-}
-
 const HomePage = () => {
   const { userProfile } = useAuth();
-  const { residents, households, loading: dataLoading } = useData();
-  const [barangayName, setBarangayName] = useState<string>('');
+  const { 
+    residents, 
+    households, 
+    upcomingEvents, 
+    latestAnnouncements, 
+    barangayOfficials, 
+    barangayName, 
+    loading 
+  } = useData();
+  
   const [currentDate, setCurrentDate] = useState('');
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [latestAnnouncements, setLatestAnnouncements] = useState<Announcement[]>([]);
-  const [barangayOfficials, setBarangayOfficials] = useState<OfficialWithPosition[]>([]);
 
   useEffect(() => {
     // Set current date
@@ -53,116 +30,7 @@ const HomePage = () => {
       day: 'numeric'
     };
     setCurrentDate(now.toLocaleDateString('en-US', options));
-
-    // Fetch barangay name immediately
-    const fetchBarangayName = async () => {
-      if (userProfile?.brgyid) {
-        try {
-          const { data, error } = await supabase
-            .from('barangays')
-            .select('barangayname')
-            .eq('id', userProfile.brgyid)
-            .single();
-          
-          if (data && !error) {
-            setBarangayName(data.barangayname);
-          }
-        } catch (err) {
-          console.error('Error fetching barangay name:', err);
-        }
-      }
-    };
-
-    // Fetch upcoming events
-    const fetchUpcomingEvents = async () => {
-      if (userProfile?.brgyid) {
-        try {
-          const { data, error } = await supabase
-            .from('events')
-            .select('*')
-            .eq('brgyid', userProfile.brgyid)
-            .gte('start_time', new Date().toISOString())
-            .order('start_time', { ascending: true })
-            .limit(3);
-          
-          if (data && !error) {
-            setUpcomingEvents(data);
-          }
-        } catch (err) {
-          console.error('Error fetching upcoming events:', err);
-        }
-      }
-    };
-
-    // Fetch latest announcements
-    const fetchLatestAnnouncements = async () => {
-      if (userProfile?.brgyid) {
-        try {
-          const { data, error } = await supabase
-            .from('announcements')
-            .select('*')
-            .eq('brgyid', userProfile.brgyid)
-            .order('created_at', { ascending: false })
-            .limit(2);
-          
-          if (data && !error) {
-            setLatestAnnouncements(data);
-          }
-        } catch (err) {
-          console.error('Error fetching latest announcements:', err);
-        }
-      }
-    };
-
-    // Fetch barangay officials with positions
-    const fetchBarangayOfficials = async () => {
-      if (userProfile?.brgyid) {
-        try {
-          const { data, error } = await supabase
-            .from('official_positions')
-            .select(`
-              id,
-              position,
-              term_start,
-              term_end,
-              is_current,
-              officials (
-                id,
-                name,
-                photo_url
-              )
-            `)
-            .eq('officials.brgyid', userProfile.brgyid)
-            .eq('is_current', true)
-            .order('term_start', { ascending: true })
-            .limit(5);
-          
-          if (data && !error) {
-            // Transform the data to match our interface
-            const officialsWithPositions: OfficialWithPosition[] = data
-              .filter(item => item.officials) // Only include items with valid officials data
-              .map(item => ({
-                id: item.officials.id,
-                name: item.officials.name,
-                photo_url: item.officials.photo_url,
-                position: item.position,
-                term_start: item.term_start,
-                term_end: item.term_end
-              }));
-            
-            setBarangayOfficials(officialsWithPositions);
-          }
-        } catch (err) {
-          console.error('Error fetching barangay officials:', err);
-        }
-      }
-    };
-
-    fetchBarangayName();
-    fetchUpcomingEvents();
-    fetchLatestAnnouncements();
-    fetchBarangayOfficials();
-  }, [userProfile]);
+  }, []);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -220,7 +88,7 @@ const HomePage = () => {
   };
 
   // Show loading state if data is still loading
-  if (dataLoading) {
+  if (loading) {
     return (
       <div className="p-6 bg-background min-h-screen">
         <div className="animate-pulse">
