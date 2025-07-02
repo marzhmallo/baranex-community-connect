@@ -55,6 +55,7 @@ const DisasterZonesManager = () => {
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
   const currentPolygonRef = useRef<L.Polygon | null>(null);
   const polygonDrawerRef = useRef<L.Draw.Polygon | null>(null);
+  const initializingRef = useRef(false);
 
   const form = useForm<ZoneFormData>({
     defaultValues: {
@@ -72,26 +73,38 @@ const DisasterZonesManager = () => {
     }
   }, [userProfile?.brgyid]);
 
-  // Initialize map when component mounts and data is ready
+  // Initialize map when component mounts
   useEffect(() => {
-    if (!mapReady && mapRef.current && !mapInstanceRef.current) {
+    if (!mapReady && mapRef.current && !mapInstanceRef.current && !initializingRef.current) {
+      initializingRef.current = true;
+      console.log('Starting map initialization...');
+      
       const timer = setTimeout(() => {
         initializeMap();
       }, 100);
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        initializingRef.current = false;
+      };
     }
     
+    // Cleanup on unmount
     return () => {
-      // Cleanup map on unmount
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        console.log('Cleaning up map...');
+        try {
+          mapInstanceRef.current.remove();
+        } catch (error) {
+          console.error('Error cleaning up map:', error);
+        }
         mapInstanceRef.current = null;
         drawnItemsRef.current = null;
         setMapReady(false);
+        initializingRef.current = false;
       }
     };
-  }, [mapReady]);
+  }, []);
 
   // Load zones on map when zones data changes and map is ready
   useEffect(() => {
@@ -101,21 +114,29 @@ const DisasterZonesManager = () => {
   }, [zones, mapReady, isAddingNew, isEditing]);
 
   const initializeMap = () => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    if (!mapRef.current || mapInstanceRef.current || initializingRef.current === false) {
+      console.log('Map initialization skipped - conditions not met');
+      return;
+    }
 
     try {
-      console.log('Initializing map...');
+      console.log('Creating map instance...');
       
       const map = L.map(mapRef.current, {
+        center: [14.5995, 121.0244],
+        zoom: 13,
         zoomControl: true,
-        attributionControl: true
-      }).setView([14.5995, 121.0244], 13);
+        attributionControl: true,
+        preferCanvas: true
+      });
       
+      console.log('Adding tile layer...');
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
       }).addTo(map);
 
+      console.log('Creating drawn items layer...');
       const drawnItems = new L.FeatureGroup();
       map.addLayer(drawnItems);
 
@@ -124,6 +145,7 @@ const DisasterZonesManager = () => {
 
       // Handle polygon drawing
       map.on(L.Draw.Event.CREATED, (e: any) => {
+        console.log('Polygon created');
         const layer = e.layer;
         if (currentPolygonRef.current && drawnItems.hasLayer(currentPolygonRef.current)) {
           drawnItems.removeLayer(currentPolygonRef.current);
@@ -132,15 +154,22 @@ const DisasterZonesManager = () => {
         currentPolygonRef.current = layer;
       });
 
-      // Ensure map renders properly
+      // Force map to render properly
       setTimeout(() => {
-        map.invalidateSize();
-        setMapReady(true);
-        console.log('Map initialized successfully');
+        try {
+          map.invalidateSize();
+          setMapReady(true);
+          initializingRef.current = false;
+          console.log('Map initialized successfully');
+        } catch (error) {
+          console.error('Error during map finalization:', error);
+          initializingRef.current = false;
+        }
       }, 200);
 
     } catch (error) {
       console.error('Error initializing map:', error);
+      initializingRef.current = false;
     }
   };
 
@@ -153,7 +182,6 @@ const DisasterZonesManager = () => {
     const map = mapInstanceRef.current;
     
     try {
-      // Cast the map to any to avoid TypeScript issues with leaflet-draw
       polygonDrawerRef.current = new L.Draw.Polygon(map as any, {
         allowIntersection: false,
         drawError: {
@@ -167,6 +195,7 @@ const DisasterZonesManager = () => {
       });
       
       polygonDrawerRef.current.enable();
+      console.log('Drawing mode enabled');
     } catch (error) {
       console.error('Error enabling drawing mode:', error);
     }
@@ -177,6 +206,7 @@ const DisasterZonesManager = () => {
       try {
         polygonDrawerRef.current.disable();
         polygonDrawerRef.current = null;
+        console.log('Drawing mode disabled');
       } catch (error) {
         console.error('Error disabling drawing mode:', error);
       }
@@ -627,7 +657,7 @@ const DisasterZonesManager = () => {
           <div 
             ref={mapRef} 
             className="w-full h-full"
-            style={{ minHeight: '400px', background: '#e5e7eb' }}
+            style={{ minHeight: '400px' }}
           />
           
           {/* Instructions overlay */}
