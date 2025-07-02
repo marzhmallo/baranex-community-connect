@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Phone, MapPin, Users, AlertTriangle, Navigation, Shield } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import UnifiedEmergencyMap from "./UnifiedEmergencyMap";
+import BarangayLocationMap from "@/components/dashboard/BarangayLocationMap";
 
 interface DashboardStats {
   emergencyContacts: number;
@@ -184,8 +184,8 @@ const EmergencyDashboard = () => {
         </Card>
       </div>
 
-      {/* Unified Emergency Map */}
-      <UnifiedEmergencyMap />
+      {/* Emergency Map */}
+      <BarangayLocationMap barangayName="Emergency" />
 
       {/* Quick Emergency Contacts */}
       <Card>
