@@ -1,202 +1,184 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Home, FileText, Calendar, TrendingUp, UserPlus, Activity, Bell } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { useState, useEffect } from "react";
+import { Users, Home, Calendar, TrendingUp, TrendingDown, Megaphone } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardStats = () => {
+  const { residents, households, loading: dataLoading } = useData();
   const { 
-    residents, 
-    households, 
-    upcomingEvents, 
-    latestAnnouncements, 
-    barangayOfficials, 
-    loading: dataLoading 
-  } = useData();
-  
-  const {
+    activeAnnouncements, 
+    upcomingEvents,
     residentGrowthRate,
     householdGrowthRate,
     newResidentsThisMonth,
     newHouseholdsThisMonth,
     newAnnouncementsThisWeek,
     nextEventDays,
-    isLoading: dashboardLoading,
-    error
+    isLoading: dashboardLoading 
   } = useDashboardData();
+  
+  const [progress, setProgress] = useState(13);
 
-  const isLoading = dataLoading || dashboardLoading;
+  useEffect(() => {
+    const timer = setTimeout(() => setProgress(66), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // Calculate totals from context data
+  // Use data from context for totals
   const totalResidents = residents.length;
   const totalHouseholds = households.length;
-  const totalAnnouncements = latestAnnouncements.length;
-  const totalEvents = upcomingEvents.length;
+  const isLoading = dataLoading || dashboardLoading;
 
   const formatGrowthRate = (rate: number) => {
     const sign = rate >= 0 ? '+' : '';
     return `${sign}${rate.toFixed(1)}%`;
   };
 
-  if (error) {
+  const formatAnnouncementText = () => {
+    if (newAnnouncementsThisWeek === 0) {
+      return "No new announcements this week";
+    } else if (newAnnouncementsThisWeek === 1) {
+      return "1 new this week";
+    } else {
+      return `${newAnnouncementsThisWeek} new this week`;
+    }
+  };
+
+  const formatEventText = () => {
+    if (nextEventDays === null || upcomingEvents === 0) {
+      return "No upcoming events";
+    } else if (nextEventDays === 0) {
+      return "Event today";
+    } else if (nextEventDays === 1) {
+      return "Next event tomorrow";
+    } else {
+      return `Next event in ${nextEventDays} days`;
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="md:col-span-4">
-          <CardContent className="p-6">
-            <div className="text-center text-red-500">
-              Error loading dashboard data: {error}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="overflow-hidden border shadow-sm animate-pulse">
+            <div className="flex">
+              <div className="flex-grow p-6">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded"></div>
+              </div>
+              <div className="w-16 bg-gray-200"></div>
             </div>
-          </CardContent>
-        </Card>
+          </Card>
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Main Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Residents</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? '...' : totalResidents.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              <span className={`font-medium ${residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
-                {isLoading ? '...' : formatGrowthRate(residentGrowthRate)}
-              </span>
-              {' '}from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Households</CardTitle>
-            <Home className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? '...' : totalHouseholds.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              <span className={`font-medium ${householdGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
-                {isLoading ? '...' : formatGrowthRate(householdGrowthRate)}
-              </span>
-              {' '}from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Announcements</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? '...' : totalAnnouncements.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-baranex-primary">
-                {isLoading ? '...' : newAnnouncementsThisWeek}
-              </span>
-              {' '}new this week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? '...' : totalEvents.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {nextEventDays !== null ? (
-                <span className="font-medium text-baranex-warning">
-                  Next in {nextEventDays} day{nextEventDays !== 1 ? 's' : ''}
-                </span>
-              ) : (
-                <span className="text-muted-foreground">No upcoming events</span>
-              )}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Additional Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Residents</CardTitle>
-            <UserPlus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-baranex-success">
-              {isLoading ? '...' : newResidentsThisMonth}
-            </div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Households</CardTitle>
-            <Home className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-baranex-success">
-              {isLoading ? '...' : newHouseholdsThisMonth}
-            </div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Barangay Officials</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? '...' : barangayOfficials.length}
-            </div>
-            <p className="text-xs text-muted-foreground">Currently serving</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-1">
-              <Link to="/residents/add">
-                <Badge variant="secondary" className="text-xs cursor-pointer hover:bg-baranex-primary hover:text-white">
-                  Add Resident
-                </Badge>
-              </Link>
-              <Link to="/households/add">
-                <Badge variant="secondary" className="text-xs cursor-pointer hover:bg-baranex-primary hover:text-white">
-                  Add Household
-                </Badge>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <Card className="overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
+        <div className="flex">
+          <div className="flex-grow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Residents</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">{totalResidents.toLocaleString()}</div>
+              <div className="flex items-center mt-1">
+                {residentGrowthRate >= 0 ? (
+                  <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
+                ) : (
+                  <TrendingDown className="text-red-500 h-3 w-3 mr-1" />
+                )}
+                <p className={`text-xs ${residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
+                  {formatGrowthRate(residentGrowthRate)} ({newResidentsThisMonth} this month)
+                </p>
+              </div>
+              <Progress value={progress} className="mt-3 h-1.5" />
+            </CardContent>
+          </div>
+          <div className="bg-gradient-to-br from-baranex-primary/10 to-baranex-primary/5 p-4 flex items-center justify-center">
+            <Users className="h-8 w-8 text-baranex-primary" />
+          </div>
+        </div>
+      </Card>
+      
+      <Card className="overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
+        <div className="flex">
+          <div className="flex-grow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Registered Households</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">{totalHouseholds.toLocaleString()}</div>
+              <div className="flex items-center mt-1">
+                {householdGrowthRate >= 0 ? (
+                  <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
+                ) : (
+                  <TrendingDown className="text-red-500 h-3 w-3 mr-1" />
+                )}
+                <p className={`text-xs ${householdGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
+                  {formatGrowthRate(householdGrowthRate)} ({newHouseholdsThisMonth} this month)
+                </p>
+              </div>
+              <Progress value={35} className="mt-3 h-1.5" />
+            </CardContent>
+          </div>
+          <div className="bg-gradient-to-br from-baranex-secondary/10 to-baranex-secondary/5 p-4 flex items-center justify-center">
+            <Home className="h-8 w-8 text-baranex-secondary" />
+          </div>
+        </div>
+      </Card>
+      
+      <Card className="overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
+        <div className="flex">
+          <div className="flex-grow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Active Announcements</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">{activeAnnouncements}</div>
+              <div className="flex items-center mt-1">
+                <Megaphone className="text-baranex-warning h-3 w-3 mr-1" />
+                <p className="text-xs text-baranex-warning">
+                  {formatAnnouncementText()}
+                </p>
+              </div>
+              <Progress value={78} className="mt-3 h-1.5" />
+            </CardContent>
+          </div>
+          <div className="bg-gradient-to-br from-baranex-warning/10 to-baranex-warning/5 p-4 flex items-center justify-center">
+            <Megaphone className="h-8 w-8 text-baranex-warning" />
+          </div>
+        </div>
+      </Card>
+      
+      <Card className="overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
+        <div className="flex">
+          <div className="flex-grow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Events</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">{upcomingEvents}</div>
+              <div className="flex items-center mt-1">
+                <Calendar className="text-baranex-accent h-3 w-3 mr-1" />
+                <p className="text-xs text-accent-foreground">
+                  {formatEventText()}
+                </p>
+              </div>
+              <Progress value={45} className="mt-3 h-1.5" />
+            </CardContent>
+          </div>
+          <div className="bg-gradient-to-br from-baranex-accent/10 to-baranex-accent/5 p-4 flex items-center justify-center">
+            <Calendar className="h-8 w-8 text-baranex-accent" />
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

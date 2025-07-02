@@ -13,11 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
-import { useData } from "@/context/DataContext";
 
 const Index = () => {
-  const { residents, households, upcomingEvents, latestAnnouncements, barangayOfficials, barangayName, loading } = useData();
-
   return (
     <div className="flex min-h-screen bg-background">
       {/* Main content */}
