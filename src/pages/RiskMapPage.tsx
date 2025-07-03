@@ -36,7 +36,6 @@ interface SafeRoute {
 const RiskMapPage = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const [isMapLoading, setIsMapLoading] = useState(true);
   const [map, setMap] = useState<L.Map | null>(null);
   const [showZones, setShowZones] = useState(true);
   const [showCenters, setShowCenters] = useState(true);
@@ -80,85 +79,67 @@ const RiskMapPage = () => {
   });
 
   useEffect(() => {
-    const initializeMapAsync = async () => {
-      if (!mapRef.current || mapInstanceRef.current) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
 
-      try {
-        // Small delay to ensure DOM is ready
-        await new Promise(resolve => setTimeout(resolve, 100));
+    // Initialize map
+    const mapInstance = L.map(mapRef.current).setView([12.8797, 121.7740], 6);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(mapInstance);
 
-        // Initialize map
-        const mapInstance = L.map(mapRef.current).setView([12.8797, 121.7740], 6);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(mapInstance);
+    // Create layer groups
+    const zonesLayer = L.featureGroup().addTo(mapInstance);
+    const centersLayer = L.featureGroup().addTo(mapInstance);
+    const routesLayer = L.featureGroup().addTo(mapInstance);
 
-        // Create layer groups
-        const zonesLayer = L.featureGroup().addTo(mapInstance);
-        const centersLayer = L.featureGroup().addTo(mapInstance);
-        const routesLayer = L.featureGroup().addTo(mapInstance);
+    zonesLayerRef.current = zonesLayer;
+    centersLayerRef.current = centersLayer;
+    routesLayerRef.current = routesLayer;
 
-        zonesLayerRef.current = zonesLayer;
-        centersLayerRef.current = centersLayer;
-        routesLayerRef.current = routesLayer;
+    // Set up drawing controls
+    const drawnItems = new L.FeatureGroup();
+    mapInstance.addLayer(drawnItems);
 
-        // Set up drawing controls
-        const drawnItems = new L.FeatureGroup();
-        mapInstance.addLayer(drawnItems);
-
-        const drawControl = new L.Control.Draw({
-          edit: { featureGroup: drawnItems },
-          draw: {
-            polygon: { shapeOptions: { color: 'red' } },
-            marker: { icon: createIcon('green') },
-            polyline: { shapeOptions: { color: 'blue' } },
-            circle: false,
-            circlemarker: false,
-            rectangle: false
-          }
-        });
-
-        drawControlRef.current = drawControl;
-
-        mapInstance.on(L.Draw.Event.CREATED, function (e: any) {
-          const type = e.layerType;
-          const layer = e.layer;
-          
-          if (type === 'polygon') {
-            setTempLayer(layer);
-            setShowModal(true);
-          } else {
-            const name = prompt(`Enter a name for the new ${type}:`);
-            if (name) {
-              layer.bindPopup(`<b>${name}</b>`).openPopup();
-            }
-          }
-          toggleDrawing(); // Exit drawing mode after one shape
-        });
-
-        mapInstanceRef.current = mapInstance;
-        setMap(mapInstance);
-
-        // Render initial data
-        renderMapData(mapInstance, zonesLayer, centersLayer, routesLayer);
-
-        // Set loading to false after map is ready
-        setIsMapLoading(false);
-
-      } catch (error) {
-        console.error('Error initializing map:', error);
-        setIsMapLoading(false);
+    const drawControl = new L.Control.Draw({
+      edit: { featureGroup: drawnItems },
+      draw: {
+        polygon: { shapeOptions: { color: 'red' } },
+        marker: { icon: createIcon('green') },
+        polyline: { shapeOptions: { color: 'blue' } },
+        circle: false,
+        circlemarker: false,
+        rectangle: false
       }
-    };
+    });
 
-    initializeMapAsync();
+    drawControlRef.current = drawControl;
+
+    mapInstance.on(L.Draw.Event.CREATED, function (e: any) {
+      const type = e.layerType;
+      const layer = e.layer;
+      
+      if (type === 'polygon') {
+        setTempLayer(layer);
+        setShowModal(true);
+      } else {
+        const name = prompt(`Enter a name for the new ${type}:`);
+        if (name) {
+          layer.bindPopup(`<b>${name}</b>`).openPopup();
+        }
+      }
+      toggleDrawing(); // Exit drawing mode after one shape
+    });
+
+    mapInstanceRef.current = mapInstance;
+    setMap(mapInstance);
+
+    // Render initial data
+    renderMapData(mapInstance, zonesLayer, centersLayer, routesLayer);
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
+      mapInstance.remove();
+      mapInstanceRef.current = null;
     };
   }, []);
 
@@ -291,7 +272,7 @@ const RiskMapPage = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100 animate-fade-in">
+    <div className="flex h-screen overflow-hidden bg-gray-100">
       {/* Left Sidebar */}
       <aside className="w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col">
         {/* Header */}
@@ -348,7 +329,7 @@ const RiskMapPage = () => {
               {disasterZones.map(zone => (
                 <div 
                   key={zone.id}
-                  className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100"
                   onClick={() => focusOnItem(zone, 'zone')}
                 >
                   <h4 className="font-semibold text-gray-700">{zone.name}</h4>
@@ -374,7 +355,7 @@ const RiskMapPage = () => {
               {evacCenters.map(center => (
                 <div 
                   key={center.id}
-                  className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100"
                   onClick={() => focusOnItem(center, 'center')}
                 >
                   <h4 className="font-semibold text-gray-700">{center.name}</h4>
@@ -397,7 +378,7 @@ const RiskMapPage = () => {
               {safeRoutes.map(route => (
                 <div 
                   key={route.id}
-                  className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100"
                   onClick={() => focusOnItem(route, 'route')}
                 >
                   <h4 className="font-semibold text-gray-700">{route.name}</h4>
@@ -424,26 +405,13 @@ const RiskMapPage = () => {
 
       {/* Map Container */}
       <main className="flex-1 relative">
-        {isMapLoading && (
-          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading map...</p>
-            </div>
-          </div>
-        )}
-        <div 
-          ref={mapRef} 
-          className={`h-full w-full bg-gray-300 transition-opacity duration-300 ${
-            isMapLoading ? 'opacity-0' : 'opacity-100'
-          }`} 
-        />
+        <div ref={mapRef} className="h-full w-full bg-gray-300" />
       </main>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[2000] animate-fade-in">
-          <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md animate-scale-in">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[2000]">
+          <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
             <h2 className="text-2xl font-bold text-gray-800 mb-1">Add Disaster Zone</h2>
             <p className="text-sm text-gray-500 mb-6">Add a new disaster risk zone for your barangay.</p>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -499,13 +467,13 @@ const RiskMapPage = () => {
                 <button 
                   type="button" 
                   onClick={closeModal}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
                 >
                   Save Zone
                 </button>
