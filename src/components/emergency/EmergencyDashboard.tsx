@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +10,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -59,6 +59,8 @@ interface SafeRoute {
 
 const EmergencyDashboard = () => {
   const { userProfile } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   // Dashboard state
   const [stats, setStats] = useState<DashboardStats>({
@@ -402,6 +404,10 @@ const EmergencyDashboard = () => {
     }
   };
 
+  const handleViewRiskMap = () => {
+    navigate('/emergency?tab=riskmap');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -537,7 +543,7 @@ const EmergencyDashboard = () => {
             <Button 
               variant="outline" 
               className="w-full justify-start"
-              onClick={() => window.location.href = '/riskmap'}
+              onClick={handleViewRiskMap}
             >
               <MapPin className="h-4 w-4 mr-2" />
               View Risk Map
@@ -549,223 +555,6 @@ const EmergencyDashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Emergency Map Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Emergency Risk Map
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-screen overflow-hidden bg-gray-100 rounded-lg">
-            {/* Left Sidebar */}
-            <aside className="w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col">
-              {/* Header */}
-              <div className="p-4 border-b">
-                <h3 className="text-lg font-bold text-gray-800">Map Controls</h3>
-                <p className="text-sm text-gray-500 mt-1">Manage emergency locations.</p>
-              </div>
-
-              {/* Layer Toggles */}
-              <div className="p-4 border-b space-y-2">
-                <h4 className="font-semibold text-gray-700">Map Layers</h4>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={showZones}
-                    onChange={() => handleLayerToggle('zones')}
-                    className="form-checkbox text-red-600" 
-                  />
-                  <span className="text-sm text-red-600">Disaster Zones</span>
-                </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={showCenters}
-                    onChange={() => handleLayerToggle('centers')}
-                    className="form-checkbox text-green-600" 
-                  />
-                  <span className="text-sm text-green-600">Evacuation Centers</span>
-                </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={showRoutes}
-                    onChange={() => handleLayerToggle('routes')}
-                    className="form-checkbox text-blue-600" 
-                  />
-                  <span className="text-sm text-blue-600">Safe Routes</span>
-                </label>
-              </div>
-
-              {/* Lists */}
-              <div className="flex-grow overflow-y-auto">
-                {/* Disaster Zones */}
-                <div className="border-b">
-                  <div className="w-full text-left p-4 font-bold text-gray-800 bg-gray-50">
-                    <div className="flex items-center space-x-3">
-                      <AlertTriangle className="w-5 h-5" />
-                      <span>Disaster Zones</span>
-                    </div>
-                  </div>
-                  <div>
-                    {disasterZones.map(zone => (
-                      <div 
-                        key={zone.id}
-                        className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100"
-                        onClick={() => focusOnItem(zone, 'zone')}
-                      >
-                        <h4 className="font-semibold text-gray-700">{zone.name}</h4>
-                        <p className={`text-sm ${zone.risk === 'high' ? 'text-red-600' : zone.risk === 'medium' ? 'text-orange-500' : 'text-green-600'}`}>
-                          Risk: <span className="font-medium capitalize">{zone.risk}</span>
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Evacuation Centers */}
-                <div className="border-b">
-                  <div className="w-full text-left p-4 font-bold text-gray-800 bg-gray-50">
-                    <div className="flex items-center space-x-3">
-                      <Users className="w-5 h-5" />
-                      <span>Evacuation Centers</span>
-                    </div>
-                  </div>
-                  <div>
-                    {evacCenters.map(center => (
-                      <div 
-                        key={center.id}
-                        className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100"
-                        onClick={() => focusOnItem(center, 'center')}
-                      >
-                        <h4 className="font-semibold text-gray-700">{center.name}</h4>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Safe Routes */}
-                <div className="border-b">
-                  <div className="w-full text-left p-4 font-bold text-gray-800 bg-gray-50">
-                    <div className="flex items-center space-x-3">
-                      <Navigation className="w-5 h-5" />
-                      <span>Safe Routes</span>
-                    </div>
-                  </div>
-                  <div>
-                    {safeRoutes.map(route => (
-                      <div 
-                        key={route.id}
-                        className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100"
-                        onClick={() => focusOnItem(route, 'route')}
-                      >
-                        <h4 className="font-semibold text-gray-700">{route.name}</h4>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="p-4 border-t">
-                <button 
-                  onClick={toggleDrawing}
-                  className={`w-full font-semibold py-3 rounded-lg transition ${
-                    isDrawing 
-                      ? 'bg-red-600 hover:bg-red-700 text-white' 
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
-                >
-                  {isDrawing ? 'Cancel Drawing' : '+ Add New Location'}
-                </button>
-              </div>
-            </aside>
-
-            {/* Map Container */}
-            <main className="flex-1 relative">
-              <div ref={mapRef} className="h-full w-full bg-gray-300" />
-            </main>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[2000]">
-          <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">Add Disaster Zone</h2>
-            <p className="text-sm text-gray-500 mb-6">Add a new disaster risk zone for your barangay.</p>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Zone Name</label>
-                <input 
-                  type="text" 
-                  value={formData.zoneName}
-                  onChange={(e) => setFormData({...formData, zoneName: e.target.value})}
-                  placeholder="e.g., Riverside Flood Area" 
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
-                  required 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Disaster Type</label>
-                <select 
-                  value={formData.disasterType}
-                  onChange={(e) => setFormData({...formData, disasterType: e.target.value})}
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option>🌊 Flood Zone</option>
-                  <option>🔥 Fire Hazard</option>
-                  <option>⛰️ Landslide Risk</option>
-                  <option>🌍 Earthquake Fault</option>
-                  <option>🌀 Typhoon Path</option>
-                  <option>⚠️ Other Hazard</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Risk Level</label>
-                <select 
-                  value={formData.riskLevel}
-                  onChange={(e) => setFormData({...formData, riskLevel: e.target.value as 'low' | 'medium' | 'high'})}
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="low">Low Risk</option>
-                  <option value="medium">Medium Risk</option>
-                  <option value="high">High Risk</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Notes (Optional)</label>
-                <textarea 
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  rows={3} 
-                  placeholder="e.g., Prone to flash floods during heavy rain." 
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div className="flex justify-end space-x-4 pt-4">
-                <button 
-                  type="button" 
-                  onClick={closeModal}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
-                >
-                  Save Zone
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
