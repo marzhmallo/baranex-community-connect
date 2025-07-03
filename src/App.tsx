@@ -33,6 +33,7 @@ import ForumPage from "./pages/ForumPage";
 import StatisticsPage from "./pages/StatisticsPage";
 import OfficialDetailsPage from './pages/OfficialDetailsPage';
 import EmergencyResponsePage from "./pages/EmergencyResponsePage";
+import RiskMapPage from "./pages/RiskMapPage";
 import UserAccountManagement from "./pages/UserAccountManagement";
 import NexusPage from "./pages/NexusPage";
 import UserCalendarPage from "./components/user/UserCalendarPage";
@@ -183,6 +184,7 @@ const AppContent = () => {
                 <Route path="/blotter" element={<AdminRoute><BlotterPage /></AdminRoute>} />
                 <Route path="/feedback" element={<AdminRoute><FeedbackPage /></AdminRoute>} />
                 <Route path="/emergency" element={<AdminRoute><EmergencyResponsePage /></AdminRoute>} />
+                <Route path="/riskmap" element={<AdminRoute><RiskMapPage /></AdminRoute>} />
                 <Route path="/calendar" element={<AdminRoute><CalendarPage /></AdminRoute>} />
                 <Route path="/announcements" element={<AdminRoute><AnnouncementsPage /></AdminRoute>} />
                 <Route path="/forum" element={<AdminRoute><ForumPage /></AdminRoute>} />
