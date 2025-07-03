@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,19 +8,9 @@ import EvacuationCentersManager from "@/components/emergency/EvacuationCentersMa
 import EvacuationRoutesManager from "@/components/emergency/EvacuationRoutesManager";
 import EmergencyDashboard from "@/components/emergency/EmergencyDashboard";
 import RiskMapPage from "@/pages/RiskMapPage";
-import { useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
 
 const EmergencyResponsePage = () => {
-  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("dashboard");
-
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab) {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
 
   return (
     <div className="p-6 space-y-6">
