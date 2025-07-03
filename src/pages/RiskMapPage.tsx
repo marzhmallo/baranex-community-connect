@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -313,79 +314,84 @@ const RiskMapPage = () => {
           </label>
         </div>
 
-        {/* Lists */}
+        {/* Accordion Lists */}
         <div className="flex-grow overflow-y-auto">
-          {/* Disaster Zones */}
-          <div className="border-b">
-            <div className="w-full text-left p-4 font-bold text-gray-800 bg-gray-50">
-              <div className="flex items-center space-x-3">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-                <span>Disaster Zones</span>
-              </div>
-            </div>
-            <div>
-              {disasterZones.map(zone => (
-                <div 
-                  key={zone.id}
-                  className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100"
-                  onClick={() => focusOnItem(zone, 'zone')}
-                >
-                  <h4 className="font-semibold text-gray-700">{zone.name}</h4>
-                  <p className={`text-sm ${zone.risk === 'high' ? 'text-red-600' : zone.risk === 'medium' ? 'text-orange-500' : 'text-green-600'}`}>
-                    Risk: <span className="font-medium capitalize">{zone.risk}</span>
-                  </p>
+          <Accordion type="multiple" defaultValue={["zones", "centers", "routes"]} className="w-full">
+            {/* Disaster Zones */}
+            <AccordionItem value="zones" className="border-b">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                  </svg>
+                  <span className="font-semibold text-gray-800">Disaster Zones</span>
+                  <span className="ml-auto text-sm text-gray-500">({disasterZones.length})</span>
                 </div>
-              ))}
-            </div>
-          </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                {disasterZones.map(zone => (
+                  <div 
+                    key={zone.id}
+                    className="px-4 py-3 border-t cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => focusOnItem(zone, 'zone')}
+                  >
+                    <h4 className="font-semibold text-gray-700">{zone.name}</h4>
+                    <p className={`text-sm ${zone.risk === 'high' ? 'text-red-600' : zone.risk === 'medium' ? 'text-orange-500' : 'text-green-600'}`}>
+                      Risk: <span className="font-medium capitalize">{zone.risk}</span>
+                    </p>
+                  </div>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
 
-          {/* Evacuation Centers */}
-          <div className="border-b">
-            <div className="w-full text-left p-4 font-bold text-gray-800 bg-gray-50">
-              <div className="flex items-center space-x-3">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                </svg>
-                <span>Evacuation Centers</span>
-              </div>
-            </div>
-            <div>
-              {evacCenters.map(center => (
-                <div 
-                  key={center.id}
-                  className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100"
-                  onClick={() => focusOnItem(center, 'center')}
-                >
-                  <h4 className="font-semibold text-gray-700">{center.name}</h4>
+            {/* Evacuation Centers */}
+            <AccordionItem value="centers" className="border-b">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                  </svg>
+                  <span className="font-semibold text-gray-800">Evacuation Centers</span>
+                  <span className="ml-auto text-sm text-gray-500">({evacCenters.length})</span>
                 </div>
-              ))}
-            </div>
-          </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                {evacCenters.map(center => (
+                  <div 
+                    key={center.id}
+                    className="px-4 py-3 border-t cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => focusOnItem(center, 'center')}
+                  >
+                    <h4 className="font-semibold text-gray-700">{center.name}</h4>
+                  </div>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
 
-          {/* Safe Routes */}
-          <div className="border-b">
-            <div className="w-full text-left p-4 font-bold text-gray-800 bg-gray-50">
-              <div className="flex items-center space-x-3">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7m-6 3v7m6-10V7"></path>
-                </svg>
-                <span>Safe Routes</span>
-              </div>
-            </div>
-            <div>
-              {safeRoutes.map(route => (
-                <div 
-                  key={route.id}
-                  className="p-3 pl-12 border-t cursor-pointer hover:bg-gray-100"
-                  onClick={() => focusOnItem(route, 'route')}
-                >
-                  <h4 className="font-semibold text-gray-700">{route.name}</h4>
+            {/* Safe Routes */}
+            <AccordionItem value="routes" className="border-b">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7m-6 3v7m6-10V7"></path>
+                  </svg>
+                  <span className="font-semibold text-gray-800">Safe Routes</span>
+                  <span className="ml-auto text-sm text-gray-500">({safeRoutes.length})</span>
                 </div>
-              ))}
-            </div>
-          </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                {safeRoutes.map(route => (
+                  <div 
+                    key={route.id}
+                    className="px-4 py-3 border-t cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => focusOnItem(route, 'route')}
+                  >
+                    <h4 className="font-semibold text-gray-700">{route.name}</h4>
+                  </div>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
         {/* Footer */}
