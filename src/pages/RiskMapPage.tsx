@@ -163,7 +163,10 @@ const RiskMapPage = () => {
     mapInstance.addLayer(drawnItems);
 
     const drawControl = new L.Control.Draw({
-      edit: { featureGroup: drawnItems },
+      edit: { 
+        featureGroup: drawnItems,
+        remove: true
+      },
       draw: {
         polygon: { shapeOptions: { color: 'red' } },
         marker: { icon: createIcon('green') },
@@ -187,9 +190,20 @@ const RiskMapPage = () => {
         const name = prompt(`Enter a name for the new ${type}:`);
         if (name) {
           layer.bindPopup(`<b>${name}</b>`).openPopup();
+          drawnItems.addLayer(layer);
         }
       }
       toggleDrawing(); // Exit drawing mode after one shape
+    });
+
+    mapInstance.on(L.Draw.Event.EDITED, function (e: any) {
+      console.log('Layers edited:', e.layers);
+      toast({ title: "Items edited successfully!" });
+    });
+
+    mapInstance.on(L.Draw.Event.DELETED, function (e: any) {
+      console.log('Layers deleted:', e.layers);
+      toast({ title: "Items deleted successfully!" });
     });
 
     mapInstanceRef.current = mapInstance;
