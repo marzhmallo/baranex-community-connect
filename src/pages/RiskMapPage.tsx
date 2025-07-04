@@ -60,6 +60,7 @@ const RiskMapPage = () => {
   const centersLayerRef = useRef<L.FeatureGroup | null>(null);
   const routesLayerRef = useRef<L.FeatureGroup | null>(null);
   const drawControlRef = useRef<L.Control.Draw | null>(null);
+  const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
 
   // Database-connected data
   const [disasterZones, setDisasterZones] = useState<DisasterZone[]>([]);
@@ -161,6 +162,7 @@ const RiskMapPage = () => {
     // Set up drawing controls
     const drawnItems = new L.FeatureGroup();
     mapInstance.addLayer(drawnItems);
+    drawnItemsRef.current = drawnItems;
 
     const drawControl = new L.Control.Draw({
       edit: { 
@@ -234,6 +236,11 @@ const RiskMapPage = () => {
     zonesLayer.clearLayers();
     centersLayer.clearLayers();
     routesLayer.clearLayers();
+    
+    // Clear drawnItems for editing
+    if (drawnItemsRef.current) {
+      drawnItemsRef.current.clearLayers();
+    }
 
     // Render disaster zones
     disasterZones.forEach(zone => {
@@ -241,6 +248,12 @@ const RiskMapPage = () => {
         const coords = zone.polygon_coords as [number, number][];
         const polygon = L.polygon(coords, { color: 'red' }).bindPopup(zone.zone_name);
         zonesLayer.addLayer(polygon);
+        
+        // Also add to drawnItems for editing
+        if (drawnItemsRef.current) {
+          const editablePolygon = L.polygon(coords, { color: 'red' }).bindPopup(zone.zone_name);
+          drawnItemsRef.current.addLayer(editablePolygon);
+        }
       }
     });
 
@@ -250,6 +263,12 @@ const RiskMapPage = () => {
         const coords: [number, number] = [center.latitude, center.longitude];
         const marker = L.marker(coords, { icon: createIcon('green') }).bindPopup(center.name);
         centersLayer.addLayer(marker);
+        
+        // Also add to drawnItems for editing
+        if (drawnItemsRef.current) {
+          const editableMarker = L.marker(coords, { icon: createIcon('green') }).bindPopup(center.name);
+          drawnItemsRef.current.addLayer(editableMarker);
+        }
       }
     });
 
@@ -259,6 +278,12 @@ const RiskMapPage = () => {
         const coords = route.route_coords as [number, number][];
         const polyline = L.polyline(coords, { color: 'blue' }).bindPopup(route.route_name);
         routesLayer.addLayer(polyline);
+        
+        // Also add to drawnItems for editing
+        if (drawnItemsRef.current) {
+          const editablePolyline = L.polyline(coords, { color: 'blue' }).bindPopup(route.route_name);
+          drawnItemsRef.current.addLayer(editablePolyline);
+        }
       }
     });
   };
