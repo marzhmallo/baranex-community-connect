@@ -95,7 +95,7 @@ export type Database = {
       barangays: {
         Row: {
           barangayname: string
-          country: string | null
+          country: string
           created_at: string
           halllat: number | null
           halllong: number | null
@@ -104,12 +104,12 @@ export type Database = {
           logo_url: string | null
           municipality: string
           province: string
-          region: string | null
+          region: string
           updated_at: string | null
         }
         Insert: {
           barangayname: string
-          country?: string | null
+          country: string
           created_at: string
           halllat?: number | null
           halllong?: number | null
@@ -118,12 +118,12 @@ export type Database = {
           logo_url?: string | null
           municipality: string
           province: string
-          region?: string | null
+          region: string
           updated_at?: string | null
         }
         Update: {
           barangayname?: string
-          country?: string | null
+          country?: string
           created_at?: string
           halllat?: number | null
           halllong?: number | null
@@ -132,7 +132,7 @@ export type Database = {
           logo_url?: string | null
           municipality?: string
           province?: string
-          region?: string | null
+          region?: string
           updated_at?: string | null
         }
         Relationships: []

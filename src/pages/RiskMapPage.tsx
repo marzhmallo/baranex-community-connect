@@ -4,6 +4,8 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -14,24 +16,31 @@ L.Icon.Default.mergeOptions({
 });
 
 interface DisasterZone {
-  id: number;
-  name: string;
-  disasterType: string;
-  risk: 'low' | 'medium' | 'high';
-  notes: string;
-  coordinates: [number, number][];
+  id: string;
+  zone_name: string;
+  zone_type: string;
+  risk_level: 'low' | 'medium' | 'high';
+  notes: string | null;
+  polygon_coords: [number, number][];
 }
 
 interface EvacCenter {
-  id: number;
+  id: string;
   name: string;
-  coordinates: [number, number];
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  capacity: number;
+  current_occupancy: number | null;
+  status: string | null;
 }
 
 interface SafeRoute {
-  id: number;
-  name: string;
-  coordinates: [number, number][];
+  id: string;
+  route_name: string;
+  route_coords: [number, number][];
+  start_point: { lat: number; lng: number };
+  end_point: { lat: number; lng: number };
 }
 
 const RiskMapPage = () => {
@@ -44,6 +53,7 @@ const RiskMapPage = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [tempLayer, setTempLayer] = useState<L.Layer | null>(null);
+  const { toast } = useToast();
   
   // Layer groups
   const zonesLayerRef = useRef<L.FeatureGroup | null>(null);
@@ -51,33 +61,83 @@ const RiskMapPage = () => {
   const routesLayerRef = useRef<L.FeatureGroup | null>(null);
   const drawControlRef = useRef<L.Control.Draw | null>(null);
 
-  // Mock data
-  const [disasterZones, setDisasterZones] = useState<DisasterZone[]>([
-    { 
-      id: 1, 
-      name: 'Riverside Flood Area', 
-      disasterType: '🌊 Flood Zone', 
-      risk: 'high', 
-      notes: 'Prone to flash floods.', 
-      coordinates: [[14.60, 121.00], [14.61, 121.01], [14.59, 121.02], [14.60, 121.00]] 
-    }
-  ]);
-  
-  const [evacCenters] = useState<EvacCenter[]>([
-    { id: 101, name: 'Central Elementary School', coordinates: [14.62, 121.03] }
-  ]);
-  
-  const [safeRoutes] = useState<SafeRoute[]>([
-    { id: 201, name: 'Main St. Evac Route', coordinates: [[14.58, 121.00], [14.62, 121.03]] }
-  ]);
+  // Database-connected data
+  const [disasterZones, setDisasterZones] = useState<DisasterZone[]>([]);
+  const [evacCenters, setEvacCenters] = useState<EvacCenter[]>([]);
+  const [safeRoutes, setSafeRoutes] = useState<SafeRoute[]>([]);
 
   // Form state
   const [formData, setFormData] = useState({
     zoneName: '',
-    disasterType: '🌊 Flood Zone',
+    disasterType: 'flood',
     riskLevel: 'medium' as 'low' | 'medium' | 'high',
     notes: ''
   });
+
+  // Fetch data from Supabase
+  const fetchDisasterZones = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('disaster_zones')
+        .select('*');
+      
+      if (error) throw error;
+      const transformedData = (data || []).map(zone => ({
+        id: zone.id,
+        zone_name: zone.zone_name,
+        zone_type: zone.zone_type,
+        risk_level: zone.risk_level as 'low' | 'medium' | 'high',
+        notes: zone.notes,
+        polygon_coords: zone.polygon_coords as [number, number][]
+      }));
+      setDisasterZones(transformedData);
+    } catch (error) {
+      console.error('Error fetching disaster zones:', error);
+      toast({ title: "Error fetching disaster zones", variant: "destructive" });
+    }
+  };
+
+  const fetchEvacCenters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('evacuation_centers')
+        .select('*');
+      
+      if (error) throw error;
+      setEvacCenters(data || []);
+    } catch (error) {
+      console.error('Error fetching evacuation centers:', error);
+      toast({ title: "Error fetching evacuation centers", variant: "destructive" });
+    }
+  };
+
+  const fetchSafeRoutes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('evacuation_routes')
+        .select('*');
+      
+      if (error) throw error;
+      const transformedData = (data || []).map(route => ({
+        id: route.id,
+        route_name: route.route_name,
+        route_coords: route.route_coords as [number, number][],
+        start_point: route.start_point as { lat: number; lng: number },
+        end_point: route.end_point as { lat: number; lng: number }
+      }));
+      setSafeRoutes(transformedData);
+    } catch (error) {
+      console.error('Error fetching evacuation routes:', error);
+      toast({ title: "Error fetching evacuation routes", variant: "destructive" });
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchDisasterZones();
+    fetchEvacCenters();
+    fetchSafeRoutes();
+  }, []);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -163,22 +223,38 @@ const RiskMapPage = () => {
 
     // Render disaster zones
     disasterZones.forEach(zone => {
-      const polygon = L.polygon(zone.coordinates, { color: 'red' }).bindPopup(zone.name);
-      zonesLayer.addLayer(polygon);
+      if (zone.polygon_coords) {
+        const coords = zone.polygon_coords as [number, number][];
+        const polygon = L.polygon(coords, { color: 'red' }).bindPopup(zone.zone_name);
+        zonesLayer.addLayer(polygon);
+      }
     });
 
     // Render evacuation centers
     evacCenters.forEach(center => {
-      const marker = L.marker(center.coordinates, { icon: createIcon('green') }).bindPopup(center.name);
-      centersLayer.addLayer(marker);
+      if (center.latitude && center.longitude) {
+        const coords: [number, number] = [center.latitude, center.longitude];
+        const marker = L.marker(coords, { icon: createIcon('green') }).bindPopup(center.name);
+        centersLayer.addLayer(marker);
+      }
     });
 
     // Render safe routes
     safeRoutes.forEach(route => {
-      const polyline = L.polyline(route.coordinates, { color: 'blue' }).bindPopup(route.name);
-      routesLayer.addLayer(polyline);
+      if (route.route_coords) {
+        const coords = route.route_coords as [number, number][];
+        const polyline = L.polyline(coords, { color: 'blue' }).bindPopup(route.route_name);
+        routesLayer.addLayer(polyline);
+      }
     });
   };
+
+  // Re-render map data when data changes
+  useEffect(() => {
+    if (map && zonesLayerRef.current && centersLayerRef.current && routesLayerRef.current) {
+      renderMapData(map, zonesLayerRef.current, centersLayerRef.current, routesLayerRef.current);
+    }
+  }, [disasterZones, evacCenters, safeRoutes, map]);
 
   const toggleDrawing = () => {
     if (!map || !drawControlRef.current) return;
@@ -223,29 +299,68 @@ const RiskMapPage = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tempLayer) return;
 
-    const newZone: DisasterZone = {
-      id: Date.now(),
-      name: formData.zoneName,
-      disasterType: formData.disasterType,
-      risk: formData.riskLevel,
-      notes: formData.notes,
-      coordinates: (tempLayer as any).getLatLngs()
-    };
+    try {
+      const coordinates = (tempLayer as any).getLatLngs()[0].map((latlng: any) => [latlng.lat, latlng.lng]);
+      
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        toast({ title: "Please login to add disaster zones", variant: "destructive" });
+        return;
+      }
 
-    setDisasterZones([...disasterZones, newZone]);
-    
-    if (zonesLayerRef.current) {
-      const polygon = L.polygon(newZone.coordinates, { color: 'red' }).bindPopup(newZone.name);
-      zonesLayerRef.current.addLayer(polygon);
+      // Get user's barangay ID
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (!profile?.brgyid) {
+        toast({ title: "Unable to determine your barangay", variant: "destructive" });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('disaster_zones')
+        .insert({
+          zone_name: formData.zoneName,
+          zone_type: formData.disasterType as 'flood' | 'fire' | 'landslide' | 'earthquake' | 'typhoon' | 'other',
+          risk_level: formData.riskLevel,
+          notes: formData.notes,
+          polygon_coords: coordinates,
+          brgyid: profile.brgyid,
+          created_by: userData.user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({ title: "Disaster zone added successfully!" });
+      
+      // Update local state
+      const newZone: DisasterZone = {
+        id: data.id,
+        zone_name: data.zone_name,
+        zone_type: data.zone_type,
+        risk_level: data.risk_level as 'low' | 'medium' | 'high',
+        notes: data.notes,
+        polygon_coords: data.polygon_coords as [number, number][]
+      };
+      
+      setDisasterZones([...disasterZones, newZone]);
+      
+      setTempLayer(null);
+      setShowModal(false);
+      setFormData({ zoneName: '', disasterType: 'flood', riskLevel: 'medium', notes: '' });
+    } catch (error) {
+      console.error('Error saving disaster zone:', error);
+      toast({ title: "Error saving disaster zone", variant: "destructive" });
     }
-
-    setTempLayer(null);
-    setShowModal(false);
-    setFormData({ zoneName: '', disasterType: '🌊 Flood Zone', riskLevel: 'medium', notes: '' });
   };
 
   const closeModal = () => {
@@ -254,7 +369,7 @@ const RiskMapPage = () => {
     }
     setTempLayer(null);
     setShowModal(false);
-    setFormData({ zoneName: '', disasterType: '🌊 Flood Zone', riskLevel: 'medium', notes: '' });
+    setFormData({ zoneName: '', disasterType: 'flood', riskLevel: 'medium', notes: '' });
   };
 
   const focusOnItem = (item: DisasterZone | EvacCenter | SafeRoute, type: string) => {
@@ -262,13 +377,19 @@ const RiskMapPage = () => {
 
     if (type === 'zone') {
       const zone = item as DisasterZone;
-      map.fitBounds(L.polygon(zone.coordinates).getBounds());
+      if (zone.polygon_coords) {
+        map.fitBounds(L.polygon(zone.polygon_coords).getBounds());
+      }
     } else if (type === 'center') {
       const center = item as EvacCenter;
-      map.setView(center.coordinates, 15);
+      if (center.latitude && center.longitude) {
+        map.setView([center.latitude, center.longitude], 15);
+      }
     } else if (type === 'route') {
       const route = item as SafeRoute;
-      map.fitBounds(L.polyline(route.coordinates).getBounds());
+      if (route.route_coords) {
+        map.fitBounds(L.polyline(route.route_coords).getBounds());
+      }
     }
   };
 
@@ -335,9 +456,9 @@ const RiskMapPage = () => {
                     className="px-4 py-3 border-t cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => focusOnItem(zone, 'zone')}
                   >
-                    <h4 className="font-semibold text-gray-700">{zone.name}</h4>
-                    <p className={`text-sm ${zone.risk === 'high' ? 'text-red-600' : zone.risk === 'medium' ? 'text-orange-500' : 'text-green-600'}`}>
-                      Risk: <span className="font-medium capitalize">{zone.risk}</span>
+                    <h4 className="font-semibold text-gray-700">{zone.zone_name}</h4>
+                    <p className={`text-sm ${zone.risk_level === 'high' ? 'text-red-600' : zone.risk_level === 'medium' ? 'text-orange-500' : 'text-green-600'}`}>
+                      Risk: <span className="font-medium capitalize">{zone.risk_level}</span>
                     </p>
                   </div>
                 ))}
@@ -386,7 +507,7 @@ const RiskMapPage = () => {
                     className="px-4 py-3 border-t cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => focusOnItem(route, 'route')}
                   >
-                    <h4 className="font-semibold text-gray-700">{route.name}</h4>
+                    <h4 className="font-semibold text-gray-700">{route.route_name}</h4>
                   </div>
                 ))}
               </AccordionContent>
@@ -439,12 +560,12 @@ const RiskMapPage = () => {
                   onChange={(e) => setFormData({...formData, disasterType: e.target.value})}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option>🌊 Flood Zone</option>
-                  <option>🔥 Fire Hazard</option>
-                  <option>⛰️ Landslide Risk</option>
-                  <option>🌍 Earthquake Fault</option>
-                  <option>🌀 Typhoon Path</option>
-                  <option>⚠️ Other Hazard</option>
+                  <option value="flood">Flood Zone</option>
+                  <option value="fire">Fire Hazard</option>
+                  <option value="landslide">Landslide Risk</option>
+                  <option value="earthquake">Earthquake Fault</option>
+                  <option value="typhoon">Typhoon Path</option>
+                  <option value="other">Other Hazard</option>
                 </select>
               </div>
               <div>
