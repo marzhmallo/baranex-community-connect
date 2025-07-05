@@ -250,7 +250,8 @@ const OfficialDetailsPage = () => {
     }
   };
 
-  const handleProfilePhotoClick = () => {
+  const handleProfilePhotoClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent cover photo modal from opening
     if (official?.photo_url) {
       setIsProfilePhotoModalOpen(true);
     }
