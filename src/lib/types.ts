@@ -244,6 +244,7 @@ export interface Official {
   phone?: string;
   bio?: string;
   photo_url?: string;
+  coverurl?: string; // Added for cover photo
   term_start?: string;
   term_end?: string;
   created_at?: string;

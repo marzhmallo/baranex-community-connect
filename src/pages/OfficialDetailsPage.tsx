@@ -11,6 +11,7 @@ import { Official, OfficialPosition } from '@/lib/types';
 import { AddEditPositionDialog } from '@/components/officials/AddEditPositionDialog';
 import { Badge } from '@/components/ui/badge';
 import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
+import { OfficialCoverPhotoUpload } from '@/components/officials/OfficialCoverPhotoUpload';
 
 const OfficialDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -224,6 +225,10 @@ const OfficialDetailsPage = () => {
     refetchPositions();
   };
 
+  const handleCoverPhotoUpload = (url: string) => {
+    refetchOfficial();
+  };
+
   const goBack = () => {
     navigate(-1);
   };
@@ -279,8 +284,27 @@ const OfficialDetailsPage = () => {
     <div className="w-full max-w-7xl mx-auto px-6 py-8 bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen">
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
         {/* Header Section with Hero Background */}
-        <div className="relative h-64 bg-gradient-to-r from-primary-600 to-primary-800">
-          <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div 
+          className="relative h-64 bg-gradient-to-r from-primary-600 to-primary-800"
+          style={{
+            backgroundImage: official?.coverurl ? `url(${official.coverurl})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+          
+          {/* Cover Photo Upload Component */}
+          {id && (
+            <OfficialCoverPhotoUpload
+              officialId={id}
+              currentCoverUrl={official?.coverurl}
+              onUploadSuccess={handleCoverPhotoUpload}
+            />
+          )}
+          
           <div className="absolute bottom-6 left-6 flex items-end space-x-6">
             <div className="relative">
               {official?.photo_url ? (
