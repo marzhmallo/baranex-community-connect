@@ -117,7 +117,7 @@ export const AddEvacuationRouteModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] z-[3000]" style={{ zIndex: 3000 }}>
         <DialogHeader>
           <DialogTitle>Add Evacuation Route</DialogTitle>
           <DialogDescription>
