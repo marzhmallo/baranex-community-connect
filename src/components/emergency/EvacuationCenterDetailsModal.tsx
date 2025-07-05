@@ -136,11 +136,11 @@ export const EvacuationCenterDetailsModal = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-6">
             <Badge variant={getStatusColor(center.status || 'available') as any}>
               {getStatusLabel(center.status || 'available')}
             </Badge>
-            <Select 
+            <Select
               value={center.status || 'available'} 
               onValueChange={(value: 'available' | 'full' | 'closed' | 'maintenance') => updateCenterStatus(value)}
               disabled={updating}
