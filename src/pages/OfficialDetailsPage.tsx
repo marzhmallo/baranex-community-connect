@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Edit, Clock, Share, Check } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Edit, Clock, Share, Check, X } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddEditPositionDialog } from '@/components/officials/AddEditPositionDialog';
 import { Badge } from '@/components/ui/badge';
 import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
 import { OfficialCoverPhotoUpload } from '@/components/officials/OfficialCoverPhotoUpload';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const OfficialDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ const OfficialDetailsPage = () => {
   const [isPositionDialogOpen, setIsPositionDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<OfficialPosition | null>(null);
+  const [isCoverPhotoModalOpen, setIsCoverPhotoModalOpen] = useState(false);
 
   // Fetch official details with barangay information
   const { data: official, isLoading: officialLoading, refetch: refetchOfficial } = useQuery({
@@ -229,6 +231,18 @@ const OfficialDetailsPage = () => {
     refetchOfficial();
   };
 
+  const handleCoverPhotoClick = (e: React.MouseEvent) => {
+    // Prevent opening modal if clicking on the upload button area
+    const target = e.target as HTMLElement;
+    if (target.closest('.cover-upload-area')) {
+      return;
+    }
+    
+    if (official?.coverurl) {
+      setIsCoverPhotoModalOpen(true);
+    }
+  };
+
   const goBack = () => {
     navigate(-1);
   };
@@ -285,24 +299,27 @@ const OfficialDetailsPage = () => {
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
         {/* Header Section with Hero Background */}
         <div 
-          className="relative h-64 bg-gradient-to-r from-primary-600 to-primary-800"
+          className={`relative h-64 bg-gradient-to-r from-primary-600 to-primary-800 ${official?.coverurl ? 'cursor-pointer' : ''}`}
           style={{
             backgroundImage: official?.coverurl ? `url(${official.coverurl})` : 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
           }}
+          onClick={handleCoverPhotoClick}
         >
           {/* Overlay for better text readability */}
           <div className="absolute inset-0 bg-black bg-opacity-30"></div>
           
           {/* Cover Photo Upload Component */}
           {id && (
-            <OfficialCoverPhotoUpload
-              officialId={id}
-              currentCoverUrl={official?.coverurl}
-              onUploadSuccess={handleCoverPhotoUpload}
-            />
+            <div className="cover-upload-area">
+              <OfficialCoverPhotoUpload
+                officialId={id}
+                currentCoverUrl={official?.coverurl}
+                onUploadSuccess={handleCoverPhotoUpload}
+              />
+            </div>
           )}
           
           <div className="absolute bottom-6 left-6 flex items-end space-x-6">
@@ -572,6 +589,27 @@ const OfficialDetailsPage = () => {
         official={official} 
         position={currentPosition} 
       />
+
+      {/* Cover Photo Modal */}
+      <Dialog open={isCoverPhotoModalOpen} onOpenChange={setIsCoverPhotoModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0" hideCloseButton>
+          <div className="relative">
+            <button
+              onClick={() => setIsCoverPhotoModalOpen(false)}
+              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {official?.coverurl && (
+              <img
+                src={official.coverurl}
+                alt={`${official.name} cover photo`}
+                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
