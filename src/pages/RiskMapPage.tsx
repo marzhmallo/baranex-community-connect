@@ -6,6 +6,8 @@ import 'leaflet-draw';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AddEvacuationCenterModal } from "@/components/emergency/AddEvacuationCenterModal";
+import { AddEvacuationRouteModal } from "@/components/emergency/AddEvacuationRouteModal";
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -52,7 +54,10 @@ const RiskMapPage = () => {
   const [showRoutes, setShowRoutes] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showCenterModal, setShowCenterModal] = useState(false);
+  const [showRouteModal, setShowRouteModal] = useState(false);
   const [tempLayer, setTempLayer] = useState<L.Layer | null>(null);
+  const [tempCoordinates, setTempCoordinates] = useState<any>(null);
   const { toast } = useToast();
   
   // Layer groups
@@ -188,6 +193,16 @@ const RiskMapPage = () => {
       if (type === 'polygon') {
         setTempLayer(layer);
         setShowModal(true);
+      } else if (type === 'marker') {
+        const coords = layer.getLatLng();
+        setTempCoordinates([coords.lat, coords.lng]);
+        setTempLayer(layer);
+        setShowCenterModal(true);
+      } else if (type === 'polyline') {
+        const coords = layer.getLatLngs().map((latlng: any) => [latlng.lat, latlng.lng]);
+        setTempCoordinates(coords);
+        setTempLayer(layer);
+        setShowRouteModal(true);
       } else {
         const name = prompt(`Enter a name for the new ${type}:`);
         if (name) {
@@ -574,6 +589,32 @@ const RiskMapPage = () => {
     setFormData({ zoneName: '', disasterType: 'flood', riskLevel: 'medium', notes: '' });
   };
 
+  const closeCenterModal = () => {
+    if (tempLayer && map) {
+      map.removeLayer(tempLayer);
+    }
+    setTempLayer(null);
+    setTempCoordinates(null);
+    setShowCenterModal(false);
+  };
+
+  const closeRouteModal = () => {
+    if (tempLayer && map) {
+      map.removeLayer(tempLayer);
+    }
+    setTempLayer(null);
+    setTempCoordinates(null);
+    setShowRouteModal(false);
+  };
+
+  const handleCenterSuccess = () => {
+    fetchEvacCenters();
+  };
+
+  const handleRouteSuccess = () => {
+    fetchSafeRoutes();
+  };
+
   const focusOnItem = (item: DisasterZone | EvacCenter | SafeRoute, type: string) => {
     if (!map) return;
 
@@ -811,6 +852,22 @@ const RiskMapPage = () => {
           </div>
         </div>
       )}
+
+      {/* Evacuation Center Modal */}
+      <AddEvacuationCenterModal
+        isOpen={showCenterModal}
+        onClose={closeCenterModal}
+        coordinates={tempCoordinates}
+        onSuccess={handleCenterSuccess}
+      />
+
+      {/* Evacuation Route Modal */}
+      <AddEvacuationRouteModal
+        isOpen={showRouteModal}
+        onClose={closeRouteModal}
+        coordinates={tempCoordinates}
+        onSuccess={handleRouteSuccess}
+      />
     </div>
   );
 };
