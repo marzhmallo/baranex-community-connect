@@ -198,14 +198,18 @@ const RiskMapPage = () => {
       toggleDrawing(); // Exit drawing mode after one shape
     });
 
-    mapInstance.on(L.Draw.Event.EDITED, function (e: any) {
+    mapInstance.on(L.Draw.Event.EDITED, async function (e: any) {
       console.log('Layers edited:', e.layers);
-      toast({ title: "Items edited successfully!" });
+      // For now, just refresh the data to reflect any changes
+      await Promise.all([fetchDisasterZones(), fetchEvacCenters(), fetchSafeRoutes()]);
+      toast({ title: "Map refreshed after edit" });
     });
 
-    mapInstance.on(L.Draw.Event.DELETED, function (e: any) {
+    mapInstance.on(L.Draw.Event.DELETED, async function (e: any) {
       console.log('Layers deleted:', e.layers);
-      toast({ title: "Items deleted successfully!" });
+      // For now, just refresh the data to reflect any changes
+      await Promise.all([fetchDisasterZones(), fetchEvacCenters(), fetchSafeRoutes()]);
+      toast({ title: "Map refreshed after delete" });
     });
 
     mapInstanceRef.current = mapInstance;
