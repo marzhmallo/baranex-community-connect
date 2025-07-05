@@ -19,11 +19,63 @@ const ProfilePictureUpload = ({
   userInitials = "U"
 }: ProfilePictureUploadProps) => {
   const [uploading, setUploading] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string | undefined>(currentPhotoUrl);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
-  // Update photoUrl when currentPhotoUrl changes
+  // Generate signed URL for display
+  const generateSignedUrl = async (url: string) => {
+    if (!url) return undefined;
+
+    try {
+      // Extract file path from URL (works for both public and signed URLs)
+      let filePath = '';
+      
+      // Check if it's a public URL format
+      if (url.includes('/storage/v1/object/public/profilepictures/')) {
+        filePath = url.split('/storage/v1/object/public/profilepictures/')[1];
+      } else if (url.includes('/storage/v1/object/sign/profilepictures/')) {
+        filePath = url.split('/storage/v1/object/sign/profilepictures/')[1].split('?')[0];
+      } else {
+        // If it's already a file path, use it directly
+        const isAdmin = await checkIfAdmin();
+        const folder = isAdmin ? 'admin' : 'users';
+        filePath = url.startsWith(`${folder}/`) ? url : `${folder}/${url}`;
+      }
+
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from('profilepictures')
+        .createSignedUrl(filePath, 600); // 10 minutes expiration
+
+      if (signedUrlError) {
+        console.error('Error generating signed URL:', signedUrlError);
+        return undefined;
+      }
+
+      return signedUrlData.signedUrl;
+    } catch (error) {
+      console.error('Error generating signed URL:', error);
+      return undefined;
+    }
+  };
+
+  // Helper function to check if user is admin
+  const checkIfAdmin = async () => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    return profile?.role === 'admin';
+  };
+
+  // Generate signed URL when currentPhotoUrl changes
   useEffect(() => {
-    setPhotoUrl(currentPhotoUrl);
+    if (currentPhotoUrl) {
+      generateSignedUrl(currentPhotoUrl).then(signedUrl => {
+        setPhotoUrl(signedUrl);
+      });
+    } else {
+      setPhotoUrl(undefined);
+    }
   }, [currentPhotoUrl]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,26 +111,30 @@ const ProfilePictureUpload = ({
         throw error;
       }
 
-      // Get the public URL
-      const { data: publicUrlData } = supabase.storage
+      // Get a signed URL (expires in 10 minutes)
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('profilepictures')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 600);
 
-      const url = publicUrlData.publicUrl;
+      if (signedUrlError) {
+        throw signedUrlError;
+      }
+
+      const url = signedUrlData.signedUrl;
       
-      // Update the profiles table with the new photo URL
+      // Update the profiles table with the file path (not the signed URL)
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ profile_picture: url })
+        .update({ profile_picture: filePath })
         .eq('id', userId);
 
       if (updateError) {
         throw updateError;
       }
 
-      // Update local state immediately
+      // Update local state with signed URL for immediate display
       setPhotoUrl(url);
-      onPhotoUploaded(url);
+      onPhotoUploaded(filePath); // Pass file path to parent component
 
       toast({
         title: "Profile picture updated",
