@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { MapPin, AlertTriangle, Trash2 } from "lucide-react";
+import { MapPin, AlertTriangle, Edit } from "lucide-react";
 
 interface DisasterZone {
   id: string;
@@ -19,16 +19,16 @@ interface DisasterZoneDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   zone: DisasterZone | null;
-  onDelete?: () => void;
+  onEdit?: () => void;
 }
 
 export const DisasterZoneDetailsModal = ({ 
   isOpen, 
   onClose, 
   zone,
-  onDelete 
+  onEdit 
 }: DisasterZoneDetailsModalProps) => {
-  const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   if (!zone) return null;
 
@@ -52,31 +52,9 @@ export const DisasterZoneDetailsModal = ({
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this disaster zone?')) return;
-    
-    try {
-      setDeleting(true);
-      const { error } = await supabase
-        .from('disaster_zones')
-        .delete()
-        .eq('id', zone.id);
-
-      if (error) throw error;
-      
-      toast({ title: "Success", description: "Disaster zone deleted successfully" });
-      onDelete?.();
-      onClose();
-    } catch (error) {
-      console.error('Error deleting disaster zone:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete disaster zone",
-        variant: "destructive",
-      });
-    } finally {
-      setDeleting(false);
-    }
+  const handleEdit = () => {
+    onEdit?.();
+    onClose();
   };
 
   return (
@@ -117,12 +95,12 @@ export const DisasterZoneDetailsModal = ({
 
         <DialogFooter className="flex justify-between">
           <Button 
-            variant="destructive" 
-            onClick={handleDelete}
-            disabled={deleting}
+            variant="outline" 
+            onClick={handleEdit}
+            disabled={editing}
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            {deleting ? 'Deleting...' : 'Delete Zone'}
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Zone
           </Button>
           <Button onClick={onClose}>
             Close

@@ -932,7 +932,7 @@ const RiskMapPage = () => {
         isOpen={showZoneDetails}
         onClose={() => setShowZoneDetails(false)}
         zone={selectedZone}
-        onDelete={() => {
+        onEdit={() => {
           fetchDisasterZones();
           setSelectedZone(null);
         }}
