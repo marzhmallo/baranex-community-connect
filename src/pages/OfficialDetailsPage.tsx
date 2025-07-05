@@ -219,8 +219,14 @@ const OfficialDetailsPage = () => {
     setIsPositionDialogOpen(true);
   };
 
-  const handleEditOfficial = () => {
+  const handleEditOfficial = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsEditDialogOpen(true);
+  };
+
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Add share functionality here if needed
   };
 
   const handleEditSuccess = () => {
@@ -233,9 +239,9 @@ const OfficialDetailsPage = () => {
   };
 
   const handleCoverPhotoClick = (e: React.MouseEvent) => {
-    // Prevent opening modal if clicking on the upload button area
+    // Prevent opening modal if clicking on the upload button area or action buttons
     const target = e.target as HTMLElement;
-    if (target.closest('.cover-upload-area')) {
+    if (target.closest('.cover-upload-area') || target.closest('.header-action-button')) {
       return;
     }
     
@@ -250,7 +256,8 @@ const OfficialDetailsPage = () => {
     }
   };
 
-  const goBack = () => {
+  const goBack = (e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate(-1);
   };
 
@@ -361,17 +368,20 @@ const OfficialDetailsPage = () => {
           <div className="absolute top-6 right-6 flex space-x-2">
             <button 
               onClick={handleEditOfficial}
-              className="bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
+              className="header-action-button bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
             >
               <Edit className="h-5 w-5" />
             </button>
-            <button className="bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105">
+            <button 
+              onClick={handleShareClick}
+              className="header-action-button bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
+            >
               <Share className="h-5 w-5" />
             </button>
           </div>
           <button 
             onClick={goBack}
-            className="absolute top-6 left-6 bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
+            className="header-action-button absolute top-6 left-6 bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
