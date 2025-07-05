@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -39,6 +39,11 @@ export const EvacuationCenterDetailsModal = ({
 }: EvacuationCenterDetailsModalProps) => {
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(center?.status || 'available');
+
+  useEffect(() => {
+    setCurrentStatus(center?.status || 'available');
+  }, [center?.status]);
 
   if (!center) return null;
 
@@ -81,6 +86,7 @@ export const EvacuationCenterDetailsModal = ({
         .eq('id', center.id);
 
       if (error) throw error;
+      setCurrentStatus(status);
       toast({ title: "Success", description: "Center status updated" });
       onUpdate?.();
     } catch (error) {
@@ -127,7 +133,7 @@ export const EvacuationCenterDetailsModal = ({
       <DialogContent className="sm:max-w-[600px] z-[3000]" style={{ zIndex: 3000 }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span className="text-2xl">{getStatusIcon(center.status || 'available')}</span>
+            <span className="text-2xl">{getStatusIcon(currentStatus)}</span>
             {center.name}
           </DialogTitle>
           <DialogDescription>
@@ -137,11 +143,11 @@ export const EvacuationCenterDetailsModal = ({
 
         <div className="space-y-4">
           <div className="flex items-center gap-6">
-            <Badge variant={getStatusColor(center.status || 'available') as any}>
-              {getStatusLabel(center.status || 'available')}
+            <Badge variant={getStatusColor(currentStatus) as any}>
+              {getStatusLabel(currentStatus)}
             </Badge>
             <Select 
-              value={center.status || 'available'} 
+              value={currentStatus} 
               onValueChange={(value: 'available' | 'full' | 'closed' | 'maintenance') => updateCenterStatus(value)}
               disabled={updating}
             >
