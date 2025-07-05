@@ -11,8 +11,8 @@ interface SafeRoute {
   id: string;
   route_name: string;
   route_coords: [number, number][];
-  start_point: { name: string; coordinates: [number, number] };
-  end_point: { name: string; coordinates: [number, number] };
+  start_point: { lat: number; lng: number };
+  end_point: { lat: number; lng: number };
   distance_km?: number | null;
   estimated_time_minutes?: number | null;
 }

@@ -47,6 +47,8 @@ interface SafeRoute {
   route_coords: [number, number][];
   start_point: { lat: number; lng: number };
   end_point: { lat: number; lng: number };
+  distance_km?: number | null;
+  estimated_time_minutes?: number | null;
 }
 
 const RiskMapPage = () => {
@@ -142,7 +144,9 @@ const RiskMapPage = () => {
         route_name: route.route_name,
         route_coords: route.route_coords as [number, number][],
         start_point: route.start_point as { lat: number; lng: number },
-        end_point: route.end_point as { lat: number; lng: number }
+        end_point: route.end_point as { lat: number; lng: number },
+        distance_km: route.distance_km,
+        estimated_time_minutes: route.estimated_time_minutes
       }));
       setSafeRoutes(transformedData);
     } catch (error) {
