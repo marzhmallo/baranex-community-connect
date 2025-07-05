@@ -111,10 +111,10 @@ const OfficialDetailsPage = () => {
     return (
       <div className="space-y-4">
         {achievementItems.map((achievement, i) => (
-          <div key={i} className="bg-white rounded-lg p-4 border-l-4 border-yellow-400 hover:shadow-md transition-all duration-300">
+          <div key={i} className="bg-card rounded-lg p-4 border-l-4 border-yellow-500 hover:shadow-md transition-all duration-300 border">
             <div className="flex items-center space-x-3 mb-2">
               <Award className="h-5 w-5 text-yellow-500" />
-              <h3 className="font-semibold text-gray-800">{achievement}</h3>
+              <h3 className="font-semibold text-card-foreground">{achievement}</h3>
             </div>
           </div>
         ))}
@@ -148,9 +148,9 @@ const OfficialDetailsPage = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {committeeItems.map((committee, i) => (
-          <div key={i} className="bg-white rounded-lg p-4 border-l-4 border-primary hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-            <h3 className="font-semibold text-gray-800 mb-2">{committee}</h3>
-            <p className="text-sm text-gray-600 mb-2">Member</p>
+          <div key={i} className="bg-card rounded-lg p-4 border-l-4 border-primary hover:shadow-md transition-all duration-300 hover:-translate-y-1 border">
+            <h3 className="font-semibold text-card-foreground mb-2">{committee}</h3>
+            <p className="text-sm text-muted-foreground mb-2">Member</p>
             <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
           </div>
         ))}
@@ -184,14 +184,14 @@ const OfficialDetailsPage = () => {
     return (
       <div className="space-y-4">
         {educItems.map((education, i) => (
-          <div key={i} className="bg-white rounded-lg p-4 hover:shadow-md transition-all duration-300">
+          <div key={i} className="bg-card rounded-lg p-4 hover:shadow-md transition-all duration-300 border">
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                 <GraduationCap className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-800">{education}</h3>
-                <p className="text-sm text-gray-600 mt-1">Educational Achievement</p>
+                <h3 className="font-semibold text-card-foreground">{education}</h3>
+                <p className="text-sm text-muted-foreground mt-1">Educational Achievement</p>
               </div>
             </div>
           </div>
@@ -264,8 +264,8 @@ const OfficialDetailsPage = () => {
 
   if (officialLoading) {
     return (
-      <div className="w-full max-w-7xl mx-auto px-6 py-8 bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
+        <div className="bg-card rounded-2xl shadow-xl overflow-hidden border">
           <Skeleton className="h-64 w-full" />
           <div className="p-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -286,10 +286,10 @@ const OfficialDetailsPage = () => {
 
   if (!official) {
     return (
-      <div className="w-full max-w-7xl mx-auto px-6 py-8 bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Official Not Found</h2>
-          <p className="mb-4">The official you are looking for could not be found.</p>
+      <div className="w-full max-w-7xl mx-auto px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
+        <div className="bg-card rounded-2xl shadow-xl overflow-hidden p-8 text-center border">
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Official Not Found</h2>
+          <p className="mb-4 text-muted-foreground">The official you are looking for could not be found.</p>
           <Button onClick={goBack} variant="outline">Go Back</Button>
         </div>
       </div>
@@ -310,8 +310,8 @@ const OfficialDetailsPage = () => {
   const currentPosition = getCurrentPosition();
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-8 bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen">
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div className="w-full max-w-7xl mx-auto px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
+      <div className="bg-card rounded-2xl shadow-xl overflow-hidden border">
         {/* Header Section with Hero Background */}
         <div 
           className={`relative h-64 bg-gradient-to-r from-primary-600 to-primary-800 ${official?.coverurl ? 'cursor-pointer' : ''}`}
@@ -393,24 +393,24 @@ const OfficialDetailsPage = () => {
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-8">
               {/* Biography Section */}
-              <section className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                  <User className="text-primary-600 mr-3 h-6 w-6" />
+              <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
+                <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
+                  <User className="text-primary mr-3 h-6 w-6" />
                   Biography
                 </h2>
-                <p className="text-gray-600 leading-relaxed mb-4">
+                <p className="text-muted-foreground leading-relaxed mb-4">
                   {official?.bio || `${official?.name || 'This official'} is a dedicated public servant working for the betterment of the community.`}
                 </p>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed">
                   Born and raised in the community, this official has dedicated their career to public service, focusing on sustainable development and community engagement initiatives. Their leadership has been recognized both locally and regionally.
                 </p>
               </section>
 
               {/* Committees Section */}
               {official?.committees && (
-                <section className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <Users className="text-primary-600 mr-3 h-6 w-6" />
+                <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
+                  <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
+                    <Users className="text-primary mr-3 h-6 w-6" />
                     Committees
                   </h2>
                   {formatCommittees(official.committees)}
@@ -419,9 +419,9 @@ const OfficialDetailsPage = () => {
 
               {/* Education Section */}
               {official?.educ && (
-                <section className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <GraduationCap className="text-primary-600 mr-3 h-6 w-6" />
+                <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
+                  <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
+                    <GraduationCap className="text-primary mr-3 h-6 w-6" />
                     Education
                   </h2>
                   {formatEducation(official.educ)}
@@ -430,9 +430,9 @@ const OfficialDetailsPage = () => {
 
               {/* Achievements Section */}
               {official?.achievements && (
-                <section className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <Award className="text-primary-600 mr-3 h-6 w-6" />
+                <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
+                  <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
+                    <Award className="text-primary mr-3 h-6 w-6" />
                     Achievements & Awards
                   </h2>
                   {formatAchievements(official.achievements)}
@@ -443,42 +443,42 @@ const OfficialDetailsPage = () => {
             {/* Right Column - Sidebar */}
             <div className="space-y-6">
               {/* Current Position */}
-              <section className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <Briefcase className="text-primary-600 mr-2 h-5 w-5" />
+              <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
+                  <Briefcase className="text-primary mr-2 h-5 w-5" />
                   Current Position
                 </h2>
                 <div className="space-y-4">
                   {currentPositions.length > 0 ? (
                     currentPositions.map(position => (
-                      <div key={position.id} className="bg-primary-50 rounded-lg p-4 border border-primary-200">
+                      <div key={position.id} className="bg-primary/10 rounded-lg p-4 border border-primary/20">
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-gray-800">{position.position}</h3>
+                          <h3 className="font-semibold text-foreground">{position.position}</h3>
                           <button 
                             onClick={() => handleEditPosition(position)}
-                            className="text-primary-600 hover:text-primary-800 transition-colors duration-200"
+                            className="text-primary hover:text-primary/80 transition-colors duration-200"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                         </div>
                         {position.committee && (
-                          <p className="text-sm text-primary-700 mb-2">{position.committee}</p>
+                          <p className="text-sm text-primary mb-2">{position.committee}</p>
                         )}
-                        <p className="text-xs text-gray-600 mb-3">Since {formatDate(position.term_start)}</p>
+                        <p className="text-xs text-muted-foreground mb-3">Since {formatDate(position.term_start)}</p>
                         <div className="flex space-x-2">
-                          <span className="inline-block bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs">Full-time</span>
+                          <span className="inline-block bg-primary/20 text-primary px-2 py-1 rounded-full text-xs">Full-time</span>
                           <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-gray-600 text-sm">No current position found</p>
+                    <div className="bg-muted/30 rounded-lg p-4 border">
+                      <p className="text-muted-foreground text-sm">No current position found</p>
                     </div>
                   )}
                   <button 
                     onClick={handleAddPosition}
-                    className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-4 rounded-lg transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2"
                   >
                     <span className="text-lg">+</span>
                     <span>Add New Position</span>
@@ -488,27 +488,27 @@ const OfficialDetailsPage = () => {
 
               {/* Past Positions */}
               {pastPositions.length > 0 && (
-                <section className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                    <Clock className="text-gray-600 mr-2 h-5 w-5" />
+                <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
+                  <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
+                    <Clock className="text-muted-foreground mr-2 h-5 w-5" />
                     Past Positions
                   </h2>
                   <div className="space-y-3">
                     {pastPositions.map(position => (
-                      <div key={position.id} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors duration-200">
+                      <div key={position.id} className="bg-muted/30 rounded-lg p-3 hover:bg-muted/50 transition-colors duration-200 border">
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-medium text-gray-800 text-sm">{position.position}</h4>
+                          <h4 className="font-medium text-foreground text-sm">{position.position}</h4>
                           <button 
                             onClick={() => handleEditPosition(position)}
-                            className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                            className="text-muted-foreground hover:text-foreground transition-colors duration-200"
                           >
                             <Edit className="h-3 w-3" />
                           </button>
                         </div>
                         {position.committee && (
-                          <p className="text-xs text-gray-600 mb-1">{position.committee}</p>
+                          <p className="text-xs text-muted-foreground mb-1">{position.committee}</p>
                         )}
-                        <p className="text-xs text-gray-500">{formatDate(position.term_start)} - {formatDate(position.term_end)}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(position.term_start)} - {formatDate(position.term_end)}</p>
                       </div>
                     ))}
                   </div>
@@ -516,68 +516,68 @@ const OfficialDetailsPage = () => {
               )}
 
               {/* Contact Information */}
-              <section className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <Mail className="text-gray-600 mr-2 h-5 w-5" />
+              <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
+                  <Mail className="text-muted-foreground mr-2 h-5 w-5" />
                   Contact Information
                 </h2>
                 <div className="space-y-3">
                   {official?.email && (
                     <div className="flex items-center space-x-3 text-sm">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-700">{official.email}</span>
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">{official.email}</span>
                     </div>
                   )}
                   {official?.phone && (
                     <div className="flex items-center space-x-3 text-sm">
-                      <Phone className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-700">{official.phone}</span>
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">{official.phone}</span>
                     </div>
                   )}
                   {official?.address && (
                     <div className="flex items-center space-x-3 text-sm">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-700">{official.address}</span>
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">{official.address}</span>
                     </div>
                   )}
                   {official?.birthdate && (
                     <div className="flex items-center space-x-3 text-sm">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-700">Born: {formatDate(official.birthdate)}</span>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">Born: {formatDate(official.birthdate)}</span>
                     </div>
                   )}
                   <div className="flex items-center space-x-3 text-sm">
-                    <Clock className="h-4 w-4 text-gray-500" />
-                    <span className="text-gray-700">Mon-Fri, 9:00 AM - 5:00 PM</span>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-foreground">Mon-Fri, 9:00 AM - 5:00 PM</span>
                   </div>
                 </div>
               </section>
 
               {/* Record Information */}
-              <section className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <Clock className="text-gray-600 mr-2 h-5 w-5" />
+              <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
+                  <Clock className="text-muted-foreground mr-2 h-5 w-5" />
                   Record Information
                 </h2>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Profile Created:</span>
-                    <span className="text-gray-800 font-medium">{formatDateTime(official.created_at)}</span>
+                    <span className="text-muted-foreground">Profile Created:</span>
+                    <span className="text-foreground font-medium">{formatDateTime(official.created_at)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Last Updated:</span>
-                    <span className="text-gray-800 font-medium">{formatDateTime(official.updated_at)}</span>
+                    <span className="text-muted-foreground">Last Updated:</span>
+                    <span className="text-foreground font-medium">{formatDateTime(official.updated_at)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Updated By:</span>
-                    <span className="text-gray-800 font-medium">Admin User</span>
+                    <span className="text-muted-foreground">Updated By:</span>
+                    <span className="text-foreground font-medium">Admin User</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Status:</span>
+                    <span className="text-muted-foreground">Status:</span>
                     <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
                   </div>
-                  <div className="pt-3 border-t border-gray-200">
-                    <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
+                  <div className="pt-3 border-t border-border">
+                    <button className="w-full bg-muted hover:bg-muted/80 text-foreground py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
                       <Clock className="h-4 w-4" />
                       <span>View Edit History</span>
                     </button>
