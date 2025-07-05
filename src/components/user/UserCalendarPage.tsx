@@ -40,7 +40,7 @@ const UserCalendarPage = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="w-full h-screen py-8 px-4">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="h-96 bg-gray-200 rounded"></div>
@@ -50,7 +50,7 @@ const UserCalendarPage = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="w-full min-h-screen py-8 px-4">
       <div className="flex items-center gap-3 mb-6">
         <CalendarDays className="h-8 w-8 text-primary" />
         <div>
@@ -59,14 +59,14 @@ const UserCalendarPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3">
-          <Card>
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+        <div className="xl:col-span-3">
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Event Calendar</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div style={{ height: '600px' }}>
+            <CardContent className="h-[calc(100%-80px)]">
+              <div className="h-full min-h-[500px]">
                 <Calendar
                   localizer={localizer}
                   events={events || []}
