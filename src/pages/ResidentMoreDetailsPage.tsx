@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getResidentById } from '@/lib/api/residents';
@@ -98,12 +98,58 @@ const ResidentMoreDetailsPage = () => {
   const navigate = useNavigate();
   const [showFullPhoto, setShowFullPhoto] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | undefined>(undefined);
+
+  // Generate signed URL for display
+  const generateSignedUrl = async (url: string) => {
+    if (!url) return undefined;
+
+    try {
+      // Extract file path from URL (works for both public and signed URLs)
+      let filePath = '';
+      
+      // Check if it's a public URL format
+      if (url.includes('/storage/v1/object/public/residentphotos/')) {
+        filePath = url.split('/storage/v1/object/public/residentphotos/')[1];
+      } else if (url.includes('/storage/v1/object/sign/residentphotos/')) {
+        filePath = url.split('/storage/v1/object/sign/residentphotos/')[1].split('?')[0];
+      } else {
+        // If it's already a file path, use it directly
+        filePath = url.startsWith('resident/') ? url : `resident/${url}`;
+      }
+
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from('residentphotos')
+        .createSignedUrl(filePath, 600); // 10 minutes expiration
+
+      if (signedUrlError) {
+        console.error('Error generating signed URL:', signedUrlError);
+        return undefined;
+      }
+
+      return signedUrlData.signedUrl;
+    } catch (error) {
+      console.error('Error generating signed URL:', error);
+      return undefined;
+    }
+  };
   
   const { data: resident, isLoading, error, refetch } = useQuery({
     queryKey: ['resident', residentId],
     queryFn: () => getResidentById(residentId as string),
     enabled: !!residentId,
   });
+  
+  // Generate signed URL when resident photo changes
+  useEffect(() => {
+    if (resident?.photo_url) {
+      generateSignedUrl(resident.photo_url).then(signedUrl => {
+        setSignedPhotoUrl(signedUrl);
+      });
+    } else {
+      setSignedPhotoUrl(undefined);
+    }
+  }, [resident?.photo_url]);
 
   // Fetch admin profiles for recordedby and editedby
   const { data: createdByAdmin } = useQuery({
@@ -266,11 +312,11 @@ const ResidentMoreDetailsPage = () => {
           <Card className="border-t-4 border-t-baranex-primary">
             <CardContent className="pt-6 pb-6">
               <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-                {/* Photo/Avatar with click to enlarge */}
-                {resident.photo_url ? (
+                 {/* Photo/Avatar with click to enlarge */}
+                {signedPhotoUrl ? (
                   <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
                     <Avatar className="w-32 h-32 border-4 border-gray-100">
-                      <AvatarImage src={resident.photo_url} alt={`${resident.first_name} ${resident.last_name}`} />
+                      <AvatarImage src={signedPhotoUrl} alt={`${resident.first_name} ${resident.last_name}`} />
                       <AvatarFallback className="text-4xl">
                         {resident.first_name.charAt(0)}{resident.last_name.charAt(0)}
                       </AvatarFallback>
@@ -743,7 +789,7 @@ const ResidentMoreDetailsPage = () => {
       </ScrollArea>
 
       {/* Full screen photo dialog */}
-      {resident.photo_url && (
+      {signedPhotoUrl && (
         <Dialog open={showFullPhoto} onOpenChange={setShowFullPhoto}>
           <DialogContent 
             className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center"
@@ -754,7 +800,7 @@ const ResidentMoreDetailsPage = () => {
               onClick={() => setShowFullPhoto(false)}
             >
               <img 
-                src={resident.photo_url} 
+                src={signedPhotoUrl} 
                 alt={`${resident.first_name} ${resident.last_name}`} 
                 className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
               />

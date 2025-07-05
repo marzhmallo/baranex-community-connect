@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -18,7 +18,52 @@ const ResidentPhotoUpload = ({
   onPhotoUploaded
 }: ResidentPhotoUploadProps) => {
   const [uploading, setUploading] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string | undefined>(existingPhotoUrl);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+
+  // Generate signed URL for display
+  const generateSignedUrl = async (url: string) => {
+    if (!url) return undefined;
+
+    try {
+      // Extract file path from URL (works for both public and signed URLs)
+      let filePath = '';
+      
+      // Check if it's a public URL format
+      if (url.includes('/storage/v1/object/public/residentphotos/')) {
+        filePath = url.split('/storage/v1/object/public/residentphotos/')[1];
+      } else if (url.includes('/storage/v1/object/sign/residentphotos/')) {
+        filePath = url.split('/storage/v1/object/sign/residentphotos/')[1].split('?')[0];
+      } else {
+        // If it's already a file path, use it directly
+        filePath = url.startsWith('resident/') ? url : `resident/${url}`;
+      }
+
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from('residentphotos')
+        .createSignedUrl(filePath, 600); // 10 minutes expiration
+
+      if (signedUrlError) {
+        console.error('Error generating signed URL:', signedUrlError);
+        return undefined;
+      }
+
+      return signedUrlData.signedUrl;
+    } catch (error) {
+      console.error('Error generating signed URL:', error);
+      return undefined;
+    }
+  };
+
+  // Generate signed URL when existingPhotoUrl changes
+  useEffect(() => {
+    if (existingPhotoUrl) {
+      generateSignedUrl(existingPhotoUrl).then(signedUrl => {
+        setPhotoUrl(signedUrl);
+      });
+    } else {
+      setPhotoUrl(undefined);
+    }
+  }, [existingPhotoUrl]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -43,10 +88,10 @@ const ResidentPhotoUpload = ({
         throw error;
       }
 
-      // Get a signed URL (expires in 1 hour)
+      // Get a signed URL (expires in 10 minutes)
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('residentphotos')
-        .createSignedUrl(filePath, 3600);
+        .createSignedUrl(filePath, 600);
 
       if (signedUrlError) {
         throw signedUrlError;
@@ -78,9 +123,18 @@ const ResidentPhotoUpload = ({
     if (!photoUrl || !existingPhotoUrl) return;
 
     try {
-      // Extract file path from URL
-      const urlParts = photoUrl.split('/');
-      const filePath = `resident/${urlParts[urlParts.length - 1]}`;
+      // Extract file path from URL using the same logic as generateSignedUrl
+      let filePath = '';
+      
+      // Check if it's a public URL format
+      if (existingPhotoUrl.includes('/storage/v1/object/public/residentphotos/')) {
+        filePath = existingPhotoUrl.split('/storage/v1/object/public/residentphotos/')[1];
+      } else if (existingPhotoUrl.includes('/storage/v1/object/sign/residentphotos/')) {
+        filePath = existingPhotoUrl.split('/storage/v1/object/sign/residentphotos/')[1].split('?')[0];
+      } else {
+        // If it's already a file path, use it directly
+        filePath = existingPhotoUrl.startsWith('resident/') ? existingPhotoUrl : `resident/${existingPhotoUrl}`;
+      }
 
       const { error } = await supabase.storage
         .from('residentphotos')
