@@ -200,16 +200,142 @@ const RiskMapPage = () => {
 
     mapInstance.on(L.Draw.Event.EDITED, async function (e: any) {
       console.log('Layers edited:', e.layers);
-      // For now, just refresh the data to reflect any changes
-      await Promise.all([fetchDisasterZones(), fetchEvacCenters(), fetchSafeRoutes()]);
-      toast({ title: "Map refreshed after edit" });
+      
+      try {
+        const editedLayers = e.layers;
+        let updateCount = 0;
+        
+        editedLayers.eachLayer(async (layer: any) => {
+          const dbId = layer.dbId;
+          const dbType = layer.dbType;
+          
+          if (!dbId || !dbType) return;
+          
+          if (dbType === 'disaster_zone') {
+            const coordinates = layer.getLatLngs()[0].map((latlng: any) => [latlng.lat, latlng.lng]);
+            const { error } = await supabase
+              .from('disaster_zones')
+              .update({ polygon_coords: coordinates })
+              .eq('id', dbId);
+            
+            if (!error) {
+              // Update local state
+              setDisasterZones(prev => prev.map(zone => 
+                zone.id === dbId 
+                  ? { ...zone, polygon_coords: coordinates }
+                  : zone
+              ));
+              updateCount++;
+            }
+          } else if (dbType === 'evacuation_center') {
+            const coords = layer.getLatLng();
+            const { error } = await supabase
+              .from('evacuation_centers')
+              .update({ latitude: coords.lat, longitude: coords.lng })
+              .eq('id', dbId);
+            
+            if (!error) {
+              // Update local state
+              setEvacCenters(prev => prev.map(center => 
+                center.id === dbId 
+                  ? { ...center, latitude: coords.lat, longitude: coords.lng }
+                  : center
+              ));
+              updateCount++;
+            }
+          } else if (dbType === 'evacuation_route') {
+            const coordinates = layer.getLatLngs().map((latlng: any) => [latlng.lat, latlng.lng]);
+            const { error } = await supabase
+              .from('evacuation_routes')
+              .update({ route_coords: coordinates })
+              .eq('id', dbId);
+            
+            if (!error) {
+              // Update local state
+              setSafeRoutes(prev => prev.map(route => 
+                route.id === dbId 
+                  ? { ...route, route_coords: coordinates }
+                  : route
+              ));
+              updateCount++;
+            }
+          }
+        });
+        
+        if (updateCount > 0) {
+          toast({ title: `${updateCount} item(s) updated successfully!` });
+        }
+      } catch (error) {
+        console.error('Error updating items:', error);
+        toast({ title: "Error updating items", variant: "destructive" });
+      }
     });
 
     mapInstance.on(L.Draw.Event.DELETED, async function (e: any) {
       console.log('Layers deleted:', e.layers);
-      // For now, just refresh the data to reflect any changes
-      await Promise.all([fetchDisasterZones(), fetchEvacCenters(), fetchSafeRoutes()]);
-      toast({ title: "Map refreshed after delete" });
+      
+      try {
+        const deletedLayers = e.layers;
+        let deleteCount = 0;
+        
+        deletedLayers.eachLayer(async (layer: any) => {
+          const dbId = layer.dbId;
+          const dbType = layer.dbType;
+          
+          if (!dbId || !dbType) return;
+          
+          let error = null;
+          
+          if (dbType === 'disaster_zone') {
+            const result = await supabase
+              .from('disaster_zones')
+              .delete()
+              .eq('id', dbId);
+            error = result.error;
+            
+            if (!error) {
+              // Update local state
+              setDisasterZones(prev => prev.filter(zone => zone.id !== dbId));
+              deleteCount++;
+            }
+          } else if (dbType === 'evacuation_center') {
+            const result = await supabase
+              .from('evacuation_centers')
+              .delete()
+              .eq('id', dbId);
+            error = result.error;
+            
+            if (!error) {
+              // Update local state
+              setEvacCenters(prev => prev.filter(center => center.id !== dbId));
+              deleteCount++;
+            }
+          } else if (dbType === 'evacuation_route') {
+            const result = await supabase
+              .from('evacuation_routes')
+              .delete()
+              .eq('id', dbId);
+            error = result.error;
+            
+            if (!error) {
+              // Update local state
+              setSafeRoutes(prev => prev.filter(route => route.id !== dbId));
+              deleteCount++;
+            }
+          }
+          
+          if (error) {
+            console.error('Error deleting item:', error);
+          }
+        });
+        
+        if (deleteCount > 0) {
+          toast({ title: `${deleteCount} item(s) deleted successfully!` });
+        }
+      } catch (error) {
+        console.error('Error deleting items:', error);
+        toast({ title: "Error deleting items", variant: "destructive" });
+      }
     });
 
     mapInstanceRef.current = mapInstance;
@@ -253,9 +379,12 @@ const RiskMapPage = () => {
         const polygon = L.polygon(coords, { color: 'red' }).bindPopup(zone.zone_name);
         zonesLayer.addLayer(polygon);
         
-        // Also add to drawnItems for editing
+        // Also add to drawnItems for editing with metadata
         if (drawnItemsRef.current) {
           const editablePolygon = L.polygon(coords, { color: 'red' }).bindPopup(zone.zone_name);
+          // Store metadata to identify the database record
+          (editablePolygon as any).dbId = zone.id;
+          (editablePolygon as any).dbType = 'disaster_zone';
           drawnItemsRef.current.addLayer(editablePolygon);
         }
       }
@@ -268,9 +397,12 @@ const RiskMapPage = () => {
         const marker = L.marker(coords, { icon: createIcon('green') }).bindPopup(center.name);
         centersLayer.addLayer(marker);
         
-        // Also add to drawnItems for editing
+        // Also add to drawnItems for editing with metadata
         if (drawnItemsRef.current) {
           const editableMarker = L.marker(coords, { icon: createIcon('green') }).bindPopup(center.name);
+          // Store metadata to identify the database record  
+          (editableMarker as any).dbId = center.id;
+          (editableMarker as any).dbType = 'evacuation_center';
           drawnItemsRef.current.addLayer(editableMarker);
         }
       }
@@ -283,9 +415,12 @@ const RiskMapPage = () => {
         const polyline = L.polyline(coords, { color: 'blue' }).bindPopup(route.route_name);
         routesLayer.addLayer(polyline);
         
-        // Also add to drawnItems for editing
+        // Also add to drawnItems for editing with metadata
         if (drawnItemsRef.current) {
           const editablePolyline = L.polyline(coords, { color: 'blue' }).bindPopup(route.route_name);
+          // Store metadata to identify the database record
+          (editablePolyline as any).dbId = route.id;
+          (editablePolyline as any).dbType = 'evacuation_route';
           drawnItemsRef.current.addLayer(editablePolyline);
         }
       }
