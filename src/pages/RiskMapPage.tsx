@@ -24,7 +24,7 @@ L.Icon.Default.mergeOptions({
 interface DisasterZone {
   id: string;
   zone_name: string;
-  zone_type: string;
+  zone_type: 'flood' | 'fire' | 'landslide' | 'earthquake' | 'typhoon' | 'other';
   risk_level: 'low' | 'medium' | 'high';
   notes: string | null;
   polygon_coords: [number, number][];
