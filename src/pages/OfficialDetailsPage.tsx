@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Edit, Clock, Share, Check } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Edit, Clock, Share, Check, X } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddEditPositionDialog } from '@/components/officials/AddEditPositionDialog';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,7 @@ const OfficialDetailsPage = () => {
   const [isPositionDialogOpen, setIsPositionDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<OfficialPosition | null>(null);
+  const [isCoverPhotoModalOpen, setIsCoverPhotoModalOpen] = useState(false);
 
   // Fetch official details with barangay information
   const { data: official, isLoading: officialLoading, refetch: refetchOfficial } = useQuery({
@@ -284,73 +286,110 @@ const OfficialDetailsPage = () => {
     <div className="w-full max-w-7xl mx-auto px-6 py-8 bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen">
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
         {/* Header Section with Hero Background */}
-        <div 
-          className="relative h-64 bg-gradient-to-r from-primary-600 to-primary-800"
-          style={{
-            backgroundImage: official?.coverurl ? `url(${official.coverurl})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
-        >
-          {/* Overlay for better text readability */}
-          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+        <Dialog open={isCoverPhotoModalOpen} onOpenChange={setIsCoverPhotoModalOpen}>
+          <DialogTrigger asChild>
+            <div 
+              className="relative h-64 bg-gradient-to-r from-primary-600 to-primary-800 cursor-pointer hover:opacity-95 transition-opacity duration-200"
+              style={{
+                backgroundImage: official?.coverurl ? `url(${official.coverurl})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
+              {/* Overlay for better text readability */}
+              <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+              
+              <div className="absolute bottom-6 left-6 flex items-end space-x-6">
+                <div className="relative">
+                  {official?.photo_url ? (
+                    <img 
+                      src={official.photo_url} 
+                      alt={official.name}
+                      className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-muted flex items-center justify-center">
+                      <User className="h-16 w-16 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center">
+                    <Check className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+                <div className="text-white pb-2">
+                  <h1 className="text-3xl font-bold mb-1">{official?.name}</h1>
+                  <p className="text-primary-100 text-lg">{currentPosition?.position || 'Barangay Official'}</p>
+                  <p className="text-primary-200 text-sm">
+                    {official.barangays ? 
+                      `${official.barangays.barangayname}, ${official.barangays.municipality}, ${official.barangays.province}, ${official.barangays.region}` 
+                      : currentPosition?.committee || 'Department'
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className="absolute top-6 right-6 flex space-x-2">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditOfficial();
+                  }}
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
+                >
+                  <Edit className="h-5 w-5" />
+                </button>
+                <button 
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
+                >
+                  <Share className="h-5 w-5" />
+                </button>
+              </div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goBack();
+                }}
+                className="absolute top-6 left-6 bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            </div>
+          </DialogTrigger>
           
-          {/* Cover Photo Upload Component */}
-          {id && (
-            <OfficialCoverPhotoUpload
-              officialId={id}
-              currentCoverUrl={official?.coverurl}
-              onUploadSuccess={handleCoverPhotoUpload}
-            />
-          )}
-          
-          <div className="absolute bottom-6 left-6 flex items-end space-x-6">
+          <DialogContent className="max-w-4xl w-full p-0 bg-black border-0">
             <div className="relative">
-              {official?.photo_url ? (
+              <Button
+                onClick={() => setIsCoverPhotoModalOpen(false)}
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              {official?.coverurl ? (
                 <img 
-                  src={official.photo_url} 
-                  alt={official.name}
-                  className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                  src={official.coverurl} 
+                  alt={`${official.name} cover photo`}
+                  className="w-full h-auto max-h-[80vh] object-contain"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-muted flex items-center justify-center">
-                  <User className="h-16 w-16 text-muted-foreground" />
+                <div className="w-full h-96 bg-gradient-to-r from-primary-600 to-primary-800 flex items-center justify-center">
+                  <p className="text-white text-xl">No cover photo available</p>
                 </div>
               )}
-              <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center">
-                <Check className="h-4 w-4 text-white" />
-              </div>
             </div>
-            <div className="text-white pb-2">
-              <h1 className="text-3xl font-bold mb-1">{official?.name}</h1>
-              <p className="text-primary-100 text-lg">{currentPosition?.position || 'Barangay Official'}</p>
-              <p className="text-primary-200 text-sm">
-                {official.barangays ? 
-                  `${official.barangays.barangayname}, ${official.barangays.municipality}, ${official.barangays.province}, ${official.barangays.region}` 
-                  : currentPosition?.committee || 'Department'
-                }
-              </p>
-            </div>
-          </div>
-          <div className="absolute top-6 right-6 flex space-x-2">
-            <button 
-              onClick={handleEditOfficial}
-              className="bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
-            >
-              <Edit className="h-5 w-5" />
-            </button>
-            <button className="bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105">
-              <Share className="h-5 w-5" />
-            </button>
-          </div>
-          <button 
-            onClick={goBack}
-            className="absolute top-6 left-6 bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Cover Photo Upload Component */}
+        {id && (
+          <OfficialCoverPhotoUpload
+            officialId={id}
+            currentCoverUrl={official?.coverurl}
+            onUploadSuccess={handleCoverPhotoUpload}
+          />
+        )}
 
         <div className="p-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
