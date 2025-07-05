@@ -140,15 +140,15 @@ export const EvacuationCenterDetailsModal = ({
             <Badge variant={getStatusColor(center.status || 'available') as any}>
               {getStatusLabel(center.status || 'available')}
             </Badge>
-            <Select
+            <Select 
               value={center.status || 'available'} 
               onValueChange={(value: 'available' | 'full' | 'closed' | 'maintenance') => updateCenterStatus(value)}
               disabled={updating}
             >
               <SelectTrigger className="w-auto">
-                <SelectValue />
+                <SelectValue placeholder="Select status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[4000]">
                 <SelectItem value="available">Available</SelectItem>
                 <SelectItem value="full">Full</SelectItem>
                 <SelectItem value="closed">Closed</SelectItem>
