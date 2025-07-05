@@ -43,12 +43,16 @@ const ResidentPhotoUpload = ({
         throw error;
       }
 
-      // Get the public URL
-      const { data: publicUrlData } = supabase.storage
+      // Get a signed URL (expires in 1 hour)
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('residentphotos')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 3600);
 
-      const url = publicUrlData.publicUrl;
+      if (signedUrlError) {
+        throw signedUrlError;
+      }
+
+      const url = signedUrlData.signedUrl;
       setPhotoUrl(url);
       onPhotoUploaded(url);
 
