@@ -8,6 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AddEvacuationCenterModal } from "@/components/emergency/AddEvacuationCenterModal";
 import { AddEvacuationRouteModal } from "@/components/emergency/AddEvacuationRouteModal";
+import { DisasterZoneDetailsModal } from "@/components/emergency/DisasterZoneDetailsModal";
+import { EvacuationCenterDetailsModal } from "@/components/emergency/EvacuationCenterDetailsModal";
+import { EvacuationRouteDetailsModal } from "@/components/emergency/EvacuationRouteDetailsModal";
+import { Eye } from "lucide-react";
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -58,6 +62,15 @@ const RiskMapPage = () => {
   const [showRouteModal, setShowRouteModal] = useState(false);
   const [tempLayer, setTempLayer] = useState<L.Layer | null>(null);
   const [tempCoordinates, setTempCoordinates] = useState<any>(null);
+  
+  // Detail modal states
+  const [showZoneDetails, setShowZoneDetails] = useState(false);
+  const [showCenterDetails, setShowCenterDetails] = useState(false);
+  const [showRouteDetails, setShowRouteDetails] = useState(false);
+  const [selectedZone, setSelectedZone] = useState<DisasterZone | null>(null);
+  const [selectedCenter, setSelectedCenter] = useState<EvacCenter | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<SafeRoute | null>(null);
+  
   const { toast } = useToast();
   
   // Layer groups
@@ -696,13 +709,28 @@ const RiskMapPage = () => {
                 {disasterZones.map(zone => (
                   <div 
                     key={zone.id}
-                    className="px-4 py-3 border-t cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => focusOnItem(zone, 'zone')}
+                    className="px-4 py-3 border-t hover:bg-gray-50 transition-colors flex items-center justify-between"
                   >
-                    <h4 className="font-semibold text-gray-700">{zone.zone_name}</h4>
-                    <p className={`text-sm ${zone.risk_level === 'high' ? 'text-red-600' : zone.risk_level === 'medium' ? 'text-orange-500' : 'text-green-600'}`}>
-                      Risk: <span className="font-medium capitalize">{zone.risk_level}</span>
-                    </p>
+                    <div
+                      className="cursor-pointer flex-1"
+                      onClick={() => focusOnItem(zone, 'zone')}
+                    >
+                      <h4 className="font-semibold text-gray-700">{zone.zone_name}</h4>
+                      <p className={`text-sm ${zone.risk_level === 'high' ? 'text-red-600' : zone.risk_level === 'medium' ? 'text-orange-500' : 'text-green-600'}`}>
+                        Risk: <span className="font-medium capitalize">{zone.risk_level}</span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedZone(zone);
+                        setShowZoneDetails(true);
+                      }}
+                      className="ml-2 p-1 hover:bg-gray-200 rounded transition-colors"
+                      title="View details"
+                    >
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    </button>
                   </div>
                 ))}
               </AccordionContent>
@@ -723,10 +751,25 @@ const RiskMapPage = () => {
                 {evacCenters.map(center => (
                   <div 
                     key={center.id}
-                    className="px-4 py-3 border-t cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => focusOnItem(center, 'center')}
+                    className="px-4 py-3 border-t hover:bg-gray-50 transition-colors flex items-center justify-between"
                   >
-                    <h4 className="font-semibold text-gray-700">{center.name}</h4>
+                    <div
+                      className="cursor-pointer flex-1"
+                      onClick={() => focusOnItem(center, 'center')}
+                    >
+                      <h4 className="font-semibold text-gray-700">{center.name}</h4>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCenter(center);
+                        setShowCenterDetails(true);
+                      }}
+                      className="ml-2 p-1 hover:bg-gray-200 rounded transition-colors"
+                      title="View details"
+                    >
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    </button>
                   </div>
                 ))}
               </AccordionContent>
@@ -747,10 +790,25 @@ const RiskMapPage = () => {
                 {safeRoutes.map(route => (
                   <div 
                     key={route.id}
-                    className="px-4 py-3 border-t cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => focusOnItem(route, 'route')}
+                    className="px-4 py-3 border-t hover:bg-gray-50 transition-colors flex items-center justify-between"
                   >
-                    <h4 className="font-semibold text-gray-700">{route.route_name}</h4>
+                    <div
+                      className="cursor-pointer flex-1"
+                      onClick={() => focusOnItem(route, 'route')}
+                    >
+                      <h4 className="font-semibold text-gray-700">{route.route_name}</h4>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedRoute(route);
+                        setShowRouteDetails(true);
+                      }}
+                      className="ml-2 p-1 hover:bg-gray-200 rounded transition-colors"
+                      title="View details"
+                    >
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    </button>
                   </div>
                 ))}
               </AccordionContent>
@@ -867,6 +925,40 @@ const RiskMapPage = () => {
         onClose={closeRouteModal}
         coordinates={tempCoordinates}
         onSuccess={handleRouteSuccess}
+      />
+
+      {/* Detail Modals */}
+      <DisasterZoneDetailsModal
+        isOpen={showZoneDetails}
+        onClose={() => setShowZoneDetails(false)}
+        zone={selectedZone}
+        onDelete={() => {
+          fetchDisasterZones();
+          setSelectedZone(null);
+        }}
+      />
+
+      <EvacuationCenterDetailsModal
+        isOpen={showCenterDetails}
+        onClose={() => setShowCenterDetails(false)}
+        center={selectedCenter}
+        onUpdate={() => {
+          fetchEvacCenters();
+        }}
+        onDelete={() => {
+          fetchEvacCenters();
+          setSelectedCenter(null);
+        }}
+      />
+
+      <EvacuationRouteDetailsModal
+        isOpen={showRouteDetails}
+        onClose={() => setShowRouteDetails(false)}
+        route={selectedRoute}
+        onDelete={() => {
+          fetchSafeRoutes();
+          setSelectedRoute(null);
+        }}
       />
     </div>
   );
