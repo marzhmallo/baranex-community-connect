@@ -112,9 +112,11 @@ const RiskMapPage = () => {
         polygon_coords: zone.polygon_coords as [number, number][]
       }));
       setDisasterZones(transformedData);
+      return transformedData;
     } catch (error) {
       console.error('Error fetching disaster zones:', error);
       toast({ title: "Error fetching disaster zones", variant: "destructive" });
+      return [];
     }
   };
 
@@ -126,9 +128,11 @@ const RiskMapPage = () => {
       
       if (error) throw error;
       setEvacCenters(data || []);
+      return data || [];
     } catch (error) {
       console.error('Error fetching evacuation centers:', error);
       toast({ title: "Error fetching evacuation centers", variant: "destructive" });
+      return [];
     }
   };
 
@@ -149,9 +153,11 @@ const RiskMapPage = () => {
         estimated_time_minutes: route.estimated_time_minutes
       }));
       setSafeRoutes(transformedData);
+      return transformedData;
     } catch (error) {
       console.error('Error fetching evacuation routes:', error);
       toast({ title: "Error fetching evacuation routes", variant: "destructive" });
+      return [];
     }
   };
 
@@ -936,8 +942,15 @@ const RiskMapPage = () => {
         isOpen={showZoneDetails}
         onClose={() => setShowZoneDetails(false)}
         zone={selectedZone}
-        onEdit={() => {
-          fetchDisasterZones();
+        onEdit={async () => {
+          const freshZones = await fetchDisasterZones();
+          // Update selected zone with fresh data to keep modal open
+          if (selectedZone) {
+            const updatedZone = freshZones.find(z => z.id === selectedZone.id);
+            if (updatedZone) {
+              setSelectedZone(updatedZone);
+            }
+          }
         }}
       />
 
@@ -948,8 +961,15 @@ const RiskMapPage = () => {
         onUpdate={() => {
           fetchEvacCenters();
         }}
-        onEdit={() => {
-          fetchEvacCenters();
+        onEdit={async () => {
+          const freshCenters = await fetchEvacCenters();
+          // Update selected center with fresh data to keep modal open
+          if (selectedCenter) {
+            const updatedCenter = freshCenters.find(c => c.id === selectedCenter.id);
+            if (updatedCenter) {
+              setSelectedCenter(updatedCenter);
+            }
+          }
         }}
       />
 
@@ -957,8 +977,15 @@ const RiskMapPage = () => {
         isOpen={showRouteDetails}
         onClose={() => setShowRouteDetails(false)}
         route={selectedRoute}
-        onEdit={() => {
-          fetchSafeRoutes();
+        onEdit={async () => {
+          const freshRoutes = await fetchSafeRoutes();
+          // Update selected route with fresh data to keep modal open
+          if (selectedRoute) {
+            const updatedRoute = freshRoutes.find(r => r.id === selectedRoute.id);
+            if (updatedRoute) {
+              setSelectedRoute(updatedRoute);
+            }
+          }
         }}
       />
     </div>
