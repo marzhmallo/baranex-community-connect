@@ -201,12 +201,6 @@ const RiskMapPage = () => {
     mapInstance.on(L.Draw.Event.EDITED, async function (e: any) {
       console.log('Layers edited:', e.layers);
       
-      // Clear all layers immediately for real-time visual update
-      if (zonesLayerRef.current) zonesLayerRef.current.clearLayers();
-      if (centersLayerRef.current) centersLayerRef.current.clearLayers();
-      if (routesLayerRef.current) routesLayerRef.current.clearLayers();
-      if (drawnItemsRef.current) drawnItemsRef.current.clearLayers();
-      
       try {
         const editedLayers = e.layers;
         let updateCount = 0;
@@ -277,33 +271,17 @@ const RiskMapPage = () => {
         // Wait for all updates to complete
         await Promise.all(updatePromises);
         
-        // Re-render map data immediately after updates
-        if (map && zonesLayerRef.current && centersLayerRef.current && routesLayerRef.current) {
-          renderMapData(map, zonesLayerRef.current, centersLayerRef.current, routesLayerRef.current);
-        }
-        
         if (updateCount > 0) {
           toast({ title: `${updateCount} item(s) updated successfully!` });
         }
       } catch (error) {
         console.error('Error updating items:', error);
         toast({ title: "Error updating items", variant: "destructive" });
-        
-        // Re-render original data on error
-        if (map && zonesLayerRef.current && centersLayerRef.current && routesLayerRef.current) {
-          renderMapData(map, zonesLayerRef.current, centersLayerRef.current, routesLayerRef.current);
-        }
       }
     });
 
     mapInstance.on(L.Draw.Event.DELETED, async function (e: any) {
       console.log('Layers deleted:', e.layers);
-      
-      // Clear all layers immediately for real-time visual update
-      if (zonesLayerRef.current) zonesLayerRef.current.clearLayers();
-      if (centersLayerRef.current) centersLayerRef.current.clearLayers();
-      if (routesLayerRef.current) routesLayerRef.current.clearLayers();
-      if (drawnItemsRef.current) drawnItemsRef.current.clearLayers();
       
       try {
         const deletedLayers = e.layers;
@@ -369,22 +347,12 @@ const RiskMapPage = () => {
         // Wait for all deletions to complete
         await Promise.all(deletePromises);
         
-        // Re-render map data immediately after deletions
-        if (map && zonesLayerRef.current && centersLayerRef.current && routesLayerRef.current) {
-          renderMapData(map, zonesLayerRef.current, centersLayerRef.current, routesLayerRef.current);
-        }
-        
         if (deleteCount > 0) {
           toast({ title: `${deleteCount} item(s) deleted successfully!` });
         }
       } catch (error) {
         console.error('Error deleting items:', error);
         toast({ title: "Error deleting items", variant: "destructive" });
-        
-        // Re-render original data on error
-        if (map && zonesLayerRef.current && centersLayerRef.current && routesLayerRef.current) {
-          renderMapData(map, zonesLayerRef.current, centersLayerRef.current, routesLayerRef.current);
-        }
       }
     });
 
@@ -422,20 +390,22 @@ const RiskMapPage = () => {
       drawnItemsRef.current.clearLayers();
     }
 
-    // Render disaster zones
+    // Only add to drawnItems (single source of truth) with proper layer organization
     disasterZones.forEach(zone => {
       if (zone.polygon_coords) {
         const coords = zone.polygon_coords as [number, number][];
         const polygon = L.polygon(coords, { color: 'red' }).bindPopup(zone.zone_name);
-        zonesLayer.addLayer(polygon);
         
-        // Also add to drawnItems for editing with metadata
+        // Store metadata to identify the database record
+        (polygon as any).dbId = zone.id;
+        (polygon as any).dbType = 'disaster_zone';
+        
+        // Add to both drawnItems for editing AND zonesLayer for visibility control
+        if (showZones) {
+          zonesLayer.addLayer(polygon);
+        }
         if (drawnItemsRef.current) {
-          const editablePolygon = L.polygon(coords, { color: 'red' }).bindPopup(zone.zone_name);
-          // Store metadata to identify the database record
-          (editablePolygon as any).dbId = zone.id;
-          (editablePolygon as any).dbType = 'disaster_zone';
-          drawnItemsRef.current.addLayer(editablePolygon);
+          drawnItemsRef.current.addLayer(polygon);
         }
       }
     });
@@ -445,15 +415,17 @@ const RiskMapPage = () => {
       if (center.latitude && center.longitude) {
         const coords: [number, number] = [center.latitude, center.longitude];
         const marker = L.marker(coords, { icon: createIcon('green') }).bindPopup(center.name);
-        centersLayer.addLayer(marker);
         
-        // Also add to drawnItems for editing with metadata
+        // Store metadata to identify the database record  
+        (marker as any).dbId = center.id;
+        (marker as any).dbType = 'evacuation_center';
+        
+        // Add to both drawnItems for editing AND centersLayer for visibility control
+        if (showCenters) {
+          centersLayer.addLayer(marker);
+        }
         if (drawnItemsRef.current) {
-          const editableMarker = L.marker(coords, { icon: createIcon('green') }).bindPopup(center.name);
-          // Store metadata to identify the database record  
-          (editableMarker as any).dbId = center.id;
-          (editableMarker as any).dbType = 'evacuation_center';
-          drawnItemsRef.current.addLayer(editableMarker);
+          drawnItemsRef.current.addLayer(marker);
         }
       }
     });
@@ -463,15 +435,17 @@ const RiskMapPage = () => {
       if (route.route_coords) {
         const coords = route.route_coords as [number, number][];
         const polyline = L.polyline(coords, { color: 'blue' }).bindPopup(route.route_name);
-        routesLayer.addLayer(polyline);
         
-        // Also add to drawnItems for editing with metadata
+        // Store metadata to identify the database record
+        (polyline as any).dbId = route.id;
+        (polyline as any).dbType = 'evacuation_route';
+        
+        // Add to both drawnItems for editing AND routesLayer for visibility control
+        if (showRoutes) {
+          routesLayer.addLayer(polyline);
+        }
         if (drawnItemsRef.current) {
-          const editablePolyline = L.polyline(coords, { color: 'blue' }).bindPopup(route.route_name);
-          // Store metadata to identify the database record
-          (editablePolyline as any).dbId = route.id;
-          (editablePolyline as any).dbType = 'evacuation_route';
-          drawnItemsRef.current.addLayer(editablePolyline);
+          drawnItemsRef.current.addLayer(polyline);
         }
       }
     });
