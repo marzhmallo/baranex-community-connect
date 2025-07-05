@@ -201,66 +201,86 @@ const RiskMapPage = () => {
     mapInstance.on(L.Draw.Event.EDITED, async function (e: any) {
       console.log('Layers edited:', e.layers);
       
+      // Clear all layers immediately for real-time visual update
+      if (zonesLayerRef.current) zonesLayerRef.current.clearLayers();
+      if (centersLayerRef.current) centersLayerRef.current.clearLayers();
+      if (routesLayerRef.current) routesLayerRef.current.clearLayers();
+      if (drawnItemsRef.current) drawnItemsRef.current.clearLayers();
+      
       try {
         const editedLayers = e.layers;
         let updateCount = 0;
         
-        editedLayers.eachLayer(async (layer: any) => {
+        const updatePromises: Promise<void>[] = [];
+        
+        editedLayers.eachLayer((layer: any) => {
           const dbId = layer.dbId;
           const dbType = layer.dbType;
           
           if (!dbId || !dbType) return;
           
-          if (dbType === 'disaster_zone') {
-            const coordinates = layer.getLatLngs()[0].map((latlng: any) => [latlng.lat, latlng.lng]);
-            const { error } = await supabase
-              .from('disaster_zones')
-              .update({ polygon_coords: coordinates })
-              .eq('id', dbId);
-            
-            if (!error) {
-              // Update local state
-              setDisasterZones(prev => prev.map(zone => 
-                zone.id === dbId 
-                  ? { ...zone, polygon_coords: coordinates }
-                  : zone
-              ));
-              updateCount++;
+          const updatePromise = (async () => {
+            if (dbType === 'disaster_zone') {
+              const coordinates = layer.getLatLngs()[0].map((latlng: any) => [latlng.lat, latlng.lng]);
+              const { error } = await supabase
+                .from('disaster_zones')
+                .update({ polygon_coords: coordinates })
+                .eq('id', dbId);
+              
+              if (!error) {
+                // Update local state immediately
+                setDisasterZones(prev => prev.map(zone => 
+                  zone.id === dbId 
+                    ? { ...zone, polygon_coords: coordinates }
+                    : zone
+                ));
+                updateCount++;
+              }
+            } else if (dbType === 'evacuation_center') {
+              const coords = layer.getLatLng();
+              const { error } = await supabase
+                .from('evacuation_centers')
+                .update({ latitude: coords.lat, longitude: coords.lng })
+                .eq('id', dbId);
+              
+              if (!error) {
+                // Update local state immediately
+                setEvacCenters(prev => prev.map(center => 
+                  center.id === dbId 
+                    ? { ...center, latitude: coords.lat, longitude: coords.lng }
+                    : center
+                ));
+                updateCount++;
+              }
+            } else if (dbType === 'evacuation_route') {
+              const coordinates = layer.getLatLngs().map((latlng: any) => [latlng.lat, latlng.lng]);
+              const { error } = await supabase
+                .from('evacuation_routes')
+                .update({ route_coords: coordinates })
+                .eq('id', dbId);
+              
+              if (!error) {
+                // Update local state immediately
+                setSafeRoutes(prev => prev.map(route => 
+                  route.id === dbId 
+                    ? { ...route, route_coords: coordinates }
+                    : route
+                ));
+                updateCount++;
+              }
             }
-          } else if (dbType === 'evacuation_center') {
-            const coords = layer.getLatLng();
-            const { error } = await supabase
-              .from('evacuation_centers')
-              .update({ latitude: coords.lat, longitude: coords.lng })
-              .eq('id', dbId);
-            
-            if (!error) {
-              // Update local state
-              setEvacCenters(prev => prev.map(center => 
-                center.id === dbId 
-                  ? { ...center, latitude: coords.lat, longitude: coords.lng }
-                  : center
-              ));
-              updateCount++;
-            }
-          } else if (dbType === 'evacuation_route') {
-            const coordinates = layer.getLatLngs().map((latlng: any) => [latlng.lat, latlng.lng]);
-            const { error } = await supabase
-              .from('evacuation_routes')
-              .update({ route_coords: coordinates })
-              .eq('id', dbId);
-            
-            if (!error) {
-              // Update local state
-              setSafeRoutes(prev => prev.map(route => 
-                route.id === dbId 
-                  ? { ...route, route_coords: coordinates }
-                  : route
-              ));
-              updateCount++;
-            }
-          }
+          })();
+          
+          updatePromises.push(updatePromise);
         });
+        
+        // Wait for all updates to complete
+        await Promise.all(updatePromises);
+        
+        // Re-render map data immediately after updates
+        if (map && zonesLayerRef.current && centersLayerRef.current && routesLayerRef.current) {
+          renderMapData(map, zonesLayerRef.current, centersLayerRef.current, routesLayerRef.current);
+        }
         
         if (updateCount > 0) {
           toast({ title: `${updateCount} item(s) updated successfully!` });
@@ -268,66 +288,91 @@ const RiskMapPage = () => {
       } catch (error) {
         console.error('Error updating items:', error);
         toast({ title: "Error updating items", variant: "destructive" });
+        
+        // Re-render original data on error
+        if (map && zonesLayerRef.current && centersLayerRef.current && routesLayerRef.current) {
+          renderMapData(map, zonesLayerRef.current, centersLayerRef.current, routesLayerRef.current);
+        }
       }
     });
 
     mapInstance.on(L.Draw.Event.DELETED, async function (e: any) {
       console.log('Layers deleted:', e.layers);
       
+      // Clear all layers immediately for real-time visual update
+      if (zonesLayerRef.current) zonesLayerRef.current.clearLayers();
+      if (centersLayerRef.current) centersLayerRef.current.clearLayers();
+      if (routesLayerRef.current) routesLayerRef.current.clearLayers();
+      if (drawnItemsRef.current) drawnItemsRef.current.clearLayers();
+      
       try {
         const deletedLayers = e.layers;
         let deleteCount = 0;
         
-        deletedLayers.eachLayer(async (layer: any) => {
+        const deletePromises: Promise<void>[] = [];
+        
+        deletedLayers.eachLayer((layer: any) => {
           const dbId = layer.dbId;
           const dbType = layer.dbType;
           
           if (!dbId || !dbType) return;
           
-          let error = null;
+          const deletePromise = (async () => {
+            let error = null;
+            
+            if (dbType === 'disaster_zone') {
+              const result = await supabase
+                .from('disaster_zones')
+                .delete()
+                .eq('id', dbId);
+              error = result.error;
+              
+              if (!error) {
+                // Update local state immediately
+                setDisasterZones(prev => prev.filter(zone => zone.id !== dbId));
+                deleteCount++;
+              }
+            } else if (dbType === 'evacuation_center') {
+              const result = await supabase
+                .from('evacuation_centers')
+                .delete()
+                .eq('id', dbId);
+              error = result.error;
+              
+              if (!error) {
+                // Update local state immediately
+                setEvacCenters(prev => prev.filter(center => center.id !== dbId));
+                deleteCount++;
+              }
+            } else if (dbType === 'evacuation_route') {
+              const result = await supabase
+                .from('evacuation_routes')
+                .delete()
+                .eq('id', dbId);
+              error = result.error;
+              
+              if (!error) {
+                // Update local state immediately
+                setSafeRoutes(prev => prev.filter(route => route.id !== dbId));
+                deleteCount++;
+              }
+            }
+            
+            if (error) {
+              console.error('Error deleting item:', error);
+            }
+          })();
           
-          if (dbType === 'disaster_zone') {
-            const result = await supabase
-              .from('disaster_zones')
-              .delete()
-              .eq('id', dbId);
-            error = result.error;
-            
-            if (!error) {
-              // Update local state
-              setDisasterZones(prev => prev.filter(zone => zone.id !== dbId));
-              deleteCount++;
-            }
-          } else if (dbType === 'evacuation_center') {
-            const result = await supabase
-              .from('evacuation_centers')
-              .delete()
-              .eq('id', dbId);
-            error = result.error;
-            
-            if (!error) {
-              // Update local state
-              setEvacCenters(prev => prev.filter(center => center.id !== dbId));
-              deleteCount++;
-            }
-          } else if (dbType === 'evacuation_route') {
-            const result = await supabase
-              .from('evacuation_routes')
-              .delete()
-              .eq('id', dbId);
-            error = result.error;
-            
-            if (!error) {
-              // Update local state
-              setSafeRoutes(prev => prev.filter(route => route.id !== dbId));
-              deleteCount++;
-            }
-          }
-          
-          if (error) {
-            console.error('Error deleting item:', error);
-          }
+          deletePromises.push(deletePromise);
         });
+        
+        // Wait for all deletions to complete
+        await Promise.all(deletePromises);
+        
+        // Re-render map data immediately after deletions
+        if (map && zonesLayerRef.current && centersLayerRef.current && routesLayerRef.current) {
+          renderMapData(map, zonesLayerRef.current, centersLayerRef.current, routesLayerRef.current);
+        }
         
         if (deleteCount > 0) {
           toast({ title: `${deleteCount} item(s) deleted successfully!` });
@@ -335,6 +380,11 @@ const RiskMapPage = () => {
       } catch (error) {
         console.error('Error deleting items:', error);
         toast({ title: "Error deleting items", variant: "destructive" });
+        
+        // Re-render original data on error
+        if (map && zonesLayerRef.current && centersLayerRef.current && routesLayerRef.current) {
+          renderMapData(map, zonesLayerRef.current, centersLayerRef.current, routesLayerRef.current);
+        }
       }
     });
 
