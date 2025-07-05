@@ -107,6 +107,7 @@ export const EvacuationCenterDetailsModal = ({
   };
 
   const handleEditSuccess = () => {
+    // Just refresh data but don't close the detail modal
     onEdit?.();
   };
 

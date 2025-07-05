@@ -39,6 +39,7 @@ export const EvacuationRouteDetailsModal = ({
   };
 
   const handleEditSuccess = () => {
+    // Just refresh data but don't close the detail modal
     onEdit?.();
   };
 

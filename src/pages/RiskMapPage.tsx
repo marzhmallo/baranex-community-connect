@@ -938,7 +938,6 @@ const RiskMapPage = () => {
         zone={selectedZone}
         onEdit={() => {
           fetchDisasterZones();
-          setSelectedZone(null);
         }}
       />
 
@@ -951,7 +950,6 @@ const RiskMapPage = () => {
         }}
         onEdit={() => {
           fetchEvacCenters();
-          setSelectedCenter(null);
         }}
       />
 
@@ -961,7 +959,6 @@ const RiskMapPage = () => {
         route={selectedRoute}
         onEdit={() => {
           fetchSafeRoutes();
-          setSelectedRoute(null);
         }}
       />
     </div>
