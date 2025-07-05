@@ -21,6 +21,7 @@ const OfficialDetailsPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<OfficialPosition | null>(null);
   const [isCoverPhotoModalOpen, setIsCoverPhotoModalOpen] = useState(false);
+  const [isProfilePhotoModalOpen, setIsProfilePhotoModalOpen] = useState(false);
 
   // Fetch official details with barangay information
   const { data: official, isLoading: officialLoading, refetch: refetchOfficial } = useQuery({
@@ -243,6 +244,12 @@ const OfficialDetailsPage = () => {
     }
   };
 
+  const handleProfilePhotoClick = () => {
+    if (official?.photo_url) {
+      setIsProfilePhotoModalOpen(true);
+    }
+  };
+
   const goBack = () => {
     navigate(-1);
   };
@@ -328,7 +335,8 @@ const OfficialDetailsPage = () => {
                 <img 
                   src={official.photo_url} 
                   alt={official.name}
-                  className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                  className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                  onClick={handleProfilePhotoClick}
                 />
               ) : (
                 <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-muted flex items-center justify-center">
@@ -604,6 +612,27 @@ const OfficialDetailsPage = () => {
               <img
                 src={official.coverurl}
                 alt={`${official.name} cover photo`}
+                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Photo Modal */}
+      <Dialog open={isProfilePhotoModalOpen} onOpenChange={setIsProfilePhotoModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0" hideCloseButton>
+          <div className="relative">
+            <button
+              onClick={() => setIsProfilePhotoModalOpen(false)}
+              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {official?.photo_url && (
+              <img
+                src={official.photo_url}
+                alt={`${official.name} profile photo`}
                 className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
               />
             )}
