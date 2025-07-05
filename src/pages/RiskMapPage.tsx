@@ -945,7 +945,7 @@ const RiskMapPage = () => {
         onUpdate={() => {
           fetchEvacCenters();
         }}
-        onDelete={() => {
+        onEdit={() => {
           fetchEvacCenters();
           setSelectedCenter(null);
         }}
@@ -955,7 +955,7 @@ const RiskMapPage = () => {
         isOpen={showRouteDetails}
         onClose={() => setShowRouteDetails(false)}
         route={selectedRoute}
-        onDelete={() => {
+        onEdit={() => {
           fetchSafeRoutes();
           setSelectedRoute(null);
         }}

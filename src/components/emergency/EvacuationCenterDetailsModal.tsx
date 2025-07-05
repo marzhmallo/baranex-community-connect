@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { MapPin, Users, Phone, Trash2 } from "lucide-react";
+import { MapPin, Users, Phone, Edit } from "lucide-react";
+import { EditEvacuationCenterModal } from "./EditEvacuationCenterModal";
 
 interface EvacCenter {
   id: string;
@@ -27,7 +28,7 @@ interface EvacuationCenterDetailsModalProps {
   onClose: () => void;
   center: EvacCenter | null;
   onUpdate?: () => void;
-  onDelete?: () => void;
+  onEdit?: () => void;
 }
 
 export const EvacuationCenterDetailsModal = ({ 
@@ -35,10 +36,10 @@ export const EvacuationCenterDetailsModal = ({
   onClose, 
   center,
   onUpdate,
-  onDelete 
+  onEdit 
 }: EvacuationCenterDetailsModalProps) => {
   const [updating, setUpdating] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(center?.status || 'available');
 
   useEffect(() => {
@@ -101,146 +102,135 @@ export const EvacuationCenterDetailsModal = ({
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this evacuation center?')) return;
-    
-    try {
-      setDeleting(true);
-      const { error } = await supabase
-        .from('evacuation_centers')
-        .delete()
-        .eq('id', center.id);
+  const handleEdit = () => {
+    setShowEditModal(true);
+  };
 
-      if (error) throw error;
-      
-      toast({ title: "Success", description: "Evacuation center deleted successfully" });
-      onDelete?.();
-      onClose();
-    } catch (error) {
-      console.error('Error deleting evacuation center:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete evacuation center",
-        variant: "destructive",
-      });
-    } finally {
-      setDeleting(false);
-    }
+  const handleEditSuccess = () => {
+    onEdit?.();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] z-[3000]" style={{ zIndex: 3000 }}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span className="text-2xl">{getStatusIcon(currentStatus)}</span>
-            {center.name}
-          </DialogTitle>
-          <DialogDescription>
-            Evacuation center details and status management
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[600px] z-[3000]" style={{ zIndex: 3000 }}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-2xl">{getStatusIcon(currentStatus)}</span>
+              {center.name}
+            </DialogTitle>
+            <DialogDescription>
+              Evacuation center details and status management
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="flex items-center gap-6">
-            <Badge variant={getStatusColor(currentStatus) as any}>
-              {getStatusLabel(currentStatus)}
-            </Badge>
-            <Select 
-              value={currentStatus} 
-              onValueChange={(value: 'available' | 'full' | 'closed' | 'maintenance') => updateCenterStatus(value)}
-              disabled={updating}
+          <div className="space-y-4">
+            <div className="flex items-center gap-6">
+              <Badge variant={getStatusColor(currentStatus) as any}>
+                {getStatusLabel(currentStatus)}
+              </Badge>
+              <Select 
+                value={currentStatus} 
+                onValueChange={(value: 'available' | 'full' | 'closed' | 'maintenance') => updateCenterStatus(value)}
+                disabled={updating}
+              >
+                <SelectTrigger className="w-auto">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent className="z-[4000]">
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="full">Full</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold mb-1">Address:</h4>
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {center.address}
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">Capacity:</h4>
+                <p className="text-sm">
+                  {center.current_occupancy || 0} / {center.capacity} people
+                </p>
+              </div>
+            </div>
+
+            {center.facilities && center.facilities.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2">Facilities:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {center.facilities.map((facility, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {facility}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {center.contact_person && (
+              <div>
+                <h4 className="font-semibold mb-1">Contact Person:</h4>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{center.contact_person}</span>
+                  {center.contact_phone && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(`tel:${center.contact_phone}`)}
+                    >
+                      <Phone className="h-3 w-3" />
+                      {center.contact_phone}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {center.notes && (
+              <div>
+                <h4 className="font-semibold mb-1">Notes:</h4>
+                <p className="text-sm text-muted-foreground">{center.notes}</p>
+              </div>
+            )}
+
+            {center.latitude && center.longitude && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>Coordinates: {center.latitude.toFixed(6)}, {center.longitude.toFixed(6)}</span>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={handleEdit}
             >
-              <SelectTrigger className="w-auto">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent className="z-[4000]">
-                <SelectItem value="available">Available</SelectItem>
-                <SelectItem value="full">Full</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-                <SelectItem value="maintenance">Maintenance</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-semibold mb-1">Address:</h4>
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {center.address}
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-1">Capacity:</h4>
-              <p className="text-sm">
-                {center.current_occupancy || 0} / {center.capacity} people
-              </p>
-            </div>
-          </div>
-
-          {center.facilities && center.facilities.length > 0 && (
-            <div>
-              <h4 className="font-semibold mb-2">Facilities:</h4>
-              <div className="flex flex-wrap gap-1">
-                {center.facilities.map((facility, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {facility}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {center.contact_person && (
-            <div>
-              <h4 className="font-semibold mb-1">Contact Person:</h4>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{center.contact_person}</span>
-                {center.contact_phone && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => window.open(`tel:${center.contact_phone}`)}
-                  >
-                    <Phone className="h-3 w-3" />
-                    {center.contact_phone}
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {center.notes && (
-            <div>
-              <h4 className="font-semibold mb-1">Notes:</h4>
-              <p className="text-sm text-muted-foreground">{center.notes}</p>
-            </div>
-          )}
-
-          {center.latitude && center.longitude && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>Coordinates: {center.latitude.toFixed(6)}, {center.longitude.toFixed(6)}</span>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="flex justify-between">
-          <Button 
-            variant="destructive" 
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            {deleting ? 'Deleting...' : 'Delete Center'}
-          </Button>
-          <Button onClick={onClose}>
-            Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Center
+            </Button>
+            <Button onClick={onClose}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <EditEvacuationCenterModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        center={center}
+        onSuccess={handleEditSuccess}
+      />
+    </>
   );
 };
