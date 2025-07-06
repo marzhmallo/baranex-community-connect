@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, User } from 'lucide-react';
 
 interface ResidentPhotoUploadProps {
   residentId: string | undefined;
@@ -169,7 +169,7 @@ const ResidentPhotoUpload = ({
             <Avatar className="h-24 w-24">
               <AvatarImage src={photoUrl} alt="Resident photo" />
               <AvatarFallback>
-                {residentId ? residentId.substring(0, 2).toUpperCase() : "NA"}
+                <User className="h-8 w-8" />
               </AvatarFallback>
             </Avatar>
             <Button
@@ -185,7 +185,7 @@ const ResidentPhotoUpload = ({
         ) : (
           <Avatar className="h-24 w-24">
             <AvatarFallback>
-              {residentId ? residentId.substring(0, 2).toUpperCase() : "NA"}
+              <User className="h-8 w-8" />
             </AvatarFallback>
           </Avatar>
         )}
