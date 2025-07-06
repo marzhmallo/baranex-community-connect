@@ -208,9 +208,15 @@ const DocumentsPage = () => {
   const { data: processingStats } = useQuery({
     queryKey: ['document-processing-stats'],
     queryFn: async () => {
+      console.log('DEBUG: Calling get_document_stats RPC');
       const { data, error } = await supabase.rpc('get_document_stats');
       
-      if (error) throw error;
+      console.log('DEBUG: RPC result:', { data, error });
+      
+      if (error) {
+        console.log('DEBUG: RPC error:', error);
+        throw error;
+      }
 
       // Cast data to the expected type
       const statsData = data as { 
@@ -218,8 +224,12 @@ const DocumentsPage = () => {
         avg_processing_time_interval: string | null;
       } | null;
 
+      console.log('DEBUG: Processed statsData:', statsData);
+
       // Process status counts into the expected format
       const statusCounts = statsData?.status_counts || [];
+      console.log('DEBUG: Status counts from RPC:', statusCounts);
+      
       const stats = {
         readyForPickup: 0,
         processing: 0,
@@ -232,6 +242,8 @@ const DocumentsPage = () => {
       statusCounts.forEach((statusCount) => {
         const status = statusCount.status?.toLowerCase();
         const count = statusCount.count || 0;
+        
+        console.log('DEBUG: Processing status:', status, 'count:', count);
         
         if (status === 'approved' || status === 'ready') {
           stats.readyForPickup += count;
@@ -246,6 +258,7 @@ const DocumentsPage = () => {
         }
       });
 
+      console.log('DEBUG: Final processing stats:', stats);
       return stats;
     }
   });
