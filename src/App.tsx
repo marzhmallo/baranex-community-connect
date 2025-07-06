@@ -59,9 +59,20 @@ const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  // Redirect non-glyph users to login
-  if (!userProfile || userProfile.role !== "glyph") {
+  // If not authenticated, redirect to login
+  if (!userProfile) {
     return <Navigate to="/login" replace />;
+  }
+  
+  // If not glyph role, redirect to appropriate dashboard based on role
+  if (userProfile.role !== "glyph") {
+    if (userProfile.role === "user") {
+      return <Navigate to="/hub" replace />;
+    } else if (userProfile.role === "admin" || userProfile.role === "staff") {
+      return <Navigate to="/dashboard" replace />;
+    } else {
+      return <Navigate to="/login" replace />;
+    }
   }
   
   return <>{children}</>;
@@ -232,10 +243,8 @@ const AppContent = () => {
             <Route path="/feedback" element={<UserRoute><UserFeedbackPage /></UserRoute>} />
             <Route path="/profile" element={<UserRoute><UserProfilePage /></UserRoute>} />
             
-            {/* Glyph-only Routes */}
-            {userProfile?.role === "glyph" && (
-              <Route path="/echelon" element={<GlyphRoute><EchelonPage /></GlyphRoute>} />
-            )}
+            {/* Glyph-only Routes - Always available for proper redirection */}
+            <Route path="/echelon" element={<GlyphRoute><EchelonPage /></GlyphRoute>} />
             
             {/* Default redirects - redirect to login instead of dashboard */}
             <Route path="/" element={<Navigate to="/login" replace />} />
