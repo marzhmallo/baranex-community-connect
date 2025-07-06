@@ -29,6 +29,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   const [isEditMode, setIsEditMode] = useState(false);
   const [showFullPhoto, setShowFullPhoto] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+  const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
   const navigate = useNavigate();
   
   // Fetch household information
@@ -86,11 +87,29 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   // Generate signed URL when resident.photoUrl changes
   useEffect(() => {
     if (resident?.photoUrl) {
+      setIsLoadingPhoto(true);
+      setPhotoUrl(undefined); // Clear old image immediately
+      
       generateSignedUrl(resident.photoUrl).then(signedUrl => {
-        setPhotoUrl(signedUrl);
+        if (signedUrl) {
+          // Create image element to handle loading
+          const img = new Image();
+          img.onload = () => {
+            setPhotoUrl(signedUrl);
+            setIsLoadingPhoto(false);
+          };
+          img.onerror = () => {
+            console.error('Failed to load resident photo');
+            setIsLoadingPhoto(false);
+          };
+          img.src = signedUrl;
+        } else {
+          setIsLoadingPhoto(false);
+        }
       });
     } else {
       setPhotoUrl(undefined);
+      setIsLoadingPhoto(false);
     }
   }, [resident?.photoUrl]);
   
@@ -239,25 +258,37 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                   <CardContent className="pt-6">
                     <div className="flex flex-col md:flex-row gap-6 items-start">
                       {/* Avatar/Photo using the Avatar component with click to enlarge */}
-                      {resident.photoUrl ? (
-                        <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
-                          <Avatar className="w-24 h-24">
-                            <AvatarImage src={photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
-                            <AvatarFallback className="text-2xl">
-                              {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <ZoomIn className="text-white h-8 w-8" />
-                          </div>
-                        </div>
-                      ) : (
+                      <div className="relative w-24 h-24">
+                        {/* Placeholder with Initials (Always visible underneath) */}
                         <Avatar className="w-24 h-24">
                           <AvatarFallback className="text-2xl">
                             {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                      )}
+                        
+                        {/* Loading Spinner Overlay */}
+                        {isLoadingPhoto && (
+                          <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                            <div className="w-6 h-6 border-2 border-t-white border-gray-400 rounded-full animate-spin"></div>
+                          </div>
+                        )}
+                        
+                        {/* The Actual Image (with smooth fade-in) */}
+                        {photoUrl && (
+                          <div className="absolute inset-0 cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
+                            <Avatar className="w-24 h-24">
+                              <AvatarImage 
+                                src={photoUrl} 
+                                alt={`${resident.firstName} ${resident.lastName}`}
+                                className={`transition-opacity duration-300 ${photoUrl ? 'opacity-100' : 'opacity-0'}`}
+                              />
+                            </Avatar>
+                            <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <ZoomIn className="text-white h-8 w-8" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       
                       {/* Full screen photo dialog */}
                       {resident.photoUrl && (

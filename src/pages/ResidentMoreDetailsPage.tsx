@@ -99,6 +99,7 @@ const ResidentMoreDetailsPage = () => {
   const [showFullPhoto, setShowFullPhoto] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | undefined>(undefined);
+  const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
 
   // Generate signed URL for display
   const generateSignedUrl = async (url: string) => {
@@ -143,11 +144,29 @@ const ResidentMoreDetailsPage = () => {
   // Generate signed URL when resident photo changes
   useEffect(() => {
     if (resident?.photo_url) {
+      setIsLoadingPhoto(true);
+      setSignedPhotoUrl(undefined); // Clear old image immediately
+      
       generateSignedUrl(resident.photo_url).then(signedUrl => {
-        setSignedPhotoUrl(signedUrl);
+        if (signedUrl) {
+          // Create image element to handle loading
+          const img = new Image();
+          img.onload = () => {
+            setSignedPhotoUrl(signedUrl);
+            setIsLoadingPhoto(false);
+          };
+          img.onerror = () => {
+            console.error('Failed to load resident photo');
+            setIsLoadingPhoto(false);
+          };
+          img.src = signedUrl;
+        } else {
+          setIsLoadingPhoto(false);
+        }
       });
     } else {
       setSignedPhotoUrl(undefined);
+      setIsLoadingPhoto(false);
     }
   }, [resident?.photo_url]);
 
@@ -312,26 +331,38 @@ const ResidentMoreDetailsPage = () => {
           <Card className="border-t-4 border-t-baranex-primary">
             <CardContent className="pt-6 pb-6">
               <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-                 {/* Photo/Avatar with click to enlarge */}
-                {signedPhotoUrl ? (
-                  <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
-                    <Avatar className="w-32 h-32 border-4 border-gray-100">
-                      <AvatarImage src={signedPhotoUrl} alt={`${resident.first_name} ${resident.last_name}`} />
-                      <AvatarFallback className="text-4xl">
-                        {resident.first_name.charAt(0)}{resident.last_name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <ZoomIn className="text-white h-8 w-8" />
-                    </div>
-                  </div>
-                ) : (
+                {/* Photo/Avatar with loading state */}
+                <div className="relative w-32 h-32">
+                  {/* Placeholder with Initials (Always visible underneath) */}
                   <Avatar className="w-32 h-32 border-4 border-gray-100">
                     <AvatarFallback className="text-4xl">
                       {resident.first_name.charAt(0)}{resident.last_name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                )}
+                  
+                  {/* Loading Spinner Overlay */}
+                  {isLoadingPhoto && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 border-4 border-t-white border-gray-400 rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  
+                  {/* The Actual Image (with smooth fade-in) */}
+                  {signedPhotoUrl && (
+                    <div className="absolute inset-0 cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
+                      <Avatar className="w-32 h-32 border-4 border-gray-100">
+                        <AvatarImage 
+                          src={signedPhotoUrl} 
+                          alt={`${resident.first_name} ${resident.last_name}`}
+                          className={`transition-opacity duration-300 ${signedPhotoUrl ? 'opacity-100' : 'opacity-0'}`}
+                        />
+                      </Avatar>
+                      <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <ZoomIn className="text-white h-8 w-8" />
+                      </div>
+                    </div>
+                  )}
+                </div>
                 
                 {/* Basic Info */}
                 <div className="space-y-2 text-center md:text-left flex-1">
