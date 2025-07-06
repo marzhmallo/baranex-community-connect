@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SmartPhotoDisplay from "@/components/ui/SmartPhotoDisplay";
 import { 
   User, 
   FileText, 
@@ -165,24 +166,16 @@ const DocumentRequestDetailsModal = ({
               {request.paymenturl && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">Payment Proof</p>
-                  <div className="border rounded-lg overflow-hidden">
-                    <img 
-                      src={request.paymenturl} 
+                  <div className="flex justify-center">
+                    <SmartPhotoDisplay
+                      bucketName="cashg"
+                      filePath={request.paymenturl}
+                      isPublic={true}
+                      className="w-48 h-48"
                       alt="Payment Screenshot"
-                      className="max-w-full h-auto max-h-64 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
+                      fallbackContent="💳"
+                      enableZoom={true}
                     />
-                    <a 
-                      href={request.paymenturl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline text-sm p-2 block hidden"
-                    >
-                      View Payment Screenshot (Link)
-                    </a>
                   </div>
                 </div>
               )}
