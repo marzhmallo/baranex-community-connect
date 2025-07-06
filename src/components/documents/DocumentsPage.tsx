@@ -47,6 +47,11 @@ const DocumentsPage = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isRequestDetailsOpen, setIsRequestDetailsOpen] = useState(false);
   
+  // Document tracking modals state
+  const [selectedTrackingItem, setSelectedTrackingItem] = useState(null);
+  const [isTrackingDetailsOpen, setIsTrackingDetailsOpen] = useState(false);
+  const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
+  
   const itemsPerPage = 3;
   const { toast } = useToast();
   const { adminProfileId } = useCurrentAdmin();
@@ -460,6 +465,107 @@ const DocumentsPage = () => {
   const handleRequestClick = (request: any) => {
     setSelectedRequest(request);
     setIsRequestDetailsOpen(true);
+  };
+
+  // Handler to view tracking item details
+  const handleViewTrackingDetails = async (trackingItem: any) => {
+    try {
+      // Fetch full request details using docnumber
+      const { data, error } = await supabase
+        .from('docrequests')
+        .select('*')
+        .eq('docnumber', trackingItem.id)
+        .single();
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch request details",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Transform data to match expected format
+      let name = 'Unknown';
+      if (data.receiver) {
+        try {
+          if (typeof data.receiver === 'object' && data.receiver !== null && !Array.isArray(data.receiver)) {
+            name = (data.receiver as any).name || 'Unknown';
+          } else if (typeof data.receiver === 'string') {
+            const parsed = JSON.parse(data.receiver);
+            name = parsed.name || 'Unknown';
+          }
+        } catch {
+          name = 'Unknown';
+        }
+      }
+
+      const requestData = {
+        ...data,
+        name
+      };
+
+      setSelectedRequest(requestData);
+      setIsRequestDetailsOpen(true);
+    } catch (error) {
+      console.error('Error fetching tracking details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch request details",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handler to edit tracking item status
+  const handleEditTrackingStatus = (trackingItem: any) => {
+    setSelectedTrackingItem(trackingItem);
+    setIsEditStatusOpen(true);
+  };
+
+  // Handler to update request status
+  const handleUpdateStatus = async (docnumber: string, newStatus: string) => {
+    if (!adminProfileId) {
+      toast({
+        title: "Error",
+        description: "Admin profile not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('docrequests')
+        .update({ 
+          status: newStatus,
+          processedby: adminProfileId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('docnumber', docnumber);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Status Updated",
+        description: `Request status updated to ${newStatus}`,
+      });
+
+      // Refresh tracking data
+      fetchDocumentTracking();
+      setIsEditStatusOpen(false);
+      setSelectedTrackingItem(null);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update request status",
+        variant: "destructive",
+      });
+    }
   };
 
   // Real handlers for approve/deny actions
@@ -938,10 +1044,20 @@ const DocumentsPage = () => {
                   <TableCell className="text-muted-foreground">{doc.lastUpdate}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="hover:bg-accent">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="hover:bg-accent"
+                        onClick={() => handleViewTrackingDetails(doc)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="hover:bg-accent">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="hover:bg-accent"
+                        onClick={() => handleEditTrackingStatus(doc)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
@@ -1211,6 +1327,57 @@ const DocumentsPage = () => {
         onApprove={handleApproveRequest}
         onDeny={handleDenyRequest}
       />
+
+      {/* Edit Status Modal */}
+      <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
+        <DialogContent className="max-w-md bg-background border-border">
+          <DialogHeader>
+            <DialogTitle>Edit Request Status</DialogTitle>
+          </DialogHeader>
+          {selectedTrackingItem && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Document: {selectedTrackingItem.document}</p>
+                <p className="text-sm text-muted-foreground">Tracking ID: {selectedTrackingItem.id}</p>
+                <p className="text-sm text-muted-foreground">Requested by: {selectedTrackingItem.requestedBy}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Update Status:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'processing')}
+                    variant="outline"
+                    className="bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700 hover:text-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400"
+                  >
+                    Processing
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'approved')}
+                    variant="outline"
+                    className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400"
+                  >
+                    Approved
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'rejected')}
+                    variant="outline"
+                    className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400"
+                  >
+                    Rejected
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'completed')}
+                    variant="outline"
+                    className="bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700 hover:text-purple-800 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400"
+                  >
+                    Completed
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
