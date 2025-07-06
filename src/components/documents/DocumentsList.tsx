@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Table, 
   TableBody, 
@@ -23,98 +23,34 @@ import {
   Printer, 
   X, 
   Eye, 
-  FileText 
+  FileText,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
+import { toast } from "@/hooks/use-toast";
 
 // Document types
 type DocumentStatus = "pending" | "approved" | "rejected";
-type DocumentType = "barangay_clearance" | "business_permit" | "certificate_of_residency" | "indigency_certificate";
 
-interface Document {
+interface DocumentRequest {
   id: string;
-  requestedBy: string;
-  documentType: DocumentType;
-  requestDate: Date;
-  status: DocumentStatus;
-  urgency: "normal" | "urgent";
+  docnumber: string;
+  type: string;
+  purpose: string;
+  resident_id: string | null;
+  status: string;
+  processedby: string;
+  created_at: string;
+  issued_at: string;
+  receiver: any;
+  notes: string | null;
+  brgyid: string;
+  updated_at: string | null;
+  resident_name?: string;
 }
-
-// Document type labels for display
-const documentTypeLabels: Record<DocumentType, string> = {
-  barangay_clearance: "Barangay Clearance",
-  business_permit: "Business Permit",
-  certificate_of_residency: "Certificate of Residency",
-  indigency_certificate: "Certificate of Indigency"
-};
-
-// Sample documents data
-const mockDocuments: Document[] = [
-  {
-    id: "DOC-2023-001",
-    requestedBy: "Juan Dela Cruz",
-    documentType: "barangay_clearance",
-    requestDate: new Date(2023, 6, 15),
-    status: "approved",
-    urgency: "normal"
-  },
-  {
-    id: "DOC-2023-002",
-    requestedBy: "Maria Santos",
-    documentType: "business_permit",
-    requestDate: new Date(2023, 6, 18),
-    status: "pending",
-    urgency: "urgent"
-  },
-  {
-    id: "DOC-2023-003",
-    requestedBy: "Pedro Reyes",
-    documentType: "certificate_of_residency",
-    requestDate: new Date(2023, 6, 20),
-    status: "rejected",
-    urgency: "normal"
-  },
-  {
-    id: "DOC-2023-004",
-    requestedBy: "Ana Gonzales",
-    documentType: "indigency_certificate",
-    requestDate: new Date(2023, 6, 22),
-    status: "pending",
-    urgency: "urgent"
-  },
-  {
-    id: "DOC-2023-005",
-    requestedBy: "Roberto Lim",
-    documentType: "barangay_clearance",
-    requestDate: new Date(2023, 6, 25),
-    status: "approved",
-    urgency: "normal"
-  },
-  {
-    id: "DOC-2023-006",
-    requestedBy: "Elena Magtanggol",
-    documentType: "business_permit",
-    requestDate: new Date(2023, 6, 27),
-    status: "approved",
-    urgency: "normal"
-  },
-  {
-    id: "DOC-2023-007",
-    requestedBy: "Carlos Mendoza",
-    documentType: "certificate_of_residency",
-    requestDate: new Date(2023, 6, 28),
-    status: "pending",
-    urgency: "urgent"
-  },
-  {
-    id: "DOC-2023-008",
-    requestedBy: "Josephine Cruz",
-    documentType: "indigency_certificate",
-    requestDate: new Date(2023, 6, 30),
-    status: "rejected",
-    urgency: "normal"
-  }
-];
 
 interface DocumentsListProps {
   status: string;
@@ -122,20 +58,169 @@ interface DocumentsListProps {
 }
 
 const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
-  const [documents] = useState<Document[]>(mockDocuments);
+  const [documents, setDocuments] = useState<DocumentRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const { adminProfileId } = useCurrentAdmin();
+  
+  const itemsPerPage = 3;
 
-  // Filter documents based on status and search query
-  const filteredDocuments = documents.filter(doc => {
-    const matchesStatus = status === "all" || doc.status === status;
-    const matchesSearch = searchQuery === "" || 
-      doc.requestedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      documentTypeLabels[doc.documentType].toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesStatus && matchesSearch;
-  });
+  // Fetch documents from Supabase
+  useEffect(() => {
+    fetchDocuments();
+  }, [status, searchQuery, currentPage]);
 
-  const getStatusBadge = (status: DocumentStatus) => {
+  const fetchDocuments = async () => {
+    setLoading(true);
+    try {
+      // Build query
+      let query = supabase
+        .from('docrequests')
+        .select(`
+          *,
+          residents(first_name, last_name)
+        `, { count: 'exact' });
+
+      // Apply status filter
+      if (status !== "all") {
+        query = query.eq('status', status);
+      }
+
+      // Apply search filter
+      if (searchQuery) {
+        query = query.or(`docnumber.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,purpose.ilike.%${searchQuery}%`);
+      }
+
+      // Apply pagination
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+      query = query.range(from, to);
+
+      // Order by created_at desc
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching documents:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch documents",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Map data to include resident name
+      const mappedData = data?.map(doc => ({
+        ...doc,
+        resident_name: doc.residents ? 
+          `${doc.residents.first_name} ${doc.residents.last_name}` : 
+          (doc.receiver && typeof doc.receiver === 'string' ? 
+            JSON.parse(doc.receiver).name || 'Unknown' : 
+            'Unknown')
+      })) || [];
+
+      setDocuments(mappedData);
+      setTotalCount(count || 0);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch documents",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (docId: string) => {
+    if (!adminProfileId) {
+      toast({
+        title: "Error",
+        description: "Admin profile not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('docrequests')
+        .update({ 
+          status: 'approved',
+          processedby: adminProfileId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', docId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Document approved successfully",
+      });
+
+      // Refresh the list
+      fetchDocuments();
+    } catch (error) {
+      console.error('Error approving document:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve document",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReject = async (docId: string) => {
+    if (!adminProfileId) {
+      toast({
+        title: "Error",
+        description: "Admin profile not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('docrequests')
+        .update({ 
+          status: 'rejected',
+          processedby: adminProfileId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', docId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Document rejected successfully",
+      });
+
+      // Refresh the list
+      fetchDocuments();
+    } catch (error) {
+      console.error('Error rejecting document:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject document",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
         return <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">Pending</Badge>;
@@ -143,95 +228,152 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
         return <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Approved</Badge>;
       case "rejected":
         return <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-50">Rejected</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const getUrgencyBadge = (urgency: "normal" | "urgent") => {
-    return urgency === "urgent" ? 
-      <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Urgent</Badge> : 
-      null;
-  };
+  if (loading) {
+    return (
+      <div className="rounded-md border">
+        <div className="p-8 text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Loading documents...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Document ID</TableHead>
-            <TableHead>Requested By</TableHead>
-            <TableHead>Document Type</TableHead>
-            <TableHead>Date Requested</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Urgency</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredDocuments.length > 0 ? (
-            filteredDocuments.map((doc) => (
-              <TableRow key={doc.id}>
-                <TableCell className="font-medium">{doc.id}</TableCell>
-                <TableCell>{doc.requestedBy}</TableCell>
-                <TableCell>
-                  <div className="flex items-center">
-                    <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {documentTypeLabels[doc.documentType]}
-                  </div>
-                </TableCell>
-                <TableCell>{formatDistanceToNow(doc.requestDate, { addSuffix: true })}</TableCell>
-                <TableCell>{getStatusBadge(doc.status)}</TableCell>
-                <TableCell>{getUrgencyBadge(doc.urgency)}</TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Eye className="mr-2 h-4 w-4" />
-                        <span>View Details</span>
-                      </DropdownMenuItem>
-                      {doc.status === "pending" && (
-                        <>
-                          <DropdownMenuItem className="cursor-pointer text-green-600">
-                            <Check className="mr-2 h-4 w-4" />
-                            <span>Approve</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer text-red-600">
-                            <X className="mr-2 h-4 w-4" />
-                            <span>Reject</span>
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                      {doc.status === "approved" && (
-                        <>
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Download className="mr-2 h-4 w-4" />
-                            <span>Download</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Printer className="mr-2 h-4 w-4" />
-                            <span>Print</span>
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+    <div className="space-y-4">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Document Number</TableHead>
+              <TableHead>Requested By</TableHead>
+              <TableHead>Document Type</TableHead>
+              <TableHead>Date Requested</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Purpose</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {documents.length > 0 ? (
+              documents.map((doc) => (
+                <TableRow key={doc.id}>
+                  <TableCell className="font-medium">{doc.docnumber}</TableCell>
+                  <TableCell>{doc.resident_name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {doc.type}
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatDistanceToNow(new Date(doc.created_at), { addSuffix: true })}</TableCell>
+                  <TableCell>{getStatusBadge(doc.status)}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">{doc.purpose}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">Open menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem className="cursor-pointer">
+                          <Eye className="mr-2 h-4 w-4" />
+                          <span>View Details</span>
+                        </DropdownMenuItem>
+                        {doc.status === "pending" && (
+                          <>
+                            <DropdownMenuItem 
+                              className="cursor-pointer text-green-600"
+                              onClick={() => handleApprove(doc.id)}
+                            >
+                              <Check className="mr-2 h-4 w-4" />
+                              <span>Approve</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="cursor-pointer text-red-600"
+                              onClick={() => handleReject(doc.id)}
+                            >
+                              <X className="mr-2 h-4 w-4" />
+                              <span>Reject</span>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {doc.status === "approved" && (
+                          <>
+                            <DropdownMenuItem className="cursor-pointer">
+                              <Download className="mr-2 h-4 w-4" />
+                              <span>Download</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer">
+                              <Printer className="mr-2 h-4 w-4" />
+                              <span>Print</span>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  No documents found.
                 </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
-                No documents found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} results
+          </p>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(page)}
+                  className="w-8 h-8 p-0"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
