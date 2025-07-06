@@ -59,7 +59,7 @@ const DocumentsPage = () => {
         .from('docrequests')
         .select(`
           *,
-          residents(first_name, last_name)
+          profiles(firstname, lastname)
         `, { count: 'exact' })
         .ilike('status', 'pending');
 
@@ -81,8 +81,8 @@ const DocumentsPage = () => {
       // Map data to match the expected format
       const mappedData = data?.map(doc => ({
         id: doc.id,
-        name: doc.residents ? 
-          `${doc.residents.first_name} ${doc.residents.last_name}` : 
+        name: doc.profiles ? 
+          `${doc.profiles.firstname} ${doc.profiles.lastname}` : 
           (doc.receiver && typeof doc.receiver === 'string' ? 
             JSON.parse(doc.receiver).name || 'Unknown' : 
             'Unknown'),
@@ -215,7 +215,7 @@ const DocumentsPage = () => {
         .from('docrequests')
         .select(`
           *,
-          residents(first_name, last_name)
+          profiles(firstname, lastname)
         `)
         .not('processedby', 'is', null)
         .order('updated_at', { ascending: false });
@@ -227,8 +227,8 @@ const DocumentsPage = () => {
 
       // Map data to match the expected format
       const mappedData = data?.map(doc => {
-        const requestedBy = doc.residents ? 
-          `${doc.residents.first_name} ${doc.residents.last_name}` : 
+        const requestedBy = doc.profiles ? 
+          `${doc.profiles.firstname} ${doc.profiles.lastname}` : 
           (doc.receiver && typeof doc.receiver === 'string' ? 
             JSON.parse(doc.receiver).name || 'Unknown' : 
             'Unknown');

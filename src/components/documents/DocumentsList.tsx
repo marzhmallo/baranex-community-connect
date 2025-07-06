@@ -79,7 +79,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
         .from('docrequests')
         .select(`
           *,
-          residents(first_name, last_name)
+          profiles(firstname, lastname)
         `, { count: 'exact' });
 
       // Apply status filter
@@ -115,8 +115,8 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
       // Map data to include resident name
       const mappedData = data?.map(doc => ({
         ...doc,
-        resident_name: doc.residents ? 
-          `${doc.residents.first_name} ${doc.residents.last_name}` : 
+        resident_name: doc.profiles ? 
+          `${doc.profiles.firstname} ${doc.profiles.lastname}` : 
           (doc.receiver && typeof doc.receiver === 'string' ? 
             JSON.parse(doc.receiver).name || 'Unknown' : 
             'Unknown')
