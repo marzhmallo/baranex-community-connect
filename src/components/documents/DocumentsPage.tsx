@@ -221,20 +221,33 @@ const DocumentsPage = () => {
   // Document tracking state
   const [documentTracking, setDocumentTracking] = useState<any[]>([]);
   const [trackingLoading, setTrackingLoading] = useState(true);
+  const [trackingCurrentPage, setTrackingCurrentPage] = useState(1);
+  const [trackingTotalCount, setTrackingTotalCount] = useState(0);
+  
+  const trackingItemsPerPage = 5;
 
   // Fetch document tracking data
   useEffect(() => {
     fetchDocumentTracking();
-  }, []);
+  }, [trackingCurrentPage]);
 
   const fetchDocumentTracking = async () => {
     setTrackingLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('docrequests')
-        .select('*')
-        .not('processedby', 'is', null)
-        .order('updated_at', { ascending: false });
+        .select('*', { count: 'exact' })
+        .not('processedby', 'is', null);
+
+      // Apply pagination
+      const from = (trackingCurrentPage - 1) * trackingItemsPerPage;
+      const to = from + trackingItemsPerPage - 1;
+      query = query.range(from, to);
+
+      // Order by updated_at desc
+      query = query.order('updated_at', { ascending: false });
+
+      const { data, error, count } = await query;
 
       if (error) {
         console.error('Error fetching document tracking:', error);
@@ -265,6 +278,8 @@ const DocumentsPage = () => {
               return 'bg-red-500';
             case 'pending':
               return 'bg-yellow-500';
+            case 'processing':
+              return 'bg-blue-500';
             default:
               return 'bg-blue-500';
           }
@@ -276,6 +291,7 @@ const DocumentsPage = () => {
           requestedBy,
           status: doc.status === 'approved' ? 'Ready for pickup' : 
                   doc.status === 'rejected' ? 'Rejected' : 
+                  doc.status === 'processing' ? 'Processing' : 
                   doc.status === 'pending' ? 'Processing' : doc.status,
           statusColor: getStatusColor(doc.status),
           lastUpdate: doc.updated_at ? 
@@ -285,6 +301,7 @@ const DocumentsPage = () => {
       }) || [];
 
       setDocumentTracking(mappedData);
+      setTrackingTotalCount(count || 0);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -847,27 +864,29 @@ const DocumentsPage = () => {
 
           <div className="flex items-center justify-between mt-6">
             <div className="text-sm text-muted-foreground">
-              Showing 5 of 42 documents
+              Showing {Math.min(trackingItemsPerPage, trackingTotalCount)} of {trackingTotalCount} documents
             </div>
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious href="#" className="hover:bg-accent" />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" isActive className="bg-primary text-primary-foreground">1</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" className="hover:bg-accent">2</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" className="hover:bg-accent">3</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext href="#" className="hover:bg-accent" />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTrackingCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={trackingCurrentPage === 1}
+              >
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {trackingCurrentPage} of {Math.ceil(trackingTotalCount / trackingItemsPerPage)}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTrackingCurrentPage(prev => Math.min(prev + 1, Math.ceil(trackingTotalCount / trackingItemsPerPage)))}
+                disabled={trackingCurrentPage === Math.ceil(trackingTotalCount / trackingItemsPerPage)}
+              >
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
