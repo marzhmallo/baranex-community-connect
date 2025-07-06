@@ -46,45 +46,6 @@ const UserDocumentsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { userProfile } = useAuth();
 
-  // Mock templates data
-  const mockTemplates = [
-    {
-      id: '1',
-      name: 'Barangay Clearance',
-      description: 'Certificate of good moral character and residence',
-      fee: 50,
-      requirements: 'Valid ID, Proof of residence'
-    },
-    {
-      id: '2', 
-      name: 'Certificate of Indigency',
-      description: 'Certification for financial assistance applications',
-      fee: 0,
-      requirements: 'Valid ID, Proof of income (if any)'
-    },
-    {
-      id: '3',
-      name: 'Business Permit',
-      description: 'Permit to operate small business in the barangay',
-      fee: 200,
-      requirements: 'Valid ID, Business registration, Location map'
-    }
-  ];
-
-  const itemsPerPage = 3;
-  const totalPages = Math.ceil(mockTemplates.length / itemsPerPage);
-  
-  // Calculate paginated data
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedTemplates = mockTemplates.slice(startIndex, endIndex);
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
   // Fetch user's document requests from Supabase
   const { data: documentRequests = [], isLoading } = useQuery({
     queryKey: ['user-document-requests', userProfile?.id],
@@ -102,6 +63,34 @@ const UserDocumentsPage = () => {
     },
     enabled: !!userProfile?.id
   });
+
+  // Fetch document types from Supabase
+  const { data: documentTypes = [], isLoading: isLoadingTemplates } = useQuery({
+    queryKey: ['document-types'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('document_types')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const itemsPerPage = 3;
+  const totalPages = Math.ceil(documentTypes.length / itemsPerPage);
+  
+  // Calculate paginated data using real Supabase data
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTemplates = documentTypes.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -337,42 +326,48 @@ const UserDocumentsPage = () => {
                     </div>
 
                     <div className="space-y-3">
-                      {paginatedTemplates.map((template) => (
-                        <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
-                          <div className="flex items-center gap-4">
-                            <input type="checkbox" className="rounded border-border" />
-                            <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
-                              <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                      {isLoadingTemplates ? (
+                        <div className="text-center py-8 text-muted-foreground">Loading document templates...</div>
+                      ) : paginatedTemplates.length > 0 ? (
+                        paginatedTemplates.map((template) => (
+                          <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                            <div className="flex items-center gap-4">
+                              <input type="checkbox" className="rounded border-border" />
+                              <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
+                                <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-foreground">{template.name}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {template.description} • Fee: ₱{template.fee || 0}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium text-foreground">{template.name}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {template.description} • Fee: ₱{template.fee}
-                              </p>
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="hover:bg-accent">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="border-border bg-background">
+                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Template
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Download
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="hover:bg-accent">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="border-border bg-background">
-                                <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Template
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Download
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">No document templates found</div>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between mt-6">
