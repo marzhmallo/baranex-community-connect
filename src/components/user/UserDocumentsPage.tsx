@@ -426,6 +426,61 @@ const UserDocumentsPage = () => {
             </CardContent>
           </Card>
 
+          <Card className="border-border mt-6">
+            <CardHeader>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <PlusCircle className="h-5 w-5" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button 
+                  onClick={() => setShowIssueForm(true)}
+                  className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-accent transition-colors text-left"
+                >
+                  <div className="bg-primary/10 p-2 rounded-lg">
+                    <PlusCircle className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Issue New Document</p>
+                    <p className="text-sm text-muted-foreground">Create and issue documents</p>
+                  </div>
+                </button>
+
+                <button className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-accent transition-colors text-left">
+                  <div className="bg-blue-500/10 p-2 rounded-lg">
+                    <Upload className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Upload Template</p>
+                    <p className="text-sm text-muted-foreground">Add new document templates</p>
+                  </div>
+                </button>
+
+                <button className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-accent transition-colors text-left">
+                  <div className="bg-green-500/10 p-2 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">View Reports</p>
+                    <p className="text-sm text-muted-foreground">Document statistics and analytics</p>
+                  </div>
+                </button>
+
+                <button className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-accent transition-colors text-left">
+                  <div className="bg-orange-500/10 p-2 rounded-lg">
+                    <Settings className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">System Settings</p>
+                    <p className="text-sm text-muted-foreground">Configure document settings</p>
+                  </div>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
         </div>
 
         <div className="space-y-6">
@@ -648,60 +703,6 @@ const UserDocumentsPage = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <PlusCircle className="h-5 w-5" />
-            Quick Actions
-          </h2>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 gap-3">
-            <button 
-              onClick={() => setShowIssueForm(true)}
-              className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
-            >
-              <div className="bg-primary-100 p-2 rounded-lg">
-                <PlusCircle className="h-5 w-5 text-primary-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Issue New Document</p>
-                <p className="text-sm text-gray-500">Create and issue documents</p>
-              </div>
-            </button>
-
-            <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <Upload className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Upload Template</p>
-                <p className="text-sm text-gray-500">Add new document templates</p>
-              </div>
-            </button>
-
-            <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <div className="bg-green-100 p-2 rounded-lg">
-                <BarChart3 className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">View Reports</p>
-                <p className="text-sm text-gray-500">Document statistics and analytics</p>
-              </div>
-            </button>
-
-            <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <div className="bg-orange-100 p-2 rounded-lg">
-                <Settings className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">System Settings</p>
-                <p className="text-sm text-gray-500">Configure document settings</p>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
 
       {showIssueForm && (
         <div className="fixed inset-0 z-50 overflow-auto bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
