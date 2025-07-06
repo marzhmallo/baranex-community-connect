@@ -395,12 +395,17 @@ export type Database = {
       }
       docrequests: {
         Row: {
+          amount: number | null
           brgyid: string
           created_at: string
           docnumber: string
           id: string
           issued_at: string
+          method: string | null
           notes: string | null
+          ornumber: string | null
+          paydate: string | null
+          paymenturl: string | null
           processedby: string
           purpose: string
           receiver: Json | null
@@ -410,12 +415,17 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          amount?: number | null
           brgyid?: string
           created_at?: string
           docnumber: string
           id?: string
           issued_at: string
+          method?: string | null
           notes?: string | null
+          ornumber?: string | null
+          paydate?: string | null
+          paymenturl?: string | null
           processedby?: string
           purpose: string
           receiver?: Json | null
@@ -425,12 +435,17 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          amount?: number | null
           brgyid?: string
           created_at?: string
           docnumber?: string
           id?: string
           issued_at?: string
+          method?: string | null
           notes?: string | null
+          ornumber?: string | null
+          paydate?: string | null
+          paymenturl?: string | null
           processedby?: string
           purpose?: string
           receiver?: Json | null

@@ -6,6 +6,31 @@ import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
+import { 
+  FileText, 
+  Clock, 
+  CheckCircle, 
+  BarChart3, 
+  Package, 
+  Hourglass, 
+  Eye, 
+  XCircle, 
+  TrendingUp,
+  Search,
+  Plus,
+  Filter,
+  Download,
+  Edit,
+  Trash2,
+  RefreshCw,
+  FileX,
+  History,
+  PlusCircle,
+  Bell,
+  Upload,
+  ArrowRight,
+  Settings
+} from "lucide-react";
 
 const UserDocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,7 +77,7 @@ const UserDocumentsPage = () => {
               <p className="text-2xl font-bold text-gray-900">1,247</p>
             </div>
             <div className="bg-primary-100 p-3 rounded-full">
-              <span className="material-symbols-outlined text-primary-600">description</span>
+              <FileText className="h-6 w-6 text-primary-600" />
             </div>
           </div>
         </div>
@@ -64,7 +89,7 @@ const UserDocumentsPage = () => {
               <p className="text-2xl font-bold text-orange-600">23</p>
             </div>
             <div className="bg-orange-100 p-3 rounded-full">
-              <span className="material-symbols-outlined text-orange-600">pending_actions</span>
+              <Clock className="h-6 w-6 text-orange-600" />
             </div>
           </div>
         </div>
@@ -76,7 +101,7 @@ const UserDocumentsPage = () => {
               <p className="text-2xl font-bold text-green-600">8</p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
-              <span className="material-symbols-outlined text-green-600">task_alt</span>
+              <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
           </div>
         </div>
@@ -88,7 +113,7 @@ const UserDocumentsPage = () => {
               <p className="text-2xl font-bold text-blue-600">15</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
-              <span className="material-symbols-outlined text-blue-600">landscape</span>
+              <BarChart3 className="h-6 w-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -98,7 +123,7 @@ const UserDocumentsPage = () => {
         <div className="bg-white rounded-lg shadow-sm p-4 col-span-full">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary-600">trending_up</span>
+              <TrendingUp className="h-5 w-5 text-primary-600" />
               Document Processing Status
             </h2>
             <div className="flex gap-2">
@@ -109,7 +134,7 @@ const UserDocumentsPage = () => {
                 <option>Last Year</option>
               </select>
               <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
-                <span className="material-symbols-outlined text-sm">refresh</span>
+                <RefreshCw className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -121,7 +146,7 @@ const UserDocumentsPage = () => {
                 <p className="text-xl font-bold text-green-600">18</p>
               </div>
               <div className="bg-green-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-green-600">inventory</span>
+                <Package className="h-5 w-5 text-green-600" />
               </div>
             </div>
             
@@ -131,7 +156,7 @@ const UserDocumentsPage = () => {
                 <p className="text-xl font-bold text-yellow-600">12</p>
               </div>
               <div className="bg-yellow-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-yellow-600">hourglass_top</span>
+                <Hourglass className="h-5 w-5 text-yellow-600" />
               </div>
             </div>
             
@@ -141,7 +166,7 @@ const UserDocumentsPage = () => {
                 <p className="text-xl font-bold text-blue-600">7</p>
               </div>
               <div className="bg-blue-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-blue-600">rate_review</span>
+                <Eye className="h-5 w-5 text-blue-600" />
               </div>
             </div>
             
@@ -151,7 +176,7 @@ const UserDocumentsPage = () => {
                 <p className="text-xl font-bold text-purple-600">42</p>
               </div>
               <div className="bg-purple-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-purple-600">task_alt</span>
+                <CheckCircle className="h-5 w-5 text-purple-600" />
               </div>
             </div>
             
@@ -161,7 +186,7 @@ const UserDocumentsPage = () => {
                 <p className="text-xl font-bold text-red-600">3</p>
               </div>
               <div className="bg-red-100 p-2 rounded-full">
-                <span className="material-symbols-outlined text-red-600">cancel</span>
+                <XCircle className="h-5 w-5 text-red-600" />
               </div>
             </div>
           </div>
@@ -191,7 +216,7 @@ const UserDocumentsPage = () => {
                 <h2 className="text-xl font-semibold text-gray-900">Document Library</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <input
                       type="text"
                       placeholder="Search documents..."
@@ -199,7 +224,7 @@ const UserDocumentsPage = () => {
                     />
                   </div>
                   <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
-                    <span className="material-symbols-outlined">add</span>
+                    <Plus className="h-4 w-4" />
                     Add Document
                   </button>
                 </div>
@@ -217,7 +242,7 @@ const UserDocumentsPage = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button className="flex items-center gap-1 border border-gray-300 rounded px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors">
-                    <span className="material-symbols-outlined text-gray-600 text-sm">filter_list</span>
+                    <Filter className="h-4 w-4 text-gray-600" />
                     Advanced Filters
                   </button>
                   <div className="flex items-center border border-gray-300 rounded-lg">
@@ -247,7 +272,7 @@ const UserDocumentsPage = () => {
                           />
                         </div>
                         <div className="bg-red-100 p-2 rounded-lg">
-                          <span className="material-symbols-outlined text-red-600">picture_as_pdf</span>
+                          <FileX className="h-5 w-5 text-red-600" />
                         </div>
                         <div>
                           <h3 className="font-medium text-gray-900">{template.name}</h3>
@@ -257,13 +282,13 @@ const UserDocumentsPage = () => {
                       <div className="flex items-center gap-2">
                         <span className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded-full">Active</span>
                         <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                          <span className="material-symbols-outlined">download</span>
+                          <Download className="h-4 w-4" />
                         </button>
                         <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                          <span className="material-symbols-outlined">edit</span>
+                          <Edit className="h-4 w-4" />
                         </button>
                         <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                          <span className="material-symbols-outlined">delete</span>
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -302,7 +327,7 @@ const UserDocumentsPage = () => {
           <div className="mt-6 bg-white rounded-lg shadow-sm">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <span className="material-symbols-outlined">filter_alt</span>
+                <Filter className="h-5 w-5" />
                 Advanced Filters
               </h2>
             </div>
@@ -387,7 +412,7 @@ const UserDocumentsPage = () => {
                   Reset Filters
                 </button>
                 <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">filter_list</span>
+                  <Filter className="h-4 w-4" />
                   Apply Filters
                 </button>
               </div>
@@ -399,7 +424,7 @@ const UserDocumentsPage = () => {
           <div className="mb-6 bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <span className="material-symbols-outlined">history</span>
+                <History className="h-5 w-5" />
                 Document Status Updates
               </h2>
             </div>
@@ -480,7 +505,7 @@ const UserDocumentsPage = () => {
               <div className="border-t border-gray-200 p-4 text-center">
                 <button className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center justify-center gap-1 mx-auto">
                   View All Updates
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -492,14 +517,14 @@ const UserDocumentsPage = () => {
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <span className="material-symbols-outlined">timeline</span>
+              <BarChart3 className="h-5 w-5" />
               Document Tracking System
             </h2>
             <Button 
               onClick={() => setShowIssueForm(true)}
               className="bg-primary-600 text-white hover:bg-primary-700"
             >
-              <span className="material-symbols-outlined mr-2">add_circle</span>
+              <PlusCircle className="h-4 w-4 mr-2" />
               Issue Document
             </Button>
           </div>
@@ -507,7 +532,7 @@ const UserDocumentsPage = () => {
         <div className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
                 placeholder="Search by tracking ID..."
@@ -549,10 +574,10 @@ const UserDocumentsPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">visibility</span>
+                        <Eye className="h-4 w-4" />
                       </button>
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">edit</span>
+                        <Edit className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
@@ -571,10 +596,10 @@ const UserDocumentsPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">visibility</span>
+                        <Eye className="h-4 w-4" />
                       </button>
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">edit</span>
+                        <Edit className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
@@ -593,10 +618,10 @@ const UserDocumentsPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">visibility</span>
+                        <Eye className="h-4 w-4" />
                       </button>
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">edit</span>
+                        <Edit className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
@@ -615,10 +640,10 @@ const UserDocumentsPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">visibility</span>
+                        <Eye className="h-4 w-4" />
                       </button>
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">edit</span>
+                        <Edit className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
@@ -637,10 +662,10 @@ const UserDocumentsPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">visibility</span>
+                        <Eye className="h-4 w-4" />
                       </button>
                       <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <span className="material-symbols-outlined text-sm">edit</span>
+                        <Edit className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
@@ -674,7 +699,7 @@ const UserDocumentsPage = () => {
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <span className="material-symbols-outlined">notifications</span>
+              <Bell className="h-5 w-5" />
               Document Requests
             </h2>
           </div>
@@ -736,7 +761,7 @@ const UserDocumentsPage = () => {
             </div>
             <button className="w-full mt-4 text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center justify-center gap-1">
               View All Requests
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -744,7 +769,7 @@ const UserDocumentsPage = () => {
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <span className="material-symbols-outlined">add_circle</span>
+              <PlusCircle className="h-5 w-5" />
               Quick Actions
             </h2>
           </div>
@@ -755,7 +780,7 @@ const UserDocumentsPage = () => {
                 className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
               >
                 <div className="bg-primary-100 p-2 rounded-lg">
-                  <span className="material-symbols-outlined text-primary-600">add_circle</span>
+                  <PlusCircle className="h-5 w-5 text-primary-600" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Issue New Document</p>
@@ -765,7 +790,7 @@ const UserDocumentsPage = () => {
 
               <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
                 <div className="bg-blue-100 p-2 rounded-lg">
-                  <span className="material-symbols-outlined text-blue-600">upload_file</span>
+                  <Upload className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Upload Template</p>
@@ -775,7 +800,7 @@ const UserDocumentsPage = () => {
 
               <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
                 <div className="bg-green-100 p-2 rounded-lg">
-                  <span className="material-symbols-outlined text-green-600">analytics</span>
+                  <BarChart3 className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">View Reports</p>
@@ -785,7 +810,7 @@ const UserDocumentsPage = () => {
 
               <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
                 <div className="bg-orange-100 p-2 rounded-lg">
-                  <span className="material-symbols-outlined text-orange-600">settings</span>
+                  <Settings className="h-5 w-5 text-orange-600" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">System Settings</p>
