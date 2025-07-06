@@ -181,13 +181,14 @@ const DocumentsPage = () => {
 
       console.log('DEBUG: Pending count query:', { pendingCount, pendingError });
 
-      // Get documents issued today
+      // Get documents issued today (only those that have been processed by an admin)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const { count: issuedTodayCount, error: issuedError } = await supabase
         .from('docrequests')
         .select('*', { count: 'exact', head: true })
         .eq('brgyid', profile.brgyid)
+        .not('processedby', 'is', null)
         .in('status', ['approved', 'processing', 'completed'])
         .gte('updated_at', today.toISOString());
 
