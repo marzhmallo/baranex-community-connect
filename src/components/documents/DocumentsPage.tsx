@@ -673,7 +673,10 @@ const DocumentsPage = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleApproveRequest(request.id, request.name)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApproveRequest(request.id, request.name);
+                            }}
                             className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:text-green-300"
                           >
                             <Check className="h-3 w-3 mr-1" />
@@ -682,7 +685,10 @@ const DocumentsPage = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDenyRequest(request.id, request.name)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDenyRequest(request.id, request.name);
+                            }}
                             className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:text-red-300"
                           >
                             <X className="h-3 w-3 mr-1" />
