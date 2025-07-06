@@ -37,6 +37,52 @@ const UserDocumentsPage = () => {
   const [showIssueForm, setShowIssueForm] = useState(false);
   const { userProfile } = useAuth();
 
+  // Fetch user's document requests from Supabase
+  const { data: documentRequests = [], isLoading } = useQuery({
+    queryKey: ['user-document-requests', userProfile?.id],
+    queryFn: async () => {
+      if (!userProfile?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('docrequests')
+        .select('*')
+        .eq('resident_id', userProfile.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userProfile?.id
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'ready for pickup':
+      case 'completed':
+        return 'bg-green-500';
+      case 'processing':
+        return 'bg-yellow-500';
+      case 'for review':
+        return 'bg-blue-500';
+      case 'rejected':
+        return 'bg-red-500';
+      case 'released':
+        return 'bg-purple-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   // For now, show a simple message about document services
   const mockTemplates = [
     {
@@ -560,116 +606,52 @@ const UserDocumentsPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                <tr className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-700">#BRG-2023-0042</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Barangay Clearance</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Maria Santos</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-green-500 mr-2"></div>
-                      <span className="text-sm text-gray-700">Ready for pickup</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Today, 10:45 AM</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end gap-2">
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-700">#BRG-2023-0041</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Certificate of Residency</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Juan Dela Cruz</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-yellow-500 mr-2"></div>
-                      <span className="text-sm text-gray-700">Processing</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Today, 9:20 AM</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end gap-2">
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-700">#BRG-2023-0040</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Business Permit</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Anna Reyes</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-blue-500 mr-2"></div>
-                      <span className="text-sm text-gray-700">For Review</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yesterday, 4:30 PM</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end gap-2">
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-700">#BRG-2023-0039</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Barangay ID</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Carlos Mendoza</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-red-500 mr-2"></div>
-                      <span className="text-sm text-gray-700">Rejected</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2 days ago</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end gap-2">
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-700">#BRG-2023-0038</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Indigency Certificate</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Elena Garcia</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-purple-500 mr-2"></div>
-                      <span className="text-sm text-gray-700">Released</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3 days ago</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end gap-2">
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                      Loading your document requests...
+                    </td>
+                  </tr>
+                ) : documentRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                      No document requests found
+                    </td>
+                  </tr>
+                ) : (
+                  documentRequests.map((request) => (
+                    <tr key={request.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-700">
+                        {request.docnumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {request.type}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {userProfile?.firstname} {userProfile?.lastname}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className={`h-2.5 w-2.5 rounded-full mr-2 ${getStatusColor(request.status)}`}></div>
+                          <span className="text-sm text-gray-700 capitalize">{request.status}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDate(request.updated_at || request.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end gap-2">
+                          <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
