@@ -681,7 +681,7 @@ const DocumentsPage = () => {
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Ready for Pickup</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{processingStats?.readyForPickup || 18}</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{processingStats?.readyForPickup || 0}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500 dark:text-green-400" />
             </div>
@@ -689,7 +689,7 @@ const DocumentsPage = () => {
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Processing</p>
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{processingStats?.processing || 12}</p>
+                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{processingStats?.processing || 0}</p>
               </div>
               <Clock className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
             </div>
@@ -697,7 +697,7 @@ const DocumentsPage = () => {
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">For Review</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingStats?.forReview || 7}</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingStats?.forReview || 0}</p>
               </div>
               <Eye className="h-8 w-8 text-blue-500 dark:text-blue-400" />
             </div>
@@ -705,7 +705,7 @@ const DocumentsPage = () => {
             <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Released</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{processingStats?.released || 42}</p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{processingStats?.released || 0}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-purple-500 dark:text-purple-400" />
             </div>
@@ -713,7 +713,7 @@ const DocumentsPage = () => {
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Rejected</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{processingStats?.rejected || 3}</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{processingStats?.rejected || 0}</p>
               </div>
               <XCircle className="h-8 w-8 text-red-500 dark:text-red-400" />
             </div>
