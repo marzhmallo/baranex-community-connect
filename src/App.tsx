@@ -44,6 +44,28 @@ import UserDocumentsPage from "./components/user/UserDocumentsPage";
 import UserEmergencyPage from "./components/user/UserEmergencyPage";
 import UserSettingsPage from "./components/user/UserSettingsPage";
 import UserOfficialDetailsPage from "./components/user/UserOfficialDetailsPage";
+import EchelonPage from "./pages/EchelonPage";
+
+// Component to protect glyph-only routes
+const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
+  const { userProfile, loading } = useAuth();
+  
+  // Show loading while authentication is being determined
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  // Redirect non-glyph users to login
+  if (!userProfile || userProfile.role !== "glyph") {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -209,6 +231,11 @@ const AppContent = () => {
             <Route path="/hub/settings" element={<UserRoute><UserSettingsPage /></UserRoute>} />
             <Route path="/feedback" element={<UserRoute><UserFeedbackPage /></UserRoute>} />
             <Route path="/profile" element={<UserRoute><UserProfilePage /></UserRoute>} />
+            
+            {/* Glyph-only Routes */}
+            {userProfile?.role === "glyph" && (
+              <Route path="/echelon" element={<GlyphRoute><EchelonPage /></GlyphRoute>} />
+            )}
             
             {/* Default redirects - redirect to login instead of dashboard */}
             <Route path="/" element={<Navigate to="/login" replace />} />
