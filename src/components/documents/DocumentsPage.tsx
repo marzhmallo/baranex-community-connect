@@ -197,43 +197,74 @@ const DocumentsPage = () => {
   // Mock data for document requests - REPLACED WITH REAL DATA ABOVE
   // const documentRequests = [{...}];
 
-  // Mock data for document tracking
-  const documentTracking = [{
-    id: "#BRG-2023-0042",
-    document: "Barangay Clearance",
-    requestedBy: "Maria Santos",
-    status: "Ready for pickup",
-    statusColor: "bg-green-500",
-    lastUpdate: "Today, 10:45 AM"
-  }, {
-    id: "#BRG-2023-0041",
-    document: "Certificate of Residency",
-    requestedBy: "Juan Dela Cruz",
-    status: "Processing",
-    statusColor: "bg-yellow-500",
-    lastUpdate: "Today, 9:20 AM"
-  }, {
-    id: "#BRG-2023-0040",
-    document: "Business Permit",
-    requestedBy: "Anna Reyes",
-    status: "For Review",
-    statusColor: "bg-blue-500",
-    lastUpdate: "Yesterday, 4:30 PM"
-  }, {
-    id: "#BRG-2023-0039",
-    document: "Barangay ID",
-    requestedBy: "Carlos Mendoza",
-    status: "Rejected",
-    statusColor: "bg-red-500",
-    lastUpdate: "2 days ago"
-  }, {
-    id: "#BRG-2023-0038",
-    document: "Indigency Certificate",
-    requestedBy: "Elena Garcia",
-    status: "Released",
-    statusColor: "bg-purple-500",
-    lastUpdate: "3 days ago"
-  }];
+  // Document tracking state
+  const [documentTracking, setDocumentTracking] = useState<any[]>([]);
+  const [trackingLoading, setTrackingLoading] = useState(true);
+
+  // Fetch document tracking data
+  useEffect(() => {
+    fetchDocumentTracking();
+  }, []);
+
+  const fetchDocumentTracking = async () => {
+    setTrackingLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('docrequests')
+        .select(`
+          *,
+          residents(first_name, last_name)
+        `)
+        .not('processedby', 'is', null)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching document tracking:', error);
+        return;
+      }
+
+      // Map data to match the expected format
+      const mappedData = data?.map(doc => {
+        const requestedBy = doc.residents ? 
+          `${doc.residents.first_name} ${doc.residents.last_name}` : 
+          (doc.receiver && typeof doc.receiver === 'string' ? 
+            JSON.parse(doc.receiver).name || 'Unknown' : 
+            'Unknown');
+
+        const getStatusColor = (status: string) => {
+          switch (status.toLowerCase()) {
+            case 'approved':
+              return 'bg-green-500';
+            case 'rejected':
+              return 'bg-red-500';
+            case 'pending':
+              return 'bg-yellow-500';
+            default:
+              return 'bg-blue-500';
+          }
+        };
+
+        return {
+          id: doc.docnumber,
+          document: doc.type,
+          requestedBy,
+          status: doc.status === 'approved' ? 'Ready for pickup' : 
+                  doc.status === 'rejected' ? 'Rejected' : 
+                  doc.status === 'pending' ? 'Processing' : doc.status,
+          statusColor: getStatusColor(doc.status),
+          lastUpdate: doc.updated_at ? 
+            formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true }) : 
+            formatDistanceToNow(new Date(doc.created_at), { addSuffix: true })
+        };
+      }) || [];
+
+      setDocumentTracking(mappedData);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setTrackingLoading(false);
+    }
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ready":
