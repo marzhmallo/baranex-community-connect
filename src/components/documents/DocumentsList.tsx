@@ -50,6 +50,10 @@ interface DocumentRequest {
   brgyid: string;
   updated_at: string | null;
   resident_name?: string;
+  paymenturl: string | null;
+  paydate: string | null;
+  method: string | null;
+  amount: number | null;
 }
 
 interface DocumentsListProps {
@@ -158,7 +162,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
       const { error } = await supabase
         .from('docrequests')
         .update({ 
-          status: 'approved',
+          status: 'processing',
           processedby: adminProfileId,
           updated_at: new Date().toISOString()
         })
@@ -170,7 +174,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
 
       toast({
         title: "Success",
-        description: "Document approved successfully",
+        description: "Document is now being processed",
       });
 
       // Refresh the list
@@ -198,11 +202,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
     try {
       const { error } = await supabase
         .from('docrequests')
-        .update({ 
-          status: 'rejected',
-          processedby: adminProfileId,
-          updated_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', docId);
 
       if (error) {
@@ -211,7 +211,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
 
       toast({
         title: "Success",
-        description: "Document rejected successfully",
+        description: "Document request deleted successfully",
       });
 
       // Refresh the list
@@ -232,6 +232,8 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
     switch (status) {
       case "pending":
         return <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">Pending</Badge>;
+      case "processing":
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">Processing</Badge>;
       case "approved":
         return <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Approved</Badge>;
       case "rejected":
@@ -263,6 +265,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
               <TableHead>Document Type</TableHead>
               <TableHead>Date Requested</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Payment</TableHead>
               <TableHead>Purpose</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -281,6 +284,13 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
                   </TableCell>
                   <TableCell>{formatDistanceToNow(new Date(doc.created_at), { addSuffix: true })}</TableCell>
                   <TableCell>{getStatusBadge(doc.status)}</TableCell>
+                  <TableCell>
+                    {doc.paydate && doc.paymenturl ? (
+                      <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Paid</Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-50">Unpaid</Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="max-w-[200px] truncate">{doc.purpose}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -298,18 +308,18 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
                         {doc.status === "pending" && (
                           <>
                             <DropdownMenuItem 
-                              className="cursor-pointer text-green-600"
+                              className="cursor-pointer text-blue-600"
                               onClick={() => handleApprove(doc.id)}
                             >
                               <Check className="mr-2 h-4 w-4" />
-                              <span>Approve</span>
+                              <span>Start Processing</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="cursor-pointer text-red-600"
                               onClick={() => handleReject(doc.id)}
                             >
                               <X className="mr-2 h-4 w-4" />
-                              <span>Reject</span>
+                              <span>Delete Request</span>
                             </DropdownMenuItem>
                           </>
                         )}
@@ -332,7 +342,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   No documents found.
                 </TableCell>
               </TableRow>
