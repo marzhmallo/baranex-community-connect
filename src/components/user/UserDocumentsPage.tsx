@@ -5,6 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
 import DocumentRequestModal from "./DocumentRequestModal";
 import { 
@@ -30,7 +35,8 @@ import {
   Bell,
   Upload,
   ArrowRight,
-  Settings
+  Settings,
+  MoreHorizontal
 } from "lucide-react";
 
 const UserDocumentsPage = () => {
@@ -258,119 +264,132 @@ const UserDocumentsPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Document Library</h2>
-                <div className="flex flex-col sm:flex-row gap-3">
+          <Card className="border-border">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <CardTitle className="text-foreground">Document Library</CardTitle>
+                <div className="flex items-center gap-3">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <input
-                      type="text"
-                      placeholder="Search documents..."
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-64"
-                    />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64 border-border bg-background text-foreground" />
                   </div>
-                  <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Document
-                  </button>
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    onClick={() => setShowRequestModal(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Request Document
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            <div className="p-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                <div className="flex flex-wrap gap-2">
-                  <button className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm hover:bg-primary-200 transition-colors">All</button>
-                  <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Certificates</button>
-                  <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Permits</button>
-                  <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Clearances</button>
-                  <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">IDs</button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Tabs value="all" className="w-full">
+                <div className="px-6 border-b border-border">
+                  <TabsList className="bg-transparent h-auto p-0">
+                    <TabsTrigger value="all" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
+                      All
+                    </TabsTrigger>
+                    <TabsTrigger value="certificates" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
+                      Certificates
+                    </TabsTrigger>
+                    <TabsTrigger value="permits" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
+                      Permits
+                    </TabsTrigger>
+                    <TabsTrigger value="clearances" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
+                      Clearances
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button className="flex items-center gap-1 border border-gray-300 rounded px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors">
-                    <Filter className="h-4 w-4 text-gray-600" />
-                    Advanced Filters
-                  </button>
-                  <div className="flex items-center border border-gray-300 rounded-lg">
-                    <select className="text-sm px-3 py-1.5 rounded-l-lg border-r border-gray-300 focus:outline-none bg-white text-gray-700">
-                      <option>Bulk Actions</option>
-                      <option>Download Selected</option>
-                      <option>Archive Selected</option>
-                      <option>Delete Selected</option>
-                    </select>
-                    <button className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-r-lg hover:bg-gray-200 transition-colors text-sm">
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </div>
 
-              <div className="space-y-4">
-                {mockTemplates.map((template) => (
-                  <div key={template.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center h-5">
-                          <input
-                            id={`doc${template.id}`}
-                            type="checkbox"
-                            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                          />
-                        </div>
-                        <div className="bg-red-100 p-2 rounded-lg">
-                          <FileX className="h-5 w-5 text-red-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{template.name}</h3>
-                          <p className="text-sm text-gray-500">{template.description}</p>
-                        </div>
+                <TabsContent value="all" className="mt-0">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
+                          <Filter className="h-4 w-4 mr-2" />
+                          Advanced Filters
+                        </Button>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded-full">Active</span>
-                        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Download className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
+                          Bulk Actions
+                        </Button>
+                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
+                          Apply
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
 
-              <div className="mt-6 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <input
-                    id="selectAll"
-                    type="checkbox"
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <label htmlFor="selectAll" className="text-sm text-gray-600">
-                    Select All
-                  </label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                    Previous
-                  </button>
-                  <div className="flex">
-                    <button className="px-3 py-1 bg-primary-100 text-primary-700 rounded-md text-sm font-medium">1</button>
-                    <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">2</button>
-                    <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">3</button>
+                    <div className="space-y-3">
+                      {mockTemplates.map((template) => (
+                        <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                          <div className="flex items-center gap-4">
+                            <input type="checkbox" className="rounded border-border" />
+                            <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
+                              <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-foreground">{template.name}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {template.description} • Fee: ₱{template.fee}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="hover:bg-accent">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="border-border bg-background">
+                                <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Template
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Download
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" className="rounded border-border" />
+                        <label className="text-sm text-foreground">Select All</label>
+                      </div>
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious href="#" className="hover:bg-accent" />
+                          </PaginationItem>
+                          <PaginationItem>
+                            <PaginationLink href="#" isActive className="bg-primary text-primary-foreground">1</PaginationLink>
+                          </PaginationItem>
+                          <PaginationItem>
+                            <PaginationLink href="#" className="hover:bg-accent">2</PaginationLink>
+                          </PaginationItem>
+                          <PaginationItem>
+                            <PaginationLink href="#" className="hover:bg-accent">3</PaginationLink>
+                          </PaginationItem>
+                          <PaginationItem>
+                            <PaginationNext href="#" className="hover:bg-accent" />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
                   </div>
-                  <button className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                    Next
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
 
           <div className="mt-6 bg-white rounded-lg shadow-sm">
             <div className="p-6 border-b border-gray-200">
