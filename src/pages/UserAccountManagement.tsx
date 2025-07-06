@@ -35,6 +35,7 @@ const UserAccountManagement = () => {
   const { userProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [userDetailsOpen, setUserDetailsOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
 
   const { data: users, isLoading, refetch } = useQuery({
@@ -365,104 +366,17 @@ const UserAccountManagement = () => {
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-center gap-2">
                         {/* View button */}
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedUser(user)}
-                              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>User Details</DialogTitle>
-                            </DialogHeader>
-                            {selectedUser && (
-                              <div className="space-y-4">
-                                <div className="flex items-center space-x-3">
-                                  <Avatar className="h-12 w-12">
-                                    <AvatarFallback>
-                                      {getInitials(selectedUser.firstname, selectedUser.lastname)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <h3 className="font-semibold">
-                                      {selectedUser.firstname} {selectedUser.lastname}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground">
-                                      {selectedUser.email}
-                                    </p>
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div>
-                                    <span className="font-medium">Phone:</span>
-                                    <p>{selectedUser.phone || 'N/A'}</p>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium">Role:</span>
-                                    <p>{getRoleBadge(selectedUser.role || 'user', selectedUser.superior_admin)}</p>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium">Status:</span>
-                                    <p>{getStatusBadge(selectedUser.status || 'pending')}</p>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium">Username:</span>
-                                    <p>{selectedUser.username || 'N/A'}</p>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium">Purok:</span>
-                                    <p>{selectedUser.purok || 'N/A'}</p>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium">Middle Name:</span>
-                                    <p>{selectedUser.middlename || 'N/A'}</p>
-                                  </div>
-                                </div>
-
-                                {selectedUser.superior_admin && (
-                                  <Alert>
-                                    <AlertTriangle className="h-4 w-4" />
-                                    <AlertDescription>
-                                      This user is a superior admin and cannot be modified by other admins.
-                                    </AlertDescription>
-                                  </Alert>
-                                )}
-                                
-                                <div className="flex space-x-2">
-                                  {selectedUser.status === 'pending' && canModifyUser(selectedUser) && (
-                                    <>
-                                      <Button
-                                        size="sm"
-                                        onClick={() => updateUserStatus(selectedUser.id, 'approved')}
-                                      >
-                                        <Check className="h-4 w-4 mr-1" />
-                                        Approve
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        onClick={() => updateUserStatus(selectedUser.id, 'rejected')}
-                                      >
-                                        <X className="h-4 w-4 mr-1" />
-                                        Reject
-                                      </Button>
-                                    </>
-                                  )}
-                                  <Button size="sm" variant="outline">
-                                    <Mail className="h-4 w-4 mr-1" />
-                                    Send Email
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                          </DialogContent>
-                        </Dialog>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setUserDetailsOpen(true);
+                          }}
+                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         
                         {/* Approval buttons for pending users */}
                         {user.status === 'pending' && canModifyUser(user) && (
@@ -595,6 +509,147 @@ const UserAccountManagement = () => {
                 </div>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* User Details Modal */}
+        <Dialog open={userDetailsOpen} onOpenChange={setUserDetailsOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                User Profile Details
+              </DialogTitle>
+            </DialogHeader>
+            {selectedUser && (
+              <div className="space-y-6">
+                {/* User Header */}
+                <div className="flex items-center space-x-4 p-4 bg-muted/30 rounded-lg">
+                  <div className={`w-16 h-16 bg-gradient-to-br ${getGradientColor(0)} rounded-full flex items-center justify-center text-white text-xl font-bold`}>
+                    {getInitials(selectedUser.firstname, selectedUser.lastname)}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-foreground mb-1">
+                      {selectedUser.firstname} {selectedUser.middlename ? `${selectedUser.middlename} ` : ''}{selectedUser.lastname}
+                    </h3>
+                    <p className="text-muted-foreground mb-2">{selectedUser.email}</p>
+                    <div className="flex gap-2">
+                      {getRoleBadge(selectedUser.role || 'user', selectedUser.superior_admin)}
+                      {getStatusBadge(selectedUser.status || 'pending')}
+                    </div>
+                  </div>
+                </div>
+
+                {/* User Information Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-foreground border-b border-border pb-2">Personal Information</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                        <p className="text-foreground">{selectedUser.firstname} {selectedUser.middlename} {selectedUser.lastname}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Email Address</label>
+                        <p className="text-foreground">{selectedUser.email}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Phone Number</label>
+                        <p className="text-foreground">{selectedUser.phone || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Username</label>
+                        <p className="text-foreground">{selectedUser.username || 'Not set'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-foreground border-b border-border pb-2">System Information</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">User Role</label>
+                        <div className="mt-1">{getRoleBadge(selectedUser.role || 'user', selectedUser.superior_admin)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Account Status</label>
+                        <div className="mt-1">{getStatusBadge(selectedUser.status || 'pending')}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Purok/Zone</label>
+                        <p className="text-foreground">{selectedUser.purok || 'Not assigned'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Member Since</label>
+                        <p className="text-foreground">{new Date(selectedUser.created_at || '').toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Security Notice */}
+                {selectedUser.superior_admin && (
+                  <Alert className="border-purple-200 bg-purple-50 dark:bg-purple-900/20">
+                    <Crown className="h-4 w-4 text-purple-600" />
+                    <AlertDescription className="text-purple-700 dark:text-purple-300">
+                      This user is a <strong>Superior Administrator</strong> with elevated privileges and cannot be modified by other administrators.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
+                  {selectedUser.status === 'pending' && canModifyUser(selectedUser) && (
+                    <>
+                      <Button
+                        onClick={() => {
+                          updateUserStatus(selectedUser.id, 'approved');
+                          setUserDetailsOpen(false);
+                        }}
+                        className="flex-1 min-w-[120px]"
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        Approve User
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          updateUserStatus(selectedUser.id, 'rejected');
+                          setUserDetailsOpen(false);
+                        }}
+                        className="flex-1 min-w-[120px]"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Reject User
+                      </Button>
+                    </>
+                  )}
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      window.location.href = `mailto:${selectedUser.email}`;
+                    }}
+                    className="flex-1 min-w-[120px]"
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send Email
+                  </Button>
+                  {canModifyUser(selectedUser) && selectedUser.status !== 'pending' && (
+                    <Button 
+                      variant="outline"
+                      className="flex-1 min-w-[120px]"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
