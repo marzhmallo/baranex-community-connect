@@ -115,6 +115,14 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
 
       // Map data to include resident name
       const mappedData = data?.map(doc => {
+        console.log('Document payment data:', { 
+          id: doc.id, 
+          paydate: doc.paydate, 
+          paymenturl: doc.paymenturl,
+          method: doc.method,
+          amount: doc.amount 
+        });
+        
         let resident_name = 'Unknown';
         if (doc.receiver) {
           try {
@@ -159,6 +167,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
     }
 
     try {
+      console.log('Setting status to processing for document:', docId);
       const { error } = await supabase
         .from('docrequests')
         .update({ 
@@ -169,9 +178,11 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
         .eq('id', docId);
 
       if (error) {
+        console.error('Error updating document status:', error);
         throw error;
       }
 
+      console.log('Status updated successfully to processing');
       toast({
         title: "Success",
         description: "Document is now being processed",
