@@ -373,7 +373,7 @@ const StatisticsPage = () => {
         <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
             <Heart className="text-red-600 mr-2 h-5 w-5" />
-            Community Health
+            Residents Overview
           </h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b border-border">
