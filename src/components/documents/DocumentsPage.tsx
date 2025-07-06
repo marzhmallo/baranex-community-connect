@@ -142,33 +142,41 @@ const DocumentsPage = () => {
   const { data: processingStats } = useQuery({
     queryKey: ['document-processing-stats'],
     queryFn: async () => {
-      const { data: issuedDocs, error } = await supabase
-        .from('issued_documents')
-        .select('status, created_at, expiry_date');
+      const { data, error } = await supabase.rpc('get_document_stats');
       
       if (error) throw error;
 
-      const now = new Date();
+      // Cast data to the expected type
+      const statsData = data as { 
+        status_counts: Array<{ status: string; count: number }> | null;
+        avg_processing_time_interval: string | null;
+      } | null;
+
+      // Process status counts into the expected format
+      const statusCounts = statsData?.status_counts || [];
       const stats = {
         readyForPickup: 0,
         processing: 0,
         forReview: 0,
         released: 0,
-        rejected: 0
+        rejected: 0,
+        avgProcessingTime: statsData?.avg_processing_time_interval
       };
 
-      issuedDocs?.forEach(doc => {
-        const status = doc.status?.toLowerCase();
-        if (status === 'issued' || status === 'ready') {
-          stats.readyForPickup++;
+      statusCounts.forEach((statusCount) => {
+        const status = statusCount.status?.toLowerCase();
+        const count = statusCount.count || 0;
+        
+        if (status === 'approved' || status === 'ready') {
+          stats.readyForPickup += count;
         } else if (status === 'processing' || status === 'pending') {
-          stats.processing++;
+          stats.processing += count;
         } else if (status === 'review' || status === 'for_review') {
-          stats.forReview++;
+          stats.forReview += count;
         } else if (status === 'released' || status === 'completed') {
-          stats.released++;
+          stats.released += count;
         } else if (status === 'rejected' || status === 'denied') {
-          stats.rejected++;
+          stats.rejected += count;
         }
       });
 
