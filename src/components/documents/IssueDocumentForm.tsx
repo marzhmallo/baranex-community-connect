@@ -228,191 +228,171 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
 
   // Render loading skeleton
   if (loadingDocTypes || loadingResidents) {
-    return <div className="space-y-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-40 w-full" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>;
+    return (
+      <div className="space-y-4">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      {onClose && (
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold">Issue New Document</h2>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onClose}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-      
-      <Card className="mx-[15px]">
-        <CardContent className="pt-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="document_type_id" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>Document Type</FormLabel>
-                      <Select onValueChange={value => {
-                  field.onChange(value);
-                  handleDocTypeChange(value);
-                }} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a document type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {documentTypes.map(docType => <SelectItem key={docType.id} value={docType.id}>
-                              {docType.name} {docType.fee > 0 ? `(₱${docType.fee})` : ''}
-                            </SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      {selectedDocType?.description && <FormDescription>{selectedDocType.description}</FormDescription>}
-                      <FormMessage />
-                    </FormItem>} />
-                
-                <FormField control={form.control} name="resident_id" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>Resident</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a resident" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {residents.map(resident => <SelectItem key={resident.id} value={resident.id}>
-                              {resident.last_name}, {resident.first_name} {resident.middle_name ? resident.middle_name.charAt(0) + '.' : ''} {resident.suffix || ''}
-                            </SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>} />
-              </div>
-              
-              <FormField control={form.control} name="purpose" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Purpose</FormLabel>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField control={form.control} name="document_type_id" render={({
+            field
+          }) => <FormItem>
+                  <FormLabel>Document Type</FormLabel>
+                  <Select onValueChange={value => {
+              field.onChange(value);
+              handleDocTypeChange(value);
+            }} defaultValue={field.value}>
                     <FormControl>
-                      <Textarea placeholder="Enter the purpose for this document" className="resize-none" {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a document type" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>} />
-              
-              {selectedDocType && Object.keys(selectedDocType.required_fields || {}).length > 0 && <>
-                  <Separator />
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <FileCog className="h-5 w-5" />
-                      <h3 className="text-lg font-medium">Document Fields</h3>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(selectedDocType.required_fields).map(([field, type]) => <div key={field} className="space-y-2">
-                          <label className="text-sm font-medium">
-                            {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                          </label>
-                          <Input type={type === 'number' ? 'number' : 'text'} value={dynamicFields[field] || ''} onChange={e => handleDynamicFieldChange(field, e.target.value)} placeholder={`Enter ${field.replace(/_/g, ' ')}`} />
-                        </div>)}
-                    </div>
-                  </div>
-                </>}
-              
+                    <SelectContent>
+                      {documentTypes.map(docType => <SelectItem key={docType.id} value={docType.id}>
+                          {docType.name} {docType.fee > 0 ? `(₱${docType.fee})` : ''}
+                        </SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {selectedDocType?.description && <FormDescription>{selectedDocType.description}</FormDescription>}
+                  <FormMessage />
+                </FormItem>} />
+            
+            <FormField control={form.control} name="resident_id" render={({
+            field
+          }) => <FormItem>
+                  <FormLabel>Resident</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a resident" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {residents.map(resident => <SelectItem key={resident.id} value={resident.id}>
+                          {resident.last_name}, {resident.first_name} {resident.middle_name ? resident.middle_name.charAt(0) + '.' : ''} {resident.suffix || ''}
+                        </SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>} />
+          </div>
+          
+          <FormField control={form.control} name="purpose" render={({
+          field
+        }) => <FormItem>
+                <FormLabel>Purpose</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Enter the purpose for this document" className="resize-none" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>} />
+          
+          {selectedDocType && Object.keys(selectedDocType.required_fields || {}).length > 0 && <>
               <Separator />
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField control={form.control} name="payment_amount" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>Payment Amount</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-2.5">₱</span>
-                          <Input type="number" min="0" step="0.01" className="pl-7" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <FileCog className="h-5 w-5" />
+                  <h3 className="text-lg font-medium">Document Fields</h3>
+                </div>
                 
-                <FormField control={form.control} name="payment_status" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>Payment Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select payment status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="paid">Paid</SelectItem>
-                          <SelectItem value="waived">Waived</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>} />
-                
-                <FormField control={form.control} name="status" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>Document Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select document status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="issued">Issued</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(selectedDocType.required_fields).map(([field, type]) => <div key={field} className="space-y-2">
+                      <label className="text-sm font-medium">
+                        {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </label>
+                      <Input type={type === 'number' ? 'number' : 'text'} value={dynamicFields[field] || ''} onChange={e => handleDynamicFieldChange(field, e.target.value)} placeholder={`Enter ${field.replace(/_/g, ' ')}`} />
+                    </div>)}
+                </div>
               </div>
-              
-              {selectedDocType?.validity_days && <p className="text-sm text-muted-foreground">
-                  This document will be valid for {selectedDocType.validity_days} days from the date of issuance.
-                </p>}
-              
-              <div className="flex justify-end gap-3">
-                {onClose && (
-                  <Button type="button" variant="outline" onClick={onClose}>
-                    Cancel
-                  </Button>
-                )}
-                <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
-                  {isSubmitting ? <>Processing...</> : <>
-                      <UserCheck className="mr-2 h-4 w-4" />
-                      Issue Document
-                    </>}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            </>}
+          
+          <Separator />
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <FormField control={form.control} name="payment_amount" render={({
+            field
+          }) => <FormItem>
+                  <FormLabel>Payment Amount</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5">₱</span>
+                      <Input type="number" min="0" step="0.01" className="pl-7" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>} />
+            
+            <FormField control={form.control} name="payment_status" render={({
+            field
+          }) => <FormItem>
+                  <FormLabel>Payment Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select payment status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="waived">Waived</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>} />
+            
+            <FormField control={form.control} name="status" render={({
+            field
+          }) => <FormItem>
+                  <FormLabel>Document Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select document status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="issued">Issued</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>} />
+          </div>
+          
+          {selectedDocType?.validity_days && <p className="text-sm text-muted-foreground">
+              This document will be valid for {selectedDocType.validity_days} days from the date of issuance.
+            </p>}
+          
+          <div className="flex justify-end gap-3">
+            {onClose && (
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+            )}
+            <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
+              {isSubmitting ? <>Processing...</> : <>
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Issue Document
+                </>}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 };

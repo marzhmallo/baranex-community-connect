@@ -1294,6 +1294,9 @@ const DocumentsPage = () => {
       {/* Issue Document Dialog */}
       <Dialog open={isIssueDocumentOpen} onOpenChange={setIsIssueDocumentOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-background border-border">
+          <DialogHeader>
+            <DialogTitle>Issue New Document</DialogTitle>
+          </DialogHeader>
           <IssueDocumentForm onClose={() => setIsIssueDocumentOpen(false)} />
         </DialogContent>
       </Dialog>
