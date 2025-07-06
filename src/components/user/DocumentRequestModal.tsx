@@ -35,14 +35,25 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
   const { data: documentTypes = [], isLoading: isLoadingTypes } = useQuery({
     queryKey: ['document-types', userProfile?.brgyid],
     queryFn: async () => {
-      if (!userProfile?.brgyid) return [];
+      console.log('Fetching document types for brgyid:', userProfile?.brgyid);
+      console.log('UserProfile:', userProfile);
+      
+      if (!userProfile?.brgyid) {
+        console.log('No brgyid found, returning empty array');
+        return [];
+      }
       
       const { data, error } = await supabase
         .from('document_types')
         .select('*')
         .eq('brgyid', userProfile.brgyid);
       
-      if (error) throw error;
+      console.log('Document types query result:', { data, error });
+      
+      if (error) {
+        console.error('Error fetching document types:', error);
+        throw error;
+      }
       return data || [];
     },
     enabled: !!userProfile?.brgyid
@@ -136,11 +147,20 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
             {/* Document Type Selection */}
             <div>
               <Label htmlFor="documentType" className="text-sm font-medium text-gray-700">
-                Document Type *
+                Document Type * 
+                <span className="text-xs text-gray-500 ml-2">
+                  (Found: {documentTypes.length} documents, brgyid: {userProfile?.brgyid})
+                </span>
               </Label>
               <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
                 <SelectTrigger className="w-full mt-1">
-                  <SelectValue placeholder="Select document type..." />
+                  <SelectValue placeholder={
+                    isLoadingTypes 
+                      ? "Loading document types..." 
+                      : documentTypes.length === 0 
+                        ? "No document types available" 
+                        : "Select document type..."
+                  } />
                 </SelectTrigger>
                 <SelectContent>
                   {documentTypes.map((docType) => (
