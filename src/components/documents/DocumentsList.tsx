@@ -77,10 +77,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
       // Build query
       let query = supabase
         .from('docrequests')
-        .select(`
-          *,
-          profiles(firstname, lastname)
-        `, { count: 'exact' });
+        .select('*', { count: 'exact' });
 
       // Apply status filter
       if (status !== "all") {
@@ -113,14 +110,25 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
       }
 
       // Map data to include resident name
-      const mappedData = data?.map(doc => ({
-        ...doc,
-        resident_name: doc.profiles ? 
-          `${doc.profiles.firstname} ${doc.profiles.lastname}` : 
-          (doc.receiver && typeof doc.receiver === 'string' ? 
-            JSON.parse(doc.receiver).name || 'Unknown' : 
-            'Unknown')
-      })) || [];
+      const mappedData = data?.map(doc => {
+        let resident_name = 'Unknown';
+        if (doc.receiver) {
+          try {
+            if (typeof doc.receiver === 'object' && doc.receiver !== null && !Array.isArray(doc.receiver)) {
+              resident_name = (doc.receiver as any).name || 'Unknown';
+            } else if (typeof doc.receiver === 'string') {
+              const parsed = JSON.parse(doc.receiver);
+              resident_name = parsed.name || 'Unknown';
+            }
+          } catch {
+            resident_name = 'Unknown';
+          }
+        }
+        return {
+          ...doc,
+          resident_name
+        };
+      }) || [];
 
       setDocuments(mappedData);
       setTotalCount(count || 0);

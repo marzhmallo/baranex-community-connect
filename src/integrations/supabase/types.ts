@@ -406,7 +406,7 @@ export type Database = {
           ornumber: string | null
           paydate: string | null
           paymenturl: string | null
-          processedby: string
+          processedby: string | null
           purpose: string
           receiver: Json | null
           resident_id: string | null
@@ -426,7 +426,7 @@ export type Database = {
           ornumber?: string | null
           paydate?: string | null
           paymenturl?: string | null
-          processedby: string
+          processedby?: string | null
           purpose: string
           receiver?: Json | null
           resident_id?: string | null
@@ -446,7 +446,7 @@ export type Database = {
           ornumber?: string | null
           paydate?: string | null
           paymenturl?: string | null
-          processedby?: string
+          processedby?: string | null
           purpose?: string
           receiver?: Json | null
           resident_id?: string | null

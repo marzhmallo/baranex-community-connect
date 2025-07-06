@@ -57,10 +57,7 @@ const DocumentsPage = () => {
       // Build query for pending requests only
       let query = supabase
         .from('docrequests')
-        .select(`
-          *,
-          profiles(firstname, lastname)
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .ilike('status', 'pending');
 
       // Apply pagination
@@ -79,19 +76,30 @@ const DocumentsPage = () => {
       }
 
       // Map data to match the expected format
-      const mappedData = data?.map(doc => ({
-        id: doc.id,
-        name: doc.profiles ? 
-          `${doc.profiles.firstname} ${doc.profiles.lastname}` : 
-          (doc.receiver && typeof doc.receiver === 'string' ? 
-            JSON.parse(doc.receiver).name || 'Unknown' : 
-            'Unknown'),
-        document: doc.type,
-        timeAgo: formatDistanceToNow(new Date(doc.created_at), { addSuffix: true }),
-        status: doc.status,
-        docnumber: doc.docnumber,
-        purpose: doc.purpose
-      })) || [];
+      const mappedData = data?.map(doc => {
+        let name = 'Unknown';
+        if (doc.receiver) {
+          try {
+            if (typeof doc.receiver === 'object' && doc.receiver !== null && !Array.isArray(doc.receiver)) {
+              name = (doc.receiver as any).name || 'Unknown';
+            } else if (typeof doc.receiver === 'string') {
+              const parsed = JSON.parse(doc.receiver);
+              name = parsed.name || 'Unknown';
+            }
+          } catch {
+            name = 'Unknown';
+          }
+        }
+        return {
+          id: doc.id,
+          name,
+          document: doc.type,
+          timeAgo: formatDistanceToNow(new Date(doc.created_at), { addSuffix: true }),
+          status: doc.status,
+          docnumber: doc.docnumber,
+          purpose: doc.purpose
+        };
+      }) || [];
 
       setDocumentRequests(mappedData);
       setTotalCount(count || 0);
@@ -213,10 +221,7 @@ const DocumentsPage = () => {
     try {
       const { data, error } = await supabase
         .from('docrequests')
-        .select(`
-          *,
-          profiles(firstname, lastname)
-        `)
+        .select('*')
         .not('processedby', 'is', null)
         .order('updated_at', { ascending: false });
 
@@ -227,11 +232,19 @@ const DocumentsPage = () => {
 
       // Map data to match the expected format
       const mappedData = data?.map(doc => {
-        const requestedBy = doc.profiles ? 
-          `${doc.profiles.firstname} ${doc.profiles.lastname}` : 
-          (doc.receiver && typeof doc.receiver === 'string' ? 
-            JSON.parse(doc.receiver).name || 'Unknown' : 
-            'Unknown');
+        let requestedBy = 'Unknown';
+        if (doc.receiver) {
+          try {
+            if (typeof doc.receiver === 'object' && doc.receiver !== null && !Array.isArray(doc.receiver)) {
+              requestedBy = (doc.receiver as any).name || 'Unknown';
+            } else if (typeof doc.receiver === 'string') {
+              const parsed = JSON.parse(doc.receiver);
+              requestedBy = parsed.name || 'Unknown';
+            }
+          } catch {
+            requestedBy = 'Unknown';
+          }
+        }
 
         const getStatusColor = (status: string) => {
           switch (status.toLowerCase()) {
