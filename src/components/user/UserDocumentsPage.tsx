@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
+import DocumentRequestModal from "./DocumentRequestModal";
 import { 
   FileText, 
   Clock, 
@@ -35,6 +36,7 @@ import {
 const UserDocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
   const { userProfile } = useAuth();
 
   // Fetch user's document requests from Supabase
@@ -566,13 +568,22 @@ const UserDocumentsPage = () => {
               <BarChart3 className="h-5 w-5" />
               Document Tracking System
             </h2>
-            <Button 
-              onClick={() => setShowIssueForm(true)}
-              className="bg-primary-600 text-white hover:bg-primary-700"
-            >
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Issue Document
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => setShowRequestModal(true)}
+                className="bg-blue-600 text-white hover:bg-blue-700"
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Request Document
+              </Button>
+              <Button 
+                onClick={() => setShowIssueForm(true)}
+                className="bg-primary-600 text-white hover:bg-primary-700"
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Issue Document
+              </Button>
+            </div>
           </div>
         </div>
         <div className="p-6">
@@ -810,6 +821,10 @@ const UserDocumentsPage = () => {
             <DocumentIssueForm onClose={() => setShowIssueForm(false)} />
           </div>
         </div>
+      )}
+
+      {showRequestModal && (
+        <DocumentRequestModal onClose={() => setShowRequestModal(false)} />
       )}
     </div>
   );
