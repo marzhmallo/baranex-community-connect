@@ -27,9 +27,26 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
   const [paymentMethod, setPaymentMethod] = useState("walk-in");
   const [amount, setAmount] = useState("");
   const [orNumber, setOrNumber] = useState("");
-  const [paymentUrl, setPaymentUrl] = useState("");
-  const [payDate, setPayDate] = useState("");
+  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch barangay GCash info
+  const { data: barangayInfo = null } = useQuery({
+    queryKey: ['barangay-info', userProfile?.brgyid],
+    queryFn: async () => {
+      if (!userProfile?.brgyid) return null;
+      
+      const { data, error } = await supabase
+        .from('barangays')
+        .select('"gcash#", gcashname, gcashurl')
+        .eq('id', userProfile.brgyid)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userProfile?.brgyid
+  });
 
   // Fetch available document types
   const { data: documentTypes = [], isLoading: isLoadingTypes } = useQuery({
@@ -113,8 +130,8 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
         amount: selectedDoc?.fee || 0,
         ...(paymentMethod === "gcash" && {
           ornumber: orNumber,
-          paymenturl: paymentUrl,
-          paydate: payDate ? new Date(payDate).toISOString() : null,
+          paymenturl: paymentScreenshot ? `screenshot_${Date.now()}.jpg` : null, // Placeholder - you'd upload to storage
+          paydate: new Date().toISOString(), // Automatically set to current time
         }),
         status: 'pending',
         issued_at: new Date().toISOString(),
@@ -245,6 +262,31 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
 
                 {paymentMethod === "gcash" && (
                   <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-lg">
+                    {/* Barangay GCash Information */}
+                    {barangayInfo && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <h4 className="text-sm font-semibold text-blue-800 mb-2">Send Payment To:</h4>
+                        <div className="space-y-1 text-sm text-blue-700">
+                          {barangayInfo["gcash#"] && (
+                            <p><span className="font-medium">GCash Number:</span> {barangayInfo["gcash#"]}</p>
+                          )}
+                          {barangayInfo.gcashname && barangayInfo.gcashname.length > 0 && (
+                            <p><span className="font-medium">GCash Name:</span> {barangayInfo.gcashname.join(", ")}</p>
+                          )}
+                          {barangayInfo.gcashurl && (
+                            <div className="mt-2">
+                              <p className="font-medium mb-1">GCash QR Code:</p>
+                              <img 
+                                src={barangayInfo.gcashurl} 
+                                alt="GCash QR Code" 
+                                className="w-32 h-32 object-contain border rounded"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <Label htmlFor="amount" className="text-sm font-medium text-gray-700">
                         Amount *
@@ -273,29 +315,28 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="paymentUrl" className="text-sm font-medium text-gray-700">
-                        Payment Screenshot URL *
+                      <Label htmlFor="paymentScreenshot" className="text-sm font-medium text-gray-700">
+                        Payment Screenshot *
                       </Label>
-                      <Input
-                        id="paymentUrl"
-                        value={paymentUrl}
-                        onChange={(e) => setPaymentUrl(e.target.value)}
-                        placeholder="Upload screenshot and paste URL here..."
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="payDate" className="text-sm font-medium text-gray-700">
-                        Payment Date *
-                      </Label>
-                      <Input
-                        id="payDate"
-                        type="datetime-local"
-                        value={payDate}
-                        onChange={(e) => setPayDate(e.target.value)}
-                        className="mt-1"
-                      />
+                      <div className="mt-1">
+                        <input
+                          id="paymentScreenshot"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setPaymentScreenshot(e.target.files?.[0] || null)}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                        />
+                        {paymentScreenshot && (
+                          <div className="mt-2">
+                            <img 
+                              src={URL.createObjectURL(paymentScreenshot)} 
+                              alt="Payment screenshot preview" 
+                              className="w-32 h-32 object-cover border rounded"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Upload a screenshot of your GCash payment</p>
                     </div>
                   </div>
                 )}
@@ -319,7 +360,7 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                 !selectedDocumentType || 
                 !purpose ||
                 (receiverType === "other" && !receiverName) ||
-                (paymentMethod === "gcash" && selectedDoc?.fee > 0 && (!amount || !orNumber || !paymentUrl || !payDate))
+                (paymentMethod === "gcash" && selectedDoc?.fee > 0 && (!amount || !orNumber || !paymentScreenshot))
               }
             >
               {isSubmitting ? "Submitting..." : "Submit Request"}
