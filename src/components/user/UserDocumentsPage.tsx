@@ -43,7 +43,47 @@ const UserDocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const { userProfile } = useAuth();
+
+  // Mock templates data
+  const mockTemplates = [
+    {
+      id: '1',
+      name: 'Barangay Clearance',
+      description: 'Certificate of good moral character and residence',
+      fee: 50,
+      requirements: 'Valid ID, Proof of residence'
+    },
+    {
+      id: '2', 
+      name: 'Certificate of Indigency',
+      description: 'Certification for financial assistance applications',
+      fee: 0,
+      requirements: 'Valid ID, Proof of income (if any)'
+    },
+    {
+      id: '3',
+      name: 'Business Permit',
+      description: 'Permit to operate small business in the barangay',
+      fee: 200,
+      requirements: 'Valid ID, Business registration, Location map'
+    }
+  ];
+
+  const itemsPerPage = 3;
+  const totalPages = Math.ceil(mockTemplates.length / itemsPerPage);
+  
+  // Calculate paginated data
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTemplates = mockTemplates.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   // Fetch user's document requests from Supabase
   const { data: documentRequests = [], isLoading } = useQuery({
@@ -90,31 +130,6 @@ const UserDocumentsPage = () => {
       minute: '2-digit'
     });
   };
-
-  // For now, show a simple message about document services
-  const mockTemplates = [
-    {
-      id: '1',
-      name: 'Barangay Clearance',
-      description: 'Certificate of good moral character and residence',
-      fee: 50,
-      requirements: 'Valid ID, Proof of residence'
-    },
-    {
-      id: '2', 
-      name: 'Certificate of Indigency',
-      description: 'Certification for financial assistance applications',
-      fee: 0,
-      requirements: 'Valid ID, Proof of income (if any)'
-    },
-    {
-      id: '3',
-      name: 'Business Permit',
-      description: 'Permit to operate small business in the barangay',
-      fee: 200,
-      requirements: 'Valid ID, Business registration, Location map'
-    }
-  ];
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
@@ -322,7 +337,7 @@ const UserDocumentsPage = () => {
                     </div>
 
                     <div className="space-y-3">
-                      {mockTemplates.map((template) => (
+                      {paginatedTemplates.map((template) => (
                         <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
                           <div className="flex items-center gap-4">
                             <input type="checkbox" className="rounded border-border" />
@@ -371,52 +386,40 @@ const UserDocumentsPage = () => {
                             <PaginationPrevious 
                               onClick={(e) => {
                                 e.preventDefault();
-                                // Add pagination logic here
+                                handlePageChange(currentPage - 1);
                               }}
-                              className="hover:bg-accent cursor-pointer" 
+                              className={`hover:bg-accent cursor-pointer ${
+                                currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
                             />
                           </PaginationItem>
-                          <PaginationItem>
-                            <PaginationLink 
-                              onClick={(e) => {
-                                e.preventDefault();
-                                // Add page selection logic here
-                              }}
-                              isActive 
-                              className="bg-primary text-primary-foreground cursor-pointer"
-                            >
-                              1
-                            </PaginationLink>
-                          </PaginationItem>
-                          <PaginationItem>
-                            <PaginationLink 
-                              onClick={(e) => {
-                                e.preventDefault();
-                                // Add page selection logic here
-                              }}
-                              className="hover:bg-accent cursor-pointer"
-                            >
-                              2
-                            </PaginationLink>
-                          </PaginationItem>
-                          <PaginationItem>
-                            <PaginationLink 
-                              onClick={(e) => {
-                                e.preventDefault();
-                                // Add page selection logic here
-                              }}
-                              className="hover:bg-accent cursor-pointer"
-                            >
-                              3
-                            </PaginationLink>
-                          </PaginationItem>
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <PaginationItem key={page}>
+                              <PaginationLink 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(page);
+                                }}
+                                isActive={currentPage === page}
+                                className={`cursor-pointer ${
+                                  currentPage === page 
+                                    ? 'bg-primary text-primary-foreground' 
+                                    : 'hover:bg-accent'
+                                }`}
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
                           <PaginationItem>
                             <PaginationNext 
                               onClick={(e) => {
                                 e.preventDefault();
-                                // Add pagination logic here
+                                handlePageChange(currentPage + 1);
                               }}
-                              className="hover:bg-accent cursor-pointer" 
+                              className={`hover:bg-accent cursor-pointer ${
+                                currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
                             />
                           </PaginationItem>
                         </PaginationContent>
