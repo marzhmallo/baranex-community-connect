@@ -30,6 +30,7 @@ const FeedbackPage = () => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [newStatus, setNewStatus] = useState<FeedbackStatus>('pending');
   const [adminNotes, setAdminNotes] = useState('');
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
 
   // Fetch all reports without filters - we'll filter client-side
   const {
@@ -438,7 +439,11 @@ const FeedbackPage = () => {
                             {report.attachments.map((attachment, index) => {
                               const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
                               return (
-                                <div key={index} className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border">
+                                <div 
+                                  key={index} 
+                                  className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border cursor-pointer"
+                                  onClick={() => setEnlargedImage(imageUrl)}
+                                >
                                   <img 
                                     src={imageUrl} 
                                     alt={`Attachment ${index + 1}`} 
@@ -700,7 +705,11 @@ const FeedbackPage = () => {
                       {selectedReport.attachments.map((attachment, index) => {
                         const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
                         return (
-                          <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted/50">
+                          <div 
+                            key={index} 
+                            className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 cursor-pointer"
+                            onClick={() => setEnlargedImage(imageUrl)}
+                          >
                             <img
                               src={imageUrl}
                               alt={`Attachment ${index + 1}`}
@@ -827,6 +836,27 @@ const FeedbackPage = () => {
                   {updateStatusMutation.isPending ? 'Updating...' : 'Update Status'}
                 </Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Enlarged Image Modal */}
+        <Dialog open={!!enlargedImage} onOpenChange={() => setEnlargedImage(null)}>
+          <DialogContent className="max-w-5xl max-h-[90vh] p-0 bg-transparent border-none">
+            <div className="relative">
+              <img
+                src={enlargedImage || ''}
+                alt="Enlarged attachment"
+                className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
+                onClick={() => setEnlargedImage(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
