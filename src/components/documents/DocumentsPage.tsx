@@ -322,7 +322,14 @@ const DocumentsPage = () => {
   // Fetch document tracking data
   useEffect(() => {
     fetchDocumentTracking();
-  }, [trackingCurrentPage]);
+  }, [trackingCurrentPage, trackingSearchQuery, trackingFilter]);
+
+  // Reset page when search or filter changes
+  useEffect(() => {
+    if (trackingCurrentPage !== 1) {
+      setTrackingCurrentPage(1);
+    }
+  }, [trackingSearchQuery, trackingFilter]);
 
   const fetchDocumentTracking = async () => {
     setTrackingLoading(true);
@@ -331,6 +338,22 @@ const DocumentsPage = () => {
         .from('docrequests')
         .select('*', { count: 'exact' })
         .not('processedby', 'is', null);
+
+      // Apply search filter
+      if (trackingSearchQuery) {
+        query = query.or(`docnumber.ilike.%${trackingSearchQuery}%,receiver->>name.ilike.%${trackingSearchQuery}%`);
+      }
+
+      // Apply status filter
+      if (trackingFilter !== 'All Documents') {
+        if (trackingFilter === 'In Progress') {
+          query = query.in('status', ['pending', 'processing']);
+        } else if (trackingFilter === 'Completed') {
+          query = query.in('status', ['approved', 'completed', 'released']);
+        } else if (trackingFilter === 'Rejected') {
+          query = query.eq('status', 'rejected');
+        }
+      }
 
       // Apply pagination
       const from = (trackingCurrentPage - 1) * trackingItemsPerPage;
