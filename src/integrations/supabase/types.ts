@@ -97,6 +97,9 @@ export type Database = {
           barangayname: string
           country: string
           created_at: string
+          "gcash#": number | null
+          gcashname: string[] | null
+          gcashurl: string | null
           halllat: number | null
           halllong: number | null
           id: string
@@ -111,6 +114,9 @@ export type Database = {
           barangayname: string
           country: string
           created_at: string
+          "gcash#"?: number | null
+          gcashname?: string[] | null
+          gcashurl?: string | null
           halllat?: number | null
           halllong?: number | null
           id?: string
@@ -125,6 +131,9 @@ export type Database = {
           barangayname?: string
           country?: string
           created_at?: string
+          "gcash#"?: number | null
+          gcashname?: string[] | null
+          gcashurl?: string | null
           halllat?: number | null
           halllong?: number | null
           id?: string

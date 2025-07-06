@@ -16,6 +16,7 @@ import DocumentTemplateForm from "./DocumentTemplateForm";
 import IssueDocumentForm from "./IssueDocumentForm";
 import DocumentViewDialog from "./DocumentViewDialog";
 import DocumentDeleteDialog from "./DocumentDeleteDialog";
+import DocumentSettingsDialog from "./DocumentSettingsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
 import { formatDistanceToNow } from "date-fns";
@@ -28,6 +29,7 @@ const DocumentsPage = () => {
   const [trackingFilter, setTrackingFilter] = useState("All Documents");
   const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
   const [isIssueDocumentOpen, setIsIssueDocumentOpen] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -730,7 +732,7 @@ const DocumentsPage = () => {
                 </div>
               </Button>
               
-              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 hover:bg-orange-200 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800">
+              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 hover:bg-orange-200 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800" onClick={() => setIsSettingsDialogOpen(true)}>
                 <Settings className="h-4 w-4" />
                 <div className="text-left">
                   <div className="font-medium">System Settings</div>
@@ -1046,6 +1048,12 @@ const DocumentsPage = () => {
         onOpenChange={setDeleteDialogOpen}
         template={selectedTemplate}
         onDeleteSuccess={handleDeleteSuccess}
+      />
+
+      {/* Document Settings Dialog */}
+      <DocumentSettingsDialog 
+        open={isSettingsDialogOpen}
+        onOpenChange={setIsSettingsDialogOpen}
       />
     </div>
   );
