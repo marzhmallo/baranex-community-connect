@@ -138,6 +138,52 @@ const DocumentsPage = () => {
     }
   });
 
+  // Fetch document request stats
+  const { data: documentStats } = useQuery({
+    queryKey: ['document-request-stats'],
+    queryFn: async () => {
+      if (!adminProfileId) return null;
+
+      // Get current admin's brgyid
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('id', adminProfileId)
+        .single();
+
+      if (!profile?.brgyid) return null;
+
+      // Get total documents count
+      const { count: totalCount } = await supabase
+        .from('docrequests')
+        .select('*', { count: 'exact', head: true })
+        .eq('brgyid', profile.brgyid);
+
+      // Get pending requests count
+      const { count: pendingCount } = await supabase
+        .from('docrequests')
+        .select('*', { count: 'exact', head: true })
+        .eq('brgyid', profile.brgyid)
+        .eq('status', 'pending');
+
+      // Get documents issued today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count: issuedTodayCount } = await supabase
+        .from('docrequests')
+        .select('*', { count: 'exact', head: true })
+        .eq('brgyid', profile.brgyid)
+        .in('status', ['approved', 'processing', 'completed'])
+        .gte('updated_at', today.toISOString());
+
+      return {
+        total: totalCount || 0,
+        pending: pendingCount || 0,
+        issuedToday: issuedTodayCount || 0
+      };
+    }
+  });
+
   // Fetch document processing status data
   const { data: processingStats } = useQuery({
     queryKey: ['document-processing-stats'],
@@ -521,7 +567,7 @@ const DocumentsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Documents</p>
-                <p className="text-2xl font-bold text-foreground">1,247</p>
+                <p className="text-2xl font-bold text-foreground">{documentStats?.total || 0}</p>
               </div>
               <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full">
                 <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -535,7 +581,7 @@ const DocumentsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Pending Requests</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">23</p>
+                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{documentStats?.pending || 0}</p>
               </div>
               <div className="bg-orange-100 dark:bg-orange-900/20 p-3 rounded-full">
                 <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -549,7 +595,7 @@ const DocumentsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Issued Today</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">8</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{documentStats?.issuedToday || 0}</p>
               </div>
               <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
                 <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
