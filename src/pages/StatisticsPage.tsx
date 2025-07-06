@@ -9,7 +9,7 @@ interface StatisticsData {
   totalHouseholds: number;
   registeredVoters: number;
   totalPuroks: number;
-  genderDistribution: { male: number; female: number };
+  genderDistribution: { male: number; female: number; others: number };
   ageDistribution: { [key: string]: number };
   purokDistribution: { [key: string]: number };
   voterPercentage: number;
@@ -44,6 +44,7 @@ const StatisticsPage = () => {
         // Gender distribution
         const maleCount = residents?.filter(r => r.gender === 'Male').length || 0;
         const femaleCount = residents?.filter(r => r.gender === 'Female').length || 0;
+        const othersCount = residents?.filter(r => r.gender && r.gender !== 'Male' && r.gender !== 'Female').length || 0;
 
         // Age distribution
         const ageGroups = {
@@ -80,7 +81,7 @@ const StatisticsPage = () => {
           totalHouseholds,
           registeredVoters,
           totalPuroks,
-          genderDistribution: { male: maleCount, female: femaleCount },
+          genderDistribution: { male: maleCount, female: femaleCount, others: othersCount },
           ageDistribution: ageGroups,
           purokDistribution: purokCounts,
           voterPercentage,
@@ -109,6 +110,7 @@ const StatisticsPage = () => {
 
   const malePercentage = statistics!.totalResidents > 0 ? (statistics!.genderDistribution.male / statistics!.totalResidents) * 100 : 0;
   const femalePercentage = statistics!.totalResidents > 0 ? (statistics!.genderDistribution.female / statistics!.totalResidents) * 100 : 0;
+  const othersPercentage = statistics!.totalResidents > 0 ? (statistics!.genderDistribution.others / statistics!.totalResidents) * 100 : 0;
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-gradient-to-br from-background to-secondary/20 min-h-screen">
@@ -205,6 +207,19 @@ const StatisticsPage = () => {
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div className="bg-pink-500 h-2 rounded-full" style={{width: `${femalePercentage}%`}}></div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-purple-500 rounded mr-3"></div>
+                <span className="text-foreground">Others</span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-lg font-semibold text-foreground mr-3">{statistics!.genderDistribution.others.toLocaleString()}</span>
+                <span className="text-sm text-muted-foreground">{othersPercentage.toFixed(1)}%</span>
+              </div>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2">
+              <div className="bg-purple-500 h-2 rounded-full" style={{width: `${othersPercentage}%`}}></div>
             </div>
           </div>
         </div>
