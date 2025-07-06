@@ -397,8 +397,10 @@ export type Database = {
         Row: {
           amount: number | null
           brgyid: string
+          "contact#": number | null
           created_at: string
           docnumber: string
+          email: string | null
           id: string
           issued_at: string
           method: string | null
@@ -417,8 +419,10 @@ export type Database = {
         Insert: {
           amount?: number | null
           brgyid?: string
+          "contact#"?: number | null
           created_at?: string
           docnumber: string
+          email?: string | null
           id?: string
           issued_at: string
           method?: string | null
@@ -437,8 +441,10 @@ export type Database = {
         Update: {
           amount?: number | null
           brgyid?: string
+          "contact#"?: number | null
           created_at?: string
           docnumber?: string
+          email?: string | null
           id?: string
           issued_at?: string
           method?: string | null
