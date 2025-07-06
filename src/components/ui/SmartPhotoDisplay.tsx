@@ -118,17 +118,15 @@ const SmartPhotoDisplay = ({
 
   return (
     <>
-      <div className={`relative ${avatarSize}`}>
+      <div className={`relative ${avatarSize} border rounded-lg overflow-hidden bg-muted`}>
         {/* Placeholder/Fallback (Always visible underneath) */}
-        <Avatar className={avatarSize}>
-          <AvatarFallback>
-            {fallbackContent || alt.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+          {fallbackContent || alt.charAt(0).toUpperCase()}
+        </div>
         
         {/* Loading Spinner Overlay */}
         {isLoadingPhoto && (
-          <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <div className="w-6 h-6 border-2 border-t-white border-gray-400 rounded-full animate-spin"></div>
           </div>
         )}
@@ -139,15 +137,13 @@ const SmartPhotoDisplay = ({
             className={`absolute inset-0 ${enableZoom ? 'cursor-pointer group' : ''}`}
             onClick={enableZoom ? () => setShowFullPhoto(true) : undefined}
           >
-            <Avatar className={avatarSize}>
-              <AvatarImage 
-                src={photoUrl} 
-                alt={alt}
-                className={`transition-opacity duration-300 ${photoUrl ? 'opacity-100' : 'opacity-0'}`}
-              />
-            </Avatar>
+            <img 
+              src={photoUrl} 
+              alt={alt}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${photoUrl ? 'opacity-100' : 'opacity-0'}`}
+            />
             {enableZoom && (
-              <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                 <ZoomIn className="text-white h-8 w-8" />
               </div>
             )}
