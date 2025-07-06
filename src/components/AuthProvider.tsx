@@ -373,6 +373,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 navigate("/dashboard");
               } else if (profileData.role === "glyph") {
                 navigate("/echelon");
+              } else if (profileData.role === "overseer") {
+                navigate("/plaza");
               }
             }
           }
@@ -433,6 +435,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               navigate("/dashboard");
             } else if (profileData.role === "glyph") {
               navigate("/echelon");
+            } else if (profileData.role === "overseer") {
+              navigate("/plaza");
             }
           }
         } else {

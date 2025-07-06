@@ -45,6 +45,7 @@ import UserEmergencyPage from "./components/user/UserEmergencyPage";
 import UserSettingsPage from "./components/user/UserSettingsPage";
 import UserOfficialDetailsPage from "./components/user/UserOfficialDetailsPage";
 import EchelonPage from "./pages/EchelonPage";
+import PlazaPage from "./pages/PlazaPage";
 
 // Component to protect glyph-only routes
 const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
@@ -70,6 +71,42 @@ const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
       return <Navigate to="/hub" replace />;
     } else if (userProfile.role === "admin" || userProfile.role === "staff") {
       return <Navigate to="/dashboard" replace />;
+    } else if (userProfile.role === "overseer") {
+      return <Navigate to="/plaza" replace />;
+    } else {
+      return <Navigate to="/login" replace />;
+    }
+  }
+  
+  return <>{children}</>;
+};
+
+// Component to protect overseer-only routes
+const OverseerRoute = ({ children }: { children: React.ReactNode }) => {
+  const { userProfile, loading } = useAuth();
+  
+  // Show loading while authentication is being determined
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  // If not authenticated, redirect to login
+  if (!userProfile) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // If not overseer role, redirect to appropriate dashboard based on role
+  if (userProfile.role !== "overseer") {
+    if (userProfile.role === "user") {
+      return <Navigate to="/hub" replace />;
+    } else if (userProfile.role === "admin" || userProfile.role === "staff") {
+      return <Navigate to="/dashboard" replace />;
+    } else if (userProfile.role === "glyph") {
+      return <Navigate to="/echelon" replace />;
     } else {
       return <Navigate to="/login" replace />;
     }
@@ -245,6 +282,9 @@ const AppContent = () => {
             
             {/* Glyph-only Routes - Always available for proper redirection */}
             <Route path="/echelon" element={<GlyphRoute><EchelonPage /></GlyphRoute>} />
+            
+            {/* Overseer-only Routes - Always available for proper redirection */}
+            <Route path="/plaza" element={<OverseerRoute><PlazaPage /></OverseerRoute>} />
             
             {/* Default redirects - redirect to login instead of dashboard */}
             <Route path="/" element={<Navigate to="/login" replace />} />
