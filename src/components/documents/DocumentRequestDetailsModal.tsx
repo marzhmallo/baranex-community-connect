@@ -166,12 +166,12 @@ const DocumentRequestDetailsModal = ({
               {request.paymenturl && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">Payment Proof</p>
-                  <div className="flex justify-center">
+                  <div className="mx-4">
                     <SmartPhotoDisplay
                       bucketName="cashg"
                       filePath={request.paymenturl}
                       isPublic={true}
-                      className="w-48 h-48"
+                      className="w-full h-64"
                       alt="Payment Screenshot"
                       fallbackContent="💳"
                       enableZoom={true}

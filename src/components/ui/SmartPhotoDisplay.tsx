@@ -155,17 +155,17 @@ const SmartPhotoDisplay = ({
       {enableZoom && photoUrl && (
         <Dialog open={showFullPhoto} onOpenChange={setShowFullPhoto}>
           <DialogContent 
-            className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center"
+            className="sm:max-w-[95vw] md:max-w-[90vw] max-h-[95vh] p-0 bg-transparent border-0 shadow-none flex items-center justify-center"
             hideCloseButton={true}
           >
             <div 
-              className="relative w-full h-full flex items-center justify-center bg-black/70 p-2 rounded-lg"
+              className="relative w-full h-full flex items-center justify-center bg-black/80 p-4 rounded-lg"
               onClick={() => setShowFullPhoto(false)}
             >
               <img 
                 src={photoUrl} 
                 alt={alt} 
-                className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
+                className="max-h-[90vh] max-w-full object-contain rounded shadow-2xl" 
               />
               <Button 
                 variant="ghost" 
