@@ -371,6 +371,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 navigate("/hub");
               } else if (profileData.role === "admin" || profileData.role === "staff") {
                 navigate("/dashboard");
+              } else if (profileData.role === "glyph") {
+                navigate("/echelon");
               }
             }
           }
@@ -429,6 +431,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               navigate("/hub");
             } else if (profileData.role === "admin" || profileData.role === "staff") {
               navigate("/dashboard");
+            } else if (profileData.role === "glyph") {
+              navigate("/echelon");
             }
           }
         } else {
