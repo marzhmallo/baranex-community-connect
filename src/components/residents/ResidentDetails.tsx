@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,7 @@ type ResidentDetailsProps = {
 const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showFullPhoto, setShowFullPhoto] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const navigate = useNavigate();
   
   // Fetch household information
@@ -47,6 +48,51 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     },
     enabled: !!resident?.householdId,
   });
+  
+  // Generate signed URL for display
+  const generateSignedUrl = async (url: string) => {
+    if (!url) return undefined;
+
+    try {
+      // Extract file path from URL (works for both public and signed URLs)
+      let filePath = '';
+      
+      // Check if it's a public URL format
+      if (url.includes('/storage/v1/object/public/residentphotos/')) {
+        filePath = url.split('/storage/v1/object/public/residentphotos/')[1];
+      } else if (url.includes('/storage/v1/object/sign/residentphotos/')) {
+        filePath = url.split('/storage/v1/object/sign/residentphotos/')[1].split('?')[0];
+      } else {
+        // If it's already a file path, use it directly
+        filePath = url.startsWith('resident/') ? url : `resident/${url}`;
+      }
+
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from('residentphotos')
+        .createSignedUrl(filePath, 600); // 10 minutes expiration
+
+      if (signedUrlError) {
+        console.error('Error generating signed URL:', signedUrlError);
+        return undefined;
+      }
+
+      return signedUrlData.signedUrl;
+    } catch (error) {
+      console.error('Error generating signed URL:', error);
+      return undefined;
+    }
+  };
+
+  // Generate signed URL when resident.photoUrl changes
+  useEffect(() => {
+    if (resident?.photoUrl) {
+      generateSignedUrl(resident.photoUrl).then(signedUrl => {
+        setPhotoUrl(signedUrl);
+      });
+    } else {
+      setPhotoUrl(undefined);
+    }
+  }, [resident?.photoUrl]);
   
   if (!resident) return null;
 
@@ -196,7 +242,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                       {resident.photoUrl ? (
                         <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
                           <Avatar className="w-24 h-24">
-                            <AvatarImage src={resident.photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
+                            <AvatarImage src={photoUrl} alt={`${resident.firstName} ${resident.lastName}`} />
                             <AvatarFallback className="text-2xl">
                               {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
                             </AvatarFallback>
@@ -224,11 +270,11 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                               className="relative w-full h-full flex items-center justify-center bg-black/70 p-2 rounded-lg"
                               onClick={() => setShowFullPhoto(false)}
                             >
-                              <img 
-                                src={resident.photoUrl} 
-                                alt={`${resident.firstName} ${resident.lastName}`} 
-                                className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
-                              />
+                               <img 
+                                 src={photoUrl} 
+                                 alt={`${resident.firstName} ${resident.lastName}`} 
+                                 className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
+                               />
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
