@@ -164,15 +164,26 @@ const DocumentRequestDetailsModal = ({
 
               {request.paymenturl && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Payment Proof</p>
-                  <a 
-                    href={request.paymenturl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline text-sm"
-                  >
-                    View Payment Screenshot
-                  </a>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Payment Proof</p>
+                  <div className="border rounded-lg overflow-hidden">
+                    <img 
+                      src={request.paymenturl} 
+                      alt="Payment Screenshot"
+                      className="max-w-full h-auto max-h-64 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <a 
+                      href={request.paymenturl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline text-sm p-2 block hidden"
+                    >
+                      View Payment Screenshot (Link)
+                    </a>
+                  </div>
                 </div>
               )}
             </CardContent>
