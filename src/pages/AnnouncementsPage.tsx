@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
@@ -32,6 +32,22 @@ const AnnouncementsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedAudiences, setSelectedAudiences] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'date' | 'priority' | 'category' | 'status'>('date');
+  const [openDropdown, setOpenDropdown] = useState<'category' | 'audience' | 'sort' | null>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openDropdown && !(event.target as Element)?.closest('.dropdown-container')) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openDropdown]);
 
   // Fetch announcements from Supabase
   const { data: announcements, isLoading, error, refetch } = useQuery({
@@ -118,79 +134,129 @@ const AnnouncementsPage = () => {
             </div>
             
             <div className="flex flex-wrap gap-3">
-              <details className="relative">
-                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
+              {/* Category Filter */}
+              <div className="relative dropdown-container">
+                <button
+                  onClick={() => setOpenDropdown(openDropdown === 'category' ? null : 'category')}
+                  className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border"
+                >
                   <FolderOpen className="text-secondary-foreground h-4 w-4" />
-                  Category
+                  Category {selectedCategories.length > 0 && `(${selectedCategories.length})`}
                   <span className="text-muted-foreground">▼</span>
-                </summary>
-                <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
-                  <div className="p-2">
-                    {['Emergency', 'Event', 'Health', 'Service', 'News'].map(category => (
-                      <label key={category} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer border-b border-border/50 last:border-b-0">
-                        <input 
-                          type="checkbox" 
-                          className="rounded" 
-                          checked={selectedCategories.includes(category)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedCategories([...selectedCategories, category]);
-                            } else {
-                              setSelectedCategories(selectedCategories.filter(c => c !== category));
-                            }
-                          }}
-                        />
-                        <span className="text-popover-foreground">{category}</span>
-                      </label>
-                    ))}
+                </button>
+                {openDropdown === 'category' && (
+                  <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
+                    <div className="p-2">
+                      {['Emergency', 'Event', 'Health', 'Service', 'News'].map(category => (
+                        <label key={category} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer border-b border-border/50 last:border-b-0">
+                          <input 
+                            type="checkbox" 
+                            className="rounded" 
+                            checked={selectedCategories.includes(category)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCategories([...selectedCategories, category]);
+                              } else {
+                                setSelectedCategories(selectedCategories.filter(c => c !== category));
+                              }
+                            }}
+                          />
+                          <span className="text-popover-foreground">{category}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </details>
+                )}
+              </div>
 
-              <details className="relative">
-                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
+              {/* Audience Filter */}
+              <div className="relative dropdown-container">
+                <button
+                  onClick={() => setOpenDropdown(openDropdown === 'audience' ? null : 'audience')}
+                  className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border"
+                >
                   <Users className="text-secondary-foreground h-4 w-4" />
-                  Audience
+                  Audience {selectedAudiences.length > 0 && `(${selectedAudiences.length})`}
                   <span className="text-muted-foreground">▼</span>
-                </summary>
-                <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
-                  <div className="p-2">
-                    {['All Residents', 'Senior Citizens', 'Business Owners', 'Students'].map(audience => (
-                      <label key={audience} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer border-b border-border/50 last:border-b-0">
-                        <input 
-                          type="checkbox" 
-                          className="rounded" 
-                          checked={selectedAudiences.includes(audience)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedAudiences([...selectedAudiences, audience]);
-                            } else {
-                              setSelectedAudiences(selectedAudiences.filter(a => a !== audience));
-                            }
-                          }}
-                        />
-                        <span className="text-popover-foreground">{audience}</span>
-                      </label>
-                    ))}
+                </button>
+                {openDropdown === 'audience' && (
+                  <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
+                    <div className="p-2">
+                      {['All Residents', 'Senior Citizens', 'Business Owners', 'Students'].map(audience => (
+                        <label key={audience} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer border-b border-border/50 last:border-b-0">
+                          <input 
+                            type="checkbox" 
+                            className="rounded" 
+                            checked={selectedAudiences.includes(audience)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedAudiences([...selectedAudiences, audience]);
+                              } else {
+                                setSelectedAudiences(selectedAudiences.filter(a => a !== audience));
+                              }
+                            }}
+                          />
+                          <span className="text-popover-foreground">{audience}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </details>
+                )}
+              </div>
 
-              <details className="relative">
-                <summary className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
+              {/* Sort By */}
+              <div className="relative dropdown-container">
+                <button
+                  onClick={() => setOpenDropdown(openDropdown === 'sort' ? null : 'sort')}
+                  className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border"
+                >
                   <SortAsc className="text-secondary-foreground h-4 w-4" />
-                  Sort By
+                  Sort By: {sortBy === 'date' ? 'Date Created' : sortBy === 'priority' ? 'Priority' : sortBy === 'category' ? 'Category' : 'Status'}
                   <span className="text-muted-foreground">▼</span>
-                </summary>
-                <div className="absolute top-full right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
-                  <div className="p-2">
-                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50">Date Created</button>
-                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50">Priority</button>
-                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50">Category</button>
-                    <button className="w-full text-left p-2 hover:bg-accent text-popover-foreground rounded">Status</button>
+                </button>
+                {openDropdown === 'sort' && (
+                  <div className="absolute top-full right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
+                    <div className="p-2">
+                      <button 
+                        onClick={() => {
+                          setSortBy('date');
+                          setOpenDropdown(null);
+                        }}
+                        className={`w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50 ${sortBy === 'date' ? 'bg-accent' : ''}`}
+                      >
+                        Date Created
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSortBy('priority');
+                          setOpenDropdown(null);
+                        }}
+                        className={`w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50 ${sortBy === 'priority' ? 'bg-accent' : ''}`}
+                      >
+                        Priority
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSortBy('category');
+                          setOpenDropdown(null);
+                        }}
+                        className={`w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50 ${sortBy === 'category' ? 'bg-accent' : ''}`}
+                      >
+                        Category
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSortBy('status');
+                          setOpenDropdown(null);
+                        }}
+                        className={`w-full text-left p-2 hover:bg-accent text-popover-foreground rounded ${sortBy === 'status' ? 'bg-accent' : ''}`}
+                      >
+                        Status
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </details>
+                )}
+              </div>
 
               {userProfile?.role === 'admin' && (
                 <button 
@@ -220,6 +286,7 @@ const AnnouncementsPage = () => {
             searchQuery={searchQuery}
             selectedCategories={selectedCategories}
             selectedAudiences={selectedAudiences}
+            sortBy={sortBy}
           />
         </div>
 

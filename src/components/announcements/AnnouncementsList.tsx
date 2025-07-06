@@ -288,6 +288,7 @@ interface AnnouncementListProps {
   searchQuery?: string;
   selectedCategories?: string[];
   selectedAudiences?: string[];
+  sortBy?: 'date' | 'priority' | 'category' | 'status';
 }
 
 const AnnouncementsList: React.FC<AnnouncementListProps> = ({ 
@@ -296,7 +297,8 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
   refetch,
   searchQuery = '',
   selectedCategories = [],
-  selectedAudiences = []
+  selectedAudiences = [],
+  sortBy = 'date'
 }) => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
@@ -323,9 +325,35 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
     return matchesSearch && matchesCategory && matchesAudience;
   });
 
-  const totalPages = Math.ceil(filteredAnnouncements.length / itemsPerPage);
+  // Sort announcements based on the selected sort option
+  const sortedAnnouncements = [...filteredAnnouncements].sort((a, b) => {
+    switch (sortBy) {
+      case 'date':
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case 'priority':
+        // Priority: Pinned > Public > Draft, then by date
+        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+        if (a.is_public !== b.is_public) return a.is_public ? -1 : 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case 'category':
+        return a.category.localeCompare(b.category);
+      case 'status':
+        // Status sorting: Pinned > Active > Draft
+        const getStatusPriority = (ann: Announcement) => {
+          if (ann.is_pinned) return 3;
+          if (ann.is_public) return 2;
+          return 1;
+        };
+        const priorityDiff = getStatusPriority(b) - getStatusPriority(a);
+        return priorityDiff !== 0 ? priorityDiff : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      default:
+        return 0;
+    }
+  });
+
+  const totalPages = Math.ceil(sortedAnnouncements.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedAnnouncements = filteredAnnouncements.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedAnnouncements = sortedAnnouncements.slice(startIndex, startIndex + itemsPerPage);
 
   const openDeleteDialog = (announcement: Announcement) => {
     setSelectedAnnouncement(announcement);
@@ -480,18 +508,18 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
           </div>
         ))}
         
-        {filteredAnnouncements.length === 0 && (
-          <div className="col-span-3 py-8 text-center text-muted-foreground">
-            No announcements found matching your search criteria.
+            {sortedAnnouncements.length === 0 && (
+              <div className="col-span-3 py-8 text-center text-muted-foreground">
+                No announcements found matching your search criteria.
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {filteredAnnouncements.length > 0 && (
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-          <div className="text-sm text-muted-foreground">
-            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredAnnouncements.length)} of {filteredAnnouncements.length} announcements
-          </div>
+          {sortedAnnouncements.length > 0 && (
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, sortedAnnouncements.length)} of {sortedAnnouncements.length} announcements
+              </div>
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
