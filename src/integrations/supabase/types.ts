@@ -462,20 +462,6 @@ export type Database = {
             referencedRelation: "barangays"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "certificates_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: false
-            referencedRelation: "admin_residents_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "certificates_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: false
-            referencedRelation: "residents"
-            referencedColumns: ["id"]
-          },
         ]
       }
       document_logs: {
