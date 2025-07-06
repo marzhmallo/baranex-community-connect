@@ -426,7 +426,7 @@ export type Database = {
           ornumber?: string | null
           paydate?: string | null
           paymenturl?: string | null
-          processedby?: string
+          processedby: string
           purpose: string
           receiver?: Json | null
           resident_id?: string | null
@@ -460,6 +460,13 @@ export type Database = {
             columns: ["brgyid"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "docrequests_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
