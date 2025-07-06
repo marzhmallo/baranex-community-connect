@@ -103,8 +103,14 @@ const DashboardCharts = () => {
     return `${sign}${rate.toFixed(1)}%`;
   };
 
-  // Colors for pie chart - expanded to include more colors for gender diversity
-  const pieColors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  // Helper function to get gender-specific colors
+  const getGenderColor = (gender: string) => {
+    const normalizedGender = gender.toLowerCase();
+    if (normalizedGender === 'male') return '#3b82f6'; // Blue
+    if (normalizedGender === 'female') return '#ec4899'; // Pink
+    if (normalizedGender === 'others' || normalizedGender === 'other') return '#10b981'; // Green
+    return '#6b7280'; // Gray for any other values
+  };
   
   if (error) {
     return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -310,7 +316,7 @@ const DashboardCharts = () => {
                       label={({ gender, percentage }) => `${gender}: ${percentage}%`}
                     >
                       {genderDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                        <Cell key={`cell-${index}`} fill={getGenderColor(entry.gender)} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value, name) => [value, 'Count']} />
@@ -322,7 +328,7 @@ const DashboardCharts = () => {
                       <div className="flex items-center gap-2">
                         <div 
                           className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: pieColors[index % pieColors.length] }} 
+                          style={{ backgroundColor: getGenderColor(item.gender) }} 
                         />
                         <span>{item.gender}</span>
                       </div>
