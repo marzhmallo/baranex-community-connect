@@ -283,8 +283,18 @@ const AppContent = () => {
             {/* Overseer-only Routes - Always available for proper redirection */}
             <Route path="/plaza" element={<OverseerRoute><PlazaPage /></OverseerRoute>} />
             
-            {/* Default redirects - redirect to login instead of dashboard */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            {/* Default route - let AuthProvider handle initial routing */}
+            <Route path="/" element={
+              userProfile ? (
+                userProfile.role === "user" ? <Navigate to="/hub" replace /> :
+                userProfile.role === "admin" || userProfile.role === "staff" ? <Navigate to="/dashboard" replace /> :
+                userProfile.role === "glyph" ? <Navigate to="/echelon" replace /> :
+                userProfile.role === "overseer" ? <Navigate to="/plaza" replace /> :
+                <Navigate to="/login" replace />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
