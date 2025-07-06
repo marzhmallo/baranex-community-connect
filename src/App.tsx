@@ -10,6 +10,7 @@ import { DataProvider } from "@/context/DataContext";
 import Sidebar from "./components/layout/Sidebar";
 import PublicSidebar from "./components/layout/PublicSidebar";
 import FloatingChatButton from "./components/chatbot/FloatingChatButton";
+import GlobalLoadingScreen from "./components/ui/GlobalLoadingScreen";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -218,11 +219,7 @@ const AppContent = () => {
   
   // Show loading screen while auth is being determined
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <GlobalLoadingScreen />;
   }
   
   return (

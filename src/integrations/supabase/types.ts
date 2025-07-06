@@ -1443,10 +1443,10 @@ export type Database = {
           phone: string | null
           profile_picture: string | null
           purok: string
-          role: string | null
+          role: string
           status: string
           superior_admin: boolean
-          username: string | null
+          username: string
         }
         Insert: {
           adminid?: string | null
@@ -1465,10 +1465,10 @@ export type Database = {
           phone?: string | null
           profile_picture?: string | null
           purok: string
-          role?: string | null
+          role: string
           status?: string
           superior_admin?: boolean
-          username?: string | null
+          username: string
         }
         Update: {
           adminid?: string | null
@@ -1487,10 +1487,10 @@ export type Database = {
           phone?: string | null
           profile_picture?: string | null
           purok?: string
-          role?: string | null
+          role?: string
           status?: string
           superior_admin?: boolean
-          username?: string | null
+          username?: string
         }
         Relationships: [
           {
