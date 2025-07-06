@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Download, Edit, Trash2, Search, Plus, Filter, MoreHorizontal, Clock, CheckCircle, AlertCircle, XCircle, Eye, Upload, BarChart3, Settings, FileCheck, TrendingUp, Check, X } from "lucide-react";
+import { FileText, Download, Edit, Trash2, Search, Plus, Filter, MoreHorizontal, Clock, CheckCircle, AlertCircle, XCircle, Eye, Upload, BarChart3, Settings, FileCheck, TrendingUp, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,6 +17,8 @@ import IssueDocumentForm from "./IssueDocumentForm";
 import DocumentViewDialog from "./DocumentViewDialog";
 import DocumentDeleteDialog from "./DocumentDeleteDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
+import { formatDistanceToNow } from "date-fns";
 
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,10 +33,72 @@ const DocumentsPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Document requests state
+  const [documentRequests, setDocumentRequests] = useState<any[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(true);
+  const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  
   const itemsPerPage = 3;
   const { toast } = useToast();
+  const { adminProfileId } = useCurrentAdmin();
 
-  // Fetch document types from the database
+  // Fetch document requests from Supabase
+  useEffect(() => {
+    fetchDocumentRequests();
+  }, [requestsCurrentPage]);
+
+  const fetchDocumentRequests = async () => {
+    setRequestsLoading(true);
+    try {
+      // Build query for pending requests only
+      let query = supabase
+        .from('docrequests')
+        .select(`
+          *,
+          residents(first_name, last_name)
+        `, { count: 'exact' })
+        .eq('status', 'pending');
+
+      // Apply pagination
+      const from = (requestsCurrentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+      query = query.range(from, to);
+
+      // Order by created_at desc
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching document requests:', error);
+        return;
+      }
+
+      // Map data to match the expected format
+      const mappedData = data?.map(doc => ({
+        id: doc.id,
+        name: doc.residents ? 
+          `${doc.residents.first_name} ${doc.residents.last_name}` : 
+          (doc.receiver && typeof doc.receiver === 'string' ? 
+            JSON.parse(doc.receiver).name || 'Unknown' : 
+            'Unknown'),
+        document: doc.type,
+        timeAgo: formatDistanceToNow(new Date(doc.created_at), { addSuffix: true }),
+        status: doc.status,
+        docnumber: doc.docnumber,
+        purpose: doc.purpose
+      })) || [];
+
+      setDocumentRequests(mappedData);
+      setTotalCount(count || 0);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
   const { data: documentTypes, isLoading: isLoadingDocuments, refetch: refetchDocuments } = useQuery({
     queryKey: ['document-types', searchQuery],
     queryFn: async () => {
@@ -130,29 +194,8 @@ const DocumentsPage = () => {
     color: "text-purple-500"
   }];
 
-  // Mock data for document requests
-  const documentRequests = [{
-    id: "1",
-    name: "Maria Santos",
-    document: "Barangay Clearance",
-    timeAgo: "2 hours ago",
-    status: "pending",
-    statusColor: "bg-yellow-500"
-  }, {
-    id: "2",
-    name: "Juan Dela Cruz",
-    document: "Certificate of Residency",
-    timeAgo: "5 hours ago",
-    status: "pending",
-    statusColor: "bg-yellow-500"
-  }, {
-    id: "3",
-    name: "Anna Reyes",
-    document: "Business Permit",
-    timeAgo: "1 day ago",
-    status: "pending",
-    statusColor: "bg-yellow-500"
-  }];
+  // Mock data for document requests - REPLACED WITH REAL DATA ABOVE
+  // const documentRequests = [{...}];
 
   // Mock data for document tracking
   const documentTracking = [{
@@ -251,22 +294,87 @@ const DocumentsPage = () => {
     trackingId: "#BRG-2023-0039"
   }];
 
-  // Add new handlers for approve/deny actions
-  const handleApproveRequest = (requestId: string, requestorName: string) => {
-    toast({
-      title: "Document Request Approved",
-      description: `${requestorName}'s document request has been approved and is now being processed.`,
-    });
-    console.log(`Approved request ${requestId} for ${requestorName}`);
+  // Real handlers for approve/deny actions
+  const handleApproveRequest = async (id: string, name: string) => {
+    if (!adminProfileId) {
+      toast({
+        title: "Error",
+        description: "Admin profile not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('docrequests')
+        .update({ 
+          status: 'approved',
+          processedby: adminProfileId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Request Approved",
+        description: `Approved request for ${name}`,
+      });
+
+      // Refresh the list
+      fetchDocumentRequests();
+    } catch (error) {
+      console.error('Error approving request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve request",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDenyRequest = (requestId: string, requestorName: string) => {
-    toast({
-      title: "Document Request Denied",
-      description: `${requestorName}'s document request has been denied.`,
-      variant: "destructive",
-    });
-    console.log(`Denied request ${requestId} for ${requestorName}`);
+  const handleDenyRequest = async (id: string, name: string) => {
+    if (!adminProfileId) {
+      toast({
+        title: "Error",
+        description: "Admin profile not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('docrequests')
+        .update({ 
+          status: 'rejected',
+          processedby: adminProfileId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Request Denied",
+        description: `Denied request for ${name}`,
+      });
+
+      // Refresh the list
+      fetchDocumentRequests();
+    } catch (error) {
+      console.error('Error denying request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to deny request",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditTemplate = (template) => {
@@ -473,47 +581,84 @@ const DocumentsPage = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {documentRequests.map(request => 
-                <div key={request.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-foreground">{request.name.split(' ').map(n => n[0]).join('')}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-foreground">{request.name}</h4>
-                      <p className="text-sm text-muted-foreground">{request.document}</p>
-                      <p className="text-xs text-muted-foreground">{request.timeAgo}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleApproveRequest(request.id, request.name)}
-                      className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:text-green-300"
-                    >
-                      <Check className="h-3 w-3 mr-1" />
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDenyRequest(request.id, request.name)}
-                      className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:text-red-300"
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      Deny
-                    </Button>
-                  </div>
-                </div>
-              )}
-              <div className="flex justify-center pt-4">
-                <Button variant="link" className="text-purple-600 dark:text-purple-400">
-                  View All Requests →
-                </Button>
+            {requestsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
+                <p className="ml-2 text-sm text-muted-foreground">Loading requests...</p>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                {documentRequests.length > 0 ? (
+                  <>
+                    {documentRequests.map(request => 
+                      <div key={request.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-foreground">{request.name.split(' ').map((n: string) => n[0]).join('')}</span>
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-foreground">{request.name}</h4>
+                            <p className="text-sm text-muted-foreground">{request.document}</p>
+                            <p className="text-xs text-muted-foreground">{request.timeAgo}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleApproveRequest(request.id, request.name)}
+                            className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:text-green-300"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDenyRequest(request.id, request.name)}
+                            className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:text-red-300"
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Deny
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                     {/* Pagination */}
+                     {Math.ceil(totalCount / itemsPerPage) > 1 && (
+                       <div className="flex items-center justify-between pt-4">
+                         <p className="text-xs text-muted-foreground">
+                           Page {requestsCurrentPage} of {Math.ceil(totalCount / itemsPerPage)}
+                         </p>
+                         <div className="flex items-center space-x-2">
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => setRequestsCurrentPage(prev => Math.max(prev - 1, 1))}
+                             disabled={requestsCurrentPage === 1}
+                           >
+                             <ChevronLeft className="h-3 w-3" />
+                           </Button>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => setRequestsCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalCount / itemsPerPage)))}
+                             disabled={requestsCurrentPage === Math.ceil(totalCount / itemsPerPage)}
+                           >
+                             <ChevronRight className="h-3 w-3" />
+                           </Button>
+                         </div>
+                       </div>
+                     )}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted-foreground">No pending requests found</p>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
