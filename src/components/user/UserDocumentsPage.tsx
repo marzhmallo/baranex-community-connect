@@ -368,19 +368,56 @@ const UserDocumentsPage = () => {
                       <Pagination>
                         <PaginationContent>
                           <PaginationItem>
-                            <PaginationPrevious href="#" className="hover:bg-accent" />
+                            <PaginationPrevious 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                // Add pagination logic here
+                              }}
+                              className="hover:bg-accent cursor-pointer" 
+                            />
                           </PaginationItem>
                           <PaginationItem>
-                            <PaginationLink href="#" isActive className="bg-primary text-primary-foreground">1</PaginationLink>
+                            <PaginationLink 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                // Add page selection logic here
+                              }}
+                              isActive 
+                              className="bg-primary text-primary-foreground cursor-pointer"
+                            >
+                              1
+                            </PaginationLink>
                           </PaginationItem>
                           <PaginationItem>
-                            <PaginationLink href="#" className="hover:bg-accent">2</PaginationLink>
+                            <PaginationLink 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                // Add page selection logic here
+                              }}
+                              className="hover:bg-accent cursor-pointer"
+                            >
+                              2
+                            </PaginationLink>
                           </PaginationItem>
                           <PaginationItem>
-                            <PaginationLink href="#" className="hover:bg-accent">3</PaginationLink>
+                            <PaginationLink 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                // Add page selection logic here
+                              }}
+                              className="hover:bg-accent cursor-pointer"
+                            >
+                              3
+                            </PaginationLink>
                           </PaginationItem>
                           <PaginationItem>
-                            <PaginationNext href="#" className="hover:bg-accent" />
+                            <PaginationNext 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                // Add pagination logic here
+                              }}
+                              className="hover:bg-accent cursor-pointer" 
+                            />
                           </PaginationItem>
                         </PaginationContent>
                       </Pagination>
