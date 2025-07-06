@@ -660,18 +660,18 @@ const RiskMapPage = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Left Sidebar */}
-      <aside className="w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-full md:w-1/3 lg:w-1/4 bg-card border-r border-border flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b">
-          <h1 className="text-xl font-bold text-gray-800">Emergency Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage all emergency-related locations.</p>
+        <div className="p-4 border-b border-border">
+          <h1 className="text-xl font-bold text-foreground">Emergency Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage all emergency-related locations.</p>
         </div>
 
         {/* Layer Toggles */}
-        <div className="p-4 border-b space-y-2">
-          <h3 className="font-semibold text-gray-700">Map Layers</h3>
+        <div className="p-4 border-b border-border space-y-2">
+          <h3 className="font-semibold text-foreground">Map Layers</h3>
           <label className="flex items-center space-x-2 cursor-pointer">
             <input 
               type="checkbox" 
@@ -679,25 +679,25 @@ const RiskMapPage = () => {
               onChange={() => handleLayerToggle('zones')}
               className="form-checkbox text-red-600" 
             />
-            <span className="text-sm text-red-600">Disaster Zones</span>
+            <span className="text-sm text-destructive">Disaster Zones</span>
           </label>
           <label className="flex items-center space-x-2 cursor-pointer">
             <input 
               type="checkbox" 
               checked={showCenters}
               onChange={() => handleLayerToggle('centers')}
-              className="form-checkbox text-green-600" 
+              className="form-checkbox accent-primary" 
             />
-            <span className="text-sm text-green-600">Evacuation Centers</span>
+            <span className="text-sm text-primary">Evacuation Centers</span>
           </label>
           <label className="flex items-center space-x-2 cursor-pointer">
             <input 
               type="checkbox" 
               checked={showRoutes}
               onChange={() => handleLayerToggle('routes')}
-              className="form-checkbox text-blue-600" 
+              className="form-checkbox accent-primary" 
             />
-            <span className="text-sm text-blue-600">Safe Routes</span>
+            <span className="text-sm text-primary">Safe Routes</span>
           </label>
         </div>
 
@@ -711,21 +711,21 @@ const RiskMapPage = () => {
                   <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                   </svg>
-                  <span className="font-semibold text-gray-800">Disaster Zones</span>
-                  <span className="ml-auto text-sm text-gray-500">({disasterZones.length})</span>
+                  <span className="font-semibold text-foreground">Disaster Zones</span>
+                  <span className="ml-auto text-sm text-muted-foreground">({disasterZones.length})</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-0 pb-0">
                 {disasterZones.map(zone => (
                   <div 
                     key={zone.id}
-                    className="px-4 py-3 border-t hover:bg-gray-50 transition-colors flex items-center justify-between"
+                    className="px-4 py-3 border-t border-border hover:bg-accent transition-colors flex items-center justify-between"
                   >
                     <div
                       className="cursor-pointer flex-1"
                       onClick={() => focusOnItem(zone, 'zone')}
                     >
-                      <h4 className="font-semibold text-gray-700">{zone.zone_name}</h4>
+                      <h4 className="font-semibold text-foreground">{zone.zone_name}</h4>
                       <p className={`text-sm ${zone.risk_level === 'high' ? 'text-red-600' : zone.risk_level === 'medium' ? 'text-orange-500' : 'text-green-600'}`}>
                         Risk: <span className="font-medium capitalize">{zone.risk_level}</span>
                       </p>
@@ -736,10 +736,10 @@ const RiskMapPage = () => {
                         setSelectedZone(zone);
                         setShowZoneDetails(true);
                       }}
-                      className="ml-2 p-1 hover:bg-gray-200 rounded transition-colors"
+                      className="ml-2 p-1 hover:bg-accent rounded transition-colors"
                       title="View details"
                     >
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </div>
                 ))}
@@ -753,21 +753,21 @@ const RiskMapPage = () => {
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                   </svg>
-                  <span className="font-semibold text-gray-800">Evacuation Centers</span>
-                  <span className="ml-auto text-sm text-gray-500">({evacCenters.length})</span>
+                  <span className="font-semibold text-foreground">Evacuation Centers</span>
+                  <span className="ml-auto text-sm text-muted-foreground">({evacCenters.length})</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-0 pb-0">
                 {evacCenters.map(center => (
                   <div 
                     key={center.id}
-                    className="px-4 py-3 border-t hover:bg-gray-50 transition-colors flex items-center justify-between"
+                    className="px-4 py-3 border-t border-border hover:bg-accent transition-colors flex items-center justify-between"
                   >
                     <div
                       className="cursor-pointer flex-1"
                       onClick={() => focusOnItem(center, 'center')}
                     >
-                      <h4 className="font-semibold text-gray-700">{center.name}</h4>
+                      <h4 className="font-semibold text-foreground">{center.name}</h4>
                     </div>
                     <button
                       onClick={(e) => {
@@ -775,10 +775,10 @@ const RiskMapPage = () => {
                         setSelectedCenter(center);
                         setShowCenterDetails(true);
                       }}
-                      className="ml-2 p-1 hover:bg-gray-200 rounded transition-colors"
+                      className="ml-2 p-1 hover:bg-accent rounded transition-colors"
                       title="View details"
                     >
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </div>
                 ))}
@@ -792,21 +792,21 @@ const RiskMapPage = () => {
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7m-6 3v7m6-10V7"></path>
                   </svg>
-                  <span className="font-semibold text-gray-800">Safe Routes</span>
-                  <span className="ml-auto text-sm text-gray-500">({safeRoutes.length})</span>
+                  <span className="font-semibold text-foreground">Safe Routes</span>
+                  <span className="ml-auto text-sm text-muted-foreground">({safeRoutes.length})</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-0 pb-0">
                 {safeRoutes.map(route => (
                   <div 
                     key={route.id}
-                    className="px-4 py-3 border-t hover:bg-gray-50 transition-colors flex items-center justify-between"
+                    className="px-4 py-3 border-t border-border hover:bg-accent transition-colors flex items-center justify-between"
                   >
                     <div
                       className="cursor-pointer flex-1"
                       onClick={() => focusOnItem(route, 'route')}
                     >
-                      <h4 className="font-semibold text-gray-700">{route.route_name}</h4>
+                      <h4 className="font-semibold text-foreground">{route.route_name}</h4>
                     </div>
                     <button
                       onClick={(e) => {
@@ -814,10 +814,10 @@ const RiskMapPage = () => {
                         setSelectedRoute(route);
                         setShowRouteDetails(true);
                       }}
-                      className="ml-2 p-1 hover:bg-gray-200 rounded transition-colors"
+                      className="ml-2 p-1 hover:bg-accent rounded transition-colors"
                       title="View details"
                     >
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </div>
                 ))}
@@ -827,13 +827,13 @@ const RiskMapPage = () => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t">
+        <div className="p-4 border-t border-border">
           <button 
             onClick={toggleDrawing}
             className={`w-full font-semibold py-3 rounded-lg transition ${
               isDrawing 
-                ? 'bg-red-600 hover:bg-red-700 text-white' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' 
+                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
             }`}
           >
             {isDrawing ? 'Cancel Drawing' : '+ Add New Location'}
@@ -843,33 +843,33 @@ const RiskMapPage = () => {
 
       {/* Map Container */}
       <main className="flex-1 relative">
-        <div ref={mapRef} className="h-full w-full bg-gray-300" />
+        <div ref={mapRef} className="h-full w-full bg-muted" />
       </main>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[2000]">
-          <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">Add Disaster Zone</h2>
-            <p className="text-sm text-gray-500 mb-6">Add a new disaster risk zone for your barangay.</p>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[2000]">
+          <div className="bg-card rounded-lg shadow-xl p-8 w-full max-w-md border border-border">
+            <h2 className="text-2xl font-bold text-foreground mb-1">Add Disaster Zone</h2>
+            <p className="text-sm text-muted-foreground mb-6">Add a new disaster risk zone for your barangay.</p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Zone Name</label>
+                <label className="block text-sm font-medium text-foreground">Zone Name</label>
                 <input 
                   type="text" 
                   value={formData.zoneName}
                   onChange={(e) => setFormData({...formData, zoneName: e.target.value})}
                   placeholder="e.g., Riverside Flood Area" 
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                  className="mt-1 block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" 
                   required 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Disaster Type</label>
+                <label className="block text-sm font-medium text-foreground">Disaster Type</label>
                 <select 
                   value={formData.disasterType}
                   onChange={(e) => setFormData({...formData, disasterType: e.target.value})}
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 >
                   <option value="flood">Flood Zone</option>
                   <option value="fire">Fire Hazard</option>
@@ -880,11 +880,11 @@ const RiskMapPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Risk Level</label>
+                <label className="block text-sm font-medium text-foreground">Risk Level</label>
                 <select 
                   value={formData.riskLevel}
                   onChange={(e) => setFormData({...formData, riskLevel: e.target.value as 'low' | 'medium' | 'high'})}
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 >
                   <option value="low">Low Risk</option>
                   <option value="medium">Medium Risk</option>
@@ -892,26 +892,26 @@ const RiskMapPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+                <label className="block text-sm font-medium text-foreground">Notes (Optional)</label>
                 <textarea 
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
                   rows={3} 
                   placeholder="e.g., Prone to flash floods during heavy rain." 
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 />
               </div>
               <div className="flex justify-end space-x-4 pt-4">
                 <button 
                   type="button" 
                   onClick={closeModal}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300"
+                  className="px-4 py-2 bg-secondary text-secondary-foreground font-semibold rounded-lg hover:bg-secondary/80"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90"
                 >
                   Save Zone
                 </button>
