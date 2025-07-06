@@ -45,8 +45,7 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
       
       const { data, error } = await supabase
         .from('document_types')
-        .select('*')
-        .eq('brgyid', userProfile.brgyid);
+        .select('*');
       
       console.log('Document types query result:', { data, error });
       
