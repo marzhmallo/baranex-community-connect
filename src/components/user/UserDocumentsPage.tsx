@@ -426,100 +426,6 @@ const UserDocumentsPage = () => {
             </CardContent>
           </Card>
 
-          <div className="mt-6 bg-white rounded-lg shadow-sm">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Advanced Filters
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
-                  <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">All Types</option>
-                    <option value="certificate">Certificates</option>
-                    <option value="permit">Permits</option>
-                    <option value="clearance">Clearances</option>
-                    <option value="id">IDs</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="date" 
-                      className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                    <span className="text-gray-500">to</span>
-                    <input 
-                      type="date" 
-                      className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="archived">Archived</option>
-                    <option value="expired">Expired</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Creator</label>
-                  <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">All Users</option>
-                    <option value="admin">Admin Users</option>
-                    <option value="staff">Staff Members</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">File Size</label>
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="number" 
-                      placeholder="Min KB"
-                      className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                    <span className="text-gray-500">to</span>
-                    <input 
-                      type="number" 
-                      placeholder="Max KB"
-                      className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                  <input 
-                    type="text" 
-                    placeholder="Enter tags..."
-                    className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-3">
-                <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                  Reset Filters
-                </button>
-                <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  Apply Filters
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="space-y-6">
@@ -742,129 +648,57 @@ const UserDocumentsPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Document Requests
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              <div className="border-l-4 border-orange-400 bg-orange-50 p-4 rounded-r-lg">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">Maria Santos</p>
-                    <p className="text-sm text-gray-600">Barangay Clearance</p>
-                    <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors">
-                      Approve
-                    </button>
-                    <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
-                      Deny
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-l-4 border-orange-400 bg-orange-50 p-4 rounded-r-lg">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">Juan Dela Cruz</p>
-                    <p className="text-sm text-gray-600">Certificate of Residency</p>
-                    <p className="text-xs text-gray-500 mt-1">5 hours ago</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors">
-                      Approve
-                    </button>
-                    <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
-                      Deny
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-l-4 border-orange-400 bg-orange-50 p-4 rounded-r-lg">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">Anna Reyes</p>
-                    <p className="text-sm text-gray-600">Business Permit</p>
-                    <p className="text-xs text-gray-500 mt-1">1 day ago</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors">
-                      Approve
-                    </button>
-                    <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
-                      Deny
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <button className="w-full mt-4 text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center justify-center gap-1">
-              View All Requests
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
+      <div className="bg-white rounded-lg shadow-sm">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <PlusCircle className="h-5 w-5" />
+            Quick Actions
+          </h2>
         </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-3">
+            <button 
+              onClick={() => setShowIssueForm(true)}
+              className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+            >
+              <div className="bg-primary-100 p-2 rounded-lg">
+                <PlusCircle className="h-5 w-5 text-primary-600" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">Issue New Document</p>
+                <p className="text-sm text-gray-500">Create and issue documents</p>
+              </div>
+            </button>
 
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <PlusCircle className="h-5 w-5" />
-              Quick Actions
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 gap-3">
-              <button 
-                onClick={() => setShowIssueForm(true)}
-                className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="bg-primary-100 p-2 rounded-lg">
-                  <PlusCircle className="h-5 w-5 text-primary-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">Issue New Document</p>
-                  <p className="text-sm text-gray-500">Create and issue documents</p>
-                </div>
-              </button>
+            <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <Upload className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">Upload Template</p>
+                <p className="text-sm text-gray-500">Add new document templates</p>
+              </div>
+            </button>
 
-              <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <Upload className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">Upload Template</p>
-                  <p className="text-sm text-gray-500">Add new document templates</p>
-                </div>
-              </button>
+            <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+              <div className="bg-green-100 p-2 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">View Reports</p>
+                <p className="text-sm text-gray-500">Document statistics and analytics</p>
+              </div>
+            </button>
 
-              <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <div className="bg-green-100 p-2 rounded-lg">
-                  <BarChart3 className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">View Reports</p>
-                  <p className="text-sm text-gray-500">Document statistics and analytics</p>
-                </div>
-              </button>
-
-              <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <div className="bg-orange-100 p-2 rounded-lg">
-                  <Settings className="h-5 w-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">System Settings</p>
-                  <p className="text-sm text-gray-500">Configure document settings</p>
-                </div>
-              </button>
-            </div>
+            <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <Settings className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">System Settings</p>
+                <p className="text-sm text-gray-500">Configure document settings</p>
+              </div>
+            </button>
           </div>
         </div>
       </div>
