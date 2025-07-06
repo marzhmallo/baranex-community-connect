@@ -47,6 +47,11 @@ const DocumentsPage = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isRequestDetailsOpen, setIsRequestDetailsOpen] = useState(false);
   
+  // Document tracking modals state
+  const [selectedTrackingItem, setSelectedTrackingItem] = useState(null);
+  const [isTrackingDetailsOpen, setIsTrackingDetailsOpen] = useState(false);
+  const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
+  
   const itemsPerPage = 3;
   const { toast } = useToast();
   const { adminProfileId } = useCurrentAdmin();
@@ -138,40 +143,128 @@ const DocumentsPage = () => {
     }
   });
 
+  // Fetch document request stats
+  const { data: documentStats } = useQuery({
+    queryKey: ['document-request-stats'],
+    queryFn: async () => {
+      console.log('DEBUG: adminProfileId:', adminProfileId);
+      if (!adminProfileId) {
+        console.log('DEBUG: No adminProfileId found');
+        return null;
+      }
+
+      // Get current admin's brgyid
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('id', adminProfileId)
+        .single();
+
+      console.log('DEBUG: Profile query result:', { profile, profileError });
+
+      if (!profile?.brgyid) {
+        console.log('DEBUG: No brgyid found in profile');
+        return null;
+      }
+
+      console.log('DEBUG: Using brgyid:', profile.brgyid);
+
+      // Get total documents count
+      const { count: totalCount, error: totalError } = await supabase
+        .from('docrequests')
+        .select('*', { count: 'exact', head: true })
+        .eq('brgyid', profile.brgyid);
+
+      console.log('DEBUG: Total count query:', { totalCount, totalError });
+
+      // Get pending requests count
+      const { count: pendingCount, error: pendingError } = await supabase
+        .from('docrequests')
+        .select('*', { count: 'exact', head: true })
+        .eq('brgyid', profile.brgyid)
+        .eq('status', 'pending');
+
+      console.log('DEBUG: Pending count query:', { pendingCount, pendingError });
+
+      // Get documents issued today (only those that have been processed by an admin)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count: issuedTodayCount, error: issuedError } = await supabase
+        .from('docrequests')
+        .select('*', { count: 'exact', head: true })
+        .eq('brgyid', profile.brgyid)
+        .not('processedby', 'is', null)
+        .in('status', ['approved', 'processing', 'completed'])
+        .gte('updated_at', today.toISOString());
+
+      console.log('DEBUG: Issued today query:', { issuedTodayCount, issuedError, todayISO: today.toISOString() });
+
+      const stats = {
+        total: totalCount || 0,
+        pending: pendingCount || 0,
+        issuedToday: issuedTodayCount || 0
+      };
+
+      console.log('DEBUG: Final stats:', stats);
+      return stats;
+    }
+  });
+
   // Fetch document processing status data
   const { data: processingStats } = useQuery({
     queryKey: ['document-processing-stats'],
     queryFn: async () => {
-      const { data: issuedDocs, error } = await supabase
-        .from('issued_documents')
-        .select('status, created_at, expiry_date');
+      console.log('DEBUG: Calling get_document_stats RPC');
+      const { data, error } = await supabase.rpc('get_document_stats');
       
-      if (error) throw error;
+      console.log('DEBUG: RPC result:', { data, error });
+      
+      if (error) {
+        console.log('DEBUG: RPC error:', error);
+        throw error;
+      }
 
-      const now = new Date();
+      // Cast data to the expected type
+      const statsData = data as { 
+        status_counts: Array<{ status: string; count: number }> | null;
+        avg_processing_time_interval: string | null;
+      } | null;
+
+      console.log('DEBUG: Processed statsData:', statsData);
+
+      // Process status counts into the expected format
+      const statusCounts = statsData?.status_counts || [];
+      console.log('DEBUG: Status counts from RPC:', statusCounts);
+      
       const stats = {
         readyForPickup: 0,
         processing: 0,
         forReview: 0,
         released: 0,
-        rejected: 0
+        rejected: 0,
+        avgProcessingTime: statsData?.avg_processing_time_interval
       };
 
-      issuedDocs?.forEach(doc => {
-        const status = doc.status?.toLowerCase();
-        if (status === 'issued' || status === 'ready') {
-          stats.readyForPickup++;
+      statusCounts.forEach((statusCount) => {
+        const status = statusCount.status?.toLowerCase();
+        const count = statusCount.count || 0;
+        
+        console.log('DEBUG: Processing status:', status, 'count:', count);
+        
+        if (status === 'approved' || status === 'ready') {
+          stats.readyForPickup += count;
         } else if (status === 'processing' || status === 'pending') {
-          stats.processing++;
+          stats.processing += count;
         } else if (status === 'review' || status === 'for_review') {
-          stats.forReview++;
+          stats.forReview += count;
         } else if (status === 'released' || status === 'completed') {
-          stats.released++;
+          stats.released += count;
         } else if (status === 'rejected' || status === 'denied') {
-          stats.rejected++;
+          stats.rejected += count;
         }
       });
 
+      console.log('DEBUG: Final processing stats:', stats);
       return stats;
     }
   });
@@ -229,7 +322,14 @@ const DocumentsPage = () => {
   // Fetch document tracking data
   useEffect(() => {
     fetchDocumentTracking();
-  }, [trackingCurrentPage]);
+  }, [trackingCurrentPage, trackingSearchQuery, trackingFilter]);
+
+  // Reset page when search or filter changes
+  useEffect(() => {
+    if (trackingCurrentPage !== 1) {
+      setTrackingCurrentPage(1);
+    }
+  }, [trackingSearchQuery, trackingFilter]);
 
   const fetchDocumentTracking = async () => {
     setTrackingLoading(true);
@@ -238,6 +338,22 @@ const DocumentsPage = () => {
         .from('docrequests')
         .select('*', { count: 'exact' })
         .not('processedby', 'is', null);
+
+      // Apply search filter
+      if (trackingSearchQuery) {
+        query = query.or(`docnumber.ilike.%${trackingSearchQuery}%,receiver->>name.ilike.%${trackingSearchQuery}%`);
+      }
+
+      // Apply status filter
+      if (trackingFilter !== 'All Documents') {
+        if (trackingFilter === 'In Progress') {
+          query = query.in('status', ['pending', 'processing']);
+        } else if (trackingFilter === 'Completed') {
+          query = query.in('status', ['approved', 'completed', 'released']);
+        } else if (trackingFilter === 'Rejected') {
+          query = query.eq('status', 'rejected');
+        }
+      }
 
       // Apply pagination
       const from = (trackingCurrentPage - 1) * trackingItemsPerPage;
@@ -278,8 +394,6 @@ const DocumentsPage = () => {
               return 'bg-red-500';
             case 'pending':
               return 'bg-yellow-500';
-              case 'completed':
-              return 'bg-magenta-500';
             case 'processing':
               return 'bg-blue-500';
             default:
@@ -293,7 +407,6 @@ const DocumentsPage = () => {
           requestedBy,
           status: doc.status === 'approved' ? 'Ready for pickup' : 
                   doc.status === 'rejected' ? 'Rejected' : 
-                  doc.status === 'completed' ? 'Released' : 
                   doc.status === 'processing' ? 'Processing' : 
                   doc.status === 'pending' ? 'Processing' : doc.status,
           statusColor: getStatusColor(doc.status),
@@ -375,6 +488,107 @@ const DocumentsPage = () => {
   const handleRequestClick = (request: any) => {
     setSelectedRequest(request);
     setIsRequestDetailsOpen(true);
+  };
+
+  // Handler to view tracking item details
+  const handleViewTrackingDetails = async (trackingItem: any) => {
+    try {
+      // Fetch full request details using docnumber
+      const { data, error } = await supabase
+        .from('docrequests')
+        .select('*')
+        .eq('docnumber', trackingItem.id)
+        .single();
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch request details",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Transform data to match expected format
+      let name = 'Unknown';
+      if (data.receiver) {
+        try {
+          if (typeof data.receiver === 'object' && data.receiver !== null && !Array.isArray(data.receiver)) {
+            name = (data.receiver as any).name || 'Unknown';
+          } else if (typeof data.receiver === 'string') {
+            const parsed = JSON.parse(data.receiver);
+            name = parsed.name || 'Unknown';
+          }
+        } catch {
+          name = 'Unknown';
+        }
+      }
+
+      const requestData = {
+        ...data,
+        name
+      };
+
+      setSelectedRequest(requestData);
+      setIsRequestDetailsOpen(true);
+    } catch (error) {
+      console.error('Error fetching tracking details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch request details",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handler to edit tracking item status
+  const handleEditTrackingStatus = (trackingItem: any) => {
+    setSelectedTrackingItem(trackingItem);
+    setIsEditStatusOpen(true);
+  };
+
+  // Handler to update request status
+  const handleUpdateStatus = async (docnumber: string, newStatus: string) => {
+    if (!adminProfileId) {
+      toast({
+        title: "Error",
+        description: "Admin profile not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('docrequests')
+        .update({ 
+          status: newStatus,
+          processedby: adminProfileId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('docnumber', docnumber);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Status Updated",
+        description: `Request status updated to ${newStatus}`,
+      });
+
+      // Refresh tracking data
+      fetchDocumentTracking();
+      setIsEditStatusOpen(false);
+      setSelectedTrackingItem(null);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update request status",
+        variant: "destructive",
+      });
+    }
   };
 
   // Real handlers for approve/deny actions
@@ -516,7 +730,7 @@ const DocumentsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Documents</p>
-                <p className="text-2xl font-bold text-foreground">1,247</p>
+                <p className="text-2xl font-bold text-foreground">{documentStats?.total || 0}</p>
               </div>
               <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full">
                 <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -530,7 +744,7 @@ const DocumentsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Pending Requests</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">23</p>
+                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{documentStats?.pending || 0}</p>
               </div>
               <div className="bg-orange-100 dark:bg-orange-900/20 p-3 rounded-full">
                 <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -544,7 +758,7 @@ const DocumentsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Issued Today</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">8</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{documentStats?.issuedToday || 0}</p>
               </div>
               <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
                 <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -596,7 +810,7 @@ const DocumentsPage = () => {
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Ready for Pickup</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{processingStats?.readyForPickup || 18}</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{processingStats?.readyForPickup || 0}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500 dark:text-green-400" />
             </div>
@@ -604,7 +818,7 @@ const DocumentsPage = () => {
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Processing</p>
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{processingStats?.processing || 12}</p>
+                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{processingStats?.processing || 0}</p>
               </div>
               <Clock className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
             </div>
@@ -612,7 +826,7 @@ const DocumentsPage = () => {
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">For Review</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingStats?.forReview || 7}</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingStats?.forReview || 0}</p>
               </div>
               <Eye className="h-8 w-8 text-blue-500 dark:text-blue-400" />
             </div>
@@ -620,7 +834,7 @@ const DocumentsPage = () => {
             <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Released</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{processingStats?.released || 42}</p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{processingStats?.released || 0}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-purple-500 dark:text-purple-400" />
             </div>
@@ -628,7 +842,7 @@ const DocumentsPage = () => {
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Rejected</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{processingStats?.rejected || 3}</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{processingStats?.rejected || 0}</p>
               </div>
               <XCircle className="h-8 w-8 text-red-500 dark:text-red-400" />
             </div>
@@ -853,10 +1067,20 @@ const DocumentsPage = () => {
                   <TableCell className="text-muted-foreground">{doc.lastUpdate}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="hover:bg-accent">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="hover:bg-accent"
+                        onClick={() => handleViewTrackingDetails(doc)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="hover:bg-accent">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="hover:bg-accent"
+                        onClick={() => handleEditTrackingStatus(doc)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
@@ -1093,6 +1317,9 @@ const DocumentsPage = () => {
       {/* Issue Document Dialog */}
       <Dialog open={isIssueDocumentOpen} onOpenChange={setIsIssueDocumentOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-background border-border">
+          <DialogHeader>
+            <DialogTitle>Issue New Document</DialogTitle>
+          </DialogHeader>
           <IssueDocumentForm onClose={() => setIsIssueDocumentOpen(false)} />
         </DialogContent>
       </Dialog>
@@ -1126,6 +1353,57 @@ const DocumentsPage = () => {
         onApprove={handleApproveRequest}
         onDeny={handleDenyRequest}
       />
+
+      {/* Edit Status Modal */}
+      <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
+        <DialogContent className="max-w-md bg-background border-border">
+          <DialogHeader>
+            <DialogTitle>Edit Request Status</DialogTitle>
+          </DialogHeader>
+          {selectedTrackingItem && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Document: {selectedTrackingItem.document}</p>
+                <p className="text-sm text-muted-foreground">Tracking ID: {selectedTrackingItem.id}</p>
+                <p className="text-sm text-muted-foreground">Requested by: {selectedTrackingItem.requestedBy}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Update Status:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'processing')}
+                    variant="outline"
+                    className="bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700 hover:text-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400"
+                  >
+                    Processing
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'approved')}
+                    variant="outline"
+                    className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400"
+                  >
+                    Approved
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'rejected')}
+                    variant="outline"
+                    className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400"
+                  >
+                    Rejected
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'completed')}
+                    variant="outline"
+                    className="bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700 hover:text-purple-800 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400"
+                  >
+                    Completed
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
