@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth } from "@/components/AuthProvider";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -22,6 +23,7 @@ const DocumentTemplateForm = ({ template, onClose, onSuccess }: DocumentTemplate
   const [content, setContent] = useState(template?.content || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
   
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: {
@@ -55,7 +57,7 @@ const DocumentTemplateForm = ({ template, onClose, onSuccess }: DocumentTemplate
         fee: Number(data.fee),
         validity_days: data.validity_days ? Number(data.validity_days) : null,
         required_fields: {},
-        brgyid: "00000000-0000-0000-0000-000000000000" // Default brgyid for now
+        brgyid: userProfile?.brgyid || "00000000-0000-0000-0000-000000000000"
       };
 
       let result;
