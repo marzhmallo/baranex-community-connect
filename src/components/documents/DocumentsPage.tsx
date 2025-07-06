@@ -17,6 +17,7 @@ import IssueDocumentForm from "./IssueDocumentForm";
 import DocumentViewDialog from "./DocumentViewDialog";
 import DocumentDeleteDialog from "./DocumentDeleteDialog";
 import DocumentSettingsDialog from "./DocumentSettingsDialog";
+import DocumentRequestDetailsModal from "./DocumentRequestDetailsModal";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
 import { formatDistanceToNow } from "date-fns";
@@ -41,6 +42,10 @@ const DocumentsPage = () => {
   const [requestsLoading, setRequestsLoading] = useState(true);
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  
+  // Document request details modal state
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [isRequestDetailsOpen, setIsRequestDetailsOpen] = useState(false);
   
   const itemsPerPage = 3;
   const { toast } = useToast();
@@ -97,7 +102,13 @@ const DocumentsPage = () => {
           timeAgo: formatDistanceToNow(new Date(doc.created_at), { addSuffix: true }),
           status: doc.status,
           docnumber: doc.docnumber,
-          purpose: doc.purpose
+          purpose: doc.purpose,
+          amount: doc.amount,
+          method: doc.method,
+          paydate: doc.paydate,
+          paymenturl: doc.paymenturl,
+          notes: doc.notes,
+          created_at: doc.created_at
         };
       }) || [];
 
@@ -339,6 +350,12 @@ const DocumentsPage = () => {
     status: "rejected",
     trackingId: "#BRG-2023-0039"
   }];
+
+  // Handler to open request details modal
+  const handleRequestClick = (request: any) => {
+    setSelectedRequest(request);
+    setIsRequestDetailsOpen(true);
+  };
 
   // Real handlers for approve/deny actions
   const handleApproveRequest = async (id: string, name: string) => {
@@ -637,7 +654,11 @@ const DocumentsPage = () => {
                 {documentRequests.length > 0 ? (
                   <>
                     {documentRequests.map(request => 
-                      <div key={request.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
+                      <div 
+                        key={request.id} 
+                        className="flex items-center justify-between p-4 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
+                        onClick={() => handleRequestClick(request)}
+                      >
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                             <span className="text-sm font-medium text-foreground">{request.name.split(' ').map((n: string) => n[0]).join('')}</span>
@@ -1067,6 +1088,15 @@ const DocumentsPage = () => {
       <DocumentSettingsDialog 
         open={isSettingsDialogOpen}
         onOpenChange={setIsSettingsDialogOpen}
+      />
+
+      {/* Document Request Details Modal */}
+      <DocumentRequestDetailsModal
+        isOpen={isRequestDetailsOpen}
+        onClose={() => setIsRequestDetailsOpen(false)}
+        request={selectedRequest}
+        onApprove={handleApproveRequest}
+        onDeny={handleDenyRequest}
       />
     </div>
   );
