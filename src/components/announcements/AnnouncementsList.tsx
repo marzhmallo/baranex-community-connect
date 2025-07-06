@@ -1,5 +1,8 @@
 
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { 
   MoreVertical,
   Edit,
@@ -8,6 +11,11 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  Loader2,
+  Calendar,
+  User,
+  Pin,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,12 +33,253 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from 'date-fns';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Announcement } from '@/pages/AnnouncementsPage';
+
+const editFormSchema = z.object({
+  title: z.string().min(5, { message: 'Title must be at least 5 characters' }).max(100, { message: 'Title must be less than 100 characters' }),
+  content: z.string().min(10, { message: 'Content must be at least 10 characters' }),
+  category: z.string().min(1, { message: 'Please select a category' }),
+  audience: z.string().min(1, { message: 'Please select an audience' }),
+  is_pinned: z.boolean().default(false),
+  is_public: z.boolean().default(true),
+});
+
+interface EditAnnouncementDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  announcement: Announcement | null;
+  onSuccess: () => void;
+}
+
+const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
+  open,
+  onOpenChange,
+  announcement,
+  onSuccess
+}) => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<z.infer<typeof editFormSchema>>({
+    resolver: zodResolver(editFormSchema),
+    defaultValues: {
+      title: announcement?.title || '',
+      content: announcement?.content || '',
+      category: announcement?.category || '',
+      audience: announcement?.audience || 'Public',
+      is_pinned: announcement?.is_pinned || false,
+      is_public: announcement?.is_public || true,
+    },
+  });
+
+  // Reset form when announcement changes
+  React.useEffect(() => {
+    if (announcement) {
+      form.reset({
+        title: announcement.title,
+        content: announcement.content,
+        category: announcement.category,
+        audience: announcement.audience,
+        is_pinned: announcement.is_pinned,
+        is_public: announcement.is_public,
+      });
+    }
+  }, [announcement, form]);
+
+  const onSubmit = async (values: z.infer<typeof editFormSchema>) => {
+    if (!announcement) return;
+    
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('announcements')
+        .update({
+          title: values.title,
+          content: values.content,
+          category: values.category,
+          audience: values.audience,
+          is_pinned: values.is_pinned,
+          is_public: values.is_public,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', announcement.id);
+
+      if (error) throw error;
+
+      onSuccess();
+    } catch (error) {
+      console.error('Error updating announcement:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update the announcement. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Announcement</DialogTitle>
+          <DialogDescription>
+            Update the announcement details below.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter announcement title" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Content</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter announcement content"
+                      className="min-h-[120px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Emergency">Emergency</SelectItem>
+                        <SelectItem value="Event">Event</SelectItem>
+                        <SelectItem value="Health">Health</SelectItem>
+                        <SelectItem value="Service">Service</SelectItem>
+                        <SelectItem value="News">News</SelectItem>
+                        <SelectItem value="Education">Education</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="audience"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Audience</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select audience" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="All Residents">All Residents</SelectItem>
+                        <SelectItem value="Senior Citizens">Senior Citizens</SelectItem>
+                        <SelectItem value="Business Owners">Business Owners</SelectItem>
+                        <SelectItem value="Students">Students</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex items-center space-x-6">
+              <FormField
+                control={form.control}
+                name="is_pinned"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Pin this announcement</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="is_public"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Make public</FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Update Announcement
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 interface AnnouncementListProps {
   announcements: Announcement[];
@@ -52,6 +301,8 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -79,6 +330,16 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
   const openDeleteDialog = (announcement: Announcement) => {
     setSelectedAnnouncement(announcement);
     setDeleteDialogOpen(true);
+  };
+
+  const openEditDialog = (announcement: Announcement) => {
+    setSelectedAnnouncement(announcement);
+    setEditDialogOpen(true);
+  };
+
+  const openViewDialog = (announcement: Announcement) => {
+    setSelectedAnnouncement(announcement);
+    setViewDialogOpen(true);
   };
 
   const handleDeleteAnnouncement = async () => {
@@ -185,11 +446,11 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="min-w-[120px]">
-                    <DropdownMenuItem className="flex items-center gap-2">
+                    <DropdownMenuItem onClick={() => openEditDialog(announcement)} className="flex items-center gap-2">
                       <Edit className="h-4 w-4 text-blue-600" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
+                    <DropdownMenuItem onClick={() => openViewDialog(announcement)} className="flex items-center gap-2">
                       <Eye className="h-4 w-4 text-green-600" />
                       View
                     </DropdownMenuItem>
@@ -282,6 +543,95 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View Announcement Modal */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              {selectedAnnouncement && getCategoryBadge(selectedAnnouncement.category)}
+              {selectedAnnouncement && getStatusBadge(selectedAnnouncement)}
+            </div>
+            <DialogTitle className="text-2xl">{selectedAnnouncement?.title}</DialogTitle>
+          </DialogHeader>
+          
+          {selectedAnnouncement && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground border-b pb-4">
+                <div className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  {selectedAnnouncement.authorName}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  {format(new Date(selectedAnnouncement.created_at), 'MMM dd, yyyy')}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  {selectedAnnouncement.audience}
+                </div>
+                {selectedAnnouncement.is_pinned && (
+                  <div className="flex items-center gap-1">
+                    <Pin className="h-4 w-4" />
+                    Pinned
+                  </div>
+                )}
+              </div>
+              
+              <div className="prose max-w-none">
+                <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                  {selectedAnnouncement.content}
+                </p>
+              </div>
+              
+              {selectedAnnouncement.photo_url && (
+                <div>
+                  <h4 className="font-semibold mb-2">Photo</h4>
+                  <img 
+                    src={selectedAnnouncement.photo_url} 
+                    alt="Announcement photo" 
+                    className="max-w-full h-auto rounded-lg border"
+                  />
+                </div>
+              )}
+              
+              {selectedAnnouncement.attachment_url && (
+                <div>
+                  <h4 className="font-semibold mb-2">Attachment</h4>
+                  <a 
+                    href={selectedAnnouncement.attachment_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View Attachment
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Announcement Modal */}
+      <EditAnnouncementDialog 
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        announcement={selectedAnnouncement}
+        onSuccess={() => {
+          setEditDialogOpen(false);
+          refetch();
+          toast({
+            title: "Announcement updated",
+            description: "The announcement has been successfully updated.",
+          });
+        }}
+      />
     </div>
   );
 };
