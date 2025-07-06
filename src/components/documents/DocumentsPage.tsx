@@ -59,7 +59,7 @@ const DocumentsPage = () => {
           *,
           residents(first_name, last_name)
         `, { count: 'exact' })
-        .eq('status', 'pending');
+        .ilike('status', 'pending');
 
       // Apply pagination
       const from = (requestsCurrentPage - 1) * itemsPerPage;
