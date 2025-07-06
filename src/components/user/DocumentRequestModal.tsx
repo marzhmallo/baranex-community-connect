@@ -113,6 +113,34 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
     setIsSubmitting(true);
     
     try {
+      let paymentUrl = null;
+      
+      // Upload payment screenshot to Supabase storage if provided
+      if (paymentMethod === "gcash" && paymentScreenshot) {
+        const fileName = `${userProfile.id}/payment_${Date.now()}_${paymentScreenshot.name}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('cashg')
+          .upload(fileName, paymentScreenshot);
+        
+        if (uploadError) {
+          console.error('Error uploading payment screenshot:', uploadError);
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload payment screenshot",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Get the public URL for the uploaded file
+        const { data: { publicUrl } } = supabase.storage
+          .from('cashg')
+          .getPublicUrl(fileName);
+        
+        paymentUrl = publicUrl;
+      }
+
       const receiver = receiverType === "self" 
         ? { 
             id: userProfile.id, 
@@ -130,8 +158,8 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
         amount: selectedDoc?.fee || 0,
         ...(paymentMethod === "gcash" && {
           ornumber: orNumber,
-          paymenturl: paymentScreenshot ? `screenshot_${Date.now()}.jpg` : null, // Placeholder - you'd upload to storage
-          paydate: new Date().toISOString(), // Automatically set to current time
+          paymenturl: paymentUrl,
+          paydate: new Date().toISOString(),
         }),
         status: 'pending',
         issued_at: new Date().toISOString(),
