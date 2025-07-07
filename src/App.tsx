@@ -50,20 +50,11 @@ import PlazaPage from "./pages/PlazaPage";
 
 // Component to protect glyph-only routes
 const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, loading } = useAuth();
+  const { userProfile } = useAuth();
   
-  // Show loading while authentication is being determined
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  // If not authenticated, redirect to login
+  // If not authenticated, this should never happen since we have global auth check
   if (!userProfile) {
-    return <Navigate to="/login" replace />;
+    return null;
   }
   
   // If not glyph role, redirect to appropriate dashboard based on role
@@ -74,9 +65,8 @@ const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
       return <Navigate to="/dashboard" replace />;
     } else if (userProfile.role === "overseer") {
       return <Navigate to="/plaza" replace />;
-    } else {
-      return <Navigate to="/login" replace />;
     }
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -84,20 +74,11 @@ const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Component to protect overseer-only routes
 const OverseerRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, loading } = useAuth();
+  const { userProfile } = useAuth();
   
-  // Show loading while authentication is being determined
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  // If not authenticated, redirect to login
+  // If not authenticated, this should never happen since we have global auth check
   if (!userProfile) {
-    return <Navigate to="/login" replace />;
+    return null;
   }
   
   // If not overseer role, redirect to appropriate dashboard based on role
@@ -108,9 +89,8 @@ const OverseerRoute = ({ children }: { children: React.ReactNode }) => {
       return <Navigate to="/dashboard" replace />;
     } else if (userProfile.role === "glyph") {
       return <Navigate to="/echelon" replace />;
-    } else {
-      return <Navigate to="/login" replace />;
     }
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -127,24 +107,25 @@ const queryClient = new QueryClient({
 
 // Component to protect admin-only routes
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, loading } = useAuth();
+  const { userProfile } = useAuth();
   
-  // Show loading while authentication is being determined
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+  // If not authenticated, this should never happen since we have global auth check
+  if (!userProfile) {
+    return null;
   }
   
   // Redirect users to their hub immediately without showing admin content
-  if (userProfile?.role === "user") {
+  if (userProfile.role === "user") {
     return <Navigate to="/hub" replace />;
   }
   
-  // Redirect non-admin roles to login if not admin/staff
-  if (userProfile && userProfile.role !== "admin" && userProfile.role !== "staff") {
+  // Redirect non-admin roles to appropriate dashboards
+  if (userProfile.role !== "admin" && userProfile.role !== "staff") {
+    if (userProfile.role === "glyph") {
+      return <Navigate to="/echelon" replace />;
+    } else if (userProfile.role === "overseer") {
+      return <Navigate to="/plaza" replace />;
+    }
     return <Navigate to="/hub" replace />;
   }
   
@@ -153,19 +134,20 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Component to protect user-only routes
 const UserRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, loading } = useAuth();
+  const { userProfile } = useAuth();
   
-  // Show loading while authentication is being determined
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+  // If not authenticated, this should never happen since we have global auth check
+  if (!userProfile) {
+    return null;
   }
   
-  if (userProfile?.role === "admin" || userProfile?.role === "staff") {
+  // Redirect admin/staff to their dashboard
+  if (userProfile.role === "admin" || userProfile.role === "staff") {
     return <Navigate to="/dashboard" replace />;
+  } else if (userProfile.role === "glyph") {
+    return <Navigate to="/echelon" replace />;
+  } else if (userProfile.role === "overseer") {
+    return <Navigate to="/plaza" replace />;
   }
   
   return <>{children}</>;
