@@ -310,55 +310,55 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
             field
           }) => <FormItem>
                   <FormLabel>Resident</FormLabel>
-                  <Popover open={residentComboOpen} onOpenChange={setResidentComboOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Input
-                          placeholder="Search resident or enter name..."
-                          value={residentSearchValue}
-                          onChange={(e) => {
-                            setResidentSearchValue(e.target.value);
-                            setResidentComboOpen(true);
-                          }}
-                          onFocus={() => setResidentComboOpen(true)}
-                        />
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandList>
-                          <CommandEmpty>
-                            <div className="py-2">
-                              <p className="text-sm text-muted-foreground mb-2">No resident found.</p>
-                              <Button 
-                                variant="ghost" 
-                                className="w-full" 
-                                onClick={() => handleResidentSelection(residentSearchValue)}
-                              >
-                                Add "{residentSearchValue}" as non-registered resident
-                              </Button>
-                            </div>
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {filteredResidents.map((resident) => (
-                              <CommandItem
-                                key={resident.id}
-                                value={resident.id}
-                                onSelect={() => handleResidentSelection(resident.id)}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${
-                                    field.value === resident.id ? "opacity-100" : "opacity-0"
-                                  }`}
-                                />
-                                {getResidentName(resident.id)}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <div className="relative">
+                    <FormControl>
+                      <Input
+                        placeholder="Search resident or enter name..."
+                        value={residentSearchValue}
+                        onChange={(e) => {
+                          setResidentSearchValue(e.target.value);
+                          setResidentComboOpen(true);
+                        }}
+                        onFocus={() => setResidentComboOpen(true)}
+                      />
+                    </FormControl>
+                     {residentComboOpen && (
+                      <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md p-0">
+                        <Command>
+                          <CommandList>
+                            <CommandEmpty>
+                              <div className="py-2">
+                                <p className="text-sm text-muted-foreground mb-2">No resident found.</p>
+                                <Button 
+                                  variant="ghost" 
+                                  className="w-full" 
+                                  onClick={() => handleResidentSelection(residentSearchValue)}
+                                >
+                                  Add "{residentSearchValue}" as non-registered resident
+                                </Button>
+                              </div>
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {filteredResidents.map((resident) => (
+                                <CommandItem
+                                  key={resident.id}
+                                  value={resident.id}
+                                  onSelect={() => handleResidentSelection(resident.id)}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      field.value === resident.id ? "opacity-100" : "opacity-0"
+                                    }`}
+                                  />
+                                  {getResidentName(resident.id)}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </div>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>} />
           </div>
