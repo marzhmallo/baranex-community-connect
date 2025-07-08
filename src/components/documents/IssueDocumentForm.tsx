@@ -391,18 +391,20 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
           
           {selectedDocType && Object.keys(selectedDocType.required_fields || {}).length > 0 && <>
               <Separator />
-              <div className="flex items-center gap-2">
-                <FileCog className="h-5 w-5" />
-                <h3 className="text-lg font-medium">Document Fields</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(selectedDocType.required_fields).map(([field, type]) => <div key={field} className="space-y-2">
-                    <label className="text-sm font-medium">
-                      {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </label>
-                    <Input type={type === 'number' ? 'number' : 'text'} value={dynamicFields[field] || ''} onChange={e => handleDynamicFieldChange(field, e.target.value)} placeholder={`Enter ${field.replace(/_/g, ' ')}`} />
-                  </div>)}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <FileCog className="h-5 w-5" />
+                  <h3 className="text-lg font-medium">Document Fields</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(selectedDocType.required_fields).map(([field, type]) => <div key={field} className="space-y-2">
+                      <label className="text-sm font-medium">
+                        {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </label>
+                      <Input type={type === 'number' ? 'number' : 'text'} value={dynamicFields[field] || ''} onChange={e => handleDynamicFieldChange(field, e.target.value)} placeholder={`Enter ${field.replace(/_/g, ' ')}`} />
+                    </div>)}
+                </div>
               </div>
             </>}
           
