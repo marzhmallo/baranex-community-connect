@@ -241,23 +241,6 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       } = await supabase.from('docrequests').insert(documentData).select();
       if (error) throw error;
 
-      // Log the document issuance
-      const {
-        error: logError
-      } = await supabase.from('document_logs').insert({
-        document_id: newDocument[0].id,
-        action: "issued",
-        performed_by: "Admin User",
-        // In a real app, use the actual user name
-        details: {
-          document_number: documentNumber,
-          document_type: selectedDocType?.name,
-          resident_name: getResidentName(data.resident_id),
-          ...dynamicFields
-        }
-      });
-      if (logError) throw logError;
-      
       toast({
         title: "Document Issued",
         description: `Document has been issued successfully with number: ${documentNumber}`
