@@ -43,11 +43,13 @@ export const EvacuationCenterDetailsModal = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(center?.status || 'available');
   const [currentOccupancy, setCurrentOccupancy] = useState(center?.occupancy || 0);
+  const [inputOccupancy, setInputOccupancy] = useState(center?.occupancy || 0);
   const [updatingOccupancy, setUpdatingOccupancy] = useState(false);
 
   useEffect(() => {
     setCurrentStatus(center?.status || 'available');
     setCurrentOccupancy(center?.occupancy || 0);
+    setInputOccupancy(center?.occupancy || 0);
   }, [center?.status, center?.occupancy]);
 
   if (!center) return null;
@@ -149,6 +151,7 @@ export const EvacuationCenterDetailsModal = ({
       if (error) throw error;
       
       setCurrentOccupancy(newOccupancy);
+      setInputOccupancy(newOccupancy);
       setCurrentStatus(newStatus);
       toast({ title: "Success", description: "Occupancy updated" });
       onUpdate?.();
@@ -238,11 +241,25 @@ export const EvacuationCenterDetailsModal = ({
                 </Button>
                 <Input
                   type="number"
-                  value={currentOccupancy}
+                  value={inputOccupancy}
                   onChange={(e) => {
                     const value = parseInt(e.target.value) || 0;
-                    if (value >= 0 && value <= center.capacity) {
-                      updateOccupancy(value);
+                    setInputOccupancy(value);
+                  }}
+                  onBlur={() => {
+                    if (inputOccupancy >= 0 && inputOccupancy <= center.capacity) {
+                      updateOccupancy(inputOccupancy);
+                    } else {
+                      setInputOccupancy(currentOccupancy); // Reset to current value if invalid
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (inputOccupancy >= 0 && inputOccupancy <= center.capacity) {
+                        updateOccupancy(inputOccupancy);
+                      } else {
+                        setInputOccupancy(currentOccupancy); // Reset to current value if invalid
+                      }
                     }
                   }}
                   className="w-[80px] text-center"
