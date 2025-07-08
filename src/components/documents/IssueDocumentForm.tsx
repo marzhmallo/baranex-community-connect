@@ -313,15 +313,15 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
                   <Popover open={residentComboOpen} onOpenChange={setResidentComboOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={residentComboOpen}
-                          className="w-full justify-between"
-                        >
-                          {residentSearchValue || "Search resident or enter name..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
+                        <Input
+                          placeholder="Search resident or enter name..."
+                          value={residentSearchValue}
+                          onChange={(e) => {
+                            setResidentSearchValue(e.target.value);
+                            setResidentComboOpen(true);
+                          }}
+                          onFocus={() => setResidentComboOpen(true)}
+                        />
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0">
