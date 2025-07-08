@@ -25,12 +25,35 @@ interface EmergencyContact {
 }
 
 interface ContactFormData {
-  type: 'fire' | 'police' | 'medical' | 'disaster' | 'rescue' | '';
+  type: 'Fire' | 'Police' | 'Medical' | 'Disaster' | 'Rescue' | '';
   name: string;
   phone_number: string;
   email?: string;
   description?: string;
 }
+
+// Type conversion functions
+const capitalizeToLowercase = (type: string): 'fire' | 'police' | 'medical' | 'disaster' | 'rescue' => {
+  const mapping: Record<string, 'fire' | 'police' | 'medical' | 'disaster' | 'rescue'> = {
+    'Fire': 'fire',
+    'Police': 'police', 
+    'Medical': 'medical',
+    'Disaster': 'disaster',
+    'Rescue': 'rescue'
+  };
+  return mapping[type] || 'fire';
+};
+
+const lowercaseToCapitalize = (type: string): string => {
+  const mapping: Record<string, string> = {
+    'fire': 'Fire',
+    'police': 'Police',
+    'medical': 'Medical', 
+    'disaster': 'Disaster',
+    'rescue': 'Rescue'
+  };
+  return mapping[type] || type;
+};
 
 const EmergencyContactsManager = () => {
   const { userProfile } = useAuth();
@@ -86,7 +109,7 @@ const EmergencyContactsManager = () => {
         const { error } = await supabase
           .from('emergency_contacts')
           .update({
-            type: data.type as 'fire' | 'police' | 'medical' | 'disaster' | 'rescue',
+            type: capitalizeToLowercase(data.type),
             name: data.name,
             phone_number: data.phone_number,
             email: data.email || null,
@@ -100,7 +123,7 @@ const EmergencyContactsManager = () => {
         const { error } = await supabase
           .from('emergency_contacts')
           .insert({
-            type: data.type as 'fire' | 'police' | 'medical' | 'disaster' | 'rescue',
+            type: capitalizeToLowercase(data.type),
             name: data.name,
             phone_number: data.phone_number,
             email: data.email || null,
@@ -152,7 +175,7 @@ const EmergencyContactsManager = () => {
   const openEditDialog = (contact: EmergencyContact) => {
     setEditingContact(contact);
     form.reset({
-      type: contact.type,
+      type: lowercaseToCapitalize(contact.type) as 'Fire' | 'Police' | 'Medical' | 'Disaster' | 'Rescue',
       name: contact.name,
       phone_number: contact.phone_number,
       email: contact.email || "",
@@ -240,11 +263,11 @@ const EmergencyContactsManager = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="fire">🔥 Fire Department</SelectItem>
-                          <SelectItem value="police">👮 Police</SelectItem>
-                          <SelectItem value="medical">🚑 Medical/Ambulance</SelectItem>
-                          <SelectItem value="disaster">⛑️ Disaster Response</SelectItem>
-                          <SelectItem value="rescue">🚁 Rescue Services</SelectItem>
+                          <SelectItem value="Fire">🔥 Fire Department</SelectItem>
+                          <SelectItem value="Police">👮 Police</SelectItem>
+                          <SelectItem value="Medical">🚑 Medical/Ambulance</SelectItem>
+                          <SelectItem value="Disaster">⛑️ Disaster Response</SelectItem>
+                          <SelectItem value="Rescue">🚁 Rescue Services</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -337,7 +360,7 @@ const EmergencyContactsManager = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{getTypeIcon(contact.type)}</span>
                     <Badge variant={getTypeColor(contact.type) as any}>
-                      {contact.type}
+                      {lowercaseToCapitalize(contact.type)}
                     </Badge>
                   </div>
                   <div className="flex gap-1">
