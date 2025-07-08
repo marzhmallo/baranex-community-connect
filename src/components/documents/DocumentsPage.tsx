@@ -625,7 +625,7 @@ const DocumentsPage = () => {
       const { error } = await supabase
         .from('docrequests')
         .update({ 
-          status: 'processing',
+          status: 'Pending',
           processedby: adminProfileId,
           updated_at: new Date().toISOString()
         })
