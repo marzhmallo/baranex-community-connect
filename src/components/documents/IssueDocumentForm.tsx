@@ -59,7 +59,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       purpose: "",
       payment_amount: 0,
       payment_status: "pending",
-      status: "issued"
+      status: "Pending"
     }
   });
 
@@ -365,9 +365,10 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="issued">Issued</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Processing">Processing</SelectItem>
+                      <SelectItem value="Ready">Ready</SelectItem>
+                      <SelectItem value="Released">Released</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
