@@ -323,21 +323,21 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
                       />
                     </FormControl>
                      {residentComboOpen && (
-                      <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md p-0">
-                        <Command>
-                          <CommandList>
-                            <CommandEmpty>
-                              <div>
-                                <p className="text-sm text-muted-foreground mb-2">No resident found.</p>
-                                <Button 
-                                  variant="ghost" 
-                                  className="w-full" 
-                                  onClick={() => handleResidentSelection(residentSearchValue)}
-                                >
-                                  Add "{residentSearchValue}" as non-registered resident
-                                </Button>
-                              </div>
-                            </CommandEmpty>
+                       <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md p-0">
+                         <Command className="p-0">
+                           <CommandList className="p-0">
+                             <CommandEmpty className="p-0">
+                               <div className="p-2">
+                                 <p className="text-sm text-muted-foreground mb-2">No resident found.</p>
+                                 <Button 
+                                   variant="ghost" 
+                                   className="w-full" 
+                                   onClick={() => handleResidentSelection(residentSearchValue)}
+                                 >
+                                   Add "{residentSearchValue}" as non-registered resident
+                                 </Button>
+                               </div>
+                             </CommandEmpty>
                             <CommandGroup>
                               {filteredResidents.map((resident) => (
                                 <CommandItem
