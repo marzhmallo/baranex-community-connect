@@ -326,11 +326,6 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0">
                       <Command>
-                        <CommandInput 
-                          placeholder="Search resident or enter name..." 
-                          value={residentSearchValue}
-                          onValueChange={setResidentSearchValue}
-                        />
                         <CommandList>
                           <CommandEmpty>
                             <div className="py-2">
