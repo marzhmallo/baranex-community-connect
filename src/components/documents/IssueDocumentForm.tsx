@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileCog, Save, UserCheck, X } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { FileCog, Save, UserCheck, X, Check, ChevronsUpDown } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { addDays } from "date-fns";
@@ -21,9 +23,7 @@ const issueDocumentSchema = z.object({
   document_type_id: z.string().uuid({
     message: "Please select a document type"
   }),
-  resident_id: z.string().uuid({
-    message: "Please select a resident"
-  }),
+  resident_id: z.string().optional(),
   purpose: z.string().min(5, {
     message: "Purpose must be at least 5 characters"
   }),
@@ -46,6 +46,9 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
   const [loadingResidents, setLoadingResidents] = useState(true);
   const [selectedDocType, setSelectedDocType] = useState(null);
   const [dynamicFields, setDynamicFields] = useState({});
+  const [residentComboOpen, setResidentComboOpen] = useState(false);
+  const [residentSearchValue, setResidentSearchValue] = useState("");
+  const [nonRegisteredResident, setNonRegisteredResident] = useState(null);
   const {
     toast
   } = useToast();
@@ -146,6 +149,32 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
     return `${resident.first_name}${middleInitial} ${resident.last_name}${resident.suffix ? ` ${resident.suffix}` : ""}`;
   };
 
+  // Handle resident selection or manual input
+  const handleResidentSelection = (value) => {
+    const resident = residents.find(r => r.id === value);
+    if (resident) {
+      form.setValue("resident_id", value);
+      setResidentSearchValue(getResidentName(value));
+      setNonRegisteredResident(null);
+    } else {
+      // This is manual input for non-registered resident
+      form.setValue("resident_id", "");
+      setResidentSearchValue(value);
+      setNonRegisteredResident({
+        name: value,
+        contact: "",
+        address: ""
+      });
+    }
+    setResidentComboOpen(false);
+  };
+
+  // Filter residents based on search
+  const filteredResidents = residents.filter(resident => {
+    const fullName = getResidentName(resident.id).toLowerCase();
+    return fullName.includes(residentSearchValue.toLowerCase());
+  });
+
   // Handle form submission
   const onSubmit = async data => {
     setIsSubmitting(true);
@@ -165,7 +194,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       // Prepare data for insertion - using correct field names
       const documentData = {
         document_id: data.document_type_id, // This should be document_id, not document_type_id
-        resident_id: data.resident_id,
+        resident_id: data.resident_id || null,
         purpose: data.purpose,
         payment_amount: data.payment_amount,
         payment_status: data.payment_status,
@@ -173,7 +202,12 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
         document_number: documentNumber,
         issued_by: userId,
         data: dynamicFields,
-        expiry_date: expiryDate
+        expiry_date: expiryDate,
+        receiver: nonRegisteredResident ? {
+          name: nonRegisteredResident.name,
+          contact: nonRegisteredResident.contact,
+          address: nonRegisteredResident.address
+        } : null
       };
 
       // Insert the document
@@ -209,6 +243,8 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       form.reset();
       setSelectedDocType(null);
       setDynamicFields({});
+      setResidentSearchValue("");
+      setNonRegisteredResident(null);
       
       // Close the modal if onClose is provided
       if (onClose) {
@@ -274,18 +310,60 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
             field
           }) => <FormItem>
                   <FormLabel>Resident</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a resident" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {residents.map(resident => <SelectItem key={resident.id} value={resident.id}>
-                          {resident.last_name}, {resident.first_name} {resident.middle_name ? resident.middle_name.charAt(0) + '.' : ''} {resident.suffix || ''}
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={residentComboOpen} onOpenChange={setResidentComboOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={residentComboOpen}
+                          className="w-full justify-between"
+                        >
+                          {residentSearchValue || "Search resident or enter name..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search resident or enter name..." 
+                          value={residentSearchValue}
+                          onValueChange={setResidentSearchValue}
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            <div className="py-2">
+                              <p className="text-sm text-muted-foreground mb-2">No resident found.</p>
+                              <Button 
+                                variant="ghost" 
+                                className="w-full" 
+                                onClick={() => handleResidentSelection(residentSearchValue)}
+                              >
+                                Add "{residentSearchValue}" as non-registered resident
+                              </Button>
+                            </div>
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {filteredResidents.map((resident) => (
+                              <CommandItem
+                                key={resident.id}
+                                value={resident.id}
+                                onSelect={() => handleResidentSelection(resident.id)}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    field.value === resident.id ? "opacity-100" : "opacity-0"
+                                  }`}
+                                />
+                                {getResidentName(resident.id)}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>} />
           </div>
