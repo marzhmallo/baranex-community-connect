@@ -320,10 +320,19 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
                           setResidentComboOpen(true);
                         }}
                         onFocus={() => setResidentComboOpen(true)}
+                        onBlur={(e) => {
+                          // Only close if not clicking within the dropdown
+                          if (!e.currentTarget.contains(e.relatedTarget)) {
+                            setTimeout(() => setResidentComboOpen(false), 150);
+                          }
+                        }}
                       />
                     </FormControl>
                      {residentComboOpen && (
-                       <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md p-0">
+                       <div 
+                         className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md p-0"
+                         onMouseDown={(e) => e.preventDefault()} // Prevent input blur when clicking dropdown
+                       >
                          <Command className="p-0">
                            <CommandList className="p-0">
                              <CommandEmpty className="p-0">
