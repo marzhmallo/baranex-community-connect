@@ -253,6 +253,17 @@ const EmergencyDashboard = () => {
     }
   };
 
+  const lowercaseToCapitalize = (type: string): string => {
+    const mapping: Record<string, string> = {
+      'fire': 'Fire',
+      'police': 'Police',
+      'medical': 'Medical', 
+      'disaster': 'Disaster',
+      'rescue': 'Rescue'
+    };
+    return mapping[type] || type;
+  };
+
   const getContactTypeIcon = (type: string) => {
     switch (type) {
       case 'fire': return '🔥';
@@ -482,7 +493,7 @@ const EmergencyDashboard = () => {
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-lg">{getContactTypeIcon(contact.type)}</span>
                       <Badge variant={getContactTypeColor(contact.type) as any}>
-                        {contact.type}
+                        {lowercaseToCapitalize(contact.type)}
                       </Badge>
                     </div>
                     <h4 className="font-semibold text-sm mb-1">{contact.name}</h4>
