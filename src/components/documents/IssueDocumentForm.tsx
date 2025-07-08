@@ -49,6 +49,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
   const [residentComboOpen, setResidentComboOpen] = useState(false);
   const [residentSearchValue, setResidentSearchValue] = useState("");
   const [nonRegisteredResident, setNonRegisteredResident] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const {
     toast
   } = useToast();
@@ -68,9 +69,28 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
 
   // Fetch document types and residents on component mount
   useEffect(() => {
+    fetchUserProfile();
     fetchDocumentTypes();
     fetchResidents();
   }, []);
+
+  // Fetch user profile to get barangay ID
+  const fetchUserProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('brgyid')
+          .eq('id', user.id)
+          .single();
+        if (error) throw error;
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
 
   // Fetch document types from the database
   const fetchDocumentTypes = async () => {
@@ -201,7 +221,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
         docnumber: documentNumber,
         processedby: userId,
         issued_at: new Date().toISOString(),
-        brgyid: 'temp-brgy-id', // This should come from user's profile
+        brgyid: userProfile?.brgyid || null,
         receiver: nonRegisteredResident ? {
           name: nonRegisteredResident.name,
           contact: nonRegisteredResident.contact,
