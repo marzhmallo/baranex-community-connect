@@ -64,11 +64,11 @@ const DocumentsPage = () => {
   const fetchDocumentRequests = async () => {
     setRequestsLoading(true);
     try {
-      // Build query for pending requests only
+      // Build query for Request status only
       let query = supabase
         .from('docrequests')
         .select('*', { count: 'exact' })
-        .ilike('status', 'pending');
+        .ilike('status', 'Request');
 
       // Apply pagination
       const from = (requestsCurrentPage - 1) * itemsPerPage;
