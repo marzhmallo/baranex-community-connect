@@ -364,7 +364,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
                         <SelectValue placeholder="Select document status" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="z-50">
                       <SelectItem value="Pending">Pending</SelectItem>
                       <SelectItem value="Processing">Processing</SelectItem>
                       <SelectItem value="Ready">Ready</SelectItem>
