@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -235,9 +236,20 @@ export const EvacuationCenterDetailsModal = ({
                 >
                   -
                 </Button>
-                <span className="px-3 py-1 border rounded text-center min-w-[60px]">
-                  {currentOccupancy}
-                </span>
+                <Input
+                  type="number"
+                  value={currentOccupancy}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    if (value >= 0 && value <= center.capacity) {
+                      updateOccupancy(value);
+                    }
+                  }}
+                  className="w-[80px] text-center"
+                  min="0"
+                  max={center.capacity}
+                  disabled={updatingOccupancy}
+                />
                 <Button
                   variant="outline"
                   size="sm"
