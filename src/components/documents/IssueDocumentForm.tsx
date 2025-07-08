@@ -398,7 +398,9 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(selectedDocType.required_fields).map(([field, type]) => <div key={field} className="space-y-2">
+                  {Object.entries(selectedDocType.required_fields)
+                    .filter(([field]) => !['purpose', 'resident_id'].includes(field))
+                    .map(([field, type]) => <div key={field} className="space-y-2">
                       <label className="text-sm font-medium">
                         {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </label>
