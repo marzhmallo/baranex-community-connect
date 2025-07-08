@@ -194,7 +194,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       // Prepare data for insertion into docrequests table
       const documentData = {
         type: selectedDocType?.name || 'Unknown',
-        resident_id: data.resident_id || null,
+        resident_id: null, // Admin issuing, not resident requesting
         purpose: data.purpose,
         amount: data.payment_amount,
         status: data.status,
@@ -206,6 +206,10 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
           name: nonRegisteredResident.name,
           contact: nonRegisteredResident.contact,
           address: nonRegisteredResident.address
+        } : data.resident_id ? {
+          name: getResidentName(data.resident_id),
+          contact: "",
+          address: ""
         } : null,
         notes: Object.keys(dynamicFields).length > 0 ? JSON.stringify(dynamicFields) : null
       };
