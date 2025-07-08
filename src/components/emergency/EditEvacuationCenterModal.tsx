@@ -16,7 +16,7 @@ interface EvacCenter {
   latitude: number | null;
   longitude: number | null;
   capacity: number;
-  current_occupancy: number | null;
+  occupancy: number | null;
   status: string | null;
   contact_person?: string | null;
   contact_phone?: string | null;

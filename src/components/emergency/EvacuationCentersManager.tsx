@@ -18,7 +18,7 @@ interface EvacuationCenter {
   name: string;
   address: string;
   capacity: number;
-  current_occupancy: number;
+  occupancy: number;
   status: 'available' | 'full' | 'closed' | 'maintenance';
   contact_person?: string;
   contact_phone?: string;
@@ -447,7 +447,7 @@ const EvacuationCentersManager = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Capacity:</span>
                   <span className="font-medium">
-                    {center.current_occupancy || 0} / {center.capacity} people
+                    {center.occupancy || 0} / {center.capacity} people
                   </span>
                 </div>
                 

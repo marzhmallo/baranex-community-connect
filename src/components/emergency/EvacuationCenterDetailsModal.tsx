@@ -15,7 +15,7 @@ interface EvacCenter {
   latitude: number | null;
   longitude: number | null;
   capacity: number;
-  current_occupancy: number | null;
+  occupancy: number | null;
   status: string | null;
   contact_person?: string | null;
   contact_phone?: string | null;
@@ -41,10 +41,13 @@ export const EvacuationCenterDetailsModal = ({
   const [updating, setUpdating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(center?.status || 'available');
+  const [currentOccupancy, setCurrentOccupancy] = useState(center?.occupancy || 0);
+  const [updatingOccupancy, setUpdatingOccupancy] = useState(false);
 
   useEffect(() => {
     setCurrentStatus(center?.status || 'available');
-  }, [center?.status]);
+    setCurrentOccupancy(center?.occupancy || 0);
+  }, [center?.status, center?.occupancy]);
 
   if (!center) return null;
 
@@ -79,6 +82,16 @@ export const EvacuationCenterDetailsModal = ({
   };
 
   const updateCenterStatus = async (status: 'available' | 'full' | 'closed' | 'maintenance') => {
+    // Check if trying to change from 'full' when occupancy >= capacity
+    if (currentStatus === 'full' && status !== 'full' && currentOccupancy >= center.capacity) {
+      toast({
+        title: "Cannot Change Status",
+        description: "Center is at full capacity. Reduce occupancy first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setUpdating(true);
       const { error } = await supabase
@@ -99,6 +112,54 @@ export const EvacuationCenterDetailsModal = ({
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const updateOccupancy = async (newOccupancy: number) => {
+    if (newOccupancy < 0) return;
+    if (newOccupancy > center.capacity) {
+      toast({
+        title: "Cannot Exceed Capacity",
+        description: `Maximum capacity is ${center.capacity} people`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUpdatingOccupancy(true);
+      
+      // Determine new status based on occupancy
+      let newStatus: 'available' | 'full' | 'closed' | 'maintenance' = currentStatus as 'available' | 'full' | 'closed' | 'maintenance';
+      if (newOccupancy >= center.capacity && currentStatus !== 'closed' && currentStatus !== 'maintenance') {
+        newStatus = 'full';
+      } else if (newOccupancy < center.capacity && currentStatus === 'full') {
+        newStatus = 'available';
+      }
+
+      const { error } = await supabase
+        .from('evacuation_centers')
+        .update({ 
+          occupancy: newOccupancy,
+          status: newStatus
+        })
+        .eq('id', center.id);
+
+      if (error) throw error;
+      
+      setCurrentOccupancy(newOccupancy);
+      setCurrentStatus(newStatus);
+      toast({ title: "Success", description: "Occupancy updated" });
+      onUpdate?.();
+    } catch (error) {
+      console.error('Error updating occupancy:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update occupancy",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingOccupancy(false);
     }
   };
 
@@ -133,7 +194,7 @@ export const EvacuationCenterDetailsModal = ({
               <Select 
                 value={currentStatus} 
                 onValueChange={(value: 'available' | 'full' | 'closed' | 'maintenance') => updateCenterStatus(value)}
-                disabled={updating}
+                disabled={updating || (currentStatus === 'full' && currentOccupancy >= center.capacity)}
               >
                 <SelectTrigger className="w-auto">
                   <SelectValue placeholder="Select status" />
@@ -158,9 +219,42 @@ export const EvacuationCenterDetailsModal = ({
               <div>
                 <h4 className="font-semibold mb-1">Capacity:</h4>
                 <p className="text-sm">
-                  {center.current_occupancy || 0} / {center.capacity} people
+                  {currentOccupancy} / {center.capacity} people
                 </p>
               </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-2">Current Occupancy:</h4>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateOccupancy(currentOccupancy - 1)}
+                  disabled={updatingOccupancy || currentOccupancy <= 0}
+                >
+                  -
+                </Button>
+                <span className="px-3 py-1 border rounded text-center min-w-[60px]">
+                  {currentOccupancy}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateOccupancy(currentOccupancy + 1)}
+                  disabled={updatingOccupancy || currentOccupancy >= center.capacity}
+                >
+                  +
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  / {center.capacity} people
+                </span>
+              </div>
+              {currentOccupancy >= center.capacity && (
+                <p className="text-sm text-orange-600 mt-1">
+                  ⚠️ Center is at full capacity
+                </p>
+              )}
             </div>
 
             {center.facilities && center.facilities.length > 0 && (

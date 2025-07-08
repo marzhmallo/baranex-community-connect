@@ -617,13 +617,13 @@ export type Database = {
           contact_person: string | null
           contact_phone: string | null
           created_at: string | null
-          current_occupancy: number | null
           facilities: string[] | null
           id: string
           latitude: number | null
           longitude: number | null
           name: string
           notes: string | null
+          occupancy: number | null
           status: Database["public"]["Enums"]["evacuation_center_status"] | null
           updated_at: string | null
         }
@@ -634,13 +634,13 @@ export type Database = {
           contact_person?: string | null
           contact_phone?: string | null
           created_at?: string | null
-          current_occupancy?: number | null
           facilities?: string[] | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           name: string
           notes?: string | null
+          occupancy?: number | null
           status?:
             | Database["public"]["Enums"]["evacuation_center_status"]
             | null
@@ -653,13 +653,13 @@ export type Database = {
           contact_person?: string | null
           contact_phone?: string | null
           created_at?: string | null
-          current_occupancy?: number | null
           facilities?: string[] | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           name?: string
           notes?: string | null
+          occupancy?: number | null
           status?:
             | Database["public"]["Enums"]["evacuation_center_status"]
             | null

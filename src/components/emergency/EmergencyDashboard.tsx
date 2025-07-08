@@ -216,7 +216,7 @@ const EmergencyDashboard = () => {
       // Calculate center statistics
       const availableCenters = centers?.filter(c => c.status === 'available').length || 0;
       const totalCapacity = centers?.reduce((sum, c) => sum + (c.capacity || 0), 0) || 0;
-      const currentOccupancy = centers?.reduce((sum, c) => sum + (c.current_occupancy || 0), 0) || 0;
+      const currentOccupancy = centers?.reduce((sum, c) => sum + (c.occupancy || 0), 0) || 0;
 
       // Fetch quick access contacts
       const { data: contacts } = await supabase
