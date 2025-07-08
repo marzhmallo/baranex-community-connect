@@ -665,11 +665,7 @@ const DocumentsPage = () => {
     try {
       const { error } = await supabase
         .from('docrequests')
-        .update({ 
-          status: 'rejected',
-          processedby: adminProfileId,
-          updated_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', id);
 
       if (error) {
@@ -678,7 +674,7 @@ const DocumentsPage = () => {
 
       toast({
         title: "Request Denied",
-        description: `Denied request for ${name}`,
+        description: `Denied and removed request for ${name}`,
       });
 
       // Refresh the list

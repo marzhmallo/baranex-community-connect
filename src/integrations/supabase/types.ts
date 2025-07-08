@@ -2217,6 +2217,10 @@ export type Database = {
         Args: { options: string[]; catalog: unknown }
         Returns: undefined
       }
+      delete_rejected_unprocessed_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       firebase_fdw_handler: {
         Args: Record<PropertyKey, never>
         Returns: unknown
