@@ -191,30 +191,30 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
       // Get logged in user ID (mock for now)
       const userId = uuidv4(); // In a real app, this would come from auth
 
-      // Prepare data for insertion - using correct field names
+      // Prepare data for insertion into docrequests table
       const documentData = {
-        document_id: data.document_type_id, // This should be document_id, not document_type_id
+        type: selectedDocType?.name || 'Unknown',
         resident_id: data.resident_id || null,
         purpose: data.purpose,
-        payment_amount: data.payment_amount,
-        payment_status: data.payment_status,
+        amount: data.payment_amount,
         status: data.status,
-        document_number: documentNumber,
-        issued_by: userId,
-        data: dynamicFields,
-        expiry_date: expiryDate,
+        docnumber: documentNumber,
+        processedby: userId,
+        issued_at: new Date().toISOString(),
+        brgyid: 'temp-brgy-id', // This should come from user's profile
         receiver: nonRegisteredResident ? {
           name: nonRegisteredResident.name,
           contact: nonRegisteredResident.contact,
           address: nonRegisteredResident.address
-        } : null
+        } : null,
+        notes: Object.keys(dynamicFields).length > 0 ? JSON.stringify(dynamicFields) : null
       };
 
-      // Insert the document
+      // Insert the document request
       const {
         data: newDocument,
         error
-      } = await supabase.from('issued_documents').insert(documentData).select();
+      } = await supabase.from('docrequests').insert(documentData).select();
       if (error) throw error;
 
       // Log the document issuance
