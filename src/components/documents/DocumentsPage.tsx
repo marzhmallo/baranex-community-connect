@@ -390,15 +390,36 @@ const DocumentsPage = () => {
         const getStatusColor = (status: string) => {
           switch (status.toLowerCase()) {
             case 'approved':
-              return 'bg-green-500';
+            case 'ready':
+              return 'bg-green-500 text-white';
             case 'rejected':
-              return 'bg-red-500';
+              return 'bg-red-500 text-white';
             case 'pending':
-              return 'bg-yellow-500';
+              return 'bg-yellow-500 text-white';
             case 'processing':
-              return 'bg-blue-500';
+              return 'bg-blue-500 text-white';
+            case 'released':
+              return 'bg-purple-500 text-white';
             default:
-              return 'bg-blue-500';
+              return 'bg-gray-500 text-white';
+          }
+        };
+
+        const getDisplayStatus = (status: string) => {
+          switch (status.toLowerCase()) {
+            case 'approved':
+            case 'ready':
+              return 'Ready for Pickup';
+            case 'rejected':
+              return 'Rejected';
+            case 'pending':
+              return 'Pending';
+            case 'processing':
+              return 'Processing';
+            case 'released':
+              return 'Released';
+            default:
+              return status;
           }
         };
 
@@ -406,10 +427,7 @@ const DocumentsPage = () => {
           id: doc.docnumber,
           document: doc.type,
           requestedBy,
-          status: doc.status === 'approved' ? 'Ready for pickup' : 
-                  doc.status === 'rejected' ? 'Rejected' : 
-                  doc.status === 'processing' ? 'Processing' : 
-                  doc.status === 'pending' ? 'Processing' : doc.status,
+          status: getDisplayStatus(doc.status),
           statusColor: getStatusColor(doc.status),
           lastUpdate: doc.updated_at ? 
             formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true }) : 
