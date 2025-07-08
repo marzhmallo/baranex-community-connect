@@ -337,7 +337,8 @@ const DocumentsPage = () => {
       let query = supabase
         .from('docrequests')
         .select('*', { count: 'exact' })
-        .not('processedby', 'is', null);
+        .not('processedby', 'is', null)
+        .neq('status', 'Request');
 
       // Apply search filter
       if (trackingSearchQuery) {
