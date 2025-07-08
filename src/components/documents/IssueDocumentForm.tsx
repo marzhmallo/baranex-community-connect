@@ -327,7 +327,7 @@ const IssueDocumentForm = ({ onClose }: IssueDocumentFormProps) => {
                         <Command>
                           <CommandList>
                             <CommandEmpty>
-                              <div className="py-2">
+                              <div>
                                 <p className="text-sm text-muted-foreground mb-2">No resident found.</p>
                                 <Button 
                                   variant="ghost" 
