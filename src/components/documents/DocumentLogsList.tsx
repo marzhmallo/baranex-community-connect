@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useAuth } from "@/components/AuthProvider";
 
 const DocumentLogsList = ({
   searchQuery
@@ -18,9 +19,8 @@ const DocumentLogsList = ({
   const [loading, setLoading] = useState(true);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const { userProfile } = useAuth();
 
   useEffect(() => {
     fetchLogs();
@@ -29,31 +29,12 @@ const DocumentLogsList = ({
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      // Create a query to join document_logs with issued_documents and document_types
-      let query = supabase.from('document_logs').select(`
-          *,
-          issued_documents:document_id (
-            document_number,
-            document_id,
-            document_types:document_id (
-              name
-            ),
-            resident_id,
-            residents:resident_id (
-              first_name,
-              middle_name,
-              last_name,
-              suffix
-            )
-          )
-        `).order('created_at', {
-        ascending: false
-      });
-
-      const {
-        data,
-        error
-      } = await query;
+      // Simplified query - just get document logs for the barangay
+      const { data, error } = await supabase
+        .from('document_logs')
+        .select('*')
+        .eq('brgyid', userProfile?.brgyid)
+        .order('created_at', { ascending: false });
 
       if (error) {
         throw error;
@@ -64,25 +45,20 @@ const DocumentLogsList = ({
       if (searchQuery) {
         const lowerQuery = searchQuery.toLowerCase();
         filteredLogs = filteredLogs.filter(log => {
-          // Check document number
-          if (log.issued_documents?.document_number?.toLowerCase().includes(lowerQuery)) {
-            return true;
-          }
-          // Check document type name
-          if (log.issued_documents?.document_types?.name?.toLowerCase().includes(lowerQuery)) {
-            return true;
-          }
-          // Check resident name
-          const resident = log.issued_documents?.residents;
-          if (resident) {
-            const fullName = `${resident.first_name} ${resident.middle_name || ''} ${resident.last_name} ${resident.suffix || ''}`.toLowerCase();
-            if (fullName.includes(lowerQuery)) {
-              return true;
-            }
-          }
           // Check action
           if (log.action?.toLowerCase().includes(lowerQuery)) {
             return true;
+          }
+          // Check document ID
+          if (log.document_id?.toLowerCase().includes(lowerQuery)) {
+            return true;
+          }
+          // Check details
+          if (log.details && typeof log.details === 'object') {
+            const detailsString = JSON.stringify(log.details).toLowerCase();
+            if (detailsString.includes(lowerQuery)) {
+              return true;
+            }
           }
           return false;
         });

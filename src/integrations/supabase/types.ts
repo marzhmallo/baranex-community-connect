@@ -510,15 +510,7 @@ export type Database = {
           id?: string
           performed_by?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "document_logs_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "issued_documents"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       document_types: {
         Row: {
@@ -1164,94 +1156,38 @@ export type Database = {
           },
         ]
       }
-      issued_documents: {
+      notification: {
         Row: {
-          admin_id: string | null
           created_at: string | null
-          data: Json
-          document_id: string
-          document_number: string
-          expiry_date: string | null
-          household_id: string | null
           id: string
-          issued_by: string | null
-          issued_date: string | null
-          payment_amount: number | null
-          payment_date: string | null
-          payment_status: string | null
-          purpose: string | null
-          resident_id: string | null
-          status: string | null
+          linkurl: string | null
+          message: string | null
+          read: boolean | null
+          type: string
           updated_at: string | null
+          userid: string | null
         }
         Insert: {
-          admin_id?: string | null
           created_at?: string | null
-          data?: Json
-          document_id: string
-          document_number: string
-          expiry_date?: string | null
-          household_id?: string | null
           id?: string
-          issued_by?: string | null
-          issued_date?: string | null
-          payment_amount?: number | null
-          payment_date?: string | null
-          payment_status?: string | null
-          purpose?: string | null
-          resident_id?: string | null
-          status?: string | null
+          linkurl?: string | null
+          message?: string | null
+          read?: boolean | null
+          type: string
           updated_at?: string | null
+          userid?: string | null
         }
         Update: {
-          admin_id?: string | null
           created_at?: string | null
-          data?: Json
-          document_id?: string
-          document_number?: string
-          expiry_date?: string | null
-          household_id?: string | null
           id?: string
-          issued_by?: string | null
-          issued_date?: string | null
-          payment_amount?: number | null
-          payment_date?: string | null
-          payment_status?: string | null
-          purpose?: string | null
-          resident_id?: string | null
-          status?: string | null
+          linkurl?: string | null
+          message?: string | null
+          read?: boolean | null
+          type?: string
           updated_at?: string | null
+          userid?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "issued_documents_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "document_types"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "issued_documents_household_id_fkey"
-            columns: ["household_id"]
-            isOneToOne: false
-            referencedRelation: "households"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "issued_documents_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: false
-            referencedRelation: "admin_residents_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "issued_documents_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: false
-            referencedRelation: "residents"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       official_positions: {
         Row: {
