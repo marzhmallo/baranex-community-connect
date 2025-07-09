@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasHandledInitialAuth, setHasHandledInitialAuth] = useState(false);
+  const [hasLoggedSignIn, setHasLoggedSignIn] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(!document.hidden);
   const navigate = useNavigate();
   const location = useLocation();
@@ -175,8 +176,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await updateUserOnlineStatus(userId, true);
         setUserProfile(profileData as UserProfile);
         
-        // Log the sign in activity
-        await logUserSignIn(userId, profileData);
+        // Log the sign in activity only once per session
+        if (!hasLoggedSignIn) {
+          console.log('Logging sign in activity for user:', userId);
+          await logUserSignIn(userId, profileData);
+          setHasLoggedSignIn(true);
+        }
         
         // Fetch user settings after profile is loaded
         await fetchUserSettings(userId);
@@ -248,6 +253,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUserProfile(null);
       setUserSettings(null);
       setHasHandledInitialAuth(false);
+      setHasLoggedSignIn(false);
       
       // Update user to OFFLINE status if we have a user ID
       if (currentUserId) {
@@ -282,6 +288,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUserProfile(null);
       setUserSettings(null);
       setHasHandledInitialAuth(false);
+      setHasLoggedSignIn(false);
       
       // Force clear storage
       localStorage.removeItem('supabase.auth.token');
@@ -347,6 +354,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserProfile(null);
         setUserSettings(null);
         setHasHandledInitialAuth(false);
+        setHasLoggedSignIn(false);
         setLoading(false);
         return;
       }
