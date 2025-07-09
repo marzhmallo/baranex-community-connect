@@ -12,6 +12,8 @@ import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { saveResident } from "@/lib/api/residents";
+import { logActivity } from '@/lib/api/activityLogs';
+import { useAuth } from '@/components/AuthProvider';
 import { Resident } from "@/lib/types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -121,6 +123,7 @@ const ResidentForm = ({
 }: ResidentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
+  const { userProfile } = useAuth();
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(resident?.photoUrl);
   const {
     getAutoFillData,
@@ -345,6 +348,30 @@ const ResidentForm = ({
       if (!result.success) {
         console.error("Error in saveResident:", result.error);
         throw new Error(result.error);
+      }
+
+      // Log the activity
+      if (userProfile?.id && userProfile?.brgyid) {
+        const isEditing = !!resident;
+        const action = isEditing ? 'resident_updated' : 'resident_added';
+        const residentName = `${finalValues.firstName} ${finalValues.middleName ? finalValues.middleName + ' ' : ''}${finalValues.lastName}${finalValues.suffix ? ' ' + finalValues.suffix : ''}`;
+        
+        await logActivity({
+          user_id: userProfile.id,
+          brgyid: userProfile.brgyid,
+          action,
+          details: {
+            resident_name: residentName,
+            resident_id: result.data?.id || residentToSave.id,
+            operation: isEditing ? 'update' : 'create',
+            changes: isEditing ? 'Resident information updated' : 'New resident created',
+            purok: finalValues.purok,
+            status: finalValues.status,
+            classifications: finalValues.classifications,
+            method: 'modal_form',
+            reason: isEditing ? 'Data correction/update' : 'New resident registration'
+          }
+        });
       }
 
       // Show success toast
