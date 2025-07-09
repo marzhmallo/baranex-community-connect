@@ -157,15 +157,22 @@ const DashboardCharts = () => {
       ? `${userProfile.firstname} ${userProfile.lastname}`.trim() || userProfile.username
       : 'Unknown User';
 
+    const residentName = activity.details?.resident_name;
+
     switch (activity.action) {
       case 'user_sign_in':
         return `${userName} has signed in`;
       case 'user_sign_out':
         return `${userName} has signed out`;
       case 'resident_created':
-        return `${userName} added a new resident`;
+      case 'resident_added':
+        return residentName 
+          ? `${userName} added a new resident: ${residentName}`
+          : `${userName} added a new resident`;
       case 'resident_updated':
-        return `${userName} updated a resident`;
+        return residentName 
+          ? `${userName} updated resident: ${residentName}`
+          : `${userName} updated a resident`;
       case 'document_issued':
         return `${userName} issued a document`;
       case 'household_created':
