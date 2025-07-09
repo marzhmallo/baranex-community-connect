@@ -199,7 +199,7 @@ const DashboardCharts = () => {
   
   return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Main chart area - takes up 2 columns on md screens */}
-      <Card className="md:col-span-2">
+      <Card className="md:col-span-2 h-fit">
         <CardHeader>
           <div>
             <CardTitle className="text-lg">Population Growth</CardTitle>
