@@ -339,46 +339,9 @@ const DashboardCharts = () => {
                       <p className="text-sm font-medium leading-none">
                         {formatActivityMessage(activity)}
                       </p>
-                      
-                      {/* Additional informative details */}
-                      <div className="flex flex-wrap gap-2 items-center">
-                        {activity.details?.purok && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                            Purok {activity.details.purok}
-                          </span>
-                        )}
-                        {activity.details?.operation && (
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                            activity.details.operation === 'create' 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                          }`}>
-                            {activity.details.operation === 'create' ? 'New Entry' : 'Updated'}
-                          </span>
-                        )}
-                        {activity.details?.status && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                            {activity.details.status}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {/* Classifications for resident activities */}
-                      {activity.details?.classifications && activity.details.classifications.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {activity.details.classifications.slice(0, 3).map((classification: string, index: number) => (
-                            <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                              {classification}
-                            </span>
-                          ))}
-                          {activity.details.classifications.length > 3 && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                              +{activity.details.classifications.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      
+                      <p className="text-xs text-muted-foreground">
+                        {activity.details?.description || 'System activity'}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {formatTimeAgo(activity.created_at)}
                       </p>
