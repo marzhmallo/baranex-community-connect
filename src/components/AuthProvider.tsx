@@ -176,13 +176,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await updateUserOnlineStatus(userId, true);
         setUserProfile(profileData as UserProfile);
         
-        // Log the sign in activity only once per session
-        if (!hasLoggedSignIn) {
-          console.log('Logging sign in activity for user:', userId);
-          await logUserSignIn(userId, profileData);
-          setHasLoggedSignIn(true);
-        }
-        
         // Fetch user settings after profile is loaded
         await fetchUserSettings(userId);
         
@@ -372,17 +365,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         console.log('Processing SIGNED_IN event from login page - will redirect');
         setHasHandledInitialAuth(true);
+        setHasLoggedSignIn(true); // Mark that we've logged this sign-in
         
         setTimeout(async () => {
           if (mounted) {
             await fetchUserProfile(currentSession.user.id);
             
-            // Get fresh profile data for redirect
+            // Log the sign in activity ONLY for actual SIGNED_IN events
             const { data: profileData } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', currentSession.user.id)
               .maybeSingle();
+            
+            if (profileData) {
+              console.log('Logging sign in activity for actual SIGNED_IN event:', currentSession.user.id);
+              await logUserSignIn(currentSession.user.id, profileData);
+            }
             
             if (profileData) {
               console.log('Redirecting based on role:', profileData.role);
