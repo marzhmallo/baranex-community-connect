@@ -2245,10 +2245,6 @@ export type Database = {
           count: number
         }[]
       }
-      get_document_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       get_gender_distribution: {
         Args: Record<PropertyKey, never>
         Returns: {
