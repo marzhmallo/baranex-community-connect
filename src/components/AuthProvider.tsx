@@ -3,6 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { logUserSignIn, logUserSignOut } from "@/lib/api/activityLogs";
 
 interface UserProfile {
   id: string;
@@ -174,6 +175,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await updateUserOnlineStatus(userId, true);
         setUserProfile(profileData as UserProfile);
         
+        // Log the sign in activity
+        await logUserSignIn(userId, profileData);
+        
         // Fetch user settings after profile is loaded
         await fetchUserSettings(userId);
         
@@ -228,8 +232,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('Starting sign out process...');
       
-      // Store current user ID before clearing state
+      // Store current user ID and profile before clearing state
       const currentUserId = user?.id;
+      const currentUserProfile = userProfile;
+      
+      // Log the sign out activity before clearing state
+      if (currentUserId && currentUserProfile) {
+        console.log('Logging sign out activity...');
+        await logUserSignOut(currentUserId, currentUserProfile);
+      }
       
       // Clear local state FIRST to prevent any UI issues
       setUser(null);
