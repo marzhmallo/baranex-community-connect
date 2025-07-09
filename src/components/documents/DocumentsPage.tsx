@@ -212,55 +212,77 @@ const DocumentsPage = () => {
 
   // Fetch document processing status data
   const { data: processingStats } = useQuery({
-    queryKey: ['document-processing-stats'],
+    queryKey: ['document-processing-stats', adminProfileId],
     queryFn: async () => {
-      console.log('DEBUG: Calling get_document_stats RPC');
-      const { data, error } = await supabase.rpc('get_document_stats');
+      if (!adminProfileId) {
+        console.log('DEBUG: No adminProfileId available');
+        return {
+          readyForPickup: 0,
+          processing: 0,
+          forReview: 0,
+          released: 0,
+          rejected: 0,
+          avgProcessingTime: null
+        };
+      }
+
+      // Get current admin's brgyid
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('id', adminProfileId)
+        .single();
+
+      if (!profile?.brgyid) {
+        console.log('DEBUG: No brgyid found in profile');
+        return {
+          readyForPickup: 0,
+          processing: 0,
+          forReview: 0,
+          released: 0,
+          rejected: 0,
+          avgProcessingTime: null
+        };
+      }
+
+      console.log('DEBUG: Fetching document stats from docrequests table');
+      const { data, error } = await supabase
+        .from('docrequests')
+        .select('status, created_at, updated_at')
+        .eq('brgyid', profile.brgyid);
       
-      console.log('DEBUG: RPC result:', { data, error });
+      console.log('DEBUG: Query result:', { data, error });
       
       if (error) {
-        console.log('DEBUG: RPC error:', error);
+        console.log('DEBUG: Query error:', error);
         throw error;
       }
 
-      // Cast data to the expected type
-      const statsData = data as { 
-        status_counts: Array<{ status: string; count: number }> | null;
-        avg_processing_time_interval: string | null;
-      } | null;
-
-      console.log('DEBUG: Processed statsData:', statsData);
-
-      // Process status counts into the expected format
-      const statusCounts = statsData?.status_counts || [];
-      console.log('DEBUG: Status counts from RPC:', statusCounts);
-      
+      // Process the data to calculate statistics
       const stats = {
         readyForPickup: 0,
         processing: 0,
         forReview: 0,
         released: 0,
         rejected: 0,
-        avgProcessingTime: statsData?.avg_processing_time_interval
+        avgProcessingTime: null
       };
 
-      statusCounts.forEach((statusCount) => {
-        const status = statusCount.status?.toLowerCase();
-        const count = statusCount.count || 0;
+      data?.forEach((doc) => {
+        const status = doc.status?.toLowerCase();
         
-        console.log('DEBUG: Processing status:', status, 'count:', count);
+        console.log('DEBUG: Processing status:', status);
         
         if (status === 'approved' || status === 'ready') {
-          stats.readyForPickup += count;
+          stats.readyForPickup += 1;
         } else if (status === 'processing' || status === 'pending') {
-          stats.processing += count;
+          stats.processing += 1;
         } else if (status === 'review' || status === 'for_review') {
-          stats.forReview += count;
+          stats.forReview += 1;
         } else if (status === 'released' || status === 'completed') {
-          stats.released += count;
+          stats.released += 1;
         } else if (status === 'rejected' || status === 'denied') {
-          stats.rejected += count;
+          stats.rejected += 1;
         }
       });
 
