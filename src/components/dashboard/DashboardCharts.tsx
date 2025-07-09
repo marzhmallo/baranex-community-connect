@@ -314,6 +314,31 @@ const DashboardCharts = () => {
               </CardContent>
             </Card>
           </div>
+          
+          {/* Population Insights */}
+          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+            <h4 className="text-sm font-medium text-muted-foreground mb-3">Population Insights</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-primary"></div>
+                <span className="text-muted-foreground">
+                  {isLoading ? 'Loading...' : `Average: ${Math.round(monthlyResidents.reduce((sum, item) => sum + item.residents, 0) / monthlyResidents.length || 0)} residents/month`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <span className="text-muted-foreground">
+                  Peak: {isLoading ? 'Loading...' : `${Math.max(...monthlyResidents.map(item => item.residents), 0)} residents`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                <span className="text-muted-foreground">
+                  Active Rate: {isLoading ? 'Loading...' : `${((totalResidents / (totalResidents + totalDeceased + totalRelocated)) * 100).toFixed(1)}%`}
+                </span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
