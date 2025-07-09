@@ -19,10 +19,18 @@ interface ActivityLog {
   user_id: string;
 }
 
+interface UserProfile {
+  id: string;
+  firstname: string;
+  lastname: string;
+  username: string;
+}
+
 const DashboardCharts = () => {
   const { residents, households, loading: dataLoading } = useData();
   const { userProfile } = useAuth();
   const [recentActivities, setRecentActivities] = useState<ActivityLog[]>([]);
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   
   const {
@@ -59,6 +67,23 @@ const DashboardCharts = () => {
         }
 
         setRecentActivities(data || []);
+
+        // Fetch user profiles for the activities
+        if (data && data.length > 0) {
+          const userIds = [...new Set(data.map(activity => activity.user_id))];
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, firstname, lastname, username')
+            .in('id', userIds);
+
+          if (!profilesError && profiles) {
+            const profilesMap = profiles.reduce((acc, profile) => {
+              acc[profile.id] = profile;
+              return acc;
+            }, {} as Record<string, UserProfile>);
+            setUserProfiles(profilesMap);
+          }
+        }
       } catch (err) {
         console.error('Error in fetchRecentActivities:', err);
       } finally {
@@ -110,6 +135,33 @@ const DashboardCharts = () => {
     if (normalizedGender === 'female') return '#ec4899'; // Pink
     if (normalizedGender === 'others' || normalizedGender === 'other') return '#10b981'; // Green
     return '#6b7280'; // Gray for any other values
+  };
+
+  // Helper function to format activity message with user name
+  const formatActivityMessage = (activity: ActivityLog) => {
+    const userProfile = userProfiles[activity.user_id];
+    const userName = userProfile 
+      ? `${userProfile.firstname} ${userProfile.lastname}`.trim() || userProfile.username
+      : 'Unknown User';
+
+    switch (activity.action) {
+      case 'user_sign_in':
+        return `${userName} has signed in`;
+      case 'user_sign_out':
+        return `${userName} has signed out`;
+      case 'resident_created':
+        return `${userName} added a new resident`;
+      case 'resident_updated':
+        return `${userName} updated a resident`;
+      case 'document_issued':
+        return `${userName} issued a document`;
+      case 'household_created':
+        return `${userName} added a new household`;
+      case 'household_updated':
+        return `${userName} updated household information`;
+      default:
+        return `${userName} performed an action: ${activity.action}`;
+    }
   };
   
   if (error) {
@@ -265,7 +317,7 @@ const DashboardCharts = () => {
                     </div>
                     <div className="space-y-1 flex-1">
                       <p className="text-sm font-medium leading-none">
-                        {activity.action}
+                        {formatActivityMessage(activity)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {activity.details?.description || 'System activity'}
