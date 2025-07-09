@@ -32,6 +32,7 @@ const DashboardCharts = () => {
   const [recentActivities, setRecentActivities] = useState<ActivityLog[]>([]);
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [activitiesLoading, setActivitiesLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
   
   const {
     monthlyResidents,
@@ -94,6 +95,15 @@ const DashboardCharts = () => {
     fetchRecentActivities();
   }, [userProfile?.brgyid]);
 
+  // Update current time every minute for real-time "time ago" display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Helper function to get icon based on action type
   const getActivityIcon = (action: string) => {
     if (action.toLowerCase().includes('resident')) {
@@ -107,18 +117,21 @@ const DashboardCharts = () => {
     }
   };
 
-  // Helper function to format time ago
+  // Helper function to format time ago with real-time updates
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const now = currentTime; // Use the state that updates every minute
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
-    if (diffInHours < 1) {
+    if (diffInMinutes < 1) {
       return 'Just now';
-    } else if (diffInHours < 24) {
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+    } else if (diffInMinutes < 1440) { // Less than 24 hours
+      const diffInHours = Math.floor(diffInMinutes / 60);
       return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
     } else {
-      const diffInDays = Math.floor(diffInHours / 24);
+      const diffInDays = Math.floor(diffInMinutes / 1440);
       return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
     }
   };
