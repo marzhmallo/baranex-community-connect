@@ -4,13 +4,13 @@ import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSq
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useAuth } from '@/components/AuthProvider';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useAuth();
 
   // Dispatch a custom event when sidebar state changes
   useEffect(() => {
@@ -22,22 +22,7 @@ const Sidebar = () => {
     window.dispatchEvent(event);
   }, [isCollapsed]);
   const handleSignOut = async () => {
-    const {
-      error
-    } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out"
-      });
-      navigate("/login");
-    }
+    await signOut();
   };
   const isActive = (path: string) => {
     return location.pathname === path;
