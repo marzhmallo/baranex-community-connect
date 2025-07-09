@@ -10,7 +10,6 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from 'react';
-import { Cake } from 'lucide-react';
 
 interface ActivityLog {
   id: string;
@@ -27,14 +26,6 @@ interface UserProfile {
   username: string;
 }
 
-interface TodayCelebrant {
-  id: string;
-  first_name: string;
-  last_name: string;
-  birthdate: string;
-  purok: string;
-  age: number;
-}
 
 const DashboardCharts = () => {
   const { residents, households, loading: dataLoading } = useData();
@@ -43,8 +34,6 @@ const DashboardCharts = () => {
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [todayCelebrants, setTodayCelebrants] = useState<TodayCelebrant[]>([]);
-  const [celebrantsLoading, setCelebrantsLoading] = useState(true);
   
   const {
     monthlyResidents,
@@ -105,55 +94,6 @@ const DashboardCharts = () => {
     };
 
     fetchRecentActivities();
-  }, [userProfile?.brgyid]);
-
-  // Fetch today's celebrants
-  useEffect(() => {
-    const fetchTodayCelebrants = async () => {
-      if (!userProfile?.brgyid) return;
-      
-      try {
-        setCelebrantsLoading(true);
-        const today = new Date();
-        const todayMonth = today.getMonth() + 1; // getMonth() returns 0-11
-        const todayDay = today.getDate();
-        
-        const { data, error } = await supabase
-          .from('residents')
-          .select('id, first_name, last_name, birthdate, purok')
-          .eq('brgyid', userProfile.brgyid)
-          .eq('status', 'active')
-          .not('birthdate', 'is', null);
-
-        if (error) {
-          console.error('Error fetching residents for birthdays:', error);
-          return;
-        }
-
-        // Filter residents with birthdays today
-        const celebrants = (data || [])
-          .filter(resident => {
-            const birthDate = new Date(resident.birthdate);
-            return birthDate.getMonth() + 1 === todayMonth && birthDate.getDate() === todayDay;
-          })
-          .map(resident => {
-            const birthDate = new Date(resident.birthdate);
-            const age = today.getFullYear() - birthDate.getFullYear();
-            return {
-              ...resident,
-              age
-            };
-          });
-
-        setTodayCelebrants(celebrants);
-      } catch (err) {
-        console.error('Error in fetchTodayCelebrants:', err);
-      } finally {
-        setCelebrantsLoading(false);
-      }
-    };
-
-    fetchTodayCelebrants();
   }, [userProfile?.brgyid]);
 
   // Update current time every minute for real-time "time ago" display
@@ -374,45 +314,6 @@ const DashboardCharts = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-          
-          {/* Today's Celebrants */}
-          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-            <div className="flex items-center gap-2 mb-3">
-              <Cake className="h-4 w-4 text-primary" />
-              <h4 className="text-sm font-medium text-muted-foreground">Today's Celebrants</h4>
-            </div>
-            
-            {celebrantsLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-              </div>
-            ) : todayCelebrants.length > 0 ? (
-              <div className="space-y-3">
-                {todayCelebrants.map((celebrant) => (
-                  <div key={celebrant.id} className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-medium">
-                        {celebrant.first_name} {celebrant.last_name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Turning {celebrant.age}, {celebrant.purok}
-                      </div>
-                    </div>
-                    <Link 
-                      to={`/residents/${celebrant.id}`}
-                      className="text-xs text-primary hover:underline"
-                    >
-                      View Profile
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground text-center py-2">
-                No birthdays today. A great day to plan for the next celebration! 🎉
-              </p>
-            )}
           </div>
         </CardContent>
       </Card>
