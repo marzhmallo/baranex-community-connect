@@ -186,7 +186,7 @@ const DashboardHeader = () => {
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1">
                   <Upload className="h-4 w-4" />
-                  <span className="hidden md:inline">Background</span>
+                  <span className="md:inline">Background</span>
                 </Button>
               </DialogTrigger>
               <DialogContent>
