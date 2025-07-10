@@ -396,12 +396,12 @@ const StatisticsPage = () => {
               <span className="text-lg font-semibold text-green-600">{statistics!.registeredVoters.toLocaleString()} ({statistics!.voterPercentage.toFixed(1)}%)</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
-              <span className="text-foreground">Male Population</span>
-              <span className="text-lg font-semibold text-blue-600">{statistics!.genderDistribution.male.toLocaleString()} ({malePercentage.toFixed(1)}%)</span>
+              <span className="text-foreground">Working Age Population</span>
+              <span className="text-lg font-semibold text-blue-600">{(statistics!.ageDistribution['15-29'] + statistics!.ageDistribution['30-59']).toLocaleString()} ({(((statistics!.ageDistribution['15-29'] + statistics!.ageDistribution['30-59']) / statistics!.totalResidents) * 100).toFixed(1)}%)</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
-              <span className="text-foreground">Female Population</span>
-              <span className="text-lg font-semibold text-pink-600">{statistics!.genderDistribution.female.toLocaleString()} ({femalePercentage.toFixed(1)}%)</span>
+              <span className="text-foreground">Youth Population</span>
+              <span className="text-lg font-semibold text-pink-600">{statistics!.ageDistribution['15-29'].toLocaleString()} ({((statistics!.ageDistribution['15-29'] / statistics!.totalResidents) * 100).toFixed(1)}%)</span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-foreground">Senior Citizens</span>
