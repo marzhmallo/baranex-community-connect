@@ -849,14 +849,6 @@ const FeedbackPage = () => {
                 alt="Enlarged attachment"
                 className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
               />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
-                onClick={() => setEnlargedImage(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </DialogContent>
         </Dialog>
