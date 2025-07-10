@@ -180,13 +180,63 @@ const DashboardHeader = () => {
         <div className="flex flex-wrap gap-2">
           <NotificationDropdown />
           
-          {/* Background Photo Upload Button for Admins */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <User className="h-4 w-4" />
+                <span className="md:inline">{username}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem asChild>
+                <Link to="/profile" className="flex items-center w-full">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="flex items-center w-full">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={signOut} className="text-red-500 cursor-pointer">
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      
+      <Card className="border-none overflow-hidden relative">
+        {/* Background Photo */}
+        {backgroundPhoto && (
+          <div className="absolute inset-0">
+            <img
+              src={backgroundPhoto}
+              alt="Dashboard Background"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-baranex-primary/90 to-baranex-secondary/90" />
+          </div>
+        )}
+        
+        {/* Fallback gradient when no background photo */}
+        {!backgroundPhoto && (
+          <div className="absolute inset-0 bg-gradient-to-r from-baranex-primary to-baranex-secondary" />
+        )}
+
+        <CardContent className="relative p-6 text-white">
+          {/* Background Photo Upload Button for Admins - Floating at bottom right */}
           {isAdmin && (
             <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1">
-                  <Upload className="h-4 w-4" />
-                  <span className="md:inline">Background</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="absolute bottom-4 right-4 h-10 w-10 p-0 text-white hover:bg-white/20 bg-black/20 backdrop-blur-sm rounded-full"
+                >
+                  <Upload className="h-5 w-5" />
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -238,53 +288,6 @@ const DashboardHeader = () => {
             </Dialog>
           )}
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1">
-                <User className="h-4 w-4" />
-                <span className="md:inline">{username}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link to="/profile" className="flex items-center w-full">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/settings" className="flex items-center w-full">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={signOut} className="text-red-500 cursor-pointer">
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-      
-      <Card className="border-none overflow-hidden relative">
-        {/* Background Photo */}
-        {backgroundPhoto && (
-          <div className="absolute inset-0">
-            <img
-              src={backgroundPhoto}
-              alt="Dashboard Background"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-baranex-primary/90 to-baranex-secondary/90" />
-          </div>
-        )}
-        
-        {/* Fallback gradient when no background photo */}
-        {!backgroundPhoto && (
-          <div className="absolute inset-0 bg-gradient-to-r from-baranex-primary to-baranex-secondary" />
-        )}
-
-        <CardContent className="relative p-6 text-white">
           <div className="flex flex-col md:flex-row justify-between items-start">
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2">
