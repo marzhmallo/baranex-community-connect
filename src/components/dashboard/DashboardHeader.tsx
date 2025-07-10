@@ -50,21 +50,20 @@ const DashboardHeader = () => {
   // Check if user is admin
   const isAdmin = userProfile?.role === 'admin';
 
-  // Load existing background photo
+  // Load existing background photo from barangays table
   useEffect(() => {
     const loadBackgroundPhoto = async () => {
       if (!userProfile?.brgyid) return;
       
       try {
-        const { data, error } = await supabase.storage
-          .from('barangayimgs')
-          .list(`backgrounds/${userProfile.brgyid}`, {
-            limit: 1,
-            sortBy: { column: 'created_at', order: 'desc' }
-          });
+        const { data, error } = await supabase
+          .from('barangays')
+          .select('backgroundurl')
+          .eq('id', userProfile.brgyid)
+          .single();
 
-        if (!error && data && data.length > 0) {
-          setBackgroundPhoto(`backgrounds/${userProfile.brgyid}/${data[0].name}`);
+        if (!error && data?.backgroundurl) {
+          setBackgroundPhoto(data.backgroundurl);
         }
       } catch (error) {
         console.error('Error loading background photo:', error);
@@ -82,7 +81,7 @@ const DashboardHeader = () => {
     try {
       // Upload new background photo
       const fileName = `background-${Date.now()}.${file.name.split('.').pop()}`;
-      const filePath = `backgrounds/${userProfile.brgyid}/${fileName}`;
+      const filePath = `backgrounds/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('barangayimgs')
@@ -90,26 +89,33 @@ const DashboardHeader = () => {
 
       if (uploadError) throw uploadError;
 
-      // Remove old background photos for this barangay
-      try {
-        const { data: existingFiles } = await supabase.storage
-          .from('barangayimgs')
-          .list(`backgrounds/${userProfile.brgyid}`);
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('barangayimgs')
+        .getPublicUrl(filePath);
 
-        if (existingFiles && existingFiles.length > 1) {
-          const filesToDelete = existingFiles
-            .filter(f => f.name !== fileName)
-            .map(f => `backgrounds/${userProfile.brgyid}/${f.name}`);
+      // Update the barangays table with the new background URL
+      const { error: updateError } = await supabase
+        .from('barangays')
+        .update({ backgroundurl: publicUrl })
+        .eq('id', userProfile.brgyid);
 
+      if (updateError) throw updateError;
+
+      // Remove old background photo if it exists
+      if (backgroundPhoto) {
+        try {
+          // Extract file path from the old URL
+          const oldFilePath = backgroundPhoto.split('/').slice(-2).join('/');
           await supabase.storage
             .from('barangayimgs')
-            .remove(filesToDelete);
+            .remove([oldFilePath]);
+        } catch (cleanupError) {
+          console.warn('Error cleaning up old background photo:', cleanupError);
         }
-      } catch (cleanupError) {
-        console.warn('Error cleaning up old background photos:', cleanupError);
       }
 
-      setBackgroundPhoto(filePath);
+      setBackgroundPhoto(publicUrl);
       setUploadDialogOpen(false);
       toast({
         title: "Success",
@@ -131,11 +137,22 @@ const DashboardHeader = () => {
     if (!backgroundPhoto || !userProfile?.brgyid) return;
 
     try {
-      const { error } = await supabase.storage
+      // Extract file path from the URL
+      const filePath = backgroundPhoto.split('/').slice(-2).join('/');
+      
+      const { error: storageError } = await supabase.storage
         .from('barangayimgs')
-        .remove([backgroundPhoto]);
+        .remove([filePath]);
 
-      if (error) throw error;
+      if (storageError) throw storageError;
+
+      // Update the barangays table to remove the background URL
+      const { error: updateError } = await supabase
+        .from('barangays')
+        .update({ backgroundurl: null })
+        .eq('id', userProfile.brgyid);
+
+      if (updateError) throw updateError;
 
       setBackgroundPhoto(null);
       toast({
@@ -162,6 +179,64 @@ const DashboardHeader = () => {
         
         <div className="flex flex-wrap gap-2">
           <NotificationDropdown />
+          
+          {/* Background Photo Upload Button for Admins */}
+          {isAdmin && (
+            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1">
+                  <Upload className="h-4 w-4" />
+                  <span className="hidden md:inline">Background</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Manage Background Photo</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {backgroundPhoto && (
+                    <div className="space-y-2">
+                      <Label>Current Background</Label>
+                      <div className="relative w-full h-32 rounded-lg overflow-hidden">
+                        <img
+                          src={backgroundPhoto}
+                          alt="Current Background"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          removeBackgroundPhoto();
+                          setUploadDialogOpen(false);
+                        }}
+                        className="w-full"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Remove Background
+                      </Button>
+                    </div>
+                  )}
+                  <div>
+                    <Label htmlFor="background-photo">
+                      {backgroundPhoto ? 'Replace Background Photo' : 'Upload Background Photo'}
+                    </Label>
+                    <Input
+                      id="background-photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      disabled={uploading}
+                    />
+                  </div>
+                  {uploading && (
+                    <p className="text-sm text-muted-foreground">Uploading...</p>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -195,12 +270,10 @@ const DashboardHeader = () => {
         {/* Background Photo */}
         {backgroundPhoto && (
           <div className="absolute inset-0">
-            <SmartPhotoDisplay
-              bucketName="barangayimgs"
-              filePath={backgroundPhoto}
-              isPublic={true}
-              className="w-full h-full object-cover"
+            <img
+              src={backgroundPhoto}
               alt="Dashboard Background"
+              className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-baranex-primary/90 to-baranex-secondary/90" />
           </div>
@@ -216,52 +289,6 @@ const DashboardHeader = () => {
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-semibold">Welcome to Baranex</h2>
-                {isAdmin && (
-                  <div className="flex gap-1">
-                    <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-white hover:bg-white/20"
-                        >
-                          <Upload className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Upload Background Photo</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="background-photo">Choose Photo</Label>
-                            <Input
-                              id="background-photo"
-                              type="file"
-                              accept="image/*"
-                              onChange={handlePhotoUpload}
-                              disabled={uploading}
-                            />
-                          </div>
-                          {uploading && (
-                            <p className="text-sm text-muted-foreground">Uploading...</p>
-                          )}
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                    
-                    {backgroundPhoto && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-white hover:bg-white/20"
-                        onClick={removeBackgroundPhoto}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                )}
               </div>
               <p className="text-white/80 max-w-md">
                 Your partner in digital barangay management. Access and manage resident data, documents, and community events all in one place.

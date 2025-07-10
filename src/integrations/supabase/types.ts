@@ -99,6 +99,7 @@ export type Database = {
       }
       barangays: {
         Row: {
+          backgroundurl: string | null
           barangayname: string
           country: string
           created_at: string
@@ -116,6 +117,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          backgroundurl?: string | null
           barangayname: string
           country: string
           created_at: string
@@ -133,6 +135,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          backgroundurl?: string | null
           barangayname?: string
           country?: string
           created_at?: string
