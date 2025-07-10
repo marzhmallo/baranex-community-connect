@@ -4,7 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { feedbackAPI } from '@/lib/api/feedback';
 import { FeedbackReport, FeedbackType, FeedbackStatus } from '@/lib/types/feedback';
-import { FileText, Clock, CheckCircle, Timer, Search, Filter, AlertTriangle, ThumbsUp, Construction, Volume2, ZoomIn, Play, PlusCircle, Upload, Download, BarChart3, Smartphone, Trees, Shield, Users, MessageSquare, User, Mic, Calendar, MapPin, Eye, X } from 'lucide-react';
+import { FileText, Clock, CheckCircle, Timer, Search, Filter, AlertTriangle, ThumbsUp, Construction, Volume2, ZoomIn, Play, PlusCircle, Upload, Download, BarChart3, Smartphone, Trees, Shield, Users, MessageSquare, User, Mic, Calendar, MapPin, Eye, X, Droplets } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar, ResponsiveContainer } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -266,7 +266,7 @@ const FeedbackPage = () => {
     if (category.toLowerCase().includes('road') || category.toLowerCase().includes('infrastructure')) return Construction;
     if (category.toLowerCase().includes('garbage') || category.toLowerCase().includes('environment')) return Trees;
     if (category.toLowerCase().includes('light') || category.toLowerCase().includes('street')) return AlertTriangle;
-    if (category.toLowerCase().includes('water')) return Volume2;
+    if (category.toLowerCase().includes('water')) return Droplets;
     if (category.toLowerCase().includes('safety') || category.toLowerCase().includes('security')) return Shield;
     if (category.toLowerCase().includes('noise')) return Volume2;
     if (category.toLowerCase().includes('community')) return Users;
