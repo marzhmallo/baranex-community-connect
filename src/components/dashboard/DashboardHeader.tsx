@@ -217,7 +217,7 @@ const DashboardHeader = () => {
               alt="Dashboard Background"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-baranex-primary/90 to-baranex-secondary/90" />
+            <div className="absolute inset-0 bg-gradient-to-r from-baranex-primary/40 to-baranex-secondary/40" />
           </div>
         )}
         
