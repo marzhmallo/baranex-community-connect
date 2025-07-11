@@ -208,21 +208,7 @@ const StatisticsPage = () => {
             <div className="w-full bg-muted rounded-full h-2">
               <div className="bg-pink-500 h-2 rounded-full" style={{width: `${femalePercentage}%`}}></div>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-purple-500 rounded mr-3"></div>
-                <span className="text-foreground"></span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-lg font-semibold text-foreground mr-3">{statistics!.genderDistribution.others.toLocaleString()}</span>
-                <span className="text-sm text-muted-foreground">{othersPercentage.toFixed(1)}%</span>
-              </div>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-purple-500 h-2 rounded-full" style={{width: `${othersPercentage}%`}}></div>
-            </div>
-          </div>
-        </div>
+           
 
         <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
