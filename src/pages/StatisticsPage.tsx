@@ -288,7 +288,7 @@ const StatisticsPage = () => {
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Working Age (18-59)</span>
               <span className="text-sm font-medium text-foreground">
-                {(statistics!.ageDistribution['18-29 (Young Adult)'] + statistics!.ageDistribution['30-59 (Adult)']).toLocaleString()}
+                {((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0)).toLocaleString()}
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
@@ -296,17 +296,17 @@ const StatisticsPage = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Youth (18-29)</span>
-              <span className="text-sm font-medium text-foreground">{statistics!.ageDistribution['18-29 (Young Adult)'].toLocaleString()}</span>
+              <span className="text-sm font-medium text-foreground">{(statistics!.ageDistribution['18-29 (Young Adult)'] || 0).toLocaleString()}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-green-500 h-2 rounded-full" style={{width: `${(statistics!.ageDistribution['18-29 (Young Adult)'] / statistics!.totalResidents) * 100}%`}}></div>
+              <div className="bg-green-500 h-2 rounded-full" style={{width: `${((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) / statistics!.totalResidents) * 100}%`}}></div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Senior Citizens (60+)</span>
-              <span className="text-sm font-medium text-foreground">{statistics!.ageDistribution['60+ (Senior Citizen)'].toLocaleString()}</span>
+              <span className="text-sm font-medium text-foreground">{(statistics!.ageDistribution['60+ (Senior Citizen)'] || 0).toLocaleString()}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-blue-500 h-2 rounded-full" style={{width: `${(statistics!.ageDistribution['60+ (Senior Citizen)'] / statistics!.totalResidents) * 100}%`}}></div>
+              <div className="bg-blue-500 h-2 rounded-full" style={{width: `${((statistics!.ageDistribution['60+ (Senior Citizen)'] || 0) / statistics!.totalResidents) * 100}%`}}></div>
             </div>
           </div>
         </div>
@@ -319,22 +319,26 @@ const StatisticsPage = () => {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Children (0-12)</span>
-              <span className="text-sm font-medium text-foreground">{statistics!.ageDistribution['0-12 (Child)'].toLocaleString()}</span>
+              <span className="text-sm font-medium text-foreground">{(statistics!.ageDistribution['0-12 (Child)'] || 0).toLocaleString()}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-blue-400 h-2 rounded-full" style={{width: `${(statistics!.ageDistribution['0-12 (Child)'] / statistics!.totalResidents) * 100}%`}}></div>
+              <div className="bg-blue-400 h-2 rounded-full" style={{width: `${((statistics!.ageDistribution['0-12 (Child)'] || 0) / statistics!.totalResidents) * 100}%`}}></div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Adults (30-59)</span>
-              <span className="text-sm font-medium text-foreground">{statistics!.ageDistribution['30-59 (Adult)'].toLocaleString()}</span>
+              <span className="text-sm font-medium text-foreground">{(statistics!.ageDistribution['30-59 (Adult)'] || 0).toLocaleString()}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full" style={{width: `${(statistics!.ageDistribution['30-59 (Adult)'] / statistics!.totalResidents) * 100}%`}}></div>
+              <div className="bg-blue-600 h-2 rounded-full" style={{width: `${((statistics!.ageDistribution['30-59 (Adult)'] || 0) / statistics!.totalResidents) * 100}%`}}></div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Dependency Ratio</span>
               <span className="text-sm font-medium text-foreground">
-                {((statistics!.ageDistribution['0-14'] + statistics!.ageDistribution['60+']) / (statistics!.ageDistribution['15-29'] + statistics!.ageDistribution['30-59']) * 100).toFixed(1)}%
+                {(() => {
+                  const dependents = (statistics!.ageDistribution['0-12 (Child)'] || 0) + (statistics!.ageDistribution['60+ (Senior Citizen)'] || 0);
+                  const workers = (statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0);
+                  return workers > 0 ? ((dependents / workers) * 100).toFixed(1) : '0.0';
+                })()}%
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
@@ -399,15 +403,15 @@ const StatisticsPage = () => {
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Working Age Population</span>
-              <span className="text-lg font-semibold text-blue-600">{(statistics!.ageDistribution['15-29'] + statistics!.ageDistribution['30-59']).toLocaleString()} ({(((statistics!.ageDistribution['15-29'] + statistics!.ageDistribution['30-59']) / statistics!.totalResidents) * 100).toFixed(1)}%)</span>
+              <span className="text-lg font-semibold text-blue-600">{((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0)).toLocaleString()} ({((((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0)) / statistics!.totalResidents) * 100).toFixed(1)}%)</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Youth Population</span>
-              <span className="text-lg font-semibold text-pink-600">{statistics!.ageDistribution['15-29'].toLocaleString()} ({((statistics!.ageDistribution['15-29'] / statistics!.totalResidents) * 100).toFixed(1)}%)</span>
+              <span className="text-lg font-semibold text-pink-600">{(statistics!.ageDistribution['18-29 (Young Adult)'] || 0).toLocaleString()} ({(((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) / statistics!.totalResidents) * 100).toFixed(1)}%)</span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-foreground">Senior Citizens</span>
-              <span className="text-lg font-semibold text-orange-600">{statistics!.ageDistribution['60+'].toLocaleString()}</span>
+              <span className="text-lg font-semibold text-orange-600">{(statistics!.ageDistribution['60+ (Senior Citizen)'] || 0).toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -428,11 +432,11 @@ const StatisticsPage = () => {
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Youth Population (15-29)</span>
-              <span className="text-lg font-semibold text-green-600">{statistics!.ageDistribution['15-29'].toLocaleString()}</span>
+              <span className="text-lg font-semibold text-green-600">{(statistics!.ageDistribution['18-29 (Young Adult)'] || 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-foreground">Children (0-14)</span>
-              <span className="text-lg font-semibold text-purple-600">{statistics!.ageDistribution['0-14'].toLocaleString()}</span>
+              <span className="text-lg font-semibold text-purple-600">{(statistics!.ageDistribution['0-12 (Child)'] || 0).toLocaleString()}</span>
             </div>
           </div>
         </div>
