@@ -208,7 +208,9 @@ const StatisticsPage = () => {
             <div className="w-full bg-muted rounded-full h-2">
               <div className="bg-pink-500 h-2 rounded-full" style={{width: `${femalePercentage}%`}}></div>
             </div>
-           
+            </div>
+          </div>
+        </div>
 
         <div className="bg-card rounded-xl shadow-lg p-6 border border-border/50">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
