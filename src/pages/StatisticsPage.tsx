@@ -213,7 +213,7 @@ const StatisticsPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-purple-500 rounded mr-3"></div>
-                <span className="text-foreground">Others</span>
+                <span className="text-foreground">Pon</span>
               </div>
               <div className="flex items-center">
                 <span className="text-lg font-semibold text-foreground mr-3">{statistics!.genderDistribution.others.toLocaleString()}</span>
