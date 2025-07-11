@@ -196,7 +196,7 @@ const ResidentForm = ({
     lastName: "",
     middleName: "",
     suffix: "",
-    gender: "",
+    gender: "Male",
     birthDate: "",
     photoUrl: "",
     purok: "",
@@ -208,7 +208,7 @@ const ResidentForm = ({
     contactNumber: "",
     email: "",
     occupation: "",
-    civilStatus: "",
+    civilStatus: "Single",
     monthlyIncome: 0,
     yearsInBarangay: 0,
     nationality: "",
@@ -222,7 +222,6 @@ const ResidentForm = ({
     emergencyContactRelationship: "",
     emergencyContactNumber: "",
     status: "Temporary",
-    // Default status
     diedOn: null,
     remarks: ""
   };
