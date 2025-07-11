@@ -208,6 +208,8 @@ const StatisticsPage = () => {
             <div className="w-full bg-muted rounded-full h-2">
               <div className="bg-pink-500 h-2 rounded-full" style={{width: `${femalePercentage}%`}}></div>
             </div>
+            <div
+              </div>
               <div className="flex items-center">
                 <span className="text-lg font-semibold text-foreground mr-3">{statistics!.genderDistribution.others.toLocaleString()}</span>
                 <span className="text-sm text-muted-foreground">{othersPercentage.toFixed(1)}%</span>
