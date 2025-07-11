@@ -262,7 +262,7 @@ const StatisticsPage = () => {
           <div className="space-y-3">
             {Object.entries(statistics!.ageDistribution).map(([ageGroup, count], index) => {
               const percentage = statistics!.totalResidents > 0 ? (count / statistics!.totalResidents) * 100 : 0;
-              const colors = ['bg-orange-600', 'bg-orange-500', 'bg-orange-700', 'bg-orange-800'];
+              const colors = ['bg-orange-600', 'bg-orange-500', 'bg-orange-700', 'bg-orange-800', 'bg-orange-900'];
               
               return (
                 <div key={ageGroup}>
