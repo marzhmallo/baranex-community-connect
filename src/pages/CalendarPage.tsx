@@ -342,8 +342,8 @@ const CalendarPage = () => {
   const pastEvents = events?.filter(event => new Date(event.start_time) < now) || [];
 
   return (
-    <div className="w-[1200px] mx-auto p-6 bg-background min-h-screen">
-      <div className="max-w-6xl mx-auto">
+    <div className="w-full p-6 bg-background min-h-screen">
+      <div className="max-w-none mx-auto">
         <div className="bg-card border border-border rounded-lg shadow-lg overflow-hidden">
           <div className="bg-primary text-primary-foreground p-6">
             <div className="flex items-center justify-between">
