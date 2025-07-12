@@ -104,7 +104,7 @@ const UserDocumentsPage = () => {
     }
   });
 
-  const itemsPerPage = 3;
+  const itemsPerPage = 5;
   const totalPages = Math.ceil(documentTypes.length / itemsPerPage);
   
   // Calculate paginated data using real Supabase data
