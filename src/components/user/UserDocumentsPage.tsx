@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
@@ -46,8 +46,8 @@ const UserDocumentsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { userProfile } = useAuth();
 
-  // Fetch user's document requests from Supabase
-  const { data: documentRequests = [], isLoading } = useQuery({
+  // Fetch user's document requests from Supabase with real-time updates
+  const { data: documentRequests = [], isLoading, refetch } = useQuery({
     queryKey: ['user-document-requests', userProfile?.id],
     queryFn: async () => {
       if (!userProfile?.id) return [];
@@ -63,6 +63,32 @@ const UserDocumentsPage = () => {
     },
     enabled: !!userProfile?.id
   });
+
+  // Set up real-time subscription for user document requests
+  useEffect(() => {
+    if (!userProfile?.id) return;
+
+    const channel = supabase
+      .channel('user-document-requests-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'docrequests',
+          filter: `resident_id=eq.${userProfile.id}`
+        },
+        () => {
+          // Refetch user's document requests when changes occur
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userProfile?.id, refetch]);
 
   // Fetch document types from Supabase
   const { data: documentTypes = [], isLoading: isLoadingTemplates } = useQuery({

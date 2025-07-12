@@ -56,9 +56,30 @@ const DocumentsPage = () => {
   const { toast } = useToast();
   const { adminProfileId } = useCurrentAdmin();
 
-  // Fetch document requests from Supabase
+  // Fetch document requests from Supabase with real-time updates
   useEffect(() => {
     fetchDocumentRequests();
+    
+    // Set up real-time subscription for document requests
+    const channel = supabase
+      .channel('document-requests-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'docrequests'
+        },
+        () => {
+          // Refetch document requests when changes occur
+          fetchDocumentRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [requestsCurrentPage]);
 
   const fetchDocumentRequests = async () => {
@@ -142,6 +163,29 @@ const DocumentsPage = () => {
       return data || [];
     }
   });
+
+  // Set up real-time subscription for document types
+  useEffect(() => {
+    const channel = supabase
+      .channel('document-types-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'document_types'
+        },
+        () => {
+          // Refetch document types when changes occur
+          refetchDocuments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetchDocuments]);
 
   // Fetch document request stats
   const { data: documentStats } = useQuery({
@@ -341,9 +385,30 @@ const DocumentsPage = () => {
   
   const trackingItemsPerPage = 5;
 
-  // Fetch document tracking data
+  // Fetch document tracking data with real-time updates
   useEffect(() => {
     fetchDocumentTracking();
+    
+    // Set up real-time subscription for document tracking
+    const channel = supabase
+      .channel('document-tracking-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'docrequests'
+        },
+        () => {
+          // Refetch tracking data when changes occur
+          fetchDocumentTracking();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [trackingCurrentPage, trackingSearchQuery, trackingFilter]);
 
   // Reset page when search or filter changes

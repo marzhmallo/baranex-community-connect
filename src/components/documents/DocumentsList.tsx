@@ -70,9 +70,30 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
   
   const itemsPerPage = 3;
 
-  // Fetch documents from Supabase
+  // Fetch documents from Supabase with real-time updates
   useEffect(() => {
     fetchDocuments();
+    
+    // Set up real-time subscription for documents list
+    const channel = supabase
+      .channel('documents-list-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'docrequests'
+        },
+        () => {
+          // Refetch documents when changes occur
+          fetchDocuments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [status, searchQuery, currentPage]);
 
   const fetchDocuments = async () => {

@@ -24,6 +24,27 @@ const DocumentLogsList = ({
 
   useEffect(() => {
     fetchLogs();
+    
+    // Set up real-time subscription for document logs
+    const channel = supabase
+      .channel('document-logs-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'document_logs'
+        },
+        () => {
+          // Refetch logs when changes occur
+          fetchLogs();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [searchQuery]);
 
   const fetchLogs = async () => {

@@ -21,6 +21,27 @@ const DocumentTemplatesList = ({
   } = useToast();
   useEffect(() => {
     fetchTemplates();
+    
+    // Set up real-time subscription for document templates
+    const channel = supabase
+      .channel('document-templates-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'document_types'
+        },
+        () => {
+          // Refetch templates when changes occur
+          fetchTemplates();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [searchQuery]);
   const fetchTemplates = async () => {
     setLoading(true);
