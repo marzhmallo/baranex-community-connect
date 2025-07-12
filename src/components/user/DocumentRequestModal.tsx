@@ -50,6 +50,20 @@ const DocumentRequestModal = ({
     enabled: !!userProfile?.brgyid
   });
 
+  // Check if GCash is available for the barangay
+  const isGCashAvailable = barangayInfo && (
+    barangayInfo["gcash#"] || 
+    (barangayInfo.gcashname && barangayInfo.gcashname.length > 0) ||
+    barangayInfo.gcashurl
+  );
+
+  // Reset payment method to walk-in if GCash becomes unavailable
+  useEffect(() => {
+    if (paymentMethod === "gcash" && !isGCashAvailable) {
+      setPaymentMethod("walk-in");
+    }
+  }, [isGCashAvailable, paymentMethod]);
+
   // Fetch available document types
   const {
     data: documentTypes = [],
@@ -159,7 +173,7 @@ const DocumentRequestModal = ({
           paymenturl: paymentUrl,
           paydate: new Date().toISOString()
         }),
-        status: 'pending',
+        status: 'Request',
         issued_at: new Date().toISOString()
       };
       await createDocumentRequest.mutateAsync(requestData);
@@ -244,9 +258,12 @@ const DocumentRequestModal = ({
                     <RadioGroupItem value="walk-in" id="walk-in" />
                     <Label htmlFor="walk-in">Walk-in Payment (Cash)</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="gcash" id="gcash" />
-                    <Label htmlFor="gcash">GCash Payment</Label>
+                  <div className={`flex items-center space-x-2 ${!isGCashAvailable ? 'opacity-50' : ''}`}>
+                    <RadioGroupItem value="gcash" id="gcash" disabled={!isGCashAvailable} />
+                    <Label htmlFor="gcash" className={!isGCashAvailable ? 'cursor-not-allowed' : ''}>
+                      GCash Payment
+                      {!isGCashAvailable && <span className="text-xs text-red-500 ml-2">(Not available - GCash not set up)</span>}
+                    </Label>
                   </div>
                 </RadioGroup>
 
