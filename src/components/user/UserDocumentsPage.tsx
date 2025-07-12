@@ -36,7 +36,8 @@ import {
   Upload,
   ArrowRight,
   Settings,
-  MoreHorizontal
+  MoreHorizontal,
+  MessageCircle
 } from "lucide-react";
 
 const UserDocumentsPage = () => {
@@ -506,45 +507,45 @@ const UserDocumentsPage = () => {
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button 
-                  onClick={() => setShowIssueForm(true)}
+                  onClick={() => setShowRequestModal(true)}
                   className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-accent transition-colors text-left"
                 >
                   <div className="bg-primary/10 p-2 rounded-lg">
                     <PlusCircle className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">Issue New Document</p>
-                    <p className="text-sm text-muted-foreground">Create and issue documents</p>
+                    <p className="font-medium text-foreground">Request Document</p>
+                    <p className="text-sm text-muted-foreground">Submit a new document request</p>
                   </div>
                 </button>
 
                 <button className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-accent transition-colors text-left">
                   <div className="bg-blue-500/10 p-2 rounded-lg">
-                    <Upload className="h-5 w-5 text-blue-600" />
+                    <History className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">Upload Template</p>
-                    <p className="text-sm text-muted-foreground">Add new document templates</p>
+                    <p className="font-medium text-foreground">Track Requests</p>
+                    <p className="text-sm text-muted-foreground">View your request history</p>
                   </div>
                 </button>
 
                 <button className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-accent transition-colors text-left">
                   <div className="bg-green-500/10 p-2 rounded-lg">
-                    <BarChart3 className="h-5 w-5 text-green-600" />
+                    <Download className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">View Reports</p>
-                    <p className="text-sm text-muted-foreground">Document statistics and analytics</p>
+                    <p className="font-medium text-foreground">Download Documents</p>
+                    <p className="text-sm text-muted-foreground">Access your completed documents</p>
                   </div>
                 </button>
 
                 <button className="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-accent transition-colors text-left">
                   <div className="bg-orange-500/10 p-2 rounded-lg">
-                    <Settings className="h-5 w-5 text-orange-600" />
+                    <MessageCircle className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">System Settings</p>
-                    <p className="text-sm text-muted-foreground">Configure document settings</p>
+                    <p className="font-medium text-foreground">Contact Support</p>
+                    <p className="text-sm text-muted-foreground">Get help with your requests</p>
                   </div>
                 </button>
               </div>
