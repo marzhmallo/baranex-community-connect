@@ -68,7 +68,7 @@ const DocumentsList = ({ status, searchQuery }: DocumentsListProps) => {
   const [totalCount, setTotalCount] = useState(0);
   const { adminProfileId } = useCurrentAdmin();
   
-  const itemsPerPage = 3;
+  const itemsPerPage = 5;
 
   // Fetch documents from Supabase with real-time updates
   useEffect(() => {
