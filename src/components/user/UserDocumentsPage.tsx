@@ -224,56 +224,61 @@ const UserDocumentsPage = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary-600" />
-              Document Processing Status
+              My Document Status
             </h2>
             <div className="flex gap-2">
-              <select className="text-xs border border-gray-300 rounded-md p-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                <option>This Week</option>
-                <option>This Month</option>
-                <option>Last 3 Months</option>
-                <option>Last Year</option>
-              </select>
-              <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
+              <button 
+                onClick={() => refetch()}
+                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              >
                 <RefreshCw className="h-4 w-4" />
               </button>
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+            <div className="rounded-lg bg-yellow-50 border border-yellow-100 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-gray-500">Pending</p>
+                <p className="text-xl font-bold text-yellow-600">
+                  {documentRequests.filter(req => req.status === 'pending').length}
+                </p>
+              </div>
+              <div className="bg-yellow-100 p-2 rounded-full">
+                <Clock className="h-5 w-5 text-yellow-600" />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-blue-50 border border-blue-100 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-gray-500">Processing</p>
+                <p className="text-xl font-bold text-blue-600">
+                  {documentRequests.filter(req => req.status === 'processing').length}
+                </p>
+              </div>
+              <div className="bg-blue-100 p-2 rounded-full">
+                <Hourglass className="h-5 w-5 text-blue-600" />
+              </div>
+            </div>
+            
             <div className="rounded-lg bg-green-50 border border-green-100 p-3 flex justify-between items-center">
               <div>
-                <p className="text-xs text-gray-500">Ready for Pickup</p>
-                <p className="text-xl font-bold text-green-600">18</p>
+                <p className="text-xs text-gray-500">Ready to Pickup</p>
+                <p className="text-xl font-bold text-green-600">
+                  {documentRequests.filter(req => req.status === 'approved' || req.status === 'ready').length}
+                </p>
               </div>
               <div className="bg-green-100 p-2 rounded-full">
                 <Package className="h-5 w-5 text-green-600" />
               </div>
             </div>
             
-            <div className="rounded-lg bg-yellow-50 border border-yellow-100 p-3 flex justify-between items-center">
-              <div>
-                <p className="text-xs text-gray-500">Processing</p>
-                <p className="text-xl font-bold text-yellow-600">12</p>
-              </div>
-              <div className="bg-yellow-100 p-2 rounded-full">
-                <Hourglass className="h-5 w-5 text-yellow-600" />
-              </div>
-            </div>
-            
-            <div className="rounded-lg bg-blue-50 border border-blue-100 p-3 flex justify-between items-center">
-              <div>
-                <p className="text-xs text-gray-500">For Review</p>
-                <p className="text-xl font-bold text-blue-600">7</p>
-              </div>
-              <div className="bg-blue-100 p-2 rounded-full">
-                <Eye className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-            
             <div className="rounded-lg bg-purple-50 border border-purple-100 p-3 flex justify-between items-center">
               <div>
                 <p className="text-xs text-gray-500">Released</p>
-                <p className="text-xl font-bold text-purple-600">42</p>
+                <p className="text-xl font-bold text-purple-600">
+                  {documentRequests.filter(req => req.status === 'released' || req.status === 'completed').length}
+                </p>
               </div>
               <div className="bg-purple-100 p-2 rounded-full">
                 <CheckCircle className="h-5 w-5 text-purple-600" />
@@ -283,7 +288,9 @@ const UserDocumentsPage = () => {
             <div className="rounded-lg bg-red-50 border border-red-100 p-3 flex justify-between items-center">
               <div>
                 <p className="text-xs text-gray-500">Rejected</p>
-                <p className="text-xl font-bold text-red-600">3</p>
+                <p className="text-xl font-bold text-red-600">
+                  {documentRequests.filter(req => req.status === 'rejected').length}
+                </p>
               </div>
               <div className="bg-red-100 p-2 rounded-full">
                 <XCircle className="h-5 w-5 text-red-600" />
@@ -292,19 +299,30 @@ const UserDocumentsPage = () => {
           </div>
           
           <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
-            <span>Processing Time (Average)</span>
-            <span>Updated: Today, 11:30 AM</span>
+            <span>Total Documents: {documentRequests.length}</span>
+            <span>Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
           </div>
           
-          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-            <div className="bg-primary-600 h-2.5 rounded-full" style={{ width: '70%' }}></div>
-          </div>
-          
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-500">0 days</span>
-            <span className="font-medium text-primary-600">1.2 days</span>
-            <span className="text-gray-500">3 days (target)</span>
-          </div>
+          {documentRequests.length > 0 && (
+            <>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                <div 
+                  className="bg-primary-600 h-2.5 rounded-full transition-all duration-500" 
+                  style={{ 
+                    width: `${Math.round((documentRequests.filter(req => req.status === 'released' || req.status === 'completed' || req.status === 'approved').length / documentRequests.length) * 100)}%` 
+                  }}
+                ></div>
+              </div>
+              
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-500">0%</span>
+                <span className="font-medium text-primary-600">
+                  {Math.round((documentRequests.filter(req => req.status === 'released' || req.status === 'completed' || req.status === 'approved').length / documentRequests.length) * 100)}% Completed
+                </span>
+                <span className="text-gray-500">100%</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
