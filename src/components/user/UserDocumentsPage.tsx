@@ -680,13 +680,6 @@ const UserDocumentsPage = () => {
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Request Document
               </Button>
-              <Button 
-                onClick={() => setShowIssueForm(true)}
-                className="bg-primary-600 text-white hover:bg-primary-700"
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Issue Document
-              </Button>
             </div>
           </div>
         </div>
