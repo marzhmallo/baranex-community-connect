@@ -44,6 +44,7 @@ const UserDocumentsPage = () => {
   const [showIssueForm, setShowIssueForm] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const { userProfile } = useAuth();
 
   // Fetch user's document requests from Supabase with real-time updates
@@ -107,14 +108,29 @@ const UserDocumentsPage = () => {
   const itemsPerPage = 5;
   const totalPages = Math.ceil(documentTypes.length / itemsPerPage);
   
+  // Pagination for document requests
+  const requestsPerPage = 5;
+  const requestsTotalPages = Math.ceil(documentRequests.length / requestsPerPage);
+  
   // Calculate paginated data using real Supabase data
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedTemplates = documentTypes.slice(startIndex, endIndex);
+  
+  // Calculate paginated document requests
+  const requestsStartIndex = (requestsCurrentPage - 1) * requestsPerPage;
+  const requestsEndIndex = requestsStartIndex + requestsPerPage;
+  const paginatedRequests = documentRequests.slice(requestsStartIndex, requestsEndIndex);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
+    }
+  };
+  
+  const handleRequestsPageChange = (page: number) => {
+    if (page >= 1 && page <= requestsTotalPages) {
+      setRequestsCurrentPage(page);
     }
   };
 
@@ -671,7 +687,7 @@ const UserDocumentsPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  documentRequests.map((request) => (
+                  paginatedRequests.map((request) => (
                     <tr key={request.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-700">
                         {request.docnumber}
@@ -708,24 +724,52 @@ const UserDocumentsPage = () => {
             </table>
           </div>
           
-          <div className="mt-6 flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              Showing 5 of 42 documents
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                Previous
-              </button>
-              <div className="flex">
-                <button className="px-3 py-1 bg-primary-100 text-primary-700 rounded-md text-sm font-medium">1</button>
-                <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">2</button>
-                <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md text-sm">3</button>
+          {requestsTotalPages > 1 && (
+            <div className="mt-6 flex justify-between items-center">
+              <div className="text-sm text-gray-600">
+                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, documentRequests.length)} of {documentRequests.length} requests
               </div>
-              <button className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                Next
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)}
+                  disabled={requestsCurrentPage === 1}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    requestsCurrentPage === 1 
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Previous
+                </button>
+                <div className="flex">
+                  {Array.from({ length: requestsTotalPages }, (_, i) => i + 1).map((page) => (
+                    <button 
+                      key={page}
+                      onClick={() => handleRequestsPageChange(page)}
+                      className={`px-3 py-1 text-sm rounded-md font-medium ${
+                        requestsCurrentPage === page 
+                          ? 'bg-primary-100 text-primary-700' 
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)}
+                  disabled={requestsCurrentPage === requestsTotalPages}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    requestsCurrentPage === requestsTotalPages 
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
