@@ -181,16 +181,16 @@ const UserDocumentsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm p-4 col-span-full">
+        <div className="bg-card rounded-lg shadow-sm p-4 col-span-full border border-border">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary-600" />
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
               My Document Status
             </h2>
             <div className="flex gap-2">
               <button 
                 onClick={() => refetch()}
-                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
@@ -198,77 +198,77 @@ const UserDocumentsPage = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-            <div className="rounded-lg bg-yellow-50 border border-yellow-100 p-3 flex justify-between items-center">
+            <div className="rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex justify-between items-center">
               <div>
-                <p className="text-xs text-gray-500">Pending</p>
-                <p className="text-xl font-bold text-yellow-600">
+                <p className="text-xs text-muted-foreground">Pending</p>
+                <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
                   {documentRequests.filter(req => matchesStatus(req.status, 'pending')).length}
                 </p>
               </div>
-              <div className="bg-yellow-100 p-2 rounded-full">
-                <Clock className="h-5 w-5 text-yellow-600" />
+              <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full">
+                <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
               </div>
             </div>
             
-            <div className="rounded-lg bg-blue-50 border border-blue-100 p-3 flex justify-between items-center">
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex justify-between items-center">
               <div>
-                <p className="text-xs text-gray-500">Processing</p>
-                <p className="text-xl font-bold text-blue-600">
+                <p className="text-xs text-muted-foreground">Processing</p>
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                   {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
                 </p>
               </div>
-              <div className="bg-blue-100 p-2 rounded-full">
-                <Hourglass className="h-5 w-5 text-blue-600" />
+              <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
             
-            <div className="rounded-lg bg-green-50 border border-green-100 p-3 flex justify-between items-center">
+            <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex justify-between items-center">
               <div>
-                <p className="text-xs text-gray-500">Ready to Pickup</p>
-                <p className="text-xl font-bold text-green-600">
+                <p className="text-xs text-muted-foreground">Ready to Pickup</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
                   {documentRequests.filter(req => matchesAnyStatus(req.status, ['approved', 'ready'])).length}
                 </p>
               </div>
-              <div className="bg-green-100 p-2 rounded-full">
-                <Package className="h-5 w-5 text-green-600" />
+              <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
             </div>
             
-            <div className="rounded-lg bg-purple-50 border border-purple-100 p-3 flex justify-between items-center">
+            <div className="rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex justify-between items-center">
               <div>
-                <p className="text-xs text-gray-500">Released</p>
-                <p className="text-xl font-bold text-purple-600">
+                <p className="text-xs text-muted-foreground">Released</p>
+                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
                   {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
                 </p>
               </div>
-              <div className="bg-purple-100 p-2 rounded-full">
-                <CheckCircle className="h-5 w-5 text-purple-600" />
+              <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full">
+                <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
             
-            <div className="rounded-lg bg-red-50 border border-red-100 p-3 flex justify-between items-center">
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex justify-between items-center">
               <div>
-                <p className="text-xs text-gray-500">Rejected</p>
-                <p className="text-xl font-bold text-red-600">
+                <p className="text-xs text-muted-foreground">Rejected</p>
+                <p className="text-xl font-bold text-red-600 dark:text-red-400">
                   {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
                 </p>
               </div>
-              <div className="bg-red-100 p-2 rounded-full">
-                <XCircle className="h-5 w-5 text-red-600" />
+              <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full">
+                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </div>
           
-          <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+          <div className="flex justify-between items-center text-xs text-muted-foreground mb-2">
             <span>Total Documents: {documentRequests.length}</span>
             <span>Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
           </div>
           
           {documentRequests.length > 0 && (
             <>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+              <div className="w-full bg-muted rounded-full h-2.5 mb-1">
                 <div 
-                  className="bg-primary-600 h-2.5 rounded-full transition-all duration-500" 
+                  className="bg-primary h-2.5 rounded-full transition-all duration-500" 
                   style={{ 
                     width: `${Math.round((documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed', 'approved'])).length / documentRequests.length) * 100)}%` 
                   }}
@@ -276,11 +276,11 @@ const UserDocumentsPage = () => {
               </div>
               
               <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-500">0%</span>
-                <span className="font-medium text-primary-600">
+                <span className="text-muted-foreground">0%</span>
+                <span className="font-medium text-primary">
                   {Math.round((documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed', 'approved'])).length / documentRequests.length) * 100)}% Completed
                 </span>
-                <span className="text-gray-500">100%</span>
+                <span className="text-muted-foreground">100%</span>
               </div>
             </>
           )}
@@ -505,9 +505,9 @@ const UserDocumentsPage = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="mb-6 bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <div className="mb-6 bg-card rounded-lg shadow-sm overflow-hidden border border-border">
+            <div className="p-6 border-b border-border">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <History className="h-5 w-5" />
                 Document Status Updates
               </h2>
@@ -518,11 +518,11 @@ const UserDocumentsPage = () => {
                   {isLoading ? (
                     <div className="text-center py-8">
                       <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
-                      <p className="mt-2 text-sm text-gray-500">Loading updates...</p>
+                      <p className="mt-2 text-sm text-muted-foreground">Loading updates...</p>
                     </div>
                   ) : documentRequests.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-sm text-gray-500">No document updates yet</p>
+                      <p className="text-sm text-muted-foreground">No document updates yet</p>
                     </div>
                   ) : (
                     documentRequests
@@ -540,40 +540,40 @@ const UserDocumentsPage = () => {
                           statusInfo = {
                             text: 'Ready for Pickup',
                             dotClass: 'bg-green-500',
-                            bgClass: 'bg-green-50 border-green-200',
-                            badgeClass: 'bg-green-100 text-green-800',
+                            bgClass: 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800',
+                            badgeClass: 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200',
                             description: 'You can now pick up your document at the barangay office.'
                           };
                         } else if (matchesAnyStatus(request.status, ['completed', 'released'])) {
                           statusInfo = {
                             text: 'Released',
                             dotClass: 'bg-purple-500',
-                            bgClass: 'bg-purple-50 border-purple-200',
-                            badgeClass: 'bg-purple-100 text-purple-800',
+                            bgClass: 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800',
+                            badgeClass: 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200',
                             description: 'Your document has been successfully released.'
                           };
                         } else if (matchesStatus(request.status, 'processing')) {
                           statusInfo = {
                             text: 'Processing',
                             dotClass: 'bg-blue-500',
-                            bgClass: 'bg-blue-50 border-blue-200',
-                            badgeClass: 'bg-blue-100 text-blue-800',
+                            bgClass: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800',
+                            badgeClass: 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200',
                             description: 'Please wait while we process your request.'
                           };
                         } else if (matchesStatus(request.status, 'rejected')) {
                           statusInfo = {
                             text: 'Rejected',
                             dotClass: 'bg-red-500',
-                            bgClass: 'bg-red-50 border-red-200',
-                            badgeClass: 'bg-red-100 text-red-800',
+                            bgClass: 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800',
+                            badgeClass: 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200',
                             description: 'Please contact the office for more details.'
                           };
                         } else {
                           statusInfo = {
                             text: 'Pending',
                             dotClass: 'bg-yellow-500',
-                            bgClass: 'bg-yellow-50 border-yellow-200',
-                            badgeClass: 'bg-yellow-100 text-yellow-800',
+                            bgClass: 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800',
+                            badgeClass: 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200',
                             description: 'Your request is being reviewed.'
                           };
                         }
@@ -581,43 +581,43 @@ const UserDocumentsPage = () => {
                         return (
                           <div key={request.id} className={`grid grid-cols-[auto_1fr] gap-4 ${!isLast ? 'mb-6' : ''}`}>
                             <div className="flex flex-col items-center">
-                              <div className={`h-6 w-6 rounded-full ${statusInfo.dotClass} border-2 border-white shadow-md flex items-center justify-center`}>
-                                <div className="h-1.5 w-1.5 bg-white rounded-full"></div>
+                              <div className={`h-6 w-6 rounded-full ${statusInfo.dotClass} border-2 border-background shadow-md flex items-center justify-center`}>
+                                <div className="h-1.5 w-1.5 bg-background rounded-full"></div>
                               </div>
-                              {!isLast && <div className="w-0.5 bg-gray-200 flex-1 mt-2"></div>}
+                              {!isLast && <div className="w-0.5 bg-border flex-1 mt-2"></div>}
                             </div>
                             <div className={`${statusInfo.bgClass} border p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
                               <div className="mb-3">
                                 <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-semibold text-gray-900 text-sm">
+                                  <h3 className="font-semibold text-foreground text-sm">
                                     {request.type}
                                   </h3>
                                   <span className={`text-xs px-2 py-1 ${statusInfo.badgeClass} rounded-full font-medium`}>
                                     {statusInfo.text}
                                   </span>
                                 </div>
-                                <p className="text-xs text-gray-500 font-mono">
+                                <p className="text-xs text-muted-foreground font-mono">
                                   {request.docnumber}
                                 </p>
                               </div>
                               
                               <div className="space-y-2">
-                                <p className="text-sm text-gray-700">
+                                <p className="text-sm text-foreground">
                                   <span className="font-medium">Purpose:</span> {request.purpose}
                                 </p>
-                                <p className="text-xs text-gray-600">
+                                <p className="text-xs text-muted-foreground">
                                   {statusInfo.description}
                                 </p>
                                 {request.notes && (
-                                  <div className="mt-3 p-3 bg-gray-50 rounded-md border-l-3 border-gray-300">
-                                    <p className="text-xs text-gray-500 font-medium mb-1">ADMIN NOTE</p>
-                                    <p className="text-xs text-gray-700">{request.notes}</p>
+                                  <div className="mt-3 p-3 bg-muted rounded-md border-l-4 border-primary">
+                                    <p className="text-xs text-muted-foreground font-medium mb-1">ADMIN NOTE</p>
+                                    <p className="text-xs text-foreground">{request.notes}</p>
                                   </div>
                                 )}
                               </div>
                               
-                              <div className="flex justify-end mt-3 pt-2 border-t border-gray-100">
-                                <span className="text-xs text-gray-400">
+                              <div className="flex justify-end mt-3 pt-2 border-t border-border">
+                                <span className="text-xs text-muted-foreground">
                                   {formatDate(request.updated_at || request.created_at)}
                                 </span>
                               </div>
@@ -634,10 +634,10 @@ const UserDocumentsPage = () => {
         </div>
       </div>
 
-      <div className="mb-8 bg-white rounded-lg shadow-sm">
-        <div className="p-6 border-b border-gray-200">
+      <div className="mb-8 bg-card rounded-lg shadow-sm border border-border">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
               Document Tracking System
             </h2>
@@ -655,73 +655,73 @@ const UserDocumentsPage = () => {
         <div className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <input
                 type="text"
                 placeholder="Search by tracking ID..."
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-64"
+                className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground"
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <button className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm hover:bg-primary-200 transition-colors">All Documents</button>
-              <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">In Progress</button>
-              <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Completed</button>
-              <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors">Rejected</button>
+              <button className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm hover:bg-primary/20 transition-colors">All Documents</button>
+              <button className="bg-muted text-foreground px-3 py-1 rounded-full text-sm hover:bg-muted/80 transition-colors">In Progress</button>
+              <button className="bg-muted text-foreground px-3 py-1 rounded-full text-sm hover:bg-muted/80 transition-colors">Completed</button>
+              <button className="bg-muted text-foreground px-3 py-1 rounded-full text-sm hover:bg-muted/80 transition-colors">Rejected</button>
             </div>
           </div>
           
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking ID</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested By</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Update</th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tracking ID</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Requested By</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Update</th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
                       Loading your document requests...
                     </td>
                   </tr>
                 ) : documentRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
                       No document requests found
                     </td>
                   </tr>
                 ) : (
                   paginatedRequests.map((request) => (
-                    <tr key={request.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-700">
+                    <tr key={request.id} className="hover:bg-accent transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
                         {request.docnumber}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {request.type}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {userProfile?.firstname} {userProfile?.lastname}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className={`h-2.5 w-2.5 rounded-full mr-2 ${getStatusColor(request.status)}`}></div>
-                          <span className="text-sm text-gray-700 capitalize">{request.status}</span>
+                          <span className="text-sm text-foreground capitalize">{request.status}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {formatDate(request.updated_at || request.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">
-                          <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
+                          <button className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors">
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button className="p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors">
+                          <button className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors">
                             <Edit className="h-4 w-4" />
                           </button>
                         </div>
@@ -735,7 +735,7 @@ const UserDocumentsPage = () => {
           
           {requestsTotalPages > 1 && (
             <div className="mt-6 flex justify-between items-center">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, documentRequests.length)} of {documentRequests.length} requests
               </div>
               <div className="flex items-center gap-2">
@@ -744,8 +744,8 @@ const UserDocumentsPage = () => {
                   disabled={requestsCurrentPage === 1}
                   className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                     requestsCurrentPage === 1 
-                      ? 'text-gray-400 cursor-not-allowed' 
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'text-muted-foreground cursor-not-allowed' 
+                      : 'text-foreground hover:bg-accent'
                   }`}
                 >
                   Previous
@@ -757,8 +757,8 @@ const UserDocumentsPage = () => {
                       onClick={() => handleRequestsPageChange(page)}
                       className={`px-3 py-1 text-sm rounded-md font-medium ${
                         requestsCurrentPage === page 
-                          ? 'bg-primary-100 text-primary-700' 
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-primary/10 text-primary' 
+                          : 'text-foreground hover:bg-accent'
                       }`}
                     >
                       {page}
@@ -770,8 +770,8 @@ const UserDocumentsPage = () => {
                   disabled={requestsCurrentPage === requestsTotalPages}
                   className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                     requestsCurrentPage === requestsTotalPages 
-                      ? 'text-gray-400 cursor-not-allowed' 
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'text-muted-foreground cursor-not-allowed' 
+                      : 'text-foreground hover:bg-accent'
                   }`}
                 >
                   Next
@@ -784,8 +784,8 @@ const UserDocumentsPage = () => {
 
 
       {showIssueForm && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border">
             <DocumentIssueForm onClose={() => setShowIssueForm(false)} />
           </div>
         </div>
