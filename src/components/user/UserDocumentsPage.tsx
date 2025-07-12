@@ -152,6 +152,16 @@ const UserDocumentsPage = () => {
     }
   };
 
+  // Helper function for case-insensitive status matching
+  const matchesStatus = (requestStatus: string, targetStatus: string): boolean => {
+    return requestStatus.toLowerCase() === targetStatus.toLowerCase();
+  };
+
+  // Helper function for case-insensitive multiple status matching
+  const matchesAnyStatus = (requestStatus: string, targetStatuses: string[]): boolean => {
+    return targetStatuses.some(status => matchesStatus(requestStatus, status));
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -241,7 +251,7 @@ const UserDocumentsPage = () => {
               <div>
                 <p className="text-xs text-gray-500">Pending</p>
                 <p className="text-xl font-bold text-yellow-600">
-                  {documentRequests.filter(req => req.status === 'pending').length}
+                  {documentRequests.filter(req => matchesStatus(req.status, 'pending')).length}
                 </p>
               </div>
               <div className="bg-yellow-100 p-2 rounded-full">
@@ -253,7 +263,7 @@ const UserDocumentsPage = () => {
               <div>
                 <p className="text-xs text-gray-500">Processing</p>
                 <p className="text-xl font-bold text-blue-600">
-                  {documentRequests.filter(req => req.status === 'processing').length}
+                  {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
                 </p>
               </div>
               <div className="bg-blue-100 p-2 rounded-full">
@@ -265,7 +275,7 @@ const UserDocumentsPage = () => {
               <div>
                 <p className="text-xs text-gray-500">Ready to Pickup</p>
                 <p className="text-xl font-bold text-green-600">
-                  {documentRequests.filter(req => req.status === 'approved' || req.status === 'ready').length}
+                  {documentRequests.filter(req => matchesAnyStatus(req.status, ['approved', 'ready'])).length}
                 </p>
               </div>
               <div className="bg-green-100 p-2 rounded-full">
@@ -277,7 +287,7 @@ const UserDocumentsPage = () => {
               <div>
                 <p className="text-xs text-gray-500">Released</p>
                 <p className="text-xl font-bold text-purple-600">
-                  {documentRequests.filter(req => req.status === 'released' || req.status === 'completed').length}
+                  {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
                 </p>
               </div>
               <div className="bg-purple-100 p-2 rounded-full">
@@ -289,7 +299,7 @@ const UserDocumentsPage = () => {
               <div>
                 <p className="text-xs text-gray-500">Rejected</p>
                 <p className="text-xl font-bold text-red-600">
-                  {documentRequests.filter(req => req.status === 'rejected').length}
+                  {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
                 </p>
               </div>
               <div className="bg-red-100 p-2 rounded-full">
@@ -309,7 +319,7 @@ const UserDocumentsPage = () => {
                 <div 
                   className="bg-primary-600 h-2.5 rounded-full transition-all duration-500" 
                   style={{ 
-                    width: `${Math.round((documentRequests.filter(req => req.status === 'released' || req.status === 'completed' || req.status === 'approved').length / documentRequests.length) * 100)}%` 
+                    width: `${Math.round((documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed', 'approved'])).length / documentRequests.length) * 100)}%` 
                   }}
                 ></div>
               </div>
@@ -317,7 +327,7 @@ const UserDocumentsPage = () => {
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-500">0%</span>
                 <span className="font-medium text-primary-600">
-                  {Math.round((documentRequests.filter(req => req.status === 'released' || req.status === 'completed' || req.status === 'approved').length / documentRequests.length) * 100)}% Completed
+                  {Math.round((documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed', 'approved'])).length / documentRequests.length) * 100)}% Completed
                 </span>
                 <span className="text-gray-500">100%</span>
               </div>
@@ -580,11 +590,9 @@ const UserDocumentsPage = () => {
                         };
                         
                         const config = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.pending;
-                        const statusText = request.status === 'approved' ? 'Ready for Pickup' : 
-                                         request.status === 'ready' ? 'Ready for Pickup' :
-                                         request.status === 'completed' ? 'Released' :
-                                         request.status === 'released' ? 'Released' :
-                                         request.status.charAt(0).toUpperCase() + request.status.slice(1);
+                         const statusText = matchesAnyStatus(request.status, ['approved', 'ready']) ? 'Ready for Pickup' : 
+                                          matchesAnyStatus(request.status, ['completed', 'released']) ? 'Released' :
+                                          request.status.charAt(0).toUpperCase() + request.status.slice(1);
                         
                         return (
                           <div key={request.id} className={`grid grid-cols-[auto_1fr] gap-6 ${!isLast ? 'mb-8' : ''}`}>
@@ -620,13 +628,13 @@ const UserDocumentsPage = () => {
                                 </p>
                                 <p className="text-sm text-gray-600">
                                   Your request is currently <span className="font-medium text-gray-800">{statusText.toLowerCase()}</span>
-                                  {request.status === 'approved' || request.status === 'ready' ? 
-                                    '. You can now pick up your document at the barangay office.' :
-                                    request.status === 'processing' ? 
-                                    '. Please wait while we process your request.' :
-                                    request.status === 'rejected' ?
-                                    '. Please contact the office for more details.' :
-                                    '.'}
+                                   {matchesAnyStatus(request.status, ['approved', 'ready']) ? 
+                                     '. You can now pick up your document at the barangay office.' :
+                                     matchesStatus(request.status, 'processing') ? 
+                                     '. Please wait while we process your request.' :
+                                     matchesStatus(request.status, 'rejected') ?
+                                     '. Please contact the office for more details.' :
+                                     '.'}
                                 </p>
                                 {request.notes && (
                                   <div className="mt-3 p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300">
