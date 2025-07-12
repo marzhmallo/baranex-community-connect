@@ -186,7 +186,7 @@ const UserProfilePage = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-4xl bg-background min-h-screen">
+    <div className="w-full py-6 px-4 bg-background min-h-screen">
       <Card className="border-border bg-card">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold text-foreground">Account Information</CardTitle>
