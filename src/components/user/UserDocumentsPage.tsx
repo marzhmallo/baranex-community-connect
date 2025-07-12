@@ -637,23 +637,18 @@ const UserDocumentsPage = () => {
                               {!isLast && <div className="w-0.5 bg-gray-200 flex-1 mt-2"></div>}
                             </div>
                             <div className={`${statusInfo.bgClass} border p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <h3 className="font-semibold text-gray-900 text-sm">
-                                      {request.type}
-                                    </h3>
-                                    <span className={`text-xs px-2 py-1 ${statusInfo.badgeClass} rounded-full font-medium`}>
-                                      {statusInfo.text}
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-gray-500 font-mono">
-                                    {request.docnumber}
-                                  </p>
+                              <div className="mb-3">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="font-semibold text-gray-900 text-sm">
+                                    {request.type}
+                                  </h3>
+                                  <span className={`text-xs px-2 py-1 ${statusInfo.badgeClass} rounded-full font-medium`}>
+                                    {statusInfo.text}
+                                  </span>
                                 </div>
-                                <span className="text-xs text-gray-400 whitespace-nowrap ml-4">
-                                  {formatDate(request.updated_at || request.created_at)}
-                                </span>
+                                <p className="text-xs text-gray-500 font-mono">
+                                  {request.docnumber}
+                                </p>
                               </div>
                               
                               <div className="space-y-2">
@@ -669,6 +664,12 @@ const UserDocumentsPage = () => {
                                     <p className="text-xs text-gray-700">{request.notes}</p>
                                   </div>
                                 )}
+                              </div>
+                              
+                              <div className="flex justify-end mt-3 pt-2 border-t border-gray-100">
+                                <span className="text-xs text-gray-400">
+                                  {formatDate(request.updated_at || request.created_at)}
+                                </span>
                               </div>
                             </div>
                           </div>
