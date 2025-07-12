@@ -174,60 +174,10 @@ const UserDocumentsPage = () => {
   };
 
   return (
-    <div className="w-full p-6 bg-gray-50 min-h-screen">
+    <div className="w-full p-6 bg-background min-h-screen">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Barangay Document Management</h1>
-        <p className="text-gray-600">Manage official documents, requests, and issuances for the barangay community</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Documents</p>
-              <p className="text-2xl font-bold text-gray-900">1,247</p>
-            </div>
-            <div className="bg-primary-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-primary-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Requests</p>
-              <p className="text-2xl font-bold text-orange-600">23</p>
-            </div>
-            <div className="bg-orange-100 p-3 rounded-full">
-              <Clock className="h-6 w-6 text-orange-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Issued Today</p>
-              <p className="text-2xl font-bold text-green-600">8</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Templates</p>
-              <p className="text-2xl font-bold text-blue-600">15</p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <BarChart3 className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
+        <p className="text-muted-foreground">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
