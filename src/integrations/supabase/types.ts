@@ -17,26 +17,32 @@ export type Database = {
       activity_logs: {
         Row: {
           action: string
+          agent: string | null
           brgyid: string
           created_at: string | null
           details: Json
           id: string
+          ip: string | null
           user_id: string
         }
         Insert: {
           action: string
+          agent?: string | null
           brgyid: string
           created_at?: string | null
           details: Json
           id?: string
+          ip?: string | null
           user_id: string
         }
         Update: {
           action?: string
+          agent?: string | null
           brgyid?: string
           created_at?: string | null
           details?: Json
           id?: string
+          ip?: string | null
           user_id?: string
         }
         Relationships: []

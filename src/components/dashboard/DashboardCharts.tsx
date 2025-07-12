@@ -41,12 +41,12 @@ const DashboardCharts = () => {
     residentGrowthRate,
     totalDeceased,
     totalRelocated,
+    totalResidents: activePopulation,
     isLoading: dashboardLoading,
     error
   } = useDashboardData();
 
-  // Use data from context for totals
-  const totalResidents = residents.length;
+  // Use active population from dashboard data (excludes deceased and relocated)
   const isLoading = dataLoading || dashboardLoading;
 
   // Fetch recent activities from activity_logs table
@@ -272,7 +272,7 @@ const DashboardCharts = () => {
               <CardContent className="p-4 flex flex-col items-center">
                 <div className="text-xs uppercase text-muted-foreground mb-1">Active Population</div>
                 <div className="text-2xl font-bold text-center">
-                  {isLoading ? '...' : totalResidents.toLocaleString()}
+                  {isLoading ? '...' : activePopulation.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
