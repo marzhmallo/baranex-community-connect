@@ -588,30 +588,53 @@ const UserDocumentsPage = () => {
                                          request.status.charAt(0).toUpperCase() + request.status.slice(1);
                         
                         return (
-                          <div key={request.id} className={`grid grid-cols-[auto_1fr] gap-4 ${!isLast ? 'mb-6' : ''}`}>
-                            <div className="mt-1">
-                              <div className={`h-6 w-6 rounded-full bg-${config.color}-500 border-4 border-white shadow`}></div>
+                          <div key={request.id} className={`grid grid-cols-[auto_1fr] gap-6 ${!isLast ? 'mb-8' : ''}`}>
+                            <div className="flex flex-col items-center">
+                              <div className={`h-8 w-8 rounded-full bg-${config.color}-500 border-4 border-white shadow-lg flex items-center justify-center`}>
+                                <div className="h-2 w-2 bg-white rounded-full"></div>
+                              </div>
+                              {!isLast && <div className="w-0.5 bg-gray-200 flex-1 mt-2"></div>}
                             </div>
-                            <div className={`bg-${config.bgColor} p-4 rounded-lg`}>
-                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                                <h3 className="font-medium text-gray-900">
-                                  {request.type} - {statusText}
-                                </h3>
-                                <span className="text-xs text-gray-500">
+                            <div className={`bg-${config.bgColor} border border-${config.color}-200 p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow`}>
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="font-semibold text-gray-900 text-base">
+                                      {request.type}
+                                    </h3>
+                                    <span className={`text-xs px-2.5 py-1 bg-${config.color}-100 text-${config.textColor} rounded-full font-medium`}>
+                                      {statusText}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-500 font-mono">
+                                    {request.docnumber}
+                                  </p>
+                                </div>
+                                <span className="text-xs text-gray-400 whitespace-nowrap ml-4">
                                   {formatDate(request.updated_at || request.created_at)}
                                 </span>
                               </div>
-                              <p className="text-sm text-gray-600">
-                                Your {request.type.toLowerCase()} request for "{request.purpose}" is now {statusText.toLowerCase()}.
-                                {request.notes && ` Note: ${request.notes}`}
-                              </p>
-                              <div className="flex mt-2 gap-2">
-                                <span className={`text-xs px-2 py-0.5 bg-${config.color}-100 text-${config.textColor} rounded-full`}>
-                                  {statusText}
-                                </span>
-                                <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">
-                                  ID: {request.docnumber}
-                                </span>
+                              
+                              <div className="space-y-2">
+                                <p className="text-sm text-gray-700 leading-relaxed">
+                                  <span className="font-medium">Purpose:</span> {request.purpose}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Your request is currently <span className="font-medium text-gray-800">{statusText.toLowerCase()}</span>
+                                  {request.status === 'approved' || request.status === 'ready' ? 
+                                    '. You can now pick up your document at the barangay office.' :
+                                    request.status === 'processing' ? 
+                                    '. Please wait while we process your request.' :
+                                    request.status === 'rejected' ?
+                                    '. Please contact the office for more details.' :
+                                    '.'}
+                                </p>
+                                {request.notes && (
+                                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300">
+                                    <p className="text-xs text-gray-500 font-medium mb-1">ADMIN NOTE</p>
+                                    <p className="text-sm text-gray-700">{request.notes}</p>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
