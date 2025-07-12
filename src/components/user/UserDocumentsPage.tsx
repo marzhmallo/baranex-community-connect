@@ -551,10 +551,9 @@ const UserDocumentsPage = () => {
                 Document Status Updates
               </h2>
             </div>
-            <div className="p-0">
+            <div className="p-0 overflow-visible">
               <div className="relative">
-                <div className="absolute top-0 bottom-0 left-8 w-0.5 bg-gray-200 z-0"></div>
-                <div className="p-6 relative z-10">
+                <div className="p-6 relative z-10 overflow-visible">{/* removed z-index line */}
                   {isLoading ? (
                     <div className="text-center py-8">
                       <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
