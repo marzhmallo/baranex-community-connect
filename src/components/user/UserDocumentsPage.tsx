@@ -679,14 +679,6 @@ const UserDocumentsPage = () => {
                 </div>
               </div>
               
-              {documentRequests.length > 4 && (
-                <div className="border-t border-gray-200 p-4 text-center">
-                  <button className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center justify-center gap-1 mx-auto">
-                    View All Updates
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
