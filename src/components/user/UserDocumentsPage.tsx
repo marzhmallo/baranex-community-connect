@@ -109,7 +109,7 @@ const UserDocumentsPage = () => {
   const totalPages = Math.ceil(documentTypes.length / itemsPerPage);
   
   // Pagination for document requests
-  const requestsPerPage = 5;
+  const requestsPerPage = 4;
   const requestsTotalPages = Math.ceil(documentRequests.length / requestsPerPage);
   
   // Calculate paginated data using real Supabase data
