@@ -580,41 +580,74 @@ const UserDocumentsPage = () => {
                       .slice(0, 4)
                       .map((request, index) => {
                         const isLast = index === Math.min(3, documentRequests.length - 1);
-                        const statusConfig = {
-                          pending: { color: 'yellow', bgColor: 'yellow-50', textColor: 'yellow-700' },
-                          processing: { color: 'blue', bgColor: 'blue-50', textColor: 'blue-700' },
-                          approved: { color: 'green', bgColor: 'green-50', textColor: 'green-700' },
-                          ready: { color: 'green', bgColor: 'green-50', textColor: 'green-700' },
-                          completed: { color: 'purple', bgColor: 'purple-50', textColor: 'purple-700' },
-                          released: { color: 'purple', bgColor: 'purple-50', textColor: 'purple-700' },
-                          rejected: { color: 'red', bgColor: 'red-50', textColor: 'red-700' }
-                        };
                         
-                        const config = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.pending;
-                         const statusText = matchesAnyStatus(request.status, ['approved', 'ready']) ? 'Ready for Pickup' : 
-                                          matchesAnyStatus(request.status, ['completed', 'released']) ? 'Released' :
-                                          request.status.charAt(0).toUpperCase() + request.status.slice(1);
+                        // Normalize status for better matching
+                        const normalizedStatus = request.status.toLowerCase();
+                        
+                        // Determine status display and styling
+                        let statusInfo;
+                        if (matchesAnyStatus(request.status, ['approved', 'ready for pickup', 'ready'])) {
+                          statusInfo = {
+                            text: 'Ready for Pickup',
+                            dotClass: 'bg-green-500',
+                            bgClass: 'bg-green-50 border-green-200',
+                            badgeClass: 'bg-green-100 text-green-800',
+                            description: 'You can now pick up your document at the barangay office.'
+                          };
+                        } else if (matchesAnyStatus(request.status, ['completed', 'released'])) {
+                          statusInfo = {
+                            text: 'Released',
+                            dotClass: 'bg-purple-500',
+                            bgClass: 'bg-purple-50 border-purple-200',
+                            badgeClass: 'bg-purple-100 text-purple-800',
+                            description: 'Your document has been successfully released.'
+                          };
+                        } else if (matchesStatus(request.status, 'processing')) {
+                          statusInfo = {
+                            text: 'Processing',
+                            dotClass: 'bg-blue-500',
+                            bgClass: 'bg-blue-50 border-blue-200',
+                            badgeClass: 'bg-blue-100 text-blue-800',
+                            description: 'Please wait while we process your request.'
+                          };
+                        } else if (matchesStatus(request.status, 'rejected')) {
+                          statusInfo = {
+                            text: 'Rejected',
+                            dotClass: 'bg-red-500',
+                            bgClass: 'bg-red-50 border-red-200',
+                            badgeClass: 'bg-red-100 text-red-800',
+                            description: 'Please contact the office for more details.'
+                          };
+                        } else {
+                          statusInfo = {
+                            text: 'Pending',
+                            dotClass: 'bg-yellow-500',
+                            bgClass: 'bg-yellow-50 border-yellow-200',
+                            badgeClass: 'bg-yellow-100 text-yellow-800',
+                            description: 'Your request is being reviewed.'
+                          };
+                        }
                         
                         return (
-                          <div key={request.id} className={`grid grid-cols-[auto_1fr] gap-6 ${!isLast ? 'mb-8' : ''}`}>
+                          <div key={request.id} className={`grid grid-cols-[auto_1fr] gap-4 ${!isLast ? 'mb-6' : ''}`}>
                             <div className="flex flex-col items-center">
-                              <div className={`h-8 w-8 rounded-full bg-${config.color}-500 border-4 border-white shadow-lg flex items-center justify-center`}>
-                                <div className="h-2 w-2 bg-white rounded-full"></div>
+                              <div className={`h-6 w-6 rounded-full ${statusInfo.dotClass} border-2 border-white shadow-md flex items-center justify-center`}>
+                                <div className="h-1.5 w-1.5 bg-white rounded-full"></div>
                               </div>
                               {!isLast && <div className="w-0.5 bg-gray-200 flex-1 mt-2"></div>}
                             </div>
-                            <div className={`bg-${config.bgColor} border border-${config.color}-200 p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow`}>
+                            <div className={`${statusInfo.bgClass} border p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="font-semibold text-gray-900 text-base">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h3 className="font-semibold text-gray-900 text-sm">
                                       {request.type}
                                     </h3>
-                                    <span className={`text-xs px-2.5 py-1 bg-${config.color}-100 text-${config.textColor} rounded-full font-medium`}>
-                                      {statusText}
+                                    <span className={`text-xs px-2 py-1 ${statusInfo.badgeClass} rounded-full font-medium`}>
+                                      {statusInfo.text}
                                     </span>
                                   </div>
-                                  <p className="text-sm text-gray-500 font-mono">
+                                  <p className="text-xs text-gray-500 font-mono">
                                     {request.docnumber}
                                   </p>
                                 </div>
@@ -624,23 +657,16 @@ const UserDocumentsPage = () => {
                               </div>
                               
                               <div className="space-y-2">
-                                <p className="text-sm text-gray-700 leading-relaxed">
+                                <p className="text-sm text-gray-700">
                                   <span className="font-medium">Purpose:</span> {request.purpose}
                                 </p>
-                                <p className="text-sm text-gray-600">
-                                  Your request is currently <span className="font-medium text-gray-800">{statusText.toLowerCase()}</span>
-                                   {matchesAnyStatus(request.status, ['approved', 'ready']) ? 
-                                     '. You can now pick up your document at the barangay office.' :
-                                     matchesStatus(request.status, 'processing') ? 
-                                     '. Please wait while we process your request.' :
-                                     matchesStatus(request.status, 'rejected') ?
-                                     '. Please contact the office for more details.' :
-                                     '.'}
+                                <p className="text-xs text-gray-600">
+                                  {statusInfo.description}
                                 </p>
                                 {request.notes && (
-                                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300">
+                                  <div className="mt-3 p-3 bg-gray-50 rounded-md border-l-3 border-gray-300">
                                     <p className="text-xs text-gray-500 font-medium mb-1">ADMIN NOTE</p>
-                                    <p className="text-sm text-gray-700">{request.notes}</p>
+                                    <p className="text-xs text-gray-700">{request.notes}</p>
                                   </div>
                                 )}
                               </div>
