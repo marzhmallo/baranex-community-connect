@@ -555,82 +555,80 @@ const UserDocumentsPage = () => {
               <div className="relative">
                 <div className="absolute top-0 bottom-0 left-8 w-0.5 bg-gray-200 z-0"></div>
                 <div className="p-6 relative z-10">
-                  <div className="grid grid-cols-[auto_1fr] gap-4 mb-6">
-                    <div className="mt-1">
-                      <div className="h-6 w-6 rounded-full bg-green-500 border-4 border-white shadow"></div>
+                  {isLoading ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
+                      <p className="mt-2 text-sm text-gray-500">Loading updates...</p>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                        <h3 className="font-medium text-gray-900">Barangay Clearance - Ready for Pickup</h3>
-                        <span className="text-xs text-gray-500">10 minutes ago</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Document for Maria Santos has been signed and is ready for pickup at the Barangay Hall.</p>
-                      <div className="flex mt-2 gap-2">
-                        <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Ready for pickup</span>
-                        <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">ID: #BRG-2023-0042</span>
-                      </div>
+                  ) : documentRequests.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-gray-500">No document updates yet</p>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-[auto_1fr] gap-4 mb-6">
-                    <div className="mt-1">
-                      <div className="h-6 w-6 rounded-full bg-yellow-500 border-4 border-white shadow"></div>
-                    </div>
-                    <div className="bg-yellow-50 p-4 rounded-lg">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                        <h3 className="font-medium text-gray-900">Certificate of Residency - Processing</h3>
-                        <span className="text-xs text-gray-500">2 hours ago</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Juan Dela Cruz's document is being processed. Pending approval from the Barangay Captain.</p>
-                      <div className="flex mt-2 gap-2">
-                        <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">Processing</span>
-                        <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">ID: #BRG-2023-0041</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-[auto_1fr] gap-4 mb-6">
-                    <div className="mt-1">
-                      <div className="h-6 w-6 rounded-full bg-blue-500 border-4 border-white shadow"></div>
-                    </div>
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                        <h3 className="font-medium text-gray-900">Business Permit - For Review</h3>
-                        <span className="text-xs text-gray-500">5 hours ago</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Business Permit application for Anna Reyes has been submitted for review. Pending verification of business requirements.</p>
-                      <div className="flex mt-2 gap-2">
-                        <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">For Review</span>
-                        <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">ID: #BRG-2023-0040</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-[auto_1fr] gap-4">
-                    <div className="mt-1">
-                      <div className="h-6 w-6 rounded-full bg-red-500 border-4 border-white shadow"></div>
-                    </div>
-                    <div className="bg-red-50 p-4 rounded-lg">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                        <h3 className="font-medium text-gray-900">Barangay ID - Rejected</h3>
-                        <span className="text-xs text-gray-500">Yesterday, 2:15 PM</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Carlos Mendoza's application for Barangay ID was rejected. Reason: Insufficient supporting documents.</p>
-                      <div className="flex mt-2 gap-2">
-                        <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full">Rejected</span>
-                        <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">ID: #BRG-2023-0039</span>
-                      </div>
-                    </div>
-                  </div>
+                  ) : (
+                    documentRequests
+                      .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
+                      .slice(0, 4)
+                      .map((request, index) => {
+                        const isLast = index === Math.min(3, documentRequests.length - 1);
+                        const statusConfig = {
+                          pending: { color: 'yellow', bgColor: 'yellow-50', textColor: 'yellow-700' },
+                          processing: { color: 'blue', bgColor: 'blue-50', textColor: 'blue-700' },
+                          approved: { color: 'green', bgColor: 'green-50', textColor: 'green-700' },
+                          ready: { color: 'green', bgColor: 'green-50', textColor: 'green-700' },
+                          completed: { color: 'purple', bgColor: 'purple-50', textColor: 'purple-700' },
+                          released: { color: 'purple', bgColor: 'purple-50', textColor: 'purple-700' },
+                          rejected: { color: 'red', bgColor: 'red-50', textColor: 'red-700' }
+                        };
+                        
+                        const config = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.pending;
+                        const statusText = request.status === 'approved' ? 'Ready for Pickup' : 
+                                         request.status === 'ready' ? 'Ready for Pickup' :
+                                         request.status === 'completed' ? 'Released' :
+                                         request.status === 'released' ? 'Released' :
+                                         request.status.charAt(0).toUpperCase() + request.status.slice(1);
+                        
+                        return (
+                          <div key={request.id} className={`grid grid-cols-[auto_1fr] gap-4 ${!isLast ? 'mb-6' : ''}`}>
+                            <div className="mt-1">
+                              <div className={`h-6 w-6 rounded-full bg-${config.color}-500 border-4 border-white shadow`}></div>
+                            </div>
+                            <div className={`bg-${config.bgColor} p-4 rounded-lg`}>
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
+                                <h3 className="font-medium text-gray-900">
+                                  {request.type} - {statusText}
+                                </h3>
+                                <span className="text-xs text-gray-500">
+                                  {formatDate(request.updated_at || request.created_at)}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600">
+                                Your {request.type.toLowerCase()} request for "{request.purpose}" is now {statusText.toLowerCase()}.
+                                {request.notes && ` Note: ${request.notes}`}
+                              </p>
+                              <div className="flex mt-2 gap-2">
+                                <span className={`text-xs px-2 py-0.5 bg-${config.color}-100 text-${config.textColor} rounded-full`}>
+                                  {statusText}
+                                </span>
+                                <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">
+                                  ID: {request.docnumber}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
                 </div>
               </div>
               
-              <div className="border-t border-gray-200 p-4 text-center">
-                <button className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center justify-center gap-1 mx-auto">
-                  View All Updates
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
+              {documentRequests.length > 4 && (
+                <div className="border-t border-gray-200 p-4 text-center">
+                  <button className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center justify-center gap-1 mx-auto">
+                    View All Updates
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
