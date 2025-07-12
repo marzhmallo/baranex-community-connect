@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Eye, Users, UserPlus, Building } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -61,7 +61,7 @@ export const OrganizationalChart = ({
     }
   });
 
-  // Fetch all ranks
+  // Fetch all ranks with real-time updates
   const {
     data: allRanks
   } = useQuery({
@@ -79,6 +79,33 @@ export const OrganizationalChart = ({
     },
     enabled: !!currentUser?.brgyid
   });
+
+  // Set up real-time subscription for ranks
+  useEffect(() => {
+    if (!currentUser?.brgyid) return;
+
+    const channel = supabase
+      .channel('organizational-chart-ranks')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'officialranks',
+          filter: `brgyid=eq.${currentUser.brgyid}`
+        },
+        () => {
+          // Invalidate queries to refetch the data
+          queryClient.invalidateQueries({ queryKey: ['all-official-ranks'] });
+          queryClient.invalidateQueries({ queryKey: ['officials-with-positions'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser?.brgyid, queryClient]);
 
   // Assign official to rank mutation
   const assignMutation = useMutation({

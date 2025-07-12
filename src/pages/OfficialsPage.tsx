@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,7 +22,7 @@ const OfficialsPage = () => {
   const [selectedOfficial, setSelectedOfficial] = useState<Official | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'organizational'>('cards');
 
-  // Fetch officials data from Supabase with positions and ranks
+  // Fetch officials data from Supabase with positions and ranks with real-time updates
   const {
     data: officialsData,
     isLoading,
@@ -98,6 +98,53 @@ const OfficialsPage = () => {
       return officialsWithPositions;
     }
   });
+
+  // Set up real-time subscription for officials and ranks
+  useEffect(() => {
+    const channel = supabase
+      .channel('officials-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'officialranks'
+        },
+        () => {
+          // Invalidate officials query when ranks change
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'officials'
+        },
+        () => {
+          // Invalidate officials query when officials change
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'official_positions'
+        },
+        () => {
+          // Invalidate officials query when positions change
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   // Filter and sort officials based on the active tab
   const filteredOfficials = officialsData ? officialsData.filter(official => {

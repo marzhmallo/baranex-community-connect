@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -25,7 +25,7 @@ export const AssignOfficialToRankDialog = ({ open, onOpenChange, official }: Ass
   const [selectedRankId, setSelectedRankId] = useState<string>('');
   const queryClient = useQueryClient();
 
-  // Fetch available ranks
+  // Fetch available ranks with real-time updates
   const { data: ranks } = useQuery({
     queryKey: ['official-ranks-for-assignment'],
     queryFn: async () => {
@@ -39,6 +39,31 @@ export const AssignOfficialToRankDialog = ({ open, onOpenChange, official }: Ass
     },
     enabled: open
   });
+
+  // Set up real-time subscription for ranks
+  useEffect(() => {
+    if (!open) return;
+
+    const channel = supabase
+      .channel('assign-rank-dialog')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'officialranks'
+        },
+        () => {
+          // Invalidate queries to refetch the data
+          queryClient.invalidateQueries({ queryKey: ['official-ranks-for-assignment'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [open, queryClient]);
 
   // Assign official to rank mutation
   const assignMutation = useMutation({

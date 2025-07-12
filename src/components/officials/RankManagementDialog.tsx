@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -49,7 +49,7 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
     enabled: open
   });
 
-  // Fetch existing ranks
+  // Fetch existing ranks with real-time updates
   const { data: ranks, isLoading } = useQuery({
     queryKey: ['official-ranks'],
     queryFn: async () => {
@@ -66,6 +66,34 @@ export const RankManagementDialog = ({ open, onOpenChange }: RankManagementDialo
     },
     enabled: open && !!currentUser?.brgyid
   });
+
+  // Set up real-time subscription for ranks
+  useEffect(() => {
+    if (!open || !currentUser?.brgyid) return;
+
+    const channel = supabase
+      .channel('official-ranks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'officialranks',
+          filter: `brgyid=eq.${currentUser.brgyid}`
+        },
+        () => {
+          // Invalidate queries to refetch the data
+          queryClient.invalidateQueries({ queryKey: ['official-ranks'] });
+          queryClient.invalidateQueries({ queryKey: ['officials-with-positions'] });
+          queryClient.invalidateQueries({ queryKey: ['all-official-ranks'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [open, currentUser?.brgyid, queryClient]);
 
   // Create rank mutation
   const createRankMutation = useMutation({
