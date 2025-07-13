@@ -10,6 +10,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from 'react';
+import { UAParser } from 'ua-parser-js';
 
 interface ActivityLog {
   id: string;
@@ -28,81 +29,56 @@ interface UserProfile {
   username: string;
 }
 
-// Function to parse device information from User-Agent string
+// Function to parse device information from User-Agent string using ua-parser-js
 const parseDeviceInfo = (userAgent?: string): string => {
   if (!userAgent) return 'Unknown Device';
   
-  // Mobile devices
-  if (/iPhone/i.test(userAgent)) {
-    const match = userAgent.match(/iPhone OS (\d+_\d+)/);
-    const version = match ? match[1].replace('_', '.') : '';
-    return `iPhone ${version ? `(iOS ${version})` : ''}`.trim();
-  }
-  
-  if (/iPad/i.test(userAgent)) {
-    return 'iPad';
-  }
-  
-  if (/Android/i.test(userAgent)) {
-    const match = userAgent.match(/Android (\d+\.?\d*)/);
-    const version = match ? match[1] : '';
-    return `Android ${version ? `${version}` : 'Device'}`;
-  }
-  
-  // Desktop browsers
-  if (/Windows NT/i.test(userAgent)) {
-    const match = userAgent.match(/Windows NT (\d+\.?\d*)/);
-    const version = match ? match[1] : '';
-    let windowsVersion = 'Windows';
+  try {
+    const parser = new UAParser(userAgent);
+    const result = parser.getResult();
     
-    switch(version) {
-      case '10.0': windowsVersion = 'Windows 10/11'; break;
-      case '6.3': windowsVersion = 'Windows 8.1'; break;
-      case '6.2': windowsVersion = 'Windows 8'; break;
-      case '6.1': windowsVersion = 'Windows 7'; break;
-      default: windowsVersion = `Windows ${version}`;
+    const { browser, os, device } = result;
+    
+    // Check if it's a mobile device
+    if (device.type === 'mobile' || device.type === 'tablet') {
+      if (device.vendor && device.model) {
+        return `${device.vendor} ${device.model} (${browser.name || 'Unknown Browser'})`;
+      } else if (os.name && os.version) {
+        return `${os.name} ${os.version} (${browser.name || 'Unknown Browser'})`;
+      } else {
+        return `Mobile Device (${browser.name || 'Unknown Browser'})`;
+      }
     }
     
-    // Get browser info
-    if (/Chrome/i.test(userAgent) && !/Edge/i.test(userAgent)) {
-      return `${windowsVersion} (Chrome)`;
-    } else if (/Firefox/i.test(userAgent)) {
-      return `${windowsVersion} (Firefox)`;
-    } else if (/Edge/i.test(userAgent)) {
-      return `${windowsVersion} (Edge)`;
-    } else if (/Safari/i.test(userAgent) && !/Chrome/i.test(userAgent)) {
-      return `${windowsVersion} (Safari)`;
+    // Desktop/Laptop devices
+    let deviceInfo = '';
+    
+    // Build OS info
+    if (os.name) {
+      deviceInfo = os.name;
+      if (os.version) {
+        deviceInfo += ` ${os.version}`;
+      }
+    } else {
+      deviceInfo = 'Unknown OS';
     }
     
-    return windowsVersion;
-  }
-  
-  if (/Mac OS X/i.test(userAgent)) {
-    const match = userAgent.match(/Mac OS X (\d+_\d+_?\d*)/);
-    const version = match ? match[1].replace(/_/g, '.') : '';
-    
-    // Get browser info
-    if (/Chrome/i.test(userAgent) && !/Edge/i.test(userAgent)) {
-      return `macOS ${version ? `${version} ` : ''}(Chrome)`;
-    } else if (/Firefox/i.test(userAgent)) {
-      return `macOS ${version ? `${version} ` : ''}(Firefox)`;
-    } else if (/Safari/i.test(userAgent) && !/Chrome/i.test(userAgent)) {
-      return `macOS ${version ? `${version} ` : ''}(Safari)`;
+    // Add browser info
+    if (browser.name) {
+      deviceInfo += ` (${browser.name}`;
+      if (browser.version) {
+        // Only show major version number
+        const majorVersion = browser.version.split('.')[0];
+        deviceInfo += ` ${majorVersion}`;
+      }
+      deviceInfo += ')';
     }
     
-    return `macOS ${version}`.trim();
+    return deviceInfo || 'Unknown Device';
+  } catch (error) {
+    console.error('Error parsing user agent:', error);
+    return 'Unknown Device';
   }
-  
-  if (/Linux/i.test(userAgent)) {
-    if (/Chrome/i.test(userAgent)) {
-      return 'Linux (Chrome)';
-    } else if (/Firefox/i.test(userAgent)) {
-      return 'Linux (Firefox)';
-    }
-    return 'Linux';
-  }
-  
-  return 'Unknown Device';
 };
 
 
