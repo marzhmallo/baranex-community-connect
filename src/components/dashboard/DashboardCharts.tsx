@@ -17,6 +17,8 @@ interface ActivityLog {
   details: any;
   created_at: string;
   user_id: string;
+  ip?: string;
+  agent?: string;
 }
 
 interface UserProfile {
@@ -25,6 +27,83 @@ interface UserProfile {
   lastname: string;
   username: string;
 }
+
+// Function to parse device information from User-Agent string
+const parseDeviceInfo = (userAgent?: string): string => {
+  if (!userAgent) return 'Unknown Device';
+  
+  // Mobile devices
+  if (/iPhone/i.test(userAgent)) {
+    const match = userAgent.match(/iPhone OS (\d+_\d+)/);
+    const version = match ? match[1].replace('_', '.') : '';
+    return `iPhone ${version ? `(iOS ${version})` : ''}`.trim();
+  }
+  
+  if (/iPad/i.test(userAgent)) {
+    return 'iPad';
+  }
+  
+  if (/Android/i.test(userAgent)) {
+    const match = userAgent.match(/Android (\d+\.?\d*)/);
+    const version = match ? match[1] : '';
+    return `Android ${version ? `${version}` : 'Device'}`;
+  }
+  
+  // Desktop browsers
+  if (/Windows NT/i.test(userAgent)) {
+    const match = userAgent.match(/Windows NT (\d+\.?\d*)/);
+    const version = match ? match[1] : '';
+    let windowsVersion = 'Windows';
+    
+    switch(version) {
+      case '10.0': windowsVersion = 'Windows 10/11'; break;
+      case '6.3': windowsVersion = 'Windows 8.1'; break;
+      case '6.2': windowsVersion = 'Windows 8'; break;
+      case '6.1': windowsVersion = 'Windows 7'; break;
+      default: windowsVersion = `Windows ${version}`;
+    }
+    
+    // Get browser info
+    if (/Chrome/i.test(userAgent) && !/Edge/i.test(userAgent)) {
+      return `${windowsVersion} (Chrome)`;
+    } else if (/Firefox/i.test(userAgent)) {
+      return `${windowsVersion} (Firefox)`;
+    } else if (/Edge/i.test(userAgent)) {
+      return `${windowsVersion} (Edge)`;
+    } else if (/Safari/i.test(userAgent) && !/Chrome/i.test(userAgent)) {
+      return `${windowsVersion} (Safari)`;
+    }
+    
+    return windowsVersion;
+  }
+  
+  if (/Mac OS X/i.test(userAgent)) {
+    const match = userAgent.match(/Mac OS X (\d+_\d+_?\d*)/);
+    const version = match ? match[1].replace(/_/g, '.') : '';
+    
+    // Get browser info
+    if (/Chrome/i.test(userAgent) && !/Edge/i.test(userAgent)) {
+      return `macOS ${version ? `${version} ` : ''}(Chrome)`;
+    } else if (/Firefox/i.test(userAgent)) {
+      return `macOS ${version ? `${version} ` : ''}(Firefox)`;
+    } else if (/Safari/i.test(userAgent) && !/Chrome/i.test(userAgent)) {
+      return `macOS ${version ? `${version} ` : ''}(Safari)`;
+    }
+    
+    return `macOS ${version}`.trim();
+  }
+  
+  if (/Linux/i.test(userAgent)) {
+    if (/Chrome/i.test(userAgent)) {
+      return 'Linux (Chrome)';
+    } else if (/Firefox/i.test(userAgent)) {
+      return 'Linux (Firefox)';
+    }
+    return 'Linux';
+  }
+  
+  return 'Unknown Device';
+};
 
 
 const DashboardCharts = () => {
@@ -58,7 +137,7 @@ const DashboardCharts = () => {
         setActivitiesLoading(true);
         const { data, error } = await supabase
           .from('activity_logs')
-          .select('*')
+          .select('*, ip, agent')
           .eq('brgyid', userProfile.brgyid)
           .order('created_at', { ascending: false })
           .limit(4);
@@ -343,6 +422,12 @@ const DashboardCharts = () => {
                       <p className="text-xs text-muted-foreground">
                         {activity.details?.description || 'System activity'}
                       </p>
+                      {activity.agent && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {parseDeviceInfo(activity.agent)}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground">
                         {formatTimeAgo(activity.created_at)}
                       </p>
