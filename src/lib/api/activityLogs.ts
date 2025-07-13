@@ -41,6 +41,20 @@ export const logUserSignIn = async (userId: string, userProfile: any) => {
     return;
   }
 
+  // Get IP address and User-Agent for activity logging
+  const getUserIP = async () => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch {
+      return 'Unknown';
+    }
+  };
+
+  const userAgent = navigator.userAgent;
+  const ipAddress = await getUserIP();
+
   return logActivity({
     user_id: userId,
     brgyid: userProfile.brgyid,
@@ -49,10 +63,10 @@ export const logUserSignIn = async (userId: string, userProfile: any) => {
       username: userProfile.username || 'Unknown',
       email: userProfile.email || 'Unknown',
       role: userProfile.role || 'Unknown',
-      timestamp: new Date().toISOString(),
-      ip_address: 'Not captured', // Could be enhanced to capture real IP
-      user_agent: navigator.userAgent
-    }
+      timestamp: new Date().toISOString()
+    },
+    ip: ipAddress,
+    agent: userAgent
   });
 };
 

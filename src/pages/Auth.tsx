@@ -16,7 +16,6 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { logActivity } from "@/lib/api/activityLogs";
 const loginSchema = z.object({
   emailOrUsername: z.string().min(1, "Please enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters long")
@@ -212,45 +211,6 @@ const Auth = () => {
         });
       } else if (user) {
         console.log("Login successful, user authenticated");
-        
-        // Get user profile to extract brgyid for activity logging
-        const { data: userProfile } = await supabase
-          .from('profiles')
-          .select('brgyid, username, role')
-          .eq('id', user.id)
-          .single();
-
-        // Get IP address and User-Agent for activity logging
-        const getUserIP = async () => {
-          try {
-            const response = await fetch('https://api.ipify.org?format=json');
-            const data = await response.json();
-            return data.ip;
-          } catch {
-            return 'Unknown';
-          }
-        };
-
-        const userAgent = navigator.userAgent;
-        const ipAddress = await getUserIP();
-
-        // Log the login activity with IP and User-Agent
-        if (userProfile?.brgyid) {
-          await logActivity({
-            user_id: user.id,
-            brgyid: userProfile.brgyid,
-            action: 'user_login',
-            details: {
-              username: userProfile.username || email,
-              email: email,
-              role: userProfile.role || 'Unknown',
-              timestamp: new Date().toISOString()
-            },
-            ip: ipAddress,
-            agent: userAgent
-          });
-        }
-
         toast({
           title: "Login successful",
           description: "Welcome back!"
