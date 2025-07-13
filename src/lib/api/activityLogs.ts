@@ -5,6 +5,8 @@ export interface ActivityLogEntry {
   brgyid: string;
   action: string;
   details: Record<string, any>;
+  ip?: string;
+  agent?: string;
 }
 
 export const logActivity = async (entry: ActivityLogEntry) => {
@@ -16,6 +18,8 @@ export const logActivity = async (entry: ActivityLogEntry) => {
         brgyid: entry.brgyid,
         action: entry.action,
         details: entry.details,
+        ip: entry.ip || null,
+        agent: entry.agent || null,
         created_at: new Date().toISOString()
       });
 
