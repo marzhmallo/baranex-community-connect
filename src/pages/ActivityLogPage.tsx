@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { Search, Activity, User, Clock, Monitor } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,6 +25,7 @@ interface UserProfile {
   lastname?: string;
   username: string;
   email: string;
+  role: string;
 }
 
 export default function ActivityLogPage() {
@@ -67,7 +68,7 @@ export default function ActivityLogPage() {
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('id, firstname, lastname, username, email')
+          .select('id, firstname, lastname, username, email, role')
           .in('id', userIds);
 
         const profileMap = profiles?.reduce((acc, profile) => ({
@@ -92,25 +93,43 @@ export default function ActivityLogPage() {
   const parseDeviceInfo = (userAgent?: string): string => {
     if (!userAgent) return 'Unknown Device';
     
+    let device = 'Desktop';
+    let browser = 'Unknown Browser';
+    let os = 'Unknown OS';
+    
+    // Detect device type
     if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
-      return 'Mobile Device';
+      device = 'Mobile';
     } else if (userAgent.includes('Tablet') || userAgent.includes('iPad')) {
-      return 'Tablet';
-    } else {
-      return 'Desktop';
+      device = 'Tablet';
     }
+    
+    // Detect browser
+    if (userAgent.includes('Chrome')) browser = 'Chrome';
+    else if (userAgent.includes('Firefox')) browser = 'Firefox';
+    else if (userAgent.includes('Safari')) browser = 'Safari';
+    else if (userAgent.includes('Edge')) browser = 'Edge';
+    
+    // Detect OS
+    if (userAgent.includes('Windows')) os = 'Windows';
+    else if (userAgent.includes('Mac')) os = 'macOS';
+    else if (userAgent.includes('Linux')) os = 'Linux';
+    else if (userAgent.includes('Android')) os = 'Android';
+    else if (userAgent.includes('iOS')) os = 'iOS';
+    
+    return `${device} (${browser} on ${os})`;
   };
 
   const getActionIcon = (action: string) => {
     switch (action.toLowerCase()) {
       case 'login':
       case 'sign_in':
-        return <User className="h-4 w-4 text-green-500" />;
+        return '👤';
       case 'logout':
       case 'sign_out':
-        return <User className="h-4 w-4 text-red-500" />;
+        return '🚪';
       default:
-        return <Activity className="h-4 w-4 text-blue-500" />;
+        return '📝';
     }
   };
 
@@ -135,6 +154,37 @@ export default function ActivityLogPage() {
       return `${profile.firstname} ${profile.lastname}`;
     }
     return profile.username || profile.email || 'Unknown User';
+  };
+
+  const getUserRole = (userId: string) => {
+    const profile = userProfiles[userId];
+    return profile?.role || 'Unknown';
+  };
+
+  const getActionDescription = (action: string, userName: string) => {
+    switch (action.toLowerCase()) {
+      case 'login':
+      case 'sign_in':
+        return `${userName} successfully signed in.`;
+      case 'logout':
+      case 'sign_out':
+        return `${userName} signed out.`;
+      default:
+        return `${userName} performed ${action}.`;
+    }
+  };
+
+  const getActionTitle = (action: string) => {
+    switch (action.toLowerCase()) {
+      case 'login':
+      case 'sign_in':
+        return 'User Login';
+      case 'logout':
+      case 'sign_out':
+        return 'User Logout';
+      default:
+        return action.charAt(0).toUpperCase() + action.slice(1);
+    }
   };
 
   const filteredActivities = activities.filter(activity => {
@@ -201,48 +251,73 @@ export default function ActivityLogPage() {
           <div className="space-y-0">
             {filteredActivities.length > 0 ? (
               filteredActivities.map((activity, index) => (
-                <div 
-                  key={activity.id} 
-                  className={`p-4 border-b border-border ${index === filteredActivities.length - 1 ? 'border-b-0' : ''}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-1 rounded-full border-2 border-border">
-                      {getActionIcon(activity.action)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className={getActionColor(activity.action)}>
-                          {activity.action}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
-                        </span>
-                      </div>
-                      <p className="text-sm font-medium text-foreground mb-1">
-                        {getUserName(activity.user_id)}
-                      </p>
-                      {Object.keys(activity.details).length > 0 && (
-                        <div className="text-xs text-muted-foreground mb-2">
-                          <pre className="whitespace-pre-wrap font-mono bg-muted p-2 rounded text-xs">
-                            {JSON.stringify(activity.details, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        {activity.ip && (
-                          <span>IP: {activity.ip}</span>
-                        )}
-                        {activity.agent && (
-                          <span className="flex items-center gap-1">
-                            <Monitor className="h-3 w-3" />
-                            {parseDeviceInfo(activity.agent)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                 <div 
+                   key={activity.id} 
+                   className={`p-6 border-b border-border ${index === filteredActivities.length - 1 ? 'border-b-0' : ''}`}
+                 >
+                   <div className="space-y-3">
+                     {/* Action Title with Icon */}
+                     <div className="flex items-center gap-2">
+                       <span className="text-lg">{getActionIcon(activity.action)}</span>
+                       <h3 className="text-lg font-semibold text-foreground">
+                         {getActionTitle(activity.action)}
+                       </h3>
+                     </div>
+
+                     {/* Action Description */}
+                     <p className="text-muted-foreground">
+                       {getActionDescription(activity.action, getUserName(activity.user_id))}
+                     </p>
+
+                     {/* Timestamp */}
+                     <div className="text-sm">
+                       <span className="font-medium text-foreground">When: </span>
+                       <span className="text-muted-foreground">
+                         {format(new Date(activity.created_at), "MMMM d, yyyy, h:mm a")}
+                       </span>
+                     </div>
+
+                     {/* User Role */}
+                     <div className="text-sm">
+                       <span className="font-medium text-foreground">Role: </span>
+                       <span className="text-muted-foreground capitalize">
+                         {getUserRole(activity.user_id)}
+                       </span>
+                     </div>
+
+                     {/* Device/Browser Info */}
+                     {activity.agent && (
+                       <div className="text-sm">
+                         <span className="font-medium text-foreground">From: </span>
+                         <span className="text-muted-foreground">
+                           {parseDeviceInfo(activity.agent)}
+                         </span>
+                       </div>
+                     )}
+
+                     {/* IP Address */}
+                     {activity.ip && (
+                       <div className="text-sm">
+                         <span className="font-medium text-foreground">IP Address: </span>
+                         <span className="text-muted-foreground font-mono">
+                           {activity.ip}
+                         </span>
+                       </div>
+                     )}
+
+                     {/* Additional Details (if any) */}
+                     {Object.keys(activity.details || {}).length > 0 && (
+                       <div className="text-sm">
+                         <span className="font-medium text-foreground">Additional Details: </span>
+                         <div className="mt-1 p-3 bg-muted rounded-md">
+                           <pre className="text-xs text-muted-foreground whitespace-pre-wrap">
+                             {JSON.stringify(activity.details, null, 2)}
+                           </pre>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 </div>
               ))
             ) : (
               <div className="p-8 text-center text-muted-foreground">
