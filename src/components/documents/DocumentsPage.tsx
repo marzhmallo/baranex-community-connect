@@ -1419,7 +1419,7 @@ const DocumentsPage = () => {
             </CardHeader>
             <CardContent className="p-0">
               <div className="space-y-0">
-                {statusUpdates.map((update, index) => <div key={update.id} className={`p-4 border-b border-border ${index === statusUpdates.length - 1 ? 'border-b-0' : ''}`}>
+                {(statusUpdates || []).map((update, index) => <div key={update.id} className={`p-4 border-b border-border ${index === (statusUpdates || []).length - 1 ? 'border-b-0' : ''}`}>
                     <div className="flex items-start gap-3">
                       <div className={`p-1 rounded-full border-2 ${getStatusColor(update.status)}`}>
                         {getStatusIcon(update.status)}
