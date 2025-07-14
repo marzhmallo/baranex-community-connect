@@ -195,7 +195,11 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
 
   const { data: comments, isLoading: isCommentsLoading, error: commentsError, refetch: refetchComments } = useQuery({
     queryKey: ['comments', thread.id],
-    queryFn: fetchCommentsAndReactions
+    queryFn: fetchCommentsAndReactions,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true
   });
 
   // Set up real-time subscriptions
