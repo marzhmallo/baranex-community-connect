@@ -74,6 +74,37 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
 
+  // Session tracking for view counts - prevent spam
+  const incrementViewCount = async () => {
+    try {
+      // Check if this thread has already been viewed in this session
+      const sessionViewedThreads = JSON.parse(sessionStorage.getItem('viewedThreads') || '[]');
+      
+      if (!sessionViewedThreads.includes(thread.id)) {
+        // Increment view count in database
+        const { error } = await supabase
+          .from('threads')
+          .update({ viewcount: (thread.viewcount || 0) + 1 })
+          .eq('id', thread.id);
+        
+        if (error) {
+          console.error('Error incrementing view count:', error);
+        } else {
+          // Mark thread as viewed in session
+          sessionViewedThreads.push(thread.id);
+          sessionStorage.setItem('viewedThreads', JSON.stringify(sessionViewedThreads));
+        }
+      }
+    } catch (error) {
+      console.error('Error handling view count:', error);
+    }
+  };
+
+  // Increment view count when component mounts
+  useEffect(() => {
+    incrementViewCount();
+  }, [thread.id]);
+
   // Fetch comments and reactions
   const fetchCommentsAndReactions = async () => {
     try {

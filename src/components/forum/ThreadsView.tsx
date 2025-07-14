@@ -23,6 +23,7 @@ export interface Thread {
   created_by: string;
   created_at: string;
   updated_at: string;
+  viewcount?: number;
   authorName?: string;
   commentCount?: number;
   reactionCount?: number;
@@ -123,9 +124,8 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         const reactionInfo = reactionData.find(r => r.threadId === thread.id);
         const reactionCount = reactionInfo?.count || 0;
         const userReaction = reactionInfo?.userReaction || null;
-        // Generate a realistic view count based on engagement metrics
-        const baseViews = Math.max(commentCount * 5, reactionCount * 3, 1);
-        const viewCount = baseViews + Math.floor(Math.random() * 20);
+        // Use actual viewcount from database
+        const viewCount = thread.viewcount || 0;
         
         return {
           ...thread,

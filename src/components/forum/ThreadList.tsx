@@ -84,11 +84,11 @@ const ThreadList = ({ threads, onThreadSelect }: ThreadListProps) => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        <span>{thread.viewCount || 0} views</span>
-                      </span>
+                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                       <span className="flex items-center gap-1">
+                         <Eye className="h-4 w-4" />
+                         <span>{thread.viewcount || 0} views</span>
+                       </span>
                       <Button 
                         variant="ghost" 
                         size="sm" 
