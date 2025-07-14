@@ -416,8 +416,8 @@ const DashboardCharts = () => {
                 </p>
               )}
 
-              <Link to="/residents" className="flex items-center justify-center text-sm text-primary hover:underline mt-2 py-2">
-                View all residents
+              <Link to="/activitylog" className="flex items-center justify-center text-sm text-primary hover:underline mt-2 py-2">
+                View all activity
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Link>
             </div>

@@ -47,6 +47,7 @@ import UserSettingsPage from "./components/user/UserSettingsPage";
 import UserOfficialDetailsPage from "./components/user/UserOfficialDetailsPage";
 import EchelonPage from "./pages/EchelonPage";
 import PlazaPage from "./pages/PlazaPage";
+import ActivityLogPage from "./pages/ActivityLogPage";
 
 // Component to protect glyph-only routes
 const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
@@ -242,6 +243,7 @@ const AppContent = () => {
                 <Route path="/profile" element={<AdminRoute><ProfilePage /></AdminRoute>} />
                 <Route path="/management" element={<AdminRoute><UserAccountManagement /></AdminRoute>} />
                 <Route path="/nexus" element={<AdminRoute><NexusPage /></AdminRoute>} />
+                <Route path="/activitylog" element={<AdminRoute><ActivityLogPage /></AdminRoute>} />
               </>
             )}
             

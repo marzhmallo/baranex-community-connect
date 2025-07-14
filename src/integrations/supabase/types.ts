@@ -115,7 +115,7 @@ export type Database = {
           halllat: number | null
           halllong: number | null
           id: string
-          is_custom: boolean | null
+          is_custom: boolean
           logo_url: string | null
           municipality: string
           province: string
@@ -133,7 +133,7 @@ export type Database = {
           halllat?: number | null
           halllong?: number | null
           id?: string
-          is_custom?: boolean | null
+          is_custom?: boolean
           logo_url?: string | null
           municipality: string
           province: string
@@ -151,7 +151,7 @@ export type Database = {
           halllat?: number | null
           halllong?: number | null
           id?: string
-          is_custom?: boolean | null
+          is_custom?: boolean
           logo_url?: string | null
           municipality?: string
           province?: string
