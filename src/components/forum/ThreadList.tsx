@@ -78,16 +78,16 @@ const ThreadList = ({ threads, onThreadSelect }: ThreadListProps) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <div className="h-auto p-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded-md flex items-center gap-1 cursor-default">
-                        <ThumbsUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        <span className="text-blue-600 dark:text-blue-400">{thread.reactionCount || 0}</span>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <ThumbsUp className="h-4 w-4" />
+                        <span>{thread.reactionCount || 0}</span>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Eye className="h-4 w-4" />
-                        <span>{Math.floor(Math.random() * 200) + 50} views</span>
+                        <span>{thread.viewCount || 0} views</span>
                       </span>
                       <Button 
                         variant="ghost" 
