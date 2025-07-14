@@ -526,7 +526,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
     );
   };
 
-  const userHasLikedThread = userThreadReaction === '👍';
+  const userHasLikedThread = thread.userReaction === '👍' || userThreadReaction === '👍';
 
   return (
     <div className="w-full py-6 px-6">

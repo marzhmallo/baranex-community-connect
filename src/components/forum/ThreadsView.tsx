@@ -27,6 +27,7 @@ export interface Thread {
   commentCount?: number;
   reactionCount?: number;
   viewCount?: number;
+  userReaction?: string | null;
 }
 
 interface ThreadsViewProps {
@@ -87,22 +88,41 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         })
       );
       
-      // Get reaction counts for each thread
-      const reactionCounts = await Promise.all(
+      // Get reaction counts and user reactions for each thread
+      const reactionData = await Promise.all(
         threadsData.map(async (thread) => {
           const { count, error } = await supabase
             .from('reactions')
             .select('*', { count: 'exact', head: true })
             .eq('thread_id', thread.id);
           
-          return { threadId: thread.id, count: count || 0 };
+          // Get user's reaction for this thread
+          let userReaction = null;
+          if (userProfile) {
+            const { data: userReactionData } = await supabase
+              .from('reactions')
+              .select('emoji')
+              .eq('thread_id', thread.id)
+              .eq('user_id', userProfile.id)
+              .maybeSingle();
+            
+            userReaction = userReactionData?.emoji || null;
+          }
+          
+          return { 
+            threadId: thread.id, 
+            count: count || 0,
+            userReaction 
+          };
         })
       );
 
       // Add author names and counts to threads
       const threadsWithAuthors = threadsData.map((thread: Thread) => {
         const commentCount = commentCounts.find(c => c.threadId === thread.id)?.count || 0;
-        const reactionCount = reactionCounts.find(r => r.threadId === thread.id)?.count || 0;
+        const reactionInfo = reactionData.find(r => r.threadId === thread.id);
+        const reactionCount = reactionInfo?.count || 0;
+        const userReaction = reactionInfo?.userReaction || null;
         // Generate a realistic view count based on engagement metrics
         const baseViews = Math.max(commentCount * 5, reactionCount * 3, 1);
         const viewCount = baseViews + Math.floor(Math.random() * 20);
@@ -112,7 +132,8 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           authorName: userMap[thread.created_by] || 'Unknown User',
           commentCount,
           reactionCount,
-          viewCount
+          viewCount,
+          userReaction
         };
       });
 
