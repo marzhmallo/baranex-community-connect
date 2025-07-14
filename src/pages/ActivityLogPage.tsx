@@ -290,7 +290,7 @@ export default function ActivityLogPage() {
 
   return (
     <div className="w-full min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
           
           {/* Header */}
