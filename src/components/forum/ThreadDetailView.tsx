@@ -10,6 +10,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -527,6 +528,10 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
   };
 
   const userHasLikedThread = thread.userReaction === '👍' || userThreadReaction === '👍';
+
+  if (isCommentsLoading) {
+    return <GlobalLoadingScreen />;
+  }
 
   return (
     <div className="w-full py-6 px-6">
