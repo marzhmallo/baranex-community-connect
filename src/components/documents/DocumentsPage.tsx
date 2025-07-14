@@ -818,7 +818,7 @@ const DocumentsPage = () => {
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
+    <div className="w-full p-6 bg-background min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
