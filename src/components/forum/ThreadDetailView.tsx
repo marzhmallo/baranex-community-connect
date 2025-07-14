@@ -460,7 +460,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
   const userHasLikedThread = userThreadReaction === '👍';
 
   return (
-    <div className="max-w-4xl mx-auto py-6 px-4">
+    <div className="w-full py-6 px-6">
       {/* Header */}
       <div className="mb-6">
         <Button 
