@@ -3,11 +3,9 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ForumList from '@/components/forum/ForumList';
 import CreateForumDialog from '@/components/forum/CreateForumDialog';
 import { Button } from '@/components/ui/button';
-import { Plus, Globe, Building, HelpCircle } from 'lucide-react';
+import { Plus, Megaphone, AlertTriangle, Calendar, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -23,12 +21,39 @@ export interface Forum {
   updated_at: string;
 }
 
+// Pre-defined forum categories with their styling
+const forumCategories = [
+  {
+    title: "General Announcements",
+    description: "Official updates and announcements from the barangay council.",
+    icon: Megaphone,
+    iconColor: "text-blue-400",
+    bgColor: "bg-blue-500/20",
+    key: "announcements"
+  },
+  {
+    title: "Community Concerns",
+    description: "Report issues and discuss local concerns like waste management, safety, and infrastructure.",
+    icon: AlertTriangle,
+    iconColor: "text-yellow-400",
+    bgColor: "bg-yellow-500/20",
+    key: "concerns"
+  },
+  {
+    title: "Events & Activities",
+    description: "Plan and discuss upcoming fiestas, sports leagues, and community events.",
+    icon: Calendar,
+    iconColor: "text-green-400",
+    bgColor: "bg-green-500/20",
+    key: "events"
+  }
+];
+
 const ForumPage = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedForum, setSelectedForum] = useState<Forum | null>(null);
-  const [activeTab, setActiveTab] = useState('all');
   const [forumStats, setForumStats] = useState<{[key: string]: {threads: number, posts: number}}>({});
   
   const fetchForums = async () => {
@@ -133,14 +158,6 @@ const ForumPage = () => {
     setSelectedForum(null);
   };
 
-  const myBarangayForums = forums?.filter(
-    (forum) => forum.brgyid === userProfile?.brgyid
-  );
-
-  const publicForums = forums?.filter(
-    (forum) => forum.is_public && forum.brgyid !== userProfile?.brgyid
-  );
-
   const isAdmin = userProfile?.role === 'admin';
 
   if (selectedForum) {
@@ -152,39 +169,71 @@ const ForumPage = () => {
     );
   }
 
-  const renderForumCard = (forum: Forum) => {
-    const stats = forumStats[forum.id] || { threads: 0, posts: 0 };
-    const isPublic = forum.is_public;
+  // Match existing forums to categories, or show all forums if none match
+  const getForumForCategory = (categoryKey: string) => {
+    return forums?.find(forum => 
+      forum.title.toLowerCase().includes(categoryKey) ||
+      forum.description?.toLowerCase().includes(categoryKey)
+    );
+  };
+
+  const renderForumCard = (category: typeof forumCategories[0], index: number) => {
+    const forum = getForumForCategory(category.key);
+    const stats = forum ? forumStats[forum.id] || { threads: 0, posts: 0 } : { threads: 0, posts: 0 };
+    const IconComponent = category.icon;
+    
+    const handleClick = () => {
+      if (forum) {
+        handleForumSelected(forum);
+      }
+    };
+
+    return (
+      <div 
+        key={index}
+        className="bg-card border border-border rounded-xl p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+        onClick={handleClick}
+      >
+        <div className="flex items-center space-x-6">
+          <div className={`flex-shrink-0 w-16 h-16 ${category.bgColor} rounded-full flex items-center justify-center`}>
+            <IconComponent className={`${category.iconColor} h-8 w-8`} />
+          </div>
+          <div className="flex-grow">
+            <h2 className="font-bold text-xl text-foreground mb-1">{category.title}</h2>
+            <p className="text-muted-foreground text-sm">{category.description}</p>
+          </div>
+          <div className="text-right text-muted-foreground hidden sm:block">
+            <div className="font-semibold">{stats.threads} Threads</div>
+            <div className="text-sm">{stats.posts} Posts</div>
+          </div>
+          <ChevronRight className="text-muted-foreground group-hover:text-foreground transition-colors h-5 w-5" />
+        </div>
+      </div>
+    );
+  };
+
+  const renderLoadingCard = (index: number) => {
+    const category = forumCategories[index];
+    const IconComponent = category.icon;
     
     return (
       <div 
-        key={forum.id}
-        className="bg-background rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-        onClick={() => handleForumSelected(forum)}
+        key={index}
+        className="bg-card border border-border rounded-xl p-6 animate-pulse"
       >
-        <div className="flex items-center gap-3 mb-4">
-          <div className={`w-12 h-12 ${isPublic ? 'bg-green-100 dark:bg-green-900/20' : 'bg-blue-100 dark:bg-blue-900/20'} rounded-full flex items-center justify-center`}>
-            {isPublic ? (
-              <Globe className="text-green-600 dark:text-green-400 h-6 w-6" />
-            ) : (
-              <Building className="text-blue-600 dark:text-blue-400 h-6 w-6" />
-            )}
+        <div className="flex items-center space-x-6">
+          <div className={`flex-shrink-0 w-16 h-16 ${category.bgColor} rounded-full flex items-center justify-center`}>
+            <IconComponent className={`${category.iconColor} h-8 w-8`} />
           </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-foreground text-lg">{forum.title}</h3>
-            <span className={`text-sm px-2 py-1 rounded-full ${
-              isPublic 
-                ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30' 
-                : 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30'
-            }`}>
-              {isPublic ? 'Public Forum' : 'Barangay Only'}
-            </span>
+          <div className="flex-grow">
+            <h2 className="font-bold text-xl text-foreground mb-1">{category.title}</h2>
+            <p className="text-muted-foreground text-sm">{category.description}</p>
           </div>
-        </div>
-        <p className="text-muted-foreground text-sm mb-4">{forum.description || 'Open discussions about community topics and general interests'}</p>
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{stats.threads.toLocaleString()} threads</span>
-          <span>{stats.posts.toLocaleString()} posts</span>
+          <div className="text-right text-muted-foreground hidden sm:block">
+            <div className="font-semibold bg-muted h-4 w-16 rounded mb-1"></div>
+            <div className="text-sm bg-muted h-3 w-12 rounded"></div>
+          </div>
+          <ChevronRight className="text-muted-foreground h-5 w-5" />
         </div>
       </div>
     );
@@ -192,61 +241,44 @@ const ForumPage = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Community Forums</h1>
-          {isAdmin && (
-            <Button 
-              onClick={() => setShowCreateDialog(true)} 
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="h-4 w-4" />
-              Create Forum
-            </Button>
-          )}
+      <header className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Community Discussion Board</h1>
+          <p className="text-muted-foreground mt-1">Connect with your neighbors and barangay officials.</p>
         </div>
-
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              Failed to load forums. Please try again later.
-            </AlertDescription>
-          </Alert>
+        {isAdmin && (
+          <Button 
+            onClick={() => setShowCreateDialog(true)} 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold hidden sm:flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Post
+          </Button>
         )}
+      </header>
 
-        {showCreateDialog && (
-          <CreateForumDialog 
-            open={showCreateDialog} 
-            onOpenChange={setShowCreateDialog} 
-            onForumCreated={handleForumCreated}
-          />
-        )}
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load forums. Please try again later.
+          </AlertDescription>
+        </Alert>
+      )}
 
+      {showCreateDialog && (
+        <CreateForumDialog 
+          open={showCreateDialog} 
+          onOpenChange={setShowCreateDialog} 
+          onForumCreated={handleForumCreated}
+        />
+      )}
+
+      <div className="space-y-4">
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-background rounded-xl shadow-sm border border-border p-6 animate-pulse">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-muted rounded-full"></div>
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-muted rounded w-32"></div>
-                    <div className="h-3 bg-muted rounded w-20"></div>
-                  </div>
-                </div>
-                <div className="h-3 bg-muted rounded w-full mb-2"></div>
-                <div className="h-3 bg-muted rounded w-3/4 mb-4"></div>
-                <div className="flex justify-between">
-                  <div className="h-3 bg-muted rounded w-16"></div>
-                  <div className="h-3 bg-muted rounded w-16"></div>
-                </div>
-              </div>
-            ))}
-          </div>
+          forumCategories.map((_, index) => renderLoadingCard(index))
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {forums?.map(renderForumCard)}
-          </div>
+          forumCategories.map((category, index) => renderForumCard(category, index))
         )}
       </div>
     </div>
