@@ -575,7 +575,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                 <ThumbsUp 
                   className={`text-lg ${userHasLikedThread ? 'fill-current' : ''}`} 
                 />
-                <span>{threadReactions['👍'] || 0}</span>
+                <span>{threadReactions['👍'] || thread.reactionCount || 0}</span>
               </button>
               <button className="flex items-center space-x-1 hover:text-primary transition-colors">
                 <MessageSquare className="text-lg" />
