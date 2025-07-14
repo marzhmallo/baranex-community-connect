@@ -916,6 +916,7 @@ export type Database = {
           is_public: boolean | null
           title: string
           updated_at: string
+          viewcount: number
         }
         Insert: {
           brgyid: string
@@ -926,6 +927,7 @@ export type Database = {
           is_public?: boolean | null
           title: string
           updated_at?: string
+          viewcount?: number
         }
         Update: {
           brgyid?: string
@@ -936,6 +938,7 @@ export type Database = {
           is_public?: boolean | null
           title?: string
           updated_at?: string
+          viewcount?: number
         }
         Relationships: []
       }

@@ -21,33 +21,37 @@ export interface Forum {
   updated_at: string;
 }
 
-// Pre-defined forum categories with their styling
-const forumCategories = [
-  {
-    title: "General Announcements",
-    description: "Official updates and announcements from the barangay council.",
-    icon: Megaphone,
-    iconColor: "text-blue-400",
-    bgColor: "bg-blue-500/20",
-    key: "announcements"
-  },
-  {
-    title: "Community Concerns",
-    description: "Report issues and discuss local concerns like waste management, safety, and infrastructure.",
-    icon: AlertTriangle,
-    iconColor: "text-yellow-400",
-    bgColor: "bg-yellow-500/20",
-    key: "concerns"
-  },
-  {
-    title: "Events & Activities",
-    description: "Plan and discuss upcoming fiestas, sports leagues, and community events.",
-    icon: Calendar,
-    iconColor: "text-green-400",
-    bgColor: "bg-green-500/20",
-    key: "events"
+// Icon mapping for different forum types
+const getForumIcon = (title: string, isPublic: boolean) => {
+  const titleLower = title.toLowerCase();
+  
+  if (titleLower.includes('announcement') || titleLower.includes('news')) {
+    return {
+      icon: Megaphone,
+      iconColor: "text-blue-400",
+      bgColor: "bg-blue-500/20"
+    };
+  } else if (titleLower.includes('concern') || titleLower.includes('issue') || titleLower.includes('problem')) {
+    return {
+      icon: AlertTriangle,
+      iconColor: "text-yellow-400",
+      bgColor: "bg-yellow-500/20"
+    };
+  } else if (titleLower.includes('event') || titleLower.includes('activity') || titleLower.includes('calendar')) {
+    return {
+      icon: Calendar,
+      iconColor: "text-green-400",
+      bgColor: "bg-green-500/20"
+    };
+  } else {
+    // Default forum appearance
+    return {
+      icon: isPublic ? Megaphone : AlertTriangle,
+      iconColor: isPublic ? "text-purple-400" : "text-orange-400",
+      bgColor: isPublic ? "bg-purple-500/20" : "bg-orange-500/20"
+    };
   }
-];
+};
 
 const ForumPage = () => {
   const { userProfile } = useAuth();
@@ -169,38 +173,30 @@ const ForumPage = () => {
     );
   }
 
-  // Match existing forums to categories, or show all forums if none match
-  const getForumForCategory = (categoryKey: string) => {
-    return forums?.find(forum => 
-      forum.title.toLowerCase().includes(categoryKey) ||
-      forum.description?.toLowerCase().includes(categoryKey)
-    );
-  };
-
-  const renderForumCard = (category: typeof forumCategories[0], index: number) => {
-    const forum = getForumForCategory(category.key);
-    const stats = forum ? forumStats[forum.id] || { threads: 0, posts: 0 } : { threads: 0, posts: 0 };
-    const IconComponent = category.icon;
+  const renderForumCard = (forum: Forum) => {
+    const stats = forumStats[forum.id] || { threads: 0, posts: 0 };
+    const iconConfig = getForumIcon(forum.title, forum.is_public);
+    const IconComponent = iconConfig.icon;
     
     const handleClick = () => {
-      if (forum) {
-        handleForumSelected(forum);
-      }
+      handleForumSelected(forum);
     };
 
     return (
       <div 
-        key={index}
+        key={forum.id}
         className="bg-card border border-border rounded-xl p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 cursor-pointer group"
         onClick={handleClick}
       >
         <div className="flex items-center space-x-6">
-          <div className={`flex-shrink-0 w-16 h-16 ${category.bgColor} rounded-full flex items-center justify-center`}>
-            <IconComponent className={`${category.iconColor} h-8 w-8`} />
+          <div className={`flex-shrink-0 w-16 h-16 ${iconConfig.bgColor} rounded-full flex items-center justify-center`}>
+            <IconComponent className={`${iconConfig.iconColor} h-8 w-8`} />
           </div>
           <div className="flex-grow">
-            <h2 className="font-bold text-xl text-foreground mb-1">{category.title}</h2>
-            <p className="text-muted-foreground text-sm">{category.description}</p>
+            <h2 className="font-bold text-xl text-foreground mb-1">{forum.title}</h2>
+            <p className="text-muted-foreground text-sm">
+              {forum.description || 'Join the discussion in this community forum.'}
+            </p>
           </div>
           <div className="text-right text-muted-foreground hidden sm:block">
             <div className="font-semibold">{stats.threads} Threads</div>
@@ -213,25 +209,22 @@ const ForumPage = () => {
   };
 
   const renderLoadingCard = (index: number) => {
-    const category = forumCategories[index];
-    const IconComponent = category.icon;
-    
     return (
       <div 
         key={index}
         className="bg-card border border-border rounded-xl p-6 animate-pulse"
       >
         <div className="flex items-center space-x-6">
-          <div className={`flex-shrink-0 w-16 h-16 ${category.bgColor} rounded-full flex items-center justify-center`}>
-            <IconComponent className={`${category.iconColor} h-8 w-8`} />
+          <div className="flex-shrink-0 w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-gray-400 dark:bg-gray-500 rounded"></div>
           </div>
           <div className="flex-grow">
-            <h2 className="font-bold text-xl text-foreground mb-1">{category.title}</h2>
-            <p className="text-muted-foreground text-sm">{category.description}</p>
+            <div className="h-6 bg-muted rounded w-48 mb-2"></div>
+            <div className="h-4 bg-muted rounded w-64"></div>
           </div>
           <div className="text-right text-muted-foreground hidden sm:block">
-            <div className="font-semibold bg-muted h-4 w-16 rounded mb-1"></div>
-            <div className="text-sm bg-muted h-3 w-12 rounded"></div>
+            <div className="bg-muted h-4 w-16 rounded mb-1"></div>
+            <div className="bg-muted h-3 w-12 rounded"></div>
           </div>
           <ChevronRight className="text-muted-foreground h-5 w-5" />
         </div>
@@ -276,9 +269,26 @@ const ForumPage = () => {
 
       <div className="space-y-4">
         {isLoading ? (
-          forumCategories.map((_, index) => renderLoadingCard(index))
+          Array.from({ length: 3 }, (_, index) => renderLoadingCard(index))
+        ) : forums && forums.length > 0 ? (
+          forums.map((forum) => renderForumCard(forum))
         ) : (
-          forumCategories.map((category, index) => renderForumCard(category, index))
+          <div className="text-center py-12">
+            <div className="text-muted-foreground mb-4">
+              <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-semibold">No Forums Available</h3>
+              <p>No community forums have been created yet.</p>
+            </div>
+            {isAdmin && (
+              <Button 
+                onClick={() => setShowCreateDialog(true)}
+                className="mt-4"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create First Forum
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </div>
