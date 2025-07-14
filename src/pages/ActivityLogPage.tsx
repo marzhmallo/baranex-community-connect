@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow, format } from "date-fns";
-import { Search, Activity, User, Clock, Monitor } from "lucide-react";
+import { Search, Activity, Download, Filter, RefreshCw, MoreVertical, ChevronLeft, ChevronRight, X, Eye, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ActivityLog {
@@ -35,15 +32,24 @@ export default function ActivityLogPage() {
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState("all");
+  const [selectedAction, setSelectedAction] = useState("all");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<ActivityLog | null>(null);
 
   useEffect(() => {
     fetchActivityLogs();
-  }, [user]);
+  }, [user, currentPage, itemsPerPage, searchQuery, selectedUser, selectedAction, selectedDate]);
 
   const fetchActivityLogs = async () => {
     if (!user) return;
 
     try {
+      setLoading(true);
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('brgyid')
@@ -52,16 +58,39 @@ export default function ActivityLogPage() {
 
       if (!userProfile?.brgyid) return;
 
-      const { data: logs, error } = await supabase
+      let query = supabase
         .from('activity_logs')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('brgyid', userProfile.brgyid)
-        .order('created_at', { ascending: false })
-        .limit(100);
+        .order('created_at', { ascending: false });
+
+      // Apply filters
+      if (searchQuery) {
+        query = query.or(`action.ilike.%${searchQuery}%,details.ilike.%${searchQuery}%`);
+      }
+
+      if (selectedAction !== 'all') {
+        query = query.eq('action', selectedAction);
+      }
+
+      if (selectedDate) {
+        const startDate = new Date(selectedDate);
+        const endDate = new Date(selectedDate);
+        endDate.setDate(endDate.getDate() + 1);
+        query = query.gte('created_at', startDate.toISOString()).lt('created_at', endDate.toISOString());
+      }
+
+      // Pagination
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+      query = query.range(from, to);
+
+      const { data: logs, error, count } = await query;
 
       if (error) throw error;
 
       setActivities(logs || []);
+      setTotalItems(count || 0);
 
       // Fetch user profiles for all unique user_ids
       const userIds = [...new Set(logs?.map(log => log.user_id) || [])];
@@ -124,10 +153,20 @@ export default function ActivityLogPage() {
     switch (action.toLowerCase()) {
       case 'login':
       case 'sign_in':
+      case 'user_sign_in':
         return '👤';
       case 'logout':
       case 'sign_out':
+      case 'user_sign_out':
         return '🚪';
+      case 'create':
+        return '➕';
+      case 'update':
+        return '✏️';
+      case 'delete':
+        return '🗑️';
+      case 'export':
+        return '📤';
       default:
         return '📝';
     }
@@ -137,12 +176,22 @@ export default function ActivityLogPage() {
     switch (action.toLowerCase()) {
       case 'login':
       case 'sign_in':
-        return 'bg-green-100 text-green-800 border-green-200';
+      case 'user_sign_in':
+        return 'bg-green-100 text-green-800';
       case 'logout':
       case 'sign_out':
-        return 'bg-red-100 text-red-800 border-red-200';
+      case 'user_sign_out':
+        return 'bg-gray-100 text-gray-800';
+      case 'create':
+        return 'bg-blue-100 text-blue-800';
+      case 'update':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'delete':
+        return 'bg-red-100 text-red-800';
+      case 'export':
+        return 'bg-purple-100 text-purple-800';
       default:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -161,54 +210,77 @@ export default function ActivityLogPage() {
     return profile?.role || 'Unknown';
   };
 
-  const getActionDescription = (action: string, userName: string) => {
-    switch (action.toLowerCase()) {
-      case 'login':
-      case 'sign_in':
-      case 'user_sign_in':
-        return `${userName} successfully signed in.`;
-      case 'logout':
-      case 'sign_out':
-      case 'user_sign_out':
-        return `${userName} successfully signed out.`;
-      default:
-        return `${userName} performed ${action}.`;
+  const getUserInitials = (userId: string) => {
+    const profile = userProfiles[userId];
+    if (!profile) return 'U';
+    
+    if (profile.firstname && profile.lastname) {
+      return `${profile.firstname[0]}${profile.lastname[0]}`;
     }
+    return profile.username ? profile.username.substring(0, 2).toUpperCase() : 'U';
   };
 
   const getActionTitle = (action: string) => {
     switch (action.toLowerCase()) {
       case 'login':
       case 'sign_in':
-        return 'User Login';
+      case 'user_sign_in':
+        return 'Login';
       case 'logout':
       case 'sign_out':
-        return 'User Logout';
+      case 'user_sign_out':
+        return 'Logout';
+      case 'create':
+        return 'Create';
+      case 'update':
+        return 'Update';
+      case 'delete':
+        return 'Delete';
+      case 'export':
+        return 'Export';
       default:
         return action.charAt(0).toUpperCase() + action.slice(1);
     }
   };
 
-  const filteredActivities = activities.filter(activity => {
-    const searchLower = searchQuery.toLowerCase();
-    const userName = getUserName(activity.user_id).toLowerCase();
-    const action = activity.action.toLowerCase();
-    const details = JSON.stringify(activity.details).toLowerCase();
-    
-    return userName.includes(searchLower) || 
-           action.includes(searchLower) || 
-           details.includes(searchLower);
-  });
+  const getActionDescription = (action: string) => {
+    switch (action.toLowerCase()) {
+      case 'login':
+      case 'sign_in':
+      case 'user_sign_in':
+        return 'Successful authentication';
+      case 'logout':
+      case 'sign_out':
+      case 'user_sign_out':
+        return 'User signed out';
+      default:
+        return 'Action performed';
+    }
+  };
+
+  const handleViewDetails = (activity: ActivityLog) => {
+    setSelectedActivity(activity);
+    setShowModal(true);
+  };
+
+  const handleExport = () => {
+    toast({
+      title: "Export Started",
+      description: "Activity logs export will be ready shortly",
+    });
+  };
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="w-full min-h-screen bg-background p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-8 bg-muted rounded w-1/4"></div>
+          <div className="h-4 bg-muted rounded w-1/2"></div>
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
+              <div key={i} className="h-20 bg-muted rounded"></div>
             ))}
           </div>
         </div>
@@ -217,122 +289,353 @@ export default function ActivityLogPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Activity Logs</h1>
-        <p className="text-muted-foreground">
-          Track all user activities and system events in your barangay
-        </p>
+    <div className="w-full min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+          
+          {/* Header */}
+          <div className="bg-gradient-to-r from-primary to-primary/90 px-6 py-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                  <Activity className="text-white" size={24} />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white">Activity Logs</h1>
+                  <p className="text-primary-foreground/80 text-sm">Track all user activities and system events</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="px-3 py-1 bg-white bg-opacity-20 rounded-full">
+                  <span className="text-white text-sm font-medium">{totalItems} Total Logs</span>
+                </div>
+                <button 
+                  onClick={fetchActivityLogs}
+                  className="p-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-all duration-200"
+                >
+                  <RefreshCw className="text-white" size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="p-6 border-b border-border">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="relative">
+                <label className="block text-sm font-medium text-foreground mb-2">Search Activities</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                  <input 
+                    type="text" 
+                    placeholder="Search by action, user, or details..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 bg-background"
+                  />
+                </div>
+              </div>
+              
+              <div className="relative">
+                <label className="block text-sm font-medium text-foreground mb-2">Sort by User</label>
+                <select 
+                  value={selectedUser}
+                  onChange={(e) => setSelectedUser(e.target.value)}
+                  className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 bg-background"
+                >
+                  <option value="all">All Users</option>
+                  <option value="admin">Admin Users</option>
+                  <option value="user">Regular Users</option>
+                  <option value="staff">Staff</option>
+                </select>
+              </div>
+
+              <div className="relative">
+                <label className="block text-sm font-medium text-foreground mb-2">Sort by Action</label>
+                <select 
+                  value={selectedAction}
+                  onChange={(e) => setSelectedAction(e.target.value)}
+                  className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 bg-background"
+                >
+                  <option value="all">All Actions</option>
+                  <option value="user_sign_in">Login</option>
+                  <option value="user_sign_out">Logout</option>
+                  <option value="create">Create</option>
+                  <option value="update">Update</option>
+                  <option value="delete">Delete</option>
+                  <option value="export">Export</option>
+                </select>
+              </div>
+
+              <div className="relative">
+                <label className="block text-sm font-medium text-foreground mb-2">Date Range</label>
+                <input 
+                  type="date" 
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 bg-background"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Timestamp</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Resource</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Details</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">IP Address</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-card divide-y divide-border">
+                {activities.map((activity) => (
+                  <tr key={activity.id} className="hover:bg-muted/50 transition-colors duration-200">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-foreground">{format(new Date(activity.created_at), "yyyy-MM-dd HH:mm:ss")}</div>
+                      <div className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(activity.created_at))} ago</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs font-medium">{getUserInitials(activity.user_id)}</span>
+                        </div>
+                        <div className="ml-3">
+                          <div className="text-sm font-medium text-foreground">{getUserName(activity.user_id)}</div>
+                          <div className="text-sm text-muted-foreground capitalize">{getUserRole(activity.user_id)}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getActionColor(activity.action)}`}>
+                        <span className="mr-1">{getActionIcon(activity.action)}</span>
+                        {getActionTitle(activity.action)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      {activity.details?.resource || 'System'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-foreground">{getActionDescription(activity.action)}</div>
+                      {activity.agent && (
+                        <div className="text-xs text-muted-foreground">{parseDeviceInfo(activity.agent)}</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-mono">
+                      {activity.ip || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Success
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleViewDetails(activity)}
+                        className="p-2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors duration-200"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="bg-muted/50 px-6 py-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-foreground">Showing</span>
+                <select 
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="px-3 py-1 border border-input rounded bg-background"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+                <span className="text-sm text-foreground">of {totalItems} results</span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-input rounded hover:bg-muted transition-colors duration-200 disabled:opacity-50"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                {/* Page numbers */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded transition-colors duration-200 ${
+                        currentPage === page 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'border border-input hover:bg-muted'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                
+                <button 
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-input rounded hover:bg-muted transition-colors duration-200 disabled:opacity-50"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="px-6 py-4 bg-card border-t border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <button 
+                  onClick={handleExport}
+                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors duration-200"
+                >
+                  <Download size={16} />
+                  <span>Export Logs</span>
+                </button>
+                <button className="flex items-center space-x-2 px-4 py-2 border border-input rounded-lg hover:bg-muted transition-colors duration-200">
+                  <Filter size={16} />
+                  <span>Advanced Filter</span>
+                </button>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Activity size={16} />
+                <span>Last updated: {formatDistanceToNow(new Date())} ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Search Activities
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Input
-            placeholder="Search by user, action, or details..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-md"
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Recent Activities ({filteredActivities.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="space-y-0">
-            {filteredActivities.length > 0 ? (
-              filteredActivities.map((activity, index) => (
-                 <div 
-                   key={activity.id} 
-                   className={`p-6 border-b border-border ${index === filteredActivities.length - 1 ? 'border-b-0' : ''}`}
-                 >
-                   <div className="space-y-3">
-                     {/* Action Title with Icon */}
-                     <div className="flex items-center gap-2">
-                       <span className="text-lg">{getActionIcon(activity.action)}</span>
-                       <h3 className="text-lg font-semibold text-foreground">
-                         {getActionTitle(activity.action)}
-                       </h3>
-                     </div>
-
-                     {/* Action Description */}
-                     <p className="text-muted-foreground">
-                       {getActionDescription(activity.action, getUserName(activity.user_id))}
-                     </p>
-
-                     {/* Timestamp */}
-                     <div className="text-sm">
-                       <span className="font-medium text-foreground">When: </span>
-                       <span className="text-muted-foreground">
-                         {format(new Date(activity.created_at), "MMMM d, yyyy, h:mm a")}
-                       </span>
-                     </div>
-
-                     {/* User Role */}
-                     <div className="text-sm">
-                       <span className="font-medium text-foreground">Role: </span>
-                       <span className="text-muted-foreground capitalize">
-                         {getUserRole(activity.user_id)}
-                       </span>
-                     </div>
-
-                     {/* Device/Browser Info */}
-                     {activity.agent && (
-                       <div className="text-sm">
-                         <span className="font-medium text-foreground">From: </span>
-                         <span className="text-muted-foreground">
-                           {parseDeviceInfo(activity.agent)}
-                         </span>
-                       </div>
-                     )}
-
-                     {/* IP Address */}
-                     {activity.ip && (
-                       <div className="text-sm">
-                         <span className="font-medium text-foreground">IP Address: </span>
-                         <span className="text-muted-foreground font-mono">
-                           {activity.ip}
-                         </span>
-                       </div>
-                     )}
-
-                     {/* Additional Details (if any) */}
-                     {Object.keys(activity.details || {}).length > 0 && (
-                       <div className="text-sm">
-                         <span className="font-medium text-foreground">Additional Details: </span>
-                         <div className="mt-1 p-3 bg-muted rounded-md">
-                           <pre className="text-xs text-muted-foreground whitespace-pre-wrap">
-                             {JSON.stringify(activity.details, null, 2)}
-                           </pre>
-                         </div>
-                       </div>
-                     )}
-                   </div>
-                 </div>
-              ))
-            ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">No activity logs found</p>
-                <p className="text-sm">
-                  {searchQuery ? 'Try adjusting your search criteria' : 'Activity logs will appear here when users interact with the system'}
-                </p>
+      {/* Details Modal */}
+      {showModal && selectedActivity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-primary to-primary/90 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                  <Eye className="text-white" size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-white">Audit Log Details</h2>
               </div>
-            )}
+              <button 
+                onClick={() => setShowModal(false)}
+                className="p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all duration-200 text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <div className="border-b border-border pb-4 mb-4">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-primary-foreground text-sm font-medium">{getUserInitials(selectedActivity.user_id)}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">{getActionTitle(selectedActivity.action)} Activity</h3>
+                    <p className="text-muted-foreground">Performed by {getUserName(selectedActivity.user_id)} ({getUserRole(selectedActivity.user_id)}) • {formatDistanceToNow(new Date(selectedActivity.created_at))} ago</p>
+                  </div>
+                  <span className="ml-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Success
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground uppercase mb-2">Event Information</h4>
+                    <div className="bg-muted rounded-lg p-4 space-y-3">
+                      <div className="flex">
+                        <span className="text-muted-foreground w-1/3">Timestamp:</span>
+                        <span className="font-medium">{format(new Date(selectedActivity.created_at), "MMMM d, yyyy, h:mm a")}</span>
+                      </div>
+                      <div className="flex">
+                        <span className="text-muted-foreground w-1/3">Event ID:</span>
+                        <span className="font-medium">{selectedActivity.id}</span>
+                      </div>
+                      <div className="flex">
+                        <span className="text-muted-foreground w-1/3">IP Address:</span>
+                        <span className="font-medium">{selectedActivity.ip || 'N/A'}</span>
+                      </div>
+                      <div className="flex">
+                        <span className="text-muted-foreground w-1/3">Action:</span>
+                        <span className="font-medium">{selectedActivity.action}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground uppercase mb-2">Device Information</h4>
+                    <div className="bg-muted rounded-lg p-4 space-y-3">
+                      {selectedActivity.agent ? (
+                        <>
+                          <div className="flex">
+                            <span className="text-muted-foreground w-1/3">Device:</span>
+                            <span className="font-medium">{parseDeviceInfo(selectedActivity.agent)}</span>
+                          </div>
+                          <div className="flex">
+                            <span className="text-muted-foreground w-1/3">User Agent:</span>
+                            <span className="font-medium text-xs break-all">{selectedActivity.agent}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-muted-foreground">No device information available</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-muted-foreground uppercase mb-2">Detailed Event Data</h4>
+                <div className="bg-muted rounded-lg p-4">
+                  <pre className="whitespace-pre-wrap text-sm font-mono text-foreground">
+                    {JSON.stringify(selectedActivity.details || {}, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-muted px-6 py-4 border-t border-border flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <button className="flex items-center space-x-2 px-4 py-2 border border-input rounded-lg hover:bg-background transition-colors duration-200">
+                  <FileDown size={16} />
+                  <span>Export</span>
+                </button>
+              </div>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors duration-200"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }
