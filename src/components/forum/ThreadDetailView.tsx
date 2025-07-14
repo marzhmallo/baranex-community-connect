@@ -108,10 +108,17 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
       }, {});
 
       // Fetch all reactions (for both thread and comments)
-      const { data: reactionsData, error: reactionsError } = await supabase
+      let reactionsQuery = supabase
         .from('reactions')
-        .select('*')
-        .or(`thread_id.eq.${thread.id},comment_id.in.(${commentsData.map((c: Comment) => c.id).join(',')})`);
+        .select('*');
+      
+      if (commentsData.length > 0) {
+        reactionsQuery = reactionsQuery.or(`thread_id.eq.${thread.id},comment_id.in.(${commentsData.map((c: Comment) => c.id).join(',')})`);
+      } else {
+        reactionsQuery = reactionsQuery.eq('thread_id', thread.id);
+      }
+      
+      const { data: reactionsData, error: reactionsError } = await reactionsQuery;
       
       if (reactionsError) throw reactionsError;
 
@@ -190,6 +197,64 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
     queryKey: ['comments', thread.id],
     queryFn: fetchCommentsAndReactions
   });
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    let commentChannel: any;
+    let reactionChannel: any;
+
+    const setupRealtimeSubscriptions = () => {
+      // Subscribe to comment changes
+      commentChannel = supabase
+        .channel(`comments-${thread.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'comments',
+            filter: `thread_id=eq.${thread.id}`
+          },
+          () => {
+            refetchComments();
+          }
+        )
+        .subscribe();
+
+      // Subscribe to reaction changes
+      reactionChannel = supabase
+        .channel(`reactions-${thread.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'reactions'
+          },
+          (payload: any) => {
+            // Only refetch if this reaction is related to our thread or its comments
+            const payloadNew = payload.new || {};
+            const payloadOld = payload.old || {};
+            if (payloadNew.thread_id === thread.id || payloadOld.thread_id === thread.id ||
+                payloadNew.comment_id || payloadOld.comment_id) {
+              refetchComments();
+            }
+          }
+        )
+        .subscribe();
+    };
+
+    setupRealtimeSubscriptions();
+
+    return () => {
+      if (commentChannel) {
+        supabase.removeChannel(commentChannel);
+      }
+      if (reactionChannel) {
+        supabase.removeChannel(reactionChannel);
+      }
+    };
+  }, [thread.id, refetchComments]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
