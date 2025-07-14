@@ -2221,6 +2221,10 @@ export type Database = {
         Args: { options: string[]; catalog: unknown }
         Returns: undefined
       }
+      is_service_role: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       logflare_fdw_handler: {
         Args: Record<PropertyKey, never>
         Returns: unknown

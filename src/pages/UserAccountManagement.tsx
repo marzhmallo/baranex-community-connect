@@ -51,7 +51,7 @@ const UserAccountManagement = () => {
         .from('profiles')
         .select('*')
         .eq('brgyid', userProfile.brgyid)
-        // Don't exclude current admin - show all users including superior admin
+        .in('role', ['user', 'admin'])
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -259,7 +259,7 @@ const UserAccountManagement = () => {
     );
   }
 
-  const adminUsers = filteredUsers?.filter(u => u.role === 'admin' || u.role === 'staff') || [];
+  const adminUsers = filteredUsers?.filter(u => u.role === 'admin') || [];
   const regularUsers = filteredUsers?.filter(u => u.role === 'user') || [];
   const pendingUsers = filteredUsers?.filter(u => u.status === 'pending') || [];
 
