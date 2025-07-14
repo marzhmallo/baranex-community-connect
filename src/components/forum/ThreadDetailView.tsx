@@ -560,12 +560,23 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
 
   const userHasLikedThread = thread.userReaction === '👍' || userThreadReaction === '👍';
 
-  if (isCommentsLoading) {
-    return <GlobalLoadingScreen />;
-  }
-
   return (
-    <div className="w-full py-6 px-6">
+    <div className="w-full py-6 px-6 relative">
+      {isCommentsLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-lg font-medium text-foreground">Loading Thread</p>
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="mb-6">
         <Button 
