@@ -579,7 +579,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
               </button>
               <button className="flex items-center space-x-1 hover:text-primary transition-colors">
                 <MessageSquare className="text-lg" />
-                <span>{comments?.length || 0}</span>
+                <span>{comments ? comments.reduce((total, comment) => total + 1 + (comment.replies?.length || 0), 0) : 0}</span>
               </button>
               <button className="flex items-center space-x-1 hover:text-primary transition-colors">
                 <Share className="text-lg" />
