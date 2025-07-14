@@ -335,44 +335,21 @@ const DocumentsPage = () => {
     }
   });
 
-  // Mock data for documents
-  const documents = [{
-    id: "1",
-    name: "Barangay Clearance Template",
+  // Document templates from document_types table (connected)
+  const documents = documentTypes?.map(docType => ({
+    id: docType.id,
+    name: docType.name,
     type: "template",
     status: "Active",
-    size: "45 kB",
-    updatedAt: "2 hours ago",
+    size: "Template",
+    updatedAt: formatDistanceToNow(new Date(docType.updated_at || docType.created_at), { addSuffix: true }),
     icon: FileText,
-    color: "text-red-500"
-  }, {
-    id: "2",
-    name: "Certificate of Residency",
-    type: "template",
-    status: "Active",
-    size: "32 kB",
-    updatedAt: "1 day ago",
-    icon: FileText,
-    color: "text-blue-500"
-  }, {
-    id: "3",
-    name: "Business Permit Form",
-    type: "template",
-    status: "Active",
-    size: "28 kB",
-    updatedAt: "3 days ago",
-    icon: FileText,
-    color: "text-green-500"
-  }, {
-    id: "4",
-    name: "Barangay ID Application",
-    type: "template",
-    status: "Active",
-    size: "41 kB",
-    updatedAt: "1 week ago",
-    icon: FileText,
-    color: "text-purple-500"
-  }];
+    color: "text-blue-500",
+    description: docType.description,
+    fee: docType.fee,
+    template: docType.template,
+    required_fields: docType.required_fields
+  })) || [];
 
   // Mock data for document requests - REPLACED WITH REAL DATA ABOVE
   // const documentRequests = [{...}];
