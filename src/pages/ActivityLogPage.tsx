@@ -165,10 +165,12 @@ export default function ActivityLogPage() {
     switch (action.toLowerCase()) {
       case 'login':
       case 'sign_in':
+      case 'user_sign_in':
         return `${userName} successfully signed in.`;
       case 'logout':
       case 'sign_out':
-        return `${userName} signed out.`;
+      case 'user_sign_out':
+        return `${userName} successfully signed out.`;
       default:
         return `${userName} performed ${action}.`;
     }
