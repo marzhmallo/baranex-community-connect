@@ -536,36 +536,101 @@ const DocumentsPage = () => {
     }
   };
 
-  // Mock data for document status updates
-  const statusUpdates = [{
-    id: "1",
-    title: "Barangay Clearance - Ready for Pickup",
-    description: "Document for Maria Santos has been signed and is ready for pickup at the Barangay Hall.",
-    time: "10 minutes ago",
-    status: "ready",
-    trackingId: "#BRG-2023-0042"
-  }, {
-    id: "2",
-    title: "Certificate of Residency - Processing",
-    description: "Juan Dela Cruz's document is being processed. Pending approval from the Barangay Captain.",
-    time: "2 hours ago",
-    status: "processing",
-    trackingId: "#BRG-2023-0041"
-  }, {
-    id: "3",
-    title: "Business Permit - For Review",
-    description: "Business Permit application for Anna Reyes has been submitted for review. Pending verification of business requirements.",
-    time: "5 hours ago",
-    status: "review",
-    trackingId: "#BRG-2023-0040"
-  }, {
-    id: "4",
-    title: "Barangay ID - Rejected",
-    description: "Carlos Mendoza's application for Barangay ID was rejected. Reason: insufficient supporting documents.",
-    time: "Yesterday, 2:15 PM",
-    status: "rejected",
-    trackingId: "#BRG-2023-0039"
-  }];
+  // Fetch recent document status updates from docrequests table
+  const { data: statusUpdates } = useQuery({
+    queryKey: ['document-status-updates', adminProfileId],
+    queryFn: async () => {
+      if (!adminProfileId) return [];
+      
+      // Get current admin's brgyid
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('id', adminProfileId)
+        .single();
+
+      if (!profile?.brgyid) return [];
+      
+      const { data, error } = await supabase
+        .from('docrequests')
+        .select(`
+          id,
+          docnumber,
+          type,
+          status,
+          updated_at,
+          receiver
+        `)
+        .eq('brgyid', profile.brgyid)
+        .not('status', 'eq', 'Request')
+        .order('updated_at', { ascending: false })
+        .limit(4);
+      
+      if (error) throw error;
+      
+      return data?.map(doc => {
+        let requesterName = 'Unknown';
+        if (doc.receiver) {
+          try {
+            if (typeof doc.receiver === 'object' && doc.receiver !== null && !Array.isArray(doc.receiver)) {
+              requesterName = (doc.receiver as any).name || 'Unknown';
+            } else if (typeof doc.receiver === 'string') {
+              const parsed = JSON.parse(doc.receiver);
+              requesterName = parsed.name || 'Unknown';
+            }
+          } catch {
+            requesterName = 'Unknown';
+          }
+        }
+
+        const getStatusText = (status: string) => {
+          switch (status.toLowerCase()) {
+            case 'approved':
+            case 'ready':
+              return 'Ready for Pickup';
+            case 'processing':
+              return 'Processing';
+            case 'pending':
+              return 'For Review';
+            case 'rejected':
+              return 'Rejected';
+            case 'released':
+              return 'Released';
+            default:
+              return status;
+          }
+        };
+
+        const getDescriptionText = (status: string, type: string, name: string) => {
+          switch (status.toLowerCase()) {
+            case 'approved':
+            case 'ready':
+              return `Document for ${name} has been signed and is ready for pickup at the Barangay Hall.`;
+            case 'processing':
+              return `${name}'s document is being processed. Pending approval from the Barangay Captain.`;
+            case 'pending':
+              return `${type} application for ${name} has been submitted for review. Pending verification of requirements.`;
+            case 'rejected':
+              return `${name}'s application for ${type} was rejected. Please contact the office for details.`;
+            case 'released':
+              return `${type} for ${name} has been successfully released.`;
+            default:
+              return `${type} for ${name} - Status: ${status}`;
+          }
+        };
+
+        return {
+          id: doc.id,
+          title: `${doc.type} - ${getStatusText(doc.status)}`,
+          description: getDescriptionText(doc.status, doc.type, requesterName),
+          time: formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true }),
+          status: doc.status.toLowerCase(),
+          trackingId: doc.docnumber
+        };
+      }) || [];
+    },
+    enabled: !!adminProfileId
+  });
 
   // Handler to open request details modal
   const handleRequestClick = (request: any) => {
