@@ -54,6 +54,7 @@ const getForumIcon = (title: string, isPublic: boolean) => {
 };
 
 const ForumPage = () => {
+  console.log('ForumPage component loaded - updated version');
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
