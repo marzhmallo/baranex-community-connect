@@ -9,7 +9,7 @@ import { Plus, Megaphone, AlertTriangle, Calendar, ChevronRight } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import LocalizedLoadingScreen from '@/components/ui/LocalizedLoadingScreen';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface Forum {
   id: string;
@@ -218,30 +218,26 @@ const ForumPage = () => {
     return (
       <div 
         key={index}
-        className="bg-card border border-border rounded-xl p-6 animate-pulse"
+        className="bg-card border border-border rounded-xl p-6"
       >
         <div className="flex items-center space-x-6">
-          <div className="flex-shrink-0 w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
-            <div className="w-8 h-8 bg-gray-400 dark:bg-gray-500 rounded"></div>
+          <Skeleton className="flex-shrink-0 w-16 h-16 rounded-full" />
+          <div className="flex-grow space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-64" />
           </div>
-          <div className="flex-grow">
-            <div className="h-6 bg-muted rounded w-48 mb-2"></div>
-            <div className="h-4 bg-muted rounded w-64"></div>
+          <div className="text-right hidden sm:block space-y-1">
+            <Skeleton className="h-4 w-16 ml-auto" />
+            <Skeleton className="h-3 w-12 ml-auto" />
           </div>
-          <div className="text-right text-muted-foreground hidden sm:block">
-            <div className="bg-muted h-4 w-16 rounded mb-1"></div>
-            <div className="bg-muted h-3 w-12 rounded"></div>
-          </div>
-          <ChevronRight className="text-muted-foreground h-5 w-5" />
+          <Skeleton className="h-5 w-5" />
         </div>
       </div>
     );
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen relative">
-      <LocalizedLoadingScreen isLoading={isLoading} />
-      
+    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
       <header className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Community Discussion Board</h1>
@@ -276,9 +272,11 @@ const ForumPage = () => {
       )}
 
       <div className="space-y-4">
-        {forums && forums.length > 0 ? (
+        {isLoading ? (
+          Array.from({ length: 3 }, (_, index) => renderLoadingCard(index))
+        ) : forums && forums.length > 0 ? (
           forums.map((forum) => renderForumCard(forum))
-        ) : !isLoading ? (
+        ) : (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-4">
               <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50" />
@@ -295,7 +293,7 @@ const ForumPage = () => {
               </Button>
             )}
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );
