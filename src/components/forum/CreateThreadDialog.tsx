@@ -127,6 +127,16 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
 
     setIsSubmitting(true);
     try {
+      // Upload photo first if selected
+      let photoUrl = null;
+      if (selectedPhoto) {
+        photoUrl = await uploadPhoto();
+        if (!photoUrl && selectedPhoto) {
+          // Photo upload failed but was selected
+          return;
+        }
+      }
+
       const { data, error } = await supabase
         .from('threads')
         .insert({
@@ -136,7 +146,8 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
           content: content.trim(),
           tags,
           pinned: isAdmin ? isPinned : false,
-          created_by: userProfile.id
+          created_by: userProfile.id,
+          photo_url: photoUrl
         })
         .select();
 
@@ -152,6 +163,8 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
       setContent('');
       setTags([]);
       setIsPinned(false);
+      setSelectedPhoto(null);
+      setPhotoPreview(null);
     } catch (error: any) {
       console.error('Error creating thread:', error);
       toast({
