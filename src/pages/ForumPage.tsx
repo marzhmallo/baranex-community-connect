@@ -9,7 +9,7 @@ import { Plus, Megaphone, AlertTriangle, Calendar, ChevronRight } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
+import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
 
 export interface Forum {
   id: string;
@@ -61,6 +61,7 @@ const ForumPage = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedForum, setSelectedForum] = useState<Forum | null>(null);
   const [forumStats, setForumStats] = useState<{[key: string]: {threads: number, posts: number}}>({});
+  const [statsLoading, setStatsLoading] = useState(false);
   
   const fetchForums = async () => {
     try {
@@ -137,8 +138,9 @@ const ForumPage = () => {
 
   useEffect(() => {
     const fetchAllStats = async () => {
-      if (!forums) return;
+      if (!forums || forums.length === 0) return;
       
+      setStatsLoading(true);
       const stats: {[key: string]: {threads: number, posts: number}} = {};
       
       for (const forum of forums) {
@@ -146,6 +148,7 @@ const ForumPage = () => {
       }
       
       setForumStats(stats);
+      setStatsLoading(false);
     };
 
     fetchAllStats();
@@ -169,6 +172,9 @@ const ForumPage = () => {
   };
 
   const isAdmin = userProfile?.role === 'admin';
+  
+  // Combined loading state - wait for both forums and stats to load
+  const isPageLoading = isLoading || statsLoading;
 
   if (selectedForum) {
     return (
@@ -214,27 +220,11 @@ const ForumPage = () => {
     );
   };
 
-  const renderLoadingCard = (index: number) => {
-    return (
-      <div 
-        key={index}
-        className="bg-card border border-border rounded-xl p-6"
-      >
-        <div className="flex items-center space-x-6">
-          <Skeleton className="flex-shrink-0 w-16 h-16 rounded-full" />
-          <div className="flex-grow space-y-2">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <div className="text-right hidden sm:block space-y-1">
-            <Skeleton className="h-4 w-16 ml-auto" />
-            <Skeleton className="h-3 w-12 ml-auto" />
-          </div>
-          <Skeleton className="h-5 w-5" />
-        </div>
-      </div>
-    );
-  };
+
+  // Show global loading screen until everything is loaded
+  if (isPageLoading) {
+    return <GlobalLoadingScreen />;
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
@@ -272,9 +262,7 @@ const ForumPage = () => {
       )}
 
       <div className="space-y-4">
-        {isLoading ? (
-          Array.from({ length: 3 }, (_, index) => renderLoadingCard(index))
-        ) : forums && forums.length > 0 ? (
+        {forums && forums.length > 0 ? (
           forums.map((forum) => renderForumCard(forum))
         ) : (
           <div className="text-center py-12">
