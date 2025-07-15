@@ -20,10 +20,13 @@ export default function UpdatePasswordPage() {
 
   useEffect(() => {
     const checkRecoverySession = async () => {
+      // Check both URL hash and search params for tokens
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      const type = hashParams.get('type');
+      const searchParams = new URLSearchParams(window.location.search);
+      
+      const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+      const type = hashParams.get('type') || searchParams.get('type');
 
       if (accessToken && refreshToken && type === 'recovery') {
         try {
