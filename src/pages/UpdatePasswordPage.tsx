@@ -1,12 +1,22 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+// import { supabase } from "@/integrations/supabase/client"; // This line is removed
+import { createClient } from "@supabase/supabase-js"; // Added to create the client
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Lock } from "lucide-react";
+
+// --- FIX START ---
+// Initialize Supabase client directly in the component.
+// In a real application, these would be environment variables.
+const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co"; // Replace with your Supabase URL
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzc2pzcGFrYWd5ZXJybXRhYWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU2NDI2NTUsImV4cCI6MjAzMTIxODY1NX0.2N4s4aA21t3i-4PA8v4y-1-sVFLy3gJc5qBv2v2a2sA"; // Replace with your Supabase Anon Key
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// --- FIX END ---
+
 
 export default function UpdatePasswordPage() {
   const [newPassword, setNewPassword] = useState("");
@@ -19,59 +29,36 @@ export default function UpdatePasswordPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkRecoverySession = async () => {
-      try {
-        // Check if we have a valid session from Supabase password reset flow
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error checking session:', error);
-          toast({
-            title: "Error",
-            description: "Something went wrong. Please try again.",
-            variant: "destructive"
-          });
-          navigate('/login');
-          return;
-        }
+    // This is the corrected logic.
+    // We listen for the specific 'PASSWORD_RECOVERY' event from Supabase.
+    // This event ONLY fires when the user arrives from a valid password reset link.
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        // The link is valid. It is now safe to show the password update form.
+        setIsValidRecovery(true);
+      }
+    });
 
-        // Only allow access if user has a valid session from password reset
-        if (session?.user) {
-          setIsValidRecovery(true);
-        } else {
-          toast({
+    // It's also good practice to check if the URL hash contains the recovery token,
+    // and if not, redirect immediately. This prevents users from navigating here directly.
+    if (!window.location.hash.includes('type=recovery')) {
+        toast({
             title: "Invalid Access",
             description: "This page can only be accessed through a password reset link.",
             variant: "destructive"
-          });
-          navigate('/login');
-        }
-      } catch (error) {
-        console.error('Unexpected error:', error);
-        toast({
-          title: "Error",
-          description: "Something went wrong. Please try again.",
-          variant: "destructive"
         });
         navigate('/login');
-      }
-    };
+    }
 
-    checkRecoverySession();
+    // Cleanup the listener when the component unmounts
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [navigate, toast]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newPassword || !confirmPassword) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all fields.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (newPassword !== confirmPassword) {
       toast({
         title: "Passwords Don't Match",
@@ -111,7 +98,7 @@ export default function UpdatePasswordPage() {
           variant: "default"
         });
 
-        // Sign out the user after password reset
+        // Sign out the user's temporary session and redirect to login
         await supabase.auth.signOut();
         navigate('/login');
       }
@@ -127,12 +114,13 @@ export default function UpdatePasswordPage() {
     }
   };
 
+  // This loading state gives Supabase time to fire the event.
   if (!isValidRecovery) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Verifying...</CardTitle>
+            <CardTitle className="text-2xl font-bold">Verifying Link...</CardTitle>
             <CardDescription>
               Please wait while we verify your password reset link.
             </CardDescription>
@@ -142,6 +130,7 @@ export default function UpdatePasswordPage() {
     );
   }
 
+  // Once isValidRecovery is true, show the form.
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted">
       <Card className="w-full max-w-md">
