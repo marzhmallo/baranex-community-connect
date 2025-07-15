@@ -356,12 +356,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
-      // ONLY handle redirects for SIGNED_IN event from login page AND only if we haven't already handled initial auth AND page is visible
+      // Check if this is a password recovery session
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const recoveryType = hashParams.get('type');
+      const isPasswordRecovery = recoveryType === 'recovery';
+      
+      // ONLY handle redirects for SIGNED_IN event from login page AND only if we haven't already handled initial auth AND page is visible AND NOT password recovery
       if (event === 'SIGNED_IN' && 
           location.pathname === '/login' && 
           !hasHandledInitialAuth && 
           isPageVisible &&
-          currentSession?.user) {
+          currentSession?.user &&
+          !isPasswordRecovery) {
         
         console.log('Processing SIGNED_IN event from login page - will redirect');
         setHasHandledInitialAuth(true);
@@ -435,7 +441,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await fetchUserProfile(initialSession.user.id);
         
         // ONLY redirect on initial load if on login or root page AND haven't handled initial auth
-        if ((location.pathname === "/login" || location.pathname === "/") && !hasHandledInitialAuth) {
+        // Check if this is a password recovery session
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const recoveryType = hashParams.get('type');
+        const isPasswordRecovery = recoveryType === 'recovery';
+        
+        if ((location.pathname === "/login" || location.pathname === "/") && !hasHandledInitialAuth && !isPasswordRecovery) {
           console.log('Initial load from login/root, checking for redirect...');
           setHasHandledInitialAuth(true);
           
