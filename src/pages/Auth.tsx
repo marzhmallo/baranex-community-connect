@@ -467,6 +467,16 @@ const Auth = () => {
   const handleForgotPassword = async (values: ForgotPasswordFormValues) => {
     setIsLoading(true);
     
+    if (!captchaToken) {
+      toast({
+        title: "CAPTCHA Required",
+        description: "Please complete the captcha verification",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo: `${window.location.origin}/login`
@@ -496,6 +506,8 @@ const Auth = () => {
       console.error("Forgot password error:", error);
     } finally {
       setIsLoading(false);
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
     }
   };
 
@@ -1010,10 +1022,14 @@ const Auth = () => {
                       )} 
                     />
                     
+                    <div className="flex justify-center my-4">
+                      <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
+                    </div>
+                    
                     <Button 
                       type="submit" 
                       className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
-                      disabled={isLoading}
+                      disabled={isLoading || !captchaToken}
                     >
                       {isLoading ? "Sending Reset Link..." : "Send Reset Link"}
                     </Button>
