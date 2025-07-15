@@ -74,9 +74,17 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
   const { userProfile } = useAuth();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
-  const [sortOrder, setSortOrder] = useState<'new' | 'popular'>('new');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular' | 'most_replies' | 'recent_activity'>('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserFromSameBarangay, setIsUserFromSameBarangay] = useState(false);
+  
+  // Dropdown states
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pinned' | 'locked' | 'open'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
 
   useEffect(() => {
     if (userProfile && forum) {
@@ -86,12 +94,25 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
 
   const fetchThreads = async () => {
     try {
-      const { data: threadsData, error: threadsError } = await supabase
+      let query = supabase
         .from('threads')
         .select('*')
-        .eq('forum_id', forum.id)
-        .order('pinned', { ascending: false })
-        .order(sortOrder === 'new' ? 'created_at' : 'updated_at', { ascending: false });
+        .eq('forum_id', forum.id);
+      
+      // Apply sorting
+      if (sortOrder === 'newest') {
+        query = query.order('pinned', { ascending: false }).order('created_at', { ascending: false });
+      } else if (sortOrder === 'oldest') {
+        query = query.order('pinned', { ascending: false }).order('created_at', { ascending: true });
+      } else if (sortOrder === 'recent_activity') {
+        query = query.order('pinned', { ascending: false }).order('updated_at', { ascending: false });
+      }
+      // For popular and most_replies, we'll sort after getting the data
+      else {
+        query = query.order('pinned', { ascending: false }).order('created_at', { ascending: false });
+      }
+
+      const { data: threadsData, error: threadsError } = await query;
 
       if (threadsError) throw threadsError;
 
@@ -166,7 +187,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
       );
 
       // Add author names and counts to threads
-      const threadsWithAuthors = threadsData.map((thread: Thread) => {
+      let threadsWithAuthors = threadsData.map((thread: Thread) => {
         const commentInfo = commentData.find(c => c.threadId === thread.id);
         const commentCount = commentInfo?.count || 0;
         const lastReplyAt = commentInfo?.lastReplyAt || null;
@@ -187,6 +208,23 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         };
       });
 
+      // Apply sorting for popular and most_replies
+      if (sortOrder === 'popular') {
+        threadsWithAuthors.sort((a, b) => {
+          // First sort by pinned status
+          if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+          // Then by reaction count
+          return (b.reactionCount || 0) - (a.reactionCount || 0);
+        });
+      } else if (sortOrder === 'most_replies') {
+        threadsWithAuthors.sort((a, b) => {
+          // First sort by pinned status
+          if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+          // Then by comment count
+          return (b.commentCount || 0) - (a.commentCount || 0);
+        });
+      }
+
       return threadsWithAuthors;
     } catch (error) {
       console.error('Error fetching threads:', error);
@@ -195,7 +233,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
   };
 
   const { data: threads, isLoading, error, refetch } = useQuery({
-    queryKey: ['threads', forum.id, sortOrder],
+    queryKey: ['threads', forum.id, sortOrder, statusFilter, dateFilter],
     queryFn: fetchThreads
   });
 
@@ -237,11 +275,41 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
     );
   }
 
-  // Filter threads based on search query
-  const filteredThreads = threads?.filter(thread => 
-    thread.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    thread.content.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  // Filter threads based on search query and filters
+  const filteredThreads = threads?.filter(thread => {
+    // Search filter
+    const matchesSearch = thread.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      thread.content.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Status filter
+    let matchesStatus = true;
+    if (statusFilter === 'pinned') {
+      matchesStatus = thread.pinned;
+    } else if (statusFilter === 'locked') {
+      matchesStatus = thread.locked;
+    } else if (statusFilter === 'open') {
+      matchesStatus = !thread.locked;
+    }
+    
+    // Date filter
+    let matchesDate = true;
+    if (dateFilter !== 'all') {
+      const threadDate = new Date(thread.created_at);
+      const now = new Date();
+      
+      if (dateFilter === 'today') {
+        matchesDate = threadDate.toDateString() === now.toDateString();
+      } else if (dateFilter === 'week') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        matchesDate = threadDate >= weekAgo;
+      } else if (dateFilter === 'month') {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        matchesDate = threadDate >= monthAgo;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesDate;
+  }) || [];
 
   return (
     <div className="w-[1200px] mx-auto p-6 bg-background min-h-screen">
@@ -288,7 +356,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
               <Button 
                 variant="outline"
                 className="px-4 py-3 flex items-center gap-2"
-                onClick={() => {/* TODO: Add sort dropdown */}}
+                onClick={() => setShowSortDropdown(!showSortDropdown)}
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -296,13 +364,80 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
                 Sort by
                 <ChevronLeft className="h-4 w-4 rotate-90" />
               </Button>
+              
+              {showSortDropdown && (
+                <div className="absolute right-0 top-full mt-2 bg-background border border-border rounded-lg shadow-lg z-50 w-48">
+                  <div className="py-2">
+                    <button 
+                      className="w-full px-4 py-3 text-left hover:bg-muted transition-colors duration-200 flex items-center gap-2"
+                      onClick={() => {
+                        setSortOrder('newest');
+                        setShowSortDropdown(false);
+                      }}
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Newest First
+                    </button>
+                    <button 
+                      className="w-full px-4 py-3 text-left hover:bg-muted transition-colors duration-200 flex items-center gap-2"
+                      onClick={() => {
+                        setSortOrder('oldest');
+                        setShowSortDropdown(false);
+                      }}
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Oldest First
+                    </button>
+                    <button 
+                      className="w-full px-4 py-3 text-left hover:bg-muted transition-colors duration-200 flex items-center gap-2"
+                      onClick={() => {
+                        setSortOrder('popular');
+                        setShowSortDropdown(false);
+                      }}
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                      Most Popular
+                    </button>
+                    <button 
+                      className="w-full px-4 py-3 text-left hover:bg-muted transition-colors duration-200 flex items-center gap-2"
+                      onClick={() => {
+                        setSortOrder('most_replies');
+                        setShowSortDropdown(false);
+                      }}
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      Most Replies
+                    </button>
+                    <button 
+                      className="w-full px-4 py-3 text-left hover:bg-muted transition-colors duration-200 flex items-center gap-2"
+                      onClick={() => {
+                        setSortOrder('recent_activity');
+                        setShowSortDropdown(false);
+                      }}
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Recent Activity
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="relative">
               <Button 
                 variant="outline"
                 className="px-4 py-3 flex items-center gap-2"
-                onClick={() => {/* TODO: Add filter dropdown */}}
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
@@ -310,6 +445,103 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
                 Filter
                 <ChevronLeft className="h-4 w-4 rotate-90" />
               </Button>
+              
+              {showFilterDropdown && (
+                <div className="absolute right-0 top-full mt-2 bg-background border border-border rounded-lg shadow-lg z-50 w-64 p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="font-medium text-foreground mb-2">Status</h4>
+                      <div className="flex flex-wrap gap-2">
+                        <button 
+                          className={`px-2 py-1 text-xs border rounded-full transition-colors ${
+                            statusFilter === 'all' 
+                              ? 'bg-primary text-primary-foreground border-primary' 
+                              : 'border-border hover:bg-muted'
+                          }`}
+                          onClick={() => setStatusFilter('all')}
+                        >
+                          All
+                        </button>
+                        <button 
+                          className={`px-2 py-1 text-xs border rounded-full transition-colors ${
+                            statusFilter === 'pinned' 
+                              ? 'bg-primary text-primary-foreground border-primary' 
+                              : 'border-border hover:bg-muted'
+                          }`}
+                          onClick={() => setStatusFilter('pinned')}
+                        >
+                          Pinned
+                        </button>
+                        <button 
+                          className={`px-2 py-1 text-xs border rounded-full transition-colors ${
+                            statusFilter === 'locked' 
+                              ? 'bg-primary text-primary-foreground border-primary' 
+                              : 'border-border hover:bg-muted'
+                          }`}
+                          onClick={() => setStatusFilter('locked')}
+                        >
+                          Locked
+                        </button>
+                        <button 
+                          className={`px-2 py-1 text-xs border rounded-full transition-colors ${
+                            statusFilter === 'open' 
+                              ? 'bg-primary text-primary-foreground border-primary' 
+                              : 'border-border hover:bg-muted'
+                          }`}
+                          onClick={() => setStatusFilter('open')}
+                        >
+                          Open
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-foreground mb-2">Date</h4>
+                      <div className="flex flex-col gap-1">
+                        <button 
+                          className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            dateFilter === 'today' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                          onClick={() => setDateFilter('today')}
+                        >
+                          Today
+                        </button>
+                        <button 
+                          className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            dateFilter === 'week' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                          onClick={() => setDateFilter('week')}
+                        >
+                          This week
+                        </button>
+                        <button 
+                          className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            dateFilter === 'month' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                          onClick={() => setDateFilter('month')}
+                        >
+                          This month
+                        </button>
+                        <button 
+                          className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            dateFilter === 'all' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                          onClick={() => setDateFilter('all')}
+                        >
+                          All time
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -319,7 +551,12 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           <Button 
             variant="outline" 
             size="sm"
-            className="px-3 py-1 rounded-full bg-background hover:bg-muted text-sm transition-colors duration-200 flex items-center gap-1"
+            className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 flex items-center gap-1 ${
+              statusFilter === 'pinned' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-background hover:bg-muted'
+            }`}
+            onClick={() => setStatusFilter(statusFilter === 'pinned' ? 'all' : 'pinned')}
           >
             <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -329,8 +566,12 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           <Button 
             variant="outline" 
             size="sm"
-            className="px-3 py-1 rounded-full bg-background hover:bg-muted text-sm transition-colors duration-200 flex items-center gap-1"
-            onClick={() => setSortOrder('new')}
+            className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 flex items-center gap-1 ${
+              sortOrder === 'recent_activity' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-background hover:bg-muted'
+            }`}
+            onClick={() => setSortOrder('recent_activity')}
           >
             <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -340,7 +581,11 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           <Button 
             variant="outline" 
             size="sm"
-            className="px-3 py-1 rounded-full bg-background hover:bg-muted text-sm transition-colors duration-200 flex items-center gap-1"
+            className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 flex items-center gap-1 ${
+              sortOrder === 'popular' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-background hover:bg-muted'
+            }`}
             onClick={() => setSortOrder('popular')}
           >
             <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
