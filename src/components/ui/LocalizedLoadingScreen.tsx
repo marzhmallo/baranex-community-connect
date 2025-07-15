@@ -5,6 +5,7 @@ interface LocalizedLoadingScreenProps {
 }
 
 const LocalizedLoadingScreen = ({ isLoading }: LocalizedLoadingScreenProps) => {
+  console.log('LocalizedLoadingScreen render:', { isLoading });
   if (!isLoading) return null;
 
   return (

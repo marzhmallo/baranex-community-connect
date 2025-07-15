@@ -84,8 +84,12 @@ const ForumPage = () => {
 
   const { data: forums, isLoading, error, refetch } = useQuery({
     queryKey: ['forums'],
-    queryFn: fetchForums
+    queryFn: fetchForums,
+    staleTime: 0,
+    gcTime: 0,
   });
+
+  console.log('Forum loading state:', { isLoading, forumsCount: forums?.length });
 
   // Fetch actual thread and comment counts for each forum
   const getForumStats = async (forumId: string) => {
