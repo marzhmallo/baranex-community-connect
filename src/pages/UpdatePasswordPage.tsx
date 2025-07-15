@@ -28,6 +28,7 @@ export default function UpdatePasswordPage() {
       const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
       const type = hashParams.get('type') || searchParams.get('type');
 
+      // Check if we have recovery tokens in the URL
       if (accessToken && refreshToken && type === 'recovery') {
         try {
           const { error } = await supabase.auth.setSession({
@@ -56,12 +57,30 @@ export default function UpdatePasswordPage() {
           navigate('/login');
         }
       } else {
-        toast({
-          title: "Invalid Access",
-          description: "This page can only be accessed through a password reset link.",
-          variant: "destructive"
-        });
-        navigate('/login');
+        // Check if we have an existing session that might be from password recovery
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session) {
+            // If we have a session, allow password reset
+            setIsValidRecovery(true);
+          } else {
+            toast({
+              title: "Invalid Access",
+              description: "This page can only be accessed through a password reset link.",
+              variant: "destructive"
+            });
+            navigate('/login');
+          }
+        } catch (error) {
+          console.error('Error checking session:', error);
+          toast({
+            title: "Error",
+            description: "Something went wrong. Please try again.",
+            variant: "destructive"
+          });
+          navigate('/login');
+        }
       }
     };
 
