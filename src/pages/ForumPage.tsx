@@ -241,7 +241,7 @@ const ForumPage = () => {
     <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen relative">
       {/* Show global loading screen only over the forum content */}
       {(isLoading || isLoadingStats) && (
-        <div className="absolute inset-0 z-50">
+        <div className="absolute inset-6 z-50 rounded-lg">
           <GlobalLoadingScreen />
         </div>
       )}
