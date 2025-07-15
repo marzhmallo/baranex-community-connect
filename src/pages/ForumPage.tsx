@@ -9,6 +9,7 @@ import { Plus, Megaphone, AlertTriangle, Calendar, ChevronRight } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import LocalizedLoadingScreen from '@/components/ui/LocalizedLoadingScreen';
 
 export interface Forum {
   id: string;
@@ -234,7 +235,9 @@ const ForumPage = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
+    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen relative">
+      <LocalizedLoadingScreen isLoading={isLoading} />
+      
       <header className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Community Discussion Board</h1>
@@ -269,11 +272,9 @@ const ForumPage = () => {
       )}
 
       <div className="space-y-4">
-        {isLoading ? (
-          Array.from({ length: 3 }, (_, index) => renderLoadingCard(index))
-        ) : forums && forums.length > 0 ? (
+        {forums && forums.length > 0 ? (
           forums.map((forum) => renderForumCard(forum))
-        ) : (
+        ) : !isLoading ? (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-4">
               <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50" />
@@ -290,7 +291,7 @@ const ForumPage = () => {
               </Button>
             )}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
