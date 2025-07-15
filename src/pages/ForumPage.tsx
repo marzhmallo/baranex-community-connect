@@ -227,7 +227,7 @@ const ForumPage = () => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
+    <div className="w-full mx-auto p-6 bg-background min-h-screen">
       <header className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Community Discussion Board</h1>
