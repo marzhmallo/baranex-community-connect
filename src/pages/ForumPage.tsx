@@ -238,10 +238,10 @@ const ForumPage = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
-      {/* Show global loading screen while data is loading */}
+    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen relative">
+      {/* Show global loading screen only over the forum content */}
       {(isLoading || isLoadingStats) && (
-        <div className="relative">
+        <div className="absolute inset-0 z-50">
           <GlobalLoadingScreen />
         </div>
       )}
