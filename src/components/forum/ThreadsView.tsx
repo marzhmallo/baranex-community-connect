@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Plus, Search } from 'lucide-react';
+import { ChevronLeft, Plus, Search, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Forum } from '@/pages/ForumPage';
@@ -317,7 +317,27 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
   }) || [];
 
   return (
-    <div className="w-full mx-auto p-6 bg-background min-h-screen">
+    <div className="w-full mx-auto p-6 bg-background min-h-screen relative">
+      {/* Localized loading screen that only covers this div */}
+      {isLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="absolute inset-0 h-8 w-8 animate-pulse rounded-full border border-primary/20" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-foreground">Loading threads</p>
+              <div className="flex space-x-1 mt-2">
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="mb-8">
         <Button 
           variant="ghost" 
@@ -611,30 +631,12 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           </Alert>
         )}
 
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-card border border-border rounded-lg p-6">
-                <div className="flex items-start gap-4">
-                  <Skeleton className="w-10 h-10 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-6 w-2/3" />
-                    <Skeleton className="h-4 w-1/3" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-4/5" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <ThreadList 
-            threads={filteredThreads} 
-            onThreadSelect={handleThreadSelected}
-            onPinToggle={handlePinToggle}
-            onLockToggle={handleLockToggle}
-          />
-        )}
+        <ThreadList 
+          threads={filteredThreads} 
+          onThreadSelect={handleThreadSelected}
+          onPinToggle={handlePinToggle}
+          onLockToggle={handleLockToggle}
+        />
       </div>
 
       {showCreateDialog && (
