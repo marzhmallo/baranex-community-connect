@@ -312,10 +312,6 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
       
       setCommentContent('');
       refetchComments();
-      toast({
-        title: "Comment Posted",
-        description: "Your comment has been added successfully."
-      });
     } catch (error: any) {
       console.error('Error posting comment:', error);
       toast({
