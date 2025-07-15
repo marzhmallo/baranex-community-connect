@@ -16,7 +16,6 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { PasswordResetModal } from "@/components/ui/password-reset-modal";
 const loginSchema = z.object({
   emailOrUsername: z.string().min(1, "Please enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters long")
@@ -56,16 +55,25 @@ const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address")
 });
 
+const resetPasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+  confirmPassword: z.string().min(6, "Please confirm your password")
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"]
+});
+
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 const Auth = () => {
   const {
     theme
   } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"login" | "signup" | "forgot-password">("login");
-  const [showResetModal, setShowResetModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<"login" | "signup" | "forgot-password" | "reset-password">("login");
+  const [resetMode, setResetMode] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [barangays, setBarangays] = useState<{
@@ -85,19 +93,6 @@ const Auth = () => {
   const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
   const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "a002bff6-3d98-4db2-8406-166e106c1958";
-
-  // Detect password recovery from email link
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'PASSWORD_RECOVERY') {
-          setShowResetModal(true);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   // Fetch available barangays
   useEffect(() => {
@@ -167,6 +162,14 @@ const Auth = () => {
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: ""
+    }
+  });
+  
+  const resetPasswordForm = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: ""
     }
   });
   
@@ -446,7 +449,7 @@ const Auth = () => {
     
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: window.location.origin,
+        redirectTo: `${window.location.origin}/update-password`,
         captchaToken
       });
       
@@ -479,6 +482,47 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async (values: ResetPasswordFormValues) => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: values.password
+      });
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Password Updated",
+          description: "Your password has been successfully updated. Please log in with your new password.",
+          variant: "default"
+        });
+        
+        // Sign out the user after password reset to clear recovery session
+        await supabase.auth.signOut();
+        
+        setResetMode(false);
+        setActiveTab("login");
+        resetPasswordForm.reset();
+        // Clear the URL hash
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+      console.error("Reset password error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return <div className={`w-full min-h-screen flex items-center justify-center p-6 ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'}`}>
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
@@ -546,7 +590,7 @@ const Auth = () => {
               <p className={`font-semibold ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'}`}>Next-Gen Barangay Management</p>
             </div>
             
-            <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "login" | "signup" | "forgot-password")} className="w-full">
+            <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "login" | "signup" | "forgot-password" | "reset-password")} className="w-full">
               
               
               {/* Header text */}
@@ -554,12 +598,14 @@ const Auth = () => {
                 <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
                   {activeTab === "login" ? "Welcome Back!" : 
                    activeTab === "signup" ? "Create an Account" :
-                   "Reset Password"}
+                   activeTab === "forgot-password" ? "Reset Password" :
+                   "Set New Password"}
                 </h2>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                   {activeTab === "login" ? "Sign in to your dashboard" : 
                    activeTab === "signup" ? "Join Baranex to manage your community" :
-                   "Enter your email to receive a password reset link"}
+                   activeTab === "forgot-password" ? "Enter your email to receive a password reset link" :
+                   "Enter your new password"}
                 </p>
               </div>
               
@@ -976,6 +1022,74 @@ const Auth = () => {
                 </Form>
               </TabsContent>
 
+              <TabsContent value="reset-password">
+                <Form {...resetPasswordForm}>
+                  <form onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)} className="space-y-4">
+                    <FormField 
+                      control={resetPasswordForm.control} 
+                      name="password" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                            New Password
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <Input 
+                                type={showPassword ? "text" : "password"} 
+                                placeholder="Enter your new password" 
+                                className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
+                                {...field} 
+                              />
+                              <button 
+                                type="button" 
+                                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`} 
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} 
+                    />
+                    
+                    <FormField 
+                      control={resetPasswordForm.control} 
+                      name="confirmPassword" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                            Confirm New Password
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <Input 
+                                type={showPassword ? "text" : "password"} 
+                                placeholder="Confirm your new password" 
+                                className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} 
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Updating Password..." : "Update Password"}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
             </Tabs>
             
             <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'}`}>
@@ -1020,12 +1134,6 @@ const Auth = () => {
           </div>
         </div>
       </div>
-      
-      {/* Password Reset Modal */}
-      <PasswordResetModal 
-        open={showResetModal} 
-        onOpenChange={setShowResetModal} 
-      />
     </div>;
 };
 export default Auth;
