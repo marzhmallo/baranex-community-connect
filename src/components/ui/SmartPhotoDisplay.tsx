@@ -125,10 +125,12 @@ const SmartPhotoDisplay = ({
   return (
     <>
       <div className={`relative ${containerClass} border rounded-lg overflow-hidden bg-muted ${isFullSizePhoto ? '' : 'aspect-square'}`}>
-        {/* Placeholder/Fallback (Always visible underneath) */}
-        <div className={`w-full ${isFullSizePhoto ? 'h-auto min-h-[200px]' : 'h-full'} flex items-center justify-center text-muted-foreground`}>
-          {fallbackContent || alt.charAt(0).toUpperCase()}
-        </div>
+        {/* Placeholder/Fallback (Only visible when no photo is loaded) */}
+        {!photoUrl && (
+          <div className={`w-full ${isFullSizePhoto ? 'h-32' : 'h-full'} flex items-center justify-center text-muted-foreground`}>
+            {fallbackContent || alt.charAt(0).toUpperCase()}
+          </div>
+        )}
         
         {/* Loading Spinner Overlay */}
         {isLoadingPhoto && (
