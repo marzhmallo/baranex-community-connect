@@ -9,7 +9,6 @@ import { Plus, Megaphone, AlertTriangle, Calendar, ChevronRight } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
 
 export interface Forum {
   id: string;
@@ -61,7 +60,6 @@ const ForumPage = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedForum, setSelectedForum] = useState<Forum | null>(null);
   const [forumStats, setForumStats] = useState<{[key: string]: {threads: number, posts: number}}>({});
-  const [isLoadingStats, setIsLoadingStats] = useState(false);
   
   const fetchForums = async () => {
     try {
@@ -136,7 +134,6 @@ const ForumPage = () => {
     const fetchAllStats = async () => {
       if (!forums) return;
       
-      setIsLoadingStats(true);
       const stats: {[key: string]: {threads: number, posts: number}} = {};
       
       for (const forum of forums) {
@@ -144,7 +141,6 @@ const ForumPage = () => {
       }
       
       setForumStats(stats);
-      setIsLoadingStats(false);
     };
 
     fetchAllStats();
@@ -238,71 +234,63 @@ const ForumPage = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen relative">
-      {/* Show global loading screen only over the forum content */}
-      {(isLoading || isLoadingStats) && (
-        <div className="absolute inset-0 z-50">
-          <GlobalLoadingScreen />
+    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
+      <header className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Community Discussion Board</h1>
+          <p className="text-muted-foreground mt-1">Connect with your neighbors and barangay officials.</p>
         </div>
+        {isAdmin && (
+          <Button 
+            onClick={() => setShowCreateDialog(true)} 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold hidden sm:flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Post
+          </Button>
+        )}
+      </header>
+
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load forums. Please try again later.
+          </AlertDescription>
+        </Alert>
       )}
-      
-      {/* Content - hidden while loading */}
-      <div className={`${(isLoading || isLoadingStats) ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-300`}>
-        <header className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Community Discussion Board</h1>
-            <p className="text-muted-foreground mt-1">Connect with your neighbors and barangay officials.</p>
-          </div>
-          {isAdmin && (
-            <Button 
-              onClick={() => setShowCreateDialog(true)} 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold hidden sm:flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              New Post
-            </Button>
-          )}
-        </header>
 
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              Failed to load forums. Please try again later.
-            </AlertDescription>
-          </Alert>
-        )}
+      {showCreateDialog && (
+        <CreateForumDialog 
+          open={showCreateDialog} 
+          onOpenChange={setShowCreateDialog} 
+          onForumCreated={handleForumCreated}
+        />
+      )}
 
-        {showCreateDialog && (
-          <CreateForumDialog 
-            open={showCreateDialog} 
-            onOpenChange={setShowCreateDialog} 
-            onForumCreated={handleForumCreated}
-          />
-        )}
-
-        <div className="space-y-4">
-          {forums && forums.length > 0 ? (
-            forums.map((forum) => renderForumCard(forum))
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-muted-foreground mb-4">
-                <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold">No Forums Available</h3>
-                <p>No community forums have been created yet.</p>
-              </div>
-              {isAdmin && (
-                <Button 
-                  onClick={() => setShowCreateDialog(true)}
-                  className="mt-4"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create First Forum
-                </Button>
-              )}
+      <div className="space-y-4">
+        {isLoading ? (
+          Array.from({ length: 3 }, (_, index) => renderLoadingCard(index))
+        ) : forums && forums.length > 0 ? (
+          forums.map((forum) => renderForumCard(forum))
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-muted-foreground mb-4">
+              <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-semibold">No Forums Available</h3>
+              <p>No community forums have been created yet.</p>
             </div>
-          )}
-        </div>
+            {isAdmin && (
+              <Button 
+                onClick={() => setShowCreateDialog(true)}
+                className="mt-4"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create First Forum
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
