@@ -172,6 +172,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
+        // Check if barangay requires approval (is_custom = false)
+        if (profileData.brgyid && (profileData.role === "admin" || profileData.role === "staff")) {
+          const { data: barangayData, error: barangayError } = await supabase
+            .from('barangays')
+            .select('is_custom')
+            .eq('id', profileData.brgyid)
+            .single();
+
+          if (barangayError) {
+            console.error('Error checking barangay approval status:', barangayError);
+          } else if (barangayData && !barangayData.is_custom) {
+            await signOut();
+            toast({
+              title: "Barangay Pending Approval",
+              description: "Your barangay registration is pending approval. Please wait for administrator approval.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
         // Set user to ONLINE when successfully fetching profile (login)
         await updateUserOnlineStatus(userId, true);
         setUserProfile(profileData as UserProfile);

@@ -310,7 +310,7 @@ const Auth = () => {
           region: values.region?.trim() || '',
           country: values.country || 'Philippines',
           created_at: new Date().toISOString(),
-          is_custom: true
+          is_custom: false
         }).select('id').single();
         if (brgyError) {
           toast({
