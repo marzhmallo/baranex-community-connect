@@ -435,19 +435,22 @@ const Auth = () => {
 
   // Check for password recovery token on component mount
   useEffect(() => {
-    const checkForPasswordRecovery = async () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const type = hashParams.get('type');
+  const checkForPasswordRecovery = async () => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+    const type = hashParams.get('type');
+    
+    if (accessToken && type === 'recovery') {
+      console.log('Password recovery detected, setting reset mode');
+      setResetMode(true);
+      setActiveTab("reset-password");
       
-      if (accessToken && type === 'recovery') {
-        setResetMode(true);
-        setActiveTab("reset-password");
-        
-        // Set session with the recovery token
+      // Only set session if we have both access and refresh tokens
+      if (refreshToken) {
         const { error } = await supabase.auth.setSession({
           access_token: accessToken,
-          refresh_token: hashParams.get('refresh_token') || ''
+          refresh_token: refreshToken
         });
         
         if (error) {
@@ -457,9 +460,19 @@ const Auth = () => {
             description: "The password reset link is invalid or has expired.",
             variant: "destructive"
           });
+        } else {
+          console.log('Recovery session set successfully');
         }
+      } else {
+        console.warn('Missing refresh token in recovery URL');
+        toast({
+          title: "Invalid Reset Link",
+          description: "The password reset link is incomplete. Please request a new one.",
+          variant: "destructive"
+        });
       }
-    };
+    }
+  };
     
     checkForPasswordRecovery();
   }, []);
@@ -529,9 +542,13 @@ const Auth = () => {
       } else {
         toast({
           title: "Password Updated",
-          description: "Your password has been successfully updated. You can now log in with your new password.",
+          description: "Your password has been successfully updated. Please log in with your new password.",
           variant: "default"
         });
+        
+        // Sign out the user after password reset to clear recovery session
+        await supabase.auth.signOut();
+        
         setResetMode(false);
         setActiveTab("login");
         resetPasswordForm.reset();
