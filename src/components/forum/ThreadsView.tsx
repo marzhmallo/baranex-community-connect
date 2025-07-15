@@ -213,8 +213,13 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         threadsWithAuthors.sort((a, b) => {
           // First sort by pinned status
           if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-          // Then by reaction count
-          return (b.reactionCount || 0) - (a.reactionCount || 0);
+          
+          // Calculate popularity score: likes + replies + views
+          const scoreA = (a.reactionCount || 0) + (a.commentCount || 0) + (a.viewCount || 0);
+          const scoreB = (b.reactionCount || 0) + (b.commentCount || 0) + (b.viewCount || 0);
+          
+          // Sort by highest score first
+          return scoreB - scoreA;
         });
       } else if (sortOrder === 'most_replies') {
         threadsWithAuthors.sort((a, b) => {
