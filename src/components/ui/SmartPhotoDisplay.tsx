@@ -115,12 +115,18 @@ const SmartPhotoDisplay = ({
   };
 
   const avatarSize = size ? sizeClasses[size] : className;
+  
+  // For full-size photos, we want to preserve natural dimensions
+  const isFullSizePhoto = className && className.includes('w-full');
+  const containerClass = isFullSizePhoto 
+    ? className.replace('h-auto', '').trim() // Remove any height auto and let it flow naturally
+    : avatarSize;
 
   return (
     <>
-      <div className={`relative ${avatarSize} border rounded-lg overflow-hidden bg-muted`}>
+      <div className={`relative ${containerClass} border rounded-lg overflow-hidden bg-muted ${isFullSizePhoto ? '' : 'aspect-square'}`}>
         {/* Placeholder/Fallback (Always visible underneath) */}
-        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+        <div className={`w-full ${isFullSizePhoto ? 'h-auto min-h-[200px]' : 'h-full'} flex items-center justify-center text-muted-foreground`}>
           {fallbackContent || alt.charAt(0).toUpperCase()}
         </div>
         
@@ -134,13 +140,13 @@ const SmartPhotoDisplay = ({
         {/* The Actual Image (with smooth fade-in) */}
         {photoUrl && (
           <div 
-            className={`absolute inset-0 ${enableZoom ? 'cursor-pointer group' : ''}`}
+            className={`${isFullSizePhoto ? 'relative' : 'absolute inset-0'} ${enableZoom ? 'cursor-pointer group' : ''}`}
             onClick={enableZoom ? () => setShowFullPhoto(true) : undefined}
           >
             <img 
               src={photoUrl} 
               alt={alt}
-              className={`w-full h-full object-cover transition-opacity duration-300 ${photoUrl ? 'opacity-100' : 'opacity-0'}`}
+              className={`w-full ${isFullSizePhoto ? 'h-auto' : 'h-full object-cover'} transition-opacity duration-300 ${photoUrl ? 'opacity-100' : 'opacity-0'}`}
             />
             {enableZoom && (
               <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
