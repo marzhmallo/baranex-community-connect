@@ -347,7 +347,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
               placeholder="Search threads..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all duration-200"
+              className="w-full pl-10 pr-4 py-3 bg-background text-foreground border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all duration-200 placeholder:text-muted-foreground"
             />
           </div>
           
@@ -571,7 +571,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
                 ? 'bg-primary text-primary-foreground' 
                 : 'bg-background hover:bg-muted'
             }`}
-            onClick={() => setSortOrder('recent_activity')}
+            onClick={() => setSortOrder(sortOrder === 'recent_activity' ? 'newest' : 'recent_activity')}
           >
             <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -586,7 +586,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
                 ? 'bg-primary text-primary-foreground' 
                 : 'bg-background hover:bg-muted'
             }`}
-            onClick={() => setSortOrder('popular')}
+            onClick={() => setSortOrder(sortOrder === 'popular' ? 'newest' : 'popular')}
           >
             <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
