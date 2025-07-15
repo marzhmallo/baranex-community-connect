@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { X, Upload, Image } from 'lucide-react';
 
 interface CreateThreadDialogProps {
   open: boolean;
@@ -34,6 +34,9 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const isAdmin = userProfile?.role === 'admin';
 
   const handleTagAdd = () => {
@@ -51,6 +54,55 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
 
   const handleTagRemove = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedPhoto(file);
+      const reader = new FileReader();
+      reader.onload = () => setPhotoPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePhoto = () => {
+    setSelectedPhoto(null);
+    setPhotoPreview(null);
+  };
+
+  const uploadPhoto = async (): Promise<string | null> => {
+    if (!selectedPhoto || !userProfile) return null;
+
+    setIsUploadingPhoto(true);
+    try {
+      const fileExt = selectedPhoto.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const folderName = userProfile.role === 'admin' ? 'officials' : 'user';
+      const filePath = `${folderName}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('forum')
+        .upload(filePath, selectedPhoto);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('forum')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload photo",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,6 +196,50 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
                 rows={6}
                 className="resize-y"
               />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="photo">Photo Attachment</Label>
+              <div className="space-y-2">
+                {!selectedPhoto && (
+                  <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
+                    <input
+                      type="file"
+                      id="photo"
+                      accept="image/*"
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="photo"
+                      className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Upload className="h-8 w-8" />
+                      <span>Click to upload a photo</span>
+                      <span className="text-xs">PNG, JPG, GIF up to 10MB</span>
+                    </label>
+                  </div>
+                )}
+                
+                {photoPreview && (
+                  <div className="relative">
+                    <img
+                      src={photoPreview}
+                      alt="Preview"
+                      className="w-full max-h-48 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={removePhoto}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="grid gap-2">
