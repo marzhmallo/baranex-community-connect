@@ -317,7 +317,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
   }) || [];
 
   return (
-    <div className="w-[1200px] mx-auto p-6 bg-background min-h-screen">
+    <div className="w-full mx-auto p-6 bg-background min-h-screen">
       <div className="mb-8">
         <Button 
           variant="ghost" 
