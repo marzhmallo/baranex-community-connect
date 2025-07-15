@@ -31,6 +31,7 @@ export interface Thread {
   viewCount?: number;
   userReaction?: string | null;
   photo_url?: string | null;
+  lastReplyAt?: string | null;
 }
 
 interface ThreadsViewProps {
@@ -110,15 +111,28 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         return acc;
       }, {});
 
-      // Get comment counts for each thread
-      const commentCounts = await Promise.all(
+      // Get comment counts and last reply times for each thread
+      const commentData = await Promise.all(
         threadsData.map(async (thread) => {
           const { count, error } = await supabase
             .from('comments')
             .select('*', { count: 'exact', head: true })
             .eq('thread_id', thread.id);
           
-          return { threadId: thread.id, count: count || 0 };
+          // Get the most recent comment for last reply time
+          const { data: lastComment } = await supabase
+            .from('comments')
+            .select('created_at')
+            .eq('thread_id', thread.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          return { 
+            threadId: thread.id, 
+            count: count || 0,
+            lastReplyAt: lastComment?.created_at || null
+          };
         })
       );
       
@@ -153,7 +167,9 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
 
       // Add author names and counts to threads
       const threadsWithAuthors = threadsData.map((thread: Thread) => {
-        const commentCount = commentCounts.find(c => c.threadId === thread.id)?.count || 0;
+        const commentInfo = commentData.find(c => c.threadId === thread.id);
+        const commentCount = commentInfo?.count || 0;
+        const lastReplyAt = commentInfo?.lastReplyAt || null;
         const reactionInfo = reactionData.find(r => r.threadId === thread.id);
         const reactionCount = reactionInfo?.count || 0;
         const userReaction = reactionInfo?.userReaction || null;
@@ -166,7 +182,8 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           commentCount,
           reactionCount,
           viewCount,
-          userReaction
+          userReaction,
+          lastReplyAt
         };
       });
 
