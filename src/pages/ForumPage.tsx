@@ -9,7 +9,7 @@ import { Plus, Megaphone, AlertTriangle, Calendar, ChevronRight } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
+import { Loader2 } from 'lucide-react';
 
 export interface Forum {
   id: string;
@@ -221,13 +221,27 @@ const ForumPage = () => {
   };
 
 
-  // Show global loading screen until everything is loaded
-  if (isPageLoading) {
-    return <GlobalLoadingScreen />;
-  }
-
   return (
-    <div className="w-full mx-auto p-6 bg-background min-h-screen">
+    <div className="w-full mx-auto p-6 bg-background min-h-screen relative">
+      {/* Localized loading screen that only covers this div */}
+      {isPageLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="absolute inset-0 h-8 w-8 animate-pulse rounded-full border border-primary/20" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-foreground">Loading forums</p>
+              <div className="flex space-x-1 mt-2">
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Community Discussion Board</h1>
