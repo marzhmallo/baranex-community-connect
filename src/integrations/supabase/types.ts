@@ -1796,6 +1796,7 @@ export type Database = {
           created_by: string
           forum_id: string
           id: string
+          locked: boolean
           photo_url: string | null
           pinned: boolean | null
           tags: string[] | null
@@ -1810,6 +1811,7 @@ export type Database = {
           created_by: string
           forum_id: string
           id?: string
+          locked?: boolean
           photo_url?: string | null
           pinned?: boolean | null
           tags?: string[] | null
@@ -1824,6 +1826,7 @@ export type Database = {
           created_by?: string
           forum_id?: string
           id?: string
+          locked?: boolean
           photo_url?: string | null
           pinned?: boolean | null
           tags?: string[] | null

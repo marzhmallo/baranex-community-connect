@@ -20,6 +20,7 @@ export interface Thread {
   content: string;
   tags: string[];
   pinned: boolean;
+  locked: boolean;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -36,6 +37,37 @@ interface ThreadsViewProps {
   forum: Forum;
   onBack: () => void;
 }
+
+// Add after the interface
+const togglePinThread = async (threadId: string, isPinned: boolean) => {
+  try {
+    const { error } = await supabase
+      .from('threads')
+      .update({ pinned: !isPinned })
+      .eq('id', threadId);
+    
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error toggling pin status:', error);
+    return false;
+  }
+};
+
+const toggleLockThread = async (threadId: string, isLocked: boolean) => {
+  try {
+    const { error } = await supabase
+      .from('threads')
+      .update({ locked: !isLocked })
+      .eq('id', threadId);
+    
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error toggling lock status:', error);
+    return false;
+  }
+};
 
 const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
   const { userProfile } = useAuth();
@@ -162,6 +194,20 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
   const handleBackToThreads = () => {
     setSelectedThread(null);
     refetch();
+  };
+
+  const handlePinToggle = async (threadId: string, isPinned: boolean) => {
+    const success = await togglePinThread(threadId, isPinned);
+    if (success) {
+      refetch();
+    }
+  };
+
+  const handleLockToggle = async (threadId: string, isLocked: boolean) => {
+    const success = await toggleLockThread(threadId, isLocked);
+    if (success) {
+      refetch();
+    }
   };
 
   if (selectedThread) {
@@ -318,6 +364,8 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           <ThreadList 
             threads={filteredThreads} 
             onThreadSelect={handleThreadSelected}
+            onPinToggle={handlePinToggle}
+            onLockToggle={handleLockToggle}
           />
         )}
       </div>
