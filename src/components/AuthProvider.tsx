@@ -162,17 +162,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (profileData) {
         console.log('User found in profiles table:', profileData);
         
-        if (profileData.status === "pending") {
-          await signOut();
-          toast({
-            title: "Account Pending Approval",
-            description: "Your account is pending approval from your barangay administrator.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        // Check if barangay requires approval (is_custom = false)
+        // Check if barangay requires approval FIRST (is_custom = false)
         if (profileData.brgyid && (profileData.role === "admin" || profileData.role === "staff")) {
           const { data: barangayData, error: barangayError } = await supabase
             .from('barangays')
@@ -191,6 +181,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             });
             return;
           }
+        }
+        
+        if (profileData.status === "pending") {
+          await signOut();
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account is pending approval from your barangay administrator.",
+            variant: "destructive",
+          });
+          return;
         }
 
         // Set user to ONLINE when successfully fetching profile (login)
