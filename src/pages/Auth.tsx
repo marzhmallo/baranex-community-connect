@@ -51,14 +51,29 @@ const signupSchema = z.object({
   message: "Required barangay information is missing",
   path: ["barangayname"]
 });
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address")
+});
+
+const resetPasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+  confirmPassword: z.string().min(6, "Please confirm your password")
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"]
+});
+
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 const Auth = () => {
   const {
     theme
   } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  const [activeTab, setActiveTab] = useState<"login" | "signup" | "forgot-password" | "reset-password">("login");
+  const [resetMode, setResetMode] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [barangays, setBarangays] = useState<{
@@ -142,6 +157,22 @@ const Auth = () => {
       country: "Philippines"
     }
   });
+  
+  const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: ""
+    }
+  });
+  
+  const resetPasswordForm = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: ""
+    }
+  });
+  
   const selectedRole = signupForm.watch("role");
   const selectedBarangayId = signupForm.watch("barangayId");
   const isNewBarangay = selectedBarangayId === "new-barangay";
@@ -401,6 +432,110 @@ const Auth = () => {
       signupForm.setValue("barangayId", "");
     }
   };
+
+  // Check for password recovery token on component mount
+  useEffect(() => {
+    const checkForPasswordRecovery = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+      
+      if (accessToken && type === 'recovery') {
+        setResetMode(true);
+        setActiveTab("reset-password");
+        
+        // Set session with the recovery token
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: hashParams.get('refresh_token') || ''
+        });
+        
+        if (error) {
+          console.error('Error setting session:', error);
+          toast({
+            title: "Invalid Reset Link",
+            description: "The password reset link is invalid or has expired.",
+            variant: "destructive"
+          });
+        }
+      }
+    };
+    
+    checkForPasswordRecovery();
+  }, []);
+
+  const handleForgotPassword = async (values: ForgotPasswordFormValues) => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/login`
+      });
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Password Reset Email Sent",
+          description: "Check your email for a link to reset your password.",
+          variant: "default"
+        });
+        setActiveTab("login");
+        forgotPasswordForm.reset();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+      console.error("Forgot password error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (values: ResetPasswordFormValues) => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: values.password
+      });
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Password Updated",
+          description: "Your password has been successfully updated. You can now log in with your new password.",
+          variant: "default"
+        });
+        setResetMode(false);
+        setActiveTab("login");
+        resetPasswordForm.reset();
+        // Clear the URL hash
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+      console.error("Reset password error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return <div className={`w-full min-h-screen flex items-center justify-center p-6 ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'}`}>
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
@@ -468,16 +603,22 @@ const Auth = () => {
               <p className={`font-semibold ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'}`}>Next-Gen Barangay Management</p>
             </div>
             
-            <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "login" | "signup")} className="w-full">
+            <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "login" | "signup" | "forgot-password" | "reset-password")} className="w-full">
               
               
               {/* Header text */}
               <div className="text-center mb-6">
                 <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
-                  {activeTab === "login" ? "Welcome Back!" : "Create an Account"}
+                  {activeTab === "login" ? "Welcome Back!" : 
+                   activeTab === "signup" ? "Create an Account" :
+                   activeTab === "forgot-password" ? "Reset Password" :
+                   "Set New Password"}
                 </h2>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {activeTab === "login" ? "Sign in to your dashboard" : "Join Baranex to manage your community"}
+                  {activeTab === "login" ? "Sign in to your dashboard" : 
+                   activeTab === "signup" ? "Join Baranex to manage your community" :
+                   activeTab === "forgot-password" ? "Enter your email to receive a password reset link" :
+                   "Enter your new password"}
                 </p>
               </div>
               
@@ -518,7 +659,7 @@ const Auth = () => {
                       <input type="checkbox" className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} />
                       <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
                     </label>
-                    <a href="#" className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</a>
+                    <button type="button" onClick={() => setActiveTab("forgot-password")} className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</button>
                   </div>
                   
                   <div className="flex justify-center my-4">
@@ -842,6 +983,122 @@ const Auth = () => {
                   </Form>
                 </ScrollArea>
               </TabsContent>
+
+              <TabsContent value="forgot-password">
+                <Form {...forgotPasswordForm}>
+                  <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+                    <FormField 
+                      control={forgotPasswordForm.control} 
+                      name="email" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                            Email Address
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <Input 
+                                placeholder="Enter your email address" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} 
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Sending Reset Link..." : "Send Reset Link"}
+                    </Button>
+                    
+                    <div className="text-center">
+                      <button 
+                        type="button" 
+                        onClick={() => setActiveTab("login")} 
+                        className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}
+                      >
+                        Back to Login
+                      </button>
+                    </div>
+                  </form>
+                </Form>
+              </TabsContent>
+
+              <TabsContent value="reset-password">
+                <Form {...resetPasswordForm}>
+                  <form onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)} className="space-y-4">
+                    <FormField 
+                      control={resetPasswordForm.control} 
+                      name="password" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                            New Password
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <Input 
+                                type={showPassword ? "text" : "password"} 
+                                placeholder="Enter your new password" 
+                                className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
+                                {...field} 
+                              />
+                              <button 
+                                type="button" 
+                                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`} 
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} 
+                    />
+                    
+                    <FormField 
+                      control={resetPasswordForm.control} 
+                      name="confirmPassword" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                            Confirm New Password
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <Input 
+                                type={showPassword ? "text" : "password"} 
+                                placeholder="Confirm your new password" 
+                                className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} 
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Updating Password..." : "Update Password"}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
             </Tabs>
             
             <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'}`}>
@@ -852,12 +1109,17 @@ const Auth = () => {
                       <button onClick={() => setActiveTab("signup")} className={`font-medium hover:underline transition-all duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>
                         Sign up
                       </button>
-                    </> : <>
+                    </> : activeTab === "signup" ? <>
                       Already have an account?{" "}
                       <button onClick={() => setActiveTab("login")} className={`font-medium hover:underline transition-all duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>
                         Sign in
                       </button>
-                    </>}
+                    </> : activeTab === "forgot-password" ? <>
+                      Remember your password?{" "}
+                      <button onClick={() => setActiveTab("login")} className={`font-medium hover:underline transition-all duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>
+                        Sign in
+                      </button>
+                    </> : null}
                 </p>
               </div>
             </div>
