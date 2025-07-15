@@ -48,7 +48,7 @@ import UserOfficialDetailsPage from "./components/user/UserOfficialDetailsPage";
 import EchelonPage from "./pages/EchelonPage";
 import PlazaPage from "./pages/PlazaPage";
 import ActivityLogPage from "./pages/ActivityLogPage";
-import UpdatePasswordPage from "./pages/UpdatePasswordPage";
+
 
 // Component to protect glyph-only routes
 const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
@@ -220,7 +220,6 @@ const AppContent = () => {
         > 
           <Routes>
             <Route path="/login" element={<Auth />} />
-            <Route path="/update-password" element={<UpdatePasswordPage />} />
             
             {/* Admin/Staff Routes - Only render if user has admin/staff role */}
             {(userProfile?.role === "admin" || userProfile?.role === "staff") && (
