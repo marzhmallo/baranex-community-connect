@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Download, Edit, Trash2, Search, Plus, Filter, MoreHorizontal, Clock, CheckCircle, AlertCircle, XCircle, Eye, Upload, BarChart3, Settings, FileCheck, TrendingUp, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileText, Download, Edit, Trash2, Search, Plus, Filter, MoreHorizontal, Clock, CheckCircle, AlertCircle, XCircle, Eye, Upload, BarChart3, Settings, FileCheck, TrendingUp, Check, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -859,8 +859,31 @@ const DocumentsPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
+  // Check if all data is loaded
+  const isAllDataLoaded = !requestsLoading && !isLoadingDocuments && !trackingLoading && documentStats && processingStats;
+
   return (
-    <div className="w-full p-6 bg-background min-h-screen">
+    <div className="w-full p-6 bg-background min-h-screen relative">
+      {/* Global loading screen that covers the whole documents page */}
+      {!isAllDataLoaded && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <div className="absolute inset-0 h-12 w-12 animate-pulse rounded-full border border-primary/20" />
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-medium text-foreground">Loading Documents</p>
+              <p className="text-sm text-muted-foreground">Please wait while we load all document data</p>
+              <div className="flex space-x-1 mt-3">
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
