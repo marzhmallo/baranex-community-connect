@@ -451,7 +451,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
     const userHasLiked = comment.userReaction === '👍';
     
     return (
-      <div key={comment.id} className={`${isReply ? 'ml-13 mt-3 bg-card rounded-lg p-3 border-l-2 border-primary/20' : 'bg-accent/30 rounded-lg p-4 hover:bg-accent/50 transition-colors'}`}>
+      <div key={comment.id} className={`${isReply ? 'ml-13 mt-3 rounded-lg p-3 border-l-2 border-border' : 'rounded-lg p-4'}`}>
         <div className="flex items-start space-x-3">
           <Avatar className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} flex-shrink-0`}>
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-medium">
@@ -517,7 +517,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                       {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 bg-accent/30 rounded-full px-4 py-2 hover:bg-accent/50 transition-colors">
+                  <div className="flex-1 rounded-full px-4 py-2 border border-border">
                     <input 
                       type="text" 
                       placeholder="Write a reply..." 
@@ -679,7 +679,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                     {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 bg-accent/30 rounded-full px-4 py-2 hover:bg-accent/50 transition-colors">
+                <div className="flex-1 rounded-full px-4 py-2 border border-border">
                   <input 
                     type="text" 
                     placeholder="Write a comment..." 
