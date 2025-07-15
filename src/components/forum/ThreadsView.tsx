@@ -29,6 +29,7 @@ export interface Thread {
   reactionCount?: number;
   viewCount?: number;
   userReaction?: string | null;
+  photo_url?: string | null;
 }
 
 interface ThreadsViewProps {

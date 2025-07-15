@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ThumbsUp, MessageSquare, Share, Send, Heart, Smile } from 'lucide-react';
+import SmartPhotoDisplay from '@/components/ui/SmartPhotoDisplay';
 import { Thread } from './ThreadsView';
 import { formatDistanceToNow } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
@@ -605,6 +606,19 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
             <p className="text-foreground leading-relaxed mb-4 mt-4">
               {thread.content}
             </p>
+            
+            {thread.photo_url && (
+              <div className="mb-4">
+                <SmartPhotoDisplay 
+                  bucketName="forum" 
+                  filePath={thread.photo_url.split('/').slice(-2).join('/')} 
+                  isPublic={true}
+                  alt="Thread photo"
+                  className="w-full max-w-md rounded-lg"
+                  enableZoom={true}
+                />
+              </div>
+            )}
             
             <div className="flex items-center space-x-6 text-muted-foreground text-sm">
               <button 
