@@ -614,7 +614,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
                   filePath={thread.photo_url.split('/').slice(-2).join('/')} 
                   isPublic={true}
                   alt="Thread photo"
-                  className="w-full max-w-md rounded-lg"
+                  className="w-full h-auto rounded-lg"
                   enableZoom={true}
                 />
               </div>
