@@ -181,7 +181,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
   ) || [];
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-background min-h-screen">
+    <div className="w-[1200px] mx-auto p-6 bg-background min-h-screen">
       <div className="mb-8">
         <Button 
           variant="ghost" 
@@ -192,68 +192,105 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           Back to Forums
         </Button>
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{forum.title}</h1>
-            <p className="text-muted-foreground mt-1">{forum.description}</p>
-            <div className="mt-2">
-              {forum.is_public ? (
-                <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                  Public Forum
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                  Barangay Only
-                </Badge>
-              )}
-            </div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{forum.title}</h1>
+            <p className="text-muted-foreground">{forum.description}</p>
           </div>
-          
           {isUserFromSameBarangay && (
             <Button 
               onClick={() => setShowCreateDialog(true)} 
-              className="flex items-center gap-2"
+              className="px-6 py-3 font-medium transition-colors duration-200 flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              New Thread
+              Start New Thread
             </Button>
           )}
         </div>
-      </div>
 
-      <div className="bg-card rounded-xl shadow-sm border border-border">
-        <div className="border-b border-border p-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <input 
-                type="text" 
-                placeholder="Search threads..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
-              />
-              <Search className="absolute left-3 top-2.5 text-muted-foreground h-4 w-4" />
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <input 
+              type="text" 
+              placeholder="Search threads..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all duration-200"
+            />
+          </div>
+          
+          <div className="flex gap-2">
+            <div className="relative">
+              <Button 
+                variant="outline"
+                className="px-4 py-3 flex items-center gap-2"
+                onClick={() => {/* TODO: Add sort dropdown */}}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                </svg>
+                Sort by
+                <ChevronLeft className="h-4 w-4 rotate-90" />
+              </Button>
             </div>
             
-            <div className="flex gap-2">
+            <div className="relative">
               <Button 
-                variant={sortOrder === 'new' ? 'default' : 'outline'}
-                onClick={() => setSortOrder('new')}
+                variant="outline"
+                className="px-4 py-3 flex items-center gap-2"
+                onClick={() => {/* TODO: Add filter dropdown */}}
               >
-                Newest
-              </Button>
-              <Button 
-                variant={sortOrder === 'popular' ? 'default' : 'outline'}
-                onClick={() => setSortOrder('popular')}
-              >
-                Popular
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
+                </svg>
+                Filter
+                <ChevronLeft className="h-4 w-4 rotate-90" />
               </Button>
             </div>
           </div>
         </div>
 
+        <div className="flex flex-wrap items-center gap-2 px-4 py-3 bg-muted border border-border rounded-lg mb-6">
+          <div className="text-sm font-medium text-muted-foreground">Quick Filters:</div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="px-3 py-1 rounded-full bg-background hover:bg-muted text-sm transition-colors duration-200 flex items-center gap-1"
+          >
+            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+            Pinned
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="px-3 py-1 rounded-full bg-background hover:bg-muted text-sm transition-colors duration-200 flex items-center gap-1"
+            onClick={() => setSortOrder('new')}
+          >
+            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Recent
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="px-3 py-1 rounded-full bg-background hover:bg-muted text-sm transition-colors duration-200 flex items-center gap-1"
+            onClick={() => setSortOrder('popular')}
+          >
+            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Popular
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-4">
         {error && (
-          <Alert variant="destructive" className="m-6">
+          <Alert variant="destructive" className="mb-6">
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
               Failed to load threads. Please try again later.
@@ -262,9 +299,9 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         )}
 
         {isLoading ? (
-          <div className="divide-y divide-border">
+          <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="p-6">
+              <div key={i} className="bg-card border border-border rounded-lg p-6">
                 <div className="flex items-start gap-4">
                   <Skeleton className="w-10 h-10 rounded-full" />
                   <div className="flex-1 space-y-2">
