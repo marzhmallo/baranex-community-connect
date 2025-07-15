@@ -433,49 +433,6 @@ const Auth = () => {
     }
   };
 
-  // Check for password recovery token on component mount
-  useEffect(() => {
-  const checkForPasswordRecovery = async () => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const refreshToken = hashParams.get('refresh_token');
-    const type = hashParams.get('type');
-    
-    if (accessToken && type === 'recovery') {
-      console.log('Password recovery detected, setting reset mode');
-      setResetMode(true);
-      setActiveTab("reset-password");
-      
-      // Only set session if we have both access and refresh tokens
-      if (refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        });
-        
-        if (error) {
-          console.error('Error setting session:', error);
-          toast({
-            title: "Invalid Reset Link",
-            description: "The password reset link is invalid or has expired.",
-            variant: "destructive"
-          });
-        } else {
-          console.log('Recovery session set successfully');
-        }
-      } else {
-        console.warn('Missing refresh token in recovery URL');
-        toast({
-          title: "Invalid Reset Link",
-          description: "The password reset link is incomplete. Please request a new one.",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-    
-    checkForPasswordRecovery();
-  }, []);
 
   const handleForgotPassword = async (values: ForgotPasswordFormValues) => {
     setIsLoading(true);
@@ -492,7 +449,7 @@ const Auth = () => {
     
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: `${window.location.origin}/update-password`,
         captchaToken
       });
       
