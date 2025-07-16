@@ -95,13 +95,18 @@ const EchelonPage = () => {
   };
 
   const handleApprove = async (barangay: Barangay) => {
+    console.log('Attempting to approve barangay:', barangay);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('barangays')
         .update({ is_custom: true })
-        .eq('id', barangay.id);
+        .eq('id', barangay.id)
+        .select();
+
+      console.log('Update result:', { data, error });
 
       if (error) {
+        console.error('Error approving barangay:', error);
         toast({
           title: "Error approving barangay",
           description: error.message,
@@ -118,6 +123,7 @@ const EchelonPage = () => {
       // Refresh data
       fetchBarangays();
     } catch (error) {
+      console.error('Caught error:', error);
       toast({
         title: "Error",
         description: "Failed to approve barangay",
