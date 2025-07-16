@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Building, Search, Users, MapPin, Calendar, Shield, User, Settings, Building2 } from 'lucide-react';
+import { Building, Search, MapPin, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { EcheSidebar } from '@/components/layout/EcheSidebar';
 
 interface Barangay {
   id: string;
@@ -27,19 +27,6 @@ const BarangaysPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
-
-  // Sidebar navigation items
-  const sidebarNavItems = [
-    { icon: Building2, label: 'Municipalities', active: false, count: null },
-    { icon: Building, label: 'Barangays', active: true, count: barangays.length },
-    { icon: Users, label: 'User Management', active: false, count: null },
-    { icon: Settings, label: 'System Settings', active: false, count: null },
-  ];
 
   useEffect(() => {
     fetchBarangays();
@@ -105,71 +92,11 @@ const BarangaysPage: React.FC = () => {
 
   return (
     <div className="w-full bg-background min-h-screen flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-slate-800 text-white fixed h-full">
-        <div className="p-6 border-b border-slate-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Shield className="text-white h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Baranex</h1>
-              <p className="text-sm text-slate-400">System</p>
-            </div>
-          </div>
-        </div>
-        
-        <nav className="mt-6 px-4">
-          <ul className="space-y-2">
-            {sidebarNavItems.map((item, index) => (
-              <li key={index}>
-                <button 
-                  onClick={() => {
-                    if (item.label === 'Municipalities') {
-                      navigate('/municipalities');
-                    } else if (item.label === 'Barangays') {
-                      navigate('/barangays');
-                    }
-                  }}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left transition-colors ${
-                    item.active 
-                      ? 'bg-primary text-white' 
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                  }`}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span className="flex-1">{item.label}</span>
-                  {item.count !== null && (
-                    <Badge variant="secondary" className="ml-auto">
-                      {item.count}
-                    </Badge>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="absolute bottom-0 w-64 p-4 border-t border-slate-700">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">System Admin</p>
-              <p className="text-xs text-slate-400 truncate">Glyph User</p>
-            </div>
-          </div>
-          <Button 
-            onClick={handleSignOut}
-            variant="outline" 
-            size="sm" 
-            className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
-          >
-            Sign Out
-          </Button>
-        </div>
-      </div>
+      <EcheSidebar 
+        activeRoute="barangays" 
+        pendingCount={0} 
+        registeredCount={barangays.length} 
+      />
 
       {/* Main Content */}
       <div className="flex-1 ml-64">
