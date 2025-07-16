@@ -463,6 +463,38 @@ const Auth = () => {
     }
     
     try {
+      // First check if the email exists in the system
+      const { data: existingUser, error: checkError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', values.email)
+        .single();
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        // PGRST116 is "not found" error, other errors should be handled
+        toast({
+          title: "Error",
+          description: "Unable to verify email. Please try again.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+        return;
+      }
+      
+      if (!existingUser) {
+        toast({
+          title: "Email Not Found",
+          description: "No account found with this email address.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+        return;
+      }
+      
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo: `${window.location.origin}/update-password`,
         captchaToken
