@@ -117,6 +117,8 @@ const EchelonPage = () => {
                   onClick={() => {
                     if (item.label === 'Municipalities') {
                       navigate('/municipalities');
+                    } else if (item.label === 'Barangays') {
+                      navigate('/barangays');
                     }
                   }}
                   className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left transition-colors ${
