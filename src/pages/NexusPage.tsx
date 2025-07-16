@@ -45,6 +45,7 @@ const NexusPage = () => {
   useEffect(() => {
     if (currentUserBarangay) {
       fetchTransferRequests();
+      setupRealtimeSubscription();
     }
   }, [currentUserBarangay]);
 
@@ -53,6 +54,26 @@ const NexusPage = () => {
       fetchDataItems();
     }
   }, [selectedDataType]);
+
+  // Setup realtime subscription for instant updates
+  const setupRealtimeSubscription = () => {
+    const channel = supabase
+      .channel('dnexus-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'dnexus',
+        filter: `destination=eq.${currentUserBarangay},source=eq.${currentUserBarangay}`
+      }, () => {
+        // Refresh requests when changes occur
+        fetchTransferRequests();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const getCurrentUserBarangay = async () => {
     try {
@@ -234,14 +255,31 @@ const NexusPage = () => {
   };
 
   const handleItemToggle = (itemId: string) => {
-    setSelectedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
-    );
+    setSelectedItems(prev => {
+      if (prev.includes(itemId)) {
+        return prev.filter(id => id !== itemId);
+      } else {
+        // In single mode, only allow one selection
+        if (transferMode === 'single') {
+          return [itemId];
+        } else {
+          return [...prev, itemId];
+        }
+      }
+    });
   };
 
   const handleSelectAll = () => {
+    // In single mode, don't allow select all
+    if (transferMode === 'single') {
+      toast({
+        title: 'Single Mode Active',
+        description: 'Select All is not available in single transfer mode',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (selectedItems.length === dataItems.length) {
       setSelectedItems([]);
     } else {
@@ -275,7 +313,7 @@ const NexusPage = () => {
           destination: targetBarangay,
           datatype: normalizedDataType,
           dataid: selectedItems,
-          status: 'pending',
+          status: 'Pending',
           initiator: user.id,
           notes: transferNotes || `Transfer request for ${selectedItems.length} ${selectedDataType} record(s) in ${transferMode} mode`,
         })
@@ -345,12 +383,12 @@ const NexusPage = () => {
         const { error: statusError } = await supabase
           .from('dnexus')
           .update({
-            status: 'rejected',
+            status: 'Rejected',
             reviewer: user.id,
           })
           .eq('id', selectedRequest.id)
           .eq('destination', currentUserBarangay)
-          .eq('status', 'pending');
+          .eq('status', 'Pending');
 
         if (statusError) {
           console.error('Error updating request status:', statusError);
@@ -402,7 +440,7 @@ const NexusPage = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'accepted':
@@ -414,7 +452,7 @@ const NexusPage = () => {
     }
   };
 
-  const pendingIncomingCount = incomingRequests.filter(req => req.status === 'pending').length;
+  const pendingIncomingCount = incomingRequests.filter(req => req.status.toLowerCase() === 'pending').length;
 
   return (
     <div className="p-6 space-y-6">
@@ -542,10 +580,15 @@ const NexusPage = () => {
                       </Badge>
                     )}
                   </CardTitle>
-                  {dataItems.length > 0 && (
+                  {dataItems.length > 0 && transferMode === 'bulk' && (
                     <Button variant="outline" size="sm" onClick={handleSelectAll}>
                       {selectedItems.length === dataItems.length ? 'Deselect All' : 'Select All'}
                     </Button>
+                  )}
+                  {transferMode === 'single' && selectedItems.length > 0 && (
+                    <Badge variant="outline" className="ml-2">
+                      Single Mode: 1 item max
+                    </Badge>
                   )}
                 </div>
               </CardHeader>
@@ -628,7 +671,7 @@ const NexusPage = () => {
                           {new Date(request.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          {request.status === 'pending' && (
+                          {request.status.toLowerCase() === 'pending' && (
                             <Button
                               variant="outline"
                               size="sm"
