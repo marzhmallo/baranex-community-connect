@@ -194,73 +194,58 @@ const MunicipalitiesPage = () => {
     }
 
     try {
-      let brgyId: string | null = null;
-      let isSuperiorAdmin = false;
-
-      // Process barangay selection or creation
+      // For municipality registration, always register as new municipality
       if (values.barangayId === "new-barangay") {
-        const { data: existingBarangay, error: brgyCheckError } = await supabase
-          .from('barangays')
+        // Check if municipality already exists in plaza table
+        const { data: existingMunicipality, error: plazaCheckError } = await supabase
+          .from('plaza')
           .select('id')
-          .ilike('barangayname', values.barangayname?.trim() || '')
           .eq('municipality', values.municipality?.trim() || '')
           .eq('province', values.province?.trim() || '')
           .single();
 
-        if (brgyCheckError && brgyCheckError.code !== 'PGRST116') {
+        if (plazaCheckError && plazaCheckError.code !== 'PGRST116') {
           toast({
             title: "Database Error",
-            description: brgyCheckError.message,
+            description: plazaCheckError.message,
             variant: "destructive"
           });
           setIsLoading(false);
           return;
         }
 
-        if (existingBarangay) {
+        if (existingMunicipality) {
           toast({
-            title: "Barangay Already Exists",
-            description: "This barangay is already registered in our system. Please select it from the dropdown instead.",
+            title: "Municipality Already Exists",
+            description: "This municipality is already registered in our system.",
             variant: "destructive"
           });
           setIsLoading(false);
           return;
         }
 
-        const { data: brgyData, error: brgyError } = await supabase
-          .from('barangays')
+        // Create municipality entry in plaza table
+        const { error: plazaError } = await supabase
+          .from('plaza')
           .insert({
-            barangayname: values.barangayname?.trim() || '',
+            id: crypto.randomUUID(),
+            barangay: values.barangayname?.trim() || '',
             municipality: values.municipality?.trim() || '',
             province: values.province?.trim() || '',
             region: values.region?.trim() || '',
-            country: values.country || 'Philippines',
-            created_at: new Date().toISOString(),
-            is_custom: false
-          })
-          .select('id')
-          .single();
+            country: values.country || 'Philippines'
+          });
 
-        if (brgyError) {
+        if (plazaError) {
           toast({
-            title: "Barangay Creation Error",
-            description: brgyError.message,
+            title: "Municipality Registration Error",
+            description: plazaError.message,
             variant: "destructive"
           });
           setIsLoading(false);
           return;
         }
-
-        if (brgyData) {
-          brgyId = brgyData.id;
-          isSuperiorAdmin = true;
-        }
-      } else {
-        brgyId = values.barangayId || null;
-        isSuperiorAdmin = false;
       }
-
-      const userStatus = values.barangayId === "new-barangay" ? "active" : "pending";
 
       // Create user auth account
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -287,13 +272,13 @@ const MunicipalitiesPage = () => {
       }
 
       if (authData.user) {
-        // Insert into profiles table
+        // Insert into profiles table with overseer role and null brgyid
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
             id: authData.user.id,
             adminid: authData.user.id,
-            brgyid: brgyId,
+            brgyid: null, // Municipality admin has no barangay
             username: values.username,
             firstname: values.firstname,
             middlename: values.middlename || null,
@@ -303,9 +288,9 @@ const MunicipalitiesPage = () => {
             gender: values.gender,
             purok: values.purok,
             bday: values.bday,
-            role: values.role,
-            status: userStatus,
-            superior_admin: isSuperiorAdmin,
+            role: 'overseer', // Municipality admin role
+            status: 'active',
+            superior_admin: true,
             created_at: new Date().toISOString()
           });
 
@@ -317,17 +302,13 @@ const MunicipalitiesPage = () => {
           });
           console.error("Profile creation error:", profileError);
         } else {
-          const successMessage = userStatus === "active" 
-            ? "Municipality admin account created successfully!" 
-            : "Municipality admin account created and pending approval.";
-          
           toast({
             title: "Account created",
-            description: successMessage
+            description: "Municipality overseer account created successfully!"
           });
           
           signupForm.reset();
-          navigate('/echelon');
+          setIsModalOpen(false);
         }
       }
     } catch (error: any) {
