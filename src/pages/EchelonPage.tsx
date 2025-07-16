@@ -308,7 +308,7 @@ const EchelonPage = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleReject(barangay)}
-                                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                                className="border-border text-foreground hover:bg-muted"
                               >
                                 <X className="w-4 h-4 mr-1" />
                                 Reject
