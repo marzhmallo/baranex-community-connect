@@ -39,8 +39,8 @@ const InputOTPSlot = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative flex h-12 w-12 items-center justify-center border-2 border-border bg-background text-foreground text-lg font-medium transition-all first:rounded-l-md first:border-l last:rounded-r-md hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20",
-        isActive && "z-10 border-primary ring-2 ring-primary/20 ring-offset-2 ring-offset-background",
+        "relative flex h-12 w-12 items-center justify-center border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-lg font-medium transition-all first:rounded-l-md first:border-l last:rounded-r-md hover:border-blue-300 dark:hover:border-blue-600 focus-within:border-blue-400 dark:focus-within:border-blue-500 focus-within:bg-white dark:focus-within:bg-gray-700 focus-within:ring-2 focus-within:ring-blue-200 dark:focus-within:ring-blue-900",
+        isActive && "z-10 border-blue-400 dark:border-blue-500 bg-white dark:bg-gray-700 ring-2 ring-blue-200 dark:ring-blue-900 ring-offset-2 ring-offset-white dark:ring-offset-gray-900",
         className
       )}
       {...props}
