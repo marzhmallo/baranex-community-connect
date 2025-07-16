@@ -463,11 +463,9 @@ const Auth = () => {
     }
     
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: values.email,
-        options: {
-          captchaToken
-        }
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/update-password`,
+        captchaToken
       });
       
       if (error) {
@@ -478,8 +476,8 @@ const Auth = () => {
         });
       } else {
         toast({
-          title: "Verification Code Sent",
-          description: "Check your email for a 6-digit verification code.",
+          title: "Reset Email Sent",
+          description: "Check your email for password reset instructions.",
           variant: "default"
         });
         setOtpEmail(values.email);
