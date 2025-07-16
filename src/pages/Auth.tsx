@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, Mail, User, Lock, Building, MapPin } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -55,6 +56,10 @@ const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address")
 });
 
+const otpVerificationSchema = z.object({
+  otp: z.string().min(6, "Please enter the 6-digit code").max(6, "Please enter the 6-digit code")
+});
+
 const resetPasswordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters long"),
   confirmPassword: z.string().min(6, "Please confirm your password")
@@ -67,6 +72,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+type OtpVerificationFormValues = z.infer<typeof otpVerificationSchema>;
 const Auth = () => {
   const {
     theme
@@ -75,6 +81,8 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup" | "forgot-password" | "reset-password">("login");
   const [resetMode, setResetMode] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [barangays, setBarangays] = useState<{
     id: string;
@@ -162,6 +170,13 @@ const Auth = () => {
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: ""
+    }
+  });
+
+  const otpForm = useForm<OtpVerificationFormValues>({
+    resolver: zodResolver(otpVerificationSchema),
+    defaultValues: {
+      otp: ""
     }
   });
   
@@ -448,9 +463,11 @@ const Auth = () => {
     }
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/update-password`,
-        captchaToken
+      const { error } = await supabase.auth.signInWithOtp({
+        email: values.email,
+        options: {
+          captchaToken
+        }
       });
       
       if (error) {
@@ -461,12 +478,12 @@ const Auth = () => {
         });
       } else {
         toast({
-          title: "Password Reset Email Sent",
-          description: "Check your email for a link to reset your password.",
+          title: "Verification Code Sent",
+          description: "Check your email for a 6-digit verification code.",
           variant: "default"
         });
-        setActiveTab("login");
-        forgotPasswordForm.reset();
+        setOtpEmail(values.email);
+        setShowOtpInput(true);
       }
     } catch (error: any) {
       toast({
@@ -479,6 +496,42 @@ const Auth = () => {
       setIsLoading(false);
       captchaRef.current?.resetCaptcha();
       setCaptchaToken(null);
+    }
+  };
+
+  const handleOtpVerification = async (values: OtpVerificationFormValues) => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: otpEmail,
+        token: values.otp,
+        type: 'email'
+      });
+      
+      if (error) {
+        toast({
+          title: "Invalid Code",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Code Verified",
+          description: "Redirecting to password update page...",
+          variant: "default"
+        });
+        navigate('/update-password');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+      console.error("OTP verification error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -972,54 +1025,118 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="forgot-password">
-                <Form {...forgotPasswordForm}>
-                  <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
-                    <FormField 
-                      control={forgotPasswordForm.control} 
-                      name="email" 
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
-                            Email Address
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                              <Input 
-                                placeholder="Enter your email address" 
-                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
-                                {...field} 
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} 
-                    />
-                    
-                    <div className="flex justify-center my-4">
-                      <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
-                      disabled={isLoading || !captchaToken}
-                    >
-                      {isLoading ? "Sending Reset Link..." : "Send Reset Link"}
-                    </Button>
-                    
-                    <div className="text-center">
-                      <button 
-                        type="button" 
-                        onClick={() => setActiveTab("login")} 
-                        className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}
+                {!showOtpInput ? (
+                  <Form {...forgotPasswordForm}>
+                    <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+                      <FormField 
+                        control={forgotPasswordForm.control} 
+                        name="email" 
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                              Email Address
+                            </FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                                <Input 
+                                  placeholder="Enter your email address" 
+                                  className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
+                                  {...field} 
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} 
+                      />
+                      
+                      <div className="flex justify-center my-4">
+                        <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
+                        disabled={isLoading || !captchaToken}
                       >
-                        Back to Login
-                      </button>
-                    </div>
-                  </form>
-                </Form>
+                        {isLoading ? "Sending Code..." : "Send Verification Code"}
+                      </Button>
+                      
+                      <div className="text-center">
+                        <button 
+                          type="button" 
+                          onClick={() => setActiveTab("login")} 
+                          className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}
+                        >
+                          Back to Login
+                        </button>
+                      </div>
+                    </form>
+                  </Form>
+                ) : (
+                  <Form {...otpForm}>
+                    <form onSubmit={otpForm.handleSubmit(handleOtpVerification)} className="space-y-4">
+                      <div className="text-center mb-4">
+                        <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                          Enter Verification Code
+                        </h3>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
+                          We sent a 6-digit code to {otpEmail}
+                        </p>
+                      </div>
+
+                      <FormField 
+                        control={otpForm.control} 
+                        name="otp" 
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-2 text-center ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                              Verification Code
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex justify-center">
+                                <InputOTP maxLength={6} {...field}>
+                                  <InputOTPGroup>
+                                    <InputOTPSlot index={0} />
+                                    <InputOTPSlot index={1} />
+                                    <InputOTPSlot index={2} />
+                                    <InputOTPSlot index={3} />
+                                    <InputOTPSlot index={4} />
+                                    <InputOTPSlot index={5} />
+                                  </InputOTPGroup>
+                                </InputOTP>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} 
+                      />
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Verifying..." : "Verify Code"}
+                      </Button>
+                      
+                      <div className="text-center space-y-2">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setShowOtpInput(false);
+                            setOtpEmail("");
+                            otpForm.reset();
+                          }}
+                          className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}
+                        >
+                          Try Different Email
+                        </button>
+                      </div>
+                    </form>
+                  </Form>
+                )}
               </TabsContent>
 
               <TabsContent value="reset-password">
