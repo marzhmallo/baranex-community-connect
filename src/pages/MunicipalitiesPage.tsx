@@ -448,7 +448,7 @@ const MunicipalitiesPage = () => {
                               <Input
                                 {...field}
                                 type="text"
-                                placeholder="Juan"
+                                placeholder="Robelyn"
                                 className="pl-10"
                                 disabled={isLoading}
                               />
@@ -471,7 +471,7 @@ const MunicipalitiesPage = () => {
                               <Input
                                 {...field}
                                 type="text"
-                                placeholder="Dela Cruz"
+                                placeholder="Biol"
                                 className="pl-10"
                                 disabled={isLoading}
                               />
@@ -495,7 +495,7 @@ const MunicipalitiesPage = () => {
                             <Input
                               {...field}
                               type="text"
-                              placeholder="Santos"
+                              placeholder="Tubada"
                               className="pl-10"
                               disabled={isLoading}
                             />
@@ -520,7 +520,7 @@ const MunicipalitiesPage = () => {
                               <Input
                                 {...field}
                                 type="text"
-                                placeholder="municipality_admin"
+                                placeholder="robelynbiol"
                                 className="pl-10"
                                 disabled={isLoading}
                               />
@@ -543,7 +543,7 @@ const MunicipalitiesPage = () => {
                               <Input
                                 {...field}
                                 type="email"
-                                placeholder="admin@municipality.gov.ph"
+                                placeholder="robelynbiol@municipality.gov.ph"
                                 className="pl-10"
                                 disabled={isLoading}
                               />
@@ -602,7 +602,6 @@ const MunicipalitiesPage = () => {
                             <SelectContent>
                               <SelectItem value="Male">Male</SelectItem>
                               <SelectItem value="Female">Female</SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -661,7 +660,7 @@ const MunicipalitiesPage = () => {
                               <Input
                                 {...field}
                                 type="text"
-                                placeholder="Purok 1"
+                                placeholder="1"
                                 className="pl-10"
                                 disabled={isLoading}
                               />
@@ -686,7 +685,7 @@ const MunicipalitiesPage = () => {
                             <Input
                               value={municipalitySearch}
                               onChange={(e) => handleMunicipalitySearchChange(e.target.value)}
-                              placeholder="Search for a municipality or register new..."
+                              placeholder="Search for a municipality or register a new one..."
                               className="pl-10"
                               disabled={isLoading}
                               onFocus={() => municipalitySearch && setShowMunicipalitySuggestions(true)}
@@ -735,7 +734,7 @@ const MunicipalitiesPage = () => {
                                <Input
                                  {...field}
                                  type="text"
-                                 placeholder="Barangay Santo Niño"
+                                 placeholder="Poblacion"
                                  disabled={isLoading}
                                />
                              </FormControl>
@@ -754,7 +753,7 @@ const MunicipalitiesPage = () => {
                                <Input
                                  {...field}
                                  type="text"
-                                 placeholder="City of Davao"
+                                 placeholder="Sindangan"
                                  disabled={isLoading}
                                />
                              </FormControl>
@@ -774,7 +773,7 @@ const MunicipalitiesPage = () => {
                                 <Input
                                   {...field}
                                   type="text"
-                                  placeholder="Davao del Sur"
+                                  placeholder="Zamboanga Del Norte"
                                   disabled={isLoading}
                                 />
                               </FormControl>
@@ -793,7 +792,7 @@ const MunicipalitiesPage = () => {
                                 <Input
                                   {...field}
                                   type="text"
-                                  placeholder="Region XI"
+                                  placeholder="XI"
                                   disabled={isLoading}
                                 />
                               </FormControl>
@@ -819,7 +818,7 @@ const MunicipalitiesPage = () => {
                     className="w-full" 
                     disabled={isLoading || !captchaToken}
                   >
-                    {isLoading ? "Creating Account..." : "Create Municipality Admin Account"}
+                    {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
                 </form>
               </Form>
