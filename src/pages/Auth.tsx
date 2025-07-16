@@ -260,12 +260,12 @@ const Auth = () => {
         console.log("Login successful, user authenticated");
         
         // Handle session persistence based on Remember Me checkbox
-        if (!rememberMe) {
-          // Set session to memory-only (non-persistent)
-          await supabase.auth.setSession({
-            access_token: session?.access_token || '',
-            refresh_token: session?.refresh_token || ''
-          });
+        if (rememberMe) {
+          // Store flag in sessionStorage to indicate user wants to be remembered
+          sessionStorage.setItem('rememberMe', 'true');
+        } else {
+          // Don't store the flag - session will be cleared on browser restart
+          sessionStorage.removeItem('rememberMe');
         }
         
         toast({
