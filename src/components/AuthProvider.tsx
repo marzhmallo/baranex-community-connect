@@ -455,7 +455,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       // Check if user chose not to be remembered - if so, sign them out
-      if (initialSession && !sessionStorage.getItem('rememberMe')) {
+      if (initialSession && !localStorage.getItem('rememberMe')) {
         console.log("User did not choose to be remembered - signing out");
         await supabase.auth.signOut();
         setLoading(false);

@@ -261,11 +261,11 @@ const Auth = () => {
         
         // Handle session persistence based on Remember Me checkbox
         if (rememberMe) {
-          // Store flag in sessionStorage to indicate user wants to be remembered
-          sessionStorage.setItem('rememberMe', 'true');
+          // Store flag in localStorage to indicate user wants to be remembered
+          localStorage.setItem('rememberMe', 'true');
         } else {
           // Don't store the flag - session will be cleared on browser restart
-          sessionStorage.removeItem('rememberMe');
+          localStorage.removeItem('rememberMe');
         }
         
         toast({
