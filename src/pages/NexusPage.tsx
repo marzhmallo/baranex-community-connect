@@ -265,12 +265,15 @@ const NexusPage = () => {
       if (!user) throw new Error('User not authenticated');
 
       // Create transfer request using the existing dnexus table
+      // Convert plural data types to singular for database function compatibility
+      const normalizedDataType = selectedDataType === 'residents' ? 'resident' : selectedDataType;
+      
       const { data: transferRequest, error: transferError } = await supabase
         .from('dnexus')
         .insert({
           source: currentUserBarangay,
           destination: targetBarangay,
-          datatype: selectedDataType,
+          datatype: normalizedDataType,
           dataid: selectedItems,
           status: 'pending',
           initiator: user.id,
