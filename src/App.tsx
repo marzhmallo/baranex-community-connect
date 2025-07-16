@@ -158,7 +158,7 @@ const UserRoute = ({ children }: { children: React.ReactNode }) => {
 const AppContent = () => {
   const location = useLocation();
   const { userProfile, loading } = useAuth();
-  const isAuthPage = location.pathname === "/login";
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/update-password";
   
   // Updated logic to properly detect user routes
   const isUserRoute = userProfile?.role === "user" && (
