@@ -194,6 +194,8 @@ const MunicipalitiesPage = () => {
     }
 
     try {
+      let municipalityId: string | null = null;
+      
       // For municipality registration, always register as new municipality
       if (values.barangayId === "new-barangay") {
         // Check if municipality already exists in plaza table
@@ -224,11 +226,14 @@ const MunicipalitiesPage = () => {
           return;
         }
 
+        // Generate municipality ID
+        municipalityId = crypto.randomUUID();
+        
         // Create municipality entry in plaza table
         const { error: plazaError } = await supabase
           .from('plaza')
           .insert({
-            id: crypto.randomUUID(),
+            id: municipalityId,
             barangay: values.barangayname?.trim() || '',
             municipality: values.municipality?.trim() || '',
             province: values.province?.trim() || '',
@@ -279,6 +284,7 @@ const MunicipalitiesPage = () => {
             id: authData.user.id,
             adminid: authData.user.id,
             brgyid: null, // Municipality admin has no barangay
+            mid: municipalityId, // Link to the municipality in plaza table
             username: values.username,
             firstname: values.firstname,
             middlename: values.middlename || null,
