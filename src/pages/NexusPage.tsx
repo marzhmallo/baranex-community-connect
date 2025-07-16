@@ -45,7 +45,8 @@ const NexusPage = () => {
   useEffect(() => {
     if (currentUserBarangay) {
       fetchTransferRequests();
-      setupRealtimeSubscription();
+      const cleanup = setupRealtimeSubscription();
+      return cleanup;
     }
   }, [currentUserBarangay]);
 
@@ -54,6 +55,17 @@ const NexusPage = () => {
       fetchDataItems();
     }
   }, [selectedDataType]);
+
+  useEffect(() => {
+    // Clear selections when switching transfer modes
+    if (transferMode === 'single' && selectedItems.length > 1) {
+      setSelectedItems(selectedItems.slice(0, 1));
+      toast({
+        title: 'Mode Changed',
+        description: 'Switched to single mode. Only 1 item selected.',
+      });
+    }
+  }, [transferMode]);
 
   // Setup realtime subscription for instant updates
   const setupRealtimeSubscription = () => {
