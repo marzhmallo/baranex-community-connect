@@ -463,41 +463,11 @@ const Auth = () => {
     }
     
     try {
-      // First check if the email exists in the system
-      const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', values.email)
-        .single();
-      
-      if (checkError && checkError.code !== 'PGRST116') {
-        // PGRST116 is "not found" error, other errors should be handled
-        toast({
-          title: "Error",
-          description: "Unable to verify email. Please try again.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        captchaRef.current?.resetCaptcha();
-        setCaptchaToken(null);
-        return;
-      }
-      
-      if (!existingUser) {
-        toast({
-          title: "Email Not Found",
-          description: "No account found with this email address.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        captchaRef.current?.resetCaptcha();
-        setCaptchaToken(null);
-        return;
-      }
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/update-password`,
-        captchaToken
+      const { error } = await supabase.auth.signInWithOtp({
+        email: values.email,
+        options: {
+          captchaToken
+        }
       });
       
       if (error) {
@@ -508,8 +478,8 @@ const Auth = () => {
         });
       } else {
         toast({
-          title: "Reset Email Sent",
-          description: "Check your email for password reset instructions.",
+          title: "Verification Code Sent",
+          description: "Check your email for a 6-digit verification code.",
           variant: "default"
         });
         setOtpEmail(values.email);
@@ -829,7 +799,6 @@ const Auth = () => {
                                 <SelectContent>
                                   <SelectItem value="Male">Male</SelectItem>
                                   <SelectItem value="Female">Female</SelectItem>
-                                  <SelectItem value="Other">Other</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -903,17 +872,17 @@ const Auth = () => {
                             }} className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} />
                                 </div>
                                 
-                                {showBarangaySuggestions && <div className={`absolute z-50 w-full mt-1 border rounded-md shadow-lg max-h-60 overflow-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-300'}`}>
+                                {showBarangaySuggestions && <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                                   {filteredBarangays.length > 0 && <>
-                                      {filteredBarangays.map(barangay => <button key={barangay.id} type="button" onClick={() => handleBarangaySelect(barangay)} className={`w-full text-left px-4 py-2 border-b last:border-b-0 transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 border-slate-600 text-white' : 'hover:bg-gray-100 border-gray-100 text-gray-900'}`}>
+                                      {filteredBarangays.map(barangay => <button key={barangay.id} type="button" onClick={() => handleBarangaySelect(barangay)} className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0">
                                           <div className="font-medium">{barangay.name}</div>
-                                          <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                          <div className="text-sm text-gray-500">
                                             {barangay.municipality}, {barangay.province}
                                           </div>
                                         </button>)}
                                       {(selectedRole === "admin" || selectedRole === "staff") && <>
-                                          <div className={`border-t my-1 ${theme === 'dark' ? 'border-slate-600' : 'border-gray-200'}`}></div>
-                                          <button type="button" onClick={handleNewBarangaySelect} className={`w-full text-left px-4 py-2 font-medium transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-blue-400' : 'hover:bg-blue-50 text-blue-600'}`}>
+                                          <div className="border-t border-gray-200 my-1"></div>
+                                          <button type="button" onClick={handleNewBarangaySelect} className="w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-600 font-medium">
                                             + Register New Barangay
                                           </button>
                                         </>}
