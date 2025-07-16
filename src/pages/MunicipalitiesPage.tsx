@@ -60,19 +60,14 @@ const MunicipalitiesPage = () => {
     region: string;
     barangay: string;
   }[]>([]);
-  const [barangays, setBarangays] = useState<{
+  const [municipalitySearch, setMunicipalitySearch] = useState("");
+  const [showMunicipalitySuggestions, setShowMunicipalitySuggestions] = useState(false);
+  const [filteredMunicipalities, setFilteredMunicipalities] = useState<{
     id: string;
-    name: string;
     municipality: string;
     province: string;
-  }[]>([]);
-  const [barangaySearch, setBarangaySearch] = useState("");
-  const [showBarangaySuggestions, setShowBarangaySuggestions] = useState(false);
-  const [filteredBarangays, setFilteredBarangays] = useState<{
-    id: string;
-    name: string;
-    municipality: string;
-    province: string;
+    region: string;
+    barangay: string;
   }[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -101,51 +96,23 @@ const MunicipalitiesPage = () => {
     fetchMunicipalities();
   }, []);
 
-  // Fetch available barangays for the modal form
+  // Filter municipalities based on search
   useEffect(() => {
-    const fetchBarangays = async () => {
-      const { data, error } = await supabase
-        .from('barangays')
-        .select('id, barangayname, municipality, province')
-        .order('province')
-        .order('municipality')
-        .order('barangayname');
-      
-      if (error) {
-        console.error('Error fetching barangays:', error);
-        return;
-      }
-      
-      if (data) {
-        setBarangays(data.map(b => ({
-          id: b.id,
-          name: b.barangayname,
-          municipality: b.municipality,
-          province: b.province
-        })));
-      }
-    };
-    
-    fetchBarangays();
-  }, []);
-
-  // Filter barangays based on search
-  useEffect(() => {
-    if (barangaySearch.trim() === "") {
-      setFilteredBarangays([]);
-      setShowBarangaySuggestions(false);
+    if (municipalitySearch.trim() === "") {
+      setFilteredMunicipalities([]);
+      setShowMunicipalitySuggestions(false);
       return;
     }
     
-    const filtered = barangays.filter(barangay => 
-      barangay.name.toLowerCase().includes(barangaySearch.toLowerCase()) ||
-      barangay.municipality.toLowerCase().includes(barangaySearch.toLowerCase()) ||
-      barangay.province.toLowerCase().includes(barangaySearch.toLowerCase())
+    const filtered = municipalities.filter(municipality => 
+      municipality.municipality.toLowerCase().includes(municipalitySearch.toLowerCase()) ||
+      municipality.province.toLowerCase().includes(municipalitySearch.toLowerCase()) ||
+      municipality.region.toLowerCase().includes(municipalitySearch.toLowerCase())
     );
     
-    setFilteredBarangays(filtered.slice(0, 10));
-    setShowBarangaySuggestions(true);
-  }, [barangaySearch, barangays]);
+    setFilteredMunicipalities(filtered.slice(0, 10));
+    setShowMunicipalitySuggestions(true);
+  }, [municipalitySearch, municipalities]);
 
   const signupForm = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -331,25 +298,26 @@ const MunicipalitiesPage = () => {
     }
   };
 
-  const handleBarangaySelect = (barangay: {
+  const handleMunicipalitySelect = (municipality: {
     id: string;
-    name: string;
     municipality: string;
     province: string;
+    region: string;
+    barangay: string;
   }) => {
-    signupForm.setValue("barangayId", barangay.id);
-    setBarangaySearch(`${barangay.name}, ${barangay.municipality}, ${barangay.province}`);
-    setShowBarangaySuggestions(false);
+    signupForm.setValue("barangayId", municipality.id);
+    setMunicipalitySearch(`${municipality.municipality}, ${municipality.province}`);
+    setShowMunicipalitySuggestions(false);
   };
 
-  const handleNewBarangaySelect = () => {
+  const handleNewMunicipalitySelect = () => {
     signupForm.setValue("barangayId", "new-barangay");
-    setBarangaySearch("Register New Municipality");
-    setShowBarangaySuggestions(false);
+    setMunicipalitySearch("Register New Municipality");
+    setShowMunicipalitySuggestions(false);
   };
 
-  const handleBarangaySearchChange = (value: string) => {
-    setBarangaySearch(value);
+  const handleMunicipalitySearchChange = (value: string) => {
+    setMunicipalitySearch(value);
     if (value === "") {
       signupForm.setValue("barangayId", "");
     }
@@ -716,30 +684,30 @@ const MunicipalitiesPage = () => {
                           <div className="relative">
                             <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
                             <Input
-                              value={barangaySearch}
-                              onChange={(e) => handleBarangaySearchChange(e.target.value)}
+                              value={municipalitySearch}
+                              onChange={(e) => handleMunicipalitySearchChange(e.target.value)}
                               placeholder="Search for a municipality or register new..."
                               className="pl-10"
                               disabled={isLoading}
-                              onFocus={() => barangaySearch && setShowBarangaySuggestions(true)}
+                              onFocus={() => municipalitySearch && setShowMunicipalitySuggestions(true)}
                             />
-                            {showBarangaySuggestions && (
-                              <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
-                                {filteredBarangays.map((barangay) => (
+                            {showMunicipalitySuggestions && (
+                              <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
+                                {filteredMunicipalities.map((municipality) => (
                                   <button
-                                    key={barangay.id}
+                                    key={municipality.id}
                                     type="button"
-                                    onClick={() => handleBarangaySelect(barangay)}
-                                    className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                                    onClick={() => handleMunicipalitySelect(municipality)}
+                                    className="w-full text-left px-4 py-2 hover:bg-muted border-b border-border last:border-b-0"
                                   >
-                                    <div className="font-medium">{barangay.name}</div>
-                                    <div className="text-sm text-gray-500">{barangay.municipality}, {barangay.province}</div>
+                                    <div className="font-medium text-foreground">{municipality.municipality}</div>
+                                    <div className="text-sm text-muted-foreground">{municipality.province}, {municipality.region}</div>
                                   </button>
                                 ))}
                                 <button
                                   type="button"
-                                  onClick={handleNewBarangaySelect}
-                                  className="w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-600 font-medium border-t border-gray-200"
+                                  onClick={handleNewMunicipalitySelect}
+                                  className="w-full text-left px-4 py-2 hover:bg-accent text-accent-foreground font-medium border-t border-border"
                                 >
                                   + Register New Municipality
                                 </button>
