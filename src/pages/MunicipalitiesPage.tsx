@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff, Mail, User, Lock, Building, MapPin, ArrowLeft, Plus } from 'lucide-react';
+import { Eye, EyeOff, Mail, User, Lock, Building, MapPin, ArrowLeft, Plus, Building2, Bell, Settings, LogOut } from 'lucide-react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -355,24 +355,101 @@ const MunicipalitiesPage = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out"
+      });
+      navigate("/login");
+    }
+  };
+
+  const sidebarNavItems = [
+    { icon: Building, label: 'Dashboard', active: false, count: null, path: '/echelon' },
+    { icon: Bell, label: 'Pending Approvals', active: false, count: 3, path: '/echelon' },
+    { icon: Building2, label: 'Municipalities', active: true, count: null, path: '/municipalities' },
+    { icon: Building, label: 'Barangays', active: false, count: null, path: '/echelon' },
+    { icon: User, label: 'User Management', active: false, count: null, path: '/echelon' },
+    { icon: Settings, label: 'System Settings', active: false, count: null, path: '/echelon' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-2">
+    <div className="w-full bg-background min-h-screen flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-card border-r fixed h-full">
+        <div className="p-6 border-b">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+              <Building className="text-white h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Baranex</h1>
+              <p className="text-sm text-muted-foreground">System</p>
+            </div>
+          </div>
+        </div>
+        
+        <nav className="mt-6 px-4">
+          <ul className="space-y-2">
+            {sidebarNavItems.map((item, index) => (
+              <li key={index}>
+                <button 
+                  onClick={() => navigate(item.path)}
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left transition-colors ${
+                    item.active 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                  {item.count && (
+                    <span className="bg-destructive text-destructive-foreground text-xs rounded-full px-2 py-1 ml-auto">
+                      {item.count}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                <User className="text-sm" />
+              </div>
+              <span className="text-sm text-foreground">Super Admin</span>
+            </div>
             <Button
+              onClick={handleSignOut}
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/echelon')}
-              className="p-1"
+              className="p-2"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <LogOut className="h-4 w-4" />
             </Button>
-            <h1 className="text-3xl font-bold">Municipalities</h1>
           </div>
-          
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 ml-64 p-8 bg-background">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold text-foreground">Municipalities</h1>
+            
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center space-x-2">
                 <Plus className="h-4 w-4" />
@@ -780,7 +857,7 @@ const MunicipalitiesPage = () => {
               </Form>
             </DialogContent>
           </Dialog>
-        </div>
+          </div>
 
         {/* Municipalities List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -812,6 +889,7 @@ const MunicipalitiesPage = () => {
               <p className="text-gray-500 mb-4">Register the first municipality to get started.</p>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>
