@@ -84,7 +84,6 @@ const Auth = () => {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otpEmail, setOtpEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [barangays, setBarangays] = useState<{
     id: string;
     name: string;
@@ -258,21 +257,6 @@ const Auth = () => {
         });
       } else if (user) {
         console.log("Login successful, user authenticated");
-        
-        // Handle session persistence based on Remember Me checkbox
-        if (rememberMe) {
-          // Store flag in localStorage to indicate user wants to be remembered
-          localStorage.setItem('rememberMe', 'true');
-        } else {
-          // Set up beforeunload listener to sign out when browser closes
-          localStorage.removeItem('rememberMe');
-          const handleBeforeUnload = () => {
-            // Sign out when browser/tab is closed
-            supabase.auth.signOut();
-          };
-          window.addEventListener('beforeunload', handleBeforeUnload);
-        }
-        
         toast({
           title: "Login successful",
           description: "Welcome back!"
@@ -712,12 +696,7 @@ const Auth = () => {
 
                   <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} 
-                      />
+                      <input type="checkbox" className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} />
                       <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
                     </label>
                     <button type="button" onClick={() => setActiveTab("forgot-password")} className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</button>
