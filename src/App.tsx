@@ -46,6 +46,7 @@ import UserEmergencyPage from "./components/user/UserEmergencyPage";
 import UserSettingsPage from "./components/user/UserSettingsPage";
 import UserOfficialDetailsPage from "./components/user/UserOfficialDetailsPage";
 import EchelonPage from "./pages/EchelonPage";
+import MunicipalitiesPage from "./pages/MunicipalitiesPage";
 import PlazaPage from "./pages/PlazaPage";
 import ActivityLogPage from "./pages/ActivityLogPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
@@ -265,6 +266,7 @@ const AppContent = () => {
             
             {/* Glyph-only Routes - Always available for proper redirection */}
             <Route path="/echelon" element={<GlyphRoute><EchelonPage /></GlyphRoute>} />
+            <Route path="/municipalities" element={<GlyphRoute><MunicipalitiesPage /></GlyphRoute>} />
             
             {/* Overseer-only Routes - Always available for proper redirection */}
             <Route path="/plaza" element={<OverseerRoute><PlazaPage /></OverseerRoute>} />

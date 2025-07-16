@@ -113,11 +113,18 @@ const EchelonPage = () => {
           <ul className="space-y-2">
             {sidebarNavItems.map((item, index) => (
               <li key={index}>
-                <button className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left transition-colors ${
-                  item.active 
-                    ? 'bg-primary text-white' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}>
+                <button 
+                  onClick={() => {
+                    if (item.label === 'Municipalities') {
+                      navigate('/municipalities');
+                    }
+                  }}
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left transition-colors ${
+                    item.active 
+                      ? 'bg-primary text-white' 
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                  }`}
+                >
                   <item.icon className="w-5 h-5" />
                   <span>{item.label}</span>
                   {item.count && (

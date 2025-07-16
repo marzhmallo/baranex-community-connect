@@ -118,6 +118,7 @@ export type Database = {
           is_custom: boolean
           logo_url: string | null
           municipality: string
+          plazid: string | null
           province: string
           region: string
           updated_at: string | null
@@ -136,6 +137,7 @@ export type Database = {
           is_custom?: boolean
           logo_url?: string | null
           municipality: string
+          plazid?: string | null
           province: string
           region: string
           updated_at?: string | null
@@ -154,6 +156,7 @@ export type Database = {
           is_custom?: boolean
           logo_url?: string | null
           municipality?: string
+          plazid?: string | null
           province?: string
           region?: string
           updated_at?: string | null
@@ -1168,6 +1171,39 @@ export type Database = {
           },
         ]
       }
+      monthlyreport: {
+        Row: {
+          brgyid: string
+          created_at: string
+          id: number
+          munid: string
+          report: Json
+          reportperiod: string
+          status: string
+          submittedon: string
+        }
+        Insert: {
+          brgyid?: string
+          created_at?: string
+          id?: number
+          munid?: string
+          report: Json
+          reportperiod: string
+          status: string
+          submittedon: string
+        }
+        Update: {
+          brgyid?: string
+          created_at?: string
+          id?: number
+          munid?: string
+          report?: Json
+          reportperiod?: string
+          status?: string
+          submittedon?: string
+        }
+        Relationships: []
+      }
       notification: {
         Row: {
           created_at: string | null
@@ -1378,6 +1414,36 @@ export type Database = {
           },
         ]
       }
+      plaza: {
+        Row: {
+          barangay: string
+          country: string
+          created_at: string
+          id: string
+          municipality: string
+          province: string
+          region: string
+        }
+        Insert: {
+          barangay: string
+          country: string
+          created_at?: string
+          id: string
+          municipality: string
+          province: string
+          region: string
+        }
+        Update: {
+          barangay?: string
+          country?: string
+          created_at?: string
+          id?: string
+          municipality?: string
+          province?: string
+          region?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           adminid: string | null
@@ -1391,9 +1457,11 @@ export type Database = {
           id: string
           last_login: string
           lastname: string | null
+          mid: string | null
           middlename: string | null
           online: boolean | null
           phone: string | null
+          plazid: string | null
           profile_picture: string | null
           purok: string
           role: string
@@ -1413,9 +1481,11 @@ export type Database = {
           id?: string
           last_login?: string
           lastname?: string | null
+          mid?: string | null
           middlename?: string | null
           online?: boolean | null
           phone?: string | null
+          plazid?: string | null
           profile_picture?: string | null
           purok: string
           role: string
@@ -1435,9 +1505,11 @@ export type Database = {
           id?: string
           last_login?: string
           lastname?: string | null
+          mid?: string | null
           middlename?: string | null
           online?: boolean | null
           phone?: string | null
+          plazid?: string | null
           profile_picture?: string | null
           purok?: string
           role?: string
