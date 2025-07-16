@@ -84,6 +84,7 @@ const Auth = () => {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otpEmail, setOtpEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [barangays, setBarangays] = useState<{
     id: string;
     name: string;
@@ -257,6 +258,16 @@ const Auth = () => {
         });
       } else if (user) {
         console.log("Login successful, user authenticated");
+        
+        // Handle session persistence based on Remember Me checkbox
+        if (!rememberMe) {
+          // Set session to memory-only (non-persistent)
+          await supabase.auth.setSession({
+            access_token: session?.access_token || '',
+            refresh_token: session?.refresh_token || ''
+          });
+        }
+        
         toast({
           title: "Login successful",
           description: "Welcome back!"
@@ -696,7 +707,12 @@ const Auth = () => {
 
                   <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} />
+                      <input 
+                        type="checkbox" 
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} 
+                      />
                       <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
                     </label>
                     <button type="button" onClick={() => setActiveTab("forgot-password")} className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</button>
