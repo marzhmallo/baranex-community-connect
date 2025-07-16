@@ -264,8 +264,13 @@ const Auth = () => {
           // Store flag in localStorage to indicate user wants to be remembered
           localStorage.setItem('rememberMe', 'true');
         } else {
-          // Don't store the flag - session will be cleared on browser restart
+          // Set up beforeunload listener to sign out when browser closes
           localStorage.removeItem('rememberMe');
+          const handleBeforeUnload = () => {
+            // Sign out when browser/tab is closed
+            supabase.auth.signOut();
+          };
+          window.addEventListener('beforeunload', handleBeforeUnload);
         }
         
         toast({
