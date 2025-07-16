@@ -452,19 +452,19 @@ const NexusPage = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending':
+    switch (status) {
+      case 'Pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
+      case 'Accepted':
         return 'bg-green-100 text-green-800';
-      case 'rejected':
+      case 'Rejected':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const pendingIncomingCount = incomingRequests.filter(req => req.status.toLowerCase() === 'pending').length;
+  const pendingIncomingCount = incomingRequests.filter(req => req.status === 'Pending').length;
 
   return (
     <div className="p-6 space-y-6">
@@ -683,7 +683,7 @@ const NexusPage = () => {
                           {new Date(request.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          {request.status.toLowerCase() === 'pending' && (
+                          {request.status === 'Pending' && (
                             <Button
                               variant="outline"
                               size="sm"
