@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -20,20 +20,25 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-interface PendingApproval {
+interface Barangay {
   id: string;
-  lguName: string;
-  type: 'Municipality' | 'Barangay';
-  contactPerson: string;
-  contactEmail: string;
-  dateOfRequest: string;
+  barangayname: string;
+  municipality: string;
+  province: string;
+  region: string;
+  country: string;
+  created_at: string;
+  is_custom: boolean;
 }
 
 const EchelonPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('pending');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null);
+  const [selectedBarangay, setSelectedBarangay] = useState<Barangay | null>(null);
+  const [pendingBarangays, setPendingBarangays] = useState<Barangay[]>([]);
+  const [registeredBarangays, setRegisteredBarangays] = useState<Barangay[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -52,43 +57,113 @@ const EchelonPage = () => {
     }
   };
 
-  const pendingApprovals: PendingApproval[] = [
-    {
-      id: '1',
-      lguName: 'Barangay Mankilam',
-      type: 'Barangay',
-      contactPerson: 'Maria Santos',
-      contactEmail: 'msantos@email.com',
-      dateOfRequest: '2025-07-08'
-    },
-    {
-      id: '2',
-      lguName: 'City of Panabo',
-      type: 'Municipality',
-      contactPerson: 'Pedro Gomez',
-      contactEmail: 'pgomez@email.com',
-      dateOfRequest: '2025-07-07'
-    }
-  ];
+  useEffect(() => {
+    fetchBarangays();
+  }, []);
 
-  const handleApprove = (approval: PendingApproval) => {
-    setSelectedApproval(approval);
-    setIsModalOpen(true);
+  const fetchBarangays = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('barangays')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast({
+          title: "Error fetching barangays",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const pending = data?.filter(b => !b.is_custom) || [];
+      const registered = data?.filter(b => b.is_custom) || [];
+      
+      setPendingBarangays(pending);
+      setRegisteredBarangays(registered);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch barangays",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = (approval: PendingApproval) => {
-    toast({
-      title: "Application Rejected",
-      description: `${approval.lguName} registration has been rejected.`,
-      variant: "destructive"
-    });
+  const handleApprove = async (barangay: Barangay) => {
+    try {
+      const { error } = await supabase
+        .from('barangays')
+        .update({ is_custom: true })
+        .eq('id', barangay.id);
+
+      if (error) {
+        toast({
+          title: "Error approving barangay",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Barangay Approved",
+        description: `${barangay.barangayname} has been approved successfully.`,
+      });
+
+      // Refresh data
+      fetchBarangays();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to approve barangay",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleReject = async (barangay: Barangay) => {
+    try {
+      const { error } = await supabase
+        .from('barangays')
+        .delete()
+        .eq('id', barangay.id);
+
+      if (error) {
+        toast({
+          title: "Error rejecting barangay",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Barangay Rejected",
+        description: `${barangay.barangayname} has been rejected and removed.`,
+        variant: "destructive"
+      });
+
+      // Refresh data
+      fetchBarangays();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reject barangay",
+        variant: "destructive"
+      });
+    }
   };
 
   const sidebarNavItems = [
     { icon: Gauge, label: 'Dashboard', active: true, count: null },
-    { icon: Bell, label: 'Pending Approvals', active: false, count: 3 },
+    { icon: Bell, label: 'Pending Approvals', active: false, count: pendingBarangays.length },
     { icon: Building2, label: 'Municipalities', active: false, count: null },
-    { icon: Building, label: 'Barangays', active: false, count: null },
+    { icon: Building, label: 'Barangays', active: false, count: registeredBarangays.length },
     { icon: Users, label: 'User Management', active: false, count: null },
     { icon: Settings, label: 'System Settings', active: false, count: null },
   ];
@@ -248,64 +323,74 @@ const EchelonPage = () => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGU Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barangay Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Person</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date of Request</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Municipality</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Created</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {pendingApprovals.map((approval) => (
-                    <tr key={approval.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {approval.lguName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <Badge 
-                          variant="outline" 
-                          className={
-                            approval.type === 'Barangay' 
-                              ? 'bg-green-100 text-green-800 border-green-200' 
-                              : 'bg-blue-100 text-blue-800 border-blue-200'
-                          }
-                        >
-                          {approval.type}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {approval.contactPerson}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {approval.contactEmail}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {approval.dateOfRequest}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleApprove(approval)}
-                            className="bg-primary hover:bg-primary/90 text-white"
-                          >
-                            <Check className="w-4 h-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleReject(approval)}
-                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                          >
-                            <X className="w-4 h-4 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                        Loading barangays...
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    (activeTab === 'pending' ? pendingBarangays : registeredBarangays).map((barangay) => (
+                      <tr key={barangay.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {barangay.barangayname}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <Badge 
+                            variant="outline" 
+                            className="bg-green-100 text-green-800 border-green-200"
+                          >
+                            Barangay
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {barangay.municipality}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {barangay.province}, {barangay.region}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(barangay.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {activeTab === 'pending' ? (
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleApprove(barangay)}
+                                className="bg-primary hover:bg-primary/90 text-white"
+                              >
+                                <Check className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleReject(barangay)}
+                                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                              >
+                                <X className="w-4 h-4 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          ) : (
+                            <Badge variant="secondary" className="bg-green-100 text-green-800">
+                              Approved
+                            </Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -314,12 +399,12 @@ const EchelonPage = () => {
       </div>
       
       {/* Approval Modal */}
-      {isModalOpen && selectedApproval && (
+      {isModalOpen && selectedBarangay && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-xl w-[600px] max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-800">
-                Approve New {selectedApproval.type} Registration
+                Approve New Barangay Registration
               </h2>
               <Button
                 variant="ghost"
@@ -334,27 +419,29 @@ const EchelonPage = () => {
             <div className="p-6 space-y-8">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  {selectedApproval.type} Details
+                  Barangay Details
                 </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Parent Municipality
                     </label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-                      <option>Tagum City</option>
-                      <option>Davao City</option>
-                      <option>City of Panabo</option>
-                    </select>
+                    <input 
+                      type="text" 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      defaultValue={selectedBarangay.municipality}
+                      readOnly
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Official {selectedApproval.type} Name
+                      Official Barangay Name
                     </label>
                     <input 
                       type="text" 
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      defaultValue={selectedApproval.lguName}
+                      defaultValue={selectedBarangay.barangayname}
+                      readOnly
                     />
                   </div>
                 </div>
@@ -362,7 +449,7 @@ const EchelonPage = () => {
               
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Create Initial {selectedApproval.type} Admin Account
+                  Create Initial Barangay Admin Account
                 </h3>
                 <div className="space-y-4">
                   <div>
@@ -411,13 +498,13 @@ const EchelonPage = () => {
                 onClick={() => {
                   toast({
                     title: "Application Approved",
-                    description: `${selectedApproval.lguName} has been successfully approved and registered.`,
+                    description: `${selectedBarangay.barangayname} has been successfully approved and registered.`,
                   });
                   setIsModalOpen(false);
                 }}
                 className="bg-primary hover:bg-primary/90 text-white"
               >
-                Finalize {selectedApproval.type} Approval
+                Finalize Barangay Approval
               </Button>
             </div>
           </div>
