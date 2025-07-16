@@ -671,27 +671,46 @@ const MunicipalitiesPage = () => {
 
                   {/* New Municipality Fields */}
                   {isNewBarangay && (
-                    <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="font-medium text-blue-800">New Municipality Registration</h4>
-                      
-                      <FormField
-                        control={signupForm.control}
-                        name="barangayname"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Municipality Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                type="text"
-                                placeholder="City of Davao"
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                     <div className="space-y-4 p-4 bg-background/50 rounded-lg border border-border dark:bg-muted/30 dark:border-muted-foreground/20">
+                       <h4 className="font-medium text-foreground">New Municipality Registration</h4>
+                       
+                       <FormField
+                         control={signupForm.control}
+                         name="barangayname"
+                         render={({ field }) => (
+                           <FormItem>
+                             <FormLabel>Barangay Name</FormLabel>
+                             <FormControl>
+                               <Input
+                                 {...field}
+                                 type="text"
+                                 placeholder="Barangay Santo Niño"
+                                 disabled={isLoading}
+                               />
+                             </FormControl>
+                             <FormMessage />
+                           </FormItem>
+                         )}
+                       />
+
+                       <FormField
+                         control={signupForm.control}
+                         name="municipality"
+                         render={({ field }) => (
+                           <FormItem>
+                             <FormLabel>Municipality Name</FormLabel>
+                             <FormControl>
+                               <Input
+                                 {...field}
+                                 type="text"
+                                 placeholder="City of Davao"
+                                 disabled={isLoading}
+                               />
+                             </FormControl>
+                             <FormMessage />
+                           </FormItem>
+                         )}
+                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
