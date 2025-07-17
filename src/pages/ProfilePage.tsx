@@ -360,7 +360,7 @@ const ProfilePage = () => {
               <div className="flex-shrink-0 flex gap-3">
                 <button 
                   onClick={() => setEditing(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2"
+                  className="bg-primary hover:bg-primary/80 text-primary-foreground px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2"
                 >
                   <Edit className="w-4 h-4" />
                   Edit Profile
@@ -385,7 +385,7 @@ const ProfilePage = () => {
                 </button>
                 <button 
                   onClick={handleCancel}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2"
+                  className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2"
                 >
                   <X className="w-4 h-4" />
                   Cancel
@@ -396,14 +396,14 @@ const ProfilePage = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-700 mb-8">
+        <div className="border-b border-border mb-8">
           <nav className="flex -mb-px space-x-6">
             <button 
               onClick={() => setActiveTab('personal')}
               className={`py-3 px-6 cursor-pointer border-b-2 font-semibold transition-all ${
                 activeTab === 'personal' 
-                  ? 'text-blue-500 border-blue-500' 
-                  : 'text-gray-400 border-transparent hover:text-gray-100'
+                  ? 'text-primary border-primary' 
+                  : 'text-muted-foreground border-transparent hover:text-foreground'
               }`}
             >
               Personal Information
@@ -412,8 +412,8 @@ const ProfilePage = () => {
               onClick={() => setActiveTab('barangay')}
               className={`py-3 px-6 cursor-pointer border-b-2 font-semibold transition-all ${
                 activeTab === 'barangay' 
-                  ? 'text-blue-500 border-blue-500' 
-                  : 'text-gray-400 border-transparent hover:text-gray-100'
+                  ? 'text-primary border-primary' 
+                  : 'text-muted-foreground border-transparent hover:text-foreground'
               }`}
             >
               Barangay Information
@@ -422,8 +422,8 @@ const ProfilePage = () => {
               onClick={() => setActiveTab('security')}
               className={`py-3 px-6 cursor-pointer border-b-2 font-semibold transition-all ${
                 activeTab === 'security' 
-                  ? 'text-blue-500 border-blue-500' 
-                  : 'text-gray-400 border-transparent hover:text-gray-100'
+                  ? 'text-primary border-primary' 
+                  : 'text-muted-foreground border-transparent hover:text-foreground'
               }`}
             >
               Security
@@ -435,47 +435,47 @@ const ProfilePage = () => {
         <div>
           {/* Personal Information Panel */}
           {activeTab === 'personal' && (
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Your Account Information</h2>
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-xl font-bold text-foreground mb-4">Your Account Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                  <span className="text-gray-400">Username</span>
-                  <span className="font-semibold text-white">{userProfile?.username || "Not set"}</span>
+                <div className="flex justify-between items-center py-4 border-b border-border">
+                  <span className="text-muted-foreground">Username</span>
+                  <span className="font-semibold text-foreground">{userProfile?.username || "Not set"}</span>
                 </div>
-                <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                  <span className="text-gray-400">Email</span>
-                  <span className="font-semibold text-white">{user?.email}</span>
+                <div className="flex justify-between items-center py-4 border-b border-border">
+                  <span className="text-muted-foreground">Email</span>
+                  <span className="font-semibold text-foreground">{user?.email}</span>
                 </div>
-                <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                  <span className="text-gray-400">First Name</span>
+                <div className="flex justify-between items-center py-4 border-b border-border">
+                  <span className="text-muted-foreground">First Name</span>
                   {editing ? (
                     <input 
                       type="text"
                       name="firstname"
                       value={editData.firstname}
                       onChange={handleInputChange}
-                      className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white w-60%"
+                      className="bg-input border border-border rounded px-2 py-1 text-foreground w-60%"
                     />
                   ) : (
-                    <span className="font-semibold text-white">{userProfile?.firstname || "Not set"}</span>
+                    <span className="font-semibold text-foreground">{userProfile?.firstname || "Not set"}</span>
                   )}
                 </div>
-                <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                  <span className="text-gray-400">Last Name</span>
+                <div className="flex justify-between items-center py-4 border-b border-border">
+                  <span className="text-muted-foreground">Last Name</span>
                   {editing ? (
                     <input 
                       type="text"
                       name="lastname"
                       value={editData.lastname}
                       onChange={handleInputChange}
-                      className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white w-60%"
+                      className="bg-input border border-border rounded px-2 py-1 text-foreground w-60%"
                     />
                   ) : (
-                    <span className="font-semibold text-white">{userProfile?.lastname || "Not set"}</span>
+                    <span className="font-semibold text-foreground">{userProfile?.lastname || "Not set"}</span>
                   )}
                 </div>
-                <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                  <span className="text-gray-400">Middle Name</span>
+                <div className="flex justify-between items-center py-4 border-b border-border">
+                  <span className="text-muted-foreground">Middle Name</span>
                   {editing ? (
                     <input 
                       type="text"
@@ -483,14 +483,14 @@ const ProfilePage = () => {
                       value={editData.middlename}
                       onChange={handleInputChange}
                       placeholder="Not set"
-                      className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white w-60%"
+                      className="bg-input border border-border rounded px-2 py-1 text-foreground w-60%"
                     />
                   ) : (
-                    <span className="font-semibold text-gray-500 italic">{userProfile?.middlename || "Not set"}</span>
+                    <span className="font-semibold text-muted-foreground italic">{userProfile?.middlename || "Not set"}</span>
                   )}
                 </div>
-                <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                  <span className="text-gray-400">Phone</span>
+                <div className="flex justify-between items-center py-4 border-b border-border">
+                  <span className="text-muted-foreground">Phone</span>
                   {editing ? (
                     <input 
                       type="text"
@@ -498,23 +498,23 @@ const ProfilePage = () => {
                       value={editData.phone}
                       onChange={handleInputChange}
                       placeholder="Not set"
-                      className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white w-60%"
+                      className="bg-input border border-border rounded px-2 py-1 text-foreground w-60%"
                     />
                   ) : (
-                    <span className="font-semibold text-gray-500 italic">{userProfile?.phone || "Not set"}</span>
+                    <span className="font-semibold text-muted-foreground italic">{userProfile?.phone || "Not set"}</span>
                   )}
                 </div>
-                <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                  <span className="text-gray-400">Status</span>
-                  <span className="font-semibold text-green-400">{userProfile?.status}</span>
+                <div className="flex justify-between items-center py-4 border-b border-border">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className="font-semibold text-green-500">{userProfile?.status}</span>
                 </div>
                 <div className="flex justify-between items-center py-4">
-                  <span className="text-gray-400">Role</span>
-                  <span className="font-semibold text-yellow-400">{userProfile?.role}</span>
+                  <span className="text-muted-foreground">Role</span>
+                  <span className="font-semibold text-primary">{userProfile?.role}</span>
                 </div>
                 <div className="flex justify-between items-center py-4">
-                  <span className="text-gray-400">Account Created</span>
-                  <span className="font-semibold text-white">
+                  <span className="text-muted-foreground">Account Created</span>
+                  <span className="font-semibold text-foreground">
                     {userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString() : "Not available"}
                   </span>
                 </div>
@@ -524,59 +524,59 @@ const ProfilePage = () => {
 
           {/* Barangay Information Panel */}
           {activeTab === 'barangay' && (
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Your Assigned Barangay Details</h2>
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-xl font-bold text-foreground mb-4">Your Assigned Barangay Details</h2>
               {barangay ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                  <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                    <span className="text-gray-400">Barangay Name</span>
-                    <span className="font-semibold text-white">{barangay.barangayname}</span>
+                  <div className="flex justify-between items-center py-4 border-b border-border">
+                    <span className="text-muted-foreground">Barangay Name</span>
+                    <span className="font-semibold text-foreground">{barangay.barangayname}</span>
                   </div>
-                  <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                    <span className="text-gray-400">Municipality</span>
-                    <span className="font-semibold text-white">{barangay.municipality}</span>
+                  <div className="flex justify-between items-center py-4 border-b border-border">
+                    <span className="text-muted-foreground">Municipality</span>
+                    <span className="font-semibold text-foreground">{barangay.municipality}</span>
                   </div>
-                  <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                    <span className="text-gray-400">Province</span>
-                    <span className="font-semibold text-white">{barangay.province}</span>
+                  <div className="flex justify-between items-center py-4 border-b border-border">
+                    <span className="text-muted-foreground">Province</span>
+                    <span className="font-semibold text-foreground">{barangay.province}</span>
                   </div>
-                  <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                    <span className="text-gray-400">Region</span>
-                    <span className="font-semibold text-white">{barangay.region}</span>
+                  <div className="flex justify-between items-center py-4 border-b border-border">
+                    <span className="text-muted-foreground">Region</span>
+                    <span className="font-semibold text-foreground">{barangay.region}</span>
                   </div>
-                  <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                    <span className="text-gray-400">Country</span>
-                    <span className="font-semibold text-white">{barangay.country}</span>
+                  <div className="flex justify-between items-center py-4 border-b border-border">
+                    <span className="text-muted-foreground">Country</span>
+                    <span className="font-semibold text-foreground">{barangay.country}</span>
                   </div>
                   <div className="flex justify-between items-center py-4">
-                    <span className="text-gray-400">Barangay Onboarded</span>
-                    <span className="font-semibold text-white">{new Date(barangay.created_at).toLocaleDateString()}</span>
+                    <span className="text-muted-foreground">Barangay Onboarded</span>
+                    <span className="font-semibold text-foreground">{new Date(barangay.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
               ) : (
-                <div className="text-gray-400 italic">No barangay information available</div>
+                <div className="text-muted-foreground italic">No barangay information available</div>
               )}
             </div>
           )}
 
           {/* Security Panel */}
           {activeTab === 'security' && (
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Security Settings</h2>
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-xl font-bold text-foreground mb-4">Security Settings</h2>
               <div className="space-y-1">
-                <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                  <p className="font-semibold text-white">Multi-Factor Authentication</p>
-                  <button className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm font-semibold transition-colors">
+                <div className="flex justify-between items-center py-4 border-b border-border">
+                  <p className="font-semibold text-foreground">Multi-Factor Authentication</p>
+                  <button className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-3 py-1 rounded text-sm font-semibold transition-colors">
                     Manage
                   </button>
                 </div>
-                <div className="flex justify-between items-center py-4 border-b border-gray-700">
-                  <p className="font-semibold text-white">Active Sessions</p>
-                  <a href="#" className="text-blue-400 hover:underline font-semibold">View Sessions</a>
+                <div className="flex justify-between items-center py-4 border-b border-border">
+                  <p className="font-semibold text-foreground">Active Sessions</p>
+                  <a href="#" className="text-primary hover:underline font-semibold">View Sessions</a>
                 </div>
                 <div className="flex justify-between items-center py-4">
-                  <p className="font-semibold text-white">Activity Log</p>
-                  <a href="#" className="text-blue-400 hover:underline font-semibold">View Log</a>
+                  <p className="font-semibold text-foreground">Activity Log</p>
+                  <a href="#" className="text-primary hover:underline font-semibold">View Log</a>
                 </div>
               </div>
             </div>
