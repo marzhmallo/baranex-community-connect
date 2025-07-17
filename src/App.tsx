@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import HomePage from "./pages/HomePage";
+import PublicHomePage from "./pages/PublicHomePage";
 import NotFound from "./pages/NotFound";
 import ResidentsPage from "./pages/ResidentsPage";
 import ResidentMoreDetailsPage from "./pages/ResidentMoreDetailsPage";
@@ -273,7 +274,15 @@ const AppContent = () => {
             {/* Overseer-only Routes - Always available for proper redirection */}
             <Route path="/plaza" element={<OverseerRoute><PlazaPage /></OverseerRoute>} />
             
-            {/* Default route - let AuthProvider handle initial routing */}
+            {/* Public Routes - Available to everyone */}
+            <Route path="/public/announcements" element={<UserAnnouncementsPage />} />
+            <Route path="/public/events" element={<UserCalendarPage />} />
+            <Route path="/public/officials" element={<UserOfficialsPage />} />
+            <Route path="/public/officials/:id" element={<UserOfficialDetailsPage />} />
+            <Route path="/public/emergency" element={<UserEmergencyPage />} />
+            <Route path="/public/forum" element={<UserForumPage />} />
+            
+            {/* Default route - public home for non-authenticated, dashboard for authenticated */}
             <Route path="/" element={
               userProfile ? (
                 userProfile.role === "user" ? <Navigate to="/hub" replace /> :
@@ -282,7 +291,7 @@ const AppContent = () => {
                 userProfile.role === "overseer" ? <Navigate to="/plaza" replace /> :
                 <Navigate to="/login" replace />
               ) : (
-                <Navigate to="/login" replace />
+                <PublicHomePage />
               )
             } />
             <Route path="*" element={<NotFound />} />
