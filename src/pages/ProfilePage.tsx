@@ -351,7 +351,7 @@ const ProfilePage = () => {
                 {userProfile?.firstname} {userProfile?.lastname}
               </h1>
               <p className="text-muted-foreground mt-1">
-                {userProfile?.username} &middot; <span className="font-semibold text-primary">{userProfile?.role}</span>
+                {userProfile?.username} &middot; <span className="font-semibold text-primary">{userProfile?.role?.charAt(0).toUpperCase() + userProfile?.role?.slice(1) || ""}</span>
               </p>
             </div>
 
@@ -506,11 +506,11 @@ const ProfilePage = () => {
                 </div>
                 <div className="flex justify-between items-center py-4 border-b border-border">
                   <span className="text-muted-foreground">Status</span>
-                  <span className="font-semibold text-green-500">{userProfile?.status}</span>
+                  <span className="font-semibold text-green-500">{userProfile?.status?.charAt(0).toUpperCase() + userProfile?.status?.slice(1) || ""}</span>
                 </div>
                 <div className="flex justify-between items-center py-4">
                   <span className="text-muted-foreground">Role</span>
-                  <span className="font-semibold text-primary">{userProfile?.role}</span>
+                  <span className="font-semibold text-primary">{userProfile?.role?.charAt(0).toUpperCase() + userProfile?.role?.slice(1) || ""}</span>
                 </div>
                 <div className="flex justify-between items-center py-4">
                   <span className="text-muted-foreground">Account Created</span>
