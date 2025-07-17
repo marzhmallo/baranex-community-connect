@@ -3,6 +3,10 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Edit, Save, X, Camera, Search, Eye, Lock, User, Key, Activity, Settings, Shield } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface Barangay {
   id: string;
@@ -24,6 +28,16 @@ const ProfilePage = () => {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(true);
+  
+  // Password change modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const [editData, setEditData] = useState({
     firstname: userProfile?.firstname || "",
@@ -203,30 +217,114 @@ const ProfilePage = () => {
     setEditing(false);
   };
 
+  // Password change functionality
+  const handlePasswordChange = async () => {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      // If current password is provided, reauthenticate first
+      if (passwordData.currentPassword) {
+        const { error: reauthError } = await supabase.auth.reauthenticate();
+        
+        if (reauthError) {
+          toast({
+            title: "Error",
+            description: "Current password is incorrect",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      // Update password
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Password updated successfully",
+      });
+
+      setShowPasswordModal(false);
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+    } catch (error) {
+      console.error('Error updating password:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update password",
+        variant: "destructive",
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-900">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl">
         {/* Main Profile Header Card */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 mb-8">
+        <div className="bg-card border border-border rounded-xl p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
             {/* Avatar */}
             <div className="relative w-24 h-24 cursor-pointer group">
+              {imageLoading && profilePhotoUrl && (
+                <div className="absolute inset-0 bg-muted rounded-full flex items-center justify-center z-10">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              )}
               <img 
                 src={profilePhotoUrl || `https://placehold.co/96x96/3B82F6/FFFFFF?text=${getInitials()}`}
                 alt="User Avatar" 
-                className="w-24 h-24 rounded-full ring-4 ring-gray-700 object-cover"
+                className="w-24 h-24 rounded-full ring-4 ring-border object-cover"
                 onClick={() => editing ? document.getElementById('avatar-upload')?.click() : setShowPhotoModal(true)}
+                onLoad={() => setImageLoading(false)}
+                onError={() => setImageLoading(false)}
               />
               <div className="absolute inset-0 bg-black bg-opacity-60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                {editing ? (
+                {uploading ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-white" />
+                ) : editing ? (
                   <>
                     <Camera className="w-5 h-5 text-white mb-1" />
                     <span className="text-xs font-semibold text-white">Change</span>
@@ -249,11 +347,11 @@ const ProfilePage = () => {
             </div>
             
             <div className="flex-grow text-center sm:text-left">
-              <h1 className="text-3xl font-bold text-white">
+              <h1 className="text-3xl font-bold text-foreground">
                 {userProfile?.firstname} {userProfile?.lastname}
               </h1>
-              <p className="text-gray-400 mt-1">
-                {userProfile?.username} &middot; <span className="font-semibold text-yellow-400">{userProfile?.role}</span>
+              <p className="text-muted-foreground mt-1">
+                {userProfile?.username} &middot; <span className="font-semibold text-primary">{userProfile?.role}</span>
               </p>
             </div>
 
@@ -267,7 +365,10 @@ const ProfilePage = () => {
                   <Edit className="w-4 h-4" />
                   Edit Profile
                 </button>
-                <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2">
+                <button 
+                  onClick={() => setShowPasswordModal(true)}
+                  className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2"
+                >
                   <Key className="w-4 h-4" />
                   Change Password
                 </button>
@@ -504,6 +605,86 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
+
+      {/* Password Change Modal */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Current Password (Optional)</Label>
+              <Input
+                id="current-password"
+                type="password"
+                placeholder="Enter current password"
+                value={passwordData.currentPassword}
+                onChange={(e) => setPasswordData(prev => ({
+                  ...prev,
+                  currentPassword: e.target.value
+                }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Enter new password"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData(prev => ({
+                  ...prev,
+                  newPassword: e.target.value
+                }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="Confirm new password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData(prev => ({
+                  ...prev,
+                  confirmPassword: e.target.value
+                }))}
+              />
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button 
+                onClick={handlePasswordChange}
+                disabled={passwordLoading}
+                className="flex-1"
+              >
+                {passwordLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordData({
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: ""
+                  });
+                }}
+                disabled={passwordLoading}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
