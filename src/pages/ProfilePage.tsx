@@ -28,7 +28,6 @@ const ProfilePage = () => {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
-  const [imageLoading, setImageLoading] = useState(true);
   
   // Password change modal state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -308,18 +307,11 @@ const ProfilePage = () => {
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
             {/* Avatar */}
             <div className="relative w-24 h-24 cursor-pointer group">
-              {imageLoading && profilePhotoUrl && (
-                <div className="absolute inset-0 bg-muted rounded-full flex items-center justify-center z-10">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-              )}
               <img 
                 src={profilePhotoUrl || `https://placehold.co/96x96/3B82F6/FFFFFF?text=${getInitials()}`}
                 alt="User Avatar" 
                 className="w-24 h-24 rounded-full ring-4 ring-border object-cover"
                 onClick={() => editing ? document.getElementById('avatar-upload')?.click() : setShowPhotoModal(true)}
-                onLoad={() => setImageLoading(false)}
-                onError={() => setImageLoading(false)}
               />
               <div className="absolute inset-0 bg-black bg-opacity-60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 {uploading ? (
