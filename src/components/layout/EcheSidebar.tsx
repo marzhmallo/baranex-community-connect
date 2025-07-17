@@ -14,6 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
 interface SidebarItem {
   icon: React.ComponentType<{ className?: string }>;
@@ -101,14 +102,17 @@ export const EcheSidebar = ({
   return (
     <div className="w-64 bg-slate-800 text-white fixed h-full">
       <div className="p-6 border-b border-slate-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <Shield className="text-white h-6 w-6" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+              <Shield className="text-white h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">Baranex</h1>
+              <p className="text-sm text-slate-400">System</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold">Baranex</h1>
-            <p className="text-sm text-slate-400">System</p>
-          </div>
+          <NotificationDropdown />
         </div>
       </div>
       
@@ -131,7 +135,7 @@ export const EcheSidebar = ({
                 <item.icon className="w-5 h-5" />
                 <span>{item.label}</span>
                 {item.count !== undefined && item.count > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-auto">
+                  <span className="bg-destructive text-destructive-foreground text-xs rounded-full px-2 py-1 ml-auto">
                     {item.count}
                   </span>
                 )}
