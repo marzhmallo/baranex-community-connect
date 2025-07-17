@@ -52,6 +52,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 const MunicipalitiesPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [municipalities, setMunicipalities] = useState<{
@@ -78,19 +79,35 @@ const MunicipalitiesPage = () => {
   // Fetch municipalities from plaza table
   useEffect(() => {
     const fetchMunicipalities = async () => {
-      const { data, error } = await supabase
-        .from('plaza')
-        .select('id, municipality, province, region, barangay')
-        .order('province')
-        .order('municipality');
-      
-      if (error) {
-        console.error('Error fetching municipalities:', error);
-        return;
-      }
-      
-      if (data) {
-        setMunicipalities(data);
+      try {
+        setDataLoading(true);
+        const { data, error } = await supabase
+          .from('plaza')
+          .select('id, municipality, province, region, barangay')
+          .order('province')
+          .order('municipality');
+        
+        if (error) {
+          console.error('Error fetching municipalities:', error);
+          toast({
+            title: "Error fetching municipalities",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (data) {
+          setMunicipalities(data);
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch municipalities",
+          variant: "destructive",
+        });
+      } finally {
+        setDataLoading(false);
       }
     };
     
@@ -346,371 +363,129 @@ const MunicipalitiesPage = () => {
       <EcheSidebar activeRoute="municipalities" />
 
       {/* Main Content */}
-      <div className="flex-1 ml-64 p-8 bg-background">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold text-foreground">Municipalities</h1>
-            
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center space-x-2">
-                <Plus className="h-4 w-4" />
-                <span>Register New Municipality</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Register Municipality Admin</DialogTitle>
-                <DialogDescription>
-                  Create a new municipality administrator account
-                </DialogDescription>
-              </DialogHeader>
-              
-              <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
-                  {/* Personal Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={signupForm.control}
-                      name="firstname"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>First Name</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input
-                                {...field}
-                                type="text"
-                                placeholder="Robelyn"
-                                className="pl-10"
-                                disabled={isLoading}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="lastname"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Last Name</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input
-                                {...field}
-                                type="text"
-                                placeholder="Biol"
-                                className="pl-10"
-                                disabled={isLoading}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={signupForm.control}
-                    name="middlename"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Middle Name (Optional)</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                            <Input
-                              {...field}
-                              type="text"
-                              placeholder="Tubada"
-                              className="pl-10"
-                              disabled={isLoading}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Account Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={signupForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input
-                                {...field}
-                                type="text"
-                                placeholder="robelynbiol"
-                                className="pl-10"
-                                disabled={isLoading}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={signupForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input
-                                {...field}
-                                type="email"
-                                placeholder="robelynbiol@municipality.gov.ph"
-                                className="pl-10"
-                                disabled={isLoading}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={signupForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                            <Input
-                              {...field}
-                              type={showPassword ? "text" : "password"}
-                              placeholder="••••••••"
-                              className="pl-10 pr-10"
-                              disabled={isLoading}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                            >
-                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Personal Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={signupForm.control}
-                      name="gender"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Gender</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select gender" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Male">Male</SelectItem>
-                              <SelectItem value="Female">Female</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={signupForm.control}
-                      name="bday"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date of Birth</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="date"
-                              disabled={isLoading}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={signupForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number (Optional)</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="tel"
-                              placeholder="+63 912 345 6789"
-                              disabled={isLoading}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={signupForm.control}
-                      name="purok"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Purok/Address</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input
-                                {...field}
-                                type="text"
-                                placeholder="1"
-                                className="pl-10"
-                                disabled={isLoading}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Municipality Selection */}
-                  <FormField
-                    control={signupForm.control}
-                    name="barangayId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Select or Register Municipality</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
-                            <Input
-                              value={municipalitySearch}
-                              onChange={(e) => handleMunicipalitySearchChange(e.target.value)}
-                              placeholder="Search for a municipality or register a new one..."
-                              className="pl-10"
-                              disabled={isLoading}
-                              onFocus={() => municipalitySearch && setShowMunicipalitySuggestions(true)}
-                            />
-                            {showMunicipalitySuggestions && (
-                              <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
-                                {filteredMunicipalities.map((municipality) => (
-                                  <button
-                                    key={municipality.id}
-                                    type="button"
-                                    onClick={() => handleMunicipalitySelect(municipality)}
-                                    className="w-full text-left px-4 py-2 hover:bg-muted border-b border-border last:border-b-0"
-                                  >
-                                    <div className="font-medium text-foreground">{municipality.municipality}</div>
-                                    <div className="text-sm text-muted-foreground">{municipality.province}, {municipality.region}</div>
-                                  </button>
-                                ))}
-                                <button
-                                  type="button"
-                                  onClick={handleNewMunicipalitySelect}
-                                  className="w-full text-left px-4 py-2 hover:bg-accent text-accent-foreground font-medium border-t border-border"
-                                >
-                                  + Register New Municipality
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* New Municipality Fields */}
-                  {isNewBarangay && (
-                     <div className="space-y-4 p-4 bg-background/50 rounded-lg border border-border dark:bg-muted/30 dark:border-muted-foreground/20">
-                       <h4 className="font-medium text-foreground">New Municipality Registration</h4>
-                       
-                       <FormField
-                         control={signupForm.control}
-                         name="barangayname"
-                         render={({ field }) => (
-                           <FormItem>
-                             <FormLabel>Barangay Name</FormLabel>
-                             <FormControl>
-                               <Input
-                                 {...field}
-                                 type="text"
-                                 placeholder="Poblacion"
-                                 disabled={isLoading}
-                               />
-                             </FormControl>
-                             <FormMessage />
-                           </FormItem>
-                         )}
-                       />
-
-                       <FormField
-                         control={signupForm.control}
-                         name="municipality"
-                         render={({ field }) => (
-                           <FormItem>
-                             <FormLabel>Municipality Name</FormLabel>
-                             <FormControl>
-                               <Input
-                                 {...field}
-                                 type="text"
-                                 placeholder="Sindangan"
-                                 disabled={isLoading}
-                               />
-                             </FormControl>
-                             <FormMessage />
-                           </FormItem>
-                         )}
-                       />
-
+      <div className="flex-1 ml-64">
+        {dataLoading ? (
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Loading municipalities...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="p-8 bg-background">
+            <div className="max-w-6xl mx-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-3xl font-bold text-foreground">Municipalities</h1>
+                
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center space-x-2">
+                    <Plus className="h-4 w-4" />
+                    <span>Register New Municipality</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Register Municipality Admin</DialogTitle>
+                    <DialogDescription>
+                      Create a new municipality administrator account
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <Form {...signupForm}>
+                    <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                      {/* Personal Information */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={signupForm.control}
-                          name="province"
+                          name="firstname"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Province</FormLabel>
+                              <FormLabel>First Name</FormLabel>
                               <FormControl>
+                                <div className="relative">
+                                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Input
+                                    {...field}
+                                    type="text"
+                                    placeholder="Robelyn"
+                                    className="pl-10"
+                                    disabled={isLoading}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={signupForm.control}
+                          name="lastname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Last Name</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Input
+                                    {...field}
+                                    type="text"
+                                    placeholder="Biol"
+                                    className="pl-10"
+                                    disabled={isLoading}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={signupForm.control}
+                        name="middlename"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Middle Name (Optional)</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                 <Input
                                   {...field}
                                   type="text"
-                                  placeholder="Zamboanga Del Norte"
+                                  placeholder="Tubada"
+                                  className="pl-10"
                                   disabled={isLoading}
                                 />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Account Information */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={signupForm.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Username</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Input
+                                    {...field}
+                                    type="text"
+                                    placeholder="robelynbiol"
+                                    className="pl-10"
+                                    disabled={isLoading}
+                                  />
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -719,15 +494,92 @@ const MunicipalitiesPage = () => {
 
                         <FormField
                           control={signupForm.control}
-                          name="region"
+                          name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Region</FormLabel>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Input
+                                    {...field}
+                                    type="email"
+                                    placeholder="robelynbiol@municipality.gov.ph"
+                                    className="pl-10"
+                                    disabled={isLoading}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={signupForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <Input
+                                  {...field}
+                                  type={showPassword ? "text" : "password"}
+                                  placeholder="••••••••"
+                                  className="pl-10 pr-10"
+                                  disabled={isLoading}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                                >
+                                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Personal Details */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={signupForm.control}
+                          name="gender"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Gender</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="Male">Male</SelectItem>
+                                  <SelectItem value="Female">Female</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={signupForm.control}
+                          name="bday"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date of Birth</FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  type="text"
-                                  placeholder="XI"
+                                  type="date"
                                   disabled={isLoading}
                                 />
                               </FormControl>
@@ -736,63 +588,239 @@ const MunicipalitiesPage = () => {
                           )}
                         />
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={signupForm.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone Number (Optional)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  type="tel"
+                                  placeholder="+63 912 345 6789"
+                                  disabled={isLoading}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={signupForm.control}
+                          name="purok"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Purok/Address</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                  <Input
+                                    {...field}
+                                    type="text"
+                                    placeholder="1"
+                                    className="pl-10"
+                                    disabled={isLoading}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Municipality Selection */}
+                      <FormField
+                        control={signupForm.control}
+                        name="barangayId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Select or Register Municipality</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
+                                <Input
+                                  value={municipalitySearch}
+                                  onChange={(e) => handleMunicipalitySearchChange(e.target.value)}
+                                  placeholder="Search for a municipality or register a new one..."
+                                  className="pl-10"
+                                  disabled={isLoading}
+                                  onFocus={() => municipalitySearch && setShowMunicipalitySuggestions(true)}
+                                />
+                                {showMunicipalitySuggestions && (
+                                  <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
+                                    {filteredMunicipalities.map((municipality) => (
+                                      <button
+                                        key={municipality.id}
+                                        type="button"
+                                        onClick={() => handleMunicipalitySelect(municipality)}
+                                        className="w-full text-left px-4 py-2 hover:bg-muted border-b border-border last:border-b-0"
+                                      >
+                                        <div className="font-medium text-foreground">{municipality.municipality}</div>
+                                        <div className="text-sm text-muted-foreground">{municipality.province}, {municipality.region}</div>
+                                      </button>
+                                    ))}
+                                    <button
+                                      type="button"
+                                      onClick={handleNewMunicipalitySelect}
+                                      className="w-full text-left px-4 py-2 hover:bg-accent text-accent-foreground font-medium border-t border-border"
+                                    >
+                                      + Register New Municipality
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* New Municipality Fields */}
+                      {isNewBarangay && (
+                         <div className="space-y-4 p-4 bg-background/50 rounded-lg border border-border dark:bg-muted/30 dark:border-muted-foreground/20">
+                           <h4 className="font-medium text-foreground">New Municipality Registration</h4>
+                           
+                           <FormField
+                             control={signupForm.control}
+                             name="barangayname"
+                             render={({ field }) => (
+                               <FormItem>
+                                 <FormLabel>Barangay Name</FormLabel>
+                                 <FormControl>
+                                   <Input
+                                     {...field}
+                                     type="text"
+                                     placeholder="Poblacion"
+                                     disabled={isLoading}
+                                   />
+                                 </FormControl>
+                                 <FormMessage />
+                               </FormItem>
+                             )}
+                           />
+
+                           <FormField
+                             control={signupForm.control}
+                             name="municipality"
+                             render={({ field }) => (
+                               <FormItem>
+                                 <FormLabel>Municipality Name</FormLabel>
+                                 <FormControl>
+                                   <Input
+                                     {...field}
+                                     type="text"
+                                     placeholder="Sindangan"
+                                     disabled={isLoading}
+                                   />
+                                 </FormControl>
+                                 <FormMessage />
+                               </FormItem>
+                             )}
+                           />
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={signupForm.control}
+                              name="province"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Province</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="text"
+                                      placeholder="Zamboanga Del Norte"
+                                      disabled={isLoading}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={signupForm.control}
+                              name="region"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Region</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="text"
+                                      placeholder="XI"
+                                      disabled={isLoading}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* CAPTCHA */}
+                      <div className="flex justify-center">
+                        <HCaptcha
+                          ref={captchaRef}
+                          sitekey={hcaptchaSiteKey}
+                          onVerify={handleCaptchaChange}
+                        />
+                      </div>
+
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={isLoading || !captchaToken}
+                      >
+                        {isLoading ? "Creating Account..." : "Create Account"}
+                      </Button>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+              </div>
+
+            {/* Municipalities List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {municipalities.map((municipality) => (
+                <Card key={municipality.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Building className="h-5 w-5" />
+                      <span>{municipality.municipality}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{municipality.barangay}</span>
+                      </div>
+                      <div>Province: {municipality.province}</div>
+                      <div>Region: {municipality.region}</div>
                     </div>
-                  )}
-
-                  {/* CAPTCHA */}
-                  <div className="flex justify-center">
-                    <HCaptcha
-                      ref={captchaRef}
-                      sitekey={hcaptchaSiteKey}
-                      onVerify={handleCaptchaChange}
-                    />
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading || !captchaToken}
-                  >
-                    {isLoading ? "Creating Account..." : "Create Account"}
-                  </Button>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-          </div>
-
-        {/* Municipalities List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {municipalities.map((municipality) => (
-            <Card key={municipality.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Building className="h-5 w-5" />
-                  <span>{municipality.municipality}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>{municipality.barangay}</span>
-                  </div>
-                  <div>Province: {municipality.province}</div>
-                  <div>Region: {municipality.region}</div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {municipalities.length === 0 && (
+                <div className="col-span-full text-center py-12">
+                  <Building className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">No municipalities found</h3>
+                  <p className="text-gray-500 mb-4">Register the first municipality to get started.</p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          {municipalities.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <Building className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-600 mb-2">No municipalities found</h3>
-              <p className="text-gray-500 mb-4">Register the first municipality to get started.</p>
+              )}
             </div>
-          )}
-        </div>
-        </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

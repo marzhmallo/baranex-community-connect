@@ -79,24 +79,21 @@ const BarangaysPage: React.FC = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading barangays...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full bg-background min-h-screen flex">
       <EcheSidebar activeRoute="barangays" />
 
       {/* Main Content */}
       <div className="flex-1 ml-64">
-        <div className="p-8">
+        {loading ? (
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Loading barangays...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="p-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground">Barangays Management</h1>
@@ -172,8 +169,9 @@ const BarangaysPage: React.FC = () => {
                 {searchTerm ? 'Try adjusting your search terms' : 'No barangays are registered in the system yet'}
               </p>
             </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
