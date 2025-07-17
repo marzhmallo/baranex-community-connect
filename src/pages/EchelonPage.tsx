@@ -7,7 +7,8 @@ import {
   FileText,
   Check,
   X,
-  Users
+  Users,
+  Bell
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -161,17 +162,29 @@ const EchelonPage = () => {
 
   return (
     <div className="w-full bg-gray-50 min-h-screen flex">
-      <EcheSidebar 
-        activeRoute="dashboard" 
-        pendingCount={pendingBarangays.length} 
-        registeredCount={registeredBarangays.length} 
-      />
+      <EcheSidebar activeRoute="dashboard" />
       
       {/* Main Content */}
       <div className="flex-1 ml-64 p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome, Super Admin!</h1>
-          <p className="text-gray-600">Wednesday, July 9, 2025</p>
+        {/* Header with Pending Approvals */}
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome, Super Admin!</h1>
+            <p className="text-gray-600">Wednesday, July 9, 2025</p>
+          </div>
+          
+          {/* Pending Approvals Notification */}
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 min-w-[200px]">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Bell className="text-orange-600 h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Pending Approvals</h3>
+                <p className="text-2xl font-bold text-orange-600">{pendingBarangays.length}</p>
+              </div>
+            </div>
+          </div>
         </div>
         
         {/* Statistics Cards */}

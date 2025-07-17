@@ -92,11 +92,7 @@ const BarangaysPage: React.FC = () => {
 
   return (
     <div className="w-full bg-background min-h-screen flex">
-      <EcheSidebar 
-        activeRoute="barangays" 
-        pendingCount={0} 
-        registeredCount={barangays.length} 
-      />
+      <EcheSidebar activeRoute="barangays" />
 
       {/* Main Content */}
       <div className="flex-1 ml-64">

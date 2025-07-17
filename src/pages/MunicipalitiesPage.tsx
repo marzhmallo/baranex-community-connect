@@ -343,11 +343,7 @@ const MunicipalitiesPage = () => {
 
   return (
     <div className="w-full bg-background min-h-screen flex">
-      <EcheSidebar 
-        activeRoute="municipalities" 
-        pendingCount={0} 
-        registeredCount={municipalities.length} 
-      />
+      <EcheSidebar activeRoute="municipalities" />
 
       {/* Main Content */}
       <div className="flex-1 ml-64 p-8 bg-background">

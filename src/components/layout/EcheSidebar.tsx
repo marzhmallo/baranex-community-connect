@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { 
   Shield, 
   Gauge, 
-  Bell, 
   Building2, 
   Building,
   Users, 
@@ -20,20 +19,15 @@ interface SidebarItem {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   active: boolean;
-  count?: number;
   route?: string;
 }
 
 interface EcheSidebarProps {
   activeRoute?: string;
-  pendingCount?: number;
-  registeredCount?: number;
 }
 
 export const EcheSidebar = ({ 
-  activeRoute = 'dashboard', 
-  pendingCount = 0, 
-  registeredCount = 0 
+  activeRoute = 'dashboard'
 }: EcheSidebarProps) => {
   const navigate = useNavigate();
 
@@ -59,42 +53,30 @@ export const EcheSidebar = ({
       icon: Gauge, 
       label: 'Dashboard', 
       active: activeRoute === 'dashboard', 
-      count: undefined,
-      route: '/echelon'
-    },
-    { 
-      icon: Bell, 
-      label: 'Pending Approvals', 
-      active: activeRoute === 'pending', 
-      count: pendingCount,
       route: '/echelon'
     },
     { 
       icon: Building2, 
       label: 'Municipalities', 
       active: activeRoute === 'municipalities', 
-      count: undefined,
       route: '/municipalities'
     },
     { 
       icon: Building, 
       label: 'Barangays', 
       active: activeRoute === 'barangays', 
-      count: registeredCount,
       route: '/barangays'
     },
     { 
       icon: Users, 
       label: 'User Management', 
       active: activeRoute === 'users', 
-      count: undefined,
       route: '/users'
     },
     { 
       icon: Settings, 
       label: 'System Settings', 
       active: activeRoute === 'settings', 
-      count: undefined,
       route: '/system-settings'
     },
   ];
@@ -134,11 +116,6 @@ export const EcheSidebar = ({
               >
                 <item.icon className="w-5 h-5" />
                 <span>{item.label}</span>
-                {item.count !== undefined && item.count > 0 && (
-                  <span className="bg-destructive text-destructive-foreground text-xs rounded-full px-2 py-1 ml-auto">
-                    {item.count}
-                  </span>
-                )}
               </button>
             </li>
           ))}
