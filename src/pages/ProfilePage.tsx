@@ -28,6 +28,7 @@ const ProfilePage = () => {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [photoLoading, setPhotoLoading] = useState(false);
   
   // Password change modal state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -56,6 +57,7 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchProfilePhoto = async () => {
       if (userProfile?.profile_picture) {
+        setPhotoLoading(true);
         try {
           const { data } = await supabase.storage
             .from('profilepictures')
@@ -66,6 +68,8 @@ const ProfilePage = () => {
           }
         } catch (error) {
           console.error('Error fetching profile photo:', error);
+        } finally {
+          setPhotoLoading(false);
         }
       }
     };
@@ -307,12 +311,18 @@ const ProfilePage = () => {
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
             {/* Avatar */}
             <div className="relative w-24 h-24 cursor-pointer group">
-              <img 
-                src={profilePhotoUrl || `https://placehold.co/96x96/3B82F6/FFFFFF?text=${getInitials()}`}
-                alt="User Avatar" 
-                className="w-24 h-24 rounded-full ring-4 ring-border object-cover"
-                onClick={() => editing ? document.getElementById('avatar-upload')?.click() : setShowPhotoModal(true)}
-              />
+              {photoLoading ? (
+                <div className="w-24 h-24 rounded-full ring-4 ring-border bg-muted flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : (
+                <img 
+                  src={profilePhotoUrl || `https://placehold.co/96x96/3B82F6/FFFFFF?text=${getInitials()}`}
+                  alt="User Avatar" 
+                  className="w-24 h-24 rounded-full ring-4 ring-border object-cover"
+                  onClick={() => editing ? document.getElementById('avatar-upload')?.click() : setShowPhotoModal(true)}
+                />
+              )}
               <div className="absolute inset-0 bg-black bg-opacity-60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 {uploading ? (
                   <Loader2 className="w-5 h-5 animate-spin text-white" />
