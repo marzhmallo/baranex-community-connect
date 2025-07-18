@@ -7,7 +7,7 @@ import { useData } from "@/context/DataContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardStats = () => {
-  const { residents, households, loading: dataLoading, refetchData } = useData();
+  const { residents, households, loading: dataLoading } = useData();
   const { 
     activeAnnouncements, 
     upcomingEvents,
@@ -27,15 +27,7 @@ const DashboardStats = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Calculate residents registered this month
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  
-  const residentsThisMonth = residents.filter(resident => {
-    const createdDate = new Date(resident.created_at);
-    return createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear;
-  }).length;
-  
+  // Use data from context for totals
   const totalResidents = residents.length;
   const totalHouseholds = households.length;
   const isLoading = dataLoading || dashboardLoading;
@@ -92,18 +84,18 @@ const DashboardStats = () => {
         <div className="flex">
           <div className="flex-grow">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">New Residents This Month</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Residents</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">{residentsThisMonth.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{totalResidents.toLocaleString()}</div>
               <div className="flex items-center mt-1">
                 {residentGrowthRate >= 0 ? (
                   <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
                 ) : (
                   <TrendingDown className="text-red-500 h-3 w-3 mr-1" />
                 )}
-                <p className="text-xs text-muted-foreground">
-                  Total residents: {totalResidents}
+                <p className={`text-xs ${residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
+                  {formatGrowthRate(residentGrowthRate)} ({newResidentsThisMonth} this month)
                 </p>
               </div>
               <Progress value={progress} className="mt-3 h-1.5" />
