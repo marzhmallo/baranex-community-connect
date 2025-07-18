@@ -220,6 +220,72 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   useEffect(() => {
     if (userProfile?.brgyid) {
       fetchData();
+      
+      // Set up real-time subscriptions for instant updates
+      const residentsChannel = supabase
+        .channel('residents-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'residents',
+            filter: `brgyid=eq.${userProfile.brgyid}`
+          },
+          (payload) => {
+            console.log('Real-time resident change:', payload);
+            
+            if (payload.eventType === 'INSERT') {
+              setResidents(prev => [payload.new as Resident, ...prev]);
+            } else if (payload.eventType === 'UPDATE') {
+              setResidents(prev => 
+                prev.map(resident => 
+                  resident.id === payload.new.id ? payload.new as Resident : resident
+                )
+              );
+            } else if (payload.eventType === 'DELETE') {
+              setResidents(prev => 
+                prev.filter(resident => resident.id !== payload.old.id)
+              );
+            }
+          }
+        )
+        .subscribe();
+
+      const householdsChannel = supabase
+        .channel('households-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'households',
+            filter: `brgyid=eq.${userProfile.brgyid}`
+          },
+          (payload) => {
+            console.log('Real-time household change:', payload);
+            
+            if (payload.eventType === 'INSERT') {
+              setHouseholds(prev => [payload.new as Household, ...prev]);
+            } else if (payload.eventType === 'UPDATE') {
+              setHouseholds(prev => 
+                prev.map(household => 
+                  household.id === payload.new.id ? payload.new as Household : household
+                )
+              );
+            } else if (payload.eventType === 'DELETE') {
+              setHouseholds(prev => 
+                prev.filter(household => household.id !== payload.old.id)
+              );
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(residentsChannel);
+        supabase.removeChannel(householdsChannel);
+      };
     }
   }, [userProfile?.brgyid]);
 

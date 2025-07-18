@@ -343,30 +343,12 @@ const DashboardCharts = () => {
               <CardContent className="p-4 flex flex-col items-center">
                 <div className="text-xs uppercase text-muted-foreground mb-1">New this Month</div>
                 <div className="text-2xl font-bold text-center">
-                  {isLoading ? '...' : (() => {
+                  {isLoading ? '...' : residents.filter(resident => {
+                    const createdAt = new Date(resident.created_at);
                     const now = new Date();
-                    const currentMonth = now.getMonth();
-                    const currentYear = now.getFullYear();
-                    
-                    console.log('Current date:', now);
-                    console.log('Current month:', currentMonth, 'Current year:', currentYear);
-                    console.log('Total residents:', residents.length);
-                    
-                    const thisMonthResidents = residents.filter(resident => {
-                      const createdAt = new Date(resident.created_at);
-                      const residentMonth = createdAt.getMonth();
-                      const residentYear = createdAt.getFullYear();
-                      
-                      console.log('Resident created_at:', resident.created_at, 'Parsed date:', createdAt);
-                      console.log('Resident month:', residentMonth, 'Resident year:', residentYear);
-                      console.log('Match?', residentMonth === currentMonth && residentYear === currentYear);
-                      
-                      return residentMonth === currentMonth && residentYear === currentYear;
-                    });
-                    
-                    console.log('This month residents:', thisMonthResidents.length);
-                    return thisMonthResidents.length;
-                  })()}
+                    return createdAt.getMonth() === now.getMonth() && 
+                           createdAt.getFullYear() === now.getFullYear();
+                  }).length}
                 </div>
               </CardContent>
             </Card>
