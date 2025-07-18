@@ -84,10 +84,10 @@ const DashboardStats = () => {
         <div className="flex">
           <div className="flex-grow">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">New Residents This Month</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Residents</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl font-bold">{newResidentsThisMonth.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{totalResidents.toLocaleString()}</div>
               <div className="flex items-center mt-1">
                 {residentGrowthRate >= 0 ? (
                   <TrendingUp className="text-baranex-success h-3 w-3 mr-1" />
@@ -95,7 +95,7 @@ const DashboardStats = () => {
                   <TrendingDown className="text-red-500 h-3 w-3 mr-1" />
                 )}
                 <p className={`text-xs ${residentGrowthRate >= 0 ? 'text-baranex-success' : 'text-red-500'}`}>
-                  {formatGrowthRate(residentGrowthRate)} (Total: {totalResidents})
+                  {formatGrowthRate(residentGrowthRate)} ({newResidentsThisMonth} this month)
                 </p>
               </div>
               <Progress value={progress} className="mt-3 h-1.5" />
