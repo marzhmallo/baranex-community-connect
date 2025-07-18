@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,13 +17,17 @@ import moment from 'moment';
 
 const UserOfficialsPage = () => {
   const { userProfile } = useAuth();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('current');
 
+  // Get barangay ID from URL params (for public access) or user profile (for authenticated users)
+  const barangayId = searchParams.get('barangay') || userProfile?.brgyid;
+
   const { data: officials, isLoading } = useQuery({
-    queryKey: ['user-officials', userProfile?.brgyid],
+    queryKey: ['user-officials', barangayId],
     queryFn: async (): Promise<Official[]> => {
-      if (!userProfile?.brgyid) {
+      if (!barangayId) {
         return [];
       }
 
@@ -34,7 +39,7 @@ const UserOfficialsPage = () => {
             *,
             officialPositions:official_positions(*)
           `)
-          .eq('brgyid', userProfile.brgyid);
+          .eq('brgyid', barangayId);
 
         if (error) {
           console.error('Error fetching officials:', error);
@@ -47,7 +52,25 @@ const UserOfficialsPage = () => {
         throw error;
       }
     },
-    enabled: !!userProfile?.brgyid
+    enabled: !!barangayId
+  });
+
+  // Get barangay info for public pages
+  const { data: barangayInfo } = useQuery({
+    queryKey: ['barangay-info', barangayId],
+    queryFn: async () => {
+      if (!barangayId || userProfile) return null; // Only fetch for public access
+      
+      const { data, error } = await supabase
+        .from('barangays')
+        .select('barangayname, municipality, province')
+        .eq('id', barangayId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!barangayId && !userProfile
   });
 
   // Filter officials based on search query
@@ -129,7 +152,12 @@ const UserOfficialsPage = () => {
       <div className="flex items-center gap-3 mb-6">
         <Award className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Barangay Officials</h1>
+          <h1 className="text-2xl font-bold">
+            {barangayInfo 
+              ? `Officials of ${barangayInfo.barangayname}, ${barangayInfo.municipality}`
+              : 'Barangay Officials'
+            }
+          </h1>
           <p className="text-muted-foreground">Meet your local government representatives</p>
         </div>
       </div>
