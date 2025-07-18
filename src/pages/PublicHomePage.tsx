@@ -1,13 +1,44 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogIn, MapPin, Users, Calendar, AlertTriangle, MessageSquare, FileText } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { BarangaySelectionModal } from "@/components/public/BarangaySelectionModal";
+import { BarangayBanner } from "@/components/public/BarangayBanner";
+import { useBarangaySelection } from "@/hooks/useBarangaySelection";
 
 const PublicHomePage = () => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedContentType, setSelectedContentType] = useState<'announcements' | 'events' | 'officials' | 'emergency' | 'forum'>('announcements');
+  const { selectedBarangay, showBanner, clearSelection, dismissBanner } = useBarangaySelection();
+  const navigate = useNavigate();
+
+  const handleContentNavigation = (contentType: 'announcements' | 'events' | 'officials' | 'emergency' | 'forum') => {
+    if (selectedBarangay) {
+      // If barangay is already selected, navigate directly
+      navigate(`/public/${contentType}?barangay=${selectedBarangay.id}`);
+    } else {
+      // Show modal for barangay selection
+      setSelectedContentType(contentType);
+      setModalOpen(true);
+    }
+  };
+
+  const handleChangeBarangay = () => {
+    setModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Barangay Banner */}
+      {showBanner && selectedBarangay && (
+        <BarangayBanner 
+          onChangeBarangay={handleChangeBarangay}
+          onDismiss={dismissBanner}
+        />
+      )}
+
       {/* Public Header */}
       <header className="border-b bg-background">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -18,21 +49,36 @@ const PublicHomePage = () => {
             <h1 className="text-xl font-bold">Barangay Portal</h1>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/public/announcements" className="text-sm font-medium hover:text-primary transition-colors">
+            <button 
+              onClick={() => handleContentNavigation('announcements')}
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Announcements
-            </Link>
-            <Link to="/public/events" className="text-sm font-medium hover:text-primary transition-colors">
+            </button>
+            <button 
+              onClick={() => handleContentNavigation('events')}
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Events
-            </Link>
-            <Link to="/public/officials" className="text-sm font-medium hover:text-primary transition-colors">
+            </button>
+            <button 
+              onClick={() => handleContentNavigation('officials')}
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Officials
-            </Link>
-            <Link to="/public/emergency" className="text-sm font-medium hover:text-primary transition-colors">
+            </button>
+            <button 
+              onClick={() => handleContentNavigation('emergency')}
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Emergency
-            </Link>
-            <Link to="/public/forum" className="text-sm font-medium hover:text-primary transition-colors">
+            </button>
+            <button 
+              onClick={() => handleContentNavigation('forum')}
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Community Forum
-            </Link>
+            </button>
             <ThemeToggle />
             <Link to="/login">
               <Button>
@@ -64,17 +110,22 @@ const PublicHomePage = () => {
             officials information, and emergency services all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/public/announcements">
-              <Button size="lg" className="w-full sm:w-auto">
-                View Latest Announcements
-              </Button>
-            </Link>
-            <Link to="/public/emergency">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                <AlertTriangle className="mr-2 h-4 w-4" />
-                Emergency Services
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              className="w-full sm:w-auto"
+              onClick={() => handleContentNavigation('announcements')}
+            >
+              View Latest Announcements
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="w-full sm:w-auto"
+              onClick={() => handleContentNavigation('emergency')}
+            >
+              <AlertTriangle className="mr-2 h-4 w-4" />
+              Emergency Services
+            </Button>
           </div>
         </div>
       </section>
@@ -84,65 +135,70 @@ const PublicHomePage = () => {
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center mb-12">Community Services</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Link to="/public/announcements">
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <FileText className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>Announcements</CardTitle>
-                  <CardDescription>
-                    Stay updated with the latest news and announcements from your barangay
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
+            <Card 
+              className="h-full hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleContentNavigation('announcements')}
+            >
+              <CardHeader>
+                <FileText className="h-8 w-8 text-primary mb-2" />
+                <CardTitle>Announcements</CardTitle>
+                <CardDescription>
+                  Stay updated with the latest news and announcements from your barangay
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-            <Link to="/public/events">
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <Calendar className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>Events Calendar</CardTitle>
-                  <CardDescription>
-                    View upcoming community events, meetings, and important dates
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
+            <Card 
+              className="h-full hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleContentNavigation('events')}
+            >
+              <CardHeader>
+                <Calendar className="h-8 w-8 text-primary mb-2" />
+                <CardTitle>Events Calendar</CardTitle>
+                <CardDescription>
+                  View upcoming community events, meetings, and important dates
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-            <Link to="/public/officials">
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <Users className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>Barangay Officials</CardTitle>
-                  <CardDescription>
-                    Meet your elected officials and learn about their roles and responsibilities
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
+            <Card 
+              className="h-full hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleContentNavigation('officials')}
+            >
+              <CardHeader>
+                <Users className="h-8 w-8 text-primary mb-2" />
+                <CardTitle>Barangay Officials</CardTitle>
+                <CardDescription>
+                  Meet your elected officials and learn about their roles and responsibilities
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-            <Link to="/public/emergency">
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <AlertTriangle className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>Emergency Services</CardTitle>
-                  <CardDescription>
-                    Access emergency contacts, evacuation centers, and disaster preparedness info
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
+            <Card 
+              className="h-full hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleContentNavigation('emergency')}
+            >
+              <CardHeader>
+                <AlertTriangle className="h-8 w-8 text-primary mb-2" />
+                <CardTitle>Emergency Services</CardTitle>
+                <CardDescription>
+                  Access emergency contacts, evacuation centers, and disaster preparedness info
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-            <Link to="/public/forum">
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <MessageSquare className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>Community Forum</CardTitle>
-                  <CardDescription>
-                    Participate in community discussions and share your thoughts
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
+            <Card 
+              className="h-full hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleContentNavigation('forum')}
+            >
+              <CardHeader>
+                <MessageSquare className="h-8 w-8 text-primary mb-2" />
+                <CardTitle>Community Forum</CardTitle>
+                <CardDescription>
+                  Participate in community discussions and share your thoughts
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
             <Link to="/login">
               <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-primary/20">
@@ -176,29 +232,44 @@ const PublicHomePage = () => {
               <h3 className="text-lg font-bold mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/public/announcements" className="text-muted-foreground hover:text-primary transition-colors">
+                  <button 
+                    onClick={() => handleContentNavigation('announcements')}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
                     Announcements
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link to="/public/events" className="text-muted-foreground hover:text-primary transition-colors">
+                  <button 
+                    onClick={() => handleContentNavigation('events')}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
                     Events Calendar
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link to="/public/officials" className="text-muted-foreground hover:text-primary transition-colors">
+                  <button 
+                    onClick={() => handleContentNavigation('officials')}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
                     Barangay Officials
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link to="/public/emergency" className="text-muted-foreground hover:text-primary transition-colors">
+                  <button 
+                    onClick={() => handleContentNavigation('emergency')}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
                     Emergency Services
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link to="/public/forum" className="text-muted-foreground hover:text-primary transition-colors">
+                  <button 
+                    onClick={() => handleContentNavigation('forum')}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
                     Community Forum
-                  </Link>
+                  </button>
                 </li>
               </ul>
             </div>
@@ -217,6 +288,13 @@ const PublicHomePage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Barangay Selection Modal */}
+      <BarangaySelectionModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        contentType={selectedContentType}
+      />
     </div>
   );
 };
