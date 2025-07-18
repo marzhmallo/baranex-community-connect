@@ -7,7 +7,7 @@ import { useData } from "@/context/DataContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardStats = () => {
-  const { residents, households, loading: dataLoading } = useData();
+  const { residents, households, loading: dataLoading, refetchData } = useData();
   const { 
     activeAnnouncements, 
     upcomingEvents,
