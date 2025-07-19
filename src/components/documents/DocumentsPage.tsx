@@ -1322,11 +1322,15 @@ const DocumentsPage = () => {
       )}
 
       {/* Dialogs */}
-      <DocumentTemplateForm
-        template={editingTemplate}
-        onClose={handleCloseAddDocument}
-        onSuccess={handleTemplateSuccess}
-      />
+      <Dialog open={isAddDocumentOpen} onOpenChange={setIsAddDocumentOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DocumentTemplateForm
+            template={editingTemplate}
+            onClose={handleCloseAddDocument}
+            onSuccess={handleTemplateSuccess}
+          />
+        </DialogContent>
+      </Dialog>
 
       <IssueDocumentForm />
 
