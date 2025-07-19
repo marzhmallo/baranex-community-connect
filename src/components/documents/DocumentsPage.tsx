@@ -742,8 +742,8 @@ const DocumentsPage = () => {
       setSelectedTrackingItem(null);
     } catch (error) {
       console.error('Error updating status:', error);
-      // Silently invalidate queries on error instead of fetching
-      queryClient.invalidateQueries({ queryKey: ['document-tracking'] });
+      // Revert optimistic update on error
+      fetchDocumentTracking();
       toast({
         title: "Error",
         description: "Failed to update request status",
