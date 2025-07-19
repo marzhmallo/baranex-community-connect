@@ -862,17 +862,7 @@ const DocumentsPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
-  // Check if all essential data is loaded
-  const isDataLoading = isLoadingDocuments || requestsLoading || trackingLoading || isLoadingStats || isLoadingProcessing;
-
-  // Show loading screen while any essential data is still loading
-  if (isDataLoading) {
-    return (
-      <div className="relative w-full min-h-screen">
-        <LocalizedLoadingScreen isLoading={true} />
-      </div>
-    );
-  }
+  // Loading screen is disabled per user request
 
   return (
     <div className="w-full p-6 bg-background min-h-screen">
