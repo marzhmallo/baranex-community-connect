@@ -91,10 +91,7 @@ const DocumentsPage = () => {
   }, [requestsCurrentPage]);
 
   const fetchDocumentRequests = async () => {
-    // Only show loading on initial load, not on subsequent updates
-    if (documentRequests.length === 0) {
-      setRequestsLoading(true);
-    }
+    setRequestsLoading(true);
     try {
       // Build query for Request status only
       let query = supabase
@@ -402,10 +399,7 @@ const DocumentsPage = () => {
   }, [trackingSearchQuery, trackingFilter]);
 
   const fetchDocumentTracking = async () => {
-    // Only show loading on initial load, not on subsequent updates
-    if (documentTracking.length === 0) {
-      setTrackingLoading(true);
-    }
+    setTrackingLoading(true);
     try {
       let query = supabase
         .from('docrequests')
@@ -868,12 +862,11 @@ const DocumentsPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
-  // Show loading screen on initial page load and every page load while data is being fetched
-  // Don't show for subsequent user actions (requestsLoading, trackingLoading)
-  const isInitialLoading = isLoadingDocuments || isLoadingStats || isLoadingProcessing;
+  // Check if all essential data is loaded
+  const isDataLoading = isLoadingDocuments || requestsLoading || trackingLoading || isLoadingStats || isLoadingProcessing;
 
-  // Only show loading screen on initial page load, not on subsequent actions
-  if (isInitialLoading) {
+  // Show loading screen while any essential data is still loading
+  if (isDataLoading) {
     return (
       <div className="relative w-full min-h-screen">
         <LocalizedLoadingScreen isLoading={true} />
