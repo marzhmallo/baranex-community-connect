@@ -870,8 +870,17 @@ const DocumentsPage = () => {
 
   // Show loading screen on initial page load and every page load while fetching data
   // but exclude user action loadings (requestsLoading, trackingLoading are user actions)
-  const isInitialLoading = (isLoadingDocuments || isLoadingStats || isLoadingProcessing) && 
-    (!documentTypes || !documentStats || !processingStats);
+  const isInitialLoading = isLoadingDocuments || isLoadingStats || isLoadingProcessing;
+  
+  console.log('Loading states:', {
+    isLoadingDocuments,
+    isLoadingStats, 
+    isLoadingProcessing,
+    isInitialLoading,
+    hasDocumentTypes: !!documentTypes,
+    hasDocumentStats: !!documentStats,
+    hasProcessingStats: !!processingStats
+  });
 
   // Only show loading screen on initial page load, not on subsequent actions
   if (isInitialLoading) {
