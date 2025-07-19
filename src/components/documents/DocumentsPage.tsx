@@ -859,8 +859,31 @@ const DocumentsPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
+  // Combined loading state for all data fetching
+  const isPageLoading = isLoadingDocuments || requestsLoading || trackingLoading;
+
   return (
-    <div className="w-full p-6 bg-background min-h-screen">
+    <div className="w-full p-6 bg-background min-h-screen relative">
+      {/* Localized loading screen that covers the whole page */}
+      {isPageLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <FileText className="h-8 w-8 animate-spin text-primary" />
+              <div className="absolute inset-0 h-8 w-8 animate-pulse rounded-full border border-primary/20" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-foreground">Loading documents</p>
+              <div className="flex space-x-1 mt-2">
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
