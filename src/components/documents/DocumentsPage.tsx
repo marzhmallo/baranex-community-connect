@@ -21,6 +21,7 @@ import DocumentRequestDetailsModal from "./DocumentRequestDetailsModal";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
 import { formatDistanceToNow } from "date-fns";
+import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
 
 const DocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -858,6 +859,18 @@ const DocumentsPage = () => {
   const totalPages = Math.ceil((documentTypes?.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
+
+  // Check if all essential data is loaded
+  const isDataLoading = isLoadingDocuments || requestsLoading || trackingLoading;
+
+  // Show loading screen while any essential data is still loading
+  if (isDataLoading) {
+    return (
+      <div className="relative w-full min-h-screen">
+        <LocalizedLoadingScreen isLoading={true} />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full p-6 bg-background min-h-screen">
