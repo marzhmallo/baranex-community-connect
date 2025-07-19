@@ -24,6 +24,7 @@ import { formatDistanceToNow } from "date-fns";
 import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
 
 const DocumentsPage = () => {
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
@@ -862,7 +863,19 @@ const DocumentsPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
-  // Loading screen disabled for specified data loading states
+  // Set initial load to false after component mounts
+  useEffect(() => {
+    setIsInitialLoad(false);
+  }, []);
+
+  // Show loading screen on initial page load only
+  if (isInitialLoad) {
+    return (
+      <div className="relative w-full min-h-screen">
+        <LocalizedLoadingScreen isLoading={true} />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full p-6 bg-background min-h-screen">
