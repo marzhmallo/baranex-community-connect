@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,7 @@ const DocumentsPage = () => {
   const trackingItemsPerPage = 5;
   const { toast } = useToast();
   const { adminProfileId } = useCurrentAdmin();
+  const queryClient = useQueryClient();
 
   // Fetch document requests from Supabase with real-time updates
   useEffect(() => {
@@ -698,7 +699,7 @@ const DocumentsPage = () => {
     setIsEditStatusOpen(true);
   };
 
-  // Handler to update request status
+  // Handler to update request status with optimistic update
   const handleUpdateStatus = async (docnumber: string, newStatus: string) => {
     if (!adminProfileId) {
       toast({
@@ -710,6 +711,15 @@ const DocumentsPage = () => {
     }
 
     try {
+      // Optimistic update for tracking data
+      setDocumentTracking(prev => 
+        prev.map(item => 
+          item.id === docnumber 
+            ? { ...item, status: newStatus.toLowerCase(), lastUpdated: 'Just now' }
+            : item
+        )
+      );
+
       const { error } = await supabase
         .from('docrequests')
         .update({ 
@@ -728,12 +738,12 @@ const DocumentsPage = () => {
         description: `Request status updated to ${newStatus}`,
       });
 
-      // Refresh tracking data
-      fetchDocumentTracking();
       setIsEditStatusOpen(false);
       setSelectedTrackingItem(null);
     } catch (error) {
       console.error('Error updating status:', error);
+      // Revert optimistic update on error
+      fetchDocumentTracking();
       toast({
         title: "Error",
         description: "Failed to update request status",
@@ -742,7 +752,7 @@ const DocumentsPage = () => {
     }
   };
 
-  // Real handlers for approve/deny actions
+  // Real handlers for approve/deny actions with optimistic updates
   const handleApproveRequest = async (id: string, name: string) => {
     if (!adminProfileId) {
       toast({
@@ -754,6 +764,15 @@ const DocumentsPage = () => {
     }
 
     try {
+      // Optimistic update - immediately update the UI
+      setDocumentRequests(prev => 
+        prev.map(req => 
+          req.id === id 
+            ? { ...req, status: 'Pending', processedby: adminProfileId, updated_at: new Date().toISOString() }
+            : req
+        )
+      );
+
       const { error } = await supabase
         .from('docrequests')
         .update({ 
@@ -771,11 +790,10 @@ const DocumentsPage = () => {
         title: "Request Approved",
         description: `Approved request for ${name}`,
       });
-
-      // Refresh the list
-      fetchDocumentRequests();
     } catch (error) {
       console.error('Error approving request:', error);
+      // Revert optimistic update on error
+      fetchDocumentRequests();
       toast({
         title: "Error",
         description: "Failed to approve request",
@@ -795,6 +813,9 @@ const DocumentsPage = () => {
     }
 
     try {
+      // Optimistic update - immediately remove from UI
+      setDocumentRequests(prev => prev.filter(req => req.id !== id));
+
       const { error } = await supabase
         .from('docrequests')
         .delete()
@@ -808,11 +829,10 @@ const DocumentsPage = () => {
         title: "Request Denied",
         description: `Denied and removed request for ${name}`,
       });
-
-      // Refresh the list
-      fetchDocumentRequests();
     } catch (error) {
       console.error('Error denying request:', error);
+      // Revert optimistic update on error
+      fetchDocumentRequests();
       toast({
         title: "Error",
         description: "Failed to deny request",
@@ -832,8 +852,8 @@ const DocumentsPage = () => {
   };
 
   const handleDeleteSuccess = () => {
-    // Refetch the data instead of reloading the page
-    refetchDocuments();
+    // Use invalidateQueries for smoother updates without loading states
+    queryClient.invalidateQueries({ queryKey: ['document-types'] });
     setSelectedTemplate(null);
   };
 
@@ -844,8 +864,8 @@ const DocumentsPage = () => {
 
   const handleTemplateSuccess = () => {
     setEditingTemplate(null);
-    // Refetch the data instead of reloading the page
-    refetchDocuments();
+    // Use invalidateQueries for smoother updates without loading states
+    queryClient.invalidateQueries({ queryKey: ['document-types'] });
   };
 
   const handleCloseAddDocument = () => {
