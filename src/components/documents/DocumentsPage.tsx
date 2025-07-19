@@ -53,7 +53,14 @@ const DocumentsPage = () => {
   const [isTrackingDetailsOpen, setIsTrackingDetailsOpen] = useState(false);
   const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
   
+  // Document tracking state  
+  const [documentTracking, setDocumentTracking] = useState<any[]>([]);
+  const [trackingLoading, setTrackingLoading] = useState(true);
+  const [trackingCurrentPage, setTrackingCurrentPage] = useState(1);
+  const [trackingTotalCount, setTrackingTotalCount] = useState(0);
+  
   const itemsPerPage = 3;
+  const trackingItemsPerPage = 5;
   const { toast } = useToast();
   const { adminProfileId } = useCurrentAdmin();
 
@@ -162,7 +169,9 @@ const DocumentsPage = () => {
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: false
   });
 
   // Set up real-time subscription for document types
@@ -189,7 +198,7 @@ const DocumentsPage = () => {
   }, [refetchDocuments]);
 
   // Fetch document request stats
-  const { data: documentStats } = useQuery({
+  const { data: documentStats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['document-request-stats'],
     queryFn: async () => {
       console.log('DEBUG: adminProfileId:', adminProfileId);
@@ -256,7 +265,7 @@ const DocumentsPage = () => {
   });
 
   // Fetch document processing status data
-  const { data: processingStats } = useQuery({
+  const { data: processingStats, isLoading: isLoadingProcessing } = useQuery({
     queryKey: ['document-processing-stats', adminProfileId],
     queryFn: async () => {
       if (!adminProfileId) {
@@ -355,13 +364,6 @@ const DocumentsPage = () => {
   // Mock data for document requests - REPLACED WITH REAL DATA ABOVE
   // const documentRequests = [{...}];
 
-  // Document tracking state
-  const [documentTracking, setDocumentTracking] = useState<any[]>([]);
-  const [trackingLoading, setTrackingLoading] = useState(true);
-  const [trackingCurrentPage, setTrackingCurrentPage] = useState(1);
-  const [trackingTotalCount, setTrackingTotalCount] = useState(0);
-  
-  const trackingItemsPerPage = 5;
 
   // Fetch document tracking data with real-time updates
   useEffect(() => {
@@ -861,7 +863,7 @@ const DocumentsPage = () => {
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
   // Check if all essential data is loaded
-  const isDataLoading = isLoadingDocuments || requestsLoading || trackingLoading;
+  const isDataLoading = isLoadingDocuments || requestsLoading || trackingLoading || isLoadingStats || isLoadingProcessing;
 
   // Show loading screen while any essential data is still loading
   if (isDataLoading) {
