@@ -24,7 +24,7 @@ import { formatDistanceToNow } from "date-fns";
 import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
 
 const DocumentsPage = () => {
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
@@ -41,7 +41,6 @@ const DocumentsPage = () => {
   
   // Document requests state
   const [documentRequests, setDocumentRequests] = useState<any[]>([]);
-  const [requestsLoading, setRequestsLoading] = useState(true);
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   
@@ -56,7 +55,6 @@ const DocumentsPage = () => {
   
   // Document tracking state  
   const [documentTracking, setDocumentTracking] = useState<any[]>([]);
-  const [trackingLoading, setTrackingLoading] = useState(true);
   const [trackingCurrentPage, setTrackingCurrentPage] = useState(1);
   const [trackingTotalCount, setTrackingTotalCount] = useState(0);
   
@@ -65,47 +63,163 @@ const DocumentsPage = () => {
   const { toast } = useToast();
   const { adminProfileId } = useCurrentAdmin();
 
-  // Fetch document requests from Supabase with real-time updates
+  // Initial data fetch with master loading state
   useEffect(() => {
-    fetchDocumentRequests();
-    
-    // Set up real-time subscription for document requests
-    const channel = supabase
-      .channel('document-requests-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'docrequests'
-        },
-        () => {
-          // Refetch document requests when changes occur
-          fetchDocumentRequests();
-        }
-      )
-      .subscribe();
+    const fetchAllData = async () => {
+      try {
+        const [documentsData, requestsData, trackingData] = await Promise.all([
+          // Fetch document types
+          supabase.from('document_types').select('*').order('name'),
+          // Fetch document requests
+          supabase.from('docrequests').select('*', { count: 'exact' }).ilike('status', 'Request').range(0, itemsPerPage - 1).order('created_at', { ascending: false }),
+          // Fetch document tracking
+          supabase.from('docrequests').select('*', { count: 'exact' }).not('processedby', 'is', null).neq('status', 'Request').range(0, trackingItemsPerPage - 1).order('updated_at', { ascending: false })
+        ]);
 
-    return () => {
-      supabase.removeChannel(channel);
+        // Process document requests
+        const mappedRequests = requestsData.data?.map(doc => {
+          let name = 'Unknown';
+          if (doc.receiver) {
+            try {
+              if (typeof doc.receiver === 'object' && doc.receiver !== null && !Array.isArray(doc.receiver)) {
+                name = (doc.receiver as any).name || 'Unknown';
+              } else if (typeof doc.receiver === 'string') {
+                const parsed = JSON.parse(doc.receiver);
+                name = parsed.name || 'Unknown';
+              }
+            } catch {
+              name = 'Unknown';
+            }
+          }
+          return {
+            id: doc.id,
+            name,
+            document: doc.type,
+            timeAgo: formatDistanceToNow(new Date(doc.created_at), { addSuffix: true }),
+            status: doc.status,
+            docnumber: doc.docnumber,
+            purpose: doc.purpose,
+            amount: doc.amount,
+            method: doc.method,
+            paydate: doc.paydate,
+            paymenturl: doc.paymenturl,
+            notes: doc.notes,
+            created_at: doc.created_at
+          };
+        }) || [];
+
+        // Process document tracking
+        const mappedTracking = trackingData.data?.map(doc => {
+          let requestedBy = 'Unknown';
+          if (doc.receiver) {
+            try {
+              if (typeof doc.receiver === 'object' && doc.receiver !== null && !Array.isArray(doc.receiver)) {
+                requestedBy = (doc.receiver as any).name || 'Unknown';
+              } else if (typeof doc.receiver === 'string') {
+                const parsed = JSON.parse(doc.receiver);
+                requestedBy = parsed.name || 'Unknown';
+              }
+            } catch {
+              requestedBy = 'Unknown';
+            }
+          }
+
+          const getStatusColor = (status: string) => {
+            switch (status.toLowerCase()) {
+              case 'approved':
+              case 'ready':
+                return 'bg-green-500 text-white';
+              case 'rejected':
+                return 'bg-red-500 text-white';
+              case 'pending':
+                return 'bg-yellow-500 text-white';
+              case 'processing':
+                return 'bg-blue-500 text-white';
+              case 'released':
+                return 'bg-purple-500 text-white';
+              default:
+                return 'bg-gray-500 text-white';
+            }
+          };
+
+          const getDisplayStatus = (status: string) => {
+            switch (status.toLowerCase()) {
+              case 'approved':
+              case 'ready':
+                return 'Ready for Pickup';
+              case 'rejected':
+                return 'Rejected';
+              case 'pending':
+                return 'Pending';
+              case 'processing':
+                return 'Processing';
+              case 'released':
+                return 'Released';
+              default:
+                return status;
+            }
+          };
+
+          return {
+            id: doc.docnumber,
+            document: doc.type,
+            requestedBy,
+            status: getDisplayStatus(doc.status),
+            statusColor: getStatusColor(doc.status),
+            lastUpdate: doc.updated_at ? formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true }) : 'No updates',
+            originalDoc: doc
+          };
+        }) || [];
+
+        setDocumentRequests(mappedRequests);
+        setTotalCount(requestsData.count || 0);
+        setDocumentTracking(mappedTracking);
+        setTrackingTotalCount(trackingData.count || 0);
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsInitialLoading(false);
+      }
     };
-  }, [requestsCurrentPage]);
+
+    fetchAllData();
+  }, []);
+
+  // Set up real-time subscriptions after initial load
+  useEffect(() => {
+    if (!isInitialLoading) {
+      const channel = supabase
+        .channel('document-requests-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'docrequests'
+          },
+          () => {
+            fetchDocumentRequests();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [isInitialLoading, requestsCurrentPage]);
 
   const fetchDocumentRequests = async () => {
-    setRequestsLoading(true);
     try {
-      // Build query for Request status only
       let query = supabase
         .from('docrequests')
         .select('*', { count: 'exact' })
         .ilike('status', 'Request');
 
-      // Apply pagination
       const from = (requestsCurrentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
       query = query.range(from, to);
-
-      // Order by created_at desc
       query = query.order('created_at', { ascending: false });
 
       const { data, error, count } = await query;
@@ -115,7 +229,6 @@ const DocumentsPage = () => {
         return;
       }
 
-      // Map data to match the expected format
       const mappedData = data?.map(doc => {
         let name = 'Unknown';
         if (doc.receiver) {
@@ -151,8 +264,6 @@ const DocumentsPage = () => {
       setTotalCount(count || 0);
     } catch (error) {
       console.error('Error:', error);
-    } finally {
-      setRequestsLoading(false);
     }
   };
   const { data: documentTypes, isLoading: isLoadingDocuments, refetch: refetchDocuments } = useQuery({
@@ -366,31 +477,29 @@ const DocumentsPage = () => {
   // const documentRequests = [{...}];
 
 
-  // Fetch document tracking data with real-time updates
+  // Set up real-time subscription for document tracking after initial load
   useEffect(() => {
-    fetchDocumentTracking();
-    
-    // Set up real-time subscription for document tracking
-    const channel = supabase
-      .channel('document-tracking-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'docrequests'
-        },
-        () => {
-          // Refetch tracking data when changes occur
-          fetchDocumentTracking();
-        }
-      )
-      .subscribe();
+    if (!isInitialLoading) {
+      const channel = supabase
+        .channel('document-tracking-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'docrequests'
+          },
+          () => {
+            fetchDocumentTracking();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [trackingCurrentPage, trackingSearchQuery, trackingFilter]);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [isInitialLoading, trackingCurrentPage, trackingSearchQuery, trackingFilter]);
 
   // Reset page when search or filter changes
   useEffect(() => {
@@ -400,7 +509,6 @@ const DocumentsPage = () => {
   }, [trackingSearchQuery, trackingFilter]);
 
   const fetchDocumentTracking = async () => {
-    setTrackingLoading(true);
     try {
       let query = supabase
         .from('docrequests')
@@ -497,7 +605,7 @@ const DocumentsPage = () => {
           requestedBy,
           status: getDisplayStatus(doc.status),
           statusColor: getStatusColor(doc.status),
-          lastUpdate: doc.updated_at ? 
+          lastUpdate: doc.updated_at ?
             formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true }) : 
             formatDistanceToNow(new Date(doc.created_at), { addSuffix: true })
         };
@@ -507,8 +615,6 @@ const DocumentsPage = () => {
       setTrackingTotalCount(count || 0);
     } catch (error) {
       console.error('Error:', error);
-    } finally {
-      setTrackingLoading(false);
     }
   };
   const getStatusColor = (status: string) => {
@@ -863,13 +969,8 @@ const DocumentsPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
-  // Set initial load to false after component mounts
-  useEffect(() => {
-    setIsInitialLoad(false);
-  }, []);
-
   // Show loading screen on initial page load only
-  if (isInitialLoad) {
+  if (isInitialLoading) {
     return (
       <div className="relative w-full min-h-screen">
         <LocalizedLoadingScreen isLoading={true} />
@@ -1040,7 +1141,7 @@ const DocumentsPage = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {requestsLoading ? (
+            {false ? (
               <div className="flex items-center justify-center py-8">
                 <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
                 <p className="ml-2 text-sm text-muted-foreground">Loading requests...</p>
