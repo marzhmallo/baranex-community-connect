@@ -288,7 +288,7 @@ interface AnnouncementListProps {
   searchQuery?: string;
   selectedCategories?: string[];
   selectedAudiences?: string[];
-  sortBy?: 'date' | 'priority' | 'category' | 'status';
+  sortBy?: 'newest' | 'oldest' | 'priority' | 'alphabetical' | 'category';
 }
 
 const AnnouncementsList: React.FC<AnnouncementListProps> = ({ 
@@ -298,7 +298,7 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
   searchQuery = '',
   selectedCategories = [],
   selectedAudiences = [],
-  sortBy = 'date'
+  sortBy = 'newest'
 }) => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
@@ -328,24 +328,43 @@ const AnnouncementsList: React.FC<AnnouncementListProps> = ({
   // Sort announcements based on the selected sort option
   const sortedAnnouncements = [...filteredAnnouncements].sort((a, b) => {
     switch (sortBy) {
-      case 'date':
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      case 'priority':
-        // Priority: Pinned > Public > Draft, then by date
+      case 'newest':
+        // Newest first: Pinned announcements always come first, then sort by created date descending
         if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
-        if (a.is_public !== b.is_public) return a.is_public ? -1 : 1;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      case 'category':
-        return a.category.localeCompare(b.category);
-      case 'status':
-        // Status sorting: Pinned > Active > Draft
-        const getStatusPriority = (ann: Announcement) => {
+      
+      case 'oldest':
+        // Oldest first: Pinned announcements always come first, then sort by created date ascending
+        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      
+      case 'priority':
+        // Priority: Emergency > Pinned > Public > Draft, then by recency
+        const getPriorityScore = (ann: Announcement) => {
+          if (ann.category.toLowerCase() === 'emergency') return 4;
           if (ann.is_pinned) return 3;
           if (ann.is_public) return 2;
           return 1;
         };
-        const priorityDiff = getStatusPriority(b) - getStatusPriority(a);
+        const priorityDiff = getPriorityScore(b) - getPriorityScore(a);
         return priorityDiff !== 0 ? priorityDiff : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      
+      case 'alphabetical':
+        // Alphabetical by title: Pinned announcements first, then alphabetical
+        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+        return a.title.localeCompare(b.title);
+      
+      case 'category':
+        // Group by category: Emergency first, then alphabetical by category, then by date
+        if (a.category !== b.category) {
+          if (a.category.toLowerCase() === 'emergency') return -1;
+          if (b.category.toLowerCase() === 'emergency') return 1;
+          return a.category.localeCompare(b.category);
+        }
+        // Within same category, pinned first, then by date
+        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      
       default:
         return 0;
     }

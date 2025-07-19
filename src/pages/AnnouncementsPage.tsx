@@ -5,7 +5,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import AnnouncementsList from '@/components/announcements/AnnouncementsList';
 import CreateAnnouncementForm from '@/components/announcements/CreateAnnouncementForm';
-import { Search, Users, FolderOpen, SortAsc, Plus, Megaphone, CheckCircle, Calendar, AlertTriangle } from 'lucide-react';
+import { Search, Users, FolderOpen, ArrowUpDown, Plus, Megaphone, CheckCircle, Calendar, AlertTriangle, Clock, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export interface Announcement {
@@ -32,7 +32,7 @@ const AnnouncementsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedAudiences, setSelectedAudiences] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'date' | 'priority' | 'category' | 'status'>('date');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'priority' | 'alphabetical' | 'category'>('newest');
   const [openDropdown, setOpenDropdown] = useState<'category' | 'audience' | 'sort' | null>(null);
 
   // Close dropdown when clicking outside
@@ -210,48 +210,66 @@ const AnnouncementsPage = () => {
                   onClick={() => setOpenDropdown(openDropdown === 'sort' ? null : 'sort')}
                   className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border"
                 >
-                  <SortAsc className="text-secondary-foreground h-4 w-4" />
-                  Sort By: {sortBy === 'date' ? 'Date Created' : sortBy === 'priority' ? 'Priority' : sortBy === 'category' ? 'Category' : 'Status'}
+                  <ArrowUpDown className="text-secondary-foreground h-4 w-4" />
+                  Sort: {sortBy === 'newest' ? 'Newest First' : 
+                         sortBy === 'oldest' ? 'Oldest First' : 
+                         sortBy === 'priority' ? 'Priority' : 
+                         sortBy === 'alphabetical' ? 'A-Z' : 
+                         'Category'}
                   <span className="text-muted-foreground">▼</span>
                 </button>
                 {openDropdown === 'sort' && (
-                  <div className="absolute top-full right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
+                  <div className="absolute top-full right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[160px]">
                     <div className="p-2">
                       <button 
                         onClick={() => {
-                          setSortBy('date');
+                          setSortBy('newest');
                           setOpenDropdown(null);
                         }}
-                        className={`w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50 ${sortBy === 'date' ? 'bg-accent' : ''}`}
+                        className={`w-full text-left p-3 hover:bg-accent text-popover-foreground rounded border-b border-border/50 flex items-center gap-2 ${sortBy === 'newest' ? 'bg-accent' : ''}`}
                       >
-                        Date Created
+                        <ArrowDown className="h-4 w-4" />
+                        Newest First
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSortBy('oldest');
+                          setOpenDropdown(null);
+                        }}
+                        className={`w-full text-left p-3 hover:bg-accent text-popover-foreground rounded border-b border-border/50 flex items-center gap-2 ${sortBy === 'oldest' ? 'bg-accent' : ''}`}
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                        Oldest First
                       </button>
                       <button 
                         onClick={() => {
                           setSortBy('priority');
                           setOpenDropdown(null);
                         }}
-                        className={`w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50 ${sortBy === 'priority' ? 'bg-accent' : ''}`}
+                        className={`w-full text-left p-3 hover:bg-accent text-popover-foreground rounded border-b border-border/50 flex items-center gap-2 ${sortBy === 'priority' ? 'bg-accent' : ''}`}
                       >
+                        <AlertTriangle className="h-4 w-4" />
                         Priority
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSortBy('alphabetical');
+                          setOpenDropdown(null);
+                        }}
+                        className={`w-full text-left p-3 hover:bg-accent text-popover-foreground rounded border-b border-border/50 flex items-center gap-2 ${sortBy === 'alphabetical' ? 'bg-accent' : ''}`}
+                      >
+                        <Filter className="h-4 w-4" />
+                        Alphabetical
                       </button>
                       <button 
                         onClick={() => {
                           setSortBy('category');
                           setOpenDropdown(null);
                         }}
-                        className={`w-full text-left p-2 hover:bg-accent text-popover-foreground rounded border-b border-border/50 ${sortBy === 'category' ? 'bg-accent' : ''}`}
+                        className={`w-full text-left p-3 hover:bg-accent text-popover-foreground rounded ${sortBy === 'category' ? 'bg-accent' : ''} flex items-center gap-2`}
                       >
+                        <FolderOpen className="h-4 w-4" />
                         Category
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setSortBy('status');
-                          setOpenDropdown(null);
-                        }}
-                        className={`w-full text-left p-2 hover:bg-accent text-popover-foreground rounded ${sortBy === 'status' ? 'bg-accent' : ''}`}
-                      >
-                        Status
                       </button>
                     </div>
                   </div>
