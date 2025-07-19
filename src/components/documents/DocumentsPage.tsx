@@ -868,10 +868,11 @@ const DocumentsPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
 
-  // Show loading screen on initial page load while data is being fetched
-  const isInitialLoading = isLoadingDocuments || isLoadingStats || isLoadingProcessing || requestsLoading || trackingLoading;
+  // Show initial loading only when essential data is loading for the first time
+  const isInitialLoading = (isLoadingDocuments || isLoadingStats || isLoadingProcessing) && 
+    !documentTypes && !documentStats && !processingStats;
 
-  // Show loading screen on every page load, not on subsequent user actions
+  // Only show loading screen on initial page load, not on subsequent actions
   if (isInitialLoading) {
     return (
       <div className="relative w-full min-h-screen">
