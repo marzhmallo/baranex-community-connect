@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
+import { useDashboardStore } from '@/store/dashboardStore';
 
 interface Resident {
   id: string;
@@ -105,8 +106,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [barangayName, setBarangayName] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  // Import the dashboard store to check for pre-loaded data
-  const { useDashboardStore } = require('@/store/dashboardStore');
+  // Get dashboard store data to check for pre-loaded data
   const dashboardData = useDashboardStore((state) => state.data);
 
   const fetchData = async () => {

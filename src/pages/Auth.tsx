@@ -16,7 +16,6 @@ import { Eye, EyeOff, Mail, User, Lock, Building, MapPin } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
-import GlobalLoadingScreen from "@/components/ui/GlobalLoadingScreen";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/components/theme/ThemeProvider";
 const loginSchema = z.object({
