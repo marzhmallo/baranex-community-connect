@@ -96,7 +96,7 @@ interface DataProviderProps {
 }
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
-  const { userProfile, dashboardData } = useAuth();
+  const { userProfile } = useAuth();
   const [residents, setResidents] = useState<Resident[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
@@ -105,13 +105,40 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [barangayName, setBarangayName] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  // Fetch additional data that wasn't pre-loaded (barangay officials, barangay name)
-  const fetchAdditionalData = async () => {
+  const fetchData = async () => {
     if (!userProfile?.brgyid) {
       return;
     }
 
+    setLoading(true);
+    
     try {
+      // Fetch residents
+      const { data: residentsData, error: residentsError } = await supabase
+        .from('residents')
+        .select('*')
+        .eq('brgyid', userProfile.brgyid)
+        .order('created_at', { ascending: false });
+
+      if (residentsError) {
+        console.error('Error fetching residents:', residentsError);
+      } else {
+        setResidents(residentsData || []);
+      }
+
+      // Fetch households
+      const { data: householdsData, error: householdsError } = await supabase
+        .from('households')
+        .select('*')
+        .eq('brgyid', userProfile.brgyid)
+        .order('created_at', { ascending: false });
+
+      if (householdsError) {
+        console.error('Error fetching households:', householdsError);
+      } else {
+        setHouseholds(householdsData || []);
+      }
+
       // Fetch barangay name
       const { data: barangayData, error: barangayError } = await supabase
         .from('barangays')
@@ -121,6 +148,31 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       
       if (barangayData && !barangayError) {
         setBarangayName(barangayData.barangayname);
+      }
+
+      // Fetch upcoming events
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('brgyid', userProfile.brgyid)
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+        .limit(3);
+      
+      if (eventsData && !eventsError) {
+        setUpcomingEvents(eventsData);
+      }
+
+      // Fetch latest announcements
+      const { data: announcementsData, error: announcementsError } = await supabase
+        .from('announcements')
+        .select('*')
+        .eq('brgyid', userProfile.brgyid)
+        .order('created_at', { ascending: false })
+        .limit(2);
+      
+      if (announcementsData && !announcementsError) {
+        setLatestAnnouncements(announcementsData);
       }
 
       // Fetch barangay officials with positions
@@ -159,72 +211,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setBarangayOfficials(officialsWithPositions);
       }
     } catch (error) {
-      console.error('Error in fetchAdditionalData:', error);
-    }
-  };
-
-  const fetchData = async () => {
-    if (!userProfile?.brgyid) {
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      // Fetch residents
-      const { data: residentsData, error: residentsError } = await supabase
-        .from('residents')
-        .select('*')
-        .eq('brgyid', userProfile.brgyid)
-        .order('created_at', { ascending: false });
-
-      if (residentsError) {
-        console.error('Error fetching residents:', residentsError);
-      } else {
-        setResidents(residentsData || []);
-      }
-
-      // Fetch households
-      const { data: householdsData, error: householdsError } = await supabase
-        .from('households')
-        .select('*')
-        .eq('brgyid', userProfile.brgyid)
-        .order('created_at', { ascending: false });
-
-      if (householdsError) {
-        console.error('Error fetching households:', householdsError);
-      } else {
-        setHouseholds(householdsData || []);
-      }
-
-      // Fetch upcoming events
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('brgyid', userProfile.brgyid)
-        .gte('start_time', new Date().toISOString())
-        .order('start_time', { ascending: true })
-        .limit(3);
-      
-      if (eventsData && !eventsError) {
-        setUpcomingEvents(eventsData);
-      }
-
-      // Fetch latest announcements
-      const { data: announcementsData, error: announcementsError } = await supabase
-        .from('announcements')
-        .select('*')
-        .eq('brgyid', userProfile.brgyid)
-        .order('created_at', { ascending: false })
-        .limit(2);
-      
-      if (announcementsData && !announcementsError) {
-        setLatestAnnouncements(announcementsData);
-      }
-
-      // Fetch additional data
-      await fetchAdditionalData();
-    } catch (error) {
       console.error('Error in fetchData:', error);
     } finally {
       setLoading(false);
@@ -233,22 +219,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   useEffect(() => {
     if (userProfile?.brgyid) {
-      // Check if we have pre-loaded data from AuthProvider
-      if (dashboardData) {
-        console.log('Using pre-fetched dashboard data from AuthProvider');
-        // Use pre-loaded data instead of fetching
-        setResidents(dashboardData.residents || []);
-        setHouseholds(dashboardData.households || []);
-        setUpcomingEvents(dashboardData.events?.slice(0, 3) || []);
-        setLatestAnnouncements(dashboardData.announcements?.slice(0, 2) || []);
-        setLoading(false);
-        
-        // Still fetch additional data that wasn't pre-loaded
-        fetchAdditionalData();
-      } else {
-        console.log('No pre-fetched data, fetching all data');
-        fetchData();
-      }
+      fetchData();
       
       // Set up real-time subscriptions for instant updates
       const residentsChannel = supabase
