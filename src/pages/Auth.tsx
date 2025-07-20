@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import GlobalLoadingScreen from "@/components/ui/GlobalLoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -236,14 +235,12 @@ const Auth = () => {
           return;
         }
       }
-
-      // 1. Authenticate the user
       const {
         data: {
           user,
           session
         },
-        error: authError
+        error
       } = await supabase.auth.signInWithPassword({
         email: email,
         password: values.password,
@@ -251,70 +248,28 @@ const Auth = () => {
           captchaToken
         }
       });
-
-      if (authError) {
-        console.error("Login error:", authError);
+      if (error) {
+        console.error("Login error:", error);
         toast({
           title: "Error",
-          description: authError.message,
+          description: error.message,
           variant: "destructive"
         });
-        return;
-      }
-
-      if (!user) {
+      } else if (user) {
+        console.log("Login successful, user authenticated");
         toast({
-          title: "Error",
-          description: "Authentication failed",
-          variant: "destructive"
+          title: "Login successful",
+          description: "Welcome back!"
         });
-        return;
+        // AuthProvider will handle the redirect based on user role
       }
-
-      console.log("Login successful, user authenticated");
-
-      // 2. Get the user's profile and role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError || !profile) {
-        console.error("Profile fetch error:", profileError);
-        toast({
-          title: "Error",
-          description: "Could not load user profile",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log("User profile loaded:", profile);
-
-      // 3. Pre-fetch dashboard data based on role
-      const { useDashboardStore } = await import('@/store/dashboardStore');
-      const { prefetchDashboardData } = useDashboardStore.getState();
-      
-      console.log("Pre-fetching dashboard data...");
-      await prefetchDashboardData(profile);
-
-      // 4. Show success message and navigate as the final step
-      toast({
-        title: "Login successful",
-        description: "Welcome back! Loading your dashboard..."
-      });
-
-      // 5. Navigate to dashboard (AuthProvider will still handle role-based redirects)
-      navigate('/dashboard');
-
     } catch (error: any) {
-      console.error("Authentication error:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred during login",
+        description: "An unexpected error occurred",
         variant: "destructive"
       });
+      console.error("Authentication error:", error);
     } finally {
       setIsLoading(false);
       captchaRef.current?.resetCaptcha();
