@@ -33,11 +33,20 @@ interface UserSettings {
   auto_fill_address_from_admin_barangay: boolean;
 }
 
+interface DashboardData {
+  residents: any[];
+  households: any[];
+  announcements: any[];
+  events: any[];
+  dashboardStats: any;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   userProfile: UserProfile | null;
   userSettings: UserSettings | null;
+  dashboardData: DashboardData | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshSettings: () => Promise<void>;
@@ -48,6 +57,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   userProfile: null,
   userSettings: null,
+  dashboardData: null,
   loading: true,
   signOut: async () => {},
   refreshSettings: async () => {},
@@ -58,6 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasHandledInitialAuth, setHasHandledInitialAuth] = useState(false);
   const [hasLoggedSignIn, setHasLoggedSignIn] = useState(false);
@@ -139,6 +150,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Pre-fetch essential dashboard data for admin/staff users
+  const fetchDashboardData = async (brgyId: string) => {
+    console.log('Pre-fetching dashboard data for brgyId:', brgyId);
+    try {
+      // Fetch all essential data in parallel
+      const [residentsRes, householdsRes, announcementsRes, eventsRes] = await Promise.all([
+        supabase
+          .from('residents')
+          .select('*')
+          .eq('brgyid', brgyId)
+          .not('status', 'in', '("Deceased","Relocated")'),
+        supabase
+          .from('households')
+          .select('*')
+          .eq('brgyid', brgyId),
+        supabase
+          .from('announcements')
+          .select('*')
+          .eq('brgyid', brgyId),
+        supabase
+          .from('events')
+          .select('*')
+          .eq('brgyid', brgyId)
+          .gte('start_time', new Date().toISOString())
+      ]);
+
+      const residents = residentsRes.data || [];
+      const households = householdsRes.data || [];
+      const announcements = announcementsRes.data || [];
+      const events = eventsRes.data || [];
+
+      // Calculate basic dashboard stats
+      const dashboardStats = {
+        totalResidents: residents.length,
+        totalHouseholds: households.length,
+        activeAnnouncements: announcements.length,
+        upcomingEvents: events.length,
+      };
+
+      setDashboardData({
+        residents,
+        households,
+        announcements,
+        events,
+        dashboardStats,
+      });
+
+      console.log('Dashboard data pre-fetched successfully');
+    } catch (error) {
+      console.error('Error pre-fetching dashboard data:', error);
+      // Set empty data on error to prevent loading indefinitely
+      setDashboardData({
+        residents: [],
+        households: [],
+        announcements: [],
+        events: [],
+        dashboardStats: {
+          totalResidents: 0,
+          totalHouseholds: 0,
+          activeAnnouncements: 0,
+          upcomingEvents: 0,
+        },
+      });
+    }
+  };
+
   // Fetch user profile data from profiles table - NO REDIRECTS HERE
   const fetchUserProfile = async (userId: string) => {
     console.log('Fetching user profile for:', userId);
@@ -199,6 +276,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Fetch user settings after profile is loaded
         await fetchUserSettings(userId);
+        
+        // Pre-fetch dashboard data for admin/staff users before allowing UI to show
+        if (profileData.brgyid && (profileData.role === "admin" || profileData.role === "staff")) {
+          await fetchDashboardData(profileData.brgyid);
+        }
         
         if (profileData.brgyid) {
           fetchBarangayData(profileData.brgyid);
@@ -266,6 +348,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(null);
       setUserProfile(null);
       setUserSettings(null);
+      setDashboardData(null);
       setHasHandledInitialAuth(false);
       setHasLoggedSignIn(false);
       
@@ -301,6 +384,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(null);
       setUserProfile(null);
       setUserSettings(null);
+      setDashboardData(null);
       setHasHandledInitialAuth(false);
       setHasLoggedSignIn(false);
       
@@ -367,6 +451,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(null);
         setUserProfile(null);
         setUserSettings(null);
+        setDashboardData(null);
         setHasHandledInitialAuth(false);
         setHasLoggedSignIn(false);
         setLoading(false);
@@ -504,7 +589,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [location.pathname, isPageVisible]); // Include dependencies for proper tracking
 
   return (
-    <AuthContext.Provider value={{ user, session, userProfile, userSettings, loading, signOut, refreshSettings }}>
+    <AuthContext.Provider value={{ user, session, userProfile, userSettings, dashboardData, loading, signOut, refreshSettings }}>
       {children}
     </AuthContext.Provider>
   );
