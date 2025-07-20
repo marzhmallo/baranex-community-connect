@@ -105,6 +105,10 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [barangayName, setBarangayName] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
+  // Import the dashboard store to check for pre-loaded data
+  const { useDashboardStore } = require('@/store/dashboardStore');
+  const dashboardData = useDashboardStore((state) => state.data);
+
   const fetchData = async () => {
     if (!userProfile?.brgyid) {
       return;
@@ -219,7 +223,19 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   useEffect(() => {
     if (userProfile?.brgyid) {
-      fetchData();
+      // Check if we have pre-loaded data from login
+      if (dashboardData.isPreloaded && dashboardData.profile?.id === userProfile.id) {
+        // Use pre-loaded data instead of fetching
+        setResidents(dashboardData.residents);
+        setHouseholds(dashboardData.households);
+        setUpcomingEvents(dashboardData.events);
+        setLatestAnnouncements(dashboardData.announcements);
+        setBarangayOfficials(dashboardData.officials);
+        setBarangayName(dashboardData.barangayName);
+        setLoading(false);
+      } else {
+        fetchData();
+      }
       
       // Set up real-time subscriptions for instant updates
       const residentsChannel = supabase
