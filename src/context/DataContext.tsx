@@ -106,7 +106,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [barangayName, setBarangayName] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  // Get dashboard store data to check for pre-loaded data
+  // Access dashboard store data to check for pre-loaded data
   const dashboardData = useDashboardStore((state) => state.data);
 
   const fetchData = async () => {
