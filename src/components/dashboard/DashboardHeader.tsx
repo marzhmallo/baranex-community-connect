@@ -303,7 +303,7 @@ const DashboardHeader = () => {
                   </Link>
                 </Button>
                 <Button variant="outline" size="sm" className="bg-transparent border-white text-white hover:bg-white/20" asChild>
-                  <Link to="/announcements/new">
+                  <Link to="/announcements/">
                     <span>Post Announcement</span>
                   </Link>
                 </Button>
