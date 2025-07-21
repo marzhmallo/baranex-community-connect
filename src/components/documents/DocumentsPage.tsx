@@ -376,56 +376,11 @@ const DocumentsPage = () => {
     }
   });
 
-  // Fetch document processing status data
-  const { data: processingStats, isLoading: isLoadingProcessing } = useQuery({
-    queryKey: ['document-processing-stats', adminProfileId],
-    queryFn: async () => {
-      if (!adminProfileId) {
-        console.log('DEBUG: No adminProfileId available');
-        return {
-          readyForPickup: 0,
-          processing: 0,
-          forReview: 0,
-          released: 0,
-          rejected: 0,
-          avgProcessingTime: null
-        };
-      }
-
-      // Get current admin's brgyid
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('brgyid')
-        .eq('id', adminProfileId)
-        .single();
-
-      if (!profile?.brgyid) {
-        console.log('DEBUG: No brgyid found in profile');
-        return {
-          readyForPickup: 0,
-          processing: 0,
-          forReview: 0,
-          released: 0,
-          rejected: 0,
-          avgProcessingTime: null
-        };
-      }
-
-      console.log('DEBUG: Fetching document stats from docrequests table');
-      const { data, error } = await supabase
-        .from('docrequests')
-        .select('status, created_at, updated_at')
-        .eq('brgyid', profile.brgyid);
-      
-      console.log('DEBUG: Query result:', { data, error });
-      
-      if (error) {
-        console.log('DEBUG: Query error:', error);
-        throw error;
-      }
-
-      // Process the data to calculate statistics
-      const stats = {
+  // Use pre-loaded processing stats from AuthProvider
+  const [processingStats, setProcessingStats] = useState(() => {
+    try {
+      const preloaded = localStorage.getItem('preloadedProcessingStats');
+      return preloaded ? JSON.parse(preloaded) : {
         readyForPickup: 0,
         processing: 0,
         forReview: 0,
@@ -433,27 +388,15 @@ const DocumentsPage = () => {
         rejected: 0,
         avgProcessingTime: null
       };
-
-      data?.forEach((doc) => {
-        const status = doc.status?.toLowerCase();
-        
-        console.log('DEBUG: Processing status:', status);
-        
-        if (status === 'approved' || status === 'ready') {
-          stats.readyForPickup += 1;
-        } else if (status === 'processing' || status === 'pending') {
-          stats.processing += 1;
-        } else if (status === 'review' || status === 'for_review') {
-          stats.forReview += 1;
-        } else if (status === 'released' || status === 'completed') {
-          stats.released += 1;
-        } else if (status === 'rejected' || status === 'denied') {
-          stats.rejected += 1;
-        }
-      });
-
-      console.log('DEBUG: Final processing stats:', stats);
-      return stats;
+    } catch {
+      return {
+        readyForPickup: 0,
+        processing: 0,
+        forReview: 0,
+        released: 0,
+        rejected: 0,
+        avgProcessingTime: null
+      };
     }
   });
 

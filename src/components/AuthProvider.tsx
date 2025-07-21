@@ -197,6 +197,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await updateUserOnlineStatus(userId, true);
         setUserProfile(profileData as UserProfile);
         
+        // Pre-fetch document processing stats for admin/staff users
+        if (profileData.role === 'admin' || profileData.role === 'staff') {
+          try {
+            console.log('Pre-fetching document processing stats...');
+            const { data: docData, error: docError } = await supabase
+              .from('docrequests')
+              .select('status, created_at, updated_at')
+              .eq('brgyid', profileData.brgyid);
+            
+            if (!docError && docData) {
+              // Process the data to calculate statistics (same logic as DocumentsPage)
+              const stats = {
+                readyForPickup: 0,
+                processing: 0,
+                forReview: 0,
+                released: 0,
+                rejected: 0,
+                avgProcessingTime: null
+              };
+
+              docData.forEach((doc) => {
+                const status = doc.status?.toLowerCase();
+                
+                if (status === 'approved' || status === 'ready') {
+                  stats.readyForPickup += 1;
+                } else if (status === 'processing' || status === 'pending') {
+                  stats.processing += 1;
+                } else if (status === 'review' || status === 'for_review') {
+                  stats.forReview += 1;
+                } else if (status === 'released' || status === 'completed') {
+                  stats.released += 1;
+                } else if (status === 'rejected' || status === 'denied') {
+                  stats.rejected += 1;
+                }
+              });
+              
+              console.log('Pre-fetched document processing stats:', stats);
+              // Store in localStorage for immediate use
+              localStorage.setItem('preloadedProcessingStats', JSON.stringify(stats));
+            }
+          } catch (err) {
+            console.error('Error pre-fetching document processing stats:', err);
+          }
+        }
+        
         // Fetch user settings after profile is loaded
         await fetchUserSettings(userId);
         
