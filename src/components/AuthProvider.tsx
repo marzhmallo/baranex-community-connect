@@ -237,6 +237,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               // Store in localStorage for immediate use
               localStorage.setItem('preloadedProcessingStats', JSON.stringify(stats));
             }
+            
+            // Also pre-fetch document request stats
+            const { count: totalCount } = await supabase
+              .from('docrequests')
+              .select('*', { count: 'exact', head: true })
+              .eq('brgyid', profileData.brgyid);
+            
+            const { count: pendingCount } = await supabase
+              .from('docrequests')
+              .select('*', { count: 'exact', head: true })
+              .eq('brgyid', profileData.brgyid)
+              .eq('status', 'pending');
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const { count: issuedTodayCount } = await supabase
+              .from('docrequests')
+              .select('*', { count: 'exact', head: true })
+              .eq('brgyid', profileData.brgyid)
+              .not('processedby', 'is', null)
+              .in('status', ['approved', 'processing', 'completed'])
+              .gte('updated_at', today.toISOString());
+            
+            const requestStats = {
+              total: totalCount || 0,
+              pending: pendingCount || 0,
+              issuedToday: issuedTodayCount || 0
+            };
+            
+            console.log('Pre-fetched document request stats:', requestStats);
+            localStorage.setItem('preloadedDocumentStats', JSON.stringify(requestStats));
           } catch (err) {
             console.error('Error pre-fetching document processing stats:', err);
           }

@@ -309,70 +309,21 @@ const DocumentsPage = () => {
     };
   }, [refetchDocuments]);
 
-  // Fetch document request stats
-  const { data: documentStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['document-request-stats'],
-    queryFn: async () => {
-      console.log('DEBUG: adminProfileId:', adminProfileId);
-      if (!adminProfileId) {
-        console.log('DEBUG: No adminProfileId found');
-        return null;
-      }
-
-      // Get current admin's brgyid
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('brgyid')
-        .eq('id', adminProfileId)
-        .single();
-
-      console.log('DEBUG: Profile query result:', { profile, profileError });
-
-      if (!profile?.brgyid) {
-        console.log('DEBUG: No brgyid found in profile');
-        return null;
-      }
-
-      console.log('DEBUG: Using brgyid:', profile.brgyid);
-
-      // Get total documents count
-      const { count: totalCount, error: totalError } = await supabase
-        .from('docrequests')
-        .select('*', { count: 'exact', head: true })
-        .eq('brgyid', profile.brgyid);
-
-      console.log('DEBUG: Total count query:', { totalCount, totalError });
-
-      // Get pending requests count
-      const { count: pendingCount, error: pendingError } = await supabase
-        .from('docrequests')
-        .select('*', { count: 'exact', head: true })
-        .eq('brgyid', profile.brgyid)
-        .eq('status', 'pending');
-
-      console.log('DEBUG: Pending count query:', { pendingCount, pendingError });
-
-      // Get documents issued today (only those that have been processed by an admin)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { count: issuedTodayCount, error: issuedError } = await supabase
-        .from('docrequests')
-        .select('*', { count: 'exact', head: true })
-        .eq('brgyid', profile.brgyid)
-        .not('processedby', 'is', null)
-        .in('status', ['approved', 'processing', 'completed'])
-        .gte('updated_at', today.toISOString());
-
-      console.log('DEBUG: Issued today query:', { issuedTodayCount, issuedError, todayISO: today.toISOString() });
-
-      const stats = {
-        total: totalCount || 0,
-        pending: pendingCount || 0,
-        issuedToday: issuedTodayCount || 0
+  // Use pre-loaded document stats from AuthProvider
+  const [documentStats, setDocumentStats] = useState(() => {
+    try {
+      const preloaded = localStorage.getItem('preloadedDocumentStats');
+      return preloaded ? JSON.parse(preloaded) : {
+        total: 0,
+        pending: 0,
+        issuedToday: 0
       };
-
-      console.log('DEBUG: Final stats:', stats);
-      return stats;
+    } catch {
+      return {
+        total: 0,
+        pending: 0,
+        issuedToday: 0
+      };
     }
   });
 
