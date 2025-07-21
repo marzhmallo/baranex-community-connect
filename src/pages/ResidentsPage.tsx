@@ -9,10 +9,71 @@ import { UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ResidentForm from '@/components/residents/ResidentForm';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/components/AuthProvider';
+import LocalizedLoadingScreen from '@/components/ui/LocalizedLoadingScreen';
 
 const ResidentsPage = () => {
   const [isAddResidentOpen, setIsAddResidentOpen] = React.useState(false);
+  const [isDataReady, setIsDataReady] = React.useState(false);
   const queryClient = useQueryClient();
+  const { userProfile } = useAuth();
+
+  // Check if pre-loaded data is available
+  React.useEffect(() => {
+    const checkDataReady = () => {
+      if (userProfile?.role === 'admin' || userProfile?.role === 'staff') {
+        const residentsData = localStorage.getItem('preloadedResidentsData');
+        const residentStats = localStorage.getItem('preloadedResidentStats');
+        
+        if (residentsData && residentStats) {
+          setIsDataReady(true);
+        } else {
+          // Keep checking until data is available
+          const interval = setInterval(() => {
+            const data = localStorage.getItem('preloadedResidentsData');
+            const stats = localStorage.getItem('preloadedResidentStats');
+            if (data && stats) {
+              setIsDataReady(true);
+              clearInterval(interval);
+            }
+          }, 100);
+          
+          // Cleanup interval after 10 seconds to prevent infinite checking
+          setTimeout(() => clearInterval(interval), 10000);
+        }
+      } else {
+        // For non-admin/staff users, show content immediately
+        setIsDataReady(true);
+      }
+    };
+
+    if (userProfile) {
+      checkDataReady();
+    }
+  }, [userProfile]);
+
+  // Show loading screen while data is being prepared
+  if (!isDataReady) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
+        <div className="flex flex-col items-center space-y-6">
+          <div className="relative">
+            <UserPlus className="h-12 w-12 animate-spin text-primary" />
+            <div className="absolute inset-0 h-12 w-12 animate-pulse rounded-full border-2 border-primary/20" />
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-medium text-foreground">Loading residents data...</p>
+            <p className="text-sm text-muted-foreground mt-2">Preparing resident registry and statistics</p>
+            <div className="flex space-x-1 mt-4 justify-center">
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleCloseDialog = () => {
     console.log("Dialog close handler triggered");

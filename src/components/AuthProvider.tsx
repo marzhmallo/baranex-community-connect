@@ -209,67 +209,98 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (!docError && docData) {
               // Process the data to calculate statistics (same logic as DocumentsPage)
               const stats = {
-                readyForPickup: 0,
-                processing: 0,
-                forReview: 0,
-                released: 0,
-                rejected: 0,
+                readyForPickup: docData.filter(doc => doc.status === 'Ready for Pickup').length,
+                processing: docData.filter(doc => doc.status === 'Processing').length,
+                forReview: docData.filter(doc => doc.status === 'For Review').length,
+                released: docData.filter(doc => doc.status === 'Released').length,
+                rejected: docData.filter(doc => doc.status === 'Rejected').length,
                 avgProcessingTime: null
               };
-
-              docData.forEach((doc) => {
-                const status = doc.status?.toLowerCase();
-                
-                if (status === 'approved' || status === 'ready') {
-                  stats.readyForPickup += 1;
-                } else if (status === 'processing' || status === 'pending') {
-                  stats.processing += 1;
-                } else if (status === 'review' || status === 'for_review') {
-                  stats.forReview += 1;
-                } else if (status === 'released' || status === 'completed') {
-                  stats.released += 1;
-                } else if (status === 'rejected' || status === 'denied') {
-                  stats.rejected += 1;
-                }
-              });
               
               console.log('Pre-fetched document processing stats:', stats);
-              // Store in localStorage for immediate use
               localStorage.setItem('preloadedProcessingStats', JSON.stringify(stats));
             }
             
-            // Also pre-fetch document request stats
-            const { count: totalCount } = await supabase
+            // Pre-fetch document request stats
+            const { data: requestData, error: requestError } = await supabase
               .from('docrequests')
-              .select('*', { count: 'exact', head: true })
+              .select('status, issued_at')
               .eq('brgyid', profileData.brgyid);
             
-            const { count: pendingCount } = await supabase
-              .from('docrequests')
-              .select('*', { count: 'exact', head: true })
+            if (!requestError && requestData) {
+              const totalCount = requestData.length;
+              const pendingCount = requestData.filter(doc => doc.status === 'pending').length;
+              
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const issuedTodayCount = requestData.filter(doc => {
+                if (!doc.issued_at) return false;
+                const issuedDate = new Date(doc.issued_at);
+                issuedDate.setHours(0, 0, 0, 0);
+                return issuedDate.getTime() === today.getTime();
+              }).length;
+              
+              const requestStats = {
+                total: totalCount || 0,
+                pending: pendingCount || 0,
+                issuedToday: issuedTodayCount || 0
+              };
+              
+              console.log('Pre-fetched document request stats:', requestStats);
+              localStorage.setItem('preloadedDocumentStats', JSON.stringify(requestStats));
+            }
+
+            // Pre-fetch residents data
+            console.log('Pre-fetching residents data...');
+            const { data: residentsData, error: residentsError } = await supabase
+              .from('residents')
+              .select('*')
               .eq('brgyid', profileData.brgyid)
-              .eq('status', 'pending');
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const { count: issuedTodayCount } = await supabase
-              .from('docrequests')
-              .select('*', { count: 'exact', head: true })
-              .eq('brgyid', profileData.brgyid)
-              .not('processedby', 'is', null)
-              .in('status', ['approved', 'processing', 'completed'])
-              .gte('updated_at', today.toISOString());
-            
-            const requestStats = {
-              total: totalCount || 0,
-              pending: pendingCount || 0,
-              issuedToday: issuedTodayCount || 0
-            };
-            
-            console.log('Pre-fetched document request stats:', requestStats);
-            localStorage.setItem('preloadedDocumentStats', JSON.stringify(requestStats));
+              .order('last_name', { ascending: true });
+
+            if (!residentsError && residentsData) {
+              // Store residents data
+              localStorage.setItem('preloadedResidentsData', JSON.stringify(residentsData));
+
+              // Calculate status counts
+              const permanentCount = residentsData.filter(r => r.status === 'Permanent').length;
+              const temporaryCount = residentsData.filter(r => r.status === 'Temporary').length;
+              const deceasedCount = residentsData.filter(r => r.status === 'Deceased').length;
+              const relocatedCount = residentsData.filter(r => r.status === 'Relocated').length;
+
+              // Calculate classification counts
+              const getClassificationCount = (classification: string) => {
+                return residentsData.filter(resident => 
+                  resident.classifications && Array.isArray(resident.classifications) && 
+                  resident.classifications.includes(classification)
+                ).length;
+              };
+
+              const indigentCount = getClassificationCount('Indigent');
+              const studentCount = getClassificationCount('Student');
+              const ofwCount = getClassificationCount('OFW');
+              const pwdCount = getClassificationCount('PWD');
+              const missingCount = getClassificationCount('Missing');
+
+              const residentStats = {
+                total: residentsData.length,
+                permanentCount,
+                temporaryCount, 
+                deceasedCount,
+                relocatedCount,
+                indigentCount,
+                studentCount,
+                ofwCount,
+                pwdCount,
+                missingCount
+              };
+
+              localStorage.setItem('preloadedResidentStats', JSON.stringify(residentStats));
+              console.log('Pre-fetched residents stats:', residentStats);
+            }
+
           } catch (err) {
-            console.error('Error pre-fetching document processing stats:', err);
+            console.error('Error pre-fetching data:', err);
           }
         }
         
