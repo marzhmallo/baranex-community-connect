@@ -207,13 +207,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               .eq('brgyid', profileData.brgyid);
             
             if (!docError && docData) {
-              // Process the data to calculate statistics (matching actual DB statuses)
+              // Process the data to calculate statistics (case insensitive matching)
               const stats = {
-                readyForPickup: docData.filter(doc => doc.status === 'Ready').length,
-                processing: docData.filter(doc => doc.status === 'Processing').length,
-                pending: docData.filter(doc => doc.status === 'Pending').length,
-                released: docData.filter(doc => doc.status === 'Released').length,
-                rejected: docData.filter(doc => doc.status === 'Rejected').length,
+                readyForPickup: docData.filter(doc => doc.status?.toLowerCase() === 'ready').length,
+                processing: docData.filter(doc => doc.status?.toLowerCase() === 'processing').length,
+                pending: docData.filter(doc => doc.status?.toLowerCase() === 'pending').length,
+                released: docData.filter(doc => doc.status?.toLowerCase() === 'released').length,
+                rejected: docData.filter(doc => doc.status?.toLowerCase() === 'rejected').length,
                 avgProcessingTime: null
               };
               
