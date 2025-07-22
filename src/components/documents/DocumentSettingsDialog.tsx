@@ -19,30 +19,64 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
   const [qrCodeFile, setQrCodeFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [adminProfile, setAdminProfile] = useState<any>(null);
+  const [existingGcashData, setExistingGcashData] = useState<any>(null);
+  const [isSetupComplete, setIsSetupComplete] = useState(false);
   const { toast } = useToast();
   const { adminProfileId } = useCurrentAdmin();
 
-  // Fetch admin profile data
+  // Fetch admin profile and existing GCash data
   useEffect(() => {
-    const fetchAdminProfile = async () => {
+    const fetchData = async () => {
       if (!adminProfileId) return;
       
       try {
-        const { data, error } = await supabase
+        // Fetch admin profile
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('brgyid')
           .eq('id', adminProfileId)
           .single();
           
-        if (error) throw error;
-        setAdminProfile(data);
+        if (profileError) throw profileError;
+        setAdminProfile(profile);
+
+        // Fetch existing GCash data from barangays table
+        if (profile?.brgyid) {
+          const { data: barangayData, error: barangayError } = await supabase
+            .from('barangays')
+            .select('"gcash#", gcashname, gcashurl')
+            .eq('id', profile.brgyid)
+            .single();
+
+          if (barangayError) throw barangayError;
+          
+          if (barangayData) {
+            setExistingGcashData(barangayData);
+            
+            // Pre-populate form if data exists
+            if (barangayData['gcash#']) {
+              setGcashNumber(barangayData['gcash#'].toString());
+            }
+            if (barangayData.gcashname && Array.isArray(barangayData.gcashname) && barangayData.gcashname.length > 0) {
+              setGcashName(barangayData.gcashname[0]);
+            }
+            
+            // Check if setup is complete
+            const hasNumber = !!barangayData['gcash#'];
+            const hasName = !!(barangayData.gcashname && Array.isArray(barangayData.gcashname) && barangayData.gcashname.length > 0);
+            const hasQR = !!barangayData.gcashurl;
+            setIsSetupComplete(hasNumber && hasName && hasQR);
+          }
+        }
       } catch (error) {
-        console.error('Error fetching admin profile:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchAdminProfile();
-  }, [adminProfileId]);
+    if (open) {
+      fetchData();
+    }
+  }, [adminProfileId, open]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -81,7 +115,7 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
 
     setLoading(true);
     try {
-      let qrCodeUrl = null;
+      let qrCodeUrl = existingGcashData?.gcashurl || null;
 
       // Upload QR code image if provided
       if (qrCodeFile) {
@@ -89,7 +123,7 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
         const fileName = `${adminProfile.brgyid}/gcash-qr.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('cashg')
+          .from('cashqr')
           .upload(fileName, qrCodeFile, {
             upsert: true,
           });
@@ -100,21 +134,27 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
 
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
-          .from('cashg')
+          .from('cashqr')
           .getPublicUrl(fileName);
         
         qrCodeUrl = publicUrl;
       }
 
       // Update barangay information
+      const updateData: any = {
+        'gcash#': parseInt(gcashNumber),
+        gcashname: [gcashName],
+        updated_at: new Date().toISOString()
+      };
+
+      // Only update QR URL if we have one
+      if (qrCodeUrl) {
+        updateData.gcashurl = qrCodeUrl;
+      }
+
       const { error } = await supabase
         .from('barangays')
-        .update({
-          'gcash#': parseInt(gcashNumber),
-          gcashname: [gcashName],
-          gcashurl: qrCodeUrl,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', adminProfile.brgyid);
 
       if (error) {
@@ -153,6 +193,35 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
         </DialogHeader>
         
         <div className="space-y-4 py-4">
+          {/* Setup Status Indicator */}
+          {existingGcashData && (
+            <div className={`p-3 rounded-lg border ${isSetupComplete 
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+              : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${isSetupComplete ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                <span className={`text-sm font-medium ${isSetupComplete 
+                  ? 'text-green-700 dark:text-green-300' 
+                  : 'text-yellow-700 dark:text-yellow-300'
+                }`}>
+                  {isSetupComplete ? 'GCash Setup Complete' : 'GCash Setup Incomplete'}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {isSetupComplete 
+                  ? 'All GCash payment information has been configured.' 
+                  : 'Some GCash information is missing. Please complete the setup below.'
+                }
+              </p>
+              {existingGcashData.gcashurl && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  QR Code: Already uploaded
+                </p>
+              )}
+            </div>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="gcash-number" className="text-foreground">GCash Number</Label>
             <Input
