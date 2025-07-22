@@ -207,11 +207,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               .eq('brgyid', profileData.brgyid);
             
             if (!docError && docData) {
-              // Process the data to calculate statistics (same logic as DocumentsPage)
+              // Process the data to calculate statistics (matching actual DB statuses)
               const stats = {
-                readyForPickup: docData.filter(doc => doc.status === 'Ready for Pickup').length,
+                readyForPickup: docData.filter(doc => doc.status === 'Ready').length,
                 processing: docData.filter(doc => doc.status === 'Processing').length,
-                forReview: docData.filter(doc => doc.status === 'For Review').length,
+                pending: docData.filter(doc => doc.status === 'Pending').length,
                 released: docData.filter(doc => doc.status === 'Released').length,
                 rejected: docData.filter(doc => doc.status === 'Rejected').length,
                 avgProcessingTime: null
