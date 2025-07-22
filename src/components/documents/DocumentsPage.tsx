@@ -982,8 +982,8 @@ const DocumentsPage = () => {
             
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">For Review</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingStats?.forReview || 0}</p>
+                <p className="text-sm text-muted-foreground">Pending</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingStats?.pending || 0}</p>
               </div>
               <Eye className="h-8 w-8 text-blue-500 dark:text-blue-400" />
             </div>
