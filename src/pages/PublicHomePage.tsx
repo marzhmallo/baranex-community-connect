@@ -1,18 +1,43 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LogIn, MapPin, Users, Calendar, AlertTriangle, MessageSquare, FileText } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogIn, MapPin, Users, Calendar, AlertTriangle, MessageSquare, FileText, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { BarangaySelectionModal } from "@/components/public/BarangaySelectionModal";
 import { BarangayBanner } from "@/components/public/BarangayBanner";
 import { useBarangaySelection } from "@/hooks/useBarangaySelection";
-import { ThemeToggle as IconThemeToggle } from "@/components/theme/IconThemeToggle";
 
 const PublicHomePage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedContentType, setSelectedContentType] = useState<'announcements' | 'events' | 'officials' | 'emergency' | 'forum'>('announcements');
-  const { selectedBarangay, showBanner, dismissBanner } = useBarangaySelection();
+  const { selectedBarangay, showBanner, clearSelection, dismissBanner } = useBarangaySelection();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+
+  const PublicThemeToggle = () => {
+    const handleThemeToggle = () => {
+      console.log("Current theme:", theme);
+      const newTheme = theme === "light" ? "dark" : "light";
+      console.log("Setting theme to:", newTheme);
+      setTheme(newTheme);
+    };
+
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 border border-border/50 hover:bg-accent"
+        onClick={handleThemeToggle}
+      >
+        {theme === "light" ? (
+          <Moon className="h-4 w-4" />
+        ) : (
+          <Sun className="h-4 w-4" />
+        )}
+      </Button>
+    );
+  };
 
   const handleContentNavigation = (contentType: 'announcements' | 'events' | 'officials' | 'emergency' | 'forum') => {
     if (selectedBarangay) {
@@ -33,7 +58,7 @@ const PublicHomePage = () => {
     <div className="min-h-screen flex flex-col">
       {/* Barangay Banner */}
       {showBanner && selectedBarangay && (
-        <BarangayBanner
+        <BarangayBanner 
           onChangeBarangay={handleChangeBarangay}
           onDismiss={dismissBanner}
         />
@@ -49,37 +74,37 @@ const PublicHomePage = () => {
             <h1 className="text-xl font-bold">Barangay Portal</h1>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
-            <button
+            <button 
               onClick={() => handleContentNavigation('announcements')}
               className="text-sm font-medium hover:text-primary transition-colors"
             >
               Announcements
             </button>
-            <button
+            <button 
               onClick={() => handleContentNavigation('events')}
               className="text-sm font-medium hover:text-primary transition-colors"
             >
               Events
             </button>
-            <button
+            <button 
               onClick={() => handleContentNavigation('officials')}
               className="text-sm font-medium hover:text-primary transition-colors"
             >
               Officials
             </button>
-            <button
+            <button 
               onClick={() => handleContentNavigation('emergency')}
               className="text-sm font-medium hover:text-primary transition-colors"
             >
               Emergency
             </button>
-            <button
+            <button 
               onClick={() => handleContentNavigation('forum')}
               className="text-sm font-medium hover:text-primary transition-colors"
             >
               Community Forum
             </button>
-            <IconThemeToggle />
+            <PublicThemeToggle />
             <Link to="/login">
               <Button>
                 <LogIn className="mr-2 h-4 w-4" />
@@ -88,7 +113,7 @@ const PublicHomePage = () => {
             </Link>
           </nav>
           <div className="md:hidden flex items-center gap-2">
-            <IconThemeToggle />
+            <PublicThemeToggle />
             <Link to="/login">
               <Button>
                 <LogIn className="mr-2 h-4 w-4" />
@@ -106,20 +131,20 @@ const PublicHomePage = () => {
             Welcome to Your <span className="text-primary">Barangay Portal</span>
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Stay connected with your community. Access important announcements, events,
+            Stay connected with your community. Access important announcements, events, 
             officials information, and emergency services all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
+            <Button 
+              size="lg" 
               className="w-full sm:w-auto"
               onClick={() => handleContentNavigation('announcements')}
             >
               View Latest Announcements
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
+            <Button 
+              variant="outline" 
+              size="lg" 
               className="w-full sm:w-auto"
               onClick={() => handleContentNavigation('emergency')}
             >
@@ -135,7 +160,7 @@ const PublicHomePage = () => {
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center mb-12">Community Services</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card
+            <Card 
               className="h-full hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleContentNavigation('announcements')}
             >
@@ -148,7 +173,7 @@ const PublicHomePage = () => {
               </CardHeader>
             </Card>
 
-            <Card
+            <Card 
               className="h-full hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleContentNavigation('events')}
             >
@@ -161,7 +186,7 @@ const PublicHomePage = () => {
               </CardHeader>
             </Card>
 
-            <Card
+            <Card 
               className="h-full hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleContentNavigation('officials')}
             >
@@ -174,7 +199,7 @@ const PublicHomePage = () => {
               </CardHeader>
             </Card>
 
-            <Card
+            <Card 
               className="h-full hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleContentNavigation('emergency')}
             >
@@ -187,7 +212,7 @@ const PublicHomePage = () => {
               </CardHeader>
             </Card>
 
-            <Card
+            <Card 
               className="h-full hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleContentNavigation('forum')}
             >
@@ -232,7 +257,7 @@ const PublicHomePage = () => {
               <h3 className="text-lg font-bold mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
-                  <button
+                  <button 
                     onClick={() => handleContentNavigation('announcements')}
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
@@ -240,7 +265,7 @@ const PublicHomePage = () => {
                   </button>
                 </li>
                 <li>
-                  <button
+                  <button 
                     onClick={() => handleContentNavigation('events')}
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
@@ -248,7 +273,7 @@ const PublicHomePage = () => {
                   </button>
                 </li>
                 <li>
-                  <button
+                  <button 
                     onClick={() => handleContentNavigation('officials')}
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
@@ -256,7 +281,7 @@ const PublicHomePage = () => {
                   </button>
                 </li>
                 <li>
-                  <button
+                  <button 
                     onClick={() => handleContentNavigation('emergency')}
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
@@ -264,7 +289,7 @@ const PublicHomePage = () => {
                   </button>
                 </li>
                 <li>
-                  <button
+                  <button 
                     onClick={() => handleContentNavigation('forum')}
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
