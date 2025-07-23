@@ -15,20 +15,29 @@ const PublicHomePage = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
-  const PublicThemeToggle = () => (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-9 w-9 border border-border/50 hover:bg-accent"
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-    >
-      {theme === "light" ? (
-        <Moon className="h-4 w-4" />
-      ) : (
-        <Sun className="h-4 w-4" />
-      )}
-    </Button>
-  );
+  const PublicThemeToggle = () => {
+    const handleThemeToggle = () => {
+      console.log("Current theme:", theme);
+      const newTheme = theme === "light" ? "dark" : "light";
+      console.log("Setting theme to:", newTheme);
+      setTheme(newTheme);
+    };
+
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 border border-border/50 hover:bg-accent"
+        onClick={handleThemeToggle}
+      >
+        {theme === "light" ? (
+          <Moon className="h-4 w-4" />
+        ) : (
+          <Sun className="h-4 w-4" />
+        )}
+      </Button>
+    );
+  };
 
   const handleContentNavigation = (contentType: 'announcements' | 'events' | 'officials' | 'emergency' | 'forum') => {
     if (selectedBarangay) {
