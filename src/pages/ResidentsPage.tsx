@@ -66,28 +66,6 @@ const ResidentsPage = () => {
     }
   }, [userProfile]);
 
-  // Show loading screen while data is being prepared
-  if (!isDataReady) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
-        <div className="flex flex-col items-center space-y-6">
-          <div className="relative">
-            <UserPlus className="h-12 w-12 animate-spin text-primary" />
-            <div className="absolute inset-0 h-12 w-12 animate-pulse rounded-full border-2 border-primary/20" />
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-medium text-foreground">Loading residents data...</p>
-            <p className="text-sm text-muted-foreground mt-2">Preparing resident registry and statistics</p>
-            <div className="flex space-x-1 mt-4 justify-center">
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const handleCloseDialog = () => {
     console.log("Dialog close handler triggered");
@@ -116,7 +94,28 @@ const ResidentsPage = () => {
   };
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto">
+    <div className="p-6 max-w-[1600px] mx-auto relative">
+      {/* Loading overlay within container */}
+      {!isDataReady && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm rounded-lg">
+          <div className="flex flex-col items-center space-y-6">
+            <div className="relative">
+              <UserPlus className="h-12 w-12 animate-spin text-primary" />
+              <div className="absolute inset-0 h-12 w-12 animate-pulse rounded-full border-2 border-primary/20" />
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-medium text-foreground">Loading residents data...</p>
+              <p className="text-sm text-muted-foreground mt-2">Preparing resident registry and statistics</p>
+              <div className="flex space-x-1 mt-4 justify-center">
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Resident Registry</h1>
