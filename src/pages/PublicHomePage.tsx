@@ -6,7 +6,7 @@ import { LogIn, MapPin, Users, Calendar, AlertTriangle, MessageSquare, FileText 
 import { BarangaySelectionModal } from "@/components/public/BarangaySelectionModal";
 import { BarangayBanner } from "@/components/public/BarangayBanner";
 import { useBarangaySelection } from "@/hooks/useBarangaySelection";
-import { IconThemeToggle } from "@/components/theme/IconThemeToggle";
+import { ThemeToggle as IconThemeToggle } from "@/components/theme/IconThemeToggle";
 
 const PublicHomePage = () => {
   const [modalOpen, setModalOpen] = useState(false);
