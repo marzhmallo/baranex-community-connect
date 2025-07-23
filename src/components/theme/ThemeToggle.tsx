@@ -9,17 +9,18 @@ interface ThemeToggleProps {
 export function ThemeToggle({ isCollapsed }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
 
-  const icon = theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />;
-  const label = theme === "light" ? "Dark Mode" : "Light Mode";
-
   return (
     <Button
-      variant="sidebar"
-      className={`w-full justify-start ${isCollapsed ? "px-2" : "px-4"}`}
+      variant="ghost"
+      size="icon"
+      className="h-9 w-9"
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
     >
-      {icon}
-      {!isCollapsed && <span className="ml-2">{label}</span>}
+      {theme === "light" ? (
+        <Moon className="h-4 w-4" />
+      ) : (
+        <Sun className="h-4 w-4" />
+      )}
     </Button>
   );
 }
