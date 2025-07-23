@@ -17,23 +17,36 @@ const ResidentsPage = () => {
   const [isDataReady, setIsDataReady] = React.useState(false);
   const queryClient = useQueryClient();
   const { userProfile } = useAuth();
+  const loadingStartTime = React.useRef<number>(Date.now());
 
   // Check if pre-loaded data is available
   React.useEffect(() => {
+    const setDataReadyWithMinimumDelay = () => {
+      const elapsedTime = Date.now() - loadingStartTime.current;
+      const minimumLoadingTime = 1000; // 1 second
+      
+      if (elapsedTime >= minimumLoadingTime) {
+        setIsDataReady(true);
+      } else {
+        const remainingTime = minimumLoadingTime - elapsedTime;
+        setTimeout(() => setIsDataReady(true), remainingTime);
+      }
+    };
+
     const checkDataReady = () => {
       if (userProfile?.role === 'admin' || userProfile?.role === 'staff') {
         const residentsData = localStorage.getItem('preloadedResidentsData');
         const residentStats = localStorage.getItem('preloadedResidentStats');
         
         if (residentsData && residentStats) {
-          setIsDataReady(true);
+          setDataReadyWithMinimumDelay();
         } else {
           // Keep checking until data is available
           const interval = setInterval(() => {
             const data = localStorage.getItem('preloadedResidentsData');
             const stats = localStorage.getItem('preloadedResidentStats');
             if (data && stats) {
-              setIsDataReady(true);
+              setDataReadyWithMinimumDelay();
               clearInterval(interval);
             }
           }, 100);
@@ -42,12 +55,13 @@ const ResidentsPage = () => {
           setTimeout(() => clearInterval(interval), 10000);
         }
       } else {
-        // For non-admin/staff users, show content immediately
-        setIsDataReady(true);
+        // For non-admin/staff users, show content immediately but with minimum delay
+        setDataReadyWithMinimumDelay();
       }
     };
 
     if (userProfile) {
+      loadingStartTime.current = Date.now(); // Reset start time when userProfile is available
       checkDataReady();
     }
   }, [userProfile]);
