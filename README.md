@@ -1,6 +1,6 @@
 Welcome to your project
 Project Info
-URL: https://lovable.dev/projects/3b6b5bca-8ab5-41ce-ab68-87b41400c0de
+URL: https://lovable.dev/projects/3b6b5bca-8ab5-41ce-ab68-87b41400c278
 
 How to Edit This Code
 There are a few ways you can work on this project depending on your preferences:
