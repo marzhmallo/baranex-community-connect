@@ -36,7 +36,7 @@ const LocalizedLoadingScreen = ({ isLoading, type = 'default' }: LocalizedLoadin
   const IconComponent = config.icon;
 
   return (
-    <div className="absolute inset-x-0 top-24 bottom-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl">
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl">
       <div className="flex flex-col items-center space-y-4">
         <div className="relative">
           <IconComponent className="h-8 w-8 animate-spin text-primary" />
