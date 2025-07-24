@@ -341,6 +341,21 @@ const CalendarPage = () => {
   const upcomingEvents = events?.filter(event => new Date(event.start_time) >= now) || [];
   const pastEvents = events?.filter(event => new Date(event.start_time) < now) || [];
 
+  // Show loading screen similar to feedback page
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground">Loading events</p>
+            <p className="text-xs text-muted-foreground mt-1">Preparing calendar data and upcoming events</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full p-6 bg-background min-h-screen">
       <div className="max-w-none mx-auto">
