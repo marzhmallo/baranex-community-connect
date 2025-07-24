@@ -24,7 +24,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
-import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
 
 export type Event = {
   id: string;
@@ -78,7 +77,6 @@ const CalendarPage = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -96,25 +94,20 @@ const CalendarPage = () => {
   const { data: events, isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .order('start_time', { ascending: true });
-        
-        if (error) {
-          toast({
-            title: "Error fetching events",
-            description: error.message,
-            variant: "destructive"
-          });
-          return [];
-        }
-        return data || [];
-      } finally {
-        // Only set initial loading to false after the first load
-        setTimeout(() => setIsInitialLoading(false), 500);
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('start_time', { ascending: true });
+      
+      if (error) {
+        toast({
+          title: "Error fetching events",
+          description: error.message,
+          variant: "destructive"
+        });
+        return [];
       }
+      return data || [];
     }
   });
 
@@ -349,8 +342,7 @@ const CalendarPage = () => {
   const pastEvents = events?.filter(event => new Date(event.start_time) < now) || [];
 
   return (
-    <div className="w-full p-6 bg-background min-h-screen relative">
-      <LocalizedLoadingScreen isLoading={isInitialLoading} type="calendar" />
+    <div className="w-full p-6 bg-background min-h-screen">
       <div className="max-w-none mx-auto">
         <div className="bg-card border border-border rounded-lg shadow-lg overflow-hidden">
           <div className="bg-primary text-primary-foreground p-6">
