@@ -1209,7 +1209,16 @@ const Auth = () => {
             </Tabs>
             
             <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'}`}>
-              <div className="text-center">
+              <div className="text-center space-y-3">
+                <Button
+                  onClick={() => navigate('/')}
+                  variant="ghost"
+                  size="sm"
+                  className={`text-sm transition-all duration-200 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-600'}`}
+                >
+                  ← Back to Home
+                </Button>
+                
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                   {activeTab === "login" ? <>
                       New to Baranex?{" "}
