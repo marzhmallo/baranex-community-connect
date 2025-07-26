@@ -15,10 +15,9 @@ import LocalizedLoadingScreen from '@/components/ui/LocalizedLoadingScreen';
 const ResidentsPage = () => {
   const [isAddResidentOpen, setIsAddResidentOpen] = React.useState(false);
   const [isDataReady, setIsDataReady] = React.useState(false);
-  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+  const [showLoadingScreen, setShowLoadingScreen] = React.useState(false);
   const queryClient = useQueryClient();
   const { userProfile } = useAuth();
-  const loadingStartTime = React.useRef<number>(Date.now());
 
   // Check if pre-loaded data is available
   React.useEffect(() => {
@@ -28,18 +27,20 @@ const ResidentsPage = () => {
         const residentStats = localStorage.getItem('preloadedResidentStats');
         
         if (residentsData && residentStats) {
-          // Data already exists, skip loading screen
+          // Data already exists - no loading screen, show content immediately
           setIsDataReady(true);
-          setIsInitialLoad(false);
+          setShowLoadingScreen(false);
         } else {
-          // Data doesn't exist, show loading screen and wait for data
-          setIsInitialLoad(true);
+          // Data doesn't exist - show loading screen and wait for initial fetch
+          setShowLoadingScreen(true);
+          setIsDataReady(false);
+          
           const interval = setInterval(() => {
             const data = localStorage.getItem('preloadedResidentsData');
             const stats = localStorage.getItem('preloadedResidentStats');
             if (data && stats) {
               setIsDataReady(true);
-              setIsInitialLoad(false);
+              setShowLoadingScreen(false);
               clearInterval(interval);
             }
           }, 100);
@@ -48,13 +49,13 @@ const ResidentsPage = () => {
           setTimeout(() => {
             clearInterval(interval);
             setIsDataReady(true);
-            setIsInitialLoad(false);
+            setShowLoadingScreen(false);
           }, 10000);
         }
       } else {
         // For non-admin/staff users, show content immediately
         setIsDataReady(true);
-        setIsInitialLoad(false);
+        setShowLoadingScreen(false);
       }
     };
 
@@ -93,7 +94,7 @@ const ResidentsPage = () => {
   return (
     <div className="p-6 max-w-[1600px] mx-auto relative">
       {/* Loading overlay within container */}
-      {!isDataReady && isInitialLoad && (
+      {showLoadingScreen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm rounded-lg">
           <div className="flex flex-col items-center space-y-6">
             <div className="relative">
