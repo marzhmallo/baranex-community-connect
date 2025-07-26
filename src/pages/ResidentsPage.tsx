@@ -14,55 +14,52 @@ import LocalizedLoadingScreen from '@/components/ui/LocalizedLoadingScreen';
 
 const ResidentsPage = () => {
   const [isAddResidentOpen, setIsAddResidentOpen] = React.useState(false);
-  const [isDataReady, setIsDataReady] = React.useState(false);
-  const [showLoadingScreen, setShowLoadingScreen] = React.useState(false);
   const queryClient = useQueryClient();
   const { userProfile } = useAuth();
 
-  // Check if pre-loaded data is available
+  // Check localStorage synchronously to avoid flash
+  const hasPreloadedData = () => {
+    const residentsData = localStorage.getItem('preloadedResidentsData');
+    const residentStats = localStorage.getItem('preloadedResidentStats');
+    return residentsData && residentStats;
+  };
+
+  // Initialize states based on data availability
+  const [isDataReady, setIsDataReady] = React.useState(() => {
+    if (!userProfile?.role || (userProfile.role !== 'admin' && userProfile.role !== 'staff')) {
+      return true; // Non-admin users show content immediately
+    }
+    return hasPreloadedData(); // Admin/staff: true if data exists, false if not
+  });
+
+  const [showLoadingScreen, setShowLoadingScreen] = React.useState(() => {
+    if (!userProfile?.role || (userProfile.role !== 'admin' && userProfile.role !== 'staff')) {
+      return false; // Never show loading for non-admin users
+    }
+    return !hasPreloadedData(); // Show loading only if data doesn't exist
+  });
+
+  // Only listen for data when we're actually waiting for it
   React.useEffect(() => {
-    const checkDataReady = () => {
-      if (userProfile?.role === 'admin' || userProfile?.role === 'staff') {
-        const residentsData = localStorage.getItem('preloadedResidentsData');
-        const residentStats = localStorage.getItem('preloadedResidentStats');
-        
-        if (residentsData && residentStats) {
-          // Data already exists - no loading screen, show content immediately
+    if (showLoadingScreen && (userProfile?.role === 'admin' || userProfile?.role === 'staff')) {
+      const interval = setInterval(() => {
+        if (hasPreloadedData()) {
           setIsDataReady(true);
           setShowLoadingScreen(false);
-        } else {
-          // Data doesn't exist - show loading screen and wait for initial fetch
-          setShowLoadingScreen(true);
-          setIsDataReady(false);
-          
-          const interval = setInterval(() => {
-            const data = localStorage.getItem('preloadedResidentsData');
-            const stats = localStorage.getItem('preloadedResidentStats');
-            if (data && stats) {
-              setIsDataReady(true);
-              setShowLoadingScreen(false);
-              clearInterval(interval);
-            }
-          }, 100);
-          
-          // Cleanup interval after 10 seconds to prevent infinite checking
-          setTimeout(() => {
-            clearInterval(interval);
-            setIsDataReady(true);
-            setShowLoadingScreen(false);
-          }, 10000);
+          clearInterval(interval);
         }
-      } else {
-        // For non-admin/staff users, show content immediately
+      }, 100);
+      
+      // Cleanup interval after 10 seconds
+      setTimeout(() => {
+        clearInterval(interval);
         setIsDataReady(true);
         setShowLoadingScreen(false);
-      }
-    };
+      }, 10000);
 
-    if (userProfile) {
-      checkDataReady();
+      return () => clearInterval(interval);
     }
-  }, [userProfile]);
+  }, [showLoadingScreen, userProfile]);
 
 
   const handleCloseDialog = () => {
