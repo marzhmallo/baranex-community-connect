@@ -22,26 +22,49 @@ interface DashboardData {
 }
 
 export const useDashboardData = () => {
-  const [data, setData] = useState<DashboardData>({
-    totalResidents: 0,
-    totalHouseholds: 0,
-    activeAnnouncements: 0,
-    upcomingEvents: 0,
-    monthlyResidents: [],
-    genderDistribution: [],
-    residentGrowthRate: 0,
-    householdGrowthRate: 0,
-    newResidentsThisMonth: 0,
-    newHouseholdsThisMonth: 0,
-    newAnnouncementsThisWeek: 0,
-    nextEventDays: null,
-    totalDeceased: 0,
-    totalRelocated: 0,
-    isLoading: true,
-    error: null,
+  // Check localStorage synchronously to avoid flash
+  const getCachedData = (): DashboardData | null => {
+    try {
+      const cached = localStorage.getItem('preloadedDashboardData');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Initialize with cached data if available
+  const [data, setData] = useState<DashboardData>(() => {
+    const cachedData = getCachedData();
+    if (cachedData) {
+      return { ...cachedData, isLoading: false };
+    }
+    
+    return {
+      totalResidents: 0,
+      totalHouseholds: 0,
+      activeAnnouncements: 0,
+      upcomingEvents: 0,
+      monthlyResidents: [],
+      genderDistribution: [],
+      residentGrowthRate: 0,
+      householdGrowthRate: 0,
+      newResidentsThisMonth: 0,
+      newHouseholdsThisMonth: 0,
+      newAnnouncementsThisWeek: 0,
+      nextEventDays: null,
+      totalDeceased: 0,
+      totalRelocated: 0,
+      isLoading: true,
+      error: null,
+    };
   });
 
   useEffect(() => {
+    // Skip fetching if we already have cached data
+    if (getCachedData()) {
+      return;
+    }
+
     const fetchDashboardData = async () => {
       try {
         // Fetch total active residents (excluding deceased and relocated)
@@ -188,7 +211,7 @@ export const useDashboardData = () => {
 
         const genderDistribution = processGenderDistribution(genderData || [], residentsCount || 0);
 
-        setData({
+        const dashboardData = {
           totalResidents: residentsCount || 0,
           totalHouseholds: householdsCount || 0,
           activeAnnouncements: announcementsCount || 0,
@@ -205,7 +228,12 @@ export const useDashboardData = () => {
           totalRelocated: relocatedCount || 0,
           isLoading: false,
           error: null,
-        });
+        };
+
+        // Cache the data
+        localStorage.setItem('preloadedDashboardData', JSON.stringify(dashboardData));
+        
+        setData(dashboardData);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         setData(prev => ({
