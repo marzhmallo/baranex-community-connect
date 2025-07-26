@@ -15,53 +15,50 @@ import LocalizedLoadingScreen from '@/components/ui/LocalizedLoadingScreen';
 const ResidentsPage = () => {
   const [isAddResidentOpen, setIsAddResidentOpen] = React.useState(false);
   const [isDataReady, setIsDataReady] = React.useState(false);
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
   const queryClient = useQueryClient();
   const { userProfile } = useAuth();
   const loadingStartTime = React.useRef<number>(Date.now());
 
   // Check if pre-loaded data is available
   React.useEffect(() => {
-    const setDataReadyWithMinimumDelay = () => {
-      const elapsedTime = Date.now() - loadingStartTime.current;
-      const minimumLoadingTime = 1000; // 1 second
-      
-      if (elapsedTime >= minimumLoadingTime) {
-        setIsDataReady(true);
-      } else {
-        const remainingTime = minimumLoadingTime - elapsedTime;
-        setTimeout(() => setIsDataReady(true), remainingTime);
-      }
-    };
-
     const checkDataReady = () => {
       if (userProfile?.role === 'admin' || userProfile?.role === 'staff') {
         const residentsData = localStorage.getItem('preloadedResidentsData');
         const residentStats = localStorage.getItem('preloadedResidentStats');
         
         if (residentsData && residentStats) {
-          setDataReadyWithMinimumDelay();
+          // Data already exists, skip loading screen
+          setIsDataReady(true);
+          setIsInitialLoad(false);
         } else {
-          // Keep checking until data is available
+          // Data doesn't exist, show loading screen and wait for data
+          setIsInitialLoad(true);
           const interval = setInterval(() => {
             const data = localStorage.getItem('preloadedResidentsData');
             const stats = localStorage.getItem('preloadedResidentStats');
             if (data && stats) {
-              setDataReadyWithMinimumDelay();
+              setIsDataReady(true);
+              setIsInitialLoad(false);
               clearInterval(interval);
             }
           }, 100);
           
           // Cleanup interval after 10 seconds to prevent infinite checking
-          setTimeout(() => clearInterval(interval), 10000);
+          setTimeout(() => {
+            clearInterval(interval);
+            setIsDataReady(true);
+            setIsInitialLoad(false);
+          }, 10000);
         }
       } else {
-        // For non-admin/staff users, show content immediately but with minimum delay
-        setDataReadyWithMinimumDelay();
+        // For non-admin/staff users, show content immediately
+        setIsDataReady(true);
+        setIsInitialLoad(false);
       }
     };
 
     if (userProfile) {
-      loadingStartTime.current = Date.now(); // Reset start time when userProfile is available
       checkDataReady();
     }
   }, [userProfile]);
@@ -96,7 +93,7 @@ const ResidentsPage = () => {
   return (
     <div className="p-6 max-w-[1600px] mx-auto relative">
       {/* Loading overlay within container */}
-      {!isDataReady && (
+      {!isDataReady && isInitialLoad && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm rounded-lg">
           <div className="flex flex-col items-center space-y-6">
             <div className="relative">
