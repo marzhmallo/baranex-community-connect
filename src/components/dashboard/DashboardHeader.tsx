@@ -23,7 +23,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const DashboardHeader = () => {
   const { user, userProfile, signOut } = useAuth();
-  const [backgroundPhoto, setBackgroundPhoto] = useState<string | null>(null);
+  
+  // Get cached background photo synchronously to prevent flash
+  const getCachedBackgroundPhoto = (brgyid: string): string | null => {
+    try {
+      const cached = localStorage.getItem(`dashboardBackground_${brgyid}`);
+      return cached || null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Initialize with cached data if available
+  const [backgroundPhoto, setBackgroundPhoto] = useState<string | null>(() => {
+    if (userProfile?.brgyid) {
+      const cached = getCachedBackgroundPhoto(userProfile.brgyid);
+      return cached === '' ? null : cached; // Empty string means no photo
+    }
+    return null;
+  });
+  
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isLoadingBackground, setIsLoadingBackground] = useState(false);
@@ -52,29 +71,18 @@ const DashboardHeader = () => {
   // Check if user is admin
   const isAdmin = userProfile?.role === 'admin';
 
-  // Get cached background photo
-  const getCachedBackgroundPhoto = (brgyid: string): string | null => {
-    try {
-      const cached = localStorage.getItem(`dashboardBackground_${brgyid}`);
-      return cached || null;
-    } catch {
-      return null;
-    }
-  };
-
-  // Load existing background photo from barangays table
+  // Load existing background photo from barangays table only if not cached
   useEffect(() => {
     const loadBackgroundPhoto = async () => {
       if (!userProfile?.brgyid) return;
       
-      // Check cache first
+      // Skip if we already have cached data (including empty string which means no photo)
       const cachedPhoto = getCachedBackgroundPhoto(userProfile.brgyid);
-      if (cachedPhoto) {
-        setBackgroundPhoto(cachedPhoto);
-        return;
+      if (cachedPhoto !== null) {
+        return; // Already have cached data
       }
       
-      // Only fetch if not cached and only if we need to know if there's a photo
+      // Only fetch if not cached
       setIsLoadingBackground(true);
       try {
         const { data, error } = await supabase
