@@ -81,13 +81,38 @@ const parseDeviceInfo = (userAgent?: string): string => {
   }
 };
 
-
 const DashboardCharts = () => {
   const { residents, households, loading: dataLoading } = useData();
   const { userProfile } = useAuth();
-  const [recentActivities, setRecentActivities] = useState<ActivityLog[]>([]);
-  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
-  const [activitiesLoading, setActivitiesLoading] = useState(true);
+  
+  // Get cached activities synchronously to prevent flash
+  const getCachedActivities = (brgyid: string): { activities: ActivityLog[]; profiles: Record<string, UserProfile> } | null => {
+    try {
+      const cached = localStorage.getItem(`dashboardActivities_${brgyid}`);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Initialize with cached data if available
+  const [recentActivities, setRecentActivities] = useState<ActivityLog[]>(() => {
+    if (userProfile?.brgyid) {
+      const cached = getCachedActivities(userProfile.brgyid);
+      return cached?.activities || [];
+    }
+    return [];
+  });
+  
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>(() => {
+    if (userProfile?.brgyid) {
+      const cached = getCachedActivities(userProfile.brgyid);
+      return cached?.profiles || {};
+    }
+    return {};
+  });
+  
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   
   const {
@@ -104,10 +129,16 @@ const DashboardCharts = () => {
   // Use active population from dashboard data (excludes deceased and relocated)
   const isLoading = dataLoading || dashboardLoading;
 
-  // Fetch recent activities from activity_logs table
+  // Fetch recent activities from activity_logs table only if not cached
   useEffect(() => {
     const fetchRecentActivities = async () => {
       if (!userProfile?.brgyid) return;
+      
+      // Skip if we already have cached data
+      const cachedData = getCachedActivities(userProfile.brgyid);
+      if (cachedData) {
+        return; // Already have cached data
+      }
       
       try {
         setActivitiesLoading(true);
@@ -123,24 +154,32 @@ const DashboardCharts = () => {
           return;
         }
 
-        setRecentActivities(data || []);
+        const activities = data || [];
+        setRecentActivities(activities);
 
         // Fetch user profiles for the activities
-        if (data && data.length > 0) {
-          const userIds = [...new Set(data.map(activity => activity.user_id))];
-          const { data: profiles, error: profilesError } = await supabase
+        let profiles: Record<string, UserProfile> = {};
+        if (activities.length > 0) {
+          const userIds = [...new Set(activities.map(activity => activity.user_id))];
+          const { data: profilesData, error: profilesError } = await supabase
             .from('profiles')
             .select('id, firstname, lastname, username')
             .in('id', userIds);
 
-          if (!profilesError && profiles) {
-            const profilesMap = profiles.reduce((acc, profile) => {
+          if (!profilesError && profilesData) {
+            profiles = profilesData.reduce((acc, profile) => {
               acc[profile.id] = profile;
               return acc;
             }, {} as Record<string, UserProfile>);
-            setUserProfiles(profilesMap);
+            setUserProfiles(profiles);
           }
         }
+
+        // Cache the activities and profiles data
+        localStorage.setItem(`dashboardActivities_${userProfile.brgyid}`, JSON.stringify({
+          activities,
+          profiles
+        }));
       } catch (err) {
         console.error('Error in fetchRecentActivities:', err);
       } finally {
