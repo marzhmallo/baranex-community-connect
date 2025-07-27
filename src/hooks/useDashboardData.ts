@@ -21,11 +21,12 @@ interface DashboardData {
   error: string | null;
 }
 
-export const useDashboardData = () => {
+export const useDashboardData = (brgyid?: string) => {
   // Check localStorage synchronously to avoid flash
   const getCachedData = (): DashboardData | null => {
     try {
-      const cached = localStorage.getItem('preloadedDashboardData');
+      const cacheKey = brgyid ? `dashboardData_${brgyid}` : 'preloadedDashboardData';
+      const cached = localStorage.getItem(cacheKey);
       return cached ? JSON.parse(cached) : null;
     } catch {
       return null;
@@ -231,7 +232,8 @@ export const useDashboardData = () => {
         };
 
         // Cache the data
-        localStorage.setItem('preloadedDashboardData', JSON.stringify(dashboardData));
+        const cacheKey = brgyid ? `dashboardData_${brgyid}` : 'preloadedDashboardData';
+        localStorage.setItem(cacheKey, JSON.stringify(dashboardData));
         
         setData(dashboardData);
       } catch (error) {
@@ -245,7 +247,7 @@ export const useDashboardData = () => {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [brgyid]);
 
   return data;
 };

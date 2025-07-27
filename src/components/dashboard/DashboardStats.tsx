@@ -5,9 +5,11 @@ import { useState, useEffect } from "react";
 import { Users, Home, Calendar, TrendingUp, TrendingDown, Megaphone } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useAuth } from "@/components/AuthProvider";
 
 const DashboardStats = () => {
   const { residents, households, loading: dataLoading } = useData();
+  const { userProfile } = useAuth();
   const { 
     activeAnnouncements, 
     upcomingEvents,
@@ -18,7 +20,7 @@ const DashboardStats = () => {
     newAnnouncementsThisWeek,
     nextEventDays,
     isLoading: dashboardLoading 
-  } = useDashboardData();
+  } = useDashboardData(userProfile?.brgyid);
   
   const [progress, setProgress] = useState(13);
 
