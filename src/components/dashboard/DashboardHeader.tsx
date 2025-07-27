@@ -19,12 +19,14 @@ import SmartPhotoDisplay from "@/components/ui/SmartPhotoDisplay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DashboardHeader = () => {
   const { user, userProfile, signOut } = useAuth();
   const [backgroundPhoto, setBackgroundPhoto] = useState<string | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isLoadingBackground, setIsLoadingBackground] = useState(false);
   
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', {
@@ -50,11 +52,30 @@ const DashboardHeader = () => {
   // Check if user is admin
   const isAdmin = userProfile?.role === 'admin';
 
+  // Get cached background photo
+  const getCachedBackgroundPhoto = (brgyid: string): string | null => {
+    try {
+      const cached = localStorage.getItem(`dashboardBackground_${brgyid}`);
+      return cached || null;
+    } catch {
+      return null;
+    }
+  };
+
   // Load existing background photo from barangays table
   useEffect(() => {
     const loadBackgroundPhoto = async () => {
       if (!userProfile?.brgyid) return;
       
+      // Check cache first
+      const cachedPhoto = getCachedBackgroundPhoto(userProfile.brgyid);
+      if (cachedPhoto) {
+        setBackgroundPhoto(cachedPhoto);
+        return;
+      }
+      
+      // Only fetch if not cached and only if we need to know if there's a photo
+      setIsLoadingBackground(true);
       try {
         const { data, error } = await supabase
           .from('barangays')
@@ -64,9 +85,16 @@ const DashboardHeader = () => {
 
         if (!error && data?.backgroundurl) {
           setBackgroundPhoto(data.backgroundurl);
+          // Cache the photo URL
+          localStorage.setItem(`dashboardBackground_${userProfile.brgyid}`, data.backgroundurl);
+        } else {
+          // Cache that there's no photo to avoid future fetches
+          localStorage.setItem(`dashboardBackground_${userProfile.brgyid}`, '');
         }
       } catch (error) {
         console.error('Error loading background photo:', error);
+      } finally {
+        setIsLoadingBackground(false);
       }
     };
 
@@ -116,6 +144,8 @@ const DashboardHeader = () => {
       }
 
       setBackgroundPhoto(publicUrl);
+      // Update cache
+      localStorage.setItem(`dashboardBackground_${userProfile.brgyid}`, publicUrl);
       setUploadDialogOpen(false);
       toast({
         title: "Success",
@@ -155,6 +185,8 @@ const DashboardHeader = () => {
       if (updateError) throw updateError;
 
       setBackgroundPhoto(null);
+      // Update cache to indicate no photo
+      localStorage.setItem(`dashboardBackground_${userProfile.brgyid}`, '');
       toast({
         title: "Success",
         description: "Background photo removed successfully",
@@ -209,8 +241,15 @@ const DashboardHeader = () => {
       </div>
       
       <Card className="border-none overflow-hidden relative">
+        {/* Loading skeleton for background photo */}
+        {isLoadingBackground && (
+          <div className="absolute inset-0">
+            <Skeleton className="w-full h-full" />
+          </div>
+        )}
+        
         {/* Background Photo */}
-        {backgroundPhoto && (
+        {backgroundPhoto && !isLoadingBackground && (
           <div className="absolute inset-0">
             <img
               src={backgroundPhoto}
@@ -221,8 +260,8 @@ const DashboardHeader = () => {
           </div>
         )}
         
-        {/* Fallback gradient when no background photo */}
-        {!backgroundPhoto && (
+        {/* Fallback gradient when no background photo and not loading */}
+        {!backgroundPhoto && !isLoadingBackground && (
           <div className="absolute inset-0 bg-gradient-to-r from-baranex-primary to-baranex-secondary" />
         )}
 
