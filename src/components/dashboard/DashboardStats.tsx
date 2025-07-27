@@ -22,12 +22,30 @@ const DashboardStats = () => {
     isLoading: dashboardLoading 
   } = useDashboardData(userProfile?.brgyid);
   
-  const [progress, setProgress] = useState(13);
+  // Initialize progress with cached value to prevent flash
+  const [progress, setProgress] = useState(() => {
+    try {
+      const cached = localStorage.getItem(`dashboardProgress_${userProfile?.brgyid}`);
+      return cached ? JSON.parse(cached) : 13;
+    } catch {
+      return 13;
+    }
+  });
 
   useEffect(() => {
-    const timer = setTimeout(() => setProgress(66), 500);
-    return () => clearTimeout(timer);
-  }, []);
+    // Only animate if we don't have cached progress
+    const cachedProgress = localStorage.getItem(`dashboardProgress_${userProfile?.brgyid}`);
+    if (!cachedProgress) {
+      const timer = setTimeout(() => {
+        setProgress(66);
+        // Cache the final progress value
+        if (userProfile?.brgyid) {
+          localStorage.setItem(`dashboardProgress_${userProfile.brgyid}`, JSON.stringify(66));
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [userProfile?.brgyid]);
 
   // Use data from context for totals
   const totalResidents = residents.length;
