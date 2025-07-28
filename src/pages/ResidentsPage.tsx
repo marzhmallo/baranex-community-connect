@@ -10,56 +10,20 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import ResidentForm from '@/components/residents/ResidentForm';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/components/AuthProvider';
-import LocalizedLoadingScreen from '@/components/ui/LocalizedLoadingScreen';
+import { useQuery } from '@tanstack/react-query';
+import { getResidents } from '@/lib/api/residents';
 
 const ResidentsPage = () => {
   const [isAddResidentOpen, setIsAddResidentOpen] = React.useState(false);
   const queryClient = useQueryClient();
   const { userProfile } = useAuth();
 
-  // Check localStorage synchronously to avoid flash
-  const hasPreloadedData = () => {
-    const residentsData = localStorage.getItem('preloadedResidentsData');
-    const residentStats = localStorage.getItem('preloadedResidentStats');
-    return residentsData && residentStats;
-  };
-
-  // Initialize states based on data availability
-  const [isDataReady, setIsDataReady] = React.useState(() => {
-    if (!userProfile?.role || (userProfile.role !== 'admin' && userProfile.role !== 'staff')) {
-      return true; // Non-admin users show content immediately
-    }
-    return hasPreloadedData(); // Admin/staff: true if data exists, false if not
+  // Fetch residents data - simple loading pattern like calendar/feedback pages
+  const { isLoading } = useQuery({
+    queryKey: ['residents'],
+    queryFn: getResidents,
+    enabled: !!userProfile
   });
-
-  const [showLoadingScreen, setShowLoadingScreen] = React.useState(() => {
-    if (!userProfile?.role || (userProfile.role !== 'admin' && userProfile.role !== 'staff')) {
-      return false; // Never show loading for non-admin users
-    }
-    return !hasPreloadedData(); // Show loading only if data doesn't exist
-  });
-
-  // Only listen for data when we're actually waiting for it
-  React.useEffect(() => {
-    if (showLoadingScreen && (userProfile?.role === 'admin' || userProfile?.role === 'staff')) {
-      const interval = setInterval(() => {
-        if (hasPreloadedData()) {
-          setIsDataReady(true);
-          setShowLoadingScreen(false);
-          clearInterval(interval);
-        }
-      }, 100);
-      
-      // Cleanup interval after 10 seconds
-      setTimeout(() => {
-        clearInterval(interval);
-        setIsDataReady(true);
-        setShowLoadingScreen(false);
-      }, 10000);
-
-      return () => clearInterval(interval);
-    }
-  }, [showLoadingScreen, userProfile]);
 
 
   const handleCloseDialog = () => {
@@ -88,29 +52,26 @@ const ResidentsPage = () => {
     }, 150);
   };
 
-  return (
-    <div className="p-6 max-w-[1600px] mx-auto relative">
-      {/* Loading overlay within container */}
-      {showLoadingScreen && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm rounded-lg">
-          <div className="flex flex-col items-center space-y-6">
-            <div className="relative">
-              <UserPlus className="h-12 w-12 animate-spin text-primary" />
-              <div className="absolute inset-0 h-12 w-12 animate-pulse rounded-full border-2 border-primary/20" />
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-medium text-foreground">Loading residents data...</p>
-              <p className="text-sm text-muted-foreground mt-2">Preparing resident registry and statistics</p>
-              <div className="flex space-x-1 mt-4 justify-center">
-                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            </div>
+  // Show loading screen only during initial load like calendar/feedback pages
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative">
+            <UserPlus className="h-8 w-8 animate-spin text-primary" />
+            <div className="absolute inset-0 h-8 w-8 animate-pulse rounded-full border border-primary/20" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground">Loading residents</p>
+            <p className="text-xs text-muted-foreground mt-1">Preparing resident registry and statistics</p>
           </div>
         </div>
-      )}
-      
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Resident Registry</h1>
