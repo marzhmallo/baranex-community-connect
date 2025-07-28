@@ -184,10 +184,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           term_start,
           term_end,
           is_current,
-          officials (
+          officials!inner (
             id,
             name,
-            photo_url
+            photo_url,
+            brgyid
           )
         `)
         .eq('officials.brgyid', userProfile.brgyid)
