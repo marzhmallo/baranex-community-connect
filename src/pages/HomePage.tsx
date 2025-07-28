@@ -5,6 +5,7 @@ import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import UserBarangayLocationMap from '@/components/user/UserBarangayLocationMap';
 
 const HomePage = () => {
   const { userProfile } = useAuth();
@@ -318,6 +319,11 @@ const HomePage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Barangay Hall Location Map */}
+      <div className="mt-6">
+        <UserBarangayLocationMap barangayName={barangayName} />
+      </div>
     </div>
   );
 };
