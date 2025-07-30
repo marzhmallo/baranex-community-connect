@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { useData } from '@/context/DataContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -20,6 +22,29 @@ const HomePage = () => {
   } = useData();
   
   const [currentDate, setCurrentDate] = useState('');
+
+  // Fetch user's document requests
+  const { data: documentRequests } = useQuery({
+    queryKey: ['user-document-requests', userProfile?.id],
+    queryFn: async () => {
+      if (!userProfile?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('docrequests')
+        .select('*')
+        .eq('resident_id', userProfile.id)
+        .order('created_at', { ascending: false })
+        .limit(4);
+      
+      if (error) {
+        console.error('Error fetching document requests:', error);
+        return [];
+      }
+      
+      return data || [];
+    },
+    enabled: !!userProfile?.id
+  });
 
   useEffect(() => {
     // Set current date
@@ -85,6 +110,57 @@ const HomePage = () => {
         return 'border-blue-200 dark:border-blue-800';
       default:
         return 'border-blue-200 dark:border-blue-800';
+    }
+  };
+
+  const getDocumentStatusIcon = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return Clock;
+      case 'approved':
+      case 'ready':
+        return CheckCircle;
+      case 'rejected':
+      case 'declined':
+        return XCircle;
+      default:
+        return Clock;
+    }
+  };
+
+  const getDocumentStatusStyle = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return {
+          containerClass: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800',
+          iconClass: 'bg-yellow-400',
+          badgeClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+        };
+      case 'approved':
+        return {
+          containerClass: 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800',
+          iconClass: 'bg-blue-500',
+          badgeClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+        };
+      case 'ready':
+        return {
+          containerClass: 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800',
+          iconClass: 'bg-green-500',
+          badgeClass: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+        };
+      case 'rejected':
+      case 'declined':
+        return {
+          containerClass: 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800',
+          iconClass: 'bg-red-500',
+          badgeClass: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+        };
+      default:
+        return {
+          containerClass: 'bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800',
+          iconClass: 'bg-gray-500',
+          badgeClass: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300'
+        };
     }
   };
 
@@ -210,57 +286,37 @@ const HomePage = () => {
             <button className="text-muted-foreground hover:text-foreground">•••</button>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-foreground">Barangay Clearance</h4>
-                  <p className="text-xs text-muted-foreground">Requested May 14, 2023</p>
-                </div>
+            {documentRequests && documentRequests.length > 0 ? (
+              documentRequests.map((request) => {
+                const StatusIcon = getDocumentStatusIcon(request.status);
+                const statusStyle = getDocumentStatusStyle(request.status);
+                
+                return (
+                  <div key={request.id} className={`flex items-center justify-between p-3 rounded-lg border ${statusStyle.containerClass}`}>
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-8 h-8 ${statusStyle.iconClass} rounded-full flex items-center justify-center`}>
+                        <StatusIcon className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-foreground">{request.type}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Requested {formatDate(request.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded ${statusStyle.badgeClass}`}>
+                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center text-muted-foreground py-8">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p>No document requests found</p>
+                <p className="text-sm mt-1">Request documents to see them here</p>
               </div>
-              <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded dark:bg-yellow-900 dark:text-yellow-300">Pending</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200 dark:bg-green-900/20 dark:border-green-800">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-foreground">Certificate of Residency</h4>
-                  <p className="text-xs text-muted-foreground">Requested May 10, 2023</p>
-                </div>
-              </div>
-              <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded dark:bg-green-900 dark:text-green-300">Ready</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-foreground">Indigency Certificate</h4>
-                  <p className="text-xs text-muted-foreground">Requested Apr 25, 2023</p>
-                </div>
-              </div>
-              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded dark:bg-blue-900 dark:text-blue-300">Approved</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200 dark:bg-red-900/20 dark:border-red-800">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <XCircle className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-foreground">Business Permit</h4>
-                  <p className="text-xs text-muted-foreground">Requested May 1, 2023</p>
-                </div>
-              </div>
-              <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded dark:bg-red-900 dark:text-red-300">Declined</span>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
