@@ -177,37 +177,34 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
       // Fetch barangay officials with positions
       const { data: officialsData, error: officialsError } = await supabase
-        .from('official_positions')
+        .from('officials')
         .select(`
           id,
-          position,
-          term_start,
-          term_end,
-          is_current,
-          officials!inner (
-            id,
-            name,
-            photo_url,
-            brgyid
-          )
+          name,
+          photo_url,
+          officialPositions:official_positions(*)
         `)
-        .eq('officials.brgyid', userProfile.brgyid)
-        .eq('is_current', true)
-        .order('term_start', { ascending: true })
+        .eq('brgyid', userProfile.brgyid)
         .limit(5);
       
       if (officialsData && !officialsError) {
         // Transform the data to match our interface
         const officialsWithPositions: OfficialWithPosition[] = officialsData
-          .filter(item => item.officials) // Only include items with valid officials data
-          .map(item => ({
-            id: item.officials.id,
-            name: item.officials.name,
-            photo_url: item.officials.photo_url,
-            position: item.position,
-            term_start: item.term_start,
-            term_end: item.term_end
-          }));
+          .filter(official => official.officialPositions && official.officialPositions.length > 0)
+          .map(official => {
+            // Get the current position (is_current = true) or the most recent one
+            const currentPosition = official.officialPositions.find(pos => pos.is_current) || 
+                                  official.officialPositions[0];
+            
+            return {
+              id: official.id,
+              name: official.name,
+              photo_url: official.photo_url,
+              position: currentPosition?.position || 'Official',
+              term_start: currentPosition?.term_start || '',
+              term_end: currentPosition?.term_end || ''
+            };
+          });
         
         setBarangayOfficials(officialsWithPositions);
       }
