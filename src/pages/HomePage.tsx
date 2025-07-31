@@ -229,7 +229,7 @@ const HomePage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {upcomingEvents.length > 0 ? (
-              upcomingEvents.map((event) => (
+              upcomingEvents.slice(0, 3).map((event) => (
                 <div key={event.id} className={`border-l-4 ${getEventBorderColor(event.event_type)} pl-4 py-2`}>
                   <div className="flex justify-between items-start">
                     <div>
@@ -278,7 +278,7 @@ const HomePage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {latestAnnouncements.length > 0 ? (
-              latestAnnouncements.map((announcement) => (
+              latestAnnouncements.slice(0, 3).map((announcement) => (
                 <div key={announcement.id} className={`border rounded-lg p-3 ${getAnnouncementBorderColor(announcement.category)}`}>
                   <div className="flex items-start space-x-2">
                     {announcement.category === 'Alert' && <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" />}
@@ -337,7 +337,7 @@ const HomePage = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             {documentRequests && documentRequests.length > 0 ? (
-              documentRequests.map((request) => {
+              documentRequests.slice(0, 5).map((request) => {
                 const StatusIcon = getDocumentStatusIcon(request.status);
                 const statusStyle = getDocumentStatusStyle(request.status);
                 
