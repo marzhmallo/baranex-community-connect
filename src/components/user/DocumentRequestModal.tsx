@@ -183,11 +183,11 @@ const DocumentRequestModal = ({
       setIsSubmitting(false);
     }
   };
-  return <div className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">Request Document</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+  return <div className="fixed inset-0 z-50 overflow-auto bg-black/50 dark:bg-black/70 flex items-center justify-center p-4">
+      <div className="bg-background rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border">
+        <div className="p-6 border-b border-border flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-foreground">Request Document</h2>
+          <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -196,7 +196,7 @@ const DocumentRequestModal = ({
           <div className="p-6 space-y-6">
             {/* Document Type Selection */}
             <div>
-              <Label htmlFor="documentType" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="documentType" className="text-sm font-medium text-foreground">
                 Document Type * 
                 
               </Label>
@@ -208,17 +208,17 @@ const DocumentRequestModal = ({
                   {documentTypes.map(docType => <SelectItem key={docType.id} value={docType.id}>
                       <div className="flex justify-between items-center w-full">
                         <span>{docType.name}</span>
-                        {docType.fee > 0 && <span className="text-sm text-gray-500 ml-2">₱{docType.fee}</span>}
+                        {docType.fee > 0 && <span className="text-sm text-muted-foreground ml-2">₱{docType.fee}</span>}
                       </div>
                     </SelectItem>)}
                 </SelectContent>
               </Select>
-              {selectedDoc?.description && <p className="text-sm text-gray-600 mt-1">{selectedDoc.description}</p>}
+              {selectedDoc?.description && <p className="text-sm text-muted-foreground mt-1">{selectedDoc.description}</p>}
             </div>
 
             {/* Purpose */}
             <div>
-              <Label htmlFor="purpose" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="purpose" className="text-sm font-medium text-foreground">
                 Purpose *
               </Label>
               <Textarea id="purpose" value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Enter the purpose for this document..." className="mt-1" rows={3} />
@@ -226,7 +226,7 @@ const DocumentRequestModal = ({
 
             {/* Receiver */}
             <div>
-              <Label className="text-sm font-medium text-gray-700">
+              <Label className="text-sm font-medium text-foreground">
                 Document Recipient *
               </Label>
               <RadioGroup value={receiverType} onValueChange={setReceiverType} className="mt-2">
@@ -241,7 +241,7 @@ const DocumentRequestModal = ({
               </RadioGroup>
               
               {receiverType === "other" && <div className="mt-3">
-                  <Label htmlFor="receiverName" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="receiverName" className="text-sm font-medium text-foreground">
                     Recipient's Full Name *
                   </Label>
                   <Input id="receiverName" value={receiverName} onChange={e => setReceiverName(e.target.value)} placeholder="Enter recipient's full name..." className="mt-1" />
@@ -250,7 +250,7 @@ const DocumentRequestModal = ({
 
             {/* Payment Method */}
             {selectedDoc?.fee > 0 && <div>
-                <Label className="text-sm font-medium text-gray-700">
+                <Label className="text-sm font-medium text-foreground">
                   Payment Method *
                 </Label>
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-2">
@@ -262,16 +262,16 @@ const DocumentRequestModal = ({
                     <RadioGroupItem value="gcash" id="gcash" disabled={!isGCashAvailable} />
                     <Label htmlFor="gcash" className={!isGCashAvailable ? 'cursor-not-allowed' : ''}>
                       GCash Payment
-                      {!isGCashAvailable && <span className="text-xs text-red-500 ml-2">(Not available - GCash not set up)</span>}
+                      {!isGCashAvailable && <span className="text-xs text-destructive ml-2">(Not available - GCash not set up)</span>}
                     </Label>
                   </div>
                 </RadioGroup>
 
-                {paymentMethod === "gcash" && <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-lg">
+                {paymentMethod === "gcash" && <div className="mt-4 space-y-4 p-4 bg-muted/20 rounded-lg">
                     {/* Barangay GCash Information */}
-                    {barangayInfo && <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                        <h4 className="text-sm font-semibold text-blue-800 mb-2">Send Payment To:</h4>
-                        <div className="space-y-1 text-sm text-blue-700">
+                    {barangayInfo && <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+                        <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">Send Payment To:</h4>
+                        <div className="space-y-1 text-sm text-blue-700 dark:text-blue-300">
                           {barangayInfo["gcash#"] && <p><span className="font-medium">GCash Number:</span> {barangayInfo["gcash#"]}</p>}
                           {barangayInfo.gcashname && barangayInfo.gcashname.length > 0 && <p><span className="font-medium">GCash Name:</span> {barangayInfo.gcashname.join(", ")}</p>}
                           {barangayInfo.gcashurl && <div className="mt-2">
@@ -282,36 +282,36 @@ const DocumentRequestModal = ({
                       </div>}
 
                     <div>
-                      <Label htmlFor="amount" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="amount" className="text-sm font-medium text-foreground">
                         Amount *
                       </Label>
                       <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={`₱${selectedDoc.fee}`} className="mt-1" />
                     </div>
                     
                     <div>
-                      <Label htmlFor="orNumber" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="orNumber" className="text-sm font-medium text-foreground">
                         GCash Reference Number *
                       </Label>
                       <Input id="orNumber" value={orNumber} onChange={e => setOrNumber(e.target.value)} placeholder="Enter GCash reference number..." className="mt-1" />
                     </div>
                     
                     <div>
-                      <Label htmlFor="paymentScreenshot" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="paymentScreenshot" className="text-sm font-medium text-foreground">
                         Payment Screenshot *
                       </Label>
                       <div className="mt-1">
-                        <input id="paymentScreenshot" type="file" accept="image/*" onChange={e => setPaymentScreenshot(e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
+                        <input id="paymentScreenshot" type="file" accept="image/*" onChange={e => setPaymentScreenshot(e.target.files?.[0] || null)} className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary/20 file:text-primary hover:file:bg-primary/30" />
                         {paymentScreenshot && <div className="mt-2">
                             <img src={URL.createObjectURL(paymentScreenshot)} alt="Payment screenshot preview" className="w-32 h-32 object-cover border rounded" />
                           </div>}
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Upload a screenshot of your GCash payment</p>
+                      <p className="text-xs text-muted-foreground mt-1">Upload a screenshot of your GCash payment</p>
                     </div>
                   </div>}
               </div>}
           </div>
 
-          <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+          <div className="p-6 border-t border-border flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
