@@ -5,7 +5,9 @@ import { useData } from '@/context/DataContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle, MoreVertical, Eye, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import UserBarangayLocationMap from '@/components/user/UserBarangayLocationMap';
 
@@ -209,7 +211,21 @@ const HomePage = () => {
               <Calendar className="h-5 w-5 mr-2" />
               Upcoming Events
             </CardTitle>
-            <button className="text-muted-foreground hover:text-foreground">•••</button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/hub/calendar" className="flex items-center">
+                    <Eye className="mr-2 h-4 w-4" />
+                    View All Events
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </CardHeader>
           <CardContent className="space-y-4">
             {upcomingEvents.length > 0 ? (
@@ -244,7 +260,21 @@ const HomePage = () => {
               <MessageSquare className="h-5 w-5 mr-2" />
               Latest Announcements
             </CardTitle>
-            <button className="text-muted-foreground hover:text-foreground">•••</button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/hub/announcements" className="flex items-center">
+                    <Eye className="mr-2 h-4 w-4" />
+                    View All Announcements
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </CardHeader>
           <CardContent className="space-y-4">
             {latestAnnouncements.length > 0 ? (
@@ -283,7 +313,27 @@ const HomePage = () => {
               <FileText className="h-5 w-5 mr-2" />
               Your Certificates & Documents
             </CardTitle>
-            <button className="text-muted-foreground hover:text-foreground">•••</button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/hub/documents" className="flex items-center">
+                    <Eye className="mr-2 h-4 w-4" />
+                    View All Documents
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/hub/documents" className="flex items-center">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Request Document
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </CardHeader>
           <CardContent className="space-y-3">
             {documentRequests && documentRequests.length > 0 ? (
@@ -328,7 +378,21 @@ const HomePage = () => {
             <Users className="h-5 w-5 mr-2" />
             Your Barangay Officials
           </CardTitle>
-          <button className="text-muted-foreground hover:text-foreground">•••</button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/hub/officials" className="flex items-center">
+                  <Eye className="mr-2 h-4 w-4" />
+                  View All Officials
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
