@@ -189,13 +189,13 @@ const HomePage = () => {
             <h1 className="text-3xl font-bold mb-2">
               Welcome back, {userProfile?.firstname}!
             </h1>
-            <p className="text-primary-foreground/90">
+            <p className="text-primary-foreground/80">
               Here's what's happening in {barangayName || 'your barangay'} today
             </p>
           </div>
-          <div className="flex items-center space-x-2 bg-card border border-border rounded-lg px-3 py-2 shadow-sm">
-            <Calendar className="h-4 w-4 text-primary-foreground" />
-            <span className="text-sm font-medium text-primary-foreground">{currentDate}</span>
+          <div className="flex items-center space-x-2 bg-primary-foreground/20 rounded-lg px-3 py-2">
+            <Calendar className="h-4 w-4" />
+            <span className="text-sm">{currentDate}</span>
           </div>
         </div>
       </div>
