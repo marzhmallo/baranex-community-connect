@@ -193,7 +193,7 @@ const HomePage = () => {
               Here's what's happening in {barangayName || 'your barangay'} today
             </p>
           </div>
-          <div className="flex items-center space-x-2 bg-background/30 backdrop-blur-sm border border-primary-foreground/20 rounded-lg px-3 py-2">
+          <div className="flex items-center space-x-2 bg-card border border-border rounded-lg px-3 py-2 shadow-sm">
             <Calendar className="h-4 w-4 text-primary-foreground" />
             <span className="text-sm font-medium text-primary-foreground">{currentDate}</span>
           </div>
