@@ -325,15 +325,31 @@ export default function ActivityLogPage() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      initialFocus
-                      mode="range"
-                      defaultMonth={dateRange?.from}
-                      selected={dateRange}
-                      onSelect={setDateRange}
-                      numberOfMonths={2}
-                      className={cn("p-3 pointer-events-auto")}
-                    />
+                    <div className="flex flex-col space-y-2 p-3">
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDateRange(undefined)}
+                          className="text-xs"
+                        >
+                          Clear
+                        </Button>
+                        <span className="text-sm font-medium">Select Date Range</span>
+                        <div></div>
+                      </div>
+                      <Calendar
+                        initialFocus
+                        mode="range"
+                        selected={dateRange}
+                        onSelect={setDateRange}
+                        numberOfMonths={1}
+                        captionLayout="dropdown-buttons"
+                        fromYear={2020}
+                        toYear={2030}
+                        className={cn("pointer-events-auto")}
+                      />
+                    </div>
                   </PopoverContent>
                 </Popover>
               </div>
