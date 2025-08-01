@@ -1,123 +1,36 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "@/components/AuthProvider";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Search, Activity, Download, Filter, RefreshCw, MoreVertical, ChevronLeft, ChevronRight, X, Eye, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface ActivityLog {
-  id: string;
-  user_id: string;
-  action: string;
-  details: any;
-  created_at: string;
-  ip?: string;
-  agent?: string;
-  brgyid: string;
-}
-
-interface UserProfile {
-  id: string;
-  firstname?: string;
-  lastname?: string;
-  username: string;
-  email: string;
-  role: string;
-}
+import { useActivityLogs, ActivityLog, UserProfile } from "@/hooks/useActivityLogs";
 
 export default function ActivityLogPage() {
-  const { user } = useAuth();
   const { toast } = useToast();
-  const [activities, setActivities] = useState<ActivityLog[]>([]);
-  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState("all");
   const [selectedAction, setSelectedAction] = useState("all");
   const [selectedDate, setSelectedDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ActivityLog | null>(null);
 
-  useEffect(() => {
-    fetchActivityLogs();
-  }, [user, currentPage, itemsPerPage, searchQuery, selectedUser, selectedAction, selectedDate]);
-
-  const fetchActivityLogs = async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('brgyid')
-        .eq('id', user.id)
-        .single();
-
-      if (!userProfile?.brgyid) return;
-
-      let query = supabase
-        .from('activity_logs')
-        .select('*', { count: 'exact' })
-        .eq('brgyid', userProfile.brgyid)
-        .order('created_at', { ascending: false });
-
-      // Apply filters
-      if (searchQuery) {
-        query = query.or(`action.ilike.%${searchQuery}%,details.ilike.%${searchQuery}%`);
-      }
-
-      if (selectedAction !== 'all') {
-        query = query.eq('action', selectedAction);
-      }
-
-      if (selectedDate) {
-        const startDate = new Date(selectedDate);
-        const endDate = new Date(selectedDate);
-        endDate.setDate(endDate.getDate() + 1);
-        query = query.gte('created_at', startDate.toISOString()).lt('created_at', endDate.toISOString());
-      }
-
-      // Pagination
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
-      query = query.range(from, to);
-
-      const { data: logs, error, count } = await query;
-
-      if (error) throw error;
-
-      setActivities(logs || []);
-      setTotalItems(count || 0);
-
-      // Fetch user profiles for all unique user_ids
-      const userIds = [...new Set(logs?.map(log => log.user_id) || [])];
-      if (userIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, firstname, lastname, username, email, role')
-          .in('id', userIds);
-
-        const profileMap = profiles?.reduce((acc, profile) => ({
-          ...acc,
-          [profile.id]: profile
-        }), {}) || {};
-
-        setUserProfiles(profileMap);
-      }
-    } catch (error) {
-      console.error('Error fetching activity logs:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch activity logs",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const filters = {
+    searchQuery,
+    selectedUser,
+    selectedAction,
+    selectedDate,
+    currentPage,
+    itemsPerPage
   };
+
+  const { 
+    activities, 
+    userProfiles, 
+    loading, 
+    totalItems, 
+    refreshData 
+  } = useActivityLogs(filters);
 
   const parseDeviceInfo = (userAgent?: string): string => {
     if (!userAgent) return 'Unknown Device';
@@ -310,7 +223,7 @@ export default function ActivityLogPage() {
                   <span className="text-white text-sm font-medium">{totalItems} Total Logs</span>
                 </div>
                 <button 
-                  onClick={fetchActivityLogs}
+                  onClick={refreshData}
                   className="p-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-all duration-200"
                 >
                   <RefreshCw className="text-white" size={20} />
