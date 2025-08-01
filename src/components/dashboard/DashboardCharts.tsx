@@ -129,15 +129,19 @@ const DashboardCharts = () => {
   // Use active population from dashboard data (excludes deceased and relocated)
   const isLoading = dataLoading || dashboardLoading;
 
-  // Fetch recent activities from activity_logs table only if not cached
+  // Fetch recent activities from activity_logs table with cache refresh
   useEffect(() => {
     const fetchRecentActivities = async () => {
       if (!userProfile?.brgyid) return;
       
-      // Skip if we already have cached data
+      // Check if cached data is stale (older than 5 minutes)
       const cachedData = getCachedActivities(userProfile.brgyid);
-      if (cachedData) {
-        return; // Already have cached data
+      const cacheAge = cachedData ? Date.now() - new Date(cachedData.activities[0]?.created_at || 0).getTime() : Infinity;
+      const isCacheStale = cacheAge > 5 * 60 * 1000; // 5 minutes
+      
+      // Skip if we have fresh cached data
+      if (cachedData && !isCacheStale) {
+        return;
       }
       
       try {
