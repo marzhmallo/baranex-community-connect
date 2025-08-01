@@ -1,8 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { formatDistanceToNow, format } from "date-fns";
-import { Search, Activity, Download, Filter, RefreshCw, MoreVertical, ChevronLeft, ChevronRight, X, Eye, FileDown } from "lucide-react";
+import { Search, Activity, Download, Filter, RefreshCw, MoreVertical, ChevronLeft, ChevronRight, X, Eye, FileDown, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
 
 interface ActivityLog {
   id: string;
@@ -29,7 +34,7 @@ export default function ActivityLogPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState("all");
   const [selectedAction, setSelectedAction] = useState("all");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showModal, setShowModal] = useState(false);
@@ -39,7 +44,7 @@ export default function ActivityLogPage() {
     searchQuery,
     selectedUser,
     selectedAction,
-    selectedDate,
+    dateRange,
     currentPage,
     itemsPerPage
   });
@@ -295,12 +300,42 @@ export default function ActivityLogPage() {
 
               <div className="relative">
                 <label className="block text-sm font-medium text-foreground mb-2">Date Range</label>
-                <input 
-                  type="date" 
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 bg-background"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateRange && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange?.from ? (
+                        dateRange.to ? (
+                          <>
+                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                            {format(dateRange.to, "LLL dd, y")}
+                          </>
+                        ) : (
+                          format(dateRange.from, "LLL dd, y")
+                        )
+                      ) : (
+                        <span>Pick a date range</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={dateRange?.from}
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>

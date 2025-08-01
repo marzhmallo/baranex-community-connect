@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import type { DateRange } from "react-day-picker";
 
 interface ActivityLog {
   id: string;
@@ -27,7 +28,7 @@ interface UseActivityLogsParams {
   searchQuery: string;
   selectedUser: string;
   selectedAction: string;
-  selectedDate: string;
+  dateRange: DateRange | undefined;
   currentPage: number;
   itemsPerPage: number;
 }
@@ -148,12 +149,21 @@ export function useActivityLogs(params: UseActivityLogsParams): UseActivityLogsR
       });
     }
 
-    // Apply date filter
-    if (params.selectedDate) {
-      const selectedDay = new Date(params.selectedDate).toDateString();
+    // Apply date range filter
+    if (params.dateRange?.from) {
       filtered = filtered.filter(activity => {
-        const activityDay = new Date(activity.created_at).toDateString();
-        return activityDay === selectedDay;
+        const activityDate = new Date(activity.created_at);
+        const fromDate = new Date(params.dateRange!.from!);
+        fromDate.setHours(0, 0, 0, 0);
+        
+        if (params.dateRange?.to) {
+          const toDate = new Date(params.dateRange.to);
+          toDate.setHours(23, 59, 59, 999);
+          return activityDate >= fromDate && activityDate <= toDate;
+        } else {
+          // If only 'from' date is selected, show activities from that date onwards
+          return activityDate >= fromDate;
+        }
       });
     }
 
