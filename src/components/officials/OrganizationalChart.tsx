@@ -207,7 +207,11 @@ export const OrganizationalChart = ({
 
   return <div className="relative space-y-6">
       {/* Localized Loading Screen */}
-      <LocalizedLoadingScreen isLoading={isAnyLoading} />
+      <LocalizedLoadingScreen 
+        isLoading={isAnyLoading} 
+        icon={Users} 
+        loadingText="Loading officials" 
+      />
       
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2">Barangay Officials</h2>
