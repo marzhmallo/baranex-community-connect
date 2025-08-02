@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import LocalizedLoadingScreen from '@/components/ui/LocalizedLoadingScreen';
 
 interface OrganizationalChartProps {
   officials: Official[];
@@ -42,7 +43,8 @@ export const OrganizationalChart = ({
 
   // Get current user's brgyid
   const {
-    data: currentUser
+    data: currentUser,
+    isLoading: isCurrentUserLoading
   } = useQuery({
     queryKey: ['current-user-profile'],
     queryFn: async () => {
@@ -63,7 +65,8 @@ export const OrganizationalChart = ({
 
   // Fetch all ranks with real-time updates
   const {
-    data: allRanks
+    data: allRanks,
+    isLoading: isRanksLoading
   } = useQuery({
     queryKey: ['all-official-ranks'],
     queryFn: async () => {
@@ -178,6 +181,9 @@ export const OrganizationalChart = ({
     return !hasRank;
   });
 
+  // Check if any critical data is still loading
+  const isAnyLoading = isLoading || isCurrentUserLoading || isRanksLoading;
+
   // Calculate totals for summary
   const getTotals = () => {
     const totalOfficials = officials.length;
@@ -191,23 +197,6 @@ export const OrganizationalChart = ({
     };
   };
 
-  if (isLoading) {
-    return <div className="space-y-6">
-        {[1, 2, 3].map(rank => <Card key={rank} className="animate-pulse">
-            <CardHeader>
-              <div className="h-6 bg-muted rounded w-1/3"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {Array.from({
-              length: 4
-            }).map((_, i) => <div key={i} className="h-32 bg-muted rounded"></div>)}
-              </div>
-            </CardContent>
-          </Card>)}
-      </div>;
-  }
-
   if (error) {
     return <div className="p-6 text-destructive bg-card rounded-lg border">
         Error loading officials: {error.message}
@@ -216,7 +205,10 @@ export const OrganizationalChart = ({
 
   const totals = getTotals();
 
-  return <div className="space-y-6">
+  return <div className="relative space-y-6">
+      {/* Localized Loading Screen */}
+      <LocalizedLoadingScreen isLoading={isAnyLoading} />
+      
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2">Barangay Officials</h2>
         <p className="text-muted-foreground">Official Directory</p>
