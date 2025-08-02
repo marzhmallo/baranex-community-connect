@@ -401,10 +401,10 @@ const FloatingChatButton = () => {
                 />
                 <div>
                   <CardTitle className="text-lg">Alexander Cabalan</CardTitle>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-xs opacity-80">
-                      {chatbotSettings.mode === 'online' ? "🟢 Online" : "🟠 Offline"}
-                    </span>
+                   <div className="flex items-center space-x-2 mt-1">
+                     <span className="text-xs opacity-80">
+                       {chatbotSettings.mode === 'online' ? "Online" : "Offline"}
+                     </span>
                     <div className={cn(
                       "w-2 h-2 rounded-full animate-pulse ml-1",
                       chatbotSettings.mode === 'online' ? "bg-green-400" : "bg-orange-400"
