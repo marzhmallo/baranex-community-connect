@@ -46,6 +46,7 @@ const FloatingChatButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [hasDragged, setHasDragged] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
   
   const [messages, setMessages] = useState<Message[]>([
@@ -118,6 +119,7 @@ const FloatingChatButton = () => {
     
     e.preventDefault();
     setIsDragging(true);
+    setHasDragged(false);
     
     const rect = dragRef.current?.getBoundingClientRect();
     if (rect) {
@@ -134,6 +136,7 @@ const FloatingChatButton = () => {
       if (!isDragging) return;
       
       e.preventDefault();
+      setHasDragged(true);
       
       const sidebarWidth = window.innerWidth >= 768 ? 256 : 0;
       const minX = sidebarWidth + 10;
@@ -349,7 +352,11 @@ const FloatingChatButton = () => {
           </div>
           
           <button
-            onClick={openChat}
+            onClick={() => {
+              if (!hasDragged) {
+                openChat();
+              }
+            }}
             className="absolute inset-0 w-full h-full rounded-full bg-transparent"
             aria-label="Open Alan - Barangay Assistant"
           />
