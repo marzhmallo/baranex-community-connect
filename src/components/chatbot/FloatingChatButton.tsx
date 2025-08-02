@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { useChatbotSettings } from '@/hooks/useChatbotSettings';
+import DOMPurify from 'dompurify';
 
 interface Message {
   id: string;
@@ -20,7 +21,7 @@ interface Message {
   category?: string;
 }
 
-// Simple markdown renderer for basic formatting
+// Secure markdown renderer with DOMPurify sanitization
 const renderMarkdown = (text: string) => {
   if (typeof text !== 'string') {
     console.warn('renderMarkdown received non-string input:', text);
@@ -31,7 +32,11 @@ const renderMarkdown = (text: string) => {
   formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
   formatted = formatted.replace(/\n/g, '<br>');
   
-  return formatted;
+  // Sanitize the HTML to prevent XSS attacks
+  return DOMPurify.sanitize(formatted, {
+    ALLOWED_TAGS: ['strong', 'em', 'br'],
+    ALLOWED_ATTR: []
+  });
 };
 
 const FloatingChatButton = () => {
