@@ -348,16 +348,24 @@ const ResidentsList: React.FC = () => {
         `${resident.firstName} ${resident.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (resident.address && resident.address.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      // Status filter - Modified to work with activeStatusCard
+      // Status filter - Check both dropdown and card filters
       const matchesStatus = 
-        activeStatusCard === null || resident.status === activeStatusCard;
+        (selectedStatus === null && activeStatusCard === null) || 
+        (selectedStatus !== null && resident.status === selectedStatus) ||
+        (activeStatusCard !== null && resident.status === activeStatusCard);
       
-      // Classifications filter - Modified to work with activeClassificationCard
+      // Classifications filter - Check both dropdown and card filters
       const hasClassificationsArray = resident.classifications && Array.isArray(resident.classifications);
       
       let matchesClassifications = true;
-      if (activeClassificationCard !== null && hasClassificationsArray) {
+      if (selectedClassifications.length > 0 && hasClassificationsArray) {
+        matchesClassifications = selectedClassifications.some(classification => 
+          resident.classifications!.includes(classification)
+        );
+      } else if (activeClassificationCard !== null && hasClassificationsArray) {
         matchesClassifications = resident.classifications!.includes(activeClassificationCard);
+      } else if (selectedClassifications.length > 0 && !hasClassificationsArray) {
+        matchesClassifications = false;
       }
       
       return matchesSearch && matchesStatus && matchesClassifications;
@@ -417,7 +425,9 @@ const ResidentsList: React.FC = () => {
     sortField, 
     sortDirection, 
     activeStatusCard, 
-    activeClassificationCard
+    activeClassificationCard,
+    selectedStatus,
+    selectedClassifications
   ]);
 
   // Calculate pagination
