@@ -53,10 +53,58 @@ const ProfilePage = () => {
     return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() || "AD";
   };
 
-  // Fetch profile photo from storage
+  // Cache utilities
+  const getCacheKey = (key: string) => `profile_${user?.id}_${key}`;
+  const getCachedData = (key: string, maxAge: number = 300000) => { // 5 minutes default
+    try {
+      const cached = localStorage.getItem(getCacheKey(key));
+      if (cached) {
+        const data = JSON.parse(cached);
+        if (Date.now() - data.timestamp < maxAge) {
+          return data.value;
+        }
+        localStorage.removeItem(getCacheKey(key));
+      }
+    } catch (error) {
+      console.error('Error reading cache:', error);
+    }
+    return null;
+  };
+
+  const setCachedData = (key: string, value: any) => {
+    try {
+      localStorage.setItem(getCacheKey(key), JSON.stringify({
+        value,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error('Error setting cache:', error);
+    }
+  };
+
+  const clearProfileCache = () => {
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith(`profile_${user?.id}_`)) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+    }
+  };
+
+  // Fetch profile photo from storage with caching
   useEffect(() => {
     const fetchProfilePhoto = async () => {
       if (userProfile?.profile_picture) {
+        // Check cache first
+        const cachedPhoto = getCachedData('profile_photo', 3300000); // 55 minutes (less than token expiry)
+        if (cachedPhoto) {
+          setProfilePhotoUrl(cachedPhoto);
+          return;
+        }
+
         setPhotoLoading(true);
         try {
           const { data } = await supabase.storage
@@ -65,6 +113,7 @@ const ProfilePage = () => {
           
           if (data?.signedUrl) {
             setProfilePhotoUrl(data.signedUrl);
+            setCachedData('profile_photo', data.signedUrl);
           }
         } catch (error) {
           console.error('Error fetching profile photo:', error);
@@ -79,10 +128,18 @@ const ProfilePage = () => {
     }
   }, [userProfile]);
 
-  // Fetch barangay data when component mounts
+  // Fetch barangay data when component mounts with caching
   useEffect(() => {
     const fetchBarangayData = async () => {
       if (userProfile?.brgyid) {
+        // Check cache first
+        const cachedBarangay = getCachedData('barangay', 600000); // 10 minutes
+        if (cachedBarangay) {
+          setBarangay(cachedBarangay);
+          setLoading(false);
+          return;
+        }
+
         try {
           const { data, error } = await supabase
             .from("barangays")
@@ -93,6 +150,7 @@ const ProfilePage = () => {
           if (error) throw error;
           if (data) {
             setBarangay(data);
+            setCachedData('barangay', data);
           }
         } catch (error) {
           console.error("Error fetching barangay data:", error);
@@ -152,6 +210,7 @@ const ProfilePage = () => {
 
       if (data?.signedUrl) {
         setProfilePhotoUrl(data.signedUrl);
+        setCachedData('profile_photo', data.signedUrl);
       }
 
       toast({
@@ -192,6 +251,9 @@ const ProfilePage = () => {
 
       if (error) throw error;
 
+      // Clear profile cache since data was updated
+      clearProfileCache();
+      
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated",

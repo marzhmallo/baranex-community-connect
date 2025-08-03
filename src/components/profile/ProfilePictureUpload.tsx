@@ -21,6 +21,47 @@ const ProfilePictureUpload = ({
   const [uploading, setUploading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
+  // Cache utilities
+  const getCacheKey = (key: string) => `profile_picture_${userId}_${key}`;
+  const getCachedData = (key: string, maxAge: number = 3300000) => { // 55 minutes default
+    try {
+      const cached = localStorage.getItem(getCacheKey(key));
+      if (cached) {
+        const data = JSON.parse(cached);
+        if (Date.now() - data.timestamp < maxAge) {
+          return data.value;
+        }
+        localStorage.removeItem(getCacheKey(key));
+      }
+    } catch (error) {
+      console.error('Error reading cache:', error);
+    }
+    return null;
+  };
+
+  const setCachedData = (key: string, value: any) => {
+    try {
+      localStorage.setItem(getCacheKey(key), JSON.stringify({
+        value,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error('Error setting cache:', error);
+    }
+  };
+
+  const clearPhotoCache = () => {
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith(`profile_picture_${userId}_`)) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+    }
+  };
+
   // Generate signed URL for display
   const generateSignedUrl = async (url: string) => {
     if (!url) return undefined;
@@ -67,14 +108,25 @@ const ProfilePictureUpload = ({
     return profile?.role === 'admin';
   };
 
-  // Generate signed URL when currentPhotoUrl changes
+  // Generate signed URL when currentPhotoUrl changes with caching
   useEffect(() => {
     if (currentPhotoUrl) {
+      // Check cache first
+      const cachedUrl = getCachedData('signed_url');
+      if (cachedUrl) {
+        setPhotoUrl(cachedUrl);
+        return;
+      }
+
       generateSignedUrl(currentPhotoUrl).then(signedUrl => {
-        setPhotoUrl(signedUrl);
+        if (signedUrl) {
+          setPhotoUrl(signedUrl);
+          setCachedData('signed_url', signedUrl);
+        }
       });
     } else {
       setPhotoUrl(undefined);
+      clearPhotoCache();
     }
   }, [currentPhotoUrl]);
 
@@ -132,6 +184,10 @@ const ProfilePictureUpload = ({
         throw updateError;
       }
 
+      // Clear old cache and update with new data
+      clearPhotoCache();
+      setCachedData('signed_url', url);
+      
       // Update local state with signed URL for immediate display
       setPhotoUrl(url);
       onPhotoUploaded(filePath); // Pass file path to parent component
@@ -191,6 +247,7 @@ const ProfilePictureUpload = ({
         throw updateError;
       }
 
+      clearPhotoCache();
       setPhotoUrl(undefined);
       onPhotoUploaded('');
 
