@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { Crown, Shield, User, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle, Edit, MoreVertical, UserX, Play, Blocks } from 'lucide-react';
+import CachedAvatar from '@/components/ui/CachedAvatar';
 
 interface UserProfile {
   id: string;
@@ -29,6 +30,7 @@ interface UserProfile {
   purok?: string;
   middlename?: string;
   created_at?: string;
+  profile_picture?: string;
 }
 
 const UserAccountManagement = () => {
@@ -343,9 +345,12 @@ const UserAccountManagement = () => {
                   <tr key={user.id} className="hover:bg-muted/50 transition-colors duration-200">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 bg-gradient-to-br ${getGradientColor(index)} rounded-full flex items-center justify-center text-white font-semibold`}>
-                          {getInitials(user.firstname, user.lastname)}
-                        </div>
+                        <CachedAvatar
+                          userId={user.id}
+                          profilePicture={user.profile_picture}
+                          fallback={getInitials(user.firstname, user.lastname)}
+                          className="w-10 h-10"
+                        />
                         <div>
                           <div className="font-semibold text-foreground">
                             {user.firstname} {user.lastname}
