@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
-import { Crown, Shield, User, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle, Edit, MoreVertical, UserX, Play, Blocks } from 'lucide-react';
+import { Crown, Shield, User, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle, Edit, MoreVertical, UserX, Play, Blocks, ZoomIn } from 'lucide-react';
 import CachedAvatar from '@/components/ui/CachedAvatar';
 
 interface UserProfile {
@@ -39,6 +39,7 @@ const UserAccountManagement = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [userDetailsOpen, setUserDetailsOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [photoViewOpen, setPhotoViewOpen] = useState(false);
 
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users', userProfile?.brgyid],
@@ -530,8 +531,18 @@ const UserAccountManagement = () => {
               <div className="space-y-6">
                 {/* User Header */}
                 <div className="flex items-center space-x-4 p-4 bg-muted/30 rounded-lg">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${getGradientColor(0)} rounded-full flex items-center justify-center text-white text-xl font-bold`}>
-                    {getInitials(selectedUser.firstname, selectedUser.lastname)}
+                  <div className="relative group cursor-pointer" onClick={() => setPhotoViewOpen(true)}>
+                    <CachedAvatar
+                      userId={selectedUser.id}
+                      profilePicture={selectedUser.profile_picture}
+                      fallback={getInitials(selectedUser.firstname, selectedUser.lastname)}
+                      className="w-16 h-16"
+                    />
+                    {selectedUser.profile_picture && (
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full flex items-center justify-center">
+                        <ZoomIn className="h-5 w-5 text-white" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-foreground mb-1">
@@ -652,6 +663,34 @@ const UserAccountManagement = () => {
                       Edit Profile
                     </Button>
                   )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Photo View Dialog */}
+        <Dialog open={photoViewOpen} onOpenChange={setPhotoViewOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Profile Picture
+              </DialogTitle>
+            </DialogHeader>
+            {selectedUser && (
+              <div className="flex flex-col items-center space-y-4">
+                <CachedAvatar
+                  userId={selectedUser.id}
+                  profilePicture={selectedUser.profile_picture}
+                  fallback={getInitials(selectedUser.firstname, selectedUser.lastname)}
+                  className="w-64 h-64"
+                />
+                <div className="text-center">
+                  <h3 className="font-semibold text-foreground">
+                    {selectedUser.firstname} {selectedUser.lastname}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
                 </div>
               </div>
             )}
