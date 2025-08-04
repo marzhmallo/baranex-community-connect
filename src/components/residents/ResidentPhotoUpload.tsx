@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import CachedAvatar from '@/components/ui/CachedAvatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Upload, X, User } from 'lucide-react';
 
 interface ResidentPhotoUploadProps {
@@ -18,7 +18,7 @@ const ResidentPhotoUpload = ({
   onPhotoUploaded
 }: ResidentPhotoUploadProps) => {
   const [uploading, setUploading] = useState(false);
-  // Photo URL handling is now managed by CachedAvatar component
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
   // Generate signed URL for display
   const generateSignedUrl = async (url: string) => {
@@ -54,7 +54,16 @@ const ResidentPhotoUpload = ({
     }
   };
 
-  // Photo URL handling is now managed by CachedAvatar component
+  // Generate signed URL when existingPhotoUrl changes
+  useEffect(() => {
+    if (existingPhotoUrl) {
+      generateSignedUrl(existingPhotoUrl).then(signedUrl => {
+        setPhotoUrl(signedUrl);
+      });
+    } else {
+      setPhotoUrl(undefined);
+    }
+  }, [existingPhotoUrl]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -89,7 +98,7 @@ const ResidentPhotoUpload = ({
       }
 
       const url = signedUrlData.signedUrl;
-      // Notify parent component of the upload
+      setPhotoUrl(url);
       onPhotoUploaded(url);
 
       toast({
@@ -111,7 +120,7 @@ const ResidentPhotoUpload = ({
   };
 
   const handleRemovePhoto = async () => {
-    if (!existingPhotoUrl) return;
+    if (!photoUrl || !existingPhotoUrl) return;
 
     try {
       // Extract file path from URL using the same logic as generateSignedUrl
@@ -135,6 +144,7 @@ const ResidentPhotoUpload = ({
         throw error;
       }
 
+      setPhotoUrl(undefined);
       onPhotoUploaded('');
 
       toast({
@@ -154,26 +164,31 @@ const ResidentPhotoUpload = ({
   return (
     <div className="flex flex-col items-center mb-4">
       <div className="mb-4">
-        <div className="flex flex-col items-center space-y-4">
-          <CachedAvatar
-            userId={residentId || 'new-resident'}
-            profilePicture={existingPhotoUrl}
-            fallback={residentId ? 'Photo' : 'Upload'}
-            className="h-24 w-24"
-          />
-          
-          {existingPhotoUrl && (
-            <Button 
+        {photoUrl ? (
+          <div className="relative">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={photoUrl} alt="Resident photo" />
+              <AvatarFallback>
+                <User className="h-8 w-8" />
+              </AvatarFallback>
+            </Avatar>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
               onClick={handleRemovePhoto}
-              variant="outline" 
-              size="sm"
-              className="text-red-600 hover:text-red-700"
             >
-              <X className="h-4 w-4 mr-2" />
-              Remove Photo
+              <X className="h-4 w-4" />
             </Button>
-          )}
-        </div>
+          </div>
+        ) : (
+          <Avatar className="h-24 w-24">
+            <AvatarFallback>
+              <User className="h-8 w-8" />
+            </AvatarFallback>
+          </Avatar>
+        )}
       </div>
       
       <div className="flex items-center">

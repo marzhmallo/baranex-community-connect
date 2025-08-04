@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
 
 interface CachedAvatarProps {
   userId: string;
@@ -12,7 +11,6 @@ interface CachedAvatarProps {
 
 const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAvatarProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Cache utilities
   const getCacheKey = (key: string) => `avatar_${userId}_${key}`;
@@ -48,36 +46,9 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
     if (!filePath) return undefined;
 
     try {
-      // Determine the bucket based on the file path
-      let bucket = 'profilepictures';
-      let actualPath = filePath;
-      
-      // If it's a resident photo, use the residentphotos bucket
-      if (filePath.includes('resident/') || filePath.startsWith('resident/')) {
-        bucket = 'residentphotos';
-        actualPath = filePath.startsWith('resident/') ? filePath : `resident/${filePath}`;
-      }
-      
-      // Extract path from full URLs if needed
-      if (filePath.includes('/storage/v1/object/public/')) {
-        const parts = filePath.split('/storage/v1/object/public/');
-        if (parts[1]) {
-          const pathParts = parts[1].split('/');
-          bucket = pathParts[0];
-          actualPath = pathParts.slice(1).join('/');
-        }
-      } else if (filePath.includes('/storage/v1/object/sign/')) {
-        const parts = filePath.split('/storage/v1/object/sign/');
-        if (parts[1]) {
-          const pathParts = parts[1].split('/');
-          bucket = pathParts[0];
-          actualPath = pathParts.slice(1).join('/').split('?')[0];
-        }
-      }
-
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from(bucket)
-        .createSignedUrl(actualPath, 600); // 10 minutes expiration
+        .from('profilepictures')
+        .createSignedUrl(filePath, 600); // 10 minutes expiration
 
       if (signedUrlError) {
         console.error('Error generating signed URL:', signedUrlError);
@@ -100,24 +71,20 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
         return;
       }
 
-      // Show loading state when fetching for first time
-      setIsLoading(true);
       generateSignedUrl(profilePicture).then(signedUrl => {
         if (signedUrl) {
           setAvatarUrl(signedUrl);
           setCachedData('signed_url', signedUrl);
         }
-        setIsLoading(false);
       });
     } else {
       setAvatarUrl(undefined);
-      setIsLoading(false);
     }
   }, [profilePicture, userId]);
 
   return (
     <Avatar className={className}>
-      {avatarUrl && !isLoading && (
+      {avatarUrl && (
         <AvatarImage 
           src={avatarUrl} 
           alt="Profile picture" 
@@ -127,12 +94,8 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
           }}
         />
       )}
-      <AvatarFallback className={`bg-gradient-to-br from-primary-500 to-primary-600 text-white font-semibold ${isLoading ? 'flex items-center justify-center' : ''}`}>
-        {isLoading ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : (
-          fallback
-        )}
+      <AvatarFallback className="bg-gradient-to-br from-primary-500 to-primary-600 text-white font-semibold">
+        {fallback}
       </AvatarFallback>
     </Avatar>
   );
