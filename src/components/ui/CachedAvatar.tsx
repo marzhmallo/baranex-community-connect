@@ -117,7 +117,7 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
 
   return (
     <Avatar className={className}>
-      {avatarUrl && (
+      {avatarUrl && !isLoading && (
         <AvatarImage 
           src={avatarUrl} 
           alt="Profile picture" 
@@ -127,8 +127,12 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
           }}
         />
       )}
-      <AvatarFallback className="bg-gradient-to-br from-primary-500 to-primary-600 text-white font-semibold">
-        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : fallback}
+      <AvatarFallback className={`bg-gradient-to-br from-primary-500 to-primary-600 text-white font-semibold ${isLoading ? 'flex items-center justify-center' : ''}`}>
+        {isLoading ? (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : (
+          fallback
+        )}
       </AvatarFallback>
     </Avatar>
   );
