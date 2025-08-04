@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 interface CachedAvatarProps {
   userId: string;
@@ -11,6 +12,7 @@ interface CachedAvatarProps {
 
 const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAvatarProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Cache utilities
   const getCacheKey = (key: string) => `avatar_${userId}_${key}`;
@@ -98,14 +100,18 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
         return;
       }
 
+      // Show loading state when fetching for first time
+      setIsLoading(true);
       generateSignedUrl(profilePicture).then(signedUrl => {
         if (signedUrl) {
           setAvatarUrl(signedUrl);
           setCachedData('signed_url', signedUrl);
         }
+        setIsLoading(false);
       });
     } else {
       setAvatarUrl(undefined);
+      setIsLoading(false);
     }
   }, [profilePicture, userId]);
 
@@ -122,7 +128,7 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
         />
       )}
       <AvatarFallback className="bg-gradient-to-br from-primary-500 to-primary-600 text-white font-semibold">
-        {fallback}
+        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : fallback}
       </AvatarFallback>
     </Avatar>
   );
