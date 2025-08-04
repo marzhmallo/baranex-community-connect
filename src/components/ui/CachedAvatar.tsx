@@ -46,9 +46,36 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
     if (!filePath) return undefined;
 
     try {
+      // Determine the bucket based on the file path
+      let bucket = 'profilepictures';
+      let actualPath = filePath;
+      
+      // If it's a resident photo, use the residentphotos bucket
+      if (filePath.includes('resident/') || filePath.startsWith('resident/')) {
+        bucket = 'residentphotos';
+        actualPath = filePath.startsWith('resident/') ? filePath : `resident/${filePath}`;
+      }
+      
+      // Extract path from full URLs if needed
+      if (filePath.includes('/storage/v1/object/public/')) {
+        const parts = filePath.split('/storage/v1/object/public/');
+        if (parts[1]) {
+          const pathParts = parts[1].split('/');
+          bucket = pathParts[0];
+          actualPath = pathParts.slice(1).join('/');
+        }
+      } else if (filePath.includes('/storage/v1/object/sign/')) {
+        const parts = filePath.split('/storage/v1/object/sign/');
+        if (parts[1]) {
+          const pathParts = parts[1].split('/');
+          bucket = pathParts[0];
+          actualPath = pathParts.slice(1).join('/').split('?')[0];
+        }
+      }
+
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from('profilepictures')
-        .createSignedUrl(filePath, 600); // 10 minutes expiration
+        .from(bucket)
+        .createSignedUrl(actualPath, 600); // 10 minutes expiration
 
       if (signedUrlError) {
         console.error('Error generating signed URL:', signedUrlError);

@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ResidentForm from "./ResidentForm";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import CachedAvatar from "@/components/ui/CachedAvatar";
 import { ZoomIn, X, Clock, History, Skull, Home } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -28,8 +28,7 @@ type ResidentDetailsProps = {
 const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showFullPhoto, setShowFullPhoto] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
-  const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
+  // Remove photo state management as CachedAvatar handles this
   const navigate = useNavigate();
   
   // Fetch household information
@@ -50,68 +49,7 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     enabled: !!resident?.householdId,
   });
   
-  // Generate signed URL for display
-  const generateSignedUrl = async (url: string) => {
-    if (!url) return undefined;
-
-    try {
-      // Extract file path from URL (works for both public and signed URLs)
-      let filePath = '';
-      
-      // Check if it's a public URL format
-      if (url.includes('/storage/v1/object/public/residentphotos/')) {
-        filePath = url.split('/storage/v1/object/public/residentphotos/')[1];
-      } else if (url.includes('/storage/v1/object/sign/residentphotos/')) {
-        filePath = url.split('/storage/v1/object/sign/residentphotos/')[1].split('?')[0];
-      } else {
-        // If it's already a file path, use it directly
-        filePath = url.startsWith('resident/') ? url : `resident/${url}`;
-      }
-
-      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from('residentphotos')
-        .createSignedUrl(filePath, 600); // 10 minutes expiration
-
-      if (signedUrlError) {
-        console.error('Error generating signed URL:', signedUrlError);
-        return undefined;
-      }
-
-      return signedUrlData.signedUrl;
-    } catch (error) {
-      console.error('Error generating signed URL:', error);
-      return undefined;
-    }
-  };
-
-  // Generate signed URL when resident.photoUrl changes
-  useEffect(() => {
-    if (resident?.photoUrl) {
-      setIsLoadingPhoto(true);
-      setPhotoUrl(undefined); // Clear old image immediately
-      
-      generateSignedUrl(resident.photoUrl).then(signedUrl => {
-        if (signedUrl) {
-          // Create image element to handle loading
-          const img = new Image();
-          img.onload = () => {
-            setPhotoUrl(signedUrl);
-            setIsLoadingPhoto(false);
-          };
-          img.onerror = () => {
-            console.error('Failed to load resident photo');
-            setIsLoadingPhoto(false);
-          };
-          img.src = signedUrl;
-        } else {
-          setIsLoadingPhoto(false);
-        }
-      });
-    } else {
-      setPhotoUrl(undefined);
-      setIsLoadingPhoto(false);
-    }
-  }, [resident?.photoUrl]);
+  // Photo URL handling is now managed by CachedAvatar component
   
   if (!resident) return null;
 
@@ -257,36 +195,26 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex flex-col md:flex-row gap-6 items-start">
-                      {/* Avatar/Photo using the Avatar component with click to enlarge */}
-                      <div className="relative w-24 h-24">
-                        {/* Placeholder with Initials (Always visible underneath) */}
-                        <Avatar className="w-24 h-24">
-                          <AvatarFallback className="text-2xl">
-                            {resident.firstName.charAt(0)}{resident.lastName.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        {/* Loading Spinner Overlay */}
-                        {isLoadingPhoto && (
-                          <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                            <div className="w-6 h-6 border-2 border-t-white border-gray-400 rounded-full animate-spin"></div>
-                          </div>
-                        )}
-                        
-                        {/* The Actual Image (with smooth fade-in) */}
-                        {photoUrl && (
-                          <div className="absolute inset-0 cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
-                            <Avatar className="w-24 h-24">
-                              <AvatarImage 
-                                src={photoUrl} 
-                                alt={`${resident.firstName} ${resident.lastName}`}
-                                className={`transition-opacity duration-300 ${photoUrl ? 'opacity-100' : 'opacity-0'}`}
-                              />
-                            </Avatar>
+                      {/* Cached Avatar with click to enlarge */}
+                      <div className="flex flex-col items-center space-y-4">
+                        <div className="relative cursor-pointer group" onClick={() => setShowFullPhoto(true)}>
+                          <CachedAvatar
+                            userId={resident.id}
+                            profilePicture={resident.photoUrl}
+                            fallback={`${resident.firstName?.charAt(0) || ''}${resident.lastName?.charAt(0) || ''}`}
+                            className="w-24 h-24"
+                          />
+                          {resident.photoUrl && (
                             <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                              <ZoomIn className="text-white h-8 w-8" />
+                              <ZoomIn className="text-white h-6 w-6" />
                             </div>
-                          </div>
+                          )}
+                        </div>
+                        
+                        {resident.photoUrl && (
+                          <p className="text-sm text-gray-500 mt-2 cursor-pointer hover:text-gray-700 transition-colors" onClick={() => setShowFullPhoto(true)}>
+                            Click photo to enlarge
+                          </p>
                         )}
                       </div>
                       
@@ -301,11 +229,12 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
                               className="relative w-full h-full flex items-center justify-center bg-black/70 p-2 rounded-lg"
                               onClick={() => setShowFullPhoto(false)}
                             >
-                               <img 
-                                 src={photoUrl} 
-                                 alt={`${resident.firstName} ${resident.lastName}`} 
-                                 className="max-h-[85vh] max-w-full object-contain rounded shadow-xl" 
-                               />
+                              <CachedAvatar
+                                userId={resident.id}
+                                profilePicture={resident.photoUrl}
+                                fallback={`${resident.firstName?.charAt(0) || ''}${resident.lastName?.charAt(0) || ''}`}
+                                className="w-96 h-96"
+                              />
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
