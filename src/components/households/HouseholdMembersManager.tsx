@@ -174,6 +174,18 @@ const HouseholdMembersManager = ({
       return;
     }
 
+    // Check for unique constraint violation for household members
+    if (error.message && (error.message.includes('householdmembers_householdid_residentid_key') || 
+        error.message.includes('duplicate key value') || 
+        error.message.includes('unique constraint'))) {
+      toast({
+        title: "Resident Already in Household",
+        description: "This resident is already a member of this household. Each resident can only be added once to a household.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Default error handling
     toast({
       title: "Error",
