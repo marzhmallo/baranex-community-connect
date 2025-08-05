@@ -11,6 +11,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from 'react';
 import { UAParser } from 'ua-parser-js';
+import { Phone, Mail, Clock } from 'lucide-react';
 
 interface ActivityLog {
   id: string;
@@ -27,6 +28,12 @@ interface UserProfile {
   firstname: string;
   lastname: string;
   username: string;
+}
+
+interface BarangayContact {
+  phone?: string;
+  email?: string;
+  officehours?: string;
 }
 
 // Function to parse device information from User-Agent string using ua-parser-js
@@ -114,6 +121,7 @@ const DashboardCharts = () => {
   
   const [activitiesLoading, setActivitiesLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [barangayContact, setBarangayContact] = useState<BarangayContact>({});
   
   const {
     monthlyResidents,
@@ -192,6 +200,38 @@ const DashboardCharts = () => {
     };
 
     fetchRecentActivities();
+  }, [userProfile?.brgyid]);
+
+  // Fetch barangay contact information
+  useEffect(() => {
+    const fetchBarangayContact = async () => {
+      if (!userProfile?.brgyid) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('barangays')
+          .select('phone, email, officehours')
+          .eq('id', userProfile.brgyid)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching barangay contact:', error);
+          return;
+        }
+
+        if (data) {
+          setBarangayContact({
+            phone: (data as any).phone || undefined,
+            email: (data as any).email || undefined,
+            officehours: (data as any).officehours || undefined,
+          });
+        }
+      } catch (err) {
+        console.error('Error in fetchBarangayContact:', err);
+      }
+    };
+
+    fetchBarangayContact();
   }, [userProfile?.brgyid]);
 
   // Update current time every minute for real-time "time ago" display
@@ -469,6 +509,56 @@ const DashboardCharts = () => {
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Link>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Barangay Contact</CardTitle>
+            <CardDescription>Get in touch with the barangay office</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {barangayContact.phone && (
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <Phone className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">Phone</p>
+                  <p className="text-sm font-medium">{barangayContact.phone}</p>
+                </div>
+              </div>
+            )}
+            
+            {barangayContact.email && (
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <Mail className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">Email</p>
+                  <p className="text-sm font-medium">{barangayContact.email}</p>
+                </div>
+              </div>
+            )}
+            
+            {barangayContact.officehours && (
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">Office Hours</p>
+                  <p className="text-sm font-medium">{barangayContact.officehours}</p>
+                </div>
+              </div>
+            )}
+            
+            {!barangayContact.phone && !barangayContact.email && !barangayContact.officehours && (
+              <p className="text-center text-muted-foreground py-4">
+                No contact information available
+              </p>
+            )}
           </CardContent>
         </Card>
 
