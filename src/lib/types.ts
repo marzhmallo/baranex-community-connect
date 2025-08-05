@@ -261,6 +261,8 @@ export interface Official {
   officialPositions?: OfficialPosition[];
   rank_number?: string | null; // Added for ranking system
   rank_label?: string | null; // Added for ranking system
+  recordedby?: string | null; // Added for tracking who created the record
+  editedby?: string | null; // Added for tracking who last edited the record
 }
 
 // New interface for official positions

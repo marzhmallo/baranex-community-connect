@@ -586,8 +586,12 @@ const OfficialDetailsPage = () => {
                     <span className="text-foreground font-medium">{formatShortDate(official.updated_at)}</span>
                   </div>
                   <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Created By:</span>
+                    <span className="text-foreground font-medium">{official.recordedby ? 'Admin User' : 'Unknown'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Updated By:</span>
-                    <span className="text-foreground font-medium">Admin User</span>
+                    <span className="text-foreground font-medium">{official.editedby ? 'Admin User' : 'Unknown'}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Status:</span>
