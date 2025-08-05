@@ -160,8 +160,6 @@ const OfficialDetailsPage = () => {
         {committeeItems.map((committee, i) => (
           <div key={i} className="bg-card rounded-lg p-4 border-l-4 border-primary hover:shadow-md transition-all duration-300 hover:-translate-y-1 border">
             <h3 className="font-semibold text-card-foreground mb-2">{committee}</h3>
-            <p className="text-sm text-muted-foreground mb-2">Member</p>
-            <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
           </div>
         ))}
       </div>
