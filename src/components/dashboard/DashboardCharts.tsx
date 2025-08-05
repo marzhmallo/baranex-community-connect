@@ -335,9 +335,9 @@ const DashboardCharts = () => {
       </div>;
   }
   
-  return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Main chart area - takes up 2 columns on md screens */}
-      <Card className="md:col-span-2 h-fit">
+  return <div className="space-y-6">
+      {/* Main chart area - full width */}
+      <Card className="h-fit">
         <CardHeader>
           <div>
             <CardTitle className="text-lg">Population Growth</CardTitle>
@@ -461,8 +461,9 @@ const DashboardCharts = () => {
         </CardContent>
       </Card>
 
-      {/* Sidebar area - takes 1 column */}
-      <div className="space-y-6">
+      {/* Grid layout for sidebar content */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Recent Activity - takes 1 column */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
@@ -512,6 +513,7 @@ const DashboardCharts = () => {
           </CardContent>
         </Card>
 
+        {/* Barangay Contact - takes 1 column */}
         <Card>
           <CardHeader>
             <CardTitle>Barangay Contact</CardTitle>
@@ -562,6 +564,7 @@ const DashboardCharts = () => {
           </CardContent>
         </Card>
 
+        {/* Gender Distribution - takes 1 column */}
         <Card>
           <CardHeader>
             <CardTitle>Gender Distribution</CardTitle>
