@@ -351,8 +351,14 @@ const OfficialDetailsPage = () => {
                   <User className="h-16 w-16 text-muted-foreground" />
                 </div>
               )}
-              <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center">
-                <Check className="h-4 w-4 text-white" />
+              <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center ${
+                currentPositions.length > 0 ? 'bg-green-500' : 'bg-red-500'
+              }`}>
+                {currentPositions.length > 0 ? (
+                  <Check className="h-4 w-4 text-white" />
+                ) : (
+                  <X className="h-4 w-4 text-white" />
+                )}
               </div>
             </div>
             <div className="text-white pb-2">
