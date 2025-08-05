@@ -159,7 +159,10 @@ const OfficialDetailsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {committeeItems.map((committee, i) => (
           <div key={i} className="bg-card rounded-lg p-4 border-l-4 border-primary hover:shadow-md transition-all duration-300 hover:-translate-y-1 border">
-            <h3 className="font-semibold text-card-foreground mb-2">{committee}</h3>
+            <div className="flex items-center space-x-3 mb-2">
+              <Users className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-card-foreground">{committee}</h3>
+            </div>
           </div>
         ))}
       </div>
