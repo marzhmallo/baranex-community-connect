@@ -317,7 +317,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="bg-background p-6 rounded-lg shadow-lg max-w-4xl mx-auto">
+    <div className="p-6">
       <header className="mb-8">
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Manage your account and system preferences.</p>
