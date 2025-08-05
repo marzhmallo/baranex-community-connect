@@ -580,7 +580,13 @@ const OfficialDetailsPage = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Status:</span>
-                    <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                      currentPositions.length > 0 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {currentPositions.length > 0 ? 'Active' : 'Inactive'}
+                    </span>
                   </div>
                   <div className="pt-3 border-t border-border">
                     <button className="w-full bg-muted hover:bg-muted/80 text-foreground py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
