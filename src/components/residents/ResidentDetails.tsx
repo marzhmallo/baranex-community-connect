@@ -50,6 +50,35 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     enabled: !!resident?.householdId,
   });
   
+  // Cache utilities
+  const getCacheKey = (key: string) => `resident_photo_${resident?.id}_${key}`;
+  const getCachedData = (key: string, maxAge: number = 3300000) => { // 55 minutes default
+    try {
+      const cached = localStorage.getItem(getCacheKey(key));
+      if (cached) {
+        const data = JSON.parse(cached);
+        if (Date.now() - data.timestamp < maxAge) {
+          return data.value;
+        }
+        localStorage.removeItem(getCacheKey(key));
+      }
+    } catch (error) {
+      console.error('Error reading resident photo cache:', error);
+    }
+    return null;
+  };
+
+  const setCachedData = (key: string, value: any) => {
+    try {
+      localStorage.setItem(getCacheKey(key), JSON.stringify({
+        value,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error('Error setting resident photo cache:', error);
+    }
+  };
+
   // Generate signed URL for display
   const generateSignedUrl = async (url: string) => {
     if (!url) return undefined;
@@ -87,11 +116,22 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
   // Generate signed URL when resident.photoUrl changes
   useEffect(() => {
     if (resident?.photoUrl) {
+      // Check cache first
+      const cachedUrl = getCachedData('signed_url');
+      if (cachedUrl) {
+        setPhotoUrl(cachedUrl);
+        setIsLoadingPhoto(false);
+        return;
+      }
+
       setIsLoadingPhoto(true);
       setPhotoUrl(undefined); // Clear old image immediately
       
       generateSignedUrl(resident.photoUrl).then(signedUrl => {
         if (signedUrl) {
+          // Cache the signed URL
+          setCachedData('signed_url', signedUrl);
+          
           // Create image element to handle loading
           const img = new Image();
           img.onload = () => {
