@@ -33,7 +33,14 @@ const SettingsPage = () => {
     officehours: ''
   });
 
+  const [originalBarangaySettings, setOriginalBarangaySettings] = useState({
+    phone: '',
+    email: '',
+    officehours: ''
+  });
+
   const [isLoadingBarangay, setIsLoadingBarangay] = useState(false);
+  const [isEditingBarangay, setIsEditingBarangay] = useState(false);
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
     setNotifications(prev => ({
@@ -167,11 +174,13 @@ const SettingsPage = () => {
         if (error) throw error;
 
         if (data) {
-          setBarangaySettings({
+          const settings = {
             phone: (data as any).phone || '',
             email: (data as any).email || '',
             officehours: (data as any).officehours || ''
-          });
+          };
+          setBarangaySettings(settings);
+          setOriginalBarangaySettings(settings);
         }
       } catch (error) {
         console.error('Error loading barangay settings:', error);
@@ -182,6 +191,15 @@ const SettingsPage = () => {
 
     loadBarangaySettings();
   }, [userProfile?.brgyid, userProfile?.role]);
+
+  const handleEditBarangay = () => {
+    setIsEditingBarangay(true);
+  };
+
+  const handleCancelEdit = () => {
+    setBarangaySettings(originalBarangaySettings);
+    setIsEditingBarangay(false);
+  };
 
   const updateBarangaySettings = async () => {
     if (!userProfile?.brgyid || userProfile?.role !== 'admin') return;
@@ -199,6 +217,9 @@ const SettingsPage = () => {
         .eq('id', userProfile.brgyid);
 
       if (error) throw error;
+
+      setOriginalBarangaySettings(barangaySettings);
+      setIsEditingBarangay(false);
 
       toast({
         title: "Success",
@@ -376,7 +397,14 @@ const SettingsPage = () => {
           {/* Section 5: Barangay Settings (Admin Only) */}
           {userProfile?.role === 'admin' && (
             <div className="pt-6">
-              <h2 className="text-xl font-bold">Barangay Settings</h2>
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-xl font-bold">Barangay Settings</h2>
+                {!isEditingBarangay && (
+                  <Button variant="outline" size="sm" onClick={handleEditBarangay}>
+                    Edit
+                  </Button>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground mt-1">Manage your barangay contact information.</p>
               <div className="mt-4 space-y-6">
                 <div className="space-y-4">
@@ -387,7 +415,8 @@ const SettingsPage = () => {
                       value={barangaySettings.phone}
                       onChange={(e) => setBarangaySettings(prev => ({ ...prev, phone: e.target.value }))}
                       placeholder="Enter phone number"
-                      disabled={isLoadingBarangay}
+                      disabled={!isEditingBarangay || isLoadingBarangay}
+                      className={!isEditingBarangay ? "bg-muted" : ""}
                     />
                   </div>
                   <div>
@@ -398,7 +427,8 @@ const SettingsPage = () => {
                       value={barangaySettings.email}
                       onChange={(e) => setBarangaySettings(prev => ({ ...prev, email: e.target.value }))}
                       placeholder="Enter email address"
-                      disabled={isLoadingBarangay}
+                      disabled={!isEditingBarangay || isLoadingBarangay}
+                      className={!isEditingBarangay ? "bg-muted" : ""}
                     />
                   </div>
                   <div>
@@ -408,17 +438,31 @@ const SettingsPage = () => {
                       value={barangaySettings.officehours}
                       onChange={(e) => setBarangaySettings(prev => ({ ...prev, officehours: e.target.value }))}
                       placeholder="Enter office hours (e.g., Monday-Friday 8:00 AM - 5:00 PM)"
-                      disabled={isLoadingBarangay}
+                      disabled={!isEditingBarangay || isLoadingBarangay}
+                      className={!isEditingBarangay ? "bg-muted" : ""}
                       rows={3}
                     />
                   </div>
-                  <Button 
-                    onClick={updateBarangaySettings}
-                    disabled={isLoadingBarangay}
-                    className="w-full"
-                  >
-                    {isLoadingBarangay ? 'Saving...' : 'Save Barangay Settings'}
-                  </Button>
+                  
+                  {isEditingBarangay && (
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={updateBarangaySettings}
+                        disabled={isLoadingBarangay}
+                        className="flex-1"
+                      >
+                        {isLoadingBarangay ? 'Saving...' : 'Save Changes'}
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                        disabled={isLoadingBarangay}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
