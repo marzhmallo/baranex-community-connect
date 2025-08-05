@@ -191,10 +191,7 @@ const HouseholdMembersManager = ({
     }
     setIsSearching(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('residents').select(`
+      let query = supabase.from('residents').select(`
           id,
           first_name,
           middle_name,
@@ -205,9 +202,18 @@ const HouseholdMembersManager = ({
           purok,
           gender,
           birthdate
-        `).or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,middle_name.ilike.%${term}%`)
-        .not('id', 'in', `(${registeredMembers?.map(m => m.id).join(',') || 'null'})`)
-        .order('first_name');
+        `).or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,middle_name.ilike.%${term}%`);
+        
+      // Filter out residents that are already members if there are any
+      if (registeredMembers && registeredMembers.length > 0) {
+        const memberIds = registeredMembers.map(m => m.id).filter(Boolean);
+        if (memberIds.length > 0) {
+          query = query.not('id', 'in', `(${memberIds.join(',')})`);
+        }
+      }
+      
+      const { data, error } = await query.order('first_name');
+      
       if (error) {
         console.error('Error searching residents:', error);
         toast({
