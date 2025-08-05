@@ -87,7 +87,7 @@ const OfficialDetailsPage = () => {
 
   // Format date for short display (e.g., "Jan 15, 2024")
   const formatShortDate = (dateString?: string) => {
-    if (!dateString) return 'Unknown';
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -587,11 +587,11 @@ const OfficialDetailsPage = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Created By:</span>
-                    <span className="text-foreground font-medium">{official.recordedby ? 'Admin User' : 'Unknown'}</span>
+                    <span className="text-foreground font-medium">{official.recordedby ? 'Admin User' : 'N/A'}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Updated By:</span>
-                    <span className="text-foreground font-medium">{official.editedby ? 'Admin User' : 'Unknown'}</span>
+                    <span className="text-foreground font-medium">{official.editedby ? 'Admin User' : 'N/A'}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Status:</span>
