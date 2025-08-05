@@ -50,32 +50,34 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     enabled: !!resident?.householdId,
   });
   
-  // Cache utilities
-  const getCacheKey = (key: string) => `resident_photo_${resident?.id}_${key}`;
-  const getCachedData = (key: string, maxAge: number = 3300000) => { // 55 minutes default
+  // Cache utilities - Simple cache keyed by photoUrl
+  const getCacheKey = (photoUrl: string) => `resident_photo_${btoa(photoUrl).slice(0, 20)}`;
+  
+  const getCachedData = (photoUrl: string) => {
     try {
-      const cached = localStorage.getItem(getCacheKey(key));
+      const cached = localStorage.getItem(getCacheKey(photoUrl));
       if (cached) {
         const data = JSON.parse(cached);
-        if (Date.now() - data.timestamp < maxAge) {
+        // Cache for 8 minutes (less than signed URL 10min expiry)
+        if (Date.now() - data.timestamp < 480000) {
           return data.value;
         }
-        localStorage.removeItem(getCacheKey(key));
+        localStorage.removeItem(getCacheKey(photoUrl));
       }
     } catch (error) {
-      console.error('Error reading resident photo cache:', error);
+      console.error('Error reading photo cache:', error);
     }
     return null;
   };
 
-  const setCachedData = (key: string, value: any) => {
+  const setCachedData = (photoUrl: string, signedUrl: string) => {
     try {
-      localStorage.setItem(getCacheKey(key), JSON.stringify({
-        value,
+      localStorage.setItem(getCacheKey(photoUrl), JSON.stringify({
+        value: signedUrl,
         timestamp: Date.now()
       }));
     } catch (error) {
-      console.error('Error setting resident photo cache:', error);
+      console.error('Error setting photo cache:', error);
     }
   };
 
@@ -115,27 +117,32 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
 
   // Generate signed URL when resident.photoUrl changes
   useEffect(() => {
-    if (resident?.photoUrl) {
-      // Check cache first
-      const cachedUrl = getCachedData('signed_url');
-      if (cachedUrl) {
-        setPhotoUrl(cachedUrl);
-        setIsLoadingPhoto(false);
-        return;
-      }
+    if (!resident?.photoUrl) {
+      setPhotoUrl(undefined);
+      setIsLoadingPhoto(false);
+      return;
+    }
 
-      setIsLoadingPhoto(true);
-      setPhotoUrl(undefined); // Clear old image immediately
-      
-      generateSignedUrl(resident.photoUrl).then(signedUrl => {
+    // Check cache first
+    const cachedUrl = getCachedData(resident.photoUrl);
+    if (cachedUrl) {
+      setPhotoUrl(cachedUrl);
+      setIsLoadingPhoto(false);
+      return;
+    }
+
+    // Fetch new signed URL
+    setIsLoadingPhoto(true);
+    setPhotoUrl(undefined);
+    
+    generateSignedUrl(resident.photoUrl)
+      .then(signedUrl => {
         if (signedUrl) {
-          // Cache the signed URL
-          setCachedData('signed_url', signedUrl);
-          
-          // Create image element to handle loading
+          // Test image loading first
           const img = new Image();
           img.onload = () => {
             setPhotoUrl(signedUrl);
+            setCachedData(resident.photoUrl, signedUrl);
             setIsLoadingPhoto(false);
           };
           img.onerror = () => {
@@ -146,11 +153,11 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
         } else {
           setIsLoadingPhoto(false);
         }
+      })
+      .catch(error => {
+        console.error('Error generating signed URL:', error);
+        setIsLoadingPhoto(false);
       });
-    } else {
-      setPhotoUrl(undefined);
-      setIsLoadingPhoto(false);
-    }
   }, [resident?.photoUrl]);
   
   if (!resident) return null;
