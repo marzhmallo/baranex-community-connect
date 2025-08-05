@@ -220,41 +220,10 @@ const ResidentsList: React.FC = () => {
   const { data: residentsData = [], isLoading, error } = useQuery({
     queryKey: ['residents'],
     queryFn: async () => {
-      // Try to get pre-loaded data first
-      const preloadedData = localStorage.getItem('preloadedResidentsData');
-      if (preloadedData) {
-        const data = JSON.parse(preloadedData);
-        // Transform the data to match expected format
-        return data.map((resident: any) => ({
-          ...resident,
-          // Add legacy camelCase properties for backward compatibility
-          firstName: resident.first_name,
-          lastName: resident.last_name,
-          middleName: resident.middle_name || '',
-          birthDate: resident.birthdate,
-          contactNumber: resident.mobile_number,
-          civilStatus: resident.civil_status,
-          yearsInBarangay: resident.years_in_barangay || 0,
-          monthlyIncome: resident.monthly_income || 0,
-          barangay: resident.barangaydb,
-          municipality: resident.municipalitycity,
-          province: resident.provinze,
-          region: resident.regional,
-          country: resident.countryph || '',
-          isVoter: resident.is_voter,
-          hasPhilhealth: resident.has_philhealth,
-          hasSss: resident.has_sss,
-          hasPagibig: resident.has_pagibig,
-          hasTin: resident.has_tin,
-          photoUrl: resident.photo_url || '',
-          diedOn: resident.died_on || null,
-          householdId: resident.household_id || null
-        }));
-      }
-      // Fallback to API call if no pre-loaded data
+      // Always fetch fresh data from API to ensure latest updates
       return getResidents();
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always fetch fresh data when query is invalidated
   });
   
   const queryClient = useQueryClient();
