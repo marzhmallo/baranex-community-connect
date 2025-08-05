@@ -216,21 +216,6 @@ const SettingsPage = () => {
     }
   };
 
-  const handlePasswordChange = () => {
-    // TODO: Implement password change functionality
-    toast({
-      title: "Info",
-      description: "Password change feature coming soon"
-    });
-  };
-
-  const handleDeactivateAccount = () => {
-    // TODO: Implement account deactivation
-    toast({
-      title: "Info",
-      description: "Account deactivation feature coming soon"
-    });
-  };
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl">
@@ -439,30 +424,6 @@ const SettingsPage = () => {
             </div>
           )}
 
-          {/* Section 6: Account Actions */}
-          <div className="pt-6">
-            <h2 className="text-xl font-bold text-destructive">Account Actions</h2>
-            <div className="mt-4 space-y-1">
-              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
-                <div>
-                  <h3 className="font-semibold">Change Password</h3>
-                  <p className="text-sm text-muted-foreground">Update your password to a new one.</p>
-                </div>
-                <Button variant="outline" onClick={handlePasswordChange}>
-                  Change
-                </Button>
-              </div>
-              <div className="flex items-center justify-between py-6">
-                <div>
-                  <h3 className="font-semibold">Deactivate Account</h3>
-                  <p className="text-sm text-muted-foreground">This action is irreversible and will permanently delete your account.</p>
-                </div>
-                <Button variant="destructive" onClick={handleDeactivateAccount}>
-                  Deactivate
-                </Button>
-              </div>
-            </div>
-          </div>
 
         </CardContent>
       </Card>
