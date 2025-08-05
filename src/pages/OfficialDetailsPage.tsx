@@ -85,6 +85,16 @@ const OfficialDetailsPage = () => {
     });
   };
 
+  // Format date for short display (e.g., "Jan 15, 2024")
+  const formatShortDate = (dateString?: string) => {
+    if (!dateString) return 'Unknown';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   // Format achievements into bullet points
   const formatAchievements = (achievements: any) => {
     if (!achievements) return null;
@@ -568,11 +578,11 @@ const OfficialDetailsPage = () => {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Profile Created:</span>
-                    <span className="text-foreground font-medium">{formatDateTime(official.created_at)}</span>
+                    <span className="text-foreground font-medium">{formatShortDate(official.created_at)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Last Updated:</span>
-                    <span className="text-foreground font-medium">{formatDateTime(official.updated_at)}</span>
+                    <span className="text-foreground font-medium">{formatShortDate(official.updated_at)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Updated By:</span>
