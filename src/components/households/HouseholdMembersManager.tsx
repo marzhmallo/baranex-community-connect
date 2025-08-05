@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Plus, X, Search, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +39,9 @@ const HouseholdMembersManager = ({
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState('registered');
 
+  // Member form state with role
+  const [memberRole, setMemberRole] = useState<'Head' | 'Spouse' | 'Child' | 'Other'>('Child');
+  
   // Non-registered member form state
   const [nonRegisteredForm, setNonRegisteredForm] = useState({
     first_name: '',
@@ -88,7 +92,7 @@ const HouseholdMembersManager = ({
     }
   });
 
-  // Fetch current household registered members
+  // Fetch current household registered members through householdmembers table
   const {
     data: registeredMembers,
     isLoading: isMembersLoading
@@ -98,20 +102,33 @@ const HouseholdMembersManager = ({
       const {
         data,
         error
-      } = await supabase.from('residents').select(`
+      } = await supabase
+        .from('householdmembers' as any)
+        .select(`
           id,
-          first_name,
-          middle_name,
-          last_name,
-          suffix,
-          photo_url,
-          status,
-          purok,
-          gender,
-          birthdate
-        `).eq('household_id', householdId).order('first_name');
+          role,
+          residentid,
+          residents:residentid (
+            id,
+            first_name,
+            middle_name,
+            last_name,
+            suffix,
+            photo_url,
+            status,
+            purok,
+            gender,
+            birthdate
+          )
+        `)
+        .eq('householdid', householdId)
+        .order('created_at');
       if (error) throw error;
-      return data || [];
+      return data?.map((member: any) => ({
+        ...member.residents,
+        householdMemberRole: member.role,
+        householdMemberId: member.id
+      })) || [];
     }
   });
 
@@ -188,7 +205,9 @@ const HouseholdMembersManager = ({
           purok,
           gender,
           birthdate
-        `).or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,middle_name.ilike.%${term}%`).is('household_id', null).order('first_name');
+        `).or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,middle_name.ilike.%${term}%`)
+        .not('id', 'in', `(${registeredMembers?.map(m => m.id).join(',') || 'null'})`)
+        .order('first_name');
       if (error) {
         console.error('Error searching residents:', error);
         toast({
@@ -218,15 +237,43 @@ const HouseholdMembersManager = ({
   // Add registered resident to household
   const handleAddRegisteredMember = async (residentId: string) => {
     try {
+      // Check if this role (Head) already exists for this household
+      if (memberRole === 'Head') {
+        const { data: existingHead } = await supabase
+          .from('householdmembers' as any)
+          .select('id')
+          .eq('householdid', householdId)
+          .eq('role', 'Head')
+          .single();
+        
+        if (existingHead) {
+          toast({
+            title: "Head of family already exists",
+            description: "This household already has a head of family. Please choose a different role or remove the current head first.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      // Add to householdmembers table
       const {
         error
-      } = await supabase.from('residents').update({
+      } = await supabase.from('householdmembers' as any).insert({
+        householdid: householdId,
+        residentid: residentId,
+        role: memberRole
+      });
+      if (error) throw error;
+
+      // Also update residents table to maintain backward compatibility
+      await supabase.from('residents').update({
         household_id: householdId
       }).eq('id', residentId);
-      if (error) throw error;
+
       toast({
         title: "Member added successfully",
-        description: "The resident has been added to this household."
+        description: `The resident has been added to this household as ${memberRole}.`
       });
       queryClient.invalidateQueries({
         queryKey: ['household-members', householdId]
@@ -236,6 +283,7 @@ const HouseholdMembersManager = ({
       });
       setSearchTerm('');
       setSearchResults([]);
+      setMemberRole('Child'); // Reset role
       setIsAddMemberOpen(false);
     } catch (error: any) {
       handleDatabaseError(error, "Failed to add member to household.");
@@ -300,23 +348,19 @@ const HouseholdMembersManager = ({
   };
 
   // Remove registered resident from household
-  const handleRemoveRegisteredMember = async (residentId: string, residentName: string) => {
+  const handleRemoveRegisteredMember = async (householdMemberId: string, residentId: string, residentName: string) => {
     try {
-      // Check if this resident is the head of family
-      if (householdData?.head_of_family === residentId) {
-        toast({
-          title: "Cannot remove household head",
-          description: "This person is the head of family. Please change the head of family first before removing them from the household.",
-          variant: "destructive"
-        });
-        return;
-      }
+      // Remove from householdmembers table
       const {
-        error
-      } = await supabase.from('residents').update({
+        error: householdMemberError
+      } = await supabase.from('householdmembers' as any).delete().eq('id', householdMemberId);
+      if (householdMemberError) throw householdMemberError;
+
+      // Also update residents table to maintain backward compatibility
+      await supabase.from('residents').update({
         household_id: null
       }).eq('id', residentId);
-      if (error) throw error;
+
       toast({
         title: "Member removed successfully",
         description: `${residentName} has been removed from this household.`
@@ -399,9 +443,26 @@ const HouseholdMembersManager = ({
                 </TabsList>
                 
                 <TabsContent value="registered" className="space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search residents by name..." value={searchTerm} onChange={e => handleSearch(e.target.value)} className="pl-10" />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Member Role</label>
+                      <Select value={memberRole} onValueChange={(value: 'Head' | 'Spouse' | 'Child' | 'Other') => setMemberRole(value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Head">Head of Family</SelectItem>
+                          <SelectItem value="Spouse">Spouse</SelectItem>
+                          <SelectItem value="Child">Child</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Search residents by name..." value={searchTerm} onChange={e => handleSearch(e.target.value)} className="pl-10" />
+                    </div>
                   </div>
                   
                   {isSearching && <p className="text-sm text-muted-foreground">Searching...</p>}
@@ -422,7 +483,7 @@ const HouseholdMembersManager = ({
                             </div>
                           </div>
                           <Button size="sm" onClick={() => handleAddRegisteredMember(resident.id)}>
-                            Add
+                            Add as {memberRole}
                           </Button>
                         </div>)}
                       
@@ -524,9 +585,9 @@ const HouseholdMembersManager = ({
                               {member.first_name} {member.middle_name ? member.middle_name + ' ' : ''}{member.last_name}
                               {member.suffix ? ' ' + member.suffix : ''}
                             </p>
-                            {householdData?.head_of_family === member.id && <Badge variant="outline" className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700">
-                                👑 Head of Family
-                              </Badge>}
+                            <Badge variant="outline" className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700">
+                                {member.householdMemberRole === 'Head' ? '👑 ' : ''}{member.householdMemberRole}
+                              </Badge>
                           </div>
                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <span>{member.gender}</span>
@@ -544,7 +605,7 @@ const HouseholdMembersManager = ({
                         <Button variant="ghost" size="sm" onClick={() => navigate(`/residents/${member.id}`)}>
                           View Profile
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleRemoveRegisteredMember(member.id, `${member.first_name} ${member.last_name}`)} disabled={householdData?.head_of_family === member.id}>
+                        <Button variant="ghost" size="sm" onClick={() => handleRemoveRegisteredMember(member.householdMemberId, member.id, `${member.first_name} ${member.last_name}`)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
@@ -570,9 +631,9 @@ const HouseholdMembersManager = ({
                               {unregisteredHeadOfFamily.first_name} {unregisteredHeadOfFamily.middle_name ? unregisteredHeadOfFamily.middle_name + ' ' : ''}{unregisteredHeadOfFamily.last_name}
                               {unregisteredHeadOfFamily.suffix ? ' ' + unregisteredHeadOfFamily.suffix : ''}
                             </p>
-                            <Badge variant="outline" className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700">
-                              👑 Head of Family
-                            </Badge>
+                             <Badge variant="outline" className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700">
+                                👑 Head of Family
+                              </Badge>
                           </div>
                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <span>{unregisteredHeadOfFamily.gender}</span>
