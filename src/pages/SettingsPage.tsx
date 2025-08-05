@@ -1,13 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const SettingsPage = () => {
   const { userProfile, userSettings, loading, refreshSettings } = useAuth();
@@ -23,6 +26,14 @@ const SettingsPage = () => {
     showWelcomeMessage: true,
     autoSaveChanges: false,
   });
+
+  const [barangaySettings, setBarangaySettings] = useState({
+    phone: '',
+    email: '',
+    officehours: ''
+  });
+
+  const [isLoadingBarangay, setIsLoadingBarangay] = useState(false);
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
     setNotifications(prev => ({
@@ -140,198 +151,321 @@ const SettingsPage = () => {
     }
   };
 
+  // Load barangay settings
+  useEffect(() => {
+    const loadBarangaySettings = async () => {
+      if (!userProfile?.brgyid || userProfile?.role !== 'admin') return;
+
+      setIsLoadingBarangay(true);
+      try {
+        const { data, error } = await supabase
+          .from('barangays')
+          .select('phone, email, officehours')
+          .eq('id', userProfile.brgyid)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setBarangaySettings({
+            phone: (data as any).phone || '',
+            email: (data as any).email || '',
+            officehours: (data as any).officehours || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading barangay settings:', error);
+      } finally {
+        setIsLoadingBarangay(false);
+      }
+    };
+
+    loadBarangaySettings();
+  }, [userProfile?.brgyid, userProfile?.role]);
+
+  const updateBarangaySettings = async () => {
+    if (!userProfile?.brgyid || userProfile?.role !== 'admin') return;
+
+    setIsLoadingBarangay(true);
+    try {
+      const { error } = await supabase
+        .from('barangays')
+        .update({
+          phone: barangaySettings.phone,
+          email: barangaySettings.email,
+          officehours: barangaySettings.officehours,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userProfile.brgyid);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Barangay settings updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating barangay settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update barangay settings",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingBarangay(false);
+    }
+  };
+
+  const handlePasswordChange = () => {
+    // TODO: Implement password change functionality
+    toast({
+      title: "Info",
+      description: "Password change feature coming soon"
+    });
+  };
+
+  const handleDeactivateAccount = () => {
+    // TODO: Implement account deactivation
+    toast({
+      title: "Info",
+      description: "Account deactivation feature coming soon"
+    });
+  };
+
   return (
-    <div className="container mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        <div className="md:col-span-8">
-          {/* Address Auto-Fill Settings */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Address Auto-Fill</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="auto-fill-address">Auto-fill address fields</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically populate address fields based on admin's barangay when adding residents and households. When enabled, address fields become read-only for security.
-                  </p>
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl">
+      {/* Header */}
+      <header className="mb-8">
+        <h1 className="text-3xl font-extrabold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground mt-1">Manage your account and system preferences.</p>
+      </header>
+
+      {/* Main Card Container */}
+      <Card>
+        <CardContent className="p-6 divide-y divide-border">
+          
+          {/* Section 1: General Preferences */}
+          <div>
+            <h2 className="text-xl font-bold">General Preferences</h2>
+            <div className="mt-4 space-y-1">
+              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
+                <div>
+                  <h3 className="font-semibold">Address Auto-Fill</h3>
+                  <p className="text-sm text-muted-foreground">Automatically populate address fields based on your barangay when adding residents.</p>
                 </div>
                 {loading ? (
                   <div className="w-11 h-6 bg-muted rounded-full animate-pulse" />
                 ) : (
                   <Switch 
-                    id="auto-fill-address" 
                     checked={userSettings?.auto_fill_address_from_admin_barangay ?? true}
                     onCheckedChange={updateAddressAutoFill}
                   />
                 )}
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
+                <div>
+                  <h3 className="font-semibold">Auto-Save Changes</h3>
+                  <p className="text-sm text-muted-foreground">Automatically save form changes as you work.</p>
+                </div>
+                <Switch 
+                  checked={preferences.autoSaveChanges}
+                  onCheckedChange={() => handlePreferenceChange('autoSaveChanges')}
+                />
+              </div>
+            </div>
+          </div>
 
-          {/* Chatbot Settings */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Alexander Cabalan (Chatbot)</CardTitle>
-              <CardDescription>Configure your AI assistant preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="chatbot-enabled">Enable Chatbot</Label>
-                  <p className="text-sm text-muted-foreground">Show or hide the floating chatbot button</p>
+          {/* Section 2: Alexander Cabalan (Chatbot) */}
+          <div className="pt-6">
+            <h2 className="text-xl font-bold">Alexander Cabalan (Chatbot)</h2>
+            <p className="text-sm text-muted-foreground mt-1">Configure your AI assistant preferences.</p>
+            <div className="mt-4 space-y-1">
+              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
+                <div>
+                  <h3 className="font-semibold">Enable Chatbot</h3>
+                  <p className="text-sm text-muted-foreground">Show or hide the floating chatbot button across the system.</p>
                 </div>
                 {loading ? (
                   <div className="w-11 h-6 bg-muted rounded-full animate-pulse" />
                 ) : (
                   <Switch 
-                    id="chatbot-enabled" 
                     checked={userSettings?.chatbot_enabled ?? true}
                     onCheckedChange={updateChatbotEnabled}
                   />
                 )}
               </div>
-              
               {!loading && (userSettings?.chatbot_enabled ?? true) && (
-                <div className="space-y-3 pt-2 border-t">
-                  <Label>Chatbot Mode</Label>
-                  <RadioGroup 
-                    value={userSettings?.chatbot_mode ?? 'offline'} 
-                    onValueChange={updateChatbotMode}
-                    className="grid grid-cols-2 gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="offline" id="offline-mode" />
-                      <Label htmlFor="offline-mode" className="cursor-pointer">
-                        <div>
-                          <div className="font-medium">🟠 Offline Mode</div>
-                          <div className="text-xs text-muted-foreground">Local responses only</div>
-                        </div>
-                      </Label>
+                <div className="py-6 border-b border-border last:border-b-0">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">Chatbot Mode</h3>
+                      <p className="text-sm text-muted-foreground">Select offline mode for basic responses or online mode for AI-powered responses.</p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="online" id="online-mode" />
-                      <Label htmlFor="online-mode" className="cursor-pointer">
-                        <div>
-                          <div className="font-medium">🟢 Online Mode</div>
-                          <div className="text-xs text-muted-foreground">AI-powered responses</div>
-                        </div>
-                      </Label>
+                    <div className="flex items-center space-x-2 rounded-lg bg-muted p-1">
+                      <Button 
+                        variant={userSettings?.chatbot_mode === 'offline' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => updateChatbotMode('offline')}
+                        className="text-sm font-semibold"
+                      >
+                        🟠 Offline
+                      </Button>
+                      <Button 
+                        variant={userSettings?.chatbot_mode === 'online' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => updateChatbotMode('online')}
+                        className="text-sm font-semibold"
+                      >
+                        🟢 Online
+                      </Button>
                     </div>
-                  </RadioGroup>
+                  </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Manage how you receive notifications</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="email-notifications">Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+          {/* Section 3: User Interface Preferences */}
+          <div className="pt-6">
+            <h2 className="text-xl font-bold">User Interface Preferences</h2>
+            <p className="text-sm text-muted-foreground mt-1">Customize your experience.</p>
+            <div className="mt-4 space-y-1">
+              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
+                <div>
+                  <h3 className="font-semibold">Welcome Message</h3>
+                  <p className="text-sm text-muted-foreground">Show the welcome message on the main dashboard.</p>
                 </div>
                 <Switch 
-                  id="email-notifications" 
-                  checked={notifications.email}
-                  onCheckedChange={() => handleNotificationChange('email')}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="in-app-notifications">In-App Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive notifications within the app</p>
-                </div>
-                <Switch 
-                  id="in-app-notifications" 
-                  checked={notifications.inApp}
-                  onCheckedChange={() => handleNotificationChange('inApp')}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="announcement-notifications">Announcement Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Get notified about new announcements</p>
-                </div>
-                <Switch 
-                  id="announcement-notifications" 
-                  checked={notifications.announcements}
-                  onCheckedChange={() => handleNotificationChange('announcements')}
-                />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>User Interface Preferences</CardTitle>
-              <CardDescription>Customize your experience</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="welcome-message">Welcome Message</Label>
-                  <p className="text-sm text-muted-foreground">Show welcome message on dashboard</p>
-                </div>
-                <Switch 
-                  id="welcome-message" 
                   checked={preferences.showWelcomeMessage}
                   onCheckedChange={() => handlePreferenceChange('showWelcomeMessage')}
                 />
               </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="auto-save">Auto-Save Changes</Label>
-                  <p className="text-sm text-muted-foreground">Automatically save form changes</p>
+              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
+                <div>
+                  <h3 className="font-semibold">Theme</h3>
+                  <p className="text-sm text-muted-foreground">Select your preferred interface theme.</p>
+                </div>
+                <ThemeToggle />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: Notification Preferences */}
+          <div className="pt-6">
+            <h2 className="text-xl font-bold">Notification Preferences</h2>
+            <p className="text-sm text-muted-foreground mt-1">Manage how you receive notifications.</p>
+            <div className="mt-4 space-y-1">
+              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
+                <div>
+                  <h3 className="font-semibold">In-App Notifications</h3>
+                  <p className="text-sm text-muted-foreground">Receive notifications via the bell icon in the app.</p>
                 </div>
                 <Switch 
-                  id="auto-save" 
-                  checked={preferences.autoSaveChanges}
-                  onCheckedChange={() => handlePreferenceChange('autoSaveChanges')}
+                  checked={notifications.inApp}
+                  onCheckedChange={() => handleNotificationChange('inApp')}
                 />
               </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="md:col-span-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Information about your account</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Username</label>
-                <div className="font-medium">{userProfile?.username || "Not set"}</div>
+              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
+                <div>
+                  <h3 className="font-semibold">Email Notifications</h3>
+                  <p className="text-sm text-muted-foreground">Receive important notifications via email.</p>
+                </div>
+                <Switch 
+                  checked={notifications.email}
+                  onCheckedChange={() => handleNotificationChange('email')}
+                />
               </div>
-              
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Role</label>
-                <div className="font-medium">{userProfile?.role || "Not set"}</div>
+              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
+                <div>
+                  <h3 className="font-semibold">Announcement Notifications</h3>
+                  <p className="text-sm text-muted-foreground">Get notified about new barangay-wide announcements.</p>
+                </div>
+                <Switch 
+                  checked={notifications.announcements}
+                  onCheckedChange={() => handleNotificationChange('announcements')}
+                />
               </div>
-              
-              <div className="pt-2">
-                <Button variant="outline" className="w-full">Change Password</Button>
+            </div>
+          </div>
+
+          {/* Section 5: Barangay Settings (Admin Only) */}
+          {userProfile?.role === 'admin' && (
+            <div className="pt-6">
+              <h2 className="text-xl font-bold">Barangay Settings</h2>
+              <p className="text-sm text-muted-foreground mt-1">Manage your barangay contact information.</p>
+              <div className="mt-4 space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      value={barangaySettings.phone}
+                      onChange={(e) => setBarangaySettings(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Enter phone number"
+                      disabled={isLoadingBarangay}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={barangaySettings.email}
+                      onChange={(e) => setBarangaySettings(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Enter email address"
+                      disabled={isLoadingBarangay}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="officehours">Office Hours</Label>
+                    <Textarea
+                      id="officehours"
+                      value={barangaySettings.officehours}
+                      onChange={(e) => setBarangaySettings(prev => ({ ...prev, officehours: e.target.value }))}
+                      placeholder="Enter office hours (e.g., Monday-Friday 8:00 AM - 5:00 PM)"
+                      disabled={isLoadingBarangay}
+                      rows={3}
+                    />
+                  </div>
+                  <Button 
+                    onClick={updateBarangaySettings}
+                    disabled={isLoadingBarangay}
+                    className="w-full"
+                  >
+                    {isLoadingBarangay ? 'Saving...' : 'Save Barangay Settings'}
+                  </Button>
+                </div>
               </div>
-              
-              <div>
-                <Button variant="destructive" className="w-full">Deactivate Account</Button>
+            </div>
+          )}
+
+          {/* Section 6: Account Actions */}
+          <div className="pt-6">
+            <h2 className="text-xl font-bold text-destructive">Account Actions</h2>
+            <div className="mt-4 space-y-1">
+              <div className="flex items-center justify-between py-6 border-b border-border last:border-b-0">
+                <div>
+                  <h3 className="font-semibold">Change Password</h3>
+                  <p className="text-sm text-muted-foreground">Update your password to a new one.</p>
+                </div>
+                <Button variant="outline" onClick={handlePasswordChange}>
+                  Change
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              <div className="flex items-center justify-between py-6">
+                <div>
+                  <h3 className="font-semibold">Deactivate Account</h3>
+                  <p className="text-sm text-muted-foreground">This action is irreversible and will permanently delete your account.</p>
+                </div>
+                <Button variant="destructive" onClick={handleDeactivateAccount}>
+                  Deactivate
+                </Button>
+              </div>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
     </div>
   );
 };
