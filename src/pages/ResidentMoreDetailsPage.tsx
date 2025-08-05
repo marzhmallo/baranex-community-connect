@@ -16,6 +16,7 @@ import RelationshipManager from '@/components/residents/RelationshipManager';
 import HouseholdSelector from '@/components/residents/HouseholdSelector';
 import ResidentForm from '@/components/residents/ResidentForm';
 import { supabase } from '@/integrations/supabase/client';
+import { useResidentPhoto } from '@/hooks/useResidentPhoto';
 
 // Helper function to calculate age
 const calculateAge = (birthDate: string) => {
@@ -98,124 +99,19 @@ const ResidentMoreDetailsPage = () => {
   const navigate = useNavigate();
   const [showFullPhoto, setShowFullPhoto] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | undefined>(undefined);
-  const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
 
-  // Cache utilities - Cache keyed by resident ID and photoUrl
-  const getCacheKey = (photoUrl: string) => `resident_photo_${residentId}_${btoa(photoUrl).slice(0, 15)}`;
-  
-  const getCachedData = (photoUrl: string) => {
-    try {
-      const cached = localStorage.getItem(getCacheKey(photoUrl));
-      if (cached) {
-        const data = JSON.parse(cached);
-        // Cache for 8 minutes (less than signed URL 10min expiry)
-        if (Date.now() - data.timestamp < 480000) {
-          return data.value;
-        }
-        localStorage.removeItem(getCacheKey(photoUrl));
-      }
-    } catch (error) {
-      console.error('Error reading photo cache:', error);
-    }
-    return null;
-  };
-
-  const setCachedData = (photoUrl: string, signedUrl: string) => {
-    try {
-      localStorage.setItem(getCacheKey(photoUrl), JSON.stringify({
-        value: signedUrl,
-        timestamp: Date.now()
-      }));
-    } catch (error) {
-      console.error('Error setting photo cache:', error);
-    }
-  };
-
-  // Generate signed URL for display
-  const generateSignedUrl = async (url: string) => {
-    if (!url) return undefined;
-
-    try {
-      // Extract file path from URL (works for both public and signed URLs)
-      let filePath = '';
-      
-      // Check if it's a public URL format
-      if (url.includes('/storage/v1/object/public/residentphotos/')) {
-        filePath = url.split('/storage/v1/object/public/residentphotos/')[1];
-      } else if (url.includes('/storage/v1/object/sign/residentphotos/')) {
-        filePath = url.split('/storage/v1/object/sign/residentphotos/')[1].split('?')[0];
-      } else {
-        // If it's already a file path, use it directly
-        filePath = url.startsWith('resident/') ? url : `resident/${url}`;
-      }
-
-      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from('residentphotos')
-        .createSignedUrl(filePath, 600); // 10 minutes expiration
-
-      if (signedUrlError) {
-        console.error('Error generating signed URL:', signedUrlError);
-        return undefined;
-      }
-
-      return signedUrlData.signedUrl;
-    } catch (error) {
-      console.error('Error generating signed URL:', error);
-      return undefined;
-    }
-  };
-  
   const { data: resident, isLoading, error, refetch } = useQuery({
     queryKey: ['resident', residentId],
     queryFn: () => getResidentById(residentId as string),
     enabled: !!residentId,
   });
-  
-  // Generate signed URL when resident photo changes
-  useEffect(() => {
-    if (!resident?.photo_url) {
-      setSignedPhotoUrl(undefined);
-      setIsLoadingPhoto(false);
-      return;
-    }
 
-    // Check cache first
-    const cachedUrl = getCachedData(resident.photo_url);
-    if (cachedUrl) {
-      setSignedPhotoUrl(cachedUrl);
-      setIsLoadingPhoto(false);
-      return;
-    }
-
-    // Fetch new signed URL
-    setIsLoadingPhoto(true);
-    setSignedPhotoUrl(undefined);
-    
-    generateSignedUrl(resident.photo_url)
-      .then(signedUrl => {
-        if (signedUrl) {
-          // Test image loading first
-          const img = new Image();
-          img.onload = () => {
-            setSignedPhotoUrl(signedUrl);
-            setCachedData(resident.photo_url, signedUrl);
-            setIsLoadingPhoto(false);
-          };
-          img.onerror = () => {
-            console.error('Failed to load resident photo');
-            setIsLoadingPhoto(false);
-          };
-          img.src = signedUrl;
-        } else {
-          setIsLoadingPhoto(false);
-        }
-      })
-      .catch(error => {
-        console.error('Error generating signed URL:', error);
-        setIsLoadingPhoto(false);
-      });
-  }, [resident?.photo_url]);
+  // Use TanStack Query for photo caching
+  const { data: signedPhotoUrl, isLoading: isLoadingPhoto } = useResidentPhoto({
+    residentId,
+    photoUrl: resident?.photo_url,
+    enabled: !!resident?.photo_url
+  });
   
   // Fetch admin profiles for recordedby and editedby
   const { data: createdByAdmin } = useQuery({
