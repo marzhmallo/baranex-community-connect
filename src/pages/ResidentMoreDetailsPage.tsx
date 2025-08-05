@@ -104,6 +104,7 @@ const ResidentMoreDetailsPage = () => {
     queryKey: ['resident', residentId],
     queryFn: () => getResidentById(residentId as string),
     enabled: !!residentId,
+    staleTime: 0, // Always fetch fresh data when query is invalidated
   });
 
   // Use TanStack Query for photo caching

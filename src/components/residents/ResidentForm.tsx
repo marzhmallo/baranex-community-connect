@@ -384,6 +384,11 @@ const ResidentForm = ({
         queryKey: ['residents']
       });
 
+      // Invalidate individual resident query for details page
+      queryClient.invalidateQueries({
+        queryKey: ['resident']
+      });
+
       // Invalidate resident photo cache to ensure fresh photos are loaded
       queryClient.invalidateQueries({
         queryKey: ['resident-photo']
