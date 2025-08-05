@@ -75,67 +75,69 @@ const RelationshipManager = ({ residentId, residentName }: RelationshipManagerPr
     queryKey: ['family-relationships', residentId],
     queryFn: async () => {
       try {
-        // Use raw SQL query to get household membership and family relationships
-        const { data: familyMembersData, error } = await supabase
-          .rpc('sql', {
-            query: `
-              WITH current_member AS (
-                SELECT householdid, role 
-                FROM householdmembers 
-                WHERE residentid = $1
-              )
-              SELECT 
-                hm.id,
-                hm.householdid,
-                hm.residentid,
-                hm.role,
-                r.id as resident_id,
-                r.first_name,
-                r.middle_name,
-                r.last_name,
-                r.suffix,
-                r.gender,
-                cm.role as current_role
-              FROM householdmembers hm
-              JOIN residents r ON hm.residentid = r.id
-              JOIN current_member cm ON hm.householdid = cm.householdid
-              WHERE hm.residentid != $1
-              AND hm.householdid = cm.householdid
-            `,
-            args: [residentId]
-          });
+        // First get the current resident's household membership using any type to avoid TypeScript issues
+        const { data: currentMemberData, error: currentMemberError } = await (supabase as any)
+          .from('householdmembers')
+          .select('householdid, role')
+          .eq('residentid', residentId)
+          .single();
 
-        if (error) {
-          console.error('SQL Error:', error);
+        if (currentMemberError || !currentMemberData) {
+          console.error('Error fetching current member:', currentMemberError);
           return { currentMember: null, relationships: [] };
         }
 
-        if (!familyMembersData || familyMembersData.length === 0) {
-          return { currentMember: null, relationships: [] };
+        // Get all other household members
+        const { data: householdMembersData, error: householdMembersError } = await (supabase as any)
+          .from('householdmembers')
+          .select('id, householdid, residentid, role')
+          .eq('householdid', currentMemberData.householdid)
+          .neq('residentid', residentId);
+
+        if (householdMembersError || !householdMembersData) {
+          console.error('Error fetching household members:', householdMembersError);
+          return { currentMember: { role: currentMemberData.role }, relationships: [] };
         }
 
-        const currentRole = familyMembersData[0]?.current_role;
-        
-        // Derive relationships
-        const relationships: DerivedRelationship[] = familyMembersData.map((member: any) => ({
-          id: member.id,
-          relatedResident: {
-            id: member.resident_id,
-            first_name: member.first_name,
-            middle_name: member.middle_name,
-            last_name: member.last_name,
-            suffix: member.suffix,
-            gender: member.gender
-          },
-          relationshipType: deriveRelationshipType(
-            currentRole,
-            member.role,
-            member.gender || ''
-          )
-        }));
+        if (householdMembersData.length === 0) {
+          return { currentMember: { role: currentMemberData.role }, relationships: [] };
+        }
+
+        // Get resident details for all household members
+        const residentIds = householdMembersData.map((member: any) => member.residentid);
+        const { data: residentsData, error: residentsError } = await supabase
+          .from('residents')
+          .select('id, first_name, middle_name, last_name, suffix, gender')
+          .in('id', residentIds);
+
+        if (residentsError || !residentsData) {
+          console.error('Error fetching residents data:', residentsError);
+          return { currentMember: { role: currentMemberData.role }, relationships: [] };
+        }
+
+        // Combine household member data with resident data
+        const relationships: DerivedRelationship[] = householdMembersData.map((member: any) => {
+          const residentData = residentsData.find((resident: any) => resident.id === member.residentid);
+          return {
+            id: member.id,
+            relatedResident: {
+              id: residentData?.id || '',
+              first_name: residentData?.first_name || '',
+              middle_name: residentData?.middle_name || '',
+              last_name: residentData?.last_name || '',
+              suffix: residentData?.suffix || '',
+              gender: residentData?.gender || ''
+            },
+            relationshipType: deriveRelationshipType(
+              currentMemberData.role,
+              member.role,
+              residentData?.gender || ''
+            )
+          };
+        });
 
         return { 
-          currentMember: { role: currentRole }, 
+          currentMember: { role: currentMemberData.role }, 
           relationships 
         };
       } catch (error) {
