@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +38,13 @@ const SettingsPage = () => {
     phone: '',
     email: '',
     officehours: ''
+  });
+
+  const [officeHoursStructured, setOfficeHoursStructured] = useState({
+    startDay: 'Monday',
+    endDay: 'Friday',
+    startTime: '08:00',
+    endTime: '17:00'
   });
 
   const [isLoadingBarangay, setIsLoadingBarangay] = useState(false);
@@ -158,6 +166,40 @@ const SettingsPage = () => {
     }
   };
 
+  const parseOfficeHours = (officehours: string) => {
+    // Try to parse existing office hours format
+    // Example: "Monday-Friday 8:00 AM - 5:00 PM"
+    const dayTimeMatch = officehours.match(/(\w+)-(\w+)\s+(\d{1,2}):(\d{2})\s*(AM|PM)?\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+    
+    if (dayTimeMatch) {
+      const [, startDay, endDay, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = dayTimeMatch;
+      
+      // Convert to 24-hour format
+      let start24 = parseInt(startHour);
+      let end24 = parseInt(endHour);
+      
+      if (startPeriod?.toLowerCase() === 'pm' && start24 !== 12) start24 += 12;
+      if (startPeriod?.toLowerCase() === 'am' && start24 === 12) start24 = 0;
+      if (endPeriod?.toLowerCase() === 'pm' && end24 !== 12) end24 += 12;
+      if (endPeriod?.toLowerCase() === 'am' && end24 === 12) end24 = 0;
+      
+      return {
+        startDay: startDay.charAt(0).toUpperCase() + startDay.slice(1).toLowerCase(),
+        endDay: endDay.charAt(0).toUpperCase() + endDay.slice(1).toLowerCase(),
+        startTime: `${start24.toString().padStart(2, '0')}:${startMin}`,
+        endTime: `${end24.toString().padStart(2, '0')}:${endMin}`
+      };
+    }
+    
+    // Default values
+    return {
+      startDay: 'Monday',
+      endDay: 'Friday',
+      startTime: '08:00',
+      endTime: '17:00'
+    };
+  };
+
   // Load barangay settings
   useEffect(() => {
     const loadBarangaySettings = async () => {
@@ -181,6 +223,10 @@ const SettingsPage = () => {
           };
           setBarangaySettings(settings);
           setOriginalBarangaySettings(settings);
+          
+          // Parse office hours for structured input
+          const parsed = parseOfficeHours(settings.officehours);
+          setOfficeHoursStructured(parsed);
         }
       } catch (error) {
         console.error('Error loading barangay settings:', error);
@@ -192,17 +238,45 @@ const SettingsPage = () => {
     loadBarangaySettings();
   }, [userProfile?.brgyid, userProfile?.role]);
 
+  const formatOfficeHours = (structured: typeof officeHoursStructured) => {
+    const { startDay, endDay, startTime, endTime } = structured;
+    
+    // Convert 24-hour to 12-hour format
+    const formatTime = (time: string) => {
+      const [hours, minutes] = time.split(':');
+      const hour = parseInt(hours);
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+      return `${displayHour}:${minutes} ${period}`;
+    };
+    
+    const formattedStartTime = formatTime(startTime);
+    const formattedEndTime = formatTime(endTime);
+    
+    if (startDay === endDay) {
+      return `${startDay} ${formattedStartTime} - ${formattedEndTime}`;
+    } else {
+      return `${startDay}-${endDay} ${formattedStartTime} - ${formattedEndTime}`;
+    }
+  };
+
   const handleEditBarangay = () => {
     setIsEditingBarangay(true);
   };
 
   const handleCancelEdit = () => {
     setBarangaySettings(originalBarangaySettings);
+    // Reset structured office hours too
+    const parsed = parseOfficeHours(originalBarangaySettings.officehours);
+    setOfficeHoursStructured(parsed);
     setIsEditingBarangay(false);
   };
 
   const updateBarangaySettings = async () => {
     if (!userProfile?.brgyid || userProfile?.role !== 'admin') return;
+
+    // Format the structured office hours into a readable string
+    const formattedOfficeHours = formatOfficeHours(officeHoursStructured);
 
     setIsLoadingBarangay(true);
     try {
@@ -211,14 +285,20 @@ const SettingsPage = () => {
         .update({
           phone: barangaySettings.phone,
           email: barangaySettings.email,
-          officehours: barangaySettings.officehours,
+          officehours: formattedOfficeHours,
           updated_at: new Date().toISOString()
         })
         .eq('id', userProfile.brgyid);
 
       if (error) throw error;
 
-      setOriginalBarangaySettings(barangaySettings);
+      // Update the local state with the formatted office hours
+      const updatedSettings = {
+        ...barangaySettings,
+        officehours: formattedOfficeHours
+      };
+      setBarangaySettings(updatedSettings);
+      setOriginalBarangaySettings(updatedSettings);
       setIsEditingBarangay(false);
 
       toast({
@@ -432,16 +512,84 @@ const SettingsPage = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="officehours">Office Hours</Label>
-                    <Textarea
-                      id="officehours"
-                      value={barangaySettings.officehours}
-                      onChange={(e) => setBarangaySettings(prev => ({ ...prev, officehours: e.target.value }))}
-                      placeholder="Enter office hours (e.g., Monday-Friday 8:00 AM - 5:00 PM)"
-                      disabled={!isEditingBarangay || isLoadingBarangay}
-                      className={!isEditingBarangay ? "bg-muted" : ""}
-                      rows={3}
-                    />
+                    <Label>Office Hours</Label>
+                    <div className="space-y-3">
+                      {!isEditingBarangay ? (
+                        <div className="p-3 bg-muted rounded-md text-sm">
+                          {barangaySettings.officehours || 'No office hours set'}
+                        </div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">From Day</Label>
+                              <Select
+                                value={officeHoursStructured.startDay}
+                                onValueChange={(value) => setOfficeHoursStructured(prev => ({ ...prev, startDay: value }))}
+                                disabled={isLoadingBarangay}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Monday">Monday</SelectItem>
+                                  <SelectItem value="Tuesday">Tuesday</SelectItem>
+                                  <SelectItem value="Wednesday">Wednesday</SelectItem>
+                                  <SelectItem value="Thursday">Thursday</SelectItem>
+                                  <SelectItem value="Friday">Friday</SelectItem>
+                                  <SelectItem value="Saturday">Saturday</SelectItem>
+                                  <SelectItem value="Sunday">Sunday</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">To Day</Label>
+                              <Select
+                                value={officeHoursStructured.endDay}
+                                onValueChange={(value) => setOfficeHoursStructured(prev => ({ ...prev, endDay: value }))}
+                                disabled={isLoadingBarangay}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Monday">Monday</SelectItem>
+                                  <SelectItem value="Tuesday">Tuesday</SelectItem>
+                                  <SelectItem value="Wednesday">Wednesday</SelectItem>
+                                  <SelectItem value="Thursday">Thursday</SelectItem>
+                                  <SelectItem value="Friday">Friday</SelectItem>
+                                  <SelectItem value="Saturday">Saturday</SelectItem>
+                                  <SelectItem value="Sunday">Sunday</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Start Time</Label>
+                              <Input
+                                type="time"
+                                value={officeHoursStructured.startTime}
+                                onChange={(e) => setOfficeHoursStructured(prev => ({ ...prev, startTime: e.target.value }))}
+                                disabled={isLoadingBarangay}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">End Time</Label>
+                              <Input
+                                type="time"
+                                value={officeHoursStructured.endTime}
+                                onChange={(e) => setOfficeHoursStructured(prev => ({ ...prev, endTime: e.target.value }))}
+                                disabled={isLoadingBarangay}
+                              />
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-2">
+                            Preview: {formatOfficeHours(officeHoursStructured)}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                   
                   {isEditingBarangay && (
