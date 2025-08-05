@@ -50,8 +50,8 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
     enabled: !!resident?.householdId,
   });
   
-  // Cache utilities - Simple cache keyed by photoUrl
-  const getCacheKey = (photoUrl: string) => `resident_photo_${btoa(photoUrl).slice(0, 20)}`;
+  // Cache utilities - Cache keyed by resident ID and photoUrl
+  const getCacheKey = (photoUrl: string) => `resident_photo_${resident?.id}_${btoa(photoUrl).slice(0, 15)}`;
   
   const getCachedData = (photoUrl: string) => {
     try {
