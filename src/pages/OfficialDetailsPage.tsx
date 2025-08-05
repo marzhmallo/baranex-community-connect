@@ -40,11 +40,38 @@ const OfficialDetailsPage = () => {
           )
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data as Official & { barangays?: { barangayname: string; municipality: string; province: string; region: string } };
+      return data as Official & { barangays?: { barangayname: string; municipality: string; province: string; region: string } } | null;
     },
     enabled: !!id
+  });
+
+  // Fetch profile names for created by and updated by
+  const { data: profileNames, isLoading: profileNamesLoading } = useQuery({
+    queryKey: ['profile-names', official?.recordedby, official?.editedby],
+    queryFn: async () => {
+      if (!official?.recordedby && !official?.editedby) return { createdBy: null, editedBy: null };
+      
+      const profileIds = [official?.recordedby, official?.editedby].filter(Boolean);
+      if (profileIds.length === 0) return { createdBy: null, editedBy: null };
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, firstname, lastname')
+        .in('id', profileIds);
+      
+      if (error) throw error;
+      
+      const createdBy = data?.find(p => p.id === official?.recordedby);
+      const editedBy = data?.find(p => p.id === official?.editedby);
+      
+      return {
+        createdBy: createdBy ? `${createdBy.firstname || ''} ${createdBy.lastname || ''}`.trim() : null,
+        editedBy: editedBy ? `${editedBy.firstname || ''} ${editedBy.lastname || ''}`.trim() : null
+      };
+    },
+    enabled: !!(official?.recordedby || official?.editedby)
   });
 
   // Fetch positions for the official
@@ -587,11 +614,15 @@ const OfficialDetailsPage = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Created By:</span>
-                    <span className="text-foreground font-medium">{official.recordedby ? 'Admin User' : 'N/A'}</span>
+                    <span className="text-foreground font-medium">
+                      {profileNames?.createdBy || (official.recordedby ? 'Admin User' : 'N/A')}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Updated By:</span>
-                    <span className="text-foreground font-medium">{official.editedby ? 'Admin User' : 'N/A'}</span>
+                    <span className="text-foreground font-medium">
+                      {profileNames?.editedBy || (official.editedby ? 'Admin User' : 'N/A')}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Status:</span>
