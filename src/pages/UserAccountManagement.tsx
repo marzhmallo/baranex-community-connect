@@ -519,6 +519,7 @@ const UserAccountManagement = () => {
                             Protected
                           </span> : canModifyUser(user) ? <div className="flex items-center gap-1">
                             <Button variant="ghost" size="sm" onClick={() => {
+                              console.log('Edit button clicked for user:', user);
                               setSelectedUser(user);
                               setEditUserData({
                                 firstname: user.firstname,
@@ -531,6 +532,7 @@ const UserAccountManagement = () => {
                                 role: user.role,
                                 status: user.status
                               });
+                              console.log('Opening edit dialog...');
                               setEditUserDialogOpen(true);
                             }} className="p-2 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full">
                               <Edit className="h-4 w-4" />
