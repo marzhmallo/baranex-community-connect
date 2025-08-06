@@ -233,8 +233,8 @@ const OfficialsPage = () => {
     return hadNonSkPositionThatEnded && !hasCurrentSkPosition && !hasCurrentNonSkPosition;
   }).length : 0;
 
-  const handleRefreshTerms = () => {
-    refetch();
+  const handleRefreshPage = () => {
+    window.location.reload();
   };
 
   const handleAddSuccess = () => {
@@ -280,7 +280,7 @@ const OfficialsPage = () => {
               Organization
             </Button>
           </div>
-          <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshTerms}>
+          <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshPage}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh Terms
           </Button>
           <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowAddDialog(true)}>
