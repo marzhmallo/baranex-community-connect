@@ -25,6 +25,7 @@ interface UserProfile {
   profile_picture?: string;
   chatbot_enabled?: boolean;
   chatbot_mode?: string;
+  padlock?: boolean;
 }
 
 interface UserSettings {
@@ -147,7 +148,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle();
+        .maybeSingle() as { data: any, error: any };
 
       if (profileError) {
         console.error('Error fetching from profiles table:', profileError);
@@ -162,7 +163,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (profileData) {
         console.log('User found in profiles table:', profileData);
         
-        // CRITICAL: Check user status FIRST - only approved users can proceed
+        // CRITICAL: Check padlock status FIRST - if true, require password reset and stay on login
+        if (profileData.padlock === true) {
+          console.log('User has padlock=true, preventing access');
+          await signOut();
+          toast({
+            title: "Password Reset Required",
+            description: "Please reset your password to continue logging in.",
+            variant: "destructive"
+          });
+          navigate("/login");
+          return;
+        }
+        
+        // SECOND: Check user status - only approved users can proceed
         if (profileData.status !== 'approved') {
           console.log('User status not approved:', profileData.status);
           await signOut();
