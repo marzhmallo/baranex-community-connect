@@ -531,11 +531,28 @@ const Auth = () => {
     }
     
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: values.email,
-        options: {
-          captchaToken
-        }
+      // First check if the email exists in profiles table
+      const { data: profileCheck, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', values.email)
+        .single();
+        
+      if (profileError || !profileCheck) {
+        toast({
+          title: "Email Not Found",
+          description: "No account found with this email address.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/update-password`,
+        captchaToken
       });
       
       if (error) {
@@ -546,8 +563,8 @@ const Auth = () => {
         });
       } else {
         toast({
-          title: "Verification Code Sent",
-          description: "Check your email for a 6-digit verification code.",
+          title: "Reset Code Sent",
+          description: "Check your email for a 6-digit reset code.",
           variant: "default"
         });
         setOtpEmail(values.email);
