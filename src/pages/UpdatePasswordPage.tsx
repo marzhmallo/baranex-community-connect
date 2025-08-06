@@ -26,7 +26,7 @@ export default function UpdatePasswordPage() {
       if (!session) {
         toast({
           title: "Access Denied",
-          description: "Please use the password reset link from your email.",
+          description: "Access not allowed.",
           variant: "destructive"
         });
         navigate('/login');
@@ -75,26 +75,9 @@ export default function UpdatePasswordPage() {
           variant: "destructive"
         });
       } else {
-        // Get the current user to update their padlock status
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // Set padlock to false after successful password update
-          const { error: padlockError } = await supabase
-            .from('profiles')
-            .update({ padlock: false } as any)
-            .eq('id', user.id);
-            
-          if (padlockError) {
-            console.error('Error updating padlock status:', padlockError);
-          } else {
-            console.log('Padlock set to false for user:', user.id);
-          }
-        }
-        
         toast({
           title: "Password Updated",
-          description: "Your password has been successfully updated and your account has been unlocked. Please log in with your new password.",
+          description: "Your password has been successfully updated. Please log in with your new password.",
           variant: "default"
         });
 
