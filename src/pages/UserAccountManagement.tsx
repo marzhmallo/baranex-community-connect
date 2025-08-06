@@ -248,12 +248,15 @@ const UserAccountManagement = () => {
   };
 
   const sendPasswordReset = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth?mode=reset-password`
+    });
     
     if (error) {
+      console.error('Password reset error:', error);
       toast({
         title: "Error",
-        description: "Failed to send password reset email",
+        description: error.message || "Failed to send password reset email",
         variant: "destructive"
       });
     } else {
