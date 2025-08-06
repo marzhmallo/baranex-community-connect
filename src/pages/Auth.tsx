@@ -277,9 +277,9 @@ const Auth = () => {
           return;
         }
 
-        // Check padlock status first - if true, require password reset
+        // Check padlock status first - if true, require password reset and stay on login
         if (userProfile?.padlock === true) {
-          // Sign out the user
+          // Sign out the user but keep them on login page
           await supabase.auth.signOut();
           
           toast({
@@ -287,6 +287,9 @@ const Auth = () => {
             description: "Please reset your password to continue logging in.",
             variant: "destructive"
           });
+          setIsLoading(false);
+          captchaRef.current?.resetCaptcha();
+          setCaptchaToken(null);
           return;
         }
 
