@@ -164,16 +164,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('User found in profiles table:', profileData);
         
         // CRITICAL: Check padlock status FIRST - if true, require password reset and stay on login
+        // EXCEPT allow access to update-password page
         if (profileData.padlock === true) {
-          console.log('User has padlock=true, preventing access');
-          await signOut();
-          toast({
-            title: "Password Reset Required",
-            description: "Please reset your password to continue logging in.",
-            variant: "destructive"
-          });
-          navigate("/login");
-          return;
+          console.log('User has padlock=true, checking current route');
+          
+          // Allow access to update-password page for users with padlock=true
+          if (window.location.pathname !== '/update-password') {
+            console.log('User has padlock=true, preventing access to:', window.location.pathname);
+            await signOut();
+            toast({
+              title: "Password Reset Required",
+              description: "Please reset your password to continue logging in.",
+              variant: "destructive"
+            });
+            navigate("/login");
+            return;
+          }
         }
         
         // SECOND: Check user status - only approved users can proceed
