@@ -477,9 +477,49 @@ const UserAccountManagement = () => {
                           </>}
                         
                         {/* Protected badge or action buttons */}
-                         <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
-                            {user.superior_admin ? 'Protected' : 'User'}
-                          </span>
+                        {user.superior_admin ? <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
+                            Protected
+                          </span> : canModifyUser(user) ? <div className="flex items-center gap-1">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => {
+                                  setSelectedUser(user);
+                                  setChangeRoleDialogOpen(true);
+                                }}>
+                                  <Settings className="h-4 w-4 mr-2" />
+                                  Change Role
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => lockAccount(user.id)}>
+                                  <KeyRound className="h-4 w-4 mr-2" />
+                                  Lock Account
+                                </DropdownMenuItem>
+                                {user.status === 'approved' && (
+                                  <DropdownMenuItem onClick={() => {
+                                    setSelectedUser(user);
+                                    setBanUserDialogOpen(true);
+                                  }} className="text-orange-600">
+                                    <UserX className="h-4 w-4 mr-2" />
+                                    Ban User
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => {
+                                  setSelectedUser(user);
+                                  setDeleteUserDialogOpen(true);
+                                }} className="text-red-600">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete User
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div> : <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
+                            Protected
+                          </span>}
                       </div>
                     </td>
                   </tr>)}
