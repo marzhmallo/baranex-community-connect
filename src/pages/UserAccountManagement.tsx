@@ -483,9 +483,26 @@ const UserAccountManagement = () => {
                             <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full">
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full">
-                              <UserX className="h-4 w-4" />
-                            </Button>
+                            {/* Transfer Superiority Button - only for superior admins when non-superior admins exist */}
+                            {userProfile?.superior_admin && 
+                             users?.some(u => u.role === 'admin' && !u.superior_admin && u.id !== userProfile.id) && 
+                             user.role === 'admin' && !user.superior_admin ? (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setTransferDialogOpen(true);
+                                }}
+                                className="p-2 text-muted-foreground hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-full"
+                              >
+                                <Crown className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full">
+                                <UserX className="h-4 w-4" />
+                              </Button>
+                            )}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -578,29 +595,46 @@ const UserAccountManagement = () => {
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  This action will transfer your superior admin privileges to another admin. You will lose your superior status and the selected admin will become the new superior admin.
+                  This action will transfer your superior admin privileges to <strong>{selectedUser?.firstname} {selectedUser?.lastname}</strong>. 
+                  You will lose your superior status and they will become the new superior admin.
                 </AlertDescription>
               </Alert>
               
-              <div className="space-y-2">
-                <h4 className="font-medium">Select new superior admin:</h4>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {users?.filter(u => (u.role === 'admin' || u.role === 'staff') && !u.superior_admin).map(user => <div key={user.id} className="flex items-center justify-between p-2 border border-border rounded">
-                      <div className="flex items-center space-x-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-xs">
-                            {getInitials(user.firstname, user.lastname)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{user.firstname} {user.lastname}</span>
-                        <span className="text-xs text-muted-foreground">({user.email})</span>
-                      </div>
-                      <Button size="sm" onClick={() => transferSuperiority(user.id)}>
-                        Transfer
-                      </Button>
-                    </div>)}
+              {selectedUser && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4 p-4 bg-muted/30 rounded-lg">
+                    <CachedAvatar 
+                      userId={selectedUser.id} 
+                      profilePicture={selectedUser.profile_picture} 
+                      fallback={getInitials(selectedUser.firstname, selectedUser.lastname)} 
+                      className="w-12 h-12" 
+                    />
+                    <div>
+                      <h4 className="font-semibold">{selectedUser.firstname} {selectedUser.lastname}</h4>
+                      <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                      {getRoleBadge(selectedUser.role || 'admin', false)}
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-4">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => setTransferDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      className="flex-1"
+                      onClick={() => transferSuperiority(selectedUser.id)}
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      Transfer Superiority
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
