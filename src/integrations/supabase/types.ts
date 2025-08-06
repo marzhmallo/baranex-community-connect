@@ -109,6 +109,7 @@ export type Database = {
           barangayname: string
           country: string
           created_at: string
+          email: string | null
           "gcash#": number | null
           gcashname: string[] | null
           gcashurl: string | null
@@ -118,6 +119,8 @@ export type Database = {
           is_custom: boolean
           logo_url: string | null
           municipality: string
+          officehours: string | null
+          phone: string | null
           plazid: string | null
           province: string
           region: string
@@ -128,6 +131,7 @@ export type Database = {
           barangayname: string
           country: string
           created_at: string
+          email?: string | null
           "gcash#"?: number | null
           gcashname?: string[] | null
           gcashurl?: string | null
@@ -137,6 +141,8 @@ export type Database = {
           is_custom?: boolean
           logo_url?: string | null
           municipality: string
+          officehours?: string | null
+          phone?: string | null
           plazid?: string | null
           province: string
           region: string
@@ -147,6 +153,7 @@ export type Database = {
           barangayname?: string
           country?: string
           created_at?: string
+          email?: string | null
           "gcash#"?: number | null
           gcashname?: string[] | null
           gcashurl?: string | null
@@ -156,6 +163,8 @@ export type Database = {
           is_custom?: boolean
           logo_url?: string | null
           municipality?: string
+          officehours?: string | null
+          phone?: string | null
           plazid?: string | null
           province?: string
           region?: string
@@ -945,6 +954,52 @@ export type Database = {
         }
         Relationships: []
       }
+      householdmembers: {
+        Row: {
+          created_at: string | null
+          householdid: string
+          id: string
+          residentid: string
+          role: Database["public"]["Enums"]["householdrole"]
+        }
+        Insert: {
+          created_at?: string | null
+          householdid: string
+          id?: string
+          residentid: string
+          role: Database["public"]["Enums"]["householdrole"]
+        }
+        Update: {
+          created_at?: string | null
+          householdid?: string
+          id?: string
+          residentid?: string
+          role?: Database["public"]["Enums"]["householdrole"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "householdmembers_householdid_fkey"
+            columns: ["householdid"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "householdmembers_residentid_fkey"
+            columns: ["residentid"]
+            isOneToOne: true
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "householdmembers_residentid_fkey"
+            columns: ["residentid"]
+            isOneToOne: true
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       households: {
         Row: {
           address: string
@@ -1247,7 +1302,8 @@ export type Database = {
           official_id: string
           position: string
           position_no: number | null
-          tenure: string | null
+          sk: boolean | null
+          tenure: string
           term_end: string
           term_start: string
           updated_at: string | null
@@ -1261,7 +1317,8 @@ export type Database = {
           official_id: string
           position: string
           position_no?: number | null
-          tenure?: string | null
+          sk?: boolean | null
+          tenure: string
           term_end: string
           term_start: string
           updated_at?: string | null
@@ -1275,7 +1332,8 @@ export type Database = {
           official_id?: string
           position?: string
           position_no?: number | null
-          tenure?: string | null
+          sk?: boolean | null
+          tenure?: string
           term_end?: string
           term_start?: string
           updated_at?: string | null
@@ -1346,12 +1404,12 @@ export type Database = {
           education: string | null
           email: string | null
           id: string
-          is_sk: boolean[] | null
+          "is_sk old": boolean[] | null
           name: string
           phone: string | null
           photo_url: string | null
           position_no: number | null
-          recordedby: string | null
+          recordedby: string
           term_end: string | null
           term_start: string | null
           updated_at: string
@@ -1370,12 +1428,12 @@ export type Database = {
           education?: string | null
           email?: string | null
           id?: string
-          is_sk?: boolean[] | null
+          "is_sk old"?: boolean[] | null
           name: string
           phone?: string | null
           photo_url?: string | null
           position_no?: number | null
-          recordedby?: string | null
+          recordedby: string
           term_end?: string | null
           term_start?: string | null
           updated_at?: string
@@ -1394,12 +1452,12 @@ export type Database = {
           education?: string | null
           email?: string | null
           id?: string
-          is_sk?: boolean[] | null
+          "is_sk old"?: boolean[] | null
           name?: string
           phone?: string | null
           photo_url?: string | null
           position_no?: number | null
-          recordedby?: string | null
+          recordedby?: string
           term_end?: string | null
           term_start?: string | null
           updated_at?: string
@@ -1451,6 +1509,7 @@ export type Database = {
           bio: string | null
           brgyid: string | null
           created_at: string | null
+          dis: Json | null
           email: string
           firstname: string | null
           gender: string
@@ -1459,6 +1518,7 @@ export type Database = {
           lastname: string | null
           mid: string | null
           middlename: string | null
+          notes: Json | null
           online: boolean | null
           phone: string | null
           plazid: string | null
@@ -1475,6 +1535,7 @@ export type Database = {
           bio?: string | null
           brgyid?: string | null
           created_at?: string | null
+          dis?: Json | null
           email: string
           firstname?: string | null
           gender?: string
@@ -1483,6 +1544,7 @@ export type Database = {
           lastname?: string | null
           mid?: string | null
           middlename?: string | null
+          notes?: Json | null
           online?: boolean | null
           phone?: string | null
           plazid?: string | null
@@ -1499,6 +1561,7 @@ export type Database = {
           bio?: string | null
           brgyid?: string | null
           created_at?: string | null
+          dis?: Json | null
           email?: string
           firstname?: string | null
           gender?: string
@@ -1507,6 +1570,7 @@ export type Database = {
           lastname?: string | null
           mid?: string | null
           middlename?: string | null
+          notes?: Json | null
           online?: boolean | null
           phone?: string | null
           plazid?: string | null
@@ -2305,6 +2369,10 @@ export type Database = {
         Args: { options: string[]; catalog: unknown }
         Returns: undefined
       }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_service_role: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -2429,6 +2497,7 @@ export type Database = {
       evacuation_center_status: "available" | "full" | "closed" | "maintenance"
       feedback_status: "pending" | "in_progress" | "resolved" | "rejected"
       feedback_type: "barangay" | "system"
+      householdrole: "Head" | "Spouse" | "Child" | "Other"
       incident_status: "Open" | "Under_Investigation" | "Resolved" | "Dismissed"
       report_type: "Theft" | "Dispute" | "Vandalism" | "Curfew" | "Others"
       risk_level: "Low" | "Moderate" | "High"
@@ -2577,6 +2646,7 @@ export const Constants = {
       evacuation_center_status: ["available", "full", "closed", "maintenance"],
       feedback_status: ["pending", "in_progress", "resolved", "rejected"],
       feedback_type: ["barangay", "system"],
+      householdrole: ["Head", "Spouse", "Child", "Other"],
       incident_status: ["Open", "Under_Investigation", "Resolved", "Dismissed"],
       report_type: ["Theft", "Dispute", "Vandalism", "Curfew", "Others"],
       risk_level: ["Low", "Moderate", "High"],
