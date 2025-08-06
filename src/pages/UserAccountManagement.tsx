@@ -47,6 +47,7 @@ const UserAccountManagement = () => {
   const [newRole, setNewRole] = useState('');
   const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false);
   const [banUserDialogOpen, setBanUserDialogOpen] = useState(false);
+  const [adminRoleConfirmOpen, setAdminRoleConfirmOpen] = useState(false);
   const {
     data: users,
     isLoading,
@@ -826,7 +827,12 @@ const UserAccountManagement = () => {
                   className="flex-1"
                   onClick={() => {
                     if (selectedUser && newRole) {
-                      changeUserRole(selectedUser.id, newRole);
+                      // Check if promoting to admin - show additional confirmation
+                      if (newRole === 'admin') {
+                        setAdminRoleConfirmOpen(true);
+                      } else {
+                        changeUserRole(selectedUser.id, newRole);
+                      }
                     }
                   }}
                   disabled={!newRole}
@@ -837,6 +843,39 @@ const UserAccountManagement = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Admin Role Confirmation Dialog */}
+        <AlertDialog open={adminRoleConfirmOpen} onOpenChange={setAdminRoleConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-blue-600" />
+                Promote to Administrator
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to promote <strong>{selectedUser?.firstname} {selectedUser?.lastname}</strong> to Administrator? 
+                This will grant them elevated privileges including the ability to manage other users, access sensitive data, and modify system settings.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setAdminRoleConfirmOpen(false);
+                setNewRole('');
+              }}>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => {
+                  if (selectedUser && newRole) {
+                    changeUserRole(selectedUser.id, newRole);
+                    setAdminRoleConfirmOpen(false);
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Promote to Admin
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Ban User Confirmation Dialog */}
         <AlertDialog open={banUserDialogOpen} onOpenChange={setBanUserDialogOpen}>
