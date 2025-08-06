@@ -48,8 +48,6 @@ const UserAccountManagement = () => {
   const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false);
   const [banUserDialogOpen, setBanUserDialogOpen] = useState(false);
   const [adminRoleConfirmOpen, setAdminRoleConfirmOpen] = useState(false);
-  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
-  const [editUserData, setEditUserData] = useState<Partial<UserProfile>>({});
   const {
     data: users,
     isLoading,
@@ -271,42 +269,6 @@ const UserAccountManagement = () => {
       refetch();
     }
   };
-
-  const updateUserProfile = async (userData: Partial<UserProfile>) => {
-    if (!selectedUser) return;
-
-    const targetUser = users?.find(u => u.id === selectedUser.id);
-    if (targetUser?.superior_admin && !userProfile?.superior_admin) {
-      toast({
-        title: "Access Denied",
-        description: "You cannot modify a superior admin's profile",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const { error } = await supabase
-      .from('profiles')
-      .update(userData)
-      .eq('id', selectedUser.id)
-      .eq('brgyid', userProfile?.brgyid);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update user profile",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "User profile updated successfully"
-      });
-      setEditUserDialogOpen(false);
-      setEditUserData({});
-      refetch();
-    }
-  };
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: {
@@ -518,23 +480,7 @@ const UserAccountManagement = () => {
                         {user.superior_admin ? <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
                             Protected
                           </span> : canModifyUser(user) ? <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => {
-                              console.log('Edit button clicked for user:', user);
-                              setSelectedUser(user);
-                              setEditUserData({
-                                firstname: user.firstname,
-                                lastname: user.lastname,
-                                middlename: user.middlename,
-                                email: user.email,
-                                phone: user.phone,
-                                username: user.username,
-                                purok: user.purok,
-                                role: user.role,
-                                status: user.status
-                              });
-                              console.log('Opening edit dialog...');
-                              setEditUserDialogOpen(true);
-                            }} className="p-2 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full">
+                            <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full">
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full">
@@ -1016,180 +962,6 @@ const UserAccountManagement = () => {
                   <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
                 </div>
               </div>}
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit User Dialog */}
-        <Dialog open={editUserDialogOpen} onOpenChange={setEditUserDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5" />
-                Edit User Profile
-              </DialogTitle>
-            </DialogHeader>
-            {selectedUser && (
-              <div className="space-y-6">
-                {/* User Header */}
-                <div className="flex items-center space-x-4 p-4 bg-muted/30 rounded-lg">
-                  <CachedAvatar 
-                    userId={selectedUser.id} 
-                    profilePicture={selectedUser.profile_picture} 
-                    fallback={getInitials(selectedUser.firstname, selectedUser.lastname)} 
-                    className="w-16 h-16" 
-                  />
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-foreground mb-1">
-                      {selectedUser.firstname} {selectedUser.lastname}
-                    </h3>
-                    <p className="text-muted-foreground">{selectedUser.email}</p>
-                  </div>
-                </div>
-
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  updateUserProfile(editUserData);
-                }} className="space-y-6">
-                  {/* Personal Information */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-foreground border-b border-border pb-2">Personal Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-firstname">First Name</Label>
-                        <Input
-                          id="edit-firstname"
-                          value={editUserData.firstname || ''}
-                          onChange={(e) => setEditUserData({ ...editUserData, firstname: e.target.value })}
-                          placeholder="Enter first name"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-lastname">Last Name</Label>
-                        <Input
-                          id="edit-lastname"
-                          value={editUserData.lastname || ''}
-                          onChange={(e) => setEditUserData({ ...editUserData, lastname: e.target.value })}
-                          placeholder="Enter last name"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-middlename">Middle Name</Label>
-                        <Input
-                          id="edit-middlename"
-                          value={editUserData.middlename || ''}
-                          onChange={(e) => setEditUserData({ ...editUserData, middlename: e.target.value })}
-                          placeholder="Enter middle name (optional)"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-username">Username</Label>
-                        <Input
-                          id="edit-username"
-                          value={editUserData.username || ''}
-                          onChange={(e) => setEditUserData({ ...editUserData, username: e.target.value })}
-                          placeholder="Enter username"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contact Information */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-foreground border-b border-border pb-2">Contact Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-email">Email Address</Label>
-                        <Input
-                          id="edit-email"
-                          type="email"
-                          value={editUserData.email || ''}
-                          onChange={(e) => setEditUserData({ ...editUserData, email: e.target.value })}
-                          placeholder="Enter email address"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-phone">Phone Number</Label>
-                        <Input
-                          id="edit-phone"
-                          value={editUserData.phone || ''}
-                          onChange={(e) => setEditUserData({ ...editUserData, phone: e.target.value })}
-                          placeholder="Enter phone number"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Administrative Information */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-foreground border-b border-border pb-2">Administrative Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-role">User Role</Label>
-                        <Select 
-                          value={editUserData.role || ''} 
-                          onValueChange={(value) => setEditUserData({ ...editUserData, role: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="user">User</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-status">Account Status</Label>
-                        <Select 
-                          value={editUserData.status || ''} 
-                          onValueChange={(value) => setEditUserData({ ...editUserData, status: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
-                            <SelectItem value="banned">Banned</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-purok">Purok/Zone</Label>
-                        <Input
-                          id="edit-purok"
-                          value={editUserData.purok || ''}
-                          onChange={(e) => setEditUserData({ ...editUserData, purok: e.target.value })}
-                          placeholder="Enter purok/zone"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-4 border-t border-border">
-                    <Button 
-                      type="button"
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => {
-                        setEditUserDialogOpen(false);
-                        setEditUserData({});
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit"
-                      className="flex-1"
-                    >
-                      Save Changes
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            )}
           </DialogContent>
         </Dialog>
       </div>
