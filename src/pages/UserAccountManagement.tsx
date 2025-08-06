@@ -10,9 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
-import { Crown, Shield, User, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle, Edit, MoreVertical, UserX, Play, Blocks, ZoomIn } from 'lucide-react';
+import { Crown, Shield, User, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle, Edit, MoreVertical, UserX, Play, Blocks, ZoomIn, KeyRound, Trash2, Settings } from 'lucide-react';
 import CachedAvatar from '@/components/ui/CachedAvatar';
 interface UserProfile {
   id: string;
@@ -41,6 +43,10 @@ const UserAccountManagement = () => {
   const [photoViewOpen, setPhotoViewOpen] = useState(false);
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
+  const [newRole, setNewRole] = useState('');
+  const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false);
+  const [banUserDialogOpen, setBanUserDialogOpen] = useState(false);
   const {
     data: users,
     isLoading,
@@ -171,6 +177,91 @@ const UserAccountManagement = () => {
     }
     // Regular admins cannot modify superior admins
     return !user.superior_admin;
+  };
+
+  const changeUserRole = async (userId: string, newRole: string) => {
+    const targetUser = users?.find(u => u.id === userId);
+    if (targetUser?.superior_admin && !userProfile?.superior_admin) {
+      toast({
+        title: "Access Denied",
+        description: "You cannot modify a superior admin's role",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role: newRole })
+      .eq('id', userId)
+      .eq('brgyid', userProfile?.brgyid);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user role",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: `User role updated to ${newRole}`
+      });
+      setChangeRoleDialogOpen(false);
+      setNewRole('');
+      refetch();
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    const targetUser = users?.find(u => u.id === userId);
+    if (targetUser?.superior_admin) {
+      toast({
+        title: "Access Denied",
+        description: "Cannot delete a superior admin",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId)
+      .eq('brgyid', userProfile?.brgyid);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete user",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "User deleted successfully"
+      });
+      setDeleteUserDialogOpen(false);
+      setUserDetailsOpen(false);
+      refetch();
+    }
+  };
+
+  const sendPasswordReset = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send password reset email",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Password reset email sent successfully"
+      });
+    }
   };
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -560,33 +651,87 @@ const UserAccountManagement = () => {
                     </AlertDescription>
                   </Alert>}
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
-                  {selectedUser.status === 'pending' && canModifyUser(selectedUser) && <>
+                {/* Context-Aware Action Bar */}
+                <div className="space-y-4 pt-4 border-t border-border">
+                  {/* Main Actions based on Status */}
+                  <div className="flex flex-wrap gap-3">
+                    {selectedUser.status === 'pending' && canModifyUser(selectedUser) && (
+                      <>
+                        <Button onClick={() => {
+                          updateUserStatus(selectedUser.id, 'approved');
+                          setUserDetailsOpen(false);
+                        }} className="flex-1 min-w-[120px]">
+                          <Check className="h-4 w-4 mr-2" />
+                          Approve
+                        </Button>
+                        <Button variant="destructive" onClick={() => {
+                          setRejectionDialogOpen(true);
+                        }} className="flex-1 min-w-[120px]">
+                          <X className="h-4 w-4 mr-2" />
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                    
+                    {selectedUser.status === 'approved' && canModifyUser(selectedUser) && (
+                      <>
+                        <Button variant="outline" className="flex-1 min-w-[120px]">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Profile
+                        </Button>
+                        <Button variant="outline" onClick={() => {
+                          window.location.href = `mailto:${selectedUser.email}`;
+                        }} className="flex-1 min-w-[120px]">
+                          <Mail className="h-4 w-4 mr-2" />
+                          Send Email
+                        </Button>
+                      </>
+                    )}
+                    
+                    {(selectedUser.status === 'blocked' || selectedUser.status === 'banned') && canModifyUser(selectedUser) && (
                       <Button onClick={() => {
-                  updateUserStatus(selectedUser.id, 'approved');
-                  setUserDetailsOpen(false);
-                }} className="flex-1 min-w-[120px]">
-                        <Check className="h-4 w-4 mr-2" />
-                        Approve User
+                        updateUserStatus(selectedUser.id, 'approved');
+                        setUserDetailsOpen(false);
+                      }} className="flex-1 min-w-[160px]">
+                        <Play className="h-4 w-4 mr-2" />
+                        Unban User
                       </Button>
-                      <Button variant="destructive" onClick={() => {
-                  setRejectionDialogOpen(true);
-                }} className="flex-1 min-w-[120px]">
-                        <X className="h-4 w-4 mr-2" />
-                        Reject User
-                      </Button>
-                    </>}
-                  <Button variant="outline" onClick={() => {
-                window.location.href = `mailto:${selectedUser.email}`;
-              }} className="flex-1 min-w-[120px]">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Send Email
-                  </Button>
-                  {canModifyUser(selectedUser) && selectedUser.status !== 'pending' && <Button variant="outline" className="flex-1 min-w-[120px]">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </Button>}
+                    )}
+                  </div>
+
+                  {/* More Options Dropdown */}
+                  {canModifyUser(selectedUser) && (
+                    <div className="flex justify-end">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => setChangeRoleDialogOpen(true)}>
+                            <Settings className="h-4 w-4 mr-2" />
+                            Change Role
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => sendPasswordReset(selectedUser.email || '')}>
+                            <KeyRound className="h-4 w-4 mr-2" />
+                            Send Password Reset
+                          </DropdownMenuItem>
+                          {selectedUser.status === 'approved' && (
+                            <DropdownMenuItem onClick={() => setBanUserDialogOpen(true)} className="text-orange-600">
+                              <UserX className="h-4 w-4 mr-2" />
+                              Ban User
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setDeleteUserDialogOpen(true)} className="text-red-600">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete User
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
                 </div>
               </div>}
           </DialogContent>
@@ -640,6 +785,115 @@ const UserAccountManagement = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Change Role Dialog */}
+        <Dialog open={changeRoleDialogOpen} onOpenChange={setChangeRoleDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Change User Role
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-role">New Role</Label>
+                <Select value={newRole} onValueChange={setNewRole}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select new role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setChangeRoleDialogOpen(false);
+                    setNewRole('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={() => {
+                    if (selectedUser && newRole) {
+                      changeUserRole(selectedUser.id, newRole);
+                    }
+                  }}
+                  disabled={!newRole}
+                >
+                  Change Role
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Ban User Confirmation Dialog */}
+        <AlertDialog open={banUserDialogOpen} onOpenChange={setBanUserDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <UserX className="h-5 w-5 text-orange-600" />
+                Ban User Account
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to ban <strong>{selectedUser?.firstname} {selectedUser?.lastname}</strong>? 
+                This action will block their access to the system. You can unban them later if needed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => {
+                  if (selectedUser) {
+                    updateUserStatus(selectedUser.id, 'banned');
+                    setBanUserDialogOpen(false);
+                    setUserDetailsOpen(false);
+                  }
+                }}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                Ban User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete User Confirmation Dialog */}
+        <AlertDialog open={deleteUserDialogOpen} onOpenChange={setDeleteUserDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-red-600" />
+                Delete User Account
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to permanently delete <strong>{selectedUser?.firstname} {selectedUser?.lastname}</strong>? 
+                This action cannot be undone and will remove all their data from the system.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => {
+                  if (selectedUser) {
+                    deleteUser(selectedUser.id);
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Photo View Dialog */}
         <Dialog open={photoViewOpen} onOpenChange={setPhotoViewOpen}>
