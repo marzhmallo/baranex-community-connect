@@ -16,7 +16,7 @@ const positionSchema = z.object({
   committee: z.string().optional(),
   term_start: z.string().min(1, 'Start date is required'),
   term_end: z.string().optional(),
-  is_current: z.boolean().optional(),
+  sk: z.boolean().optional(),
   description: z.string().optional(),
   position_no: z.number().min(1, 'Position number must be at least 1').optional(),
   tenure: z.string().optional()
@@ -114,7 +114,7 @@ export function AddEditPositionDialog({
       committee: '',
       term_start: '',
       term_end: '',
-      is_current: false,
+      sk: false,
       description: '',
       position_no: undefined,
       tenure: 'Elected'
@@ -135,7 +135,7 @@ export function AddEditPositionDialog({
         committee: position.committee || '',
         term_start: formatDateForInput(position.term_start),
         term_end: formatDateForInput(position.term_end),
-        is_current: position.is_current || !position.term_end,
+        sk: position.sk || false,
         description: position.description || '',
         position_no: position.position_no || undefined,
         tenure: position.tenure || 'Elected'
@@ -147,18 +147,13 @@ export function AddEditPositionDialog({
         committee: '',
         term_start: '',
         term_end: '',
-        is_current: false,
+        sk: false,
         description: '',
         position_no: undefined,
         tenure: 'Elected'
       });
     }
   }, [position, open, form]);
-  const handleIsCurrentChange = (checked: boolean) => {
-    if (checked) {
-      form.setValue('term_end', '');
-    }
-  };
   const onSubmit = async (data: PositionFormValues) => {
     if (!officialId) return;
     try {
@@ -168,9 +163,8 @@ export function AddEditPositionDialog({
       const formattedData = {
         ...data,
         official_id: officialId,
-        is_current: !!data.is_current,
-        // Set a far future date for term_end if is_current is true
-        term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : data.term_end || new Date().toISOString().split('T')[0],
+        sk: !!data.sk,
+        term_end: data.term_end || new Date().toISOString().split('T')[0],
         position: data.position,
         term_start: data.term_start,
         // Ensure this field is included
@@ -299,25 +293,22 @@ export function AddEditPositionDialog({
             }) => <FormItem>
                     <FormLabel>Term End Date (optional)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} disabled={form.watch('is_current')} className="bg-[#2a3649] border-[#3a4659]" />
+                      <Input type="date" {...field} className="bg-[#2a3649] border-[#3a4659]" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
             </div>
             
-            <FormField control={form.control} name="is_current" render={({
+            <FormField control={form.control} name="sk" render={({
             field
           }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649]">
                   <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={checked => {
-                field.onChange(checked);
-                handleIsCurrentChange(!!checked);
-              }} />
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Current Position</FormLabel>
+                    <FormLabel>Is SK</FormLabel>
                     <p className="text-xs text-gray-400">
-                      Check if this is a current position (no end date)
+                      Check if this is a Sangguniang Kabataan (SK) position
                     </p>
                   </div>
                 </FormItem>} />

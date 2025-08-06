@@ -273,7 +273,7 @@ export interface OfficialPosition {
   committee?: string;
   term_start: string;
   term_end?: string;
-  is_current?: boolean;
+  sk?: boolean;
   created_at?: string;
   updated_at?: string;
   description?: string;
