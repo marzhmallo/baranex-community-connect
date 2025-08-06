@@ -360,7 +360,11 @@ const OfficialsPage = () => {
               </div>
             ) : filteredOfficials.map(official => (
               <div key={official.id} className="relative">
-                <OfficialCard official={official} />
+                <OfficialCard 
+                  official={official} 
+                  currentTab={activeTab}
+                  currentSKTab={activeSKTab}
+                />
                 <div className="absolute top-2 right-2">
                   <Button
                     size="sm"

@@ -185,7 +185,7 @@ const UserOfficialsPage = () => {
         <TabsContent value="current" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {officialsToShow.map((official) => (
-              <OfficialCard key={official.id} official={official} />
+              <OfficialCard key={official.id} official={official} currentTab={activeTab} />
             ))}
             
             {officialsToShow.length === 0 && (
@@ -209,7 +209,7 @@ const UserOfficialsPage = () => {
         <TabsContent value="sk" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {officialsToShow.map((official) => (
-              <OfficialCard key={official.id} official={official} />
+              <OfficialCard key={official.id} official={official} currentTab={activeTab} />
             ))}
             
             {officialsToShow.length === 0 && (
@@ -233,7 +233,7 @@ const UserOfficialsPage = () => {
         <TabsContent value="previous" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {officialsToShow.map((official) => (
-              <OfficialCard key={official.id} official={official} />
+              <OfficialCard key={official.id} official={official} currentTab={activeTab} />
             ))}
             
             {officialsToShow.length === 0 && (

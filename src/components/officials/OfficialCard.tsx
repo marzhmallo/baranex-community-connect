@@ -11,10 +11,14 @@ import { OfficialDetailsDialog } from './OfficialDetailsDialog';
 
 interface OfficialCardProps {
   official: Official;
+  currentTab?: string;
+  currentSKTab?: string;
 }
 
 const OfficialCard = ({
-  official
+  official,
+  currentTab,
+  currentSKTab
 }: OfficialCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,6 +45,22 @@ const OfficialCard = ({
   // Get the position from official_positions
   const getPosition = () => {
     if (official.officialPositions && official.officialPositions.length > 0) {
+      // If we're in Previous SK context, find the most recent SK position
+      const isPreviousSkContext = currentTab === 'sk' && currentSKTab === 'previous';
+      
+      if (isPreviousSkContext) {
+        const skPositions = official.officialPositions.filter(pos => pos.sk === true);
+        if (skPositions.length > 0) {
+          // Sort by term_end date (most recent first) and return the most recent SK position
+          const sortedSkPositions = skPositions.sort((a, b) => {
+            const dateA = a.term_end ? new Date(a.term_end) : new Date();
+            const dateB = b.term_end ? new Date(b.term_end) : new Date();
+            return dateB.getTime() - dateA.getTime();
+          });
+          return sortedSkPositions[0].position || '';
+        }
+      }
+      
       // Find the current position (no term_end or term_end in future)
       const currentPositions = official.officialPositions.filter(pos => 
         !pos.term_end || new Date(pos.term_end) >= new Date()
@@ -61,6 +81,21 @@ const OfficialCard = ({
   // Get the term start date
   const getTermStart = () => {
     if (official.officialPositions && official.officialPositions.length > 0) {
+      // If we're in Previous SK context, get the most recent SK position's term
+      const isPreviousSkContext = currentTab === 'sk' && currentSKTab === 'previous';
+      
+      if (isPreviousSkContext) {
+        const skPositions = official.officialPositions.filter(pos => pos.sk === true);
+        if (skPositions.length > 0) {
+          const sortedSkPositions = skPositions.sort((a, b) => {
+            const dateA = a.term_end ? new Date(a.term_end) : new Date();
+            const dateB = b.term_end ? new Date(b.term_end) : new Date();
+            return dateB.getTime() - dateA.getTime();
+          });
+          return sortedSkPositions[0].term_start;
+        }
+      }
+      
       const currentPosition = official.officialPositions[0];
       return currentPosition.term_start;
     }
@@ -70,6 +105,21 @@ const OfficialCard = ({
   // Get the term end date
   const getTermEnd = () => {
     if (official.officialPositions && official.officialPositions.length > 0) {
+      // If we're in Previous SK context, get the most recent SK position's term
+      const isPreviousSkContext = currentTab === 'sk' && currentSKTab === 'previous';
+      
+      if (isPreviousSkContext) {
+        const skPositions = official.officialPositions.filter(pos => pos.sk === true);
+        if (skPositions.length > 0) {
+          const sortedSkPositions = skPositions.sort((a, b) => {
+            const dateA = a.term_end ? new Date(a.term_end) : new Date();
+            const dateB = b.term_end ? new Date(b.term_end) : new Date();
+            return dateB.getTime() - dateA.getTime();
+          });
+          return sortedSkPositions[0].term_end;
+        }
+      }
+      
       const currentPosition = official.officialPositions[0];
       return currentPosition.term_end;
     }
