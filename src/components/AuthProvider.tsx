@@ -162,7 +162,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (profileData) {
         console.log('User found in profiles table:', profileData);
         
-        // Check if barangay requires approval FIRST (is_custom = false)
+        // CRITICAL: Check user status FIRST - only approved users can proceed
+        if (profileData.status !== 'approved') {
+          console.log('User status not approved:', profileData.status);
+          await signOut();
+          
+          const status = profileData.status;
+          const notes = profileData.notes;
+          let rejectionReason = "";
+          
+          // Extract rejection reason from notes if available
+          if (notes && typeof notes === 'object' && !Array.isArray(notes)) {
+            rejectionReason = (notes as any).rejection_reason || "";
+          }
+
+          switch (status) {
+            case 'banned':
+              toast({
+                title: "Account Suspended",
+                description: `Your account access has been suspended. Please contact the barangay administration for more information.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`,
+                variant: "destructive"
+              });
+              break;
+            case 'rejected':
+              toast({
+                title: "Registration Not Approved",
+                description: `Your registration has not been approved. Please check your email for details or contact your barangay administrator.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`,
+                variant: "destructive"
+              });
+              break;
+            case 'pending':
+              toast({
+                title: "Account Pending Approval",
+                description: "Your account is still pending approval from the barangay administrator. Please wait for approval or contact them for updates.",
+                variant: "destructive"
+              });
+              break;
+            default:
+              toast({
+                title: "Login Failed",
+                description: "An unexpected error occurred. Please try again later or contact support if the problem persists.",
+                variant: "destructive"
+              });
+              break;
+          }
+          
+          // Force redirect to login page
+          navigate("/login");
+          return;
+        }
+        
+        // Check if barangay requires approval SECOND (is_custom = false)
         if (profileData.brgyid && (profileData.role === "admin" || profileData.role === "staff")) {
           const { data: barangayData, error: barangayError } = await supabase
             .from('barangays')
@@ -179,18 +229,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               description: "Your barangay registration is pending approval. Please wait for administrator approval.",
               variant: "destructive",
             });
+            navigate("/login");
             return;
           }
-        }
-        
-        if (profileData.status === "pending") {
-          await signOut();
-          toast({
-            title: "Account Pending Approval",
-            description: "Your account is pending approval from your barangay administrator.",
-            variant: "destructive",
-          });
-          return;
         }
 
         // Set user to ONLINE when successfully fetching profile (login)
@@ -609,6 +650,91 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
     };
   }, [location.pathname, isPageVisible]); // Include dependencies for proper tracking
+
+  // Global status monitoring effect - constantly check user status
+  useEffect(() => {
+    if (!user?.id || !userProfile || location.pathname === '/login') {
+      return;
+    }
+
+    const statusCheckInterval = setInterval(async () => {
+      try {
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('status, notes')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error checking user status:', error);
+          return;
+        }
+
+        // If user status is no longer approved, immediately sign them out and redirect
+        if (profileData && profileData.status !== 'approved') {
+          console.log('User status changed to non-approved:', profileData.status);
+          
+          clearInterval(statusCheckInterval);
+          
+          const status = profileData.status;
+          const notes = profileData.notes;
+          let rejectionReason = "";
+          
+          if (notes && typeof notes === 'object' && !Array.isArray(notes)) {
+            rejectionReason = (notes as any).rejection_reason || "";
+          }
+
+          // Clear auth state immediately
+          setUser(null);
+          setSession(null);
+          setUserProfile(null);
+          setUserSettings(null);
+          
+          // Sign out from Supabase
+          await supabase.auth.signOut();
+          
+          // Show appropriate message based on status
+          switch (status) {
+            case 'banned':
+              toast({
+                title: "Account Suspended",
+                description: `Your account access has been suspended. Please contact the barangay administration for more information.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`,
+                variant: "destructive"
+              });
+              break;
+            case 'rejected':
+              toast({
+                title: "Registration Not Approved",
+                description: `Your registration has not been approved. Please check your email for details or contact your barangay administrator.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`,
+                variant: "destructive"
+              });
+              break;
+            case 'pending':
+              toast({
+                title: "Account Pending Approval",
+                description: "Your account is still pending approval from the barangay administrator. Please wait for approval or contact them for updates.",
+                variant: "destructive"
+              });
+              break;
+            default:
+              toast({
+                title: "Login Failed",
+                description: "An unexpected error occurred. Please try again later or contact support if the problem persists.",
+                variant: "destructive"
+              });
+              break;
+          }
+          
+          // Force redirect to login
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error('Error in status check interval:', error);
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(statusCheckInterval);
+  }, [user?.id, userProfile, location.pathname, navigate]);
 
   return (
     <AuthContext.Provider value={{ user, session, userProfile, userSettings, loading, signOut, refreshSettings }}>
