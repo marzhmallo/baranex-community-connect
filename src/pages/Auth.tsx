@@ -263,7 +263,7 @@ const Auth = () => {
           .from('profiles')
           .select('status, notes, padlock')
           .eq('id', user.id)
-          .maybeSingle();
+          .maybeSingle() as { data: any, error: any };
 
         if (profileError) {
           console.error("Error fetching user profile:", profileError);
@@ -274,6 +274,19 @@ const Auth = () => {
           });
           // Sign out the user
           await supabase.auth.signOut();
+          return;
+        }
+
+        // Check padlock status first - if true, require password reset
+        if (userProfile?.padlock === true) {
+          // Sign out the user
+          await supabase.auth.signOut();
+          
+          toast({
+            title: "Password Reset Required",
+            description: "Please reset your password to continue logging in.",
+            variant: "destructive"
+          });
           return;
         }
 
