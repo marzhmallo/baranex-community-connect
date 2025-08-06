@@ -257,6 +257,74 @@ const Auth = () => {
         });
       } else if (user) {
         console.log("Login successful, user authenticated");
+        
+        // Check user status in profiles table
+        const { data: userProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('status, notes')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+          toast({
+            title: "Login Failed",
+            description: "An unexpected error occurred. Please try again later or contact support if the problem persists.",
+            variant: "destructive"
+          });
+          // Sign out the user
+          await supabase.auth.signOut();
+          return;
+        }
+
+        // Check if user status allows login
+        if (userProfile?.status !== 'approved') {
+          // Sign out the user since they're not approved
+          await supabase.auth.signOut();
+          
+          const status = userProfile?.status;
+          const notes = userProfile?.notes;
+          let rejectionReason = "";
+          
+          // Extract rejection reason from notes if available
+          if (notes && typeof notes === 'object' && !Array.isArray(notes)) {
+            rejectionReason = (notes as any).rejection_reason || "";
+          }
+
+          switch (status) {
+            case 'banned':
+              toast({
+                title: "Account Suspended",
+                description: `Your account access has been suspended. Please contact the barangay administration for more information.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`,
+                variant: "destructive"
+              });
+              break;
+            case 'rejected':
+              toast({
+                title: "Registration Not Approved",
+                description: `Your registration has not been approved. Please check your email for details or contact your barangay administrator.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`,
+                variant: "destructive"
+              });
+              break;
+            case 'pending':
+              toast({
+                title: "Account Pending Approval",
+                description: "Your account is still pending approval from the barangay administrator. Please wait for approval or contact them for updates.",
+                variant: "destructive"
+              });
+              break;
+            default:
+              toast({
+                title: "Login Failed",
+                description: "An unexpected error occurred. Please try again later or contact support if the problem persists.",
+                variant: "destructive"
+              });
+              break;
+          }
+          return;
+        }
+
+        // User is approved, allow login
         toast({
           title: "Login successful",
           description: "Welcome back!"
