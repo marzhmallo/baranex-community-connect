@@ -510,8 +510,12 @@ const OfficialDetailsPage = () => {
                         )}
                         <p className="text-xs text-muted-foreground mb-3">Since {formatDate(position.term_start)}</p>
                         <div className="flex space-x-2">
-                          <span className="inline-block bg-primary/20 text-primary px-2 py-1 rounded-full text-xs">Full-time</span>
-                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
+                          <span className="inline-block bg-primary/20 text-primary px-2 py-1 rounded-full text-xs">
+                            {position.sk ? 'SK' : 'Full-time'}
+                          </span>
+                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                            {position.tenure || 'Active'}
+                          </span>
                         </div>
                       </div>
                     ))
