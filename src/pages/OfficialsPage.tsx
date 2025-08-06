@@ -149,20 +149,28 @@ const OfficialsPage = () => {
   // Filter and sort officials based on the active tab
   const filteredOfficials = officialsData ? officialsData.filter(official => {
     const now = new Date();
-    const isSk = Array.isArray(official.is_sk) ? official.is_sk.length > 0 && official.is_sk[0] === true : Boolean(official.is_sk);
+    
+    // Check if any position has sk: true
+    const hasSkPosition = official.officialPositions?.some(pos => pos.sk === true) || false;
+    
+    // For SK officials, we need to check their SK positions specifically
+    const skPositions = official.officialPositions?.filter(pos => pos.sk === true) || [];
+    const isCurrentSk = skPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
+    const isPreviousSk = skPositions.some(pos => pos.term_end && new Date(pos.term_end) < now);
+    
     if (activeTab === 'current') {
       // Exclude SK officials from the current tab
-      return !isSk && (!official.term_end || new Date(official.term_end) > now);
+      return !hasSkPosition && (!official.term_end || new Date(official.term_end) > now);
     } else if (activeTab === 'sk') {
       if (activeSKTab === 'current') {
-        return isSk && (!official.term_end || new Date(official.term_end) > now);
+        return hasSkPosition && isCurrentSk;
       } else if (activeSKTab === 'previous') {
-        return isSk && official.term_end && new Date(official.term_end) < now;
+        return hasSkPosition && isPreviousSk;
       }
-      return isSk;
+      return hasSkPosition;
     } else if (activeTab === 'previous') {
       // Exclude SK officials from the previous tab
-      return !isSk && official.term_end && new Date(official.term_end) < now;
+      return !hasSkPosition && official.term_end && new Date(official.term_end) < now;
     }
     return false;
   }).sort((a, b) => {
@@ -174,21 +182,29 @@ const OfficialsPage = () => {
 
   // Count for each category (excluding SK from current/previous)
   const currentCount = officialsData ? officialsData.filter(o => {
-    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
-    return !isSk && (!o.term_end || new Date(o.term_end) > new Date());
+    const hasSkPosition = o.officialPositions?.some(pos => pos.sk === true) || false;
+    return !hasSkPosition && (!o.term_end || new Date(o.term_end) > new Date());
   }).length : 0;
+  
   const skCurrentCount = officialsData ? officialsData.filter(o => {
-    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
-    return isSk && (!o.term_end || new Date(o.term_end) > new Date());
+    const hasSkPosition = o.officialPositions?.some(pos => pos.sk === true) || false;
+    const skPositions = o.officialPositions?.filter(pos => pos.sk === true) || [];
+    const isCurrentSk = skPositions.some(pos => !pos.term_end || new Date(pos.term_end) > new Date());
+    return hasSkPosition && isCurrentSk;
   }).length : 0;
+  
   const skPreviousCount = officialsData ? officialsData.filter(o => {
-    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
-    return isSk && o.term_end && new Date(o.term_end) < new Date();
+    const hasSkPosition = o.officialPositions?.some(pos => pos.sk === true) || false;
+    const skPositions = o.officialPositions?.filter(pos => pos.sk === true) || [];
+    const isPreviousSk = skPositions.some(pos => pos.term_end && new Date(pos.term_end) < new Date());
+    return hasSkPosition && isPreviousSk;
   }).length : 0;
+  
   const skCount = skCurrentCount + skPreviousCount;
+  
   const previousCount = officialsData ? officialsData.filter(o => {
-    const isSk = Array.isArray(o.is_sk) ? o.is_sk.length > 0 && o.is_sk[0] === true : Boolean(o.is_sk);
-    return !isSk && o.term_end && new Date(o.term_end) < new Date();
+    const hasSkPosition = o.officialPositions?.some(pos => pos.sk === true) || false;
+    return !hasSkPosition && o.term_end && new Date(o.term_end) < new Date();
   }).length : 0;
 
   const handleRefreshTerms = () => {
