@@ -161,15 +161,14 @@ export function AddEditPositionDialog({
 
       // Ensure term_start is always provided (required by the database)
       const formattedData = {
+        ...data,
         official_id: officialId,
         sk: !!data.sk,
         term_end: data.term_end || new Date().toISOString().split('T')[0],
         position: data.position,
         term_start: data.term_start,
-        description: data.description || null,
-        committee: data.committee || null,
-        tenure: data.tenure || "N/A", // Required field with default
-        position_no: data.position_no || null
+        // Ensure this field is included
+        position_no: data.position_no || null // Include position_no
       };
       let result;
       if (isEditMode && position) {
