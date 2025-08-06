@@ -531,14 +531,44 @@ const Auth = () => {
     }
     
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: values.email,
-        options: {
-          captchaToken
-        }
+      // First validate that the email exists in auth.users or profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', values.email)
+        .maybeSingle();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error("Error checking profile:", profileError);
+        toast({
+          title: "Error",
+          description: "An error occurred while validating your email",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!profileData) {
+        toast({
+          title: "Email Not Found",
+          description: "No account found with this email address. Please check your email or sign up for a new account.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+        return;
+      }
+
+      // Send password reset email with OTP
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/update-password`,
+        captchaToken
       });
       
       if (error) {
+        console.error("Reset password error:", error);
         toast({
           title: "Error",
           description: error.message,
@@ -546,20 +576,20 @@ const Auth = () => {
         });
       } else {
         toast({
-          title: "Verification Code Sent",
-          description: "Check your email for a 6-digit verification code.",
+          title: "Password Reset Email Sent",
+          description: "Check your email for password reset instructions with a verification code.",
           variant: "default"
         });
-        setOtpEmail(values.email);
-        setShowOtpInput(true);
+        setActiveTab("login");
+        forgotPasswordForm.reset();
       }
     } catch (error: any) {
+      console.error("Forgot password error:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred",
         variant: "destructive"
       });
-      console.error("Forgot password error:", error);
     } finally {
       setIsLoading(false);
       captchaRef.current?.resetCaptcha();
@@ -723,11 +753,11 @@ const Auth = () => {
                    "Set New Password"}
                 </h2>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {activeTab === "login" ? "Sign in to your dashboard" : 
-                   activeTab === "signup" ? "Join Baranex to manage your community" :
-                   activeTab === "forgot-password" ? "Enter your email to receive a password reset link" :
-                   "Enter your new password"}
-                </p>
+                   {activeTab === "login" ? "Sign in to your dashboard" : 
+                    activeTab === "signup" ? "Join Baranex to manage your community" :
+                    activeTab === "forgot-password" ? "Enter your email to receive password reset instructions" :
+                    "Enter your new password"}
+                 </p>
               </div>
               
               <TabsContent value="login">
@@ -1092,118 +1122,54 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="forgot-password">
-                {!showOtpInput ? (
-                  <Form {...forgotPasswordForm}>
-                    <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
-                      <FormField 
-                        control={forgotPasswordForm.control} 
-                        name="email" 
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
-                              Email Address
-                            </FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                                <Input 
-                                  placeholder="Enter your email address" 
-                                  className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
-                                  {...field} 
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} 
-                      />
-                      
-                      <div className="flex justify-center my-4">
-                        <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
-                      </div>
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
-                        disabled={isLoading || !captchaToken}
+                <Form {...forgotPasswordForm}>
+                  <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+                    <FormField 
+                      control={forgotPasswordForm.control} 
+                      name="email" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                            Email Address
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <Input 
+                                placeholder="Enter your email address" 
+                                className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} 
+                    />
+                    
+                    <div className="flex justify-center my-4">
+                      <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
+                      disabled={isLoading || !captchaToken}
+                    >
+                      {isLoading ? "Sending Reset Email..." : "Send Password Reset"}
+                    </Button>
+                    
+                    <div className="text-center">
+                      <button 
+                        type="button" 
+                        onClick={() => setActiveTab("login")} 
+                        className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}
                       >
-                        {isLoading ? "Sending Code..." : "Send Verification Code"}
-                      </Button>
-                      
-                      <div className="text-center">
-                        <button 
-                          type="button" 
-                          onClick={() => setActiveTab("login")} 
-                          className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}
-                        >
-                          Back to Login
-                        </button>
-                      </div>
-                    </form>
-                  </Form>
-                ) : (
-                  <Form {...otpForm}>
-                    <form onSubmit={otpForm.handleSubmit(handleOtpVerification)} className="space-y-4">
-                      <div className="text-center mb-4">
-                        <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-                          Enter Verification Code
-                        </h3>
-                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
-                          We sent a 6-digit code to {otpEmail}
-                        </p>
-                      </div>
-
-                      <FormField 
-                        control={otpForm.control} 
-                        name="otp" 
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-2 text-center ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
-                              Verification Code
-                            </FormLabel>
-                            <FormControl>
-                              <div className="flex justify-center">
-                                <InputOTP maxLength={6} {...field}>
-                                  <InputOTPGroup>
-                                    <InputOTPSlot index={0} />
-                                    <InputOTPSlot index={1} />
-                                    <InputOTPSlot index={2} />
-                                    <InputOTPSlot index={3} />
-                                    <InputOTPSlot index={4} />
-                                    <InputOTPSlot index={5} />
-                                  </InputOTPGroup>
-                                </InputOTP>
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} 
-                      />
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Verifying..." : "Verify Code"}
-                      </Button>
-                      
-                      <div className="text-center space-y-2">
-                        <button 
-                          type="button" 
-                          onClick={() => {
-                            setShowOtpInput(false);
-                            setOtpEmail("");
-                            otpForm.reset();
-                          }}
-                          className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}
-                        >
-                          Try Different Email
-                        </button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
+                        Back to Login
+                      </button>
+                    </div>
+                  </form>
+                </Form>
               </TabsContent>
 
               <TabsContent value="reset-password">
