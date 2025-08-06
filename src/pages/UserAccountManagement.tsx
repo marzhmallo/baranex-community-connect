@@ -248,23 +248,25 @@ const UserAccountManagement = () => {
     }
   };
 
-  const sendPasswordReset = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth?mode=reset-password`
-    });
+  const lockAccount = async (userId: string) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ padlock: true } as any)
+      .eq('id', userId);
     
     if (error) {
-      console.error('Password reset error:', error);
+      console.error('Lock account error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to send password reset email",
+        description: error.message || "Failed to lock account",
         variant: "destructive"
       });
     } else {
       toast({
         title: "Success",
-        description: "Password reset email sent successfully"
+        description: "Account locked successfully"
       });
+      refetch();
     }
   };
   const getStatusBadge = (status: string) => {
@@ -717,9 +719,9 @@ const UserAccountManagement = () => {
                             <Settings className="h-4 w-4 mr-2" />
                             Change Role
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => sendPasswordReset(selectedUser.email || '')}>
+                          <DropdownMenuItem onClick={() => lockAccount(selectedUser.id)}>
                             <KeyRound className="h-4 w-4 mr-2" />
-                            Send Password Reset
+                            Lock Account
                           </DropdownMenuItem>
                           {selectedUser.status === 'approved' && (
                             <DropdownMenuItem onClick={() => setBanUserDialogOpen(true)} className="text-orange-600">
