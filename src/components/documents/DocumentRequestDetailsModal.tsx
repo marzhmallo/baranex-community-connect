@@ -170,7 +170,7 @@ const DocumentRequestDetailsModal = ({
                     <SmartPhotoDisplay
                       bucketName="cashg"
                       filePath={request.paymenturl}
-                      isPublic={true}
+                      isPublic={false}
                       className="w-full h-64"
                       alt="Payment Screenshot"
                       fallbackContent="💳"
