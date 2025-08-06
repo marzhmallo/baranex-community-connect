@@ -278,4 +278,5 @@ export interface OfficialPosition {
   updated_at?: string;
   description?: string;
   position_no?: number; // Added position_no for custom sorting
+  tenure?: string; // Added tenure field
 }

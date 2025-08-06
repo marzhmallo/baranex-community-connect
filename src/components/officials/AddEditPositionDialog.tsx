@@ -18,7 +18,8 @@ const positionSchema = z.object({
   term_end: z.string().optional(),
   is_current: z.boolean().optional(),
   description: z.string().optional(),
-  position_no: z.number().min(1, 'Position number must be at least 1').optional()
+  position_no: z.number().min(1, 'Position number must be at least 1').optional(),
+  tenure: z.string().optional()
 });
 type PositionFormValues = z.infer<typeof positionSchema>;
 interface AddEditPositionDialogProps {
@@ -115,7 +116,8 @@ export function AddEditPositionDialog({
       term_end: '',
       is_current: false,
       description: '',
-      position_no: undefined
+      position_no: undefined,
+      tenure: 'Elected'
     }
   });
 
@@ -135,7 +137,8 @@ export function AddEditPositionDialog({
         term_end: formatDateForInput(position.term_end),
         is_current: position.is_current || !position.term_end,
         description: position.description || '',
-        position_no: position.position_no || undefined
+        position_no: position.position_no || undefined,
+        tenure: position.tenure || 'Elected'
       });
     } else if (!position && open) {
       // Clear form when adding a new position
@@ -146,7 +149,8 @@ export function AddEditPositionDialog({
         term_end: '',
         is_current: false,
         description: '',
-        position_no: undefined
+        position_no: undefined,
+        tenure: 'Elected'
       });
     }
   }, [position, open, form]);
@@ -248,6 +252,24 @@ export function AddEditPositionDialog({
                     </Select>
                   </FormControl>
                   <div className="text-xs text-gray-400 mt-1">Lower numbers appear first (1 = highest priority).</div>
+                  <FormMessage />
+                </FormItem>} />
+
+            <FormField control={form.control} name="tenure" render={({
+            field
+          }) => <FormItem>
+                  <FormLabel>Tenure</FormLabel>
+                  <FormControl>
+                    <Select value={field.value || "Elected"} onValueChange={field.onChange}>
+                      <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
+                        <SelectValue placeholder="Select tenure type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Elected">Elected</SelectItem>
+                        <SelectItem value="Appointed">Appointed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>} />
             
