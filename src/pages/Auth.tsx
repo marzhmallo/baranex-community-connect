@@ -258,10 +258,10 @@ const Auth = () => {
       } else if (user) {
         console.log("Login successful, user authenticated");
         
-        // Check user status in profiles table
+        // Check user status and padlock in profiles table
         const { data: userProfile, error: profileError } = await supabase
           .from('profiles')
-          .select('status, notes')
+          .select('status, notes, padlock')
           .eq('id', user.id)
           .maybeSingle();
 
