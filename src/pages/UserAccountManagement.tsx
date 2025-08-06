@@ -480,12 +480,6 @@ const UserAccountManagement = () => {
                         {user.superior_admin ? <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
                             Protected
                           </span> : canModifyUser(user) ? <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full">
-                              <UserX className="h-4 w-4" />
-                            </Button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
