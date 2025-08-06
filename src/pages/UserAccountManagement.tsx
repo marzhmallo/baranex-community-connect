@@ -39,6 +39,8 @@ const UserAccountManagement = () => {
   const [userDetailsOpen, setUserDetailsOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [photoViewOpen, setPhotoViewOpen] = useState(false);
+  const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
   const {
     data: users,
     isLoading,
@@ -70,7 +72,7 @@ const UserAccountManagement = () => {
     const matchesSearch = user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) || user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
-  const updateUserStatus = async (userId: string, status: string) => {
+  const updateUserStatus = async (userId: string, status: string, reason?: string) => {
     // Check if the target user is a superior admin
     const targetUser = users?.find(u => u.id === userId);
     if (targetUser?.superior_admin && !userProfile?.superior_admin) {
@@ -81,11 +83,21 @@ const UserAccountManagement = () => {
       });
       return;
     }
+
+    const updateData: any = { status };
+    
+    // If rejecting and reason provided, add to notes
+    if (status === 'rejected' && reason) {
+      updateData.notes = {
+        rejection_reason: reason,
+        rejected_at: new Date().toISOString(),
+        rejected_by: userProfile?.id
+      };
+    }
+
     const {
       error
-    } = await supabase.from('profiles').update({
-      status
-    }).eq('id', userId).eq('brgyid', userProfile?.brgyid); // Additional security check
+    } = await supabase.from('profiles').update(updateData).eq('id', userId).eq('brgyid', userProfile?.brgyid); // Additional security check
 
     if (error) {
       toast({
@@ -559,8 +571,7 @@ const UserAccountManagement = () => {
                         Approve User
                       </Button>
                       <Button variant="destructive" onClick={() => {
-                  updateUserStatus(selectedUser.id, 'rejected');
-                  setUserDetailsOpen(false);
+                  setRejectionDialogOpen(true);
                 }} className="flex-1 min-w-[120px]">
                         <X className="h-4 w-4 mr-2" />
                         Reject User
@@ -578,6 +589,55 @@ const UserAccountManagement = () => {
                     </Button>}
                 </div>
               </div>}
+          </DialogContent>
+        </Dialog>
+
+        {/* Rejection Reason Dialog */}
+        <Dialog open={rejectionDialogOpen} onOpenChange={setRejectionDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <X className="h-5 w-5 text-destructive" />
+                Reject User Account
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="rejection-reason">Rejection Reason</Label>
+                <Input
+                  id="rejection-reason"
+                  placeholder="e.g., ID was unclear, Name does not match ID"
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setRejectionDialogOpen(false);
+                    setRejectionReason('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  className="flex-1"
+                  onClick={() => {
+                    if (selectedUser) {
+                      updateUserStatus(selectedUser.id, 'rejected', rejectionReason);
+                      setUserDetailsOpen(false);
+                      setRejectionDialogOpen(false);
+                      setRejectionReason('');
+                    }
+                  }}
+                >
+                  Reject User
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
 
