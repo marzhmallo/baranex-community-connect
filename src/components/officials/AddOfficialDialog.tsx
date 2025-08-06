@@ -261,7 +261,8 @@ export function AddOfficialDialog({
           is_sk: data.is_sk ? [true] : [false], // Database expects an array
           position: data.position, // Add position to satisfy type requirements
           brgyid: userProfile.brgyid, // Use current user's brgyid
-          photo_url: data.photo_url || null
+          photo_url: data.photo_url || null,
+          recordedby: userProfile.id // Add the required recordedby field
         };
         
         const { data: newOfficial, error: officialError } = await supabase
@@ -280,7 +281,8 @@ export function AddOfficialDialog({
           term_start: data.term_start,
           term_end: data.is_current ? new Date('9999-12-31').toISOString().split('T')[0] : (data.term_end || new Date().toISOString().split('T')[0]),
           is_current: !!data.is_current,
-          description: null
+          description: null,
+          tenure: "N/A" // Add required tenure field
         };
         
         const { error: positionError } = await supabase

@@ -81,8 +81,8 @@ const OfficialsPage = () => {
 
         return {
           ...official,
-          // Keep is_sk as array to match the Official interface
-          is_sk: official.is_sk || [],
+          // Keep is_sk as array to match the Official interface  
+          is_sk: (official as any).is_sk || [],
           // Update with position data if we have it
           position: latestPosition?.position || '',
           term_start: latestPosition?.term_start || official.term_start,
