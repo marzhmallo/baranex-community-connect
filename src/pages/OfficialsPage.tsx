@@ -150,27 +150,39 @@ const OfficialsPage = () => {
   const filteredOfficials = officialsData ? officialsData.filter(official => {
     const now = new Date();
     
-    // Check if any position has sk: true
-    const hasSkPosition = official.officialPositions?.some(pos => pos.sk === true) || false;
+    // Get all positions for this official
+    const allPositions = official.officialPositions || [];
+    const skPositions = allPositions.filter(pos => pos.sk === true);
+    const nonSkPositions = allPositions.filter(pos => pos.sk === false || pos.sk === null);
     
-    // For SK officials, we need to check their SK positions specifically
-    const skPositions = official.officialPositions?.filter(pos => pos.sk === true) || [];
-    const isCurrentSk = skPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
-    const isPreviousSk = skPositions.some(pos => pos.term_end && new Date(pos.term_end) < now);
+    // Check current positions (term hasn't ended)
+    const hasCurrentSkPosition = skPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
+    const hasCurrentNonSkPosition = nonSkPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
+    
+    // Check if has any SK positions at all (past or present)
+    const hasAnySkPosition = skPositions.length > 0;
+    
+    // Check if had SK positions that ended
+    const hadSkPositionThatEnded = skPositions.some(pos => pos.term_end && new Date(pos.term_end) < now);
     
     if (activeTab === 'current') {
-      // Exclude SK officials from the current tab
-      return !hasSkPosition && (!official.term_end || new Date(official.term_end) > now);
+      // Show officials with current non-SK positions, excluding those with current SK positions
+      return hasCurrentNonSkPosition && !hasCurrentSkPosition;
     } else if (activeTab === 'sk') {
       if (activeSKTab === 'current') {
-        return hasSkPosition && isCurrentSk;
+        // Show officials with current SK positions
+        return hasCurrentSkPosition;
       } else if (activeSKTab === 'previous') {
-        return hasSkPosition && isPreviousSk;
+        // Show officials who had SK positions that ended and either:
+        // 1. Have no current positions at all, OR
+        // 2. Have current non-SK positions (but not current SK positions)
+        return hadSkPositionThatEnded && !hasCurrentSkPosition;
       }
-      return hasSkPosition;
+      return hasAnySkPosition;
     } else if (activeTab === 'previous') {
-      // Exclude SK officials from the previous tab
-      return !hasSkPosition && official.term_end && new Date(official.term_end) < now;
+      // Show officials who had non-SK positions that ended and no current positions
+      const hadNonSkPositionThatEnded = nonSkPositions.some(pos => pos.term_end && new Date(pos.term_end) < now);
+      return hadNonSkPositionThatEnded && !hasCurrentSkPosition && !hasCurrentNonSkPosition;
     }
     return false;
   }).sort((a, b) => {
@@ -180,31 +192,45 @@ const OfficialsPage = () => {
     return aPos - bPos;
   }) : [];
 
-  // Count for each category (excluding SK from current/previous)
+  // Count for each category using the same logic as filtering
   const currentCount = officialsData ? officialsData.filter(o => {
-    const hasSkPosition = o.officialPositions?.some(pos => pos.sk === true) || false;
-    return !hasSkPosition && (!o.term_end || new Date(o.term_end) > new Date());
+    const now = new Date();
+    const allPositions = o.officialPositions || [];
+    const skPositions = allPositions.filter(pos => pos.sk === true);
+    const nonSkPositions = allPositions.filter(pos => pos.sk === false || pos.sk === null);
+    const hasCurrentSkPosition = skPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
+    const hasCurrentNonSkPosition = nonSkPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
+    return hasCurrentNonSkPosition && !hasCurrentSkPosition;
   }).length : 0;
   
   const skCurrentCount = officialsData ? officialsData.filter(o => {
-    const hasSkPosition = o.officialPositions?.some(pos => pos.sk === true) || false;
-    const skPositions = o.officialPositions?.filter(pos => pos.sk === true) || [];
-    const isCurrentSk = skPositions.some(pos => !pos.term_end || new Date(pos.term_end) > new Date());
-    return hasSkPosition && isCurrentSk;
+    const now = new Date();
+    const allPositions = o.officialPositions || [];
+    const skPositions = allPositions.filter(pos => pos.sk === true);
+    const hasCurrentSkPosition = skPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
+    return hasCurrentSkPosition;
   }).length : 0;
   
   const skPreviousCount = officialsData ? officialsData.filter(o => {
-    const hasSkPosition = o.officialPositions?.some(pos => pos.sk === true) || false;
-    const skPositions = o.officialPositions?.filter(pos => pos.sk === true) || [];
-    const isPreviousSk = skPositions.some(pos => pos.term_end && new Date(pos.term_end) < new Date());
-    return hasSkPosition && isPreviousSk;
+    const now = new Date();
+    const allPositions = o.officialPositions || [];
+    const skPositions = allPositions.filter(pos => pos.sk === true);
+    const hasCurrentSkPosition = skPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
+    const hadSkPositionThatEnded = skPositions.some(pos => pos.term_end && new Date(pos.term_end) < now);
+    return hadSkPositionThatEnded && !hasCurrentSkPosition;
   }).length : 0;
   
   const skCount = skCurrentCount + skPreviousCount;
   
   const previousCount = officialsData ? officialsData.filter(o => {
-    const hasSkPosition = o.officialPositions?.some(pos => pos.sk === true) || false;
-    return !hasSkPosition && o.term_end && new Date(o.term_end) < new Date();
+    const now = new Date();
+    const allPositions = o.officialPositions || [];
+    const nonSkPositions = allPositions.filter(pos => pos.sk === false || pos.sk === null);
+    const skPositions = allPositions.filter(pos => pos.sk === true);
+    const hasCurrentSkPosition = skPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
+    const hasCurrentNonSkPosition = nonSkPositions.some(pos => !pos.term_end || new Date(pos.term_end) > now);
+    const hadNonSkPositionThatEnded = nonSkPositions.some(pos => pos.term_end && new Date(pos.term_end) < now);
+    return hadNonSkPositionThatEnded && !hasCurrentSkPosition && !hasCurrentNonSkPosition;
   }).length : 0;
 
   const handleRefreshTerms = () => {
