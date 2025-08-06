@@ -742,39 +742,7 @@ const UserAccountManagement = () => {
                     )}
                   </div>
 
-                  {/* More Options Dropdown */}
-                  {canModifyUser(selectedUser) && (
-                    <div className="flex justify-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => setChangeRoleDialogOpen(true)}>
-                            <Settings className="h-4 w-4 mr-2" />
-                            Change Role
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => lockAccount(selectedUser.id)}>
-                            <KeyRound className="h-4 w-4 mr-2" />
-                            Lock Account
-                          </DropdownMenuItem>
-                          {selectedUser.status === 'approved' && (
-                            <DropdownMenuItem onClick={() => setBanUserDialogOpen(true)} className="text-orange-600">
-                              <UserX className="h-4 w-4 mr-2" />
-                              Ban User
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => setDeleteUserDialogOpen(true)} className="text-red-600">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete User
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  )}
+                  {/* More Options - Removed since dropdown is now in table */}
                 </div>
               </div>}
           </DialogContent>
