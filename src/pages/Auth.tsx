@@ -257,68 +257,6 @@ const Auth = () => {
         });
       } else if (user) {
         console.log("Login successful, user authenticated");
-        
-        // Check user status in profiles table
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('status, notes')
-          .eq('id', user.id)
-          .single();
-          
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          toast({
-            title: "Login Failed",
-            description: "An unexpected error occurred. Please try again later or contact support if the problem persists.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        // Check if user is approved
-        if (profile?.status !== 'approved') {
-          const statusHandlers = {
-            banned: () => {
-              const reason = profile.notes ? ` Reason: ${profile.notes}` : '';
-              toast({
-                title: "Account Suspended",
-                description: `Your account access has been suspended. Please contact the barangay administration for more information.${reason}`,
-                variant: "destructive"
-              });
-            },
-            rejected: () => {
-              const reason = profile.notes ? ` Reason: ${profile.notes}` : '';
-              toast({
-                title: "Registration Not Approved", 
-                description: `Your registration has not been approved. Please check your email for details or contact your barangay administrator.${reason}`,
-                variant: "destructive"
-              });
-            },
-            pending: () => {
-              toast({
-                title: "Account Pending Approval",
-                description: "Your account is still pending approval from the barangay administration. Please wait for approval or contact them for more information.",
-                variant: "destructive"
-              });
-            }
-          };
-          
-          const handler = statusHandlers[profile?.status as keyof typeof statusHandlers];
-          if (handler) {
-            handler();
-          } else {
-            toast({
-              title: "Login Failed",
-              description: "An unexpected error occurred. Please try again later or contact support if the problem persists.",
-              variant: "destructive"
-            });
-          }
-          
-          // Sign out the user since they're not approved
-          await supabase.auth.signOut();
-          return;
-        }
-        
         toast({
           title: "Login successful",
           description: "Welcome back!"
