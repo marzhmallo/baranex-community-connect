@@ -2338,6 +2338,13 @@ export type Database = {
           count: number
         }[]
       }
+      get_current_user_admin_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          is_admin: boolean
+          brgyid: string
+        }[]
+      }
       get_gender_distribution: {
         Args: Record<PropertyKey, never>
         Returns: {
