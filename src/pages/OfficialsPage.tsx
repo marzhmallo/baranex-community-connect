@@ -21,6 +21,7 @@ const OfficialsPage = () => {
   const [showAssignRank, setShowAssignRank] = useState(false);
   const [selectedOfficial, setSelectedOfficial] = useState<Official | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'organizational'>('cards');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch officials data from Supabase with positions and ranks with real-time updates
   const {
@@ -233,8 +234,13 @@ const OfficialsPage = () => {
     return hadNonSkPositionThatEnded && !hasCurrentSkPosition && !hasCurrentNonSkPosition;
   }).length : 0;
 
-  const handleRefreshTerms = () => {
-    refetch();
+  const handleRefreshTerms = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleAddSuccess = () => {
@@ -280,8 +286,9 @@ const OfficialsPage = () => {
               Organization
             </Button>
           </div>
-          <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshTerms}>
-            <RefreshCw className="h-4 w-4 mr-2" /> Refresh Terms
+          <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshTerms} disabled={isRefreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} /> 
+            {isRefreshing ? 'Refreshing...' : 'Refresh Terms'}
           </Button>
           <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> Add Official
