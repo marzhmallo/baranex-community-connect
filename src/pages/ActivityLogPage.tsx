@@ -325,8 +325,9 @@ export default function ActivityLogPage() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <div className="flex flex-col space-y-2 p-3">
+                    <div className="p-4 space-y-3">
                       <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Select Date Range</span>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -335,19 +336,16 @@ export default function ActivityLogPage() {
                         >
                           Clear
                         </Button>
-                        <span className="text-sm font-medium">Select Date Range</span>
-                        <div></div>
                       </div>
                       <Calendar
-                        initialFocus
                         mode="range"
                         selected={dateRange}
                         onSelect={setDateRange}
                         numberOfMonths={1}
-                        captionLayout="dropdown-buttons"
+                        captionLayout="dropdown"
                         fromYear={2020}
                         toYear={2030}
-                        className={cn("pointer-events-auto")}
+                        className="pointer-events-auto"
                       />
                     </div>
                   </PopoverContent>
