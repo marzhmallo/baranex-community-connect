@@ -324,8 +324,8 @@ export default function ActivityLogPage() {
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <div className="p-4 space-y-3">
+                  <PopoverContent className="w-80 p-4" align="start">
+                    <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">Select Date Range</span>
                         <Button
@@ -337,16 +337,56 @@ export default function ActivityLogPage() {
                           Clear
                         </Button>
                       </div>
-                      <Calendar
-                        mode="range"
-                        selected={dateRange}
-                        onSelect={setDateRange}
-                        numberOfMonths={1}
-                        captionLayout="dropdown"
-                        fromYear={2020}
-                        toYear={2030}
-                        className="pointer-events-auto"
-                      />
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">From Date</label>
+                          <div className="flex gap-2 mt-1">
+                            <select className="flex-1 px-2 py-1 text-sm border rounded-md bg-background">
+                              <option>Month</option>
+                              {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i} value={i + 1}>{new Date(0, i).toLocaleDateString('en', { month: 'long' })}</option>
+                              ))}
+                            </select>
+                            <select className="w-16 px-2 py-1 text-sm border rounded-md bg-background">
+                              <option>Day</option>
+                              {Array.from({ length: 31 }, (_, i) => (
+                                <option key={i} value={i + 1}>{i + 1}</option>
+                              ))}
+                            </select>
+                            <select className="w-20 px-2 py-1 text-sm border rounded-md bg-background">
+                              <option>Year</option>
+                              {Array.from({ length: 11 }, (_, i) => (
+                                <option key={i} value={2020 + i}>{2020 + i}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">To Date</label>
+                          <div className="flex gap-2 mt-1">
+                            <select className="flex-1 px-2 py-1 text-sm border rounded-md bg-background">
+                              <option>Month</option>
+                              {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i} value={i + 1}>{new Date(0, i).toLocaleDateString('en', { month: 'long' })}</option>
+                              ))}
+                            </select>
+                            <select className="w-16 px-2 py-1 text-sm border rounded-md bg-background">
+                              <option>Day</option>
+                              {Array.from({ length: 31 }, (_, i) => (
+                                <option key={i} value={i + 1}>{i + 1}</option>
+                              ))}
+                            </select>
+                            <select className="w-20 px-2 py-1 text-sm border rounded-md bg-background">
+                              <option>Year</option>
+                              {Array.from({ length: 11 }, (_, i) => (
+                                <option key={i} value={2020 + i}>{2020 + i}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </PopoverContent>
                 </Popover>
