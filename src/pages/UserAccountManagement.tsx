@@ -31,6 +31,7 @@ interface UserProfile {
   middlename?: string;
   created_at?: string;
   profile_picture?: string;
+  bday?: string;
 }
 const UserAccountManagement = () => {
   const {
@@ -48,6 +49,16 @@ const UserAccountManagement = () => {
   const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false);
   const [banUserDialogOpen, setBanUserDialogOpen] = useState(false);
   const [adminRoleConfirmOpen, setAdminRoleConfirmOpen] = useState(false);
+  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
+  const [editUserForm, setEditUserForm] = useState({
+    firstname: '',
+    lastname: '',
+    middlename: '',
+    email: '',
+    phone: '',
+    purok: '',
+    bday: ''
+  });
   const {
     data: users,
     isLoading,
@@ -269,6 +280,47 @@ const UserAccountManagement = () => {
       refetch();
     }
   };
+
+  const updateUserInfo = async (userId: string) => {
+    const targetUser = users?.find(u => u.id === userId);
+    if (targetUser?.superior_admin && !userProfile?.superior_admin) {
+      toast({
+        title: "Access Denied",
+        description: "You cannot modify a superior admin's information",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        firstname: editUserForm.firstname,
+        lastname: editUserForm.lastname,
+        middlename: editUserForm.middlename,
+        email: editUserForm.email,
+        phone: editUserForm.phone,
+        purok: editUserForm.purok,
+        bday: editUserForm.bday || null
+      })
+      .eq('id', userId)
+      .eq('brgyid', userProfile?.brgyid);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user information",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "User information updated successfully"
+      });
+      setEditUserDialogOpen(false);
+      refetch();
+    }
+  };
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: {
@@ -462,64 +514,81 @@ const UserAccountManagement = () => {
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-center gap-2">
-                        {/* View button */}
-                        <Button variant="ghost" size="sm" onClick={() => {
-                      setSelectedUser(user);
-                      setUserDetailsOpen(true);
-                    }} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full">
+                        {/* View Details Button */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setUserDetailsOpen(true);
+                          }}
+                          className="p-2 h-auto rounded-full"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        
-                        {/* Approval buttons for pending users */}
-                        {user.status === 'pending' && canModifyUser(user) && <>
-                            
-                            
-                          </>}
-                        
-                        {/* Protected badge or action buttons */}
-                        {user.superior_admin ? <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
-                            Protected
-                          </span> : canModifyUser(user) ? <div className="flex items-center gap-1">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
+
+                        {/* Edit User Button */}
+                        {canModifyUser(user) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setEditUserDialogOpen(true);
+                            }}
+                            className="p-2 h-auto rounded-full"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+
+                        {/* Dropdown Menu */}
+                        {canModifyUser(user) && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="p-2 h-auto rounded-full">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedUser(user);
+                                setChangeRoleDialogOpen(true);
+                              }}>
+                                <Settings className="h-4 w-4 mr-2" />
+                                Change Role
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => lockAccount(user.id)}>
+                                <KeyRound className="h-4 w-4 mr-2" />
+                                Lock Account
+                              </DropdownMenuItem>
+                              {user.status === 'approved' && (
                                 <DropdownMenuItem onClick={() => {
                                   setSelectedUser(user);
-                                  setChangeRoleDialogOpen(true);
-                                }}>
-                                  <Settings className="h-4 w-4 mr-2" />
-                                  Change Role
+                                  setBanUserDialogOpen(true);
+                                }} className="text-orange-600">
+                                  <UserX className="h-4 w-4 mr-2" />
+                                  Ban User
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => lockAccount(user.id)}>
-                                  <KeyRound className="h-4 w-4 mr-2" />
-                                  Lock Account
-                                </DropdownMenuItem>
-                                {user.status === 'approved' && (
-                                  <DropdownMenuItem onClick={() => {
-                                    setSelectedUser(user);
-                                    setBanUserDialogOpen(true);
-                                  }} className="text-orange-600">
-                                    <UserX className="h-4 w-4 mr-2" />
-                                    Ban User
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => {
-                                  setSelectedUser(user);
-                                  setDeleteUserDialogOpen(true);
-                                }} className="text-red-600">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete User
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div> : <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedUser(user);
+                                setDeleteUserDialogOpen(true);
+                              }} className="text-red-600">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+
+                        {/* Protected users show badge instead */}
+                        {user.superior_admin && (
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
                             Protected
-                          </span>}
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>)}
@@ -956,6 +1025,131 @@ const UserAccountManagement = () => {
                   <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
                 </div>
               </div>}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit User Dialog */}
+        <Dialog open={editUserDialogOpen} onOpenChange={(open) => {
+          setEditUserDialogOpen(open);
+          if (!open) {
+            setEditUserForm({
+              firstname: '',
+              lastname: '',
+              middlename: '',
+              email: '',
+              phone: '',
+              purok: '',
+              bday: ''
+            });
+          } else if (selectedUser) {
+            setEditUserForm({
+              firstname: selectedUser.firstname || '',
+              lastname: selectedUser.lastname || '',
+              middlename: selectedUser.middlename || '',
+              email: selectedUser.email || '',
+              phone: selectedUser.phone || '',
+              purok: selectedUser.purok || '',
+              bday: selectedUser.bday || ''
+            });
+          }
+        }}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5" />
+                Edit User Information
+              </DialogTitle>
+            </DialogHeader>
+            {selectedUser && <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-firstname">First Name</Label>
+                  <Input
+                    id="edit-firstname"
+                    value={editUserForm.firstname}
+                    onChange={(e) => setEditUserForm({...editUserForm, firstname: e.target.value})}
+                    placeholder="First name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lastname">Last Name</Label>
+                  <Input
+                    id="edit-lastname"
+                    value={editUserForm.lastname}
+                    onChange={(e) => setEditUserForm({...editUserForm, lastname: e.target.value})}
+                    placeholder="Last name"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-middlename">Middle Name</Label>
+                <Input
+                  id="edit-middlename"
+                  value={editUserForm.middlename}
+                  onChange={(e) => setEditUserForm({...editUserForm, middlename: e.target.value})}
+                  placeholder="Middle name (optional)"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email Address</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editUserForm.email}
+                  onChange={(e) => setEditUserForm({...editUserForm, email: e.target.value})}
+                  placeholder="Email address"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">Phone Number</Label>
+                <Input
+                  id="edit-phone"
+                  value={editUserForm.phone}
+                  onChange={(e) => setEditUserForm({...editUserForm, phone: e.target.value})}
+                  placeholder="Phone number"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-purok">Purok/Zone</Label>
+                <Input
+                  id="edit-purok"
+                  value={editUserForm.purok}
+                  onChange={(e) => setEditUserForm({...editUserForm, purok: e.target.value})}
+                  placeholder="Purok or zone"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-bday">Birth Date</Label>
+                <Input
+                  id="edit-bday"
+                  type="date"
+                  value={editUserForm.bday}
+                  onChange={(e) => setEditUserForm({...editUserForm, bday: e.target.value})}
+                />
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setEditUserDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={() => updateUserInfo(selectedUser.id)}
+                  disabled={!editUserForm.firstname || !editUserForm.lastname || !editUserForm.email}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>}
           </DialogContent>
         </Dialog>
       </div>
