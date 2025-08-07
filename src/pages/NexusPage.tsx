@@ -418,9 +418,60 @@ const NexusPage = () => {
     
     // Fetch item names for the request
     const itemsWithNames = await fetchItemNames(request.datatype, request.dataid);
+    
+    // Fetch missing barangay and profile information
+    let destinationBarangay = request.destination_barangay;
+    let sourceBarangay = request.source_barangay;
+    let reviewerProfile = request.reviewer_profile;
+    let initiatorProfile = request.initiator_profile;
+    
+    // Fetch destination barangay if missing
+    if (!destinationBarangay && request.destination) {
+      const { data } = await supabase
+        .from('barangays')
+        .select('barangayname, municipality, province')
+        .eq('id', request.destination)
+        .single();
+      destinationBarangay = data;
+    }
+    
+    // Fetch source barangay if missing
+    if (!sourceBarangay && request.source) {
+      const { data } = await supabase
+        .from('barangays')
+        .select('barangayname, municipality, province')
+        .eq('id', request.source)
+        .single();
+      sourceBarangay = data;
+    }
+    
+    // Fetch reviewer profile if missing
+    if (!reviewerProfile && request.reviewer) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('firstname, lastname')
+        .eq('id', request.reviewer)
+        .single();
+      reviewerProfile = data;
+    }
+    
+    // Fetch initiator profile if missing
+    if (!initiatorProfile && request.initiator) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('firstname, lastname')
+        .eq('id', request.initiator)
+        .single();
+      initiatorProfile = data;
+    }
+    
     setSelectedViewRequest({
       ...request,
-      itemsWithNames
+      itemsWithNames,
+      destination_barangay: destinationBarangay,
+      source_barangay: sourceBarangay,
+      reviewer_profile: reviewerProfile,
+      initiator_profile: initiatorProfile
     });
     
     setViewDialogOpen(true);
