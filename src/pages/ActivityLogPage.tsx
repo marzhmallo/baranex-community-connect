@@ -8,6 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
+import { UAParser } from 'ua-parser-js';
 
 interface ActivityLog {
   id: string;
@@ -55,66 +56,52 @@ export default function ActivityLogPage() {
   const parseDeviceInfo = (userAgent?: string): string => {
     if (!userAgent) return 'Unknown Device';
     
-    let device = 'Desktop';
-    let browser = 'Unknown Browser';
-    let os = 'Unknown OS';
-    let version = '';
-    
-    // Detect device type
-    if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
-      device = 'Mobile';
-    } else if (userAgent.includes('Tablet') || userAgent.includes('iPad')) {
-      device = 'Tablet';
-    }
-    
-    // Enhanced browser detection with version
-    if (userAgent.includes('Edg/')) {
-      browser = 'Microsoft Edge';
-      const versionMatch = userAgent.match(/Edg\/([0-9.]+)/);
-      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
-    } else if (userAgent.includes('Chrome/') && !userAgent.includes('Edg/')) {
-      browser = 'Google Chrome';
-      const versionMatch = userAgent.match(/Chrome\/([0-9.]+)/);
-      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
-    } else if (userAgent.includes('Firefox/')) {
-      browser = 'Mozilla Firefox';
-      const versionMatch = userAgent.match(/Firefox\/([0-9.]+)/);
-      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
-    } else if (userAgent.includes('Safari/') && !userAgent.includes('Chrome/')) {
-      browser = 'Safari';
-      const versionMatch = userAgent.match(/Version\/([0-9.]+)/);
-      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
-    } else if (userAgent.includes('Opera/') || userAgent.includes('OPR/')) {
-      browser = 'Opera';
-      const versionMatch = userAgent.match(/(?:Opera\/|OPR\/)([0-9.]+)/);
-      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
-    }
-    
-    // Enhanced OS detection
-    if (userAgent.includes('Windows NT 10.0')) os = 'Windows 10/11';
-    else if (userAgent.includes('Windows NT 6.3')) os = 'Windows 8.1';
-    else if (userAgent.includes('Windows NT 6.2')) os = 'Windows 8';
-    else if (userAgent.includes('Windows NT 6.1')) os = 'Windows 7';
-    else if (userAgent.includes('Windows')) os = 'Windows';
-    else if (userAgent.includes('Intel Mac OS X')) {
-      const macMatch = userAgent.match(/Intel Mac OS X ([0-9_]+)/);
-      if (macMatch) {
-        const macVersion = macMatch[1].replace(/_/g, '.');
-        os = `macOS ${macVersion}`;
-      } else {
-        os = 'macOS';
+    try {
+      const parser = new UAParser(userAgent);
+      const result = parser.getResult();
+      
+      const { browser, os, device } = result;
+      
+      // Check if it's a mobile device
+      if (device.type === 'mobile' || device.type === 'tablet') {
+        if (device.vendor && device.model) {
+          return `${device.vendor} ${device.model} (${browser.name || 'Unknown Browser'})`;
+        } else if (os.name && os.version) {
+          return `${os.name} ${os.version} (${browser.name || 'Unknown Browser'})`;
+        } else {
+          return `Mobile Device (${browser.name || 'Unknown Browser'})`;
+        }
       }
-    } else if (userAgent.includes('Mac')) os = 'macOS';
-    else if (userAgent.includes('X11') || userAgent.includes('Linux')) os = 'Linux';
-    else if (userAgent.includes('Android')) {
-      const androidMatch = userAgent.match(/Android ([0-9.]+)/);
-      os = androidMatch ? `Android ${androidMatch[1]}` : 'Android';
-    } else if (userAgent.includes('iPhone OS') || userAgent.includes('iOS')) {
-      const iosMatch = userAgent.match(/OS ([0-9_]+)/);
-      os = iosMatch ? `iOS ${iosMatch[1].replace(/_/g, '.')}` : 'iOS';
+      
+      // Desktop/Laptop devices
+      let deviceInfo = '';
+      
+      // Build OS info
+      if (os.name) {
+        deviceInfo = os.name;
+        if (os.version) {
+          deviceInfo += ` ${os.version}`;
+        }
+      } else {
+        deviceInfo = 'Unknown OS';
+      }
+      
+      // Add browser info
+      if (browser.name) {
+        deviceInfo += ` (${browser.name}`;
+        if (browser.version) {
+          // Only show major version number
+          const majorVersion = browser.version.split('.')[0];
+          deviceInfo += ` ${majorVersion}`;
+        }
+        deviceInfo += ')';
+      }
+      
+      return deviceInfo || 'Unknown Device';
+    } catch (error) {
+      console.error('Error parsing user agent:', error);
+      return 'Unknown Device';
     }
-    
-    return `${device} (${browser}${version} on ${os})`;
   };
 
   const getActionIcon = (action: string) => {
