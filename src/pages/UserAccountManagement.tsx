@@ -525,18 +525,19 @@ const UserAccountManagement = () => {
                           <Eye className="h-4 w-4" />
                         </Button>
 
-                        {/* Edit User Button */}
-                        {canModifyUser(user) && (
+                        {/* Transfer Superiority Button - Only for superior admin viewing other admins */}
+                        {userProfile?.superior_admin && user.role === 'admin' && !user.superior_admin && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
                               setSelectedUser(user);
-                              setEditUserDialogOpen(true);
+                              setTransferDialogOpen(true);
                             }}
                             className="p-2 h-auto rounded-full"
+                            title="Transfer Superiority"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Crown className="h-4 w-4" />
                           </Button>
                         )}
 
