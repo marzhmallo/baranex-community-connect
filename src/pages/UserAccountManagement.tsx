@@ -38,6 +38,7 @@ const UserAccountManagement = () => {
     userProfile
   } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('created_at_desc');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [userDetailsOpen, setUserDetailsOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
@@ -87,9 +88,43 @@ const UserAccountManagement = () => {
     },
     enabled: !!userProfile?.brgyid
   });
-  const filteredUsers = users?.filter(user => {
+  const filteredAndSortedUsers = users?.filter(user => {
     const matchesSearch = user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) || user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'name_asc':
+        return `${a.firstname} ${a.lastname}`.localeCompare(`${b.firstname} ${b.lastname}`);
+      case 'name_desc':
+        return `${b.firstname} ${b.lastname}`.localeCompare(`${a.firstname} ${a.lastname}`);
+      case 'email_asc':
+        return (a.email || '').localeCompare(b.email || '');
+      case 'email_desc':
+        return (b.email || '').localeCompare(a.email || '');
+      case 'role_asc':
+        const getRolePriority = (user: UserProfile) => {
+          if (user.superior_admin) return 0;
+          if (user.role === 'admin') return 1;
+          return 2;
+        };
+        return getRolePriority(a) - getRolePriority(b);
+      case 'role_desc':
+        const getRolePriorityDesc = (user: UserProfile) => {
+          if (user.superior_admin) return 2;
+          if (user.role === 'admin') return 1;
+          return 0;
+        };
+        return getRolePriorityDesc(a) - getRolePriorityDesc(b);
+      case 'status_asc':
+        return (a.status || '').localeCompare(b.status || '');
+      case 'status_desc':
+        return (b.status || '').localeCompare(a.status || '');
+      case 'created_at_asc':
+        return new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime();
+      case 'created_at_desc':
+      default:
+        return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
+    }
   });
   const updateUserStatus = async (userId: string, status: string, reason?: string) => {
     // Check if the target user is a superior admin
@@ -418,9 +453,9 @@ const UserAccountManagement = () => {
         </Card>
       </div>;
   }
-  const adminUsers = filteredUsers?.filter(u => u.role === 'admin') || [];
-  const regularUsers = filteredUsers?.filter(u => u.role === 'user') || [];
-  const pendingUsers = filteredUsers?.filter(u => u.status === 'pending') || [];
+  const adminUsers = filteredAndSortedUsers?.filter(u => u.role === 'admin') || [];
+  const regularUsers = filteredAndSortedUsers?.filter(u => u.role === 'user') || [];
+  const pendingUsers = filteredAndSortedUsers?.filter(u => u.status === 'pending') || [];
   return <div className="min-h-screen bg-background p-8">
       <div className="mx-auto">
         <div className="mb-8">
@@ -474,6 +509,24 @@ const UserAccountManagement = () => {
                   <Input type="text" placeholder="Search users..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 w-full sm:w-64" />
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 </div>
+                
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="created_at_desc">Newest First</SelectItem>
+                    <SelectItem value="created_at_asc">Oldest First</SelectItem>
+                    <SelectItem value="name_asc">Name (A-Z)</SelectItem>
+                    <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+                    <SelectItem value="email_asc">Email (A-Z)</SelectItem>
+                    <SelectItem value="email_desc">Email (Z-A)</SelectItem>
+                    <SelectItem value="role_asc">Role (Superior → User)</SelectItem>
+                    <SelectItem value="role_desc">Role (User → Superior)</SelectItem>
+                    <SelectItem value="status_asc">Status (A-Z)</SelectItem>
+                    <SelectItem value="status_desc">Status (Z-A)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -490,7 +543,7 @@ const UserAccountManagement = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredUsers?.map((user, index) => <tr key={user.id} className="hover:bg-muted/50 transition-colors duration-200">
+                {filteredAndSortedUsers?.map((user, index) => <tr key={user.id} className="hover:bg-muted/50 transition-colors duration-200">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <CachedAvatar userId={user.id} profilePicture={user.profile_picture} fallback={getInitials(user.firstname, user.lastname)} className="w-10 h-10" />
@@ -599,7 +652,7 @@ const UserAccountManagement = () => {
           <div className="p-6 border-t border-border bg-muted/50">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-sm text-muted-foreground">
-                Showing {filteredUsers?.length || 0} users
+                Showing {filteredAndSortedUsers?.length || 0} users
               </div>
             </div>
           </div>
