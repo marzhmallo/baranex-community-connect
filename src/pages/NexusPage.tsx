@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { Network, Send, Users, Home, FileText, Calendar, MessageSquare, CheckCircle, XCircle, Clock, ArrowRight, Bell } from 'lucide-react';
+import { Network, Send, Users, Home, FileText, Calendar, MessageSquare, CheckCircle, XCircle, Clock, ArrowRight, Bell, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -27,6 +27,8 @@ const NexusPage = () => {
   const [outgoingRequests, setOutgoingRequests] = useState<any[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedViewRequest, setSelectedViewRequest] = useState<any>(null);
 
   const dataTypes = [
     { value: 'residents', label: 'Residents', icon: Users },
@@ -364,6 +366,11 @@ const NexusPage = () => {
     setReviewDialogOpen(true);
   };
 
+  const handleViewRequest = (request: any) => {
+    setSelectedViewRequest(request);
+    setViewDialogOpen(true);
+  };
+
   const handleApproveReject = async (approve: boolean) => {
     if (!selectedRequest) return;
 
@@ -683,15 +690,24 @@ const NexusPage = () => {
                           {new Date(request.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          {request.status === 'Pending' && (
+                          <div className="flex space-x-2">
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              onClick={() => handleReviewRequest(request)}
+                              onClick={() => handleViewRequest(request)}
                             >
-                              Review
+                              <Eye className="h-4 w-4" />
                             </Button>
-                          )}
+                            {request.status === 'Pending' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleReviewRequest(request)}
+                              >
+                                Review
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -722,6 +738,7 @@ const NexusPage = () => {
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Reviewed By</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -745,6 +762,15 @@ const NexusPage = () => {
                             `${request.reviewer_profile.firstname} ${request.reviewer_profile.lastname}` : 
                             '-'
                           }
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewRequest(request)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -812,6 +838,146 @@ const NexusPage = () => {
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Accept & Transfer
                 </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Comprehensive View Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Transfer Request Details</DialogTitle>
+            <DialogDescription>
+              Comprehensive view of the transfer request information.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedViewRequest && (
+            <div className="space-y-6">
+              {/* Request Information */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3">Request Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Request ID</label>
+                    <p className="text-sm font-mono">{selectedViewRequest.id}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Status</label>
+                    <div className="mt-1">
+                      <Badge className={getStatusColor(selectedViewRequest.status)}>
+                        {selectedViewRequest.status}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Created Date</label>
+                    <p className="text-sm">{new Date(selectedViewRequest.created_at).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Data Type</label>
+                    <p className="text-sm capitalize">{selectedViewRequest.datatype}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Barangay Information */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3">Barangay Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Source Barangay</label>
+                    <p className="text-sm">{selectedViewRequest.source_barangay?.barangayname || 'Unknown'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedViewRequest.source_barangay?.municipality}, {selectedViewRequest.source_barangay?.province}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Destination Barangay</label>
+                    <p className="text-sm">{selectedViewRequest.destination_barangay?.barangayname || 'Current Barangay'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedViewRequest.destination_barangay?.municipality}, {selectedViewRequest.destination_barangay?.province}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Personnel Information */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3">Personnel Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Initiated By</label>
+                    <p className="text-sm">
+                      {selectedViewRequest.initiator_profile?.firstname} {selectedViewRequest.initiator_profile?.lastname}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Reviewed By</label>
+                    <p className="text-sm">
+                      {selectedViewRequest.reviewer_profile?.firstname && selectedViewRequest.reviewer_profile?.lastname ? 
+                        `${selectedViewRequest.reviewer_profile.firstname} ${selectedViewRequest.reviewer_profile.lastname}` : 
+                        'Not reviewed yet'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transfer Data */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3">Transfer Data</h3>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Number of Items</label>
+                    <p className="text-sm">{selectedViewRequest.dataid?.length || 0} items</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Item IDs</label>
+                    <div className="bg-muted p-2 rounded max-h-32 overflow-y-auto">
+                      <p className="text-xs font-mono">
+                        {selectedViewRequest.dataid?.join(', ') || 'No items'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              {selectedViewRequest.notes && (
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3">Notes</h3>
+                  <div className="bg-muted p-3 rounded">
+                    <p className="text-sm whitespace-pre-wrap">{selectedViewRequest.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Status History */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3">Status Timeline</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">
+                      <strong>Created:</strong> {new Date(selectedViewRequest.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  {selectedViewRequest.status !== 'Pending' && (
+                    <div className="flex items-center space-x-2">
+                      {selectedViewRequest.status === 'Accepted' ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-600" />
+                      )}
+                      <span className="text-sm">
+                        <strong>{selectedViewRequest.status}:</strong> by {selectedViewRequest.reviewer_profile?.firstname} {selectedViewRequest.reviewer_profile?.lastname}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
