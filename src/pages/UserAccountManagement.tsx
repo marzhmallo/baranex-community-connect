@@ -542,8 +542,8 @@ const UserAccountManagement = () => {
                           </Button>
                         )}
 
-                        {/* Dropdown Menu */}
-                        {canModifyUser(user) && (
+                        {/* Dropdown Menu - Never show for superior admins */}
+                        {canModifyUser(user) && !user.superior_admin && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="p-2 h-auto rounded-full">
