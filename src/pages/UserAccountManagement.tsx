@@ -50,6 +50,7 @@ const UserAccountManagement = () => {
   const [banUserDialogOpen, setBanUserDialogOpen] = useState(false);
   const [adminRoleConfirmOpen, setAdminRoleConfirmOpen] = useState(false);
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
+  const [editConfirmDialogOpen, setEditConfirmDialogOpen] = useState(false);
   const [editUserForm, setEditUserForm] = useState({
     firstname: '',
     lastname: '',
@@ -780,7 +781,11 @@ const UserAccountManagement = () => {
                     
                     {selectedUser.status === 'approved' && canModifyUser(selectedUser) && (
                       <>
-                        <Button variant="outline" className="flex-1 min-w-[120px]">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1 min-w-[120px]"
+                          onClick={() => setEditConfirmDialogOpen(true)}
+                        >
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Profile
                         </Button>
@@ -1157,6 +1162,37 @@ const UserAccountManagement = () => {
             </div>}
           </DialogContent>
         </Dialog>
+
+        {/* Critical Edit Confirmation Dialog */}
+        <AlertDialog open={editConfirmDialogOpen} onOpenChange={setEditConfirmDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                Critical Action: Edit User Profile
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                You are about to modify <strong>{selectedUser?.firstname} {selectedUser?.lastname}'s</strong> personal information including name, address, and birth date. 
+                <br /><br />
+                <span className="text-red-600 font-medium">This is a critical action that will permanently change the user's profile data.</span>
+                <br /><br />
+                Are you sure you want to proceed with editing this user's profile?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => {
+                  setEditConfirmDialogOpen(false);
+                  setEditUserDialogOpen(true);
+                }}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                Proceed to Edit
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>;
 };
