@@ -298,8 +298,6 @@ const UserAccountManagement = () => {
         firstname: editUserForm.firstname,
         lastname: editUserForm.lastname,
         middlename: editUserForm.middlename,
-        email: editUserForm.email,
-        phone: editUserForm.phone,
         purok: editUserForm.purok,
         bday: editUserForm.bday || null
       })
@@ -1098,9 +1096,12 @@ const UserAccountManagement = () => {
                   id="edit-email"
                   type="email"
                   value={editUserForm.email}
-                  onChange={(e) => setEditUserForm({...editUserForm, email: e.target.value})}
+                  readOnly
+                  disabled
+                  className="bg-muted cursor-not-allowed"
                   placeholder="Email address"
                 />
+                <p className="text-xs text-muted-foreground">Email cannot be changed as it's used for login</p>
               </div>
               
               <div className="space-y-2">
@@ -1108,9 +1109,12 @@ const UserAccountManagement = () => {
                 <Input
                   id="edit-phone"
                   value={editUserForm.phone}
-                  onChange={(e) => setEditUserForm({...editUserForm, phone: e.target.value})}
+                  readOnly
+                  disabled
+                  className="bg-muted cursor-not-allowed"
                   placeholder="Phone number"
                 />
+                <p className="text-xs text-muted-foreground">Phone cannot be changed as it may be used for login</p>
               </div>
               
               <div className="space-y-2">
@@ -1144,7 +1148,7 @@ const UserAccountManagement = () => {
                 <Button 
                   className="flex-1"
                   onClick={() => updateUserInfo(selectedUser.id)}
-                  disabled={!editUserForm.firstname || !editUserForm.lastname || !editUserForm.email}
+                  disabled={!editUserForm.firstname || !editUserForm.lastname}
                 >
                   Save Changes
                 </Button>
