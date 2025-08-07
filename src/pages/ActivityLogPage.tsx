@@ -35,6 +35,8 @@ export default function ActivityLogPage() {
   const [selectedUser, setSelectedUser] = useState("all");
   const [selectedAction, setSelectedAction] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [tempFromDate, setTempFromDate] = useState({ month: "", day: "", year: "" });
+  const [tempToDate, setTempToDate] = useState({ month: "", day: "", year: "" });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showModal, setShowModal] = useState(false);
@@ -194,6 +196,30 @@ export default function ActivityLogPage() {
     setShowModal(true);
   };
 
+  const handleSaveDateRange = () => {
+    if (tempFromDate.month && tempFromDate.day && tempFromDate.year && 
+        tempToDate.month && tempToDate.day && tempToDate.year) {
+      const fromDate = new Date(
+        parseInt(tempFromDate.year), 
+        parseInt(tempFromDate.month) - 1, 
+        parseInt(tempFromDate.day)
+      );
+      const toDate = new Date(
+        parseInt(tempToDate.year), 
+        parseInt(tempToDate.month) - 1, 
+        parseInt(tempToDate.day)
+      );
+      setDateRange({ from: fromDate, to: toDate });
+    } else if (tempFromDate.month && tempFromDate.day && tempFromDate.year) {
+      const fromDate = new Date(
+        parseInt(tempFromDate.year), 
+        parseInt(tempFromDate.month) - 1, 
+        parseInt(tempFromDate.day)
+      );
+      setDateRange({ from: fromDate, to: undefined });
+    }
+  };
+
   const handleExport = () => {
     toast({
       title: "Export Started",
@@ -342,20 +368,32 @@ export default function ActivityLogPage() {
                         <div>
                           <label className="text-xs font-medium text-muted-foreground">From Date</label>
                           <div className="flex gap-2 mt-1">
-                            <select className="flex-1 px-2 py-1 text-sm border rounded-md bg-background">
-                              <option>Month</option>
+                            <select 
+                              value={tempFromDate.month}
+                              onChange={(e) => setTempFromDate(prev => ({ ...prev, month: e.target.value }))}
+                              className="flex-1 px-2 py-1 text-sm border rounded-md bg-background"
+                            >
+                              <option value="">Month</option>
                               {Array.from({ length: 12 }, (_, i) => (
                                 <option key={i} value={i + 1}>{new Date(0, i).toLocaleDateString('en', { month: 'long' })}</option>
                               ))}
                             </select>
-                            <select className="w-16 px-2 py-1 text-sm border rounded-md bg-background">
-                              <option>Day</option>
+                            <select 
+                              value={tempFromDate.day}
+                              onChange={(e) => setTempFromDate(prev => ({ ...prev, day: e.target.value }))}
+                              className="w-16 px-2 py-1 text-sm border rounded-md bg-background"
+                            >
+                              <option value="">Day</option>
                               {Array.from({ length: 31 }, (_, i) => (
                                 <option key={i} value={i + 1}>{i + 1}</option>
                               ))}
                             </select>
-                            <select className="w-20 px-2 py-1 text-sm border rounded-md bg-background">
-                              <option>Year</option>
+                            <select 
+                              value={tempFromDate.year}
+                              onChange={(e) => setTempFromDate(prev => ({ ...prev, year: e.target.value }))}
+                              className="w-20 px-2 py-1 text-sm border rounded-md bg-background"
+                            >
+                              <option value="">Year</option>
                               {Array.from({ length: 11 }, (_, i) => (
                                 <option key={i} value={2020 + i}>{2020 + i}</option>
                               ))}
@@ -366,25 +404,47 @@ export default function ActivityLogPage() {
                         <div>
                           <label className="text-xs font-medium text-muted-foreground">To Date</label>
                           <div className="flex gap-2 mt-1">
-                            <select className="flex-1 px-2 py-1 text-sm border rounded-md bg-background">
-                              <option>Month</option>
+                            <select 
+                              value={tempToDate.month}
+                              onChange={(e) => setTempToDate(prev => ({ ...prev, month: e.target.value }))}
+                              className="flex-1 px-2 py-1 text-sm border rounded-md bg-background"
+                            >
+                              <option value="">Month</option>
                               {Array.from({ length: 12 }, (_, i) => (
                                 <option key={i} value={i + 1}>{new Date(0, i).toLocaleDateString('en', { month: 'long' })}</option>
                               ))}
                             </select>
-                            <select className="w-16 px-2 py-1 text-sm border rounded-md bg-background">
-                              <option>Day</option>
+                            <select 
+                              value={tempToDate.day}
+                              onChange={(e) => setTempToDate(prev => ({ ...prev, day: e.target.value }))}
+                              className="w-16 px-2 py-1 text-sm border rounded-md bg-background"
+                            >
+                              <option value="">Day</option>
                               {Array.from({ length: 31 }, (_, i) => (
                                 <option key={i} value={i + 1}>{i + 1}</option>
                               ))}
                             </select>
-                            <select className="w-20 px-2 py-1 text-sm border rounded-md bg-background">
-                              <option>Year</option>
+                            <select 
+                              value={tempToDate.year}
+                              onChange={(e) => setTempToDate(prev => ({ ...prev, year: e.target.value }))}
+                              className="w-20 px-2 py-1 text-sm border rounded-md bg-background"
+                            >
+                              <option value="">Year</option>
                               {Array.from({ length: 11 }, (_, i) => (
                                 <option key={i} value={2020 + i}>{2020 + i}</option>
                               ))}
                             </select>
                           </div>
+                        </div>
+                        
+                        <div className="pt-2 border-t">
+                          <Button 
+                            onClick={handleSaveDateRange}
+                            className="w-full"
+                            size="sm"
+                          >
+                            Apply Date Range
+                          </Button>
                         </div>
                       </div>
                     </div>
