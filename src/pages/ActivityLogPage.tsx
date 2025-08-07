@@ -58,6 +58,7 @@ export default function ActivityLogPage() {
     let device = 'Desktop';
     let browser = 'Unknown Browser';
     let os = 'Unknown OS';
+    let version = '';
     
     // Detect device type
     if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
@@ -66,20 +67,54 @@ export default function ActivityLogPage() {
       device = 'Tablet';
     }
     
-    // Detect browser
-    if (userAgent.includes('Chrome')) browser = 'Chrome';
-    else if (userAgent.includes('Firefox')) browser = 'Firefox';
-    else if (userAgent.includes('Safari')) browser = 'Safari';
-    else if (userAgent.includes('Edge')) browser = 'Edge';
+    // Enhanced browser detection with version
+    if (userAgent.includes('Edg/')) {
+      browser = 'Microsoft Edge';
+      const versionMatch = userAgent.match(/Edg\/([0-9.]+)/);
+      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
+    } else if (userAgent.includes('Chrome/') && !userAgent.includes('Edg/')) {
+      browser = 'Google Chrome';
+      const versionMatch = userAgent.match(/Chrome\/([0-9.]+)/);
+      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
+    } else if (userAgent.includes('Firefox/')) {
+      browser = 'Mozilla Firefox';
+      const versionMatch = userAgent.match(/Firefox\/([0-9.]+)/);
+      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
+    } else if (userAgent.includes('Safari/') && !userAgent.includes('Chrome/')) {
+      browser = 'Safari';
+      const versionMatch = userAgent.match(/Version\/([0-9.]+)/);
+      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
+    } else if (userAgent.includes('Opera/') || userAgent.includes('OPR/')) {
+      browser = 'Opera';
+      const versionMatch = userAgent.match(/(?:Opera\/|OPR\/)([0-9.]+)/);
+      version = versionMatch ? ` ${versionMatch[1].split('.')[0]}` : '';
+    }
     
-    // Detect OS
-    if (userAgent.includes('Windows')) os = 'Windows';
-    else if (userAgent.includes('Mac')) os = 'macOS';
-    else if (userAgent.includes('Linux')) os = 'Linux';
-    else if (userAgent.includes('Android')) os = 'Android';
-    else if (userAgent.includes('iOS')) os = 'iOS';
+    // Enhanced OS detection
+    if (userAgent.includes('Windows NT 10.0')) os = 'Windows 10/11';
+    else if (userAgent.includes('Windows NT 6.3')) os = 'Windows 8.1';
+    else if (userAgent.includes('Windows NT 6.2')) os = 'Windows 8';
+    else if (userAgent.includes('Windows NT 6.1')) os = 'Windows 7';
+    else if (userAgent.includes('Windows')) os = 'Windows';
+    else if (userAgent.includes('Intel Mac OS X')) {
+      const macMatch = userAgent.match(/Intel Mac OS X ([0-9_]+)/);
+      if (macMatch) {
+        const macVersion = macMatch[1].replace(/_/g, '.');
+        os = `macOS ${macVersion}`;
+      } else {
+        os = 'macOS';
+      }
+    } else if (userAgent.includes('Mac')) os = 'macOS';
+    else if (userAgent.includes('X11') || userAgent.includes('Linux')) os = 'Linux';
+    else if (userAgent.includes('Android')) {
+      const androidMatch = userAgent.match(/Android ([0-9.]+)/);
+      os = androidMatch ? `Android ${androidMatch[1]}` : 'Android';
+    } else if (userAgent.includes('iPhone OS') || userAgent.includes('iOS')) {
+      const iosMatch = userAgent.match(/OS ([0-9_]+)/);
+      os = iosMatch ? `iOS ${iosMatch[1].replace(/_/g, '.')}` : 'iOS';
+    }
     
-    return `${device} (${browser} on ${os})`;
+    return `${device} (${browser}${version} on ${os})`;
   };
 
   const getActionIcon = (action: string) => {
