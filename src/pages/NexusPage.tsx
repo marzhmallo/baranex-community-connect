@@ -951,7 +951,7 @@ const NexusPage = () => {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Destination Barangay</label>
-                    <p className="text-sm">{selectedViewRequest.destination_barangay?.barangayname || 'Unknown'}</p>
+                    <p className="text-sm">{selectedViewRequest.destination_barangay?.barangayname}</p>
                     <p className="text-xs text-muted-foreground">
                       {selectedViewRequest.destination_barangay?.municipality}, {selectedViewRequest.destination_barangay?.province}
                     </p>
