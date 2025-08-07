@@ -1034,8 +1034,8 @@ const UserAccountManagement = () => {
 
         {/* Edit User Dialog */}
         <Dialog open={editUserDialogOpen} onOpenChange={(open) => {
-          setEditUserDialogOpen(open);
           if (!open) {
+            setEditUserDialogOpen(false);
             setEditUserForm({
               firstname: '',
               lastname: '',
@@ -1045,103 +1045,94 @@ const UserAccountManagement = () => {
               purok: '',
               bday: ''
             });
-          } else if (selectedUser) {
-            setEditUserForm({
-              firstname: selectedUser.firstname || '',
-              lastname: selectedUser.lastname || '',
-              middlename: selectedUser.middlename || '',
-              email: selectedUser.email || '',
-              phone: selectedUser.phone || '',
-              purok: selectedUser.purok || '',
-              bday: selectedUser.bday || ''
-            });
           }
         }}>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Edit className="h-5 w-5" />
                 Edit User Information
               </DialogTitle>
             </DialogHeader>
-            {selectedUser && <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            {selectedUser && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-firstname">First Name</Label>
+                    <Input
+                      id="edit-firstname"
+                      value={editUserForm.firstname || selectedUser.firstname || ''}
+                      onChange={(e) => setEditUserForm({...editUserForm, firstname: e.target.value})}
+                      placeholder="First name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-lastname">Last Name</Label>
+                    <Input
+                      id="edit-lastname"
+                      value={editUserForm.lastname || selectedUser.lastname || ''}
+                      onChange={(e) => setEditUserForm({...editUserForm, lastname: e.target.value})}
+                      placeholder="Last name"
+                    />
+                  </div>
+                </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="edit-firstname">First Name</Label>
+                  <Label htmlFor="edit-middlename">Middle Name</Label>
                   <Input
-                    id="edit-firstname"
-                    value={editUserForm.firstname}
-                    onChange={(e) => setEditUserForm({...editUserForm, firstname: e.target.value})}
-                    placeholder="First name"
+                    id="edit-middlename"
+                    value={editUserForm.middlename || selectedUser.middlename || ''}
+                    onChange={(e) => setEditUserForm({...editUserForm, middlename: e.target.value})}
+                    placeholder="Middle name (optional)"
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="edit-lastname">Last Name</Label>
+                  <Label htmlFor="edit-email">Email Address</Label>
                   <Input
-                    id="edit-lastname"
-                    value={editUserForm.lastname}
-                    onChange={(e) => setEditUserForm({...editUserForm, lastname: e.target.value})}
-                    placeholder="Last name"
+                    id="edit-email"
+                    type="email"
+                    value={editUserForm.email || selectedUser.email || ''}
+                    readOnly
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                    placeholder="Email address"
+                  />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed as it's used for login</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-phone">Phone Number</Label>
+                  <Input
+                    id="edit-phone"
+                    value={editUserForm.phone || selectedUser.phone || ''}
+                    readOnly
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                    placeholder="Phone number"
+                  />
+                  <p className="text-xs text-muted-foreground">Phone cannot be changed as it may be used for login</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-purok">Purok/Zone</Label>
+                  <Input
+                    id="edit-purok"
+                    value={editUserForm.purok || selectedUser.purok || ''}
+                    onChange={(e) => setEditUserForm({...editUserForm, purok: e.target.value})}
+                    placeholder="Purok or zone"
                   />
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-middlename">Middle Name</Label>
-                <Input
-                  id="edit-middlename"
-                  value={editUserForm.middlename}
-                  onChange={(e) => setEditUserForm({...editUserForm, middlename: e.target.value})}
-                  placeholder="Middle name (optional)"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">Email Address</Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={editUserForm.email}
-                  readOnly
-                  disabled
-                  className="bg-muted cursor-not-allowed"
-                  placeholder="Email address"
-                />
-                <p className="text-xs text-muted-foreground">Email cannot be changed as it's used for login</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-phone">Phone Number</Label>
-                <Input
-                  id="edit-phone"
-                  value={editUserForm.phone}
-                  readOnly
-                  disabled
-                  className="bg-muted cursor-not-allowed"
-                  placeholder="Phone number"
-                />
-                <p className="text-xs text-muted-foreground">Phone cannot be changed as it may be used for login</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-purok">Purok/Zone</Label>
-                <Input
-                  id="edit-purok"
-                  value={editUserForm.purok}
-                  onChange={(e) => setEditUserForm({...editUserForm, purok: e.target.value})}
-                  placeholder="Purok or zone"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-bday">Birth Date</Label>
-                <Input
-                  id="edit-bday"
-                  type="date"
-                  value={editUserForm.bday}
-                  onChange={(e) => setEditUserForm({...editUserForm, bday: e.target.value})}
-                />
-              </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-bday">Birth Date</Label>
+                  <Input
+                    id="edit-bday"
+                    type="date"
+                    value={editUserForm.bday || selectedUser.bday || ''}
+                    onChange={(e) => setEditUserForm({...editUserForm, bday: e.target.value})}
+                  />
+                </div>
               
               <div className="flex gap-2 pt-4">
                 <Button 
@@ -1154,12 +1145,14 @@ const UserAccountManagement = () => {
                 <Button 
                   className="flex-1"
                   onClick={() => updateUserInfo(selectedUser.id)}
-                  disabled={!editUserForm.firstname || !editUserForm.lastname}
+                  disabled={!editUserForm.firstname && !selectedUser.firstname || 
+                           !editUserForm.lastname && !selectedUser.lastname}
                 >
                   Save Changes
                 </Button>
               </div>
-            </div>}
+            </div>
+            )}
           </DialogContent>
         </Dialog>
 
@@ -1184,6 +1177,18 @@ const UserAccountManagement = () => {
               <AlertDialogAction 
                 onClick={() => {
                   setEditConfirmDialogOpen(false);
+                  if (selectedUser) {
+                    // Populate the form with current user data when opening
+                    setEditUserForm({
+                      firstname: selectedUser.firstname || '',
+                      lastname: selectedUser.lastname || '',
+                      middlename: selectedUser.middlename || '',
+                      email: selectedUser.email || '',
+                      phone: selectedUser.phone || '',
+                      purok: selectedUser.purok || '',
+                      bday: selectedUser.bday || ''
+                    });
+                  }
                   setEditUserDialogOpen(true);
                 }}
                 className="bg-amber-600 hover:bg-amber-700"
