@@ -366,8 +366,63 @@ const NexusPage = () => {
     setReviewDialogOpen(true);
   };
 
-  const handleViewRequest = (request: any) => {
+  const fetchItemNames = async (datatype: string, dataid: string[]) => {
+    if (!dataid || dataid.length === 0) return [];
+
+    try {
+      let query;
+      let selectFields = 'id';
+
+      switch (datatype) {
+        case 'resident':
+        case 'residents':
+          selectFields = 'id, first_name, last_name, purok';
+          query = supabase.from('residents').select(selectFields);
+          break;
+        case 'households':
+          selectFields = 'id, name, purok, address';
+          query = supabase.from('households').select(selectFields);
+          break;
+        case 'officials':
+          selectFields = 'id, name, position_no';
+          query = supabase.from('officials').select(selectFields);
+          break;
+        case 'announcements':
+          selectFields = 'id, title, category, created_at';
+          query = supabase.from('announcements').select(selectFields);
+          break;
+        case 'events':
+          selectFields = 'id, title, start_time, location';
+          query = supabase.from('events').select(selectFields);
+          break;
+        case 'documents':
+          selectFields = 'id, name, description';
+          query = supabase.from('document_types').select(selectFields);
+          break;
+        default:
+          return [];
+      }
+
+      const { data, error } = await query.in('id', dataid);
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching item names:', error);
+      return [];
+    }
+  };
+
+  const handleViewRequest = async (request: any) => {
     setSelectedViewRequest(request);
+    
+    // Fetch item names for the request
+    const itemsWithNames = await fetchItemNames(request.datatype, request.dataid);
+    setSelectedViewRequest({
+      ...request,
+      itemsWithNames
+    });
+    
     setViewDialogOpen(true);
   };
 
@@ -861,10 +916,6 @@ const NexusPage = () => {
                 <h3 className="text-lg font-semibold mb-3">Request Information</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Request ID</label>
-                    <p className="text-sm font-mono">{selectedViewRequest.id}</p>
-                  </div>
-                  <div>
                     <label className="text-sm font-medium text-muted-foreground">Status</label>
                     <div className="mt-1">
                       <Badge className={getStatusColor(selectedViewRequest.status)}>
@@ -873,12 +924,16 @@ const NexusPage = () => {
                     </div>
                   </div>
                   <div>
+                    <label className="text-sm font-medium text-muted-foreground">Data Type</label>
+                    <p className="text-sm capitalize">{selectedViewRequest.datatype}</p>
+                  </div>
+                  <div>
                     <label className="text-sm font-medium text-muted-foreground">Created Date</label>
                     <p className="text-sm">{new Date(selectedViewRequest.created_at).toLocaleString()}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Data Type</label>
-                    <p className="text-sm capitalize">{selectedViewRequest.datatype}</p>
+                    <label className="text-sm font-medium text-muted-foreground">Number of Items</label>
+                    <p className="text-sm">{selectedViewRequest.dataid?.length || 0} items</p>
                   </div>
                 </div>
               </div>
@@ -935,11 +990,37 @@ const NexusPage = () => {
                     <p className="text-sm">{selectedViewRequest.dataid?.length || 0} items</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Item IDs</label>
+                    <label className="text-sm font-medium text-muted-foreground">Items</label>
                     <div className="bg-muted p-2 rounded max-h-32 overflow-y-auto">
-                      <p className="text-xs font-mono">
-                        {selectedViewRequest.dataid?.join(', ') || 'No items'}
-                      </p>
+                      {selectedViewRequest.itemsWithNames && selectedViewRequest.itemsWithNames.length > 0 ? (
+                        <div className="space-y-1">
+                          {selectedViewRequest.itemsWithNames.map((item: any, index: number) => (
+                            <p key={item.id} className="text-xs">
+                              {index + 1}. {(() => {
+                                switch (selectedViewRequest.datatype) {
+                                  case 'resident':
+                                  case 'residents':
+                                    return `${item.first_name} ${item.last_name} (${item.purok})`;
+                                  case 'households':
+                                    return `${item.name} - ${item.address}`;
+                                  case 'officials':
+                                    return `${item.name} (Position ${item.position_no})`;
+                                  case 'announcements':
+                                    return `${item.title} (${item.category})`;
+                                  case 'events':
+                                    return `${item.title} - ${item.location}`;
+                                  case 'documents':
+                                    return `${item.name}`;
+                                  default:
+                                    return item.name || item.title || 'Unknown';
+                                }
+                              })()}
+                            </p>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Loading items...</p>
+                      )}
                     </div>
                   </div>
                 </div>
