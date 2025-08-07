@@ -664,16 +664,16 @@ export default function ActivityLogPage() {
                   
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground uppercase mb-2">Device Information</h4>
-                    <div className="bg-muted rounded-lg p-4 space-y-3">
+                    <div className="bg-muted rounded-lg p-4 space-y-4">
                       {selectedActivity.agent ? (
                         <>
-                          <div className="flex">
-                            <span className="text-muted-foreground w-1/3">Device:</span>
-                            <span className="font-medium">{parseDeviceInfo(selectedActivity.agent)}</span>
+                          <div className="space-y-1">
+                            <div className="text-xs text-muted-foreground uppercase tracking-wide">Device</div>
+                            <div className="font-medium">{parseDeviceInfo(selectedActivity.agent)}</div>
                           </div>
-                          <div className="flex">
-                            <span className="text-muted-foreground w-1/3">User Agent:</span>
-                            <span className="font-medium text-xs break-all">{selectedActivity.agent}</span>
+                          <div className="space-y-1">
+                            <div className="text-xs text-muted-foreground uppercase tracking-wide">User Agent</div>
+                            <div className="font-mono text-xs break-all bg-background p-2 rounded border">{selectedActivity.agent}</div>
                           </div>
                         </>
                       ) : (
