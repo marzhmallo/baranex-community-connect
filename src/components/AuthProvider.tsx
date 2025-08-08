@@ -595,6 +595,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   console.log('Smart login pending; skipping auto-redirect');
                 }
               }
+            
+            // After profile and prefetch complete, lift the global loading gate
+            setLoading(false);
           }
         }, 100);
       } else if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
@@ -602,9 +605,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Only update profile data, never redirect on token refresh or initial session
         if (currentSession?.user && mounted) {
-          setTimeout(() => {
+          setTimeout(async () => {
             if (mounted) {
-              fetchUserProfile(currentSession.user.id);
+              await fetchUserProfile(currentSession.user.id);
+              setLoading(false);
             }
           }, 100);
         }
@@ -612,7 +616,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('SIGNED_IN event ignored - not from login page or already handled initial auth');
       }
       
-      setLoading(false);
+      // Defer setLoading(false) until profile/data fetch completes
     });
 
     // Get initial session
