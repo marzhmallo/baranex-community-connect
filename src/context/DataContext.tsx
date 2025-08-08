@@ -105,12 +105,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [barangayName, setBarangayName] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     if (!userProfile?.brgyid) {
       return;
     }
 
-    setLoading(true);
+    if (!silent) setLoading(true);
     
     try {
       // Fetch residents
@@ -217,7 +217,24 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   useEffect(() => {
     if (userProfile?.brgyid) {
-      fetchData();
+      try {
+        const cachedRaw = localStorage.getItem(`preloadedDashboardContext_${userProfile.brgyid}`);
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          setResidents(cached.residents || []);
+          setHouseholds(cached.households || []);
+          setUpcomingEvents(cached.upcomingEvents || []);
+          setLatestAnnouncements(cached.latestAnnouncements || []);
+          setBarangayOfficials(cached.barangayOfficials || []);
+          setBarangayName(cached.barangayName || '');
+          // Silent refresh in background without toggling loading
+          fetchData(true);
+        } else {
+          fetchData();
+        }
+      } catch {
+        fetchData();
+      }
       
       // Set up real-time subscriptions for instant updates
       const residentsChannel = supabase

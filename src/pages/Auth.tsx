@@ -17,6 +17,7 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import GlobalLoadingScreen from "@/components/ui/GlobalLoadingScreen";
 const loginSchema = z.object({
   emailOrUsername: z.string().min(1, "Please enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters long")
@@ -83,7 +84,8 @@ const Auth = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otpEmail, setOtpEmail] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+const [showPassword, setShowPassword] = useState(false);
+  const [smartLoading, setSmartLoading] = useState(false);
   const [barangays, setBarangays] = useState<{
     id: string;
     name: string;
@@ -340,12 +342,45 @@ const Auth = () => {
           return;
         }
 
-        // User is approved, allow login
-        toast({
-          title: "Login successful",
-          description: "Welcome back!"
-        });
-        // AuthProvider will handle the redirect based on user role
+        // User is approved, proceed with Smart Login prefetch
+        try {
+          // Show full-screen loader and set smart flag to prevent auto-redirects
+          setSmartLoading(true);
+          localStorage.setItem('smartLoginPending', '1');
+
+          // Fetch essential profile data for routing and scoping
+          const { data: profileFull } = await supabase
+            .from('profiles')
+            .select('id, role, brgyid')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          const role = profileFull?.role as string | undefined;
+          const brgyid = profileFull?.brgyid as string | undefined;
+
+          // Prefetch all dashboard data and cache it
+          if (brgyid) {
+            await prefetchDashboard(brgyid, user.id);
+          }
+
+          // Decide destination by role
+          const dest = role === 'user' ? '/hub'
+            : role === 'admin' || role === 'staff' ? '/dashboard'
+            : role === 'glyph' ? '/echelon'
+            : role === 'overseer' ? '/plaza'
+            : '/hub';
+
+          // Clear smart flag and navigate
+          localStorage.removeItem('smartLoginPending');
+          setSmartLoading(false);
+          navigate(dest, { replace: true });
+        } catch (e) {
+          console.error('Smart login prefetch failed:', e);
+          localStorage.removeItem('smartLoginPending');
+          setSmartLoading(false);
+          navigate('/hub', { replace: true });
+        }
+
       }
     } catch (error: any) {
       toast({
@@ -360,6 +395,157 @@ const Auth = () => {
       setCaptchaToken(null);
     }
   };
+
+  // Smart Login prefetch helpers
+  function processMonthlyData(data: Array<{ created_at: string }>) {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthlyCount: Record<string, number> = {};
+    for (let i = 0; i <= currentMonth; i++) monthlyCount[months[i]] = 0;
+    data.forEach(item => {
+      const d = new Date(item.created_at);
+      if (d.getFullYear() === currentYear && d.getMonth() <= currentMonth) {
+        const m = months[d.getMonth()];
+        if (monthlyCount.hasOwnProperty(m)) monthlyCount[m]++;
+      }
+    });
+    let cumulative = 0;
+    return months.slice(0, currentMonth + 1).map(month => ({ month, residents: (cumulative += (monthlyCount[month] || 0)) }));
+  }
+
+  function processGenderDistribution(data: Array<{ gender: string }>, totalResidents: number) {
+    const genderCount: Record<string, number> = {};
+    data.forEach(r => {
+      let g = (r.gender || 'Unknown').toLowerCase();
+      if (g === 'male' || g === 'm') g = 'Male';
+      else if (g === 'female' || g === 'f') g = 'Female';
+      else if (g === 'other' || g === 'o') g = 'Other';
+      else g = 'Unknown';
+      genderCount[g] = (genderCount[g] || 0) + 1;
+    });
+    return Object.entries(genderCount).map(([gender, count]) => ({ gender, count, percentage: totalResidents > 0 ? Math.round((count / totalResidents) * 100) : 0 }));
+  }
+
+  async function prefetchDashboard(brgyid: string, userId: string) {
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const startOfThisWeek = new Date(new Date().setDate(new Date().getDate() - new Date().getDay()));
+
+    // Primary lists in parallel
+    const [residentsRes, householdsRes, barangayRes, eventsRes, announcementsRes, officialsRes] = await Promise.all([
+      supabase.from('residents').select('*').eq('brgyid', brgyid).order('created_at', { ascending: false }),
+      supabase.from('households').select('*').eq('brgyid', brgyid).order('created_at', { ascending: false }),
+      supabase.from('barangays').select('barangayname').eq('id', brgyid).single(),
+      supabase.from('events').select('*').eq('brgyid', brgyid).gte('start_time', new Date().toISOString()).order('start_time', { ascending: true }).limit(3),
+      supabase.from('announcements').select('*').eq('brgyid', brgyid).order('created_at', { ascending: false }).limit(2),
+      supabase.from('officials').select('id, name, photo_url, officialPositions:official_positions(*)').eq('brgyid', brgyid).limit(5),
+    ]);
+
+    const residents = residentsRes.data || [];
+    const households = householdsRes.data || [];
+    const barangayName = (barangayRes.data as any)?.barangayname || '';
+    const upcomingEvents = eventsRes.data || [];
+    const latestAnnouncements = announcementsRes.data || [];
+
+    const barangayOfficials = (officialsRes.data || [])
+      .filter((o: any) => o.officialPositions && o.officialPositions.length > 0)
+      .map((o: any) => {
+        const current = o.officialPositions.find((p: any) => p.is_current) || o.officialPositions[0];
+        return {
+          id: o.id,
+          name: o.name,
+          photo_url: o.photo_url,
+          position: current?.position || 'Official',
+          term_start: current?.term_start || '',
+          term_end: current?.term_end || '',
+        };
+      });
+
+    // Cache for DataContext
+    localStorage.setItem(
+      `preloadedDashboardContext_${brgyid}`,
+      JSON.stringify({ residents, households, upcomingEvents, latestAnnouncements, barangayOfficials, barangayName, timestamp: Date.now() })
+    );
+
+    // Dashboard metrics
+    const [
+      residentsCountQ, deceasedCountQ, relocatedCountQ,
+      householdsCountQ, announcementsCountQ, eventsCountQ,
+      newResidentsThisMonthQ, newResidentsLastMonthQ,
+      newHouseholdsThisMonthQ, newHouseholdsLastMonthQ,
+      newAnnouncementsThisWeekQ, nextEventQ, monthlyDataQ, genderDataQ
+    ] = await Promise.all([
+      supabase.from('residents').select('*', { count: 'exact', head: true }).not('status', 'in', '("Deceased","Relocated")'),
+      supabase.from('residents').select('*', { count: 'exact', head: true }).eq('status', 'Deceased'),
+      supabase.from('residents').select('*', { count: 'exact', head: true }).eq('status', 'Relocated'),
+      supabase.from('households').select('*', { count: 'exact', head: true }),
+      supabase.from('announcements').select('*', { count: 'exact', head: true }),
+      supabase.from('events').select('*', { count: 'exact', head: true }).gte('start_time', new Date().toISOString()),
+      supabase.from('residents').select('*', { count: 'exact', head: true }).gte('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'),
+      supabase.from('residents').select('*', { count: 'exact', head: true }).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'),
+      supabase.from('households').select('*', { count: 'exact', head: true }).gte('created_at', startOfThisMonth.toISOString()),
+      supabase.from('households').select('*', { count: 'exact', head: true }).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()),
+      supabase.from('announcements').select('*', { count: 'exact', head: true }).gte('created_at', startOfThisWeek.toISOString()),
+      supabase.from('events').select('start_time').gte('start_time', new Date().toISOString()).order('start_time', { ascending: true }).limit(1).single(),
+      supabase.from('residents').select('created_at').gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()).not('status', 'in', '("Deceased","Relocated")'),
+      supabase.from('residents').select('gender').not('status', 'in', '("Deceased","Relocated")'),
+    ]);
+
+    const residentsCount = residentsCountQ.count || 0;
+    const deceasedCount = deceasedCountQ.count || 0;
+    const relocatedCount = relocatedCountQ.count || 0;
+    const householdsCount = householdsCountQ.count || 0;
+    const announcementsCount = announcementsCountQ.count || 0;
+    const eventsCount = eventsCountQ.count || 0;
+    const newResidentsThisMonth = newResidentsThisMonthQ.count || 0;
+    const newResidentsLastMonth = newResidentsLastMonthQ.count || 0;
+    const newHouseholdsThisMonth = newHouseholdsThisMonthQ.count || 0;
+    const newHouseholdsLastMonth = newHouseholdsLastMonthQ.count || 0;
+    const newAnnouncementsThisWeek = newAnnouncementsThisWeekQ.count || 0;
+
+    let nextEventDays: number | null = null;
+    const nextEventData: any = nextEventQ.data;
+    if (nextEventData) {
+      const eventDate = new Date(nextEventData.start_time);
+      const diffTime = eventDate.getTime() - new Date().getTime();
+      nextEventDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    const monthlyResidents = processMonthlyData((monthlyDataQ.data || []) as Array<{ created_at: string }>);
+    const genderDistribution = processGenderDistribution((genderDataQ.data || []) as Array<{ gender: string }>, residentsCount);
+
+    const residentGrowthRate = newResidentsLastMonth > 0
+      ? ((newResidentsThisMonth - newResidentsLastMonth) / (newResidentsLastMonth || 1)) * 100
+      : (newResidentsThisMonth > 0 ? 100 : 0);
+    const householdGrowthRate = newHouseholdsLastMonth > 0
+      ? ((newHouseholdsThisMonth - newHouseholdsLastMonth) / (newHouseholdsLastMonth || 1)) * 100
+      : (newHouseholdsThisMonth > 0 ? 100 : 0);
+
+    const dashboardData = {
+      totalResidents: residentsCount,
+      totalHouseholds: householdsCount,
+      activeAnnouncements: announcementsCount,
+      upcomingEvents: eventsCount,
+      monthlyResidents,
+      genderDistribution,
+      residentGrowthRate,
+      householdGrowthRate,
+      newResidentsThisMonth,
+      newHouseholdsThisMonth,
+      newAnnouncementsThisWeek,
+      nextEventDays,
+      totalDeceased: deceasedCount,
+      totalRelocated: relocatedCount,
+      isLoading: false,
+      error: null,
+    };
+
+    localStorage.setItem(`dashboardData_${brgyid}`, JSON.stringify(dashboardData));
+  }
+
   const handleSignup = async (values: SignupFormValues) => {
     setIsLoading(true);
     if (!captchaToken) {
@@ -677,6 +863,7 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+  if (smartLoading) return <GlobalLoadingScreen />;
   return <div className={`w-full min-h-screen flex items-center justify-center p-6 ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'}`}>
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
