@@ -36,7 +36,6 @@ const signupSchema = z.object({
   }),
   purok: z.string().min(1, "Please enter your purok"),
   bday: z.string().min(1, "Please enter your date of birth"),
-  
   barangayId: z.string().refine(val => val !== "", {
     message: "Please select a barangay or choose to register a new one"
   }),
@@ -159,7 +158,6 @@ const Auth = () => {
       gender: undefined,
       purok: "",
       bday: "",
-      
       barangayId: "",
       barangayname: "",
       municipality: "",
@@ -187,7 +185,6 @@ const Auth = () => {
       confirmPassword: ""
     }
   });
-  
   const selectedBarangayId = signupForm.watch("barangayId");
   const isNewBarangay = selectedBarangayId === "new-barangay";
   const selectedRole = 'admin' as const;
@@ -1104,16 +1101,7 @@ const Auth = () => {
                         
                       <Separator className="my-4" />
                         
-                      <div className="rounded-md bg-blue-50 p-4 mb-4">
-                        <div className="flex">
-                          <div className="flex-shrink-0">
-                            <Building className="h-5 w-5 text-blue-400" aria-hidden="true" />
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-blue-800">Barangay Information</h3>
-                          </div>
-                        </div>
-                      </div>
+                      
                         
                       <FormField control={signupForm.control} name="barangayId" render={({
                       field
