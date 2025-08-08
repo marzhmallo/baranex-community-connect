@@ -36,7 +36,7 @@ const signupSchema = z.object({
   }),
   purok: z.string().min(1, "Please enter your purok"),
   bday: z.string().min(1, "Please enter your date of birth"),
-  role: z.enum(["admin", "staff", "user"]),
+  
   barangayId: z.string().refine(val => val !== "", {
     message: "Please select a barangay or choose to register a new one"
   }),
@@ -46,7 +46,7 @@ const signupSchema = z.object({
   region: z.string().optional(),
   country: z.string().default("Philippines").optional()
 }).refine(data => {
-  if (data.barangayId === "new-barangay" && (data.role === "admin" || data.role === "staff")) {
+  if (data.barangayId === "new-barangay") {
     return !!data.barangayname && !!data.municipality && !!data.province;
   }
   return true;
@@ -159,7 +159,7 @@ const Auth = () => {
       gender: undefined,
       purok: "",
       bday: "",
-      role: "user",
+      
       barangayId: "",
       barangayname: "",
       municipality: "",
@@ -187,7 +187,7 @@ const Auth = () => {
       confirmPassword: ""
     }
   });
-  const selectedRole = signupForm.watch("role");
+  
   const selectedBarangayId = signupForm.watch("barangayId");
   const isNewBarangay = selectedBarangayId === "new-barangay";
   const handleCaptchaChange = (token: string | null) => {
@@ -614,17 +614,13 @@ const Auth = () => {
         }
         if (brgyData) {
           brgyId = brgyData.id;
-          // If admin/staff is creating a new barangay, they become superior admin
-          if (values.role === "admin" || values.role === "staff") {
-            isSuperiorAdmin = true;
-          }
         }
       } else {
         brgyId = values.barangayId || null;
         // If admin/staff is joining existing barangay, they remain regular admin/staff
         isSuperiorAdmin = false;
       }
-      const userStatus = (values.role === "admin" || values.role === "staff") && values.barangayId === "new-barangay" ? "active" : "pending";
+      const userStatus = "pending";
 
       // Create user auth account
       const {
@@ -667,7 +663,7 @@ const Auth = () => {
           gender: values.gender,
           purok: values.purok,
           bday: values.bday,
-          role: values.role,
+          role: 'user',
           status: userStatus,
           superior_admin: isSuperiorAdmin,
           created_at: new Date().toISOString()
@@ -1104,24 +1100,6 @@ const Auth = () => {
                             <FormMessage />
                           </FormItem>} />
                         
-                      <FormField control={signupForm.control} name="role" render={({
-                      field
-                    }) => <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Role</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`}>
-                                  <SelectValue placeholder="Select role" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="staff">Staff</SelectItem>
-                                <SelectItem value="user">User</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>} />
                         
                       <Separator className="my-4" />
                         
@@ -1168,9 +1146,9 @@ const Auth = () => {
                                     </>}
                                   
                                   {filteredBarangays.length === 0 && barangaySearch.trim() !== "" && <div className="px-4 py-2 text-gray-500">
-                                      {selectedRole === "admin" || selectedRole === "staff" ? <button type="button" onClick={handleNewBarangaySelect} className="w-full text-left text-blue-600 font-medium hover:bg-blue-50 py-2 px-2 rounded">
-                                          + Register New Barangay
-                                        </button> : "No barangays found. Contact an admin to register your barangay."}
+                                      <button type="button" onClick={handleNewBarangaySelect} className="w-full text-left text-blue-600 font-medium hover:bg-blue-50 py-2 px-2 rounded">
+                                        + Register New Barangay
+                                      </button>
                                     </div>}
                                 </div>}
                               </div>
@@ -1181,7 +1159,7 @@ const Auth = () => {
                       {/* Click outside to close suggestions */}
                       {showBarangaySuggestions && <div className="fixed inset-0 z-40" onClick={() => setShowBarangaySuggestions(false)} />}
                         
-                      {isNewBarangay && (selectedRole === "admin" || selectedRole === "staff") && <>
+                      {isNewBarangay && <>
                           <FormField control={signupForm.control} name="barangayname" render={({
                         field
                       }) => <FormItem>
@@ -1243,7 +1221,7 @@ const Auth = () => {
                             <div className="flex">
                               <div className="ml-3">
                                 <p className="text-sm text-green-700">
-                                  As you're registering a new barangay, your account will be automatically activated as the administrator.
+                                  You're registering a new barangay. Your account will be created and linked to it; an administrator may review and approve your registration.
                                 </p>
                               </div>
                             </div>
@@ -1266,7 +1244,7 @@ const Auth = () => {
                             <FormMessage />
                           </FormItem>} />
                       
-                      {!isNewBarangay && selectedRole !== "admin"}
+                      
                       
                       <div className="flex justify-center my-4">
                         <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
