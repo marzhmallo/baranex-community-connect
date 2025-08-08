@@ -190,6 +190,7 @@ const Auth = () => {
   
   const selectedBarangayId = signupForm.watch("barangayId");
   const isNewBarangay = selectedBarangayId === "new-barangay";
+  const selectedRole = 'admin' as const;
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
     if (token) {
@@ -676,7 +677,7 @@ const Auth = () => {
           });
           console.error("Profile creation error:", profileError);
         } else {
-          const successMessage = userStatus === "active" ? "Account created successfully! You can now log in." : "Account created and pending approval from the barangay administrator.";
+          const successMessage = "Account created and pending approval from the barangay administrator.";
           toast({
             title: "Account created",
             description: successMessage
