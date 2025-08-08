@@ -4,28 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Building2, MapPin, Users, TrendingUp, FileCheck, LogOut, Search, Filter, Download, Eye, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
+import { useLogoutWithLoader } from '@/hooks/useLogoutWithLoader';
 
 const PlazaPage = () => {
   const navigate = useNavigate();
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out"
-      });
-      navigate("/login");
-    }
-  };
+  const { isLoggingOut, handleLogout } = useLogoutWithLoader();
 
   return (
     <div className="min-h-screen bg-muted/30 p-6">
@@ -42,7 +27,7 @@ const PlazaPage = () => {
               <span>Profiles</span>
             </Button>
             <Button 
-              onClick={handleSignOut}
+              onClick={handleLogout}
               variant="destructive" 
               className="flex items-center gap-2"
             >
@@ -50,6 +35,7 @@ const PlazaPage = () => {
               <span>Sign Out</span>
             </Button>
           </div>
+          {isLoggingOut && <GlobalLoadingScreen message="Logging out..." />}
         </div>
 
         {/* Statistics Cards */}

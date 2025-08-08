@@ -20,9 +20,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
+import { useLogoutWithLoader } from '@/hooks/useLogoutWithLoader';
 
 const DashboardHeader = () => {
-  const { user, userProfile, signOut } = useAuth();
+  const { user, userProfile } = useAuth();
   
   // Get cached background photo synchronously to prevent flash
   const getCachedBackgroundPhoto = (brgyid: string): string | null => {
@@ -211,6 +213,8 @@ const DashboardHeader = () => {
 
   return (
     <div className="space-y-6">
+      {isLoggingOut && <GlobalLoadingScreen message="Logging out..." />}
+
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -240,7 +244,7 @@ const DashboardHeader = () => {
                   <span>Settings</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={signOut} className="text-red-500 cursor-pointer">
+              <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>

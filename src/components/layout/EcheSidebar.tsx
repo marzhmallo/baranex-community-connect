@@ -11,8 +11,8 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
+import { useLogoutWithLoader } from '@/hooks/useLogoutWithLoader';
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
 interface SidebarItem {
@@ -31,22 +31,7 @@ export const EcheSidebar = ({
 }: EcheSidebarProps) => {
   const navigate = useNavigate();
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out"
-      });
-      navigate("/login");
-    }
-  };
+  const { isLoggingOut, handleLogout } = useLogoutWithLoader();
 
   const sidebarNavItems: SidebarItem[] = [
     { 
@@ -82,7 +67,9 @@ export const EcheSidebar = ({
   ];
 
   return (
-    <div className="w-64 bg-slate-800 text-white fixed h-full">
+    <>
+      {isLoggingOut && <GlobalLoadingScreen message="Logging out..." />}
+      <div className="w-64 bg-slate-800 text-white fixed h-full">
       <div className="p-6 border-b border-slate-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -131,7 +118,7 @@ export const EcheSidebar = ({
             <span className="text-sm">Super Admin</span>
           </div>
           <Button
-            onClick={handleSignOut}
+            onClick={handleLogout}
             variant="ghost"
             size="sm"
             className="p-2 hover:bg-slate-700 text-slate-400 hover:text-white"

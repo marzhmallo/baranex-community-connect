@@ -4,13 +4,14 @@ import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSq
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { useAuth } from '@/components/AuthProvider';
+import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
+import { useLogoutWithLoader } from '@/hooks/useLogoutWithLoader';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  
 
   // Dispatch a custom event when sidebar state changes
   useEffect(() => {
@@ -21,12 +22,13 @@ const Sidebar = () => {
     });
     window.dispatchEvent(event);
   }, [isCollapsed]);
-  const handleSignOut = async () => {
-    await signOut();
-  };
+  const { isLoggingOut, handleLogout } = useLogoutWithLoader();
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+  if (isLoggingOut) {
+    return <GlobalLoadingScreen message="Logging out..." />;
+  }
   return <aside className={cn("fixed left-0 top-0 bottom-0 z-40 h-screen bg-sidebar transition-all duration-300 ease-in-out", isCollapsed ? "w-16" : "w-64")}>
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between p-4">
@@ -116,7 +118,7 @@ const Sidebar = () => {
         <div className="p-4 border-t border-sidebar-border">
           <ThemeToggle isCollapsed={isCollapsed} />
           
-          <Button variant="sidebar" className={cn("w-full justify-start mt-2", isCollapsed ? "px-2" : "")} onClick={handleSignOut}>
+          <Button variant="sidebar" className={cn("w-full justify-start mt-2", isCollapsed ? "px-2" : "")} onClick={handleLogout}>
             <LogOut className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Sign Out</span>}
           </Button>

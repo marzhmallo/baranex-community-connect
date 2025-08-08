@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GlobalLoadingScreen = () => {
+const GlobalLoadingScreen: React.FC<{ message?: string }> = ({ message = "Initializing your dashboard..." }) => {
   return (
     <div className="fixed inset-0 bg-background z-50 flex items-center justify-center">
       <div className="text-center">
@@ -18,7 +18,7 @@ const GlobalLoadingScreen = () => {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
             Baranex
           </h1>
-          <p className="text-muted-foreground text-sm mt-2">Community Connect Platform</p>
+          <p className="text-muted-foreground text-sm mt-2" aria-live="polite">Community Connect Platform</p>
         </div>
 
         {/* Loading Animation */}
@@ -32,7 +32,7 @@ const GlobalLoadingScreen = () => {
         {/* Loading Text */}
         <div className="mt-6">
           <p className="text-muted-foreground text-sm animate-pulse">
-            Initializing your dashboard...
+            {message}
           </p>
         </div>
 
