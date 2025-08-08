@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import GlobalLoadingScreen from "@/components/ui/GlobalLoadingScreen";
+import { clearAuthTransition } from "@/lib/authTransition";
 const loginSchema = z.object({
   emailOrUsername: z.string().min(1, "Please enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters long")
@@ -102,6 +103,7 @@ const [showPassword, setShowPassword] = useState(false);
   }[]>([]);
   const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
+  useEffect(() => { clearAuthTransition(); }, []);
   const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "a002bff6-3d98-4db2-8406-166e106c1958";
 
   // Fetch available barangays
