@@ -367,6 +367,7 @@ export type Database = {
       }
       dnexus: {
         Row: {
+          accepted_on: string | null
           created_at: string
           dataid: string[]
           datatype: string | null
@@ -379,6 +380,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          accepted_on?: string | null
           created_at?: string
           dataid?: string[]
           datatype?: string | null
@@ -391,6 +393,7 @@ export type Database = {
           status: string
         }
         Update: {
+          accepted_on?: string | null
           created_at?: string
           dataid?: string[]
           datatype?: string | null
@@ -1520,6 +1523,7 @@ export type Database = {
           middlename: string | null
           notes: Json | null
           online: boolean | null
+          padlock: boolean | null
           phone: string | null
           plazid: string | null
           profile_picture: string | null
@@ -1546,6 +1550,7 @@ export type Database = {
           middlename?: string | null
           notes?: Json | null
           online?: boolean | null
+          padlock?: boolean | null
           phone?: string | null
           plazid?: string | null
           profile_picture?: string | null
@@ -1572,6 +1577,7 @@ export type Database = {
           middlename?: string | null
           notes?: Json | null
           online?: boolean | null
+          padlock?: boolean | null
           phone?: string | null
           plazid?: string | null
           profile_picture?: string | null

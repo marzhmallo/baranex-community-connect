@@ -33,10 +33,7 @@ const NexusPage = () => {
   const dataTypes = [
     { value: 'residents', label: 'Residents', icon: Users },
     { value: 'households', label: 'Households', icon: Home },
-    { value: 'officials', label: 'Officials', icon: Users },
-    { value: 'announcements', label: 'Announcements', icon: MessageSquare },
-    { value: 'events', label: 'Events', icon: Calendar },
-    { value: 'documents', label: 'Documents', icon: FileText },
+    { value: 'profiles', label: 'Users', icon: Users },
   ];
 
   useEffect(() => {
@@ -217,8 +214,9 @@ const NexusPage = () => {
   const fetchDataItems = async () => {
     try {
       setLoading(true);
-      let query;
+      let query: any;
       let selectFields = 'id';
+      let orderField: string | null = 'created_at';
 
       switch (selectedDataType) {
         case 'residents':
@@ -229,30 +227,20 @@ const NexusPage = () => {
           selectFields = 'id, name, purok, address';
           query = supabase.from('households').select(selectFields);
           break;
-        case 'officials':
-          selectFields = 'id, name, position_no';
-          query = supabase.from('officials').select(selectFields);
-          break;
-        case 'announcements':
-          selectFields = 'id, title, category, created_at';
-          query = supabase.from('announcements').select(selectFields);
-          break;
-        case 'events':
-          selectFields = 'id, title, start_time, location';
-          query = supabase.from('events').select(selectFields);
-          break;
-        case 'documents':
-          selectFields = 'id, name, description';
-          query = supabase.from('document_types').select(selectFields);
+        case 'profiles':
+          selectFields = 'id, firstname, lastname, email';
+          query = supabase.from('profiles').select(selectFields);
+          orderField = 'lastname';
           break;
         default:
           return;
       }
 
-      const { data, error } = await query
-        .eq('brgyid', currentUserBarangay)
-        .order('created_at', { ascending: false })
-        .limit(100);
+      let builder = query.eq('brgyid', currentUserBarangay);
+      if (orderField) {
+        builder = builder.order(orderField, { ascending: orderField !== 'created_at' });
+      }
+      const { data, error } = await builder.limit(100);
 
       if (error) throw error;
       setDataItems(data || []);
@@ -370,7 +358,7 @@ const NexusPage = () => {
     if (!dataid || dataid.length === 0) return [];
 
     try {
-      let query;
+      let query: any;
       let selectFields = 'id';
 
       switch (datatype) {
@@ -382,6 +370,10 @@ const NexusPage = () => {
         case 'households':
           selectFields = 'id, name, purok, address';
           query = supabase.from('households').select(selectFields);
+          break;
+        case 'profiles':
+          selectFields = 'id, firstname, lastname, email';
+          query = supabase.from('profiles').select(selectFields);
           break;
         case 'officials':
           selectFields = 'id, name, position_no';
@@ -551,14 +543,8 @@ const NexusPage = () => {
         return `${item.first_name} ${item.last_name} (${item.purok})`;
       case 'households':
         return `${item.name} - ${item.address}`;
-      case 'officials':
-        return `${item.name} (Position ${item.position_no})`;
-      case 'announcements':
-        return `${item.title} (${item.category})`;
-      case 'events':
-        return `${item.title} - ${item.location}`;
-      case 'documents':
-        return `${item.name}`;
+      case 'profiles':
+        return `${item.firstname} ${item.lastname}`;
       default:
         return item.name || item.title || 'Unknown';
     }
@@ -1048,23 +1034,25 @@ const NexusPage = () => {
                           {selectedViewRequest.itemsWithNames.map((item: any, index: number) => (
                             <p key={item.id} className="text-xs">
                               {index + 1}. {(() => {
-                                switch (selectedViewRequest.datatype) {
-                                  case 'resident':
-                                  case 'residents':
-                                    return `${item.first_name} ${item.last_name} (${item.purok})`;
-                                  case 'households':
-                                    return `${item.name} - ${item.address}`;
-                                  case 'officials':
-                                    return `${item.name} (Position ${item.position_no})`;
-                                  case 'announcements':
-                                    return `${item.title} (${item.category})`;
-                                  case 'events':
-                                    return `${item.title} - ${item.location}`;
-                                  case 'documents':
-                                    return `${item.name}`;
-                                  default:
-                                    return item.name || item.title || 'Unknown';
-                                }
+                                  switch (selectedViewRequest.datatype) {
+                                    case 'resident':
+                                    case 'residents':
+                                      return `${item.first_name} ${item.last_name} (${item.purok})`;
+                                    case 'households':
+                                      return `${item.name} - ${item.address}`;
+                                    case 'profiles':
+                                      return `${item.firstname} ${item.lastname}`;
+                                    case 'officials':
+                                      return `${item.name} (Position ${item.position_no})`;
+                                    case 'announcements':
+                                      return `${item.title} (${item.category})`;
+                                    case 'events':
+                                      return `${item.title} - ${item.location}`;
+                                    case 'documents':
+                                      return `${item.name}`;
+                                    default:
+                                      return item.name || item.title || 'Unknown';
+                                  }
                               })()}
                             </p>
                           ))}
