@@ -308,6 +308,18 @@ const NexusPage = () => {
       // Convert plural data types to singular for database function compatibility
       const normalizedDataType = selectedDataType === 'residents' ? 'resident' : selectedDataType;
       
+      // Build transfernotes JSON with human-readable item names
+      const itemsForNotes = await fetchItemNames(selectedDataType, selectedItems);
+      const transfernotesPayload = {
+        datatype: normalizedDataType,
+        mode: transferMode,
+        count: selectedItems.length,
+        items: (itemsForNotes || []).map((item: any) => ({
+          id: item.id,
+          name: getItemDisplayName(item),
+        })),
+      };
+      
       const { data: transferRequest, error: transferError } = await supabase
         .from('dnexus')
         .insert({
@@ -318,6 +330,7 @@ const NexusPage = () => {
           status: 'Pending',
           initiator: user.id,
           notes: transferNotes || `Transfer request for ${selectedItems.length} ${selectedDataType} record(s) in ${transferMode} mode`,
+          transfernotes: transfernotesPayload,
         })
         .select()
         .single();
