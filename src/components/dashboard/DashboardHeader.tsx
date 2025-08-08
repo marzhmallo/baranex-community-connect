@@ -25,7 +25,7 @@ import { useLogoutWithLoader } from '@/hooks/useLogoutWithLoader';
 
 const DashboardHeader = () => {
   const { user, userProfile } = useAuth();
-  
+  const { isLoggingOut, handleLogout } = useLogoutWithLoader();
   // Get cached background photo synchronously to prevent flash
   const getCachedBackgroundPhoto = (brgyid: string): string | null => {
     try {

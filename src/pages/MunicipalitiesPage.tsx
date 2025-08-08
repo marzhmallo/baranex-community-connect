@@ -341,22 +341,6 @@ const MunicipalitiesPage = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out"
-      });
-      navigate("/login");
-    }
-  };
 
   return (
     <div className="w-full bg-background min-h-screen flex">

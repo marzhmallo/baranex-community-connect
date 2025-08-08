@@ -13,6 +13,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
+import { useLogoutWithLoader } from '@/hooks/useLogoutWithLoader';
 import { EcheSidebar } from '@/components/layout/EcheSidebar';
 
 interface Barangay {
@@ -28,6 +30,7 @@ interface Barangay {
 
 const EchelonPage = () => {
   const navigate = useNavigate();
+  const { isLoggingOut, handleLogout } = useLogoutWithLoader();
   const [activeTab, setActiveTab] = useState('pending');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBarangay, setSelectedBarangay] = useState<Barangay | null>(null);
@@ -35,26 +38,7 @@ const EchelonPage = () => {
   const [registeredBarangays, setRegisteredBarangays] = useState<Barangay[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out"
-      });
-      navigate("/login");
-    }
-  };
 
-  useEffect(() => {
-    fetchBarangays();
-  }, []);
 
   const fetchBarangays = async () => {
     try {
