@@ -760,46 +760,6 @@ const ResidentMoreDetailsPage = () => {
           <ScrollArea className="h-[calc(100vh-200px)]">
             <div className="grid gap-6 pb-8">
               {/* Record Information - moved here */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl flex items-center">
-                    <History className="mr-2 h-5 w-5" />
-                    Record Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-start gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Created</p>
-                        <p className="mt-1">
-                          {formatDate(resident.created_at)}
-                          {createdByAdmin && formatAdminName(createdByAdmin) && (
-                            <span className="text-sm text-muted-foreground block">
-                              by {formatAdminName(createdByAdmin)}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <RefreshCw className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
-                        <p className="mt-1">
-                          {formatDate(resident.updated_at)}
-                          {updatedByAdmin && formatAdminName(updatedByAdmin) && (
-                            <span className="text-sm text-muted-foreground block">
-                              by {formatAdminName(updatedByAdmin)}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </ScrollArea>
         </TabsContent>
