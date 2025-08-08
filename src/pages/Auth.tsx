@@ -57,11 +57,9 @@ const signupSchema = z.object({
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address")
 });
-
 const otpVerificationSchema = z.object({
   otp: z.string().min(6, "Please enter the 6-digit code").max(6, "Please enter the 6-digit code")
 });
-
 const resetPasswordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters long"),
   confirmPassword: z.string().min(6, "Please confirm your password")
@@ -69,7 +67,6 @@ const resetPasswordSchema = z.object({
   message: "Passwords do not match",
   path: ["confirmPassword"]
 });
-
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
@@ -85,7 +82,7 @@ const Auth = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otpEmail, setOtpEmail] = useState("");
-const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [smartLoading, setSmartLoading] = useState(false);
   const [barangays, setBarangays] = useState<{
     id: string;
@@ -103,7 +100,9 @@ const [showPassword, setShowPassword] = useState(false);
   }[]>([]);
   const captchaRef = useRef<HCaptcha>(null);
   const navigate = useNavigate();
-  useEffect(() => { clearAuthTransition(); }, []);
+  useEffect(() => {
+    clearAuthTransition();
+  }, []);
   const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "a002bff6-3d98-4db2-8406-166e106c1958";
 
   // Fetch available barangays
@@ -169,21 +168,18 @@ const [showPassword, setShowPassword] = useState(false);
       country: "Philippines"
     }
   });
-  
   const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: ""
     }
   });
-
   const otpForm = useForm<OtpVerificationFormValues>({
     resolver: zodResolver(otpVerificationSchema),
     defaultValues: {
       otp: ""
     }
   });
-  
   const resetPasswordForm = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -191,7 +187,6 @@ const [showPassword, setShowPassword] = useState(false);
       confirmPassword: ""
     }
   });
-  
   const selectedRole = signupForm.watch("role");
   const selectedBarangayId = signupForm.watch("barangayId");
   const isNewBarangay = selectedBarangayId === "new-barangay";
@@ -261,14 +256,15 @@ const [showPassword, setShowPassword] = useState(false);
         });
       } else if (user) {
         console.log("Login successful, user authenticated");
-        
-        // Check user status and padlock in profiles table
-        const { data: userProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('status, notes, padlock')
-          .eq('id', user.id)
-          .maybeSingle() as { data: any, error: any };
 
+        // Check user status and padlock in profiles table
+        const {
+          data: userProfile,
+          error: profileError
+        } = (await supabase.from('profiles').select('status, notes, padlock').eq('id', user.id).maybeSingle()) as {
+          data: any;
+          error: any;
+        };
         if (profileError) {
           console.error("Error fetching user profile:", profileError);
           toast({
@@ -285,7 +281,6 @@ const [showPassword, setShowPassword] = useState(false);
         if (userProfile?.padlock === true) {
           // Sign out the user but keep them on login page
           await supabase.auth.signOut();
-          
           toast({
             title: "Password Reset Required",
             description: "Please reset your password to continue logging in.",
@@ -301,16 +296,14 @@ const [showPassword, setShowPassword] = useState(false);
         if (userProfile?.status !== 'approved') {
           // Sign out the user since they're not approved
           await supabase.auth.signOut();
-          
           const status = userProfile?.status;
           const notes = userProfile?.notes;
           let rejectionReason = "";
-          
+
           // Extract rejection reason from notes if available
           if (notes && typeof notes === 'object' && !Array.isArray(notes)) {
             rejectionReason = (notes as any).rejection_reason || "";
           }
-
           switch (status) {
             case 'banned':
               toast({
@@ -351,12 +344,9 @@ const [showPassword, setShowPassword] = useState(false);
           localStorage.setItem('smartLoginPending', '1');
 
           // Fetch essential profile data for routing and scoping
-          const { data: profileFull } = await supabase
-            .from('profiles')
-            .select('id, role, brgyid')
-            .eq('id', user.id)
-            .maybeSingle();
-
+          const {
+            data: profileFull
+          } = await supabase.from('profiles').select('id, role, brgyid').eq('id', user.id).maybeSingle();
           const role = profileFull?.role as string | undefined;
           const brgyid = profileFull?.brgyid as string | undefined;
 
@@ -366,23 +356,22 @@ const [showPassword, setShowPassword] = useState(false);
           }
 
           // Decide destination by role
-          const dest = role === 'user' ? '/hub'
-            : role === 'admin' || role === 'staff' ? '/dashboard'
-            : role === 'glyph' ? '/echelon'
-            : role === 'overseer' ? '/plaza'
-            : '/hub';
+          const dest = role === 'user' ? '/hub' : role === 'admin' || role === 'staff' ? '/dashboard' : role === 'glyph' ? '/echelon' : role === 'overseer' ? '/plaza' : '/hub';
 
           // Clear smart flag and navigate
           localStorage.removeItem('smartLoginPending');
           setSmartLoading(false);
-          navigate(dest, { replace: true });
+          navigate(dest, {
+            replace: true
+          });
         } catch (e) {
           console.error('Smart login prefetch failed:', e);
           localStorage.removeItem('smartLoginPending');
           setSmartLoading(false);
-          navigate('/hub', { replace: true });
+          navigate('/hub', {
+            replace: true
+          });
         }
-
       }
     } catch (error: any) {
       toast({
@@ -399,11 +388,13 @@ const [showPassword, setShowPassword] = useState(false);
   };
 
   // Smart Login prefetch helpers
-  function processMonthlyData(data: Array<{ created_at: string }>) {
+  function processMonthlyData(data: Array<{
+    created_at: string;
+  }>) {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyCount: Record<string, number> = {};
     for (let i = 0; i <= currentMonth; i++) monthlyCount[months[i]] = 0;
     data.forEach(item => {
@@ -414,22 +405,26 @@ const [showPassword, setShowPassword] = useState(false);
       }
     });
     let cumulative = 0;
-    return months.slice(0, currentMonth + 1).map(month => ({ month, residents: (cumulative += (monthlyCount[month] || 0)) }));
+    return months.slice(0, currentMonth + 1).map(month => ({
+      month,
+      residents: cumulative += monthlyCount[month] || 0
+    }));
   }
-
-  function processGenderDistribution(data: Array<{ gender: string }>, totalResidents: number) {
+  function processGenderDistribution(data: Array<{
+    gender: string;
+  }>, totalResidents: number) {
     const genderCount: Record<string, number> = {};
     data.forEach(r => {
       let g = (r.gender || 'Unknown').toLowerCase();
-      if (g === 'male' || g === 'm') g = 'Male';
-      else if (g === 'female' || g === 'f') g = 'Female';
-      else if (g === 'other' || g === 'o') g = 'Other';
-      else g = 'Unknown';
+      if (g === 'male' || g === 'm') g = 'Male';else if (g === 'female' || g === 'f') g = 'Female';else if (g === 'other' || g === 'o') g = 'Other';else g = 'Unknown';
       genderCount[g] = (genderCount[g] || 0) + 1;
     });
-    return Object.entries(genderCount).map(([gender, count]) => ({ gender, count, percentage: totalResidents > 0 ? Math.round((count / totalResidents) * 100) : 0 }));
+    return Object.entries(genderCount).map(([gender, count]) => ({
+      gender,
+      count,
+      percentage: totalResidents > 0 ? Math.round(count / totalResidents * 100) : 0
+    }));
   }
-
   async function prefetchDashboard(brgyid: string, userId: string) {
     const now = new Date();
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -437,65 +432,80 @@ const [showPassword, setShowPassword] = useState(false);
     const startOfThisWeek = new Date(new Date().setDate(new Date().getDate() - new Date().getDay()));
 
     // Primary lists in parallel
-    const [residentsRes, householdsRes, barangayRes, eventsRes, announcementsRes, officialsRes] = await Promise.all([
-      supabase.from('residents').select('*').eq('brgyid', brgyid).order('created_at', { ascending: false }),
-      supabase.from('households').select('*').eq('brgyid', brgyid).order('created_at', { ascending: false }),
-      supabase.from('barangays').select('barangayname').eq('id', brgyid).single(),
-      supabase.from('events').select('*').eq('brgyid', brgyid).gte('start_time', new Date().toISOString()).order('start_time', { ascending: true }).limit(3),
-      supabase.from('announcements').select('*').eq('brgyid', brgyid).order('created_at', { ascending: false }).limit(2),
-      supabase.from('officials').select('id, name, photo_url, officialPositions:official_positions(*)').eq('brgyid', brgyid).limit(5),
-    ]);
-
+    const [residentsRes, householdsRes, barangayRes, eventsRes, announcementsRes, officialsRes] = await Promise.all([supabase.from('residents').select('*').eq('brgyid', brgyid).order('created_at', {
+      ascending: false
+    }), supabase.from('households').select('*').eq('brgyid', brgyid).order('created_at', {
+      ascending: false
+    }), supabase.from('barangays').select('barangayname').eq('id', brgyid).single(), supabase.from('events').select('*').eq('brgyid', brgyid).gte('start_time', new Date().toISOString()).order('start_time', {
+      ascending: true
+    }).limit(3), supabase.from('announcements').select('*').eq('brgyid', brgyid).order('created_at', {
+      ascending: false
+    }).limit(2), supabase.from('officials').select('id, name, photo_url, officialPositions:official_positions(*)').eq('brgyid', brgyid).limit(5)]);
     const residents = residentsRes.data || [];
     const households = householdsRes.data || [];
     const barangayName = (barangayRes.data as any)?.barangayname || '';
     const upcomingEvents = eventsRes.data || [];
     const latestAnnouncements = announcementsRes.data || [];
-
-    const barangayOfficials = (officialsRes.data || [])
-      .filter((o: any) => o.officialPositions && o.officialPositions.length > 0)
-      .map((o: any) => {
-        const current = o.officialPositions.find((p: any) => p.is_current) || o.officialPositions[0];
-        return {
-          id: o.id,
-          name: o.name,
-          photo_url: o.photo_url,
-          position: current?.position || 'Official',
-          term_start: current?.term_start || '',
-          term_end: current?.term_end || '',
-        };
-      });
+    const barangayOfficials = (officialsRes.data || []).filter((o: any) => o.officialPositions && o.officialPositions.length > 0).map((o: any) => {
+      const current = o.officialPositions.find((p: any) => p.is_current) || o.officialPositions[0];
+      return {
+        id: o.id,
+        name: o.name,
+        photo_url: o.photo_url,
+        position: current?.position || 'Official',
+        term_start: current?.term_start || '',
+        term_end: current?.term_end || ''
+      };
+    });
 
     // Cache for DataContext
-    localStorage.setItem(
-      `preloadedDashboardContext_${brgyid}`,
-      JSON.stringify({ residents, households, upcomingEvents, latestAnnouncements, barangayOfficials, barangayName, timestamp: Date.now() })
-    );
+    localStorage.setItem(`preloadedDashboardContext_${brgyid}`, JSON.stringify({
+      residents,
+      households,
+      upcomingEvents,
+      latestAnnouncements,
+      barangayOfficials,
+      barangayName,
+      timestamp: Date.now()
+    }));
 
     // Dashboard metrics
-    const [
-      residentsCountQ, deceasedCountQ, relocatedCountQ,
-      householdsCountQ, announcementsCountQ, eventsCountQ,
-      newResidentsThisMonthQ, newResidentsLastMonthQ,
-      newHouseholdsThisMonthQ, newHouseholdsLastMonthQ,
-      newAnnouncementsThisWeekQ, nextEventQ, monthlyDataQ, genderDataQ
-    ] = await Promise.all([
-      supabase.from('residents').select('*', { count: 'exact', head: true }).not('status', 'in', '("Deceased","Relocated")'),
-      supabase.from('residents').select('*', { count: 'exact', head: true }).eq('status', 'Deceased'),
-      supabase.from('residents').select('*', { count: 'exact', head: true }).eq('status', 'Relocated'),
-      supabase.from('households').select('*', { count: 'exact', head: true }),
-      supabase.from('announcements').select('*', { count: 'exact', head: true }),
-      supabase.from('events').select('*', { count: 'exact', head: true }).gte('start_time', new Date().toISOString()),
-      supabase.from('residents').select('*', { count: 'exact', head: true }).gte('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'),
-      supabase.from('residents').select('*', { count: 'exact', head: true }).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'),
-      supabase.from('households').select('*', { count: 'exact', head: true }).gte('created_at', startOfThisMonth.toISOString()),
-      supabase.from('households').select('*', { count: 'exact', head: true }).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()),
-      supabase.from('announcements').select('*', { count: 'exact', head: true }).gte('created_at', startOfThisWeek.toISOString()),
-      supabase.from('events').select('start_time').gte('start_time', new Date().toISOString()).order('start_time', { ascending: true }).limit(1).single(),
-      supabase.from('residents').select('created_at').gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()).not('status', 'in', '("Deceased","Relocated")'),
-      supabase.from('residents').select('gender').not('status', 'in', '("Deceased","Relocated")'),
-    ]);
-
+    const [residentsCountQ, deceasedCountQ, relocatedCountQ, householdsCountQ, announcementsCountQ, eventsCountQ, newResidentsThisMonthQ, newResidentsLastMonthQ, newHouseholdsThisMonthQ, newHouseholdsLastMonthQ, newAnnouncementsThisWeekQ, nextEventQ, monthlyDataQ, genderDataQ] = await Promise.all([supabase.from('residents').select('*', {
+      count: 'exact',
+      head: true
+    }).not('status', 'in', '("Deceased","Relocated")'), supabase.from('residents').select('*', {
+      count: 'exact',
+      head: true
+    }).eq('status', 'Deceased'), supabase.from('residents').select('*', {
+      count: 'exact',
+      head: true
+    }).eq('status', 'Relocated'), supabase.from('households').select('*', {
+      count: 'exact',
+      head: true
+    }), supabase.from('announcements').select('*', {
+      count: 'exact',
+      head: true
+    }), supabase.from('events').select('*', {
+      count: 'exact',
+      head: true
+    }).gte('start_time', new Date().toISOString()), supabase.from('residents').select('*', {
+      count: 'exact',
+      head: true
+    }).gte('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'), supabase.from('residents').select('*', {
+      count: 'exact',
+      head: true
+    }).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'), supabase.from('households').select('*', {
+      count: 'exact',
+      head: true
+    }).gte('created_at', startOfThisMonth.toISOString()), supabase.from('households').select('*', {
+      count: 'exact',
+      head: true
+    }).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()), supabase.from('announcements').select('*', {
+      count: 'exact',
+      head: true
+    }).gte('created_at', startOfThisWeek.toISOString()), supabase.from('events').select('start_time').gte('start_time', new Date().toISOString()).order('start_time', {
+      ascending: true
+    }).limit(1).single(), supabase.from('residents').select('created_at').gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()).not('status', 'in', '("Deceased","Relocated")'), supabase.from('residents').select('gender').not('status', 'in', '("Deceased","Relocated")')]);
     const residentsCount = residentsCountQ.count || 0;
     const deceasedCount = deceasedCountQ.count || 0;
     const relocatedCount = relocatedCountQ.count || 0;
@@ -507,7 +517,6 @@ const [showPassword, setShowPassword] = useState(false);
     const newHouseholdsThisMonth = newHouseholdsThisMonthQ.count || 0;
     const newHouseholdsLastMonth = newHouseholdsLastMonthQ.count || 0;
     const newAnnouncementsThisWeek = newAnnouncementsThisWeekQ.count || 0;
-
     let nextEventDays: number | null = null;
     const nextEventData: any = nextEventQ.data;
     if (nextEventData) {
@@ -515,17 +524,14 @@ const [showPassword, setShowPassword] = useState(false);
       const diffTime = eventDate.getTime() - new Date().getTime();
       nextEventDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
-
-    const monthlyResidents = processMonthlyData((monthlyDataQ.data || []) as Array<{ created_at: string }>);
-    const genderDistribution = processGenderDistribution((genderDataQ.data || []) as Array<{ gender: string }>, residentsCount);
-
-    const residentGrowthRate = newResidentsLastMonth > 0
-      ? ((newResidentsThisMonth - newResidentsLastMonth) / (newResidentsLastMonth || 1)) * 100
-      : (newResidentsThisMonth > 0 ? 100 : 0);
-    const householdGrowthRate = newHouseholdsLastMonth > 0
-      ? ((newHouseholdsThisMonth - newHouseholdsLastMonth) / (newHouseholdsLastMonth || 1)) * 100
-      : (newHouseholdsThisMonth > 0 ? 100 : 0);
-
+    const monthlyResidents = processMonthlyData((monthlyDataQ.data || []) as Array<{
+      created_at: string;
+    }>);
+    const genderDistribution = processGenderDistribution((genderDataQ.data || []) as Array<{
+      gender: string;
+    }>, residentsCount);
+    const residentGrowthRate = newResidentsLastMonth > 0 ? (newResidentsThisMonth - newResidentsLastMonth) / (newResidentsLastMonth || 1) * 100 : newResidentsThisMonth > 0 ? 100 : 0;
+    const householdGrowthRate = newHouseholdsLastMonth > 0 ? (newHouseholdsThisMonth - newHouseholdsLastMonth) / (newHouseholdsLastMonth || 1) * 100 : newHouseholdsThisMonth > 0 ? 100 : 0;
     const dashboardData = {
       totalResidents: residentsCount,
       totalHouseholds: householdsCount,
@@ -542,12 +548,10 @@ const [showPassword, setShowPassword] = useState(false);
       totalDeceased: deceasedCount,
       totalRelocated: relocatedCount,
       isLoading: false,
-      error: null,
+      error: null
     };
-
     localStorage.setItem(`dashboardData_${brgyid}`, JSON.stringify(dashboardData));
   }
-
   const handleSignup = async (values: SignupFormValues) => {
     setIsLoading(true);
     if (!captchaToken) {
@@ -719,11 +723,8 @@ const [showPassword, setShowPassword] = useState(false);
       signupForm.setValue("barangayId", "");
     }
   };
-
-
   const handleForgotPassword = async (values: ForgotPasswordFormValues) => {
     setIsLoading(true);
-    
     if (!captchaToken) {
       toast({
         title: "CAPTCHA Required",
@@ -733,15 +734,12 @@ const [showPassword, setShowPassword] = useState(false);
       setIsLoading(false);
       return;
     }
-    
     try {
       // First check if the email exists in profiles table
-      const { data: profileCheck, error: profileError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', values.email)
-        .single();
-        
+      const {
+        data: profileCheck,
+        error: profileError
+      } = await supabase.from('profiles').select('email').eq('email', values.email).single();
       if (profileError || !profileCheck) {
         toast({
           title: "Email Not Found",
@@ -753,12 +751,12 @@ const [showPassword, setShowPassword] = useState(false);
         setCaptchaToken(null);
         return;
       }
-
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+      const {
+        error
+      } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo: `${window.location.origin}/update-password`,
         captchaToken
       });
-      
       if (error) {
         toast({
           title: "Error",
@@ -787,17 +785,16 @@ const [showPassword, setShowPassword] = useState(false);
       setCaptchaToken(null);
     }
   };
-
   const handleOtpVerification = async (values: OtpVerificationFormValues) => {
     setIsLoading(true);
-    
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      const {
+        error
+      } = await supabase.auth.verifyOtp({
         email: otpEmail,
         token: values.otp,
         type: 'email'
       });
-      
       if (error) {
         toast({
           title: "Invalid Code",
@@ -823,15 +820,14 @@ const [showPassword, setShowPassword] = useState(false);
       setIsLoading(false);
     }
   };
-
   const handleResetPassword = async (values: ResetPasswordFormValues) => {
     setIsLoading(true);
-    
     try {
-      const { error } = await supabase.auth.updateUser({
+      const {
+        error
+      } = await supabase.auth.updateUser({
         password: values.password
       });
-      
       if (error) {
         toast({
           title: "Error",
@@ -844,10 +840,9 @@ const [showPassword, setShowPassword] = useState(false);
           description: "Your password has been successfully updated. Please log in with your new password.",
           variant: "default"
         });
-        
+
         // Sign out the user after password reset to clear recovery session
         await supabase.auth.signOut();
-        
         setResetMode(false);
         setActiveTab("login");
         resetPasswordForm.reset();
@@ -939,16 +934,10 @@ const [showPassword, setShowPassword] = useState(false);
               {/* Header text */}
               <div className="text-center mb-6">
                 <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
-                  {activeTab === "login" ? "Welcome Back!" : 
-                   activeTab === "signup" ? "Create an Account" :
-                   activeTab === "forgot-password" ? "Reset Password" :
-                   "Set New Password"}
+                  {activeTab === "login" ? "Welcome Back!" : activeTab === "signup" ? "Create an Account" : activeTab === "forgot-password" ? "Reset Password" : "Set New Password"}
                 </h2>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {activeTab === "login" ? "Sign in to your dashboard" : 
-                   activeTab === "signup" ? "Join Baranex to manage your community" :
-                   activeTab === "forgot-password" ? "Enter your email to receive a password reset link" :
-                   "Enter your new password"}
+                  {activeTab === "login" ? "Sign in to your dashboard" : activeTab === "signup" ? "Join Baranex to manage your community" : activeTab === "forgot-password" ? "Enter your email to receive a password reset link" : "Enter your new password"}
                 </p>
               </div>
               
@@ -1277,23 +1266,7 @@ const [showPassword, setShowPassword] = useState(false);
                             <FormMessage />
                           </FormItem>} />
                       
-                      {!isNewBarangay && selectedRole !== "admin" && <div className="rounded-md bg-yellow-50 p-4">
-                        <div className="flex">
-                          <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-yellow-800">Account Approval Required</h3>
-                            <div className="mt-2 text-sm text-yellow-700">
-                              <p>
-                                Your account will require approval from a barangay administrator before you can log in.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>}
+                      {!isNewBarangay && selectedRole !== "admin"}
                       
                       <div className="flex justify-center my-4">
                         <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
@@ -1314,57 +1287,38 @@ const [showPassword, setShowPassword] = useState(false);
               </TabsContent>
 
               <TabsContent value="forgot-password">
-                {!showOtpInput ? (
-                  <Form {...forgotPasswordForm}>
+                {!showOtpInput ? <Form {...forgotPasswordForm}>
                     <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
-                      <FormField 
-                        control={forgotPasswordForm.control} 
-                        name="email" 
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={forgotPasswordForm.control} name="email" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
                               Email Address
                             </FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                                <Input 
-                                  placeholder="Enter your email address" 
-                                  className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
-                                  {...field} 
-                                />
+                                <Input placeholder="Enter your email address" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
                               </div>
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )} 
-                      />
+                          </FormItem>} />
                       
                       <div className="flex justify-center my-4">
                         <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
                       </div>
                       
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
-                        disabled={isLoading || !captchaToken}
-                      >
+                      <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" disabled={isLoading || !captchaToken}>
                         {isLoading ? "Sending Code..." : "Send Verification Code"}
                       </Button>
                       
                       <div className="text-center">
-                        <button 
-                          type="button" 
-                          onClick={() => setActiveTab("login")} 
-                          className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}
-                        >
+                        <button type="button" onClick={() => setActiveTab("login")} className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>
                           Back to Login
                         </button>
                       </div>
                     </form>
-                  </Form>
-                ) : (
-                  <Form {...otpForm}>
+                  </Form> : <Form {...otpForm}>
                     <form onSubmit={otpForm.handleSubmit(handleOtpVerification)} className="space-y-4">
                       <div className="text-center mb-4">
                         <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -1375,11 +1329,9 @@ const [showPassword, setShowPassword] = useState(false);
                         </p>
                       </div>
 
-                      <FormField 
-                        control={otpForm.control} 
-                        name="otp" 
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={otpForm.control} name="otp" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-2 text-center ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
                               Verification Code
                             </FormLabel>
@@ -1398,99 +1350,62 @@ const [showPassword, setShowPassword] = useState(false);
                               </div>
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )} 
-                      />
+                          </FormItem>} />
                       
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
-                        disabled={isLoading}
-                      >
+                      <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" disabled={isLoading}>
                         {isLoading ? "Verifying..." : "Verify Code"}
                       </Button>
                       
                       <div className="text-center space-y-2">
-                        <button 
-                          type="button" 
-                          onClick={() => {
-                            setShowOtpInput(false);
-                            setOtpEmail("");
-                            otpForm.reset();
-                          }}
-                          className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}
-                        >
+                        <button type="button" onClick={() => {
+                      setShowOtpInput(false);
+                      setOtpEmail("");
+                      otpForm.reset();
+                    }} className={`text-sm font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>
                           Try Different Email
                         </button>
                       </div>
                     </form>
-                  </Form>
-                )}
+                  </Form>}
               </TabsContent>
 
               <TabsContent value="reset-password">
                 <Form {...resetPasswordForm}>
                   <form onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)} className="space-y-4">
-                    <FormField 
-                      control={resetPasswordForm.control} 
-                      name="password" 
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={resetPasswordForm.control} name="password" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
                             New Password
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                              <Input 
-                                type={showPassword ? "text" : "password"} 
-                                placeholder="Enter your new password" 
-                                className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
-                                {...field} 
-                              />
-                              <button 
-                                type="button" 
-                                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`} 
-                                onClick={() => setShowPassword(!showPassword)}
-                              >
+                              <Input type={showPassword ? "text" : "password"} placeholder="Enter your new password" className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                              <button type="button" className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setShowPassword(!showPassword)}>
                                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                               </button>
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )} 
-                    />
+                        </FormItem>} />
                     
-                    <FormField 
-                      control={resetPasswordForm.control} 
-                      name="confirmPassword" 
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={resetPasswordForm.control} name="confirmPassword" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
                             Confirm New Password
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                              <Input 
-                                type={showPassword ? "text" : "password"} 
-                                placeholder="Confirm your new password" 
-                                className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} 
-                                {...field} 
-                              />
+                              <Input type={showPassword ? "text" : "password"} placeholder="Confirm your new password" className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )} 
-                    />
+                        </FormItem>} />
                     
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" 
-                      disabled={isLoading}
-                    >
+                    <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" disabled={isLoading}>
                       {isLoading ? "Updating Password..." : "Update Password"}
                     </Button>
                   </form>
@@ -1500,12 +1415,7 @@ const [showPassword, setShowPassword] = useState(false);
             
             <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'}`}>
               <div className="text-center space-y-3">
-                <Button
-                  onClick={() => navigate('/')}
-                  variant="ghost"
-                  size="sm"
-                  className={`text-sm transition-all duration-200 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-600'}`}
-                >
+                <Button onClick={() => navigate('/')} variant="ghost" size="sm" className={`text-sm transition-all duration-200 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-600'}`}>
                   ← Back to Home
                 </Button>
                 
