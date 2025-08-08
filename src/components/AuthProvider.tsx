@@ -578,18 +578,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               await logUserSignIn(currentSession.user.id, profileData);
             }
             
-            if (profileData) {
-              console.log('Redirecting based on role:', profileData.role);
-              if (profileData.role === "user") {
-                navigate("/hub");
-              } else if (profileData.role === "admin" || profileData.role === "staff") {
-                navigate("/dashboard");
-              } else if (profileData.role === "glyph") {
-                navigate("/echelon");
-              } else if (profileData.role === "overseer") {
-                navigate("/plaza");
+              if (profileData) {
+                console.log('Redirecting based on role:', profileData.role);
+                const smartPending = localStorage.getItem('smartLoginPending') === '1';
+                if (!smartPending) {
+                  if (profileData.role === "user") {
+                    navigate("/hub");
+                  } else if (profileData.role === "admin" || profileData.role === "staff") {
+                    navigate("/dashboard");
+                  } else if (profileData.role === "glyph") {
+                    navigate("/echelon");
+                  } else if (profileData.role === "overseer") {
+                    navigate("/plaza");
+                  }
+                } else {
+                  console.log('Smart login pending; skipping auto-redirect');
+                }
               }
-            }
           }
         }, 100);
       } else if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
