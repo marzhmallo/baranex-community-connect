@@ -387,7 +387,7 @@ export type Database = {
           datatype?: string | null
           destination?: string
           id?: string
-          initiator?: string
+          initiator: string
           notes?: string | null
           reviewer?: string | null
           source?: string
