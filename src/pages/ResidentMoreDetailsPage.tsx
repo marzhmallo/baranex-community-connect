@@ -15,6 +15,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import RelationshipManager from '@/components/residents/RelationshipManager';
 import HouseholdSelector from '@/components/residents/HouseholdSelector';
 import ResidentForm from '@/components/residents/ResidentForm';
+import ResidentIDsManager from '@/components/residents/ResidentIDsManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useResidentPhoto } from '@/hooks/useResidentPhoto';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -780,18 +781,11 @@ const ResidentMoreDetailsPage = () => {
                 <CardHeader>
                   <CardTitle className="text-xl flex items-center">
                     <FileText className="mr-2 h-5 w-5" />
-                    Documents
+                    Identifications
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    Manage and issue documents related to this resident.
-                  </p>
-                  <div className="flex gap-2">
-                    <Button onClick={() => navigate('/documents')}>
-                      Open Documents
-                    </Button>
-                  </div>
+                  <ResidentIDsManager residentId={resident.id} />
                 </CardContent>
               </Card>
             </div>
