@@ -361,11 +361,33 @@ const NexusPage = () => {
     }
   };
 
-  const handleReviewRequest = (request: any) => {
+  const handleReviewRequest = async (request: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (
+        user &&
+        request.status === 'Pending' &&
+        request.destination === currentUserBarangay &&
+        !request.reviewer
+      ) {
+        await supabase
+          .from('dnexus')
+          .update({ reviewer: user.id })
+          .eq('id', request.id)
+          .eq('destination', currentUserBarangay)
+          .eq('status', 'Pending')
+          .is('reviewer', null);
+
+        // Refresh to reflect reviewer assignment
+        fetchTransferRequests();
+      }
+    } catch (error) {
+      console.error('Error marking request as reviewed:', error);
+    }
+
     setSelectedRequest(request);
     setReviewDialogOpen(true);
   };
-
   const fetchItemNames = async (datatype: string, dataid: string[]) => {
     if (!dataid || dataid.length === 0) return [];
 
@@ -791,19 +813,10 @@ const NexusPage = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleViewRequest(request)}
+                              onClick={() => (request.status === 'Pending' ? handleReviewRequest(request) : handleViewRequest(request))}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {request.status === 'Pending' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleReviewRequest(request)}
-                              >
-                                Review
-                              </Button>
-                            )}
                           </div>
                         </TableCell>
                       </TableRow>
