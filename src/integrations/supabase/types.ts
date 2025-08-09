@@ -581,6 +581,48 @@ export type Database = {
         }
         Relationships: []
       }
+      docx: {
+        Row: {
+          created_at: string
+          document_type: string
+          file_path: string
+          id: string
+          notes: string | null
+          resid: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          file_path: string
+          id?: string
+          notes?: string | null
+          resid: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          file_path?: string
+          id?: string
+          notes?: string | null
+          resid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "docx_resid_fkey"
+            columns: ["resid"]
+            isOneToOne: false
+            referencedRelation: "admin_residents_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "docx_resid_fkey"
+            columns: ["resid"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_contacts: {
         Row: {
           brgyid: string
