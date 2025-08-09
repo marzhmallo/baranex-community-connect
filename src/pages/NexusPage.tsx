@@ -377,16 +377,25 @@ const NexusPage = () => {
           .eq('destination', currentUserBarangay)
           .eq('status', 'Pending')
           .is('reviewer', null);
-
-        // Refresh to reflect reviewer assignment
-        fetchTransferRequests();
       }
-    } catch (error) {
-      console.error('Error marking request as reviewed:', error);
-    }
 
-    setSelectedRequest(request);
-    setReviewDialogOpen(true);
+      // Prepare items for review (fallback to transfernotes due to RLS)
+      const fetchedItems = await fetchItemNames(request.datatype, request.dataid);
+      const itemsWithNames = (fetchedItems && fetchedItems.length > 0)
+        ? fetchedItems
+        : (request.transfernotes?.items || []);
+
+      const enhancedRequest = { ...request, itemsWithNames };
+      setSelectedRequest(enhancedRequest);
+      setReviewDialogOpen(true);
+
+      // Refresh to reflect reviewer assignment and any changes
+      fetchTransferRequests();
+    } catch (error) {
+      console.error('Error preparing review dialog:', error);
+      setSelectedRequest(request);
+      setReviewDialogOpen(true);
+    }
   };
   const fetchItemNames = async (datatype: string, dataid: string[]) => {
     if (!dataid || dataid.length === 0) return [];
@@ -925,6 +934,44 @@ const NexusPage = () => {
                 </div>
               </div>
               
+              {/* Transfer Data */}
+              <div className="border rounded-lg p-3">
+                <h3 className="text-sm font-semibold mb-2">Transfer Data</h3>
+                <div className="bg-muted p-2 rounded max-h-40 overflow-y-auto">
+                  {selectedRequest.itemsWithNames && selectedRequest.itemsWithNames.length > 0 ? (
+                    <div className="space-y-1">
+                      {selectedRequest.itemsWithNames.map((item: any, index: number) => (
+                        <p key={item.id || index} className="text-xs">
+                          {index + 1}. {item.name ? item.name : (() => {
+                            switch (selectedRequest.datatype) {
+                              case 'resident':
+                              case 'residents':
+                                return `${item.first_name} ${item.last_name} (${item.purok})`;
+                              case 'households':
+                                return `${item.name} - ${item.address}`;
+                              case 'profiles':
+                                return `${item.firstname} ${item.lastname}`;
+                              default:
+                                return item.name || item.title || 'Unknown';
+                            }
+                          })()}
+                        </p>
+                      ))}
+                    </div>
+                  ) : selectedRequest.transfernotes?.items && selectedRequest.transfernotes.items.length > 0 ? (
+                    <div className="space-y-1">
+                      {selectedRequest.transfernotes.items.map((item: any, index: number) => (
+                        <p key={item.id || index} className="text-xs">
+                          {index + 1}. {item.name || 'Unknown'}
+                        </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No item details available</p>
+                  )}
+                </div>
+              </div>
+
               {selectedRequest.notes && (
                 <div>
                   <label className="text-sm font-medium">Notes</label>
@@ -940,7 +987,8 @@ const NexusPage = () => {
                 >
                   <XCircle className="h-4 w-4 mr-2" />
                   Reject
-                </Button>
+                </Button
+                >
                 <Button
                   onClick={() => handleApproveReject(true)}
                   disabled={loading}
