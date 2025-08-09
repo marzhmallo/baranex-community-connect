@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
@@ -27,6 +28,23 @@ interface ResidentIDsManagerProps {
 }
 
 const bucket = "residentphotos";
+const ID_TYPES = [
+  "National ID",
+  "Passport",
+  "Driver's License",
+  "Voter's ID",
+  "Postal ID",
+  "SSS ID",
+  "GSIS ID",
+  "PhilHealth ID",
+  "Senior Citizen ID",
+  "PWD ID",
+  "Student ID",
+  "PRC ID",
+  "Barangay ID",
+  "Company ID",
+  "Other"
+];
 
 const ResidentIDsManager: React.FC<ResidentIDsManagerProps> = ({ residentId }) => {
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -275,7 +293,16 @@ const ResidentIDsManager: React.FC<ResidentIDsManagerProps> = ({ residentId }) =
             <div className="space-y-3">
               <div className="grid gap-2">
                 <Label htmlFor="idType">Identification type</Label>
-                <Input id="idType" value={idType} onChange={(e) => setIdType(e.target.value)} placeholder="e.g., Passport, National ID, Driver's License" />
+                <Select value={idType} onValueChange={setIdType}>
+                  <SelectTrigger id="idType" aria-label="Identification type">
+                    <SelectValue placeholder="Select identification type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ID_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="notes">Notes (optional)</Label>
@@ -307,7 +334,16 @@ const ResidentIDsManager: React.FC<ResidentIDsManagerProps> = ({ residentId }) =
             <div className="space-y-3">
               <div className="grid gap-2">
                 <Label htmlFor="eidType">Identification type</Label>
-                <Input id="eidType" value={idType} onChange={(e) => setIdType(e.target.value)} />
+                <Select value={idType} onValueChange={setIdType}>
+                  <SelectTrigger id="eidType" aria-label="Identification type">
+                    <SelectValue placeholder="Select identification type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ID_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="enotes">Notes (optional)</Label>
