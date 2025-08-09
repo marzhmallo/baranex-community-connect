@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Eye, ChevronUp, ChevronDown } from "lucide-react";
 import { getHouseholds, deleteHousehold } from "@/lib/api/households";
 import { Household } from "@/lib/types";
+import { supabase } from "@/integrations/supabase/client";
 import HouseholdDetails from './HouseholdDetails';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
@@ -239,8 +240,38 @@ const HouseholdList: React.FC = () => {
   const totalItems = sortedAndFilteredHouseholds.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentHouseholds = sortedAndFilteredHouseholds.slice(startIndex, endIndex);
+
+  const currentHouseholdIds = useMemo(() => (
+    currentHouseholds.map(h => h?.id).filter(Boolean) as string[]
+  ), [currentHouseholds]);
+
+  const { data: headNamesMap } = useQuery({
+    queryKey: ['household-heads', currentHouseholdIds],
+    queryFn: async () => {
+      if (!currentHouseholdIds.length) return {} as Record<string, string>;
+      const { data, error } = await supabase
+        .from('householdmembers')
+        .select('householdid, role, residents:residentid(first_name, middle_name, last_name)')
+        .in('householdid', currentHouseholdIds);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data || []).forEach((m: any) => {
+        const role = (m.role || '').toLowerCase();
+        const isHead = role.includes('head');
+        if (isHead) {
+          const r = m.residents;
+          const name = r ? [r.first_name, r.middle_name ? r.middle_name.charAt(0) + '.' : null, r.last_name]
+            .filter(Boolean)
+            .join(' ') : null;
+          if (name) map[m.householdid] = name;
+        }
+      });
+      return map;
+    },
+    enabled: currentHouseholdIds.length > 0
+  });
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -454,7 +485,7 @@ const HouseholdList: React.FC = () => {
               <TableRow key={household.id}>
                 <TableCell className="font-medium">{household.name}</TableCell>
                 <TableCell>{household.address}</TableCell>
-                <TableCell>{household.head_of_family_name || "Not specified"}</TableCell>
+                <TableCell>{headNamesMap?.[household.id] || "Not specified"}</TableCell>
                 <TableCell>{household.contact_number || "Not available"}</TableCell>
                 <TableCell>{getStatusBadge(household.status)}</TableCell>
                 <TableCell className="text-right">
