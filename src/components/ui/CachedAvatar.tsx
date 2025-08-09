@@ -14,7 +14,7 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
 
   // Cache utilities
   const getCacheKey = (key: string) => `avatar_${userId}_${key}`;
-  const getCachedData = (key: string, maxAge: number = 3300000) => { // 55 minutes default
+  const getCachedData = (key: string, maxAge: number = 480000) => { // 8 minutes default (slightly less than signed URL expiry)
     try {
       const cached = localStorage.getItem(getCacheKey(key));
       if (cached) {
@@ -41,40 +41,77 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
     }
   };
 
-  // Generate signed URL for display
-  const generateSignedUrl = async (filePath: string) => {
-    if (!filePath) return undefined;
+  const clearCachedData = (key: string) => {
+    try {
+      localStorage.removeItem(getCacheKey(key));
+    } catch (error) {
+      console.error('Error clearing avatar cache:', error);
+    }
+  };
+
+  // Extract file path from possible full URLs
+  const extractFilePath = (urlOrPath: string) => {
+    if (!urlOrPath) return '';
+    if (urlOrPath.includes('/storage/v1/object/public/profilepictures/')) {
+      return urlOrPath.split('/storage/v1/object/public/profilepictures/')[1];
+    }
+    if (urlOrPath.includes('/storage/v1/object/sign/profilepictures/')) {
+      return urlOrPath.split('/storage/v1/object/sign/profilepictures/')[1].split('?')[0];
+    }
+    // If it already looks like a path, return as-is
+    return urlOrPath;
+  };
+
+  // Generate URL for display (handles full URLs and file paths)
+  const generateSignedUrl = async (inputUrl: string) => {
+    if (!inputUrl) return undefined;
+
+    const filePath = extractFilePath(inputUrl);
 
     try {
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('profilepictures')
         .createSignedUrl(filePath, 600); // 10 minutes expiration
 
-      if (signedUrlError) {
-        console.error('Error generating signed URL:', signedUrlError);
-        return undefined;
+      if (!signedUrlError && signedUrlData?.signedUrl) {
+        return signedUrlData.signedUrl;
       }
 
-      return signedUrlData.signedUrl;
+      // Fallback to public URL if bucket is public
+      const { data: publicUrlData } = supabase.storage
+        .from('profilepictures')
+        .getPublicUrl(filePath);
+
+      if (publicUrlData?.publicUrl) {
+        return publicUrlData.publicUrl;
+      }
+
+      if (signedUrlError) {
+        console.error('Error generating signed URL:', signedUrlError);
+      }
+      return undefined;
     } catch (error) {
-      console.error('Error generating signed URL:', error);
+      console.error('Error generating avatar URL:', error);
       return undefined;
     }
   };
 
   useEffect(() => {
     if (profilePicture) {
-      // Check cache first
-      const cachedUrl = getCachedData('signed_url');
+      // Check cache first (cache lifetime < signed URL expiry)
+      const cacheKey = `signed_url_${profilePicture}`;
+      const cachedUrl = getCachedData(cacheKey, 480000);
       if (cachedUrl) {
         setAvatarUrl(cachedUrl);
         return;
       }
 
-      generateSignedUrl(profilePicture).then(signedUrl => {
-        if (signedUrl) {
-          setAvatarUrl(signedUrl);
-          setCachedData('signed_url', signedUrl);
+      generateSignedUrl(profilePicture).then(url => {
+        if (url) {
+          setAvatarUrl(url);
+          setCachedData(cacheKey, url);
+        } else {
+          setAvatarUrl(undefined);
         }
       });
     } else {
@@ -90,11 +127,24 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
           alt="Profile picture" 
           onError={() => {
             console.error('Failed to load avatar image:', avatarUrl);
-            setAvatarUrl(undefined);
+            const cacheKey = `signed_url_${profilePicture || ''}`;
+            clearCachedData(cacheKey);
+            if (profilePicture) {
+              generateSignedUrl(profilePicture).then((newUrl) => {
+                if (newUrl) {
+                  setAvatarUrl(newUrl);
+                  setCachedData(cacheKey, newUrl);
+                } else {
+                  setAvatarUrl(undefined);
+                }
+              });
+            } else {
+              setAvatarUrl(undefined);
+            }
           }}
         />
       )}
-      <AvatarFallback className="bg-gradient-to-br from-primary-500 to-primary-600 text-white font-semibold">
+      <AvatarFallback className="bg-gradient-to-br from-primary-500 to-primary-600 text-foreground font-semibold">
         {fallback}
       </AvatarFallback>
     </Avatar>
