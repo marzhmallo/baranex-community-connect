@@ -378,6 +378,7 @@ export type Database = {
           reviewer: string | null
           source: string
           status: string
+          transfernotes: Json | null
         }
         Insert: {
           accepted_on?: string | null
@@ -391,6 +392,7 @@ export type Database = {
           reviewer?: string | null
           source?: string
           status: string
+          transfernotes?: Json | null
         }
         Update: {
           accepted_on?: string | null
@@ -404,6 +406,7 @@ export type Database = {
           reviewer?: string | null
           source?: string
           status?: string
+          transfernotes?: Json | null
         }
         Relationships: [
           {

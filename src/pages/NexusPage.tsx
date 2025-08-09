@@ -587,12 +587,6 @@ const NexusPage = () => {
           <h1 className="text-3xl font-bold">The Nexus</h1>
           <p className="text-muted-foreground">Transfer data between barangays</p>
         </div>
-        {pendingIncomingCount > 0 && (
-          <Badge variant="destructive" className="ml-auto">
-            <Bell className="h-3 w-3 mr-1" />
-            {pendingIncomingCount} Pending
-          </Badge>
-        )}
       </div>
 
       <Tabs defaultValue="new-transfer" className="space-y-6">
@@ -600,9 +594,6 @@ const NexusPage = () => {
           <TabsTrigger value="new-transfer">New Transfer</TabsTrigger>
           <TabsTrigger value="incoming">
             Incoming Requests
-            {pendingIncomingCount > 0 && (
-              <Badge variant="secondary" className="ml-2">{pendingIncomingCount}</Badge>
-            )}
           </TabsTrigger>
           <TabsTrigger value="outgoing">Outgoing Requests</TabsTrigger>
         </TabsList>

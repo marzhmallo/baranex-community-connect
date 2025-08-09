@@ -31,7 +31,7 @@ export const NotificationDropdown = () => {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-baranex-danger text-white">
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
@@ -72,9 +72,13 @@ export const NotificationDropdown = () => {
                 }}
                 asChild
               >
-                <div className={`${notification.linkurl ? 'cursor-pointer' : 'cursor-default'}`}>
-                  {notification.linkurl ? (
-                    <Link to={notification.linkurl} className="w-full">
+                <div className={`${(notification.type === 'dnexus' || notification.type === 'dnexus_status' || notification.linkurl) ? 'cursor-pointer' : 'cursor-default'}`}>
+                  {(notification.type === 'dnexus' || notification.type === 'dnexus_status') ? (
+                    <Link to="/nexus" className="w-full">
+                      <NotificationContent notification={notification} />
+                    </Link>
+                  ) : notification.linkurl ? (
+                    <Link to={String(notification.linkurl)} className="w-full">
                       <NotificationContent notification={notification} />
                     </Link>
                   ) : (
@@ -94,7 +98,7 @@ const NotificationContent = ({ notification }: { notification: any }) => (
   <>
     <div className="flex-shrink-0">
       {!notification.read ? (
-        <Dot className="h-6 w-6 text-baranex-primary" />
+        <Dot className="h-6 w-6 text-primary" />
       ) : (
         <div className="h-6 w-6" />
       )}
@@ -119,6 +123,7 @@ const NotificationContent = ({ notification }: { notification: any }) => (
           e.preventDefault();
           e.stopPropagation();
         }}
+        aria-label="Mark notification as read"
       >
         <Check className="h-3 w-3" />
       </Button>
