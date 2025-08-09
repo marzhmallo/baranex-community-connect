@@ -74,7 +74,6 @@ const NexusPage = () => {
         event: '*',
         schema: 'public',
         table: 'dnexus',
-        filter: `destination=eq.${currentUserBarangay},source=eq.${currentUserBarangay}`
       }, () => {
         // Refresh requests when changes occur
         fetchTransferRequests();
@@ -421,9 +420,11 @@ const NexusPage = () => {
   const handleViewRequest = async (request: any) => {
     setSelectedViewRequest(request);
     
-    // Fetch item names for the request
-    const itemsWithNames = await fetchItemNames(request.datatype, request.dataid);
-    
+    // Fetch item names for the request (fallback to transfernotes when RLS prevents fetching)
+    const fetchedItems = await fetchItemNames(request.datatype, request.dataid);
+    const itemsWithNames = (fetchedItems && fetchedItems.length > 0)
+      ? fetchedItems
+      : (request.transfernotes?.items || []);
     // Fetch missing barangay and profile information
     let destinationBarangay = request.destination_barangay;
     let sourceBarangay = request.source_barangay;
@@ -1045,33 +1046,33 @@ const NexusPage = () => {
                       {selectedViewRequest.itemsWithNames && selectedViewRequest.itemsWithNames.length > 0 ? (
                         <div className="space-y-1">
                           {selectedViewRequest.itemsWithNames.map((item: any, index: number) => (
-                            <p key={item.id} className="text-xs">
-                              {index + 1}. {(() => {
-                                  switch (selectedViewRequest.datatype) {
-                                    case 'resident':
-                                    case 'residents':
-                                      return `${item.first_name} ${item.last_name} (${item.purok})`;
-                                    case 'households':
-                                      return `${item.name} - ${item.address}`;
-                                    case 'profiles':
-                                      return `${item.firstname} ${item.lastname}`;
-                                    case 'officials':
-                                      return `${item.name} (Position ${item.position_no})`;
-                                    case 'announcements':
-                                      return `${item.title} (${item.category})`;
-                                    case 'events':
-                                      return `${item.title} - ${item.location}`;
-                                    case 'documents':
-                                      return `${item.name}`;
-                                    default:
-                                      return item.name || item.title || 'Unknown';
-                                  }
+                            <p key={item.id || index} className="text-xs">
+                              {index + 1}. {item.name ? item.name : (() => {
+                                switch (selectedViewRequest.datatype) {
+                                  case 'resident':
+                                  case 'residents':
+                                    return `${item.first_name} ${item.last_name} (${item.purok})`;
+                                  case 'households':
+                                    return `${item.name} - ${item.address}`;
+                                  case 'profiles':
+                                    return `${item.firstname} ${item.lastname}`;
+                                  case 'officials':
+                                    return `${item.name} (Position ${item.position_no})`;
+                                  case 'announcements':
+                                    return `${item.title} (${item.category})`;
+                                  case 'events':
+                                    return `${item.title} - ${item.location}`;
+                                  case 'documents':
+                                    return `${item.name}`;
+                                  default:
+                                    return item.name || item.title || 'Unknown';
+                                }
                               })()}
                             </p>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-muted-foreground">Loading items...</p>
+                        <p className="text-xs text-muted-foreground">No item details available</p>
                       )}
                     </div>
                   </div>
