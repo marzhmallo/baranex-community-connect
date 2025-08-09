@@ -36,6 +36,8 @@ const ResidentIDsManager: React.FC<ResidentIDsManagerProps> = ({ residentId }) =
   const [idType, setIdType] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const { data: ids, isLoading, refetch } = useQuery<{ rows: DocxRecord[]; urls: Record<string, string> }>(
     {
@@ -222,13 +224,22 @@ const ResidentIDsManager: React.FC<ResidentIDsManagerProps> = ({ residentId }) =
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="aspect-square w-full rounded-md bg-muted flex items-center justify-center overflow-hidden">
-                  {ids?.urls?.[rec.id] ? (
-                    <img
-                      src={ids.urls[rec.id]}
-                      alt={`${rec.document_type} - resident ID photo`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
+{ids?.urls?.[rec.id] ? (
+                    <button
+                      type="button"
+                      className="w-full h-full"
+                      onClick={() => {
+                        setPreviewUrl(ids?.urls?.[rec.id] || null);
+                        setIsPreviewOpen(true);
+                      }}
+                    >
+                      <img
+                        src={ids.urls[rec.id]}
+                        alt={`${rec.document_type} - resident ID photo`}
+                        className="w-full h-full object-cover cursor-zoom-in"
+                        loading="lazy"
+                      />
+                    </button>
                   ) : (
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                       <ImageIcon className="h-8 w-8 mb-1" />
@@ -313,6 +324,17 @@ const ResidentIDsManager: React.FC<ResidentIDsManagerProps> = ({ residentId }) =
                 <Upload className="mr-2 h-4 w-4" /> Save changes
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] max-h-[90vh] p-0 bg-transparent border-0 shadow-none">
+          <div className="relative w-full h-full flex items-center justify-center bg-black/80 p-2 rounded-lg">
+            {previewUrl && (
+              <img src={previewUrl} alt="Identification preview" className="max-h-[85vh] max-w-full object-contain rounded" />
+            )}
           </div>
         </DialogContent>
       </Dialog>
