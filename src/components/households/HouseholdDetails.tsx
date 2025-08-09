@@ -26,7 +26,7 @@ const HouseholdDetails = ({
   const navigate = useNavigate();
 
   const { data: headMember } = useQuery({
-    queryKey: ['household-head', household.id],
+    queryKey: ['household-head', household?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('householdmembers')
