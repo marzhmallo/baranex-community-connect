@@ -733,11 +733,17 @@ const UserAccountManagement = () => {
             {selectedUser && <div className="space-y-6">
                 {/* User Header */}
                 <div className="flex items-center space-x-4 p-4 bg-muted/30 rounded-lg">
-                  <div className="relative group cursor-pointer" onClick={() => setPhotoViewOpen(true)}>
+                  <div
+                    className={`relative group ${selectedUser.profile_picture ? 'cursor-pointer' : 'cursor-default'}`}
+                    onClick={selectedUser.profile_picture ? () => setPhotoViewOpen(true) : undefined}
+                    aria-disabled={!selectedUser.profile_picture}
+                  >
                     <CachedAvatar userId={selectedUser.id} profilePicture={selectedUser.profile_picture} fallback={getInitials(selectedUser.firstname, selectedUser.lastname)} className="w-16 h-16" />
-                    {selectedUser.profile_picture && <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full flex items-center justify-center">
+                    {selectedUser.profile_picture && (
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full flex items-center justify-center">
                         <ZoomIn className="h-5 w-5 text-white" />
-                      </div>}
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-foreground mb-1">
