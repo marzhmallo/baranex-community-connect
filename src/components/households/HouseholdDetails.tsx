@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import HouseholdForm from "./HouseholdForm";
 import { ZoomIn, X, Clock, History } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from "@/integrations/supabase/client";
 type HouseholdDetailsProps = {
   household: Household | null;
   open: boolean;
@@ -22,6 +24,27 @@ const HouseholdDetails = ({
 }: HouseholdDetailsProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
+
+  const { data: headMember } = useQuery({
+    queryKey: ['household-head', household.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('householdmembers')
+        .select('role, residents:residentid(id, first_name, middle_name, last_name)')
+        .eq('householdid', household.id);
+      if (error) throw error;
+      const head = (data || []).find((m: any) => (m.role || '').toLowerCase().includes('head'));
+      return head || null;
+    },
+    enabled: !!household?.id
+  });
+
+  const headName = headMember?.residents
+    ? [headMember.residents.first_name, headMember.residents.middle_name ? headMember.residents.middle_name.charAt(0) + '.' : null, headMember.residents.last_name]
+        .filter(Boolean)
+        .join(' ')
+    : null;
+  const isRegisteredHead = !!headMember?.residents;
 
   // Set edit mode when dialog opens based on initialEditMode prop
   useEffect(() => {
@@ -143,8 +166,8 @@ const HouseholdDetails = ({
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-gray-500">Head of Family</p>
-                          <p>{household.head_of_family_name || household.headname || "Not specified"}</p>
-                          {household.head_of_family && <p className="text-xs text-green-600">✓ Registered resident</p>}
+                          <p>{headName || "Not specified"}</p>
+                          {isRegisteredHead && <p className="text-xs text-green-600">✓ Registered resident</p>}
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Contact Number</p>
