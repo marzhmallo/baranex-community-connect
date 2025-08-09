@@ -1154,13 +1154,20 @@ const NexusPage = () => {
                   {selectedViewRequest.status !== 'Pending' && (
                     <div className="flex items-center space-x-2">
                       {selectedViewRequest.status === 'Accepted' ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <>
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm">
+                            <strong>Accepted:</strong> {selectedViewRequest.accepted_on ? new Date(selectedViewRequest.accepted_on).toLocaleString() : new Date(selectedViewRequest.created_at).toLocaleString()} by {selectedViewRequest.reviewer_profile?.firstname} {selectedViewRequest.reviewer_profile?.lastname}
+                          </span>
+                        </>
                       ) : (
-                        <XCircle className="h-4 w-4 text-red-600" />
+                        <>
+                          <XCircle className="h-4 w-4 text-red-600" />
+                          <span className="text-sm">
+                            <strong>Rejected:</strong> by {selectedViewRequest.reviewer_profile?.firstname} {selectedViewRequest.reviewer_profile?.lastname}
+                          </span>
+                        </>
                       )}
-                      <span className="text-sm">
-                        <strong>{selectedViewRequest.status}:</strong> by {selectedViewRequest.reviewer_profile?.firstname} {selectedViewRequest.reviewer_profile?.lastname}
-                      </span>
                     </div>
                   )}
                 </div>
