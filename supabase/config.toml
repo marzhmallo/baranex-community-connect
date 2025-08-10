@@ -1,1 +1,4 @@
 project_id = "dssjspakagyerrmtaakm"
+
+[functions.upload-user-ids]
+verify_jwt = false

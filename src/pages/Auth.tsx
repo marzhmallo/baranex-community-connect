@@ -651,6 +651,18 @@ const Auth = () => {
       }
       const userStatus = "pending";
 
+      // Prevent duplicate signups by email
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', values.email)
+        .maybeSingle();
+      if (existingProfile) {
+        toast({ title: "Email already registered", description: "Please sign in or use a different email.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+
       // Create user auth account
       const {
         data: authData,
@@ -690,54 +702,33 @@ const Auth = () => {
       if (authData.user) {
         // Profile is created by a DB trigger using user_metadata passed at sign up.
 
-        if (authData.session) {
-          // Upload required ID images and create docx records
-          try {
-            const userId = authData.user.id;
-            const files = values.idFiles as unknown as FileList;
-            const idType = values.idType as string;
-
-            const uploadedPaths: string[] = [];
-            for (const file of Array.from(files)) {
-              const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-              const filename = `${uuidv4()}.${ext}`;
-              const filePath = `dis/${userId}/${filename}`;
-              const { error: upErr } = await supabase.storage
-                .from('usersdis')
-                .upload(filePath, file, {
-                  cacheControl: '3600',
-                  upsert: false,
-                  contentType: file.type || 'image/jpeg',
-                });
-              if (upErr) throw upErr;
-              uploadedPaths.push(filePath);
-            }
-
-            const rows = uploadedPaths.map((p) => ({
-              userid: userId,
-              document_type: idType,
-              file_path: p,
-              notes: null,
-            }));
-            const { error: docxErr } = await supabase.from('docx').insert(rows as any, { defaultToNull: true });
-            if (docxErr) throw docxErr;
-
-            const successMessage = "Account created and ID uploaded. Pending admin approval.";
-            toast({ title: "Account created", description: successMessage });
-            setActiveTab("login");
-            signupForm.reset();
-          } catch (e: any) {
-            console.error('ID upload failed:', e);
-            toast({ title: "ID upload failed", description: e.message || "Please try again.", variant: "destructive" });
-          }
-        } else {
-          // No session yet (likely email confirmation required) - defer uploads
-          toast({
-            title: "Confirm your email to continue",
-            description: "We sent a confirmation link. After confirming and logging in, you can upload your ID images.",
+        // Immediately upload ID images via Edge Function (no session required)
+        try {
+          const userId = authData.user.id;
+          const files = values.idFiles as unknown as FileList;
+          const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(((reader.result as string) || '').split(',')[1] || '');
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
           });
+          const payloadFiles = await Promise.all(Array.from(files).map(async (file) => ({
+            name: file.name,
+            type: file.type || 'image/jpeg',
+            b64: await toBase64(file),
+          })));
+
+          const { error: fnError } = await supabase.functions.invoke('upload-user-ids', {
+            body: { userId, idType: values.idType, files: payloadFiles },
+          });
+          if (fnError) throw fnError;
+
+          toast({ title: "Account created", description: "Your ID images were uploaded. Please confirm your email to sign in." });
           setActiveTab("login");
           signupForm.reset();
+        } catch (e: any) {
+          console.error('ID upload failed:', e);
+          toast({ title: "ID upload failed", description: e.message || "Please try again.", variant: "destructive" });
         }
 
       }
