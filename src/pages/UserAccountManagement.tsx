@@ -61,6 +61,7 @@ const UserAccountManagement = () => {
     purok: '',
     bday: ''
   });
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const {
     data: users,
     isLoading,
@@ -271,27 +272,31 @@ const UserAccountManagement = () => {
       });
       return;
     }
-
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId)
-      .eq('brgyid', userProfile?.brgyid);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete user",
-        variant: "destructive"
+    // Use Edge Function to delete both auth user and profile
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
       });
-    } else {
+
+      if (error) {
+        throw error;
+      }
+
       toast({
         title: "Success",
-        description: "User deleted successfully"
+        description: "User deleted successfully",
       });
       setDeleteUserDialogOpen(false);
       setUserDetailsOpen(false);
+      setDeleteConfirmText('');
       refetch();
+    } catch (err: any) {
+      console.error('Delete user error:', err);
+      toast({
+        title: "Error",
+        description: err?.message || 'Failed to delete user',
+        variant: "destructive",
+      });
     }
   };
 
@@ -1042,7 +1047,7 @@ const UserAccountManagement = () => {
         </AlertDialog>
 
         {/* Delete User Confirmation Dialog */}
-        <AlertDialog open={deleteUserDialogOpen} onOpenChange={setDeleteUserDialogOpen}>
+        <AlertDialog open={deleteUserDialogOpen} onOpenChange={(open) => { setDeleteUserDialogOpen(open); if (!open) setDeleteConfirmText(''); }}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
@@ -1050,19 +1055,34 @@ const UserAccountManagement = () => {
                 Delete User Account
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to permanently delete <strong>{selectedUser?.firstname} {selectedUser?.lastname}</strong>? 
-                This action cannot be undone and will remove all their data from the system.
+                <div className="space-y-3">
+                  <p>
+                    This will permanently delete <strong>{selectedUser?.firstname} {selectedUser?.lastname}</strong> and remove their record from both authentication and profiles. This action cannot be undone.
+                  </p>
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      Type <strong>DELETE</strong> or the user's email (<em>{selectedUser?.email}</em>) to confirm.
+                    </AlertDescription>
+                  </Alert>
+                  <Input
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder={selectedUser?.email || 'Type DELETE to confirm'}
+                  />
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
+              <AlertDialogCancel onClick={() => setDeleteConfirmText('')}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
                 onClick={() => {
                   if (selectedUser) {
                     deleteUser(selectedUser.id);
                   }
                 }}
                 className="bg-red-600 hover:bg-red-700"
+                disabled={!selectedUser || ![selectedUser.email, 'DELETE'].includes(deleteConfirmText.trim())}
               >
                 Delete User
               </AlertDialogAction>
