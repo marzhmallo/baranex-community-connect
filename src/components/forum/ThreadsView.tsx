@@ -276,6 +276,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         thread={selectedThread} 
         onBack={handleBackToThreads}
         isUserFromSameBarangay={isUserFromSameBarangay}
+        isPublicForum={forum.is_public}
       />
     );
   }

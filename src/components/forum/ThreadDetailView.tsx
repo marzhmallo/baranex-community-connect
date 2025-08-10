@@ -53,6 +53,7 @@ interface ThreadDetailViewProps {
   thread: Thread;
   onBack: () => void;
   isUserFromSameBarangay: boolean;
+  isPublicForum?: boolean;
 }
 
 const AVAILABLE_REACTIONS = [
@@ -63,7 +64,7 @@ const AVAILABLE_REACTIONS = [
   { emoji: '🔥', name: 'fire' },
 ];
 
-const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDetailViewProps) => {
+const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForum = false }: ThreadDetailViewProps) => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [commentContent, setCommentContent] = useState('');
@@ -685,7 +686,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay }: ThreadDeta
           </div>
 
           {/* Comment Input - Hidden when thread is locked */}
-          {isUserFromSameBarangay && !thread.locked && (
+          {((isPublicForum || isUserFromSameBarangay) && !thread.locked) && (
             <div className="border-t border-border p-4">
               <div className="flex items-start space-x-3">
                 <Avatar className="w-10 h-10 flex-shrink-0">
