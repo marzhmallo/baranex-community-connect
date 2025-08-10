@@ -130,9 +130,10 @@ const DashboardCharts = () => {
     totalDeceased,
     totalRelocated,
     totalResidents: activePopulation,
+    newResidentsThisMonth,
     isLoading: dashboardLoading,
     error
-  } = useDashboardData();
+  } = useDashboardData(userProfile?.brgyid);
 
   // Use active population from dashboard data (excludes deceased and relocated)
   const isLoading = dataLoading || dashboardLoading;
@@ -427,12 +428,7 @@ const DashboardCharts = () => {
                 <CardContent className="p-4 flex flex-col items-center">
                   <div className="text-xs uppercase text-muted-foreground mb-1">New this Month</div>
                   <div className="text-2xl font-bold text-center">
-                    {isLoading ? '...' : residents.filter(resident => {
-                      const createdAt = new Date(resident.created_at);
-                      const now = new Date();
-                      return createdAt.getMonth() === now.getMonth() && 
-                             createdAt.getFullYear() === now.getFullYear();
-                    }).length}
+                    {isLoading ? '...' : newResidentsThisMonth}
                   </div>
                 </CardContent>
               </Card>

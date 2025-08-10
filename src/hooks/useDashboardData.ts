@@ -72,6 +72,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { count: residentsCount, error: residentsError } = await supabase
           .from('residents')
           .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string)
           .not('status', 'in', '("Deceased","Relocated")');
 
         if (residentsError) throw residentsError;
@@ -80,6 +81,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { count: deceasedCount, error: deceasedError } = await supabase
           .from('residents')
           .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string)
           .eq('status', 'Deceased');
 
         if (deceasedError) throw deceasedError;
@@ -88,6 +90,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { count: relocatedCount, error: relocatedError } = await supabase
           .from('residents')
           .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string)
           .eq('status', 'Relocated');
 
         if (relocatedError) throw relocatedError;
@@ -95,14 +98,16 @@ export const useDashboardData = (brgyid?: string) => {
         // Fetch total households
         const { count: householdsCount, error: householdsError } = await supabase
           .from('households')
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string);
 
         if (householdsError) throw householdsError;
 
         // Fetch active announcements
         const { count: announcementsCount, error: announcementsError } = await supabase
           .from('announcements')
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string);
 
         if (announcementsError) throw announcementsError;
 
@@ -110,6 +115,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { count: eventsCount, error: eventsError } = await supabase
           .from('events')
           .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string)
           .gte('start_time', new Date().toISOString());
 
         if (eventsError) throw eventsError;
@@ -124,6 +130,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { count: newResidentsThisMonth, error: newResidentsError } = await supabase
           .from('residents')
           .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string)
           .gte('created_at', startOfThisMonth.toISOString())
           .not('status', 'in', '("Deceased","Relocated")');
 
@@ -133,6 +140,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { count: newResidentsLastMonth, error: lastMonthResidentsError } = await supabase
           .from('residents')
           .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string)
           .gte('created_at', startOfLastMonth.toISOString())
           .lt('created_at', startOfThisMonth.toISOString())
           .not('status', 'in', '("Deceased","Relocated")');
@@ -143,6 +151,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { count: newHouseholdsThisMonth, error: newHouseholdsError } = await supabase
           .from('households')
           .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string)
           .gte('created_at', startOfThisMonth.toISOString());
 
         if (newHouseholdsError) throw newHouseholdsError;
@@ -151,6 +160,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { count: newHouseholdsLastMonth, error: lastMonthHouseholdsError } = await supabase
           .from('households')
           .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string)
           .gte('created_at', startOfLastMonth.toISOString())
           .lt('created_at', startOfThisMonth.toISOString());
 
@@ -160,6 +170,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { count: newAnnouncementsThisWeek, error: weekAnnouncementsError } = await supabase
           .from('announcements')
           .select('*', { count: 'exact', head: true })
+          .eq('brgyid', brgyid as string)
           .gte('created_at', startOfThisWeek.toISOString());
 
         if (weekAnnouncementsError) throw weekAnnouncementsError;
@@ -168,6 +179,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { data: nextEvent, error: nextEventError } = await supabase
           .from('events')
           .select('start_time')
+          .eq('brgyid', brgyid as string)
           .gte('start_time', new Date().toISOString())
           .order('start_time', { ascending: true })
           .limit(1)
@@ -194,6 +206,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { data: monthlyData, error: monthlyError } = await supabase
           .from('residents')
           .select('created_at')
+          .eq('brgyid', brgyid as string)
           .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
           .not('status', 'in', '("Deceased","Relocated")');
 
@@ -206,6 +219,7 @@ export const useDashboardData = (brgyid?: string) => {
         const { data: genderData, error: genderError } = await supabase
           .from('residents')
           .select('gender')
+          .eq('brgyid', brgyid as string)
           .not('status', 'in', '("Deceased","Relocated")');
 
         if (genderError) throw genderError;

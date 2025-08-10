@@ -504,42 +504,22 @@ const Auth = () => {
     }));
 
     // Dashboard metrics
-    const [residentsCountQ, deceasedCountQ, relocatedCountQ, householdsCountQ, announcementsCountQ, eventsCountQ, newResidentsThisMonthQ, newResidentsLastMonthQ, newHouseholdsThisMonthQ, newHouseholdsLastMonthQ, newAnnouncementsThisWeekQ, nextEventQ, monthlyDataQ, genderDataQ] = await Promise.all([supabase.from('residents').select('*', {
-      count: 'exact',
-      head: true
-    }).not('status', 'in', '("Deceased","Relocated")'), supabase.from('residents').select('*', {
-      count: 'exact',
-      head: true
-    }).eq('status', 'Deceased'), supabase.from('residents').select('*', {
-      count: 'exact',
-      head: true
-    }).eq('status', 'Relocated'), supabase.from('households').select('*', {
-      count: 'exact',
-      head: true
-    }), supabase.from('announcements').select('*', {
-      count: 'exact',
-      head: true
-    }), supabase.from('events').select('*', {
-      count: 'exact',
-      head: true
-    }).gte('start_time', new Date().toISOString()), supabase.from('residents').select('*', {
-      count: 'exact',
-      head: true
-    }).gte('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'), supabase.from('residents').select('*', {
-      count: 'exact',
-      head: true
-    }).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'), supabase.from('households').select('*', {
-      count: 'exact',
-      head: true
-    }).gte('created_at', startOfThisMonth.toISOString()), supabase.from('households').select('*', {
-      count: 'exact',
-      head: true
-    }).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()), supabase.from('announcements').select('*', {
-      count: 'exact',
-      head: true
-    }).gte('created_at', startOfThisWeek.toISOString()), supabase.from('events').select('start_time').gte('start_time', new Date().toISOString()).order('start_time', {
-      ascending: true
-    }).limit(1).single(), supabase.from('residents').select('created_at').gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()).not('status', 'in', '("Deceased","Relocated")'), supabase.from('residents').select('gender').not('status', 'in', '("Deceased","Relocated")')]);
+    const [residentsCountQ, deceasedCountQ, relocatedCountQ, householdsCountQ, announcementsCountQ, eventsCountQ, newResidentsThisMonthQ, newResidentsLastMonthQ, newHouseholdsThisMonthQ, newHouseholdsLastMonthQ, newAnnouncementsThisWeekQ, nextEventQ, monthlyDataQ, genderDataQ] = await Promise.all([
+      supabase.from('residents').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid).not('status', 'in', '("Deceased","Relocated")'),
+      supabase.from('residents').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid).eq('status', 'Deceased'),
+      supabase.from('residents').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid).eq('status', 'Relocated'),
+      supabase.from('households').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid),
+      supabase.from('announcements').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid),
+      supabase.from('events').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid).gte('start_time', new Date().toISOString()),
+      supabase.from('residents').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid).gte('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'),
+      supabase.from('residents').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()).not('status', 'in', '("Deceased","Relocated")'),
+      supabase.from('households').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid).gte('created_at', startOfThisMonth.toISOString()),
+      supabase.from('households').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid).gte('created_at', startOfLastMonth.toISOString()).lt('created_at', startOfThisMonth.toISOString()),
+      supabase.from('announcements').select('*', { count: 'exact', head: true }).eq('brgyid', brgyid).gte('created_at', startOfThisWeek.toISOString()),
+      supabase.from('events').select('start_time').eq('brgyid', brgyid).gte('start_time', new Date().toISOString()).order('start_time', { ascending: true }).limit(1).single(),
+      supabase.from('residents').select('created_at').eq('brgyid', brgyid).gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()).not('status', 'in', '("Deceased","Relocated")'),
+      supabase.from('residents').select('gender').eq('brgyid', brgyid).not('status', 'in', '("Deceased","Relocated")')
+    ]);
     const residentsCount = residentsCountQ.count || 0;
     const deceasedCount = deceasedCountQ.count || 0;
     const relocatedCount = relocatedCountQ.count || 0;
