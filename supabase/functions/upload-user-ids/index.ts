@@ -55,6 +55,26 @@ Deno.serve(async (req) => {
       results.push({ path, url: pub?.publicUrl || null })
     }
 
+    // Insert metadata into docx table using service role (bypasses RLS)
+    try {
+      if (results.length > 0) {
+        const payload = results.map((r) => ({
+          userid: userId,
+          resid: null,
+          document_type: idType || 'User ID',
+          file_path: r.path,
+          notes: null,
+        }))
+        const { error: insertErr } = await supabase.from('docx').insert(payload)
+        if (insertErr) {
+          console.error('docx insert error:', insertErr)
+          // Continue returning upload results even if DB insert fails
+        }
+      }
+    } catch (e) {
+      console.error('docx insert unexpected error:', e)
+    }
+
     return new Response(JSON.stringify({ uploaded: results, idType: idType || null }), {
       status: 200,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
