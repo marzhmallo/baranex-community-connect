@@ -1578,6 +1578,7 @@ export type Database = {
           purok: string
           role: string
           status: string
+          suffix: string | null
           superior_admin: boolean
           username: string
         }
@@ -1605,6 +1606,7 @@ export type Database = {
           purok: string
           role: string
           status?: string
+          suffix?: string | null
           superior_admin?: boolean
           username: string
         }
@@ -1632,6 +1634,7 @@ export type Database = {
           purok?: string
           role?: string
           status?: string
+          suffix?: string | null
           superior_admin?: boolean
           username?: string
         }

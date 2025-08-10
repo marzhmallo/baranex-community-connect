@@ -658,12 +658,23 @@ const Auth = () => {
       } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        options: {
+      options: {
           captchaToken,
           emailRedirectTo: `${window.location.origin}/`,
           data: {
+            username: values.username,
             firstname: values.firstname,
-            lastname: values.lastname
+            middlename: values.middlename || null,
+            lastname: values.lastname,
+            suffix: values.suffix || null,
+            phone: values.phone || null,
+            gender: values.gender,
+            purok: values.purok,
+            bday: values.bday,
+            brgyid: brgyId,
+            role: 'user',
+            status: userStatus,
+            superior_admin: isSuperiorAdmin
           }
         }
       });
@@ -677,52 +688,7 @@ const Auth = () => {
         return;
       }
       if (authData.user) {
-        // Build profile payload
-        const profilePayload = {
-          id: authData.user.id,
-          brgyid: brgyId,
-          username: values.username,
-          firstname: values.firstname,
-          middlename: values.middlename || null,
-          lastname: values.lastname,
-          email: values.email,
-          phone: values.phone || null,
-          gender: values.gender,
-          purok: values.purok,
-          bday: values.bday,
-          role: 'user',
-          status: userStatus,
-          superior_admin: isSuperiorAdmin,
-          created_at: new Date().toISOString()
-        } as const;
-
-        // Retry insert in case auth.users row isn't visible yet
-        let profileError: any = null;
-        for (let attempt = 1; attempt <= 5; attempt++) {
-          const { error } = await supabase.from('profiles').insert(profilePayload);
-          if (!error) {
-            profileError = null;
-            break;
-          }
-          profileError = error;
-          const msg = `${error?.message || ''} ${error?.details || ''}`;
-          if (error?.code === '23503' && msg.includes('profiles_id_fkey')) {
-            await new Promise((res) => setTimeout(res, 400));
-            continue;
-          } else {
-            break;
-          }
-        }
-
-        if (profileError) {
-          toast({
-            title: "Profile Error",
-            description: profileError.message || 'Failed to create profile',
-            variant: "destructive"
-          });
-          console.error("Profile creation error:", profileError);
-          return;
-        }
+        // Profile is created by a DB trigger using user_metadata passed at sign up.
 
         // Upload required ID images and create docx records (no preview shown to user)
         try {
