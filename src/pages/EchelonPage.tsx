@@ -377,7 +377,7 @@ const EchelonPage = () => {
                                 className="bg-primary hover:bg-primary/90 text-white"
                               >
                                 <Check className="w-4 h-4 mr-1" />
-                                Approve
+                                Approve & Promote to Admin
                               </Button>
                               <Button
                                 size="sm"

@@ -77,10 +77,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Promote the user to admin and set superior_admin = true
+    // Promote the user to admin, set superior_admin = true and status = 'approved'
     const { error: updateErr } = await admin
       .from('profiles')
-      .update({ role: 'admin', superior_admin: true })
+      .update({ role: 'admin', superior_admin: true, status: 'approved' })
       .eq('id', userId)
 
     if (updateErr) {
