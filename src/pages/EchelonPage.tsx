@@ -17,6 +17,14 @@ import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
 import { useLogoutWithLoader } from '@/hooks/useLogoutWithLoader';
 import { EcheSidebar } from '@/components/layout/EcheSidebar';
 
+interface SubmitterProfile {
+  id: string;
+  username: string | null;
+  firstname: string | null;
+  lastname: string | null;
+  email: string | null;
+}
+
 interface Barangay {
   id: string;
   barangayname: string;
@@ -26,6 +34,8 @@ interface Barangay {
   country: string;
   created_at: string;
   is_custom: boolean;
+  submitter: string | null;
+  submitter_profile?: SubmitterProfile;
 }
 
 const EchelonPage = () => {
@@ -57,8 +67,34 @@ const EchelonPage = () => {
         return;
       }
 
-      const pending = data?.filter(b => !b.is_custom) || [];
-      const registered = data?.filter(b => b.is_custom) || [];
+      // Collect submitter IDs and fetch their profiles
+      const submitterIds = Array.from(
+        new Set((data ?? []).map((b: any) => b.submitter).filter(Boolean))
+      ) as string[];
+
+      let profilesMap: Record<string, SubmitterProfile> = {};
+      if (submitterIds.length > 0) {
+        const { data: profiles, error: profErr } = await supabase
+          .from('profiles')
+          .select('id, username, firstname, lastname, email')
+          .in('id', submitterIds);
+
+        if (profErr) {
+          console.error('Error fetching submitter profiles:', profErr);
+        } else if (profiles) {
+          profilesMap = Object.fromEntries(
+            profiles.map((p: any) => [p.id, p as SubmitterProfile])
+          );
+        }
+      }
+
+      const withProfiles: Barangay[] = (data ?? []).map((b: any) => ({
+        ...b,
+        submitter_profile: b.submitter ? profilesMap[b.submitter] : undefined,
+      }));
+
+      const pending = withProfiles.filter(b => !b.is_custom) || [];
+      const registered = withProfiles.filter(b => b.is_custom) || [];
       
       setPendingBarangays(pending);
       setRegisteredBarangays(registered);
@@ -73,7 +109,11 @@ const EchelonPage = () => {
     }
   };
 
-  const handleApprove = async (barangay: Barangay) => {
+   useEffect(() => {
+     fetchBarangays();
+   }, []);
+
+   const handleApprove = async (barangay: Barangay) => {
     console.log('Attempting to approve barangay:', barangay);
     try {
       const { data, error } = await supabase
@@ -256,6 +296,7 @@ const EchelonPage = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Municipality</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted By</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Created</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
@@ -263,7 +304,7 @@ const EchelonPage = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                      <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                         Loading barangays...
                       </td>
                     </tr>
@@ -286,6 +327,14 @@ const EchelonPage = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {barangay.province}, {barangay.region}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {(() => {
+                            const p = barangay.submitter_profile;
+                            if (!p) return '—';
+                            const name = [p.firstname, p.lastname].filter(Boolean).join(' ').trim();
+                            return name || p.username || p.email || '—';
+                          })()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(barangay.created_at).toLocaleDateString()}
