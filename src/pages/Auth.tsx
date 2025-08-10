@@ -24,24 +24,7 @@ const loginSchema = z.object({
   emailOrUsername: z.string().min(1, "Please enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters long")
 });
-const ID_TYPES = [
-  "National ID",
-  "Passport",
-  "Driver's License",
-  "Voter's ID",
-  "Postal ID",
-  "SSS ID",
-  "GSIS ID",
-  "PhilHealth ID",
-  "Senior Citizen ID",
-  "PWD ID",
-  "Student ID",
-  "PRC ID",
-  "Barangay ID",
-  "Company ID",
-  "Other"
-] as const;
-
+const ID_TYPES = ["National ID", "Passport", "Driver's License", "Voter's ID", "Postal ID", "SSS ID", "GSIS ID", "PhilHealth ID", "Senior Citizen ID", "PWD ID", "Student ID", "PRC ID", "Barangay ID", "Company ID", "Other"] as const;
 const signupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters long"),
@@ -51,21 +34,21 @@ const signupSchema = z.object({
   suffix: z.string().optional(),
   username: z.string().min(3, "Username must be at least 3 characters long"),
   phone: z.string().min(10, "Please enter a valid phone number").optional(),
-  gender: z.enum(["Male", "Female", "Other"], { required_error: "Please select a gender" }),
+  gender: z.enum(["Male", "Female", "Other"], {
+    required_error: "Please select a gender"
+  }),
   purok: z.string().min(1, "Please enter your purok"),
   bday: z.string().min(1, "Please enter your date of birth"),
-  idType: z.enum(ID_TYPES, { required_error: "Please select an identification type" }),
-  idFiles: z
-    .any()
-    .refine((files) => files && typeof files === 'object' && 'length' in files, {
-      message: "Please upload 2-5 images of your ID",
-    })
-    .refine((files) => (files?.length ?? 0) >= 2 && (files?.length ?? 0) <= 5, {
-      message: "Please upload between 2 and 5 images",
-    })
-    .refine((files) => Array.from(files || []).every((f: File) => f.type?.startsWith('image/')), {
-      message: "Only image files are allowed",
-    }),
+  idType: z.enum(ID_TYPES, {
+    required_error: "Please select an identification type"
+  }),
+  idFiles: z.any().refine(files => files && typeof files === 'object' && 'length' in files, {
+    message: "Please upload 2-5 images of your ID"
+  }).refine(files => (files?.length ?? 0) >= 2 && (files?.length ?? 0) <= 5, {
+    message: "Please upload between 2 and 5 images"
+  }).refine(files => Array.from(files || []).every((f: File) => f.type?.startsWith('image/')), {
+    message: "Only image files are allowed"
+  }),
   barangayId: z.string().refine(val => val !== "", {
     message: "Please select a barangay or choose to register a new one"
   }),
@@ -652,27 +635,44 @@ const Auth = () => {
       const userStatus = "pending";
 
       // Validate uniqueness of email and phone via Edge Function
-      const { data: identity, error: identityErr } = await supabase.functions.invoke('check-identity', {
-        body: { email: values.email, phone: values.phone || undefined },
+      const {
+        data: identity,
+        error: identityErr
+      } = await supabase.functions.invoke('check-identity', {
+        body: {
+          email: values.email,
+          phone: values.phone || undefined
+        }
       });
-
       if (identityErr) {
-        toast({ title: "Validation error", description: identityErr.message || "Unable to validate email/phone at the moment.", variant: "destructive" });
+        toast({
+          title: "Validation error",
+          description: identityErr.message || "Unable to validate email/phone at the moment.",
+          variant: "destructive"
+        });
         setIsLoading(false);
         return;
       }
-
       const emailTaken = identity?.emailTaken;
       const phoneTaken = identity?.phoneTaken;
-
       if (emailTaken || phoneTaken) {
         if (emailTaken) {
-          signupForm.setError("email", { type: "manual", message: "This email is already in use." });
+          signupForm.setError("email", {
+            type: "manual",
+            message: "This email is already in use."
+          });
         }
         if (phoneTaken) {
-          signupForm.setError("phone", { type: "manual", message: "This phone number is already in use." });
+          signupForm.setError("phone", {
+            type: "manual",
+            message: "This phone number is already in use."
+          });
         }
-        toast({ title: "Duplicate information", description: `${emailTaken ? "Email already exists. " : ""}${phoneTaken ? "Phone already exists." : ""}`.trim(), variant: "destructive" });
+        toast({
+          title: "Duplicate information",
+          description: `${emailTaken ? "Email already exists. " : ""}${phoneTaken ? "Phone already exists." : ""}`.trim(),
+          variant: "destructive"
+        });
         setIsLoading(false);
         return;
       }
@@ -684,7 +684,7 @@ const Auth = () => {
       } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-      options: {
+        options: {
           captchaToken,
           emailRedirectTo: `${window.location.origin}/`,
           data: {
@@ -722,29 +722,39 @@ const Auth = () => {
           const files = values.idFiles as unknown as FileList;
           const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = () => resolve(((reader.result as string) || '').split(',')[1] || '');
+            reader.onload = () => resolve((reader.result as string || '').split(',')[1] || '');
             reader.onerror = reject;
             reader.readAsDataURL(file);
           });
-          const payloadFiles = await Promise.all(Array.from(files).map(async (file) => ({
+          const payloadFiles = await Promise.all(Array.from(files).map(async file => ({
             name: file.name,
             type: file.type || 'image/jpeg',
-            b64: await toBase64(file),
+            b64: await toBase64(file)
           })));
-
-          const { error: fnError } = await supabase.functions.invoke('upload-user-ids', {
-            body: { userId, idType: values.idType, files: payloadFiles },
+          const {
+            error: fnError
+          } = await supabase.functions.invoke('upload-user-ids', {
+            body: {
+              userId,
+              idType: values.idType,
+              files: payloadFiles
+            }
           });
           if (fnError) throw fnError;
-
-          toast({ title: "Account created", description: "Your ID images were uploaded. Please confirm your email to sign in." });
+          toast({
+            title: "Account created",
+            description: "Your ID images were uploaded. Please confirm your email to sign in."
+          });
           setActiveTab("login");
           signupForm.reset();
         } catch (e: any) {
           console.error('ID upload failed:', e);
-          toast({ title: "ID upload failed", description: e.message || "Please try again.", variant: "destructive" });
+          toast({
+            title: "ID upload failed",
+            description: e.message || "Please try again.",
+            variant: "destructive"
+          });
         }
-
       }
     } catch (error: any) {
       toast({
@@ -1174,11 +1184,9 @@ const Auth = () => {
                         
 
                       {/* ID verification section: below DOB, above barangay */}
-                      <FormField
-                        control={signupForm.control}
-                        name="idType"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={signupForm.control} name="idType" render={({
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Identification type</FormLabel>
                             <FormControl>
                               <Select value={field.value} onValueChange={field.onChange}>
@@ -1186,39 +1194,25 @@ const Auth = () => {
                                   <SelectValue placeholder="Select identification type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {ID_TYPES.map((t) => (
-                                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                                  ))}
+                                  {ID_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
 
-                      <FormField
-                        control={signupForm.control}
-                        name="idFiles"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={signupForm.control} name="idFiles" render={({
+                      field
+                    }) => <FormItem>
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
                               Upload ID photos (2-5 images)
                             </FormLabel>
                             <FormDescription>Only image files are allowed. For security, uploads will not be shown here.</FormDescription>
                             <FormControl>
-                              <Input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                onChange={(e) => field.onChange(e.target.files)}
-                                className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`}
-                              />
+                              <Input type="file" accept="image/*" multiple onChange={e => field.onChange(e.target.files)} className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
 
                       <Separator className="my-4" />
 
@@ -1325,15 +1319,7 @@ const Auth = () => {
                                 </FormItem>} />
                           </div>
                         
-                          <div className="rounded-md bg-green-50 p-4 mt-2">
-                            <div className="flex">
-                              <div className="ml-3">
-                                <p className="text-sm text-green-700">
-                                  You're registering a new barangay. Your account will be created and linked to it; an administrator may review and approve your registration.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                          
                         </>}
                         
                       <FormField control={signupForm.control} name="password" render={({
