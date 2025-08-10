@@ -1265,11 +1265,7 @@ const Auth = () => {
                               const files = Array.isArray(field.value)
                                 ? field.value
                                 : Array.from(field.value || []);
-                              const countText = files.length === 0
-                                ? 'No files chosen'
-                                : files.length === 1
-                                  ? '1 file chosen'
-                                  : `${files.length} files chosen`;
+                              const countText = `${files.length} ${files.length === 1 ? 'file' : 'files'} chosen`;
                               return (
                                 <>
                                   <div className="mt-2 text-sm text-muted-foreground" aria-live="polite">{countText}</div>
