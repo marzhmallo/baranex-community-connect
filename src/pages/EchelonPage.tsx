@@ -8,7 +8,8 @@ import {
   Check,
   X,
   Users,
-  Bell
+  Bell,
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +48,7 @@ const EchelonPage = () => {
   const [pendingBarangays, setPendingBarangays] = useState<Barangay[]>([]);
   const [registeredBarangays, setRegisteredBarangays] = useState<Barangay[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
 
   const fetchBarangays = async () => {
@@ -373,11 +374,28 @@ const EchelonPage = () => {
                             <div className="flex space-x-2">
                               <Button
                                 size="sm"
-                                onClick={() => handleApprove(barangay)}
-                                className="bg-primary hover:bg-primary/90 text-white"
+                                onClick={async () => {
+                                  setApprovingId(barangay.id);
+                                  try {
+                                    await handleApprove(barangay);
+                                  } finally {
+                                    setApprovingId(null);
+                                  }
+                                }}
+                                disabled={approvingId === barangay.id}
+                                className="bg-primary hover:bg-primary/90 text-white disabled:opacity-70 disabled:cursor-not-allowed"
                               >
-                                <Check className="w-4 h-4 mr-1" />
-                                Approve
+                                {approvingId === barangay.id ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                    Approving...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Check className="w-4 h-4 mr-1" />
+                                    Approve
+                                  </>
+                                )}
                               </Button>
                               <Button
                                 size="sm"
