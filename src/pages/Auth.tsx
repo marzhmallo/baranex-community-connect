@@ -149,9 +149,21 @@ const Auth = () => {
       setShowBarangaySuggestions(false);
       return;
     }
-    const filtered = barangays.filter(barangay => barangay.name.toLowerCase().includes(barangaySearch.toLowerCase()) || barangay.municipality.toLowerCase().includes(barangaySearch.toLowerCase()) || barangay.province.toLowerCase().includes(barangaySearch.toLowerCase()));
+
+    // If user selected "Register New Barangay", keep suggestions closed
+    if (signupForm.getValues("barangayId") === "new-barangay" || barangaySearch === "Register New Barangay") {
+      setFilteredBarangays([]);
+      setShowBarangaySuggestions(false);
+      return;
+    }
+
+    const filtered = barangays.filter(barangay =>
+      barangay.name.toLowerCase().includes(barangaySearch.toLowerCase()) ||
+      barangay.municipality.toLowerCase().includes(barangaySearch.toLowerCase()) ||
+      barangay.province.toLowerCase().includes(barangaySearch.toLowerCase())
+    );
     setFilteredBarangays(filtered.slice(0, 10)); // Limit to 10 suggestions
-    setShowBarangaySuggestions(true);
+    setShowBarangaySuggestions(filtered.length > 0);
   }, [barangaySearch, barangays]);
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
