@@ -362,12 +362,33 @@ const Auth = () => {
           const role = profileFull?.role as string | undefined;
           const brgyid = profileFull?.brgyid as string | undefined;
 
+          // Block login if barangay is not yet approved (is_custom = false)
+          if (brgyid) {
+            const { data: bData, error: bErr } = await supabase
+              .from('barangays')
+              .select('is_custom')
+              .eq('id', brgyid)
+              .single();
+            if (bErr) {
+              console.error('Error checking barangay approval status:', bErr);
+            }
+            if (bData && bData.is_custom === false) {
+              await supabase.auth.signOut();
+              toast({
+                title: "Barangay Not Yet Approved",
+                description: "Your barangay is still pending approval. Login is disabled until approval.",
+                variant: "destructive"
+              });
+              localStorage.removeItem('smartLoginPending');
+              setSmartLoading(false);
+              return;
+            }
+          }
+
           // Prefetch all dashboard data and cache it
           if (brgyid) {
             await prefetchDashboard(brgyid, user.id);
           }
-
-          // Decide destination by role
           const dest = role === 'user' ? '/hub' : role === 'admin' || role === 'staff' ? '/dashboard' : role === 'glyph' ? '/echelon' : role === 'overseer' ? '/plaza' : '/hub';
 
           // Clear smart flag and navigate

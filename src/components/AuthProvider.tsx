@@ -232,8 +232,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
-        // Check if barangay requires approval SECOND (is_custom = false)
-        if (profileData.brgyid && (profileData.role === "admin" || profileData.role === "staff")) {
+        // Check barangay approval for all roles: if barangay is not approved (is_custom = false), block login
+        if (profileData.brgyid) {
           const { data: barangayData, error: barangayError } = await supabase
             .from('barangays')
             .select('is_custom')
@@ -245,8 +245,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           } else if (barangayData && !barangayData.is_custom) {
             await signOut();
             toast({
-              title: "Barangay Pending Approval",
-              description: "Your barangay registration is pending approval. Please wait for administrator approval.",
+              title: "Barangay Not Yet Approved",
+              description: "Your barangay is still pending approval. Login is disabled until approval.",
               variant: "destructive",
             });
             navigate("/login");
@@ -579,10 +579,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
             
             if (profileData) {
-              // Only redirect if account is approved and not padlocked
+              // Only redirect if account is approved, not padlocked, and barangay is approved
               const isLocked = profileData.padlock === true;
               const isApproved = profileData.status === 'approved';
-              if (!isLocked && isApproved) {
+              let isBarangayApproved = true;
+              if (profileData.brgyid) {
+                const { data: bData, error: bErr } = await supabase
+                  .from('barangays')
+                  .select('is_custom')
+                  .eq('id', profileData.brgyid)
+                  .single();
+                if (bErr) {
+                  console.error('Error checking barangay approval status:', bErr);
+                } else if (bData && bData.is_custom === false) {
+                  isBarangayApproved = false;
+                }
+              }
+              if (!isLocked && isApproved && isBarangayApproved) {
                 console.log('Redirecting based on role:', profileData.role);
                 const smartPending = localStorage.getItem('smartLoginPending') === '1';
                 if (!smartPending) {
@@ -599,7 +612,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   console.log('Smart login pending; skipping auto-redirect');
                 }
               } else {
-                console.log('User not approved or padlocked; skipping redirect');
+                console.log('User not approved, padlocked, or barangay not approved; skipping redirect');
               }
             }
             
@@ -662,10 +675,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .maybeSingle();
           
           if (profileData) {
-            // Only redirect if approved and not padlocked
+            // Only redirect if approved, not padlocked, and barangay is approved
             const isLocked = profileData.padlock === true;
             const isApproved = profileData.status === 'approved';
-            if (!isLocked && isApproved) {
+            let isBarangayApproved = true;
+            if (profileData.brgyid) {
+              const { data: bData, error: bErr } = await supabase
+                .from('barangays')
+                .select('is_custom')
+                .eq('id', profileData.brgyid)
+                .single();
+              if (bErr) {
+                console.error('Error checking barangay approval status:', bErr);
+              } else if (bData && bData.is_custom === false) {
+                isBarangayApproved = false;
+              }
+            }
+            if (!isLocked && isApproved && isBarangayApproved) {
               console.log('Redirecting based on role:', profileData.role);
               if (profileData.role === "user") {
                 navigate("/hub");
@@ -677,7 +703,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 navigate("/plaza");
               }
             } else {
-              console.log('User not approved or padlocked; skipping redirect on initial session');
+              console.log('User not approved, padlocked, or barangay not approved; skipping redirect on initial session');
             }
           }
         } else {
