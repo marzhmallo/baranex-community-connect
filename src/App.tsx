@@ -2,7 +2,9 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
@@ -111,6 +113,7 @@ const queryClient = new QueryClient({
   },
 });
 
+const persister = createSyncStoragePersister({ storage: window.localStorage });
 // Component to protect admin-only routes
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { userProfile } = useAuth();
@@ -308,7 +311,7 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 }}>
     <ThemeProvider defaultTheme="light" storageKey="baranex-ui-theme">
       <TooltipProvider>
         <Toaster />
@@ -320,7 +323,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
-  </QueryClientProvider>
+  </PersistQueryClientProvider>
 );
 
 export default App;

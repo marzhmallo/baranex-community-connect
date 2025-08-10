@@ -4,7 +4,7 @@ import { Thread } from './ThreadsView';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, ThumbsUp, Eye, Share2, Flag, Pin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import ForumAvatar from '@/components/forum/ForumAvatar';
 
 interface ThreadListProps {
   threads: Thread[];
@@ -48,14 +48,13 @@ const ThreadList = ({ threads, onThreadSelect, onPinToggle, onLockToggle, canMod
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10">
-                    {thread.authorAvatarUrl && (
-                      <AvatarImage src={thread.authorAvatarUrl} alt={thread.authorName || 'User'} />
-                    )}
-                    <AvatarFallback className="bg-primary text-primary-foreground font-medium">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ForumAvatar
+                    userId={thread.created_by}
+                    name={thread.authorName || 'User'}
+                    profilePicture={thread.authorAvatarUrl || undefined}
+                    initials={initials}
+                    className="w-10 h-10"
+                  />
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-foreground">{thread.authorName}</h3>

@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import ForumAvatar from '@/components/forum/ForumAvatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
 import {
@@ -145,6 +145,20 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
         })
       );
       const avatarMap = Object.fromEntries(avatarEntries) as Record<string, string | undefined>;
+
+      // Preload avatar images so they are fully rendered before loader hides
+      const avatarUrls = Object.values(avatarMap).filter(Boolean) as string[];
+      await Promise.all(
+        avatarUrls.map(
+          (src) =>
+            new Promise<void>((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+              img.src = src;
+            })
+        )
+      );
 
       // Get initials for avatar fallback
       const initialsMap = profilesData.reduce((acc: Record<string, string>, user: any) => {
@@ -473,14 +487,13 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
     return (
       <div key={comment.id} className={`${isReply ? 'ml-13 mt-3 rounded-lg p-3 border-l-2 border-border' : 'rounded-lg p-4'}`}>
         <div className="flex items-start space-x-3">
-          <Avatar className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} flex-shrink-0`}>
-            {comment.authorAvatarUrl && (
-              <AvatarImage src={comment.authorAvatarUrl} alt={comment.authorName || 'User'} />
-            )}
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-medium">
-              {comment.authorInitials}
-            </AvatarFallback>
-          </Avatar>
+          <ForumAvatar
+            userId={comment.created_by}
+            name={comment.authorName || 'User'}
+            profilePicture={comment.authorAvatarUrl || undefined}
+            initials={comment.authorInitials}
+            className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} flex-shrink-0`}
+          />
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
@@ -535,15 +548,13 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
             {replyingTo === comment.id && (
               <div className="mt-3">
                 <div className="flex items-start space-x-3">
-                  <Avatar className="w-8 h-8 flex-shrink-0">
-                    {userProfile?.profile_picture && (
-                      // This avatar is only for the input area; it's fine if it falls back to initials
-                      <AvatarImage src={userProfile.profile_picture} alt="You" />
-                    )}
-                    <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
-                      {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ForumAvatar
+                    userId={userProfile?.id}
+                    name={userProfile ? `${userProfile.firstname || ''} ${userProfile.lastname || ''}` : 'You'}
+                    profilePicture={userProfile?.profile_picture}
+                    initials={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}`}
+                    className="w-8 h-8 flex-shrink-0"
+                  />
                   <div className="flex-1 rounded-full px-4 py-2 border border-border">
                     <input 
                       type="text" 
@@ -615,14 +626,13 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
         <div className="w-full mx-auto bg-card rounded-xl shadow-lg overflow-hidden border border-border">
           <div className="p-6 border-b border-border">
             <div className="flex items-start space-x-4">
-              <Avatar className="w-12 h-12">
-                {thread.authorAvatarUrl && (
-                  <AvatarImage src={thread.authorAvatarUrl} alt={thread.authorName || 'User'} />
-                )}
-                <AvatarFallback className="bg-gradient-to-br from-orange-500 to-red-600 text-white font-medium">
-                  {thread.authorName?.substring(0, 2) || 'UN'}
-                </AvatarFallback>
-              </Avatar>
+              <ForumAvatar
+                userId={thread.created_by}
+                name={thread.authorName || 'User'}
+                profilePicture={thread.authorAvatarUrl || undefined}
+                initials={thread.authorName?.substring(0, 2) || 'UN'}
+                className="w-12 h-12"
+              />
               
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground">{thread.authorName}</h3>
@@ -717,14 +727,13 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
           {(isPublicForum && !thread.locked) && (
             <div className="border-t border-border p-4">
               <div className="flex items-start space-x-3">
-              <Avatar className="w-10 h-10 flex-shrink-0">
-                {userProfile?.profile_picture && (
-                  <AvatarImage src={userProfile.profile_picture} alt="You" />
-                )}
-                <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
-                  {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
-                </AvatarFallback>
-              </Avatar>
+              <ForumAvatar
+                userId={userProfile?.id}
+                name={userProfile ? `${userProfile.firstname || ''} ${userProfile.lastname || ''}` : 'You'}
+                profilePicture={userProfile?.profile_picture}
+                initials={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}`}
+                className="w-10 h-10 flex-shrink-0"
+              />
                 <div className="flex-1 rounded-full px-4 py-2 border border-border">
                   <input 
                     type="text" 

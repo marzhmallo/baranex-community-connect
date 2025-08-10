@@ -144,6 +144,20 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
       );
       const userAvatarMap = Object.fromEntries(avatarEntries) as Record<string, string | undefined>;
 
+      // Preload avatar images to ensure they're fully rendered before loader hides
+      const avatarUrls = Object.values(userAvatarMap).filter(Boolean) as string[];
+      await Promise.all(
+        avatarUrls.map(
+          (src) =>
+            new Promise<void>((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+              img.src = src;
+            })
+        )
+      );
+
       // Get comment counts and last reply times for each thread
       const commentData = await Promise.all(
         threadsData.map(async (thread) => {
