@@ -578,7 +578,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               await logUserSignIn(currentSession.user.id, profileData);
             }
             
-              if (profileData) {
+            if (profileData) {
+              // Only redirect if account is approved and not padlocked
+              const isLocked = profileData.padlock === true;
+              const isApproved = profileData.status === 'approved';
+              if (!isLocked && isApproved) {
                 console.log('Redirecting based on role:', profileData.role);
                 const smartPending = localStorage.getItem('smartLoginPending') === '1';
                 if (!smartPending) {
@@ -594,7 +598,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 } else {
                   console.log('Smart login pending; skipping auto-redirect');
                 }
+              } else {
+                console.log('User not approved or padlocked; skipping redirect');
               }
+            }
             
             // After profile and prefetch complete, lift the global loading gate
             setLoading(false);
@@ -655,15 +662,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .maybeSingle();
           
           if (profileData) {
-            console.log('Redirecting based on role:', profileData.role);
-            if (profileData.role === "user") {
-              navigate("/hub");
-            } else if (profileData.role === "admin" || profileData.role === "staff") {
-              navigate("/dashboard");
-            } else if (profileData.role === "glyph") {
-              navigate("/echelon");
-            } else if (profileData.role === "overseer") {
-              navigate("/plaza");
+            // Only redirect if approved and not padlocked
+            const isLocked = profileData.padlock === true;
+            const isApproved = profileData.status === 'approved';
+            if (!isLocked && isApproved) {
+              console.log('Redirecting based on role:', profileData.role);
+              if (profileData.role === "user") {
+                navigate("/hub");
+              } else if (profileData.role === "admin" || profileData.role === "staff") {
+                navigate("/dashboard");
+              } else if (profileData.role === "glyph") {
+                navigate("/echelon");
+              } else if (profileData.role === "overseer") {
+                navigate("/plaza");
+              }
+            } else {
+              console.log('User not approved or padlocked; skipping redirect on initial session');
             }
           }
         } else {
