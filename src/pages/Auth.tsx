@@ -150,8 +150,8 @@ const Auth = () => {
       return;
     }
 
-    // If user selected "Register New Barangay", keep suggestions closed
-    if (signupForm.getValues("barangayId") === "new-barangay" || barangaySearch === "Register New Barangay") {
+    // If user just selected "Register New Barangay", keep suggestions closed
+    if (signupForm.getValues("barangayId") === "new-barangay" && barangaySearch === "Register New Barangay") {
       setFilteredBarangays([]);
       setShowBarangaySuggestions(false);
       return;
