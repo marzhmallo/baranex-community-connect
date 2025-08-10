@@ -123,7 +123,7 @@ const UserIDsViewer: React.FC<UserIDsViewerProps> = ({ userId }) => {
         </ScrollArea>
       )}
       <Dialog open={isPreviewOpen} onOpenChange={(o) => { setIsPreviewOpen(o); if (!o) setPreview(null); }}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{preview?.title || 'Document Preview'}</DialogTitle>
           </DialogHeader>
@@ -131,7 +131,7 @@ const UserIDsViewer: React.FC<UserIDsViewerProps> = ({ userId }) => {
             <img
               src={preview.url}
               alt={`Preview - ${preview?.title || 'Document'}`}
-              className="w-full h-auto rounded-md"
+              className="w-full max-h-[70vh] object-contain rounded-md"
             />
           )}
         </DialogContent>
