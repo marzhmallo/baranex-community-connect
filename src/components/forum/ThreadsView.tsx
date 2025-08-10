@@ -26,6 +26,7 @@ export interface Thread {
   updated_at: string;
   viewcount?: number;
   authorName?: string;
+  authorAvatarUrl?: string | null;
   commentCount?: number;
   reactionCount?: number;
   viewCount?: number;
@@ -33,6 +34,7 @@ export interface Thread {
   photo_url?: string | null;
   lastReplyAt?: string | null;
 }
+
 
 interface ThreadsViewProps {
   forum: Forum;
@@ -116,31 +118,40 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
 
       if (threadsError) throw threadsError;
 
-      // Fetch user profiles to get author names
+      // Fetch user profiles to get author names and profile pictures
       const userIds = [...new Set(threadsData.map(thread => thread.created_by))];
       
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, firstname, lastname')
+        .select('id, firstname, lastname, profile_picture')
         .in('id', userIds);
 
       if (profilesError) throw profilesError;
 
-      // Create a map of user IDs to names
-      const userMap = profilesData.reduce((acc: Record<string, string>, user: any) => {
-        acc[user.id] = `${user.firstname} ${user.lastname}`;
+      // Create maps of user IDs to names and avatar URLs
+      const userNameMap = profilesData.reduce((acc: Record<string, string>, user: any) => {
+        acc[user.id] = `${user.firstname} ${user.lastname}`.trim();
         return acc;
       }, {});
+
+      // Preload avatar signed URLs to ensure they are ready before finishing load
+      const { getSignedProfilePictureUrl } = await import('@/lib/avatar');
+      const avatarEntries = await Promise.all(
+        profilesData.map(async (user: any) => {
+          const url = await getSignedProfilePictureUrl(user.profile_picture);
+          return [user.id, url] as const;
+        })
+      );
+      const userAvatarMap = Object.fromEntries(avatarEntries) as Record<string, string | undefined>;
 
       // Get comment counts and last reply times for each thread
       const commentData = await Promise.all(
         threadsData.map(async (thread) => {
-          const { count, error } = await supabase
+          const { count } = await supabase
             .from('comments')
             .select('*', { count: 'exact', head: true })
             .eq('thread_id', thread.id);
           
-          // Get the most recent comment for last reply time
           const { data: lastComment } = await supabase
             .from('comments')
             .select('created_at')
@@ -160,7 +171,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
       // Get reaction counts and user reactions for each thread
       const reactionData = await Promise.all(
         threadsData.map(async (thread) => {
-          const { count, error } = await supabase
+          const { count } = await supabase
             .from('reactions')
             .select('*', { count: 'exact', head: true })
             .eq('thread_id', thread.id);
@@ -186,7 +197,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         })
       );
 
-      // Add author names and counts to threads
+      // Add author names, avatars, and counts to threads
       let threadsWithAuthors = threadsData.map((thread: Thread) => {
         const commentInfo = commentData.find(c => c.threadId === thread.id);
         const commentCount = commentInfo?.count || 0;
@@ -194,12 +205,12 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
         const reactionInfo = reactionData.find(r => r.threadId === thread.id);
         const reactionCount = reactionInfo?.count || 0;
         const userReaction = reactionInfo?.userReaction || null;
-        // Use actual viewcount from database
         const viewCount = thread.viewcount || 0;
         
         return {
           ...thread,
-          authorName: userMap[thread.created_by] || 'Unknown User',
+          authorName: userNameMap[thread.created_by] || 'Unknown User',
+          authorAvatarUrl: userAvatarMap[thread.created_by] || null,
           commentCount,
           reactionCount,
           viewCount,

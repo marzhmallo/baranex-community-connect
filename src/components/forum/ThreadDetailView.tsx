@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
 import {
@@ -33,6 +33,7 @@ interface Comment {
   updated_at: string;
   authorName?: string;
   authorInitials?: string;
+  authorAvatarUrl?: string | null;
   replies?: Comment[];
   reactionCounts?: {
     [key: string]: number;
@@ -119,12 +120,12 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
       
       if (commentsError) throw commentsError;
 
-      // Fetch user profiles to get author names
+      // Fetch user profiles to get author names and profile pictures
       const userIds = [...new Set(commentsData.map((comment: Comment) => comment.created_by))];
       
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, firstname, lastname')
+        .select('id, firstname, lastname, profile_picture')
         .in('id', userIds);
 
       if (profilesError) throw profilesError;
@@ -135,11 +136,24 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
         return acc;
       }, {});
 
+      // Create avatar URL map, preloading signed URLs
+      const { getSignedProfilePictureUrl } = await import('@/lib/avatar');
+      const avatarEntries = await Promise.all(
+        profilesData.map(async (user: any) => {
+          const url = await getSignedProfilePictureUrl(user.profile_picture);
+          return [user.id, url] as const;
+        })
+      );
+      const avatarMap = Object.fromEntries(avatarEntries) as Record<string, string | undefined>;
+
       // Get initials for avatar fallback
       const initialsMap = profilesData.reduce((acc: Record<string, string>, user: any) => {
-        acc[user.id] = `${user.firstname[0]}${user.lastname[0]}`;
+        const first = (user.firstname || '').toString();
+        const last = (user.lastname || '').toString();
+        acc[user.id] = `${first[0] || ''}${last[0] || ''}` || 'UN';
         return acc;
       }, {});
+
 
       // Fetch all reactions (for both thread and comments)
       let reactionsQuery = supabase
@@ -190,20 +204,24 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
         }
       });
 
-      // Add author names, reactions, and organize into thread structure
       const commentsWithAuthors = commentsData.map((comment: Comment) => ({
         ...comment,
         authorName: userMap[comment.created_by] || 'Unknown User',
         authorInitials: initialsMap[comment.created_by] || 'UN',
-        reactionCounts: commentReactionMap[comment.id] || {},
-        userReaction: userCommentReactions[comment.id] || null,
-        replies: [] // Will be filled with child comments
+        authorAvatarUrl: avatarMap[comment.created_by] || null,
+        reactionCounts: {},
+        userReaction: null,
+        replies: []
       }));
-
+      // Apply reaction data after base map so avatar/name are ready
+      commentsWithAuthors.forEach((c: any) => {
+        c.reactionCounts = commentReactionMap[c.id] || {};
+        c.userReaction = userCommentReactions[c.id] || null;
+      });
       // Organize into parent-child structure
       const rootComments: Comment[] = [];
-      const commentMap: {[key: string]: Comment} = {};
-      
+      const commentMap: { [key: string]: Comment } = {};
+
       commentsWithAuthors.forEach(comment => {
         commentMap[comment.id] = comment;
         if (!comment.parent_id) {
@@ -456,6 +474,9 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
       <div key={comment.id} className={`${isReply ? 'ml-13 mt-3 rounded-lg p-3 border-l-2 border-border' : 'rounded-lg p-4'}`}>
         <div className="flex items-start space-x-3">
           <Avatar className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} flex-shrink-0`}>
+            {comment.authorAvatarUrl && (
+              <AvatarImage src={comment.authorAvatarUrl} alt={comment.authorName || 'User'} />
+            )}
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-medium">
               {comment.authorInitials}
             </AvatarFallback>
@@ -515,6 +536,10 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
               <div className="mt-3">
                 <div className="flex items-start space-x-3">
                   <Avatar className="w-8 h-8 flex-shrink-0">
+                    {userProfile?.profile_picture && (
+                      // This avatar is only for the input area; it's fine if it falls back to initials
+                      <AvatarImage src={userProfile.profile_picture} alt="You" />
+                    )}
                     <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
                       {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
                     </AvatarFallback>
@@ -591,6 +616,9 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
           <div className="p-6 border-b border-border">
             <div className="flex items-start space-x-4">
               <Avatar className="w-12 h-12">
+                {thread.authorAvatarUrl && (
+                  <AvatarImage src={thread.authorAvatarUrl} alt={thread.authorName || 'User'} />
+                )}
                 <AvatarFallback className="bg-gradient-to-br from-orange-500 to-red-600 text-white font-medium">
                   {thread.authorName?.substring(0, 2) || 'UN'}
                 </AvatarFallback>
@@ -689,11 +717,14 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
           {(isPublicForum && !thread.locked) && (
             <div className="border-t border-border p-4">
               <div className="flex items-start space-x-3">
-                <Avatar className="w-10 h-10 flex-shrink-0">
-                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
-                    {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
-                  </AvatarFallback>
-                </Avatar>
+              <Avatar className="w-10 h-10 flex-shrink-0">
+                {userProfile?.profile_picture && (
+                  <AvatarImage src={userProfile.profile_picture} alt="You" />
+                )}
+                <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-sm">
+                  {userProfile?.firstname?.[0]}{userProfile?.lastname?.[0]}
+                </AvatarFallback>
+              </Avatar>
                 <div className="flex-1 rounded-full px-4 py-2 border border-border">
                   <input 
                     type="text" 

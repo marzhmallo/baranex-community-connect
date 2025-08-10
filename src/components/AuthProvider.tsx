@@ -22,7 +22,7 @@ interface UserProfile {
   purok?: string;
   online?: boolean;
   last_login?: string;
-  profile_picture?: string;
+  profile_picture?: string | null;
   chatbot_enabled?: boolean;
   chatbot_mode?: string;
   padlock?: boolean;
