@@ -48,6 +48,7 @@ const signupSchema = z.object({
   firstname: z.string().min(2, "First name is required"),
   lastname: z.string().min(2, "Last name is required"),
   middlename: z.string().optional(),
+  suffix: z.string().optional(),
   username: z.string().min(3, "Username must be at least 3 characters long"),
   phone: z.string().min(10, "Please enter a valid phone number").optional(),
   gender: z.enum(["Male", "Female", "Other"], { required_error: "Please select a gender" }),
@@ -182,6 +183,7 @@ const Auth = () => {
       firstname: "",
       lastname: "",
       middlename: "",
+      suffix: "",
       username: "",
       phone: "",
       gender: undefined,
@@ -1091,15 +1093,26 @@ const Auth = () => {
                             </FormItem>} />
                       </div>
                         
-                      <FormField control={signupForm.control} name="middlename" render={({
-                      field
-                    }) => <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Middle Name (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Jaugin" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>} />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField control={signupForm.control} name="middlename" render={({
+                        field
+                      }) => <FormItem>
+                              <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Middle Name (Optional)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Jaugin" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>} />
+                        <FormField control={signupForm.control} name="suffix" render={({
+                        field
+                      }) => <FormItem>
+                              <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Suffix</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Jr., Sr., III" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>} />
+                      </div>
                         
                       <FormField control={signupForm.control} name="username" render={({
                       field
