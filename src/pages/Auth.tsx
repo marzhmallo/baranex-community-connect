@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, Mail, User, Lock, Building, MapPin } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -19,10 +19,29 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import GlobalLoadingScreen from "@/components/ui/GlobalLoadingScreen";
 import { clearAuthTransition } from "@/lib/authTransition";
+import { v4 as uuidv4 } from "uuid";
 const loginSchema = z.object({
   emailOrUsername: z.string().min(1, "Please enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters long")
 });
+const ID_TYPES = [
+  "National ID",
+  "Passport",
+  "Driver's License",
+  "Voter's ID",
+  "Postal ID",
+  "SSS ID",
+  "GSIS ID",
+  "PhilHealth ID",
+  "Senior Citizen ID",
+  "PWD ID",
+  "Student ID",
+  "PRC ID",
+  "Barangay ID",
+  "Company ID",
+  "Other"
+] as const;
+
 const signupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters long"),
@@ -31,11 +50,21 @@ const signupSchema = z.object({
   middlename: z.string().optional(),
   username: z.string().min(3, "Username must be at least 3 characters long"),
   phone: z.string().min(10, "Please enter a valid phone number").optional(),
-  gender: z.enum(["Male", "Female", "Other"], {
-    required_error: "Please select a gender"
-  }),
+  gender: z.enum(["Male", "Female", "Other"], { required_error: "Please select a gender" }),
   purok: z.string().min(1, "Please enter your purok"),
   bday: z.string().min(1, "Please enter your date of birth"),
+  idType: z.enum(ID_TYPES, { required_error: "Please select an identification type" }),
+  idFiles: z
+    .any()
+    .refine((files) => files && typeof files === 'object' && 'length' in files, {
+      message: "Please upload 2-5 images of your ID",
+    })
+    .refine((files) => (files?.length ?? 0) >= 2 && (files?.length ?? 0) <= 5, {
+      message: "Please upload between 2 and 5 images",
+    })
+    .refine((files) => Array.from(files || []).every((f: File) => f.type?.startsWith('image/')), {
+      message: "Only image files are allowed",
+    }),
   barangayId: z.string().refine(val => val !== "", {
     message: "Please select a barangay or choose to register a new one"
   }),
@@ -674,13 +703,45 @@ const Auth = () => {
           });
           console.error("Profile creation error:", profileError);
         } else {
-          const successMessage = "Account created and pending approval from the barangay administrator.";
-          toast({
-            title: "Account created",
-            description: successMessage
-          });
-          setActiveTab("login");
-          signupForm.reset();
+          // Upload required ID images and create docx records (no preview shown to user)
+          try {
+            const userId = authData.user.id;
+            const files = values.idFiles as unknown as FileList;
+            const idType = values.idType as string;
+
+            const uploadedPaths: string[] = [];
+            for (const file of Array.from(files)) {
+              const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+              const filename = `${uuidv4()}.${ext}`;
+              const filePath = `dis/${userId}/${filename}`;
+              const { error: upErr } = await supabase.storage
+                .from('usersdis')
+                .upload(filePath, file, {
+                  cacheControl: '3600',
+                  upsert: false,
+                  contentType: file.type || 'image/jpeg',
+                });
+              if (upErr) throw upErr;
+              uploadedPaths.push(filePath);
+            }
+
+            const rows = uploadedPaths.map((p) => ({
+              userid: userId,
+              document_type: idType,
+              file_path: p,
+              notes: null,
+            }));
+            const { error: docxErr } = await supabase.from('docx').insert(rows as any, { defaultToNull: true });
+            if (docxErr) throw docxErr;
+
+            const successMessage = "Account created and ID uploaded. Pending admin approval.";
+            toast({ title: "Account created", description: successMessage });
+            setActiveTab("login");
+            signupForm.reset();
+          } catch (e: any) {
+            console.error('ID upload failed:', e);
+            toast({ title: "ID upload failed", description: e.message || "Please try again.", variant: "destructive" });
+          }
         }
       }
     } catch (error: any) {
@@ -1098,11 +1159,55 @@ const Auth = () => {
                             <FormMessage />
                           </FormItem>} />
                         
-                        
+
+                      {/* ID verification section: below DOB, above barangay */}
+                      <FormField
+                        control={signupForm.control}
+                        name="idType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Identification type</FormLabel>
+                            <FormControl>
+                              <Select value={field.value} onValueChange={field.onChange}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select identification type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {ID_TYPES.map((t) => (
+                                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={signupForm.control}
+                        name="idFiles"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                              Upload ID photos (2-5 images)
+                            </FormLabel>
+                            <FormDescription>Only image files are allowed. For security, uploads will not be shown here.</FormDescription>
+                            <FormControl>
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => field.onChange(e.target.files)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       <Separator className="my-4" />
-                        
-                      
-                        
+
                       <FormField control={signupForm.control} name="barangayId" render={({
                       field
                     }) => <FormItem>
