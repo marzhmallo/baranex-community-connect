@@ -715,7 +715,7 @@ const Auth = () => {
               const filename = `${uuidv4()}.${ext}`;
               const filePath = `dis/${userId}/${filename}`;
               const { error: upErr } = await supabase.storage
-                .from('userdis')
+                .from('usersdis')
                 .upload(filePath, file, {
                   cacheControl: '3600',
                   upsert: false,
@@ -1169,7 +1169,7 @@ const Auth = () => {
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Identification type</FormLabel>
                             <FormControl>
                               <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`}>
+                                <SelectTrigger>
                                   <SelectValue placeholder="Select identification type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1199,7 +1199,6 @@ const Auth = () => {
                                 accept="image/*"
                                 multiple
                                 onChange={(e) => field.onChange(e.target.files)}
-                                className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`}
                               />
                             </FormControl>
                             <FormMessage />
@@ -1216,12 +1215,12 @@ const Auth = () => {
                             <FormControl>
                               <div className="relative">
                                 <div className="relative">
-                                  <MapPin className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                                   <Input placeholder="Search for your barangay..." value={barangaySearch} onChange={e => handleBarangaySearchChange(e.target.value)} onFocus={() => {
                               if (barangaySearch && filteredBarangays.length > 0) {
                                 setShowBarangaySuggestions(true);
                               }
-                            }} className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} />
+                            }} className="pl-11" />
                                 </div>
                                 
                                 {showBarangaySuggestions && <div className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground border border-border rounded-md shadow-lg max-h-60 overflow-auto">
