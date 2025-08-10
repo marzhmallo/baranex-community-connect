@@ -702,7 +702,7 @@ const Auth = () => {
             const filename = `${uuidv4()}.${ext}`;
             const filePath = `dis/${userId}/${filename}`;
             const { error: upErr } = await supabase.storage
-              .from('userdis')
+              .from('usersdis')
               .upload(filePath, file, {
                 cacheControl: '3600',
                 upsert: false,
