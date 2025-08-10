@@ -49,6 +49,7 @@ const EchelonPage = () => {
   const [registeredBarangays, setRegisteredBarangays] = useState<Barangay[]>([]);
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
 
 
   const fetchBarangays = async () => {
@@ -400,11 +401,28 @@ const EchelonPage = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleReject(barangay)}
-                                className="border-border text-foreground hover:bg-muted"
+                                onClick={async () => {
+                                  setRejectingId(barangay.id);
+                                  try {
+                                    await handleReject(barangay);
+                                  } finally {
+                                    setRejectingId(null);
+                                  }
+                                }}
+                                disabled={rejectingId === barangay.id}
+                                className="border-border text-foreground hover:bg-muted disabled:opacity-70 disabled:cursor-not-allowed"
                               >
-                                <X className="w-4 h-4 mr-1" />
-                                Reject
+                                {rejectingId === barangay.id ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                    Rejecting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <X className="w-4 h-4 mr-1" />
+                                    Reject
+                                  </>
+                                )}
                               </Button>
                             </div>
                           ) : (
