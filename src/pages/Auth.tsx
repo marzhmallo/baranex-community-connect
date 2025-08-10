@@ -112,7 +112,6 @@ const Auth = () => {
   }[]>([]);
   const captchaRef = useRef<HCaptcha>(null);
   const idFilesInputRef = useRef<HTMLInputElement>(null);
-  const barangayNameRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   useEffect(() => {
     clearAuthTransition();
@@ -149,21 +148,9 @@ const Auth = () => {
       setShowBarangaySuggestions(false);
       return;
     }
-
-    // If user just selected "Register New Barangay", keep suggestions closed
-    if (signupForm.getValues("barangayId") === "new-barangay" && barangaySearch === "Register New Barangay") {
-      setFilteredBarangays([]);
-      setShowBarangaySuggestions(false);
-      return;
-    }
-
-    const filtered = barangays.filter(barangay =>
-      barangay.name.toLowerCase().includes(barangaySearch.toLowerCase()) ||
-      barangay.municipality.toLowerCase().includes(barangaySearch.toLowerCase()) ||
-      barangay.province.toLowerCase().includes(barangaySearch.toLowerCase())
-    );
+    const filtered = barangays.filter(barangay => barangay.name.toLowerCase().includes(barangaySearch.toLowerCase()) || barangay.municipality.toLowerCase().includes(barangaySearch.toLowerCase()) || barangay.province.toLowerCase().includes(barangaySearch.toLowerCase()));
     setFilteredBarangays(filtered.slice(0, 10)); // Limit to 10 suggestions
-    setShowBarangaySuggestions(filtered.length > 0);
+    setShowBarangaySuggestions(true);
   }, [barangaySearch, barangays]);
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -833,9 +820,6 @@ const Auth = () => {
     signupForm.setValue("barangayId", "new-barangay");
     setBarangaySearch("Register New Barangay");
     setShowBarangaySuggestions(false);
-    setTimeout(() => {
-      barangayNameRef.current?.focus();
-    }, 0);
   };
   const handleBarangaySearchChange = (value: string) => {
     setBarangaySearch(value);
@@ -1390,7 +1374,7 @@ const Auth = () => {
                                 <FormControl>
                                   <div className="relative">
                                     <Building className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                                    <Input placeholder="Poblacion" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} ref={(el) => { field.ref(el); barangayNameRef.current = el; }} />
+                                    <Input placeholder="Poblacion" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
                                   </div>
                                 </FormControl>
                                 <FormMessage />
