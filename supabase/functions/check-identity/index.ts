@@ -44,24 +44,32 @@ Deno.serve(async (req) => {
     const normEmail = typeof email === 'string' ? email.trim().toLowerCase() : null
     const normPhone = typeof phone === 'string' ? phone.trim() : null
 
-    // 1) Check auth.users via GoTrue Admin endpoint
+    // 1) Check auth.users via Admin SDK (no direct HTTP calls)
     let emailExistsAuth = false
     if (normEmail) {
-      const res = await fetch(`${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(normEmail)}`, {
-        method: 'GET',
-        headers: {
-          'apikey': serviceKey,
-          'Authorization': `Bearer ${serviceKey}`,
-        },
-      })
-      if (res.ok) {
-        const json = await res.json()
-        // json.users may be array; handle both shapes
-        const usersArray = Array.isArray(json) ? json : (Array.isArray(json.users) ? json.users : [])
-        emailExistsAuth = usersArray.length > 0
-      } else {
-        // If admin endpoint fails, we still continue with profiles checks
-        console.error('Admin users lookup failed', await res.text())
+      try {
+        const perPage = 100
+        for (let page = 1; page <= 5; page++) {
+          const { data, error } = await admin.auth.admin.listUsers({ page, perPage })
+          if (error) {
+            console.error('admin.listUsers error:', error)
+            break
+          }
+          const users = data?.users || []
+          const found = users.some((u: any) => {
+            const primary = (u.email || '').trim().toLowerCase()
+            if (primary === normEmail) return true
+            const identities = Array.isArray(u.identities) ? u.identities : []
+            return identities.some((id: any) => (id.identity_data?.email || '').trim().toLowerCase() === normEmail)
+          })
+          if (found) {
+            emailExistsAuth = true
+            break
+          }
+          if (users.length < perPage) break // no more pages
+        }
+      } catch (e) {
+        console.error('Admin SDK lookup failed:', e)
       }
     }
 
@@ -73,7 +81,7 @@ Deno.serve(async (req) => {
       const { count: emailCount, error: emailErr } = await admin
         .from('profiles')
         .select('id', { count: 'exact', head: true })
-        .ilike('email', normEmail)
+        .eq('email', normEmail)
       if (emailErr) console.error('profiles email check error:', emailErr)
       emailExistsProfiles = (emailCount ?? 0) > 0
     }
