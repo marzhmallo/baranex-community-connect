@@ -29,10 +29,22 @@ const UserIDsViewer: React.FC<UserIDsViewerProps> = ({ userId }) => {
         .order('created_at', { ascending: false });
       if (error) throw error;
       const rows = (data || []) as DocxRow[];
-      return rows.map((r) => ({
-        ...r,
-        url: supabase.storage.from('usersdis').getPublicUrl(r.file_path).data.publicUrl,
-      }));
+      const withUrls = await Promise.all(
+        rows.map(async (r) => {
+          const { data: signed, error: sErr } = await supabase
+            .storage
+            .from('usersdis')
+            .createSignedUrl(r.file_path, 60 * 60); // 1 hour expiry
+          if (sErr) {
+            console.error('Signed URL error:', sErr);
+          }
+          return {
+            ...r,
+            url: signed?.signedUrl ?? null,
+          };
+        })
+      );
+      return withUrls;
     },
     enabled: !!userId,
   });
