@@ -636,6 +636,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           onThreadSelect={handleThreadSelected}
           onPinToggle={handlePinToggle}
           onLockToggle={handleLockToggle}
+          canModerate={userProfile?.id === forum.created_by}
         />
       </div>
 
