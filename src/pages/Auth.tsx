@@ -658,6 +658,7 @@ const Auth = () => {
         password: values.password,
         options: {
           captchaToken,
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             firstname: values.firstname,
             lastname: values.lastname
@@ -674,12 +675,9 @@ const Auth = () => {
         return;
       }
       if (authData.user) {
-        // Insert into profiles table for all user types
-        const {
-          error: profileError
-        } = await supabase.from('profiles').insert({
+        // Build profile payload
+        const profilePayload = {
           id: authData.user.id,
-          
           brgyid: brgyId,
           username: values.username,
           firstname: values.firstname,
@@ -694,54 +692,74 @@ const Auth = () => {
           status: userStatus,
           superior_admin: isSuperiorAdmin,
           created_at: new Date().toISOString()
-        });
+        } as const;
+
+        // Retry insert in case auth.users row isn't visible yet
+        let profileError: any = null;
+        for (let attempt = 1; attempt <= 5; attempt++) {
+          const { error } = await supabase.from('profiles').insert(profilePayload);
+          if (!error) {
+            profileError = null;
+            break;
+          }
+          profileError = error;
+          const msg = `${error?.message || ''} ${error?.details || ''}`;
+          if (error?.code === '23503' && msg.includes('profiles_id_fkey')) {
+            await new Promise((res) => setTimeout(res, 400));
+            continue;
+          } else {
+            break;
+          }
+        }
+
         if (profileError) {
           toast({
             title: "Profile Error",
-            description: profileError.message,
+            description: profileError.message || 'Failed to create profile',
             variant: "destructive"
           });
           console.error("Profile creation error:", profileError);
-        } else {
-          // Upload required ID images and create docx records (no preview shown to user)
-          try {
-            const userId = authData.user.id;
-            const files = values.idFiles as unknown as FileList;
-            const idType = values.idType as string;
+          return;
+        }
 
-            const uploadedPaths: string[] = [];
-            for (const file of Array.from(files)) {
-              const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-              const filename = `${uuidv4()}.${ext}`;
-              const filePath = `dis/${userId}/${filename}`;
-              const { error: upErr } = await supabase.storage
-                .from('userdis')
-                .upload(filePath, file, {
-                  cacheControl: '3600',
-                  upsert: false,
-                  contentType: file.type || 'image/jpeg',
-                });
-              if (upErr) throw upErr;
-              uploadedPaths.push(filePath);
-            }
+        // Upload required ID images and create docx records (no preview shown to user)
+        try {
+          const userId = authData.user.id;
+          const files = values.idFiles as unknown as FileList;
+          const idType = values.idType as string;
 
-            const rows = uploadedPaths.map((p) => ({
-              userid: userId,
-              document_type: idType,
-              file_path: p,
-              notes: null,
-            }));
-            const { error: docxErr } = await supabase.from('docx').insert(rows as any, { defaultToNull: true });
-            if (docxErr) throw docxErr;
-
-            const successMessage = "Account created and ID uploaded. Pending admin approval.";
-            toast({ title: "Account created", description: successMessage });
-            setActiveTab("login");
-            signupForm.reset();
-          } catch (e: any) {
-            console.error('ID upload failed:', e);
-            toast({ title: "ID upload failed", description: e.message || "Please try again.", variant: "destructive" });
+          const uploadedPaths: string[] = [];
+          for (const file of Array.from(files)) {
+            const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+            const filename = `${uuidv4()}.${ext}`;
+            const filePath = `dis/${userId}/${filename}`;
+            const { error: upErr } = await supabase.storage
+              .from('userdis')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: file.type || 'image/jpeg',
+              });
+            if (upErr) throw upErr;
+            uploadedPaths.push(filePath);
           }
+
+          const rows = uploadedPaths.map((p) => ({
+            userid: userId,
+            document_type: idType,
+            file_path: p,
+            notes: null,
+          }));
+          const { error: docxErr } = await supabase.from('docx').insert(rows as any, { defaultToNull: true });
+          if (docxErr) throw docxErr;
+
+          const successMessage = "Account created and ID uploaded. Pending admin approval.";
+          toast({ title: "Account created", description: successMessage });
+          setActiveTab("login");
+          signupForm.reset();
+        } catch (e: any) {
+          console.error('ID upload failed:', e);
+          toast({ title: "ID upload failed", description: e.message || "Please try again.", variant: "destructive" });
         }
       }
     } catch (error: any) {
