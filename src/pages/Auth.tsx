@@ -1259,7 +1259,7 @@ const Auth = () => {
                                     field.onChange(merged);
                                     if (e.target) e.target.value = '';
                                   }}
-                                  className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'} text-transparent caret-transparent file:mr-3`}
+                                  className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'} text-transparent caret-transparent file:mr-3 file:text-sm file:px-3 file:py-1.5 file:rounded-md file:h-9 file:w-32 file:leading-none`}
                                 />
                                 {(() => {
                                   const files = Array.isArray(field.value)
@@ -1267,7 +1267,7 @@ const Auth = () => {
                                     : Array.from(field.value || []);
                                   return (
                                     <span
-                                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                                      className="pointer-events-none absolute left-36 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
                                       aria-live="polite"
                                     >
                                       {`${files.length} ${files.length === 1 ? 'file' : 'files'} chosen`}
