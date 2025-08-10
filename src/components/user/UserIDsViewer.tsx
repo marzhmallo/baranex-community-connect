@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface UserIDsViewerProps {
   userId: string;
@@ -18,6 +19,8 @@ interface DocxRow {
 }
 
 const UserIDsViewer: React.FC<UserIDsViewerProps> = ({ userId }) => {
+  const [preview, setPreview] = React.useState<{ url: string; title: string } | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
   const { data, isLoading, error } = useQuery({
     queryKey: ['docx-user', userId],
     queryFn: async () => {
@@ -75,18 +78,37 @@ const UserIDsViewer: React.FC<UserIDsViewerProps> = ({ userId }) => {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <AspectRatio ratio={16 / 9}>
-                    {doc.url ? (
-                      <img
-                        src={doc.url}
-                        alt={`User identification document - ${doc.document_type}`}
-                        className="w-full h-full object-cover rounded-md"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted rounded-md flex items-center justify-center text-muted-foreground text-sm">
-                        No preview
-                      </div>
-                    )}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className={`relative w-full h-full rounded-md overflow-hidden ${doc.url ? 'cursor-zoom-in group' : ''}`}
+                      onClick={() => {
+                        if (doc.url) {
+                          setPreview({ url: doc.url, title: doc.document_type });
+                          setIsPreviewOpen(true);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && doc.url) {
+                          setPreview({ url: doc.url, title: doc.document_type });
+                          setIsPreviewOpen(true);
+                        }
+                      }}
+                      aria-label={`View ${doc.document_type} in full`}
+                   >
+                      {doc.url ? (
+                        <img
+                          src={doc.url}
+                          alt={`User identification document - ${doc.document_type}`}
+                          className="w-full h-full object-cover rounded-md"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted rounded-md flex items-center justify-center text-muted-foreground text-sm">
+                          No preview
+                        </div>
+                      )}
+                    </div>
                   </AspectRatio>
                   {doc.notes && (
                     <p className="text-sm text-muted-foreground">{doc.notes}</p>
@@ -100,6 +122,20 @@ const UserIDsViewer: React.FC<UserIDsViewerProps> = ({ userId }) => {
           </div>
         </ScrollArea>
       )}
+      <Dialog open={isPreviewOpen} onOpenChange={(o) => { setIsPreviewOpen(o); if (!o) setPreview(null); }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{preview?.title || 'Document Preview'}</DialogTitle>
+          </DialogHeader>
+          {preview?.url && (
+            <img
+              src={preview.url}
+              alt={`Preview - ${preview?.title || 'Document'}`}
+              className="w-full h-auto rounded-md"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
