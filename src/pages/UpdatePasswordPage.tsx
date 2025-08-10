@@ -75,6 +75,23 @@ export default function UpdatePasswordPage() {
           variant: "destructive"
         });
       } else {
+        // Update padlock if currently true before signing out
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('padlock')
+              .eq('id', user.id)
+              .maybeSingle();
+            if (profile && profile.padlock === true) {
+              await supabase.from('profiles').update({ padlock: false }).eq('id', user.id);
+            }
+          }
+        } catch (e) {
+          console.error('Padlock update skipped:', e);
+        }
+
         toast({
           title: "Password Updated",
           description: "Your password has been successfully updated. Please log in with your new password.",
