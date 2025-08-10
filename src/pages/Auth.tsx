@@ -1245,68 +1245,72 @@ const Auth = () => {
                             </FormLabel>
                             <FormDescription>Only image files are allowed. We’ll list filenames below; no image previews.</FormDescription>
                             <FormControl>
-                              <div className="relative">
-                                <Input
-                                  type="file"
-                                  accept="image/*"
-                                  multiple
-                                  onChange={e => {
-                                    const selected = Array.from(e.target.files || []);
-                                    const prev = Array.isArray(field.value)
+                              <>
+                                <div className="flex items-center gap-3">
+                                  <input
+                                    id="id-files-input"
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={e => {
+                                      const selected = Array.from(e.target.files || []);
+                                      const prev = Array.isArray(field.value)
+                                        ? field.value
+                                        : Array.from(field.value || []);
+                                      const merged = [...prev, ...selected];
+                                      field.onChange(merged);
+                                      if (e.target) e.target.value = '';
+                                    }}
+                                    className="hidden"
+                                  />
+                                  <label htmlFor="id-files-input">
+                                    <Button type="button" variant="outline" className="cursor-pointer">
+                                      Choose files
+                                    </Button>
+                                  </label>
+                                  {(() => {
+                                    const files = Array.isArray(field.value)
                                       ? field.value
                                       : Array.from(field.value || []);
-                                    const merged = [...prev, ...selected];
-                                    field.onChange(merged);
-                                    if (e.target) e.target.value = '';
-                                  }}
-                                  className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'} text-transparent caret-transparent file:mr-3 file:text-sm file:px-3 file:py-1.5 file:rounded-md file:h-9 file:w-32 file:leading-none`}
-                                />
-                                {(() => {
-                                  const files = Array.isArray(field.value)
-                                    ? field.value
-                                    : Array.from(field.value || []);
-                                  return (
-                                    <span
-                                      className="pointer-events-none absolute left-36 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                                      aria-live="polite"
-                                    >
-                                      {`${files.length} ${files.length === 1 ? 'file' : 'files'} chosen`}
-                                    </span>
-                                  );
-                                })()}
-                              </div>
+                                    const countText = files.length === 0
+                                      ? 'No files chosen'
+                                      : files.length === 1
+                                        ? '1 file chosen'
+                                        : `${files.length} files chosen`;
+                                    return (
+                                      <span className="text-sm text-muted-foreground" aria-live="polite">
+                                        {countText}
+                                      </span>
+                                    );
+                                  })()}
+                                </div>
+                              </>
                             </FormControl>
                             {(() => {
                               const files = Array.isArray(field.value)
                                 ? field.value
                                 : Array.from(field.value || []);
-                              const countText = `${files.length} ${files.length === 1 ? 'file' : 'files'} chosen`;
-                              return (
-                                <>
-                                  <div className="mt-2 text-sm text-muted-foreground" aria-live="polite">{countText}</div>
-                                  {files.length > 0 && (
-                                    <div className="mt-1 space-y-1">
-                                      {files.map((f: File, idx: number) => (
-                                        <div key={idx} className="flex items-center justify-between gap-3">
-                                          <div className="text-sm text-muted-foreground truncate">• {f.name}</div>
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              const next = files.filter((_: File, i: number) => i !== idx);
-                                              field.onChange(next);
-                                            }}
-                                            className="text-destructive hover:opacity-80 transition-opacity"
-                                            aria-label={`Remove ${f.name}`}
-                                            title="Remove file"
-                                          >
-                                            <X className="w-4 h-4" />
-                                          </button>
-                                        </div>
-                                      ))}
+                              return files.length > 0 ? (
+                                <div className="mt-2 space-y-1">
+                                  {files.map((f: File, idx: number) => (
+                                    <div key={idx} className="flex items-center justify-between gap-3">
+                                      <div className="text-sm text-muted-foreground truncate">• {f.name}</div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = files.filter((_: File, i: number) => i !== idx);
+                                          field.onChange(next);
+                                        }}
+                                        className="text-destructive hover:opacity-80 transition-opacity"
+                                        aria-label={`Remove ${f.name}`}
+                                        title="Remove file"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
                                     </div>
-                                  )}
-                                </>
-                              );
+                                  ))}
+                                </div>
+                              ) : null;
                             })()}
                             <FormMessage />
                           </FormItem>} />
