@@ -111,6 +111,7 @@ const Auth = () => {
     province: string;
   }[]>([]);
   const captchaRef = useRef<HCaptcha>(null);
+  const idFilesInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   useEffect(() => {
     clearAuthTransition();
@@ -1261,10 +1262,16 @@ const Auth = () => {
                                       field.onChange(merged);
                                       if (e.target) e.target.value = '';
                                     }}
+                                    ref={idFilesInputRef}
                                     className="hidden"
                                   />
                                   <label htmlFor="id-files-input">
-                                    <Button type="button" variant="outline" className="cursor-pointer">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      className="cursor-pointer bg-muted text-foreground border-input hover:bg-muted/80"
+                                      onClick={() => idFilesInputRef.current?.click()}
+                                    >
                                       Choose files
                                     </Button>
                                   </label>
@@ -1272,11 +1279,8 @@ const Auth = () => {
                                     const files = Array.isArray(field.value)
                                       ? field.value
                                       : Array.from(field.value || []);
-                                    const countText = files.length === 0
-                                      ? 'No files chosen'
-                                      : files.length === 1
-                                        ? '1 file chosen'
-                                        : `${files.length} files chosen`;
+                                    const count = files.length;
+                                    const countText = count === 1 ? '1 file chosen' : `${count} files chosen`;
                                     return (
                                       <span className="text-sm text-muted-foreground" aria-live="polite">
                                         {countText}
