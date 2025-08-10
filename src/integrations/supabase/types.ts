@@ -588,7 +588,7 @@ export type Database = {
           file_path: string
           id: string
           notes: string | null
-          resid: string
+          resid: string | null
           userid: string | null
         }
         Insert: {
@@ -597,7 +597,7 @@ export type Database = {
           file_path: string
           id?: string
           notes?: string | null
-          resid: string
+          resid?: string | null
           userid?: string | null
         }
         Update: {
@@ -606,7 +606,7 @@ export type Database = {
           file_path?: string
           id?: string
           notes?: string | null
-          resid?: string
+          resid?: string | null
           userid?: string | null
         }
         Relationships: [
