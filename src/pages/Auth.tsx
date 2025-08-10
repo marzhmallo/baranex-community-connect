@@ -715,7 +715,7 @@ const Auth = () => {
               const filename = `${uuidv4()}.${ext}`;
               const filePath = `dis/${userId}/${filename}`;
               const { error: upErr } = await supabase.storage
-                .from('usersdis')
+                .from('userdis')
                 .upload(filePath, file, {
                   cacheControl: '3600',
                   upsert: false,
@@ -1169,7 +1169,7 @@ const Auth = () => {
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Identification type</FormLabel>
                             <FormControl>
                               <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger>
+                                <SelectTrigger className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`}>
                                   <SelectValue placeholder="Select identification type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1199,6 +1199,7 @@ const Auth = () => {
                                 accept="image/*"
                                 multiple
                                 onChange={(e) => field.onChange(e.target.files)}
+                                className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`}
                               />
                             </FormControl>
                             <FormMessage />
