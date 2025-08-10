@@ -1243,10 +1243,36 @@ const Auth = () => {
                             <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
                               Upload ID photos (2-5 images)
                             </FormLabel>
-                            <FormDescription>Only image files are allowed. For security, uploads will not be shown here.</FormDescription>
+                            <FormDescription>Only image files are allowed. We’ll list filenames below; no image previews.</FormDescription>
                             <FormControl>
-                              <Input type="file" accept="image/*" multiple onChange={e => field.onChange(e.target.files)} className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`} />
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={e => {
+                                  const selected = Array.from(e.target.files || []);
+                                  const prev = Array.isArray(field.value)
+                                    ? field.value
+                                    : Array.from(field.value || []);
+                                  const merged = [...prev, ...selected];
+                                  field.onChange(merged);
+                                  if (e.target) e.target.value = '';
+                                }}
+                                className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`}
+                              />
                             </FormControl>
+                            {(() => {
+                              const files = Array.isArray(field.value)
+                                ? field.value
+                                : Array.from(field.value || []);
+                              return files.length > 0 ? (
+                                <div className="mt-2 space-y-1">
+                                  {files.map((f: File, idx: number) => (
+                                    <div key={idx} className="text-sm text-muted-foreground truncate">• {f.name}</div>
+                                  ))}
+                                </div>
+                              ) : null;
+                            })()}
                             <FormMessage />
                           </FormItem>} />
 
