@@ -124,6 +124,7 @@ export type Database = {
           plazid: string | null
           province: string
           region: string
+          submitter: string | null
           updated_at: string | null
         }
         Insert: {
@@ -146,6 +147,7 @@ export type Database = {
           plazid?: string | null
           province: string
           region: string
+          submitter?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -168,6 +170,7 @@ export type Database = {
           plazid?: string | null
           province?: string
           region?: string
+          submitter?: string | null
           updated_at?: string | null
         }
         Relationships: []
