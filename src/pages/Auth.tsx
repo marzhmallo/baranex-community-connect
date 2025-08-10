@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Mail, User, Lock, Building, MapPin } from "lucide-react";
+import { Eye, EyeOff, Mail, User, Lock, Building, MapPin, X } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
@@ -1265,13 +1265,37 @@ const Auth = () => {
                               const files = Array.isArray(field.value)
                                 ? field.value
                                 : Array.from(field.value || []);
-                              return files.length > 0 ? (
-                                <div className="mt-2 space-y-1">
-                                  {files.map((f: File, idx: number) => (
-                                    <div key={idx} className="text-sm text-muted-foreground truncate">• {f.name}</div>
-                                  ))}
-                                </div>
-                              ) : null;
+                              const countText = files.length === 0
+                                ? 'No files chosen'
+                                : files.length === 1
+                                  ? '1 file chosen'
+                                  : `${files.length} files chosen`;
+                              return (
+                                <>
+                                  <div className="mt-2 text-sm text-muted-foreground" aria-live="polite">{countText}</div>
+                                  {files.length > 0 && (
+                                    <div className="mt-1 space-y-1">
+                                      {files.map((f: File, idx: number) => (
+                                        <div key={idx} className="flex items-center justify-between gap-3">
+                                          <div className="text-sm text-muted-foreground truncate">• {f.name}</div>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const next = files.filter((_: File, i: number) => i !== idx);
+                                              field.onChange(next);
+                                            }}
+                                            className="text-destructive hover:opacity-80 transition-opacity"
+                                            aria-label={`Remove ${f.name}`}
+                                            title="Remove file"
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </>
+                              );
                             })()}
                             <FormMessage />
                           </FormItem>} />
