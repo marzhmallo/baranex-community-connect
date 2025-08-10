@@ -113,7 +113,7 @@ const EchelonPage = () => {
      fetchBarangays();
    }, []);
 
-   const handleApprove = async (barangay: Barangay) => {
+  const handleApprove = async (barangay: Barangay) => {
     console.log('Attempting to approve barangay:', barangay);
     try {
       const { data, error } = await supabase
@@ -127,32 +127,62 @@ const EchelonPage = () => {
       if (error) {
         console.error('Error approving barangay:', error);
         toast({
-          title: "Error approving barangay",
+          title: 'Error approving barangay',
           description: error.message,
-          variant: "destructive"
+          variant: 'destructive',
         });
         return;
       }
 
+      // Promote submitter to admin and superior_admin
+      if (barangay.submitter) {
+        const { error: promoteErr } = await supabase.functions.invoke('promote-user', {
+          body: { userId: barangay.submitter, barangayId: barangay.id },
+        });
+        if (promoteErr) {
+          console.error('Failed to promote submitter:', promoteErr);
+          toast({
+            title: 'Barangay approved, but failed to promote submitter',
+            description: 'The barangay is approved. Please manually promote the submitter.',
+            variant: 'destructive',
+          });
+        }
+      }
+
       toast({
-        title: "Barangay Approved",
+        title: 'Barangay Approved',
         description: `${barangay.barangayname} has been approved successfully.`,
       });
 
-      // Refresh data
       fetchBarangays();
     } catch (error) {
       console.error('Caught error:', error);
       toast({
-        title: "Error",
-        description: "Failed to approve barangay",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to approve barangay',
+        variant: 'destructive',
       });
     }
   };
 
   const handleReject = async (barangay: Barangay) => {
     try {
+      // If there is a submitter, delete the user (auth + profile) via Edge Function
+      if (barangay.submitter) {
+        const { error: delUserErr } = await supabase.functions.invoke('delete-user', {
+          body: { userId: barangay.submitter },
+        });
+        if (delUserErr) {
+          toast({
+            title: 'Failed to delete submitter',
+            description: delUserErr.message || 'Please try again.',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
+      // Delete the barangay record
       const { error } = await supabase
         .from('barangays')
         .delete()
@@ -160,26 +190,25 @@ const EchelonPage = () => {
 
       if (error) {
         toast({
-          title: "Error rejecting barangay",
+          title: 'Error rejecting barangay',
           description: error.message,
-          variant: "destructive"
+          variant: 'destructive',
         });
         return;
       }
 
       toast({
-        title: "Barangay Rejected",
+        title: 'Barangay Rejected',
         description: `${barangay.barangayname} has been rejected and removed.`,
-        variant: "destructive"
+        variant: 'destructive',
       });
 
-      // Refresh data
       fetchBarangays();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to reject barangay",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to reject barangay',
+        variant: 'destructive',
       });
     }
   };
