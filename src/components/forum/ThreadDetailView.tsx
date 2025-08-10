@@ -686,7 +686,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
           </div>
 
           {/* Comment Input - Hidden when thread is locked */}
-          {((isPublicForum || isUserFromSameBarangay) && !thread.locked) && (
+          {(isPublicForum && !thread.locked) && (
             <div className="border-t border-border p-4">
               <div className="flex items-start space-x-3">
                 <Avatar className="w-10 h-10 flex-shrink-0">
