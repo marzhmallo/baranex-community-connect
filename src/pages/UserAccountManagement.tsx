@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { Crown, Shield, User, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle, Edit, MoreVertical, UserX, Play, Blocks, ZoomIn, KeyRound, Trash2, Settings } from 'lucide-react';
 import CachedAvatar from '@/components/ui/CachedAvatar';
+import UserIDsViewer from '@/components/user/UserIDsViewer';
 interface UserProfile {
   id: string;
   firstname?: string;
@@ -812,6 +813,9 @@ const UserAccountManagement = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Identification Documents */}
+                <UserIDsViewer userId={selectedUser.id} />
 
                 {/* Security Notice */}
                 {selectedUser.superior_admin && <Alert className="border-purple-200 bg-purple-50 dark:bg-purple-900/20">
