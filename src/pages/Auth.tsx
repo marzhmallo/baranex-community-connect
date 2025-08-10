@@ -740,6 +740,21 @@ const Auth = () => {
         // Immediately upload ID images via Edge Function (no session required)
         try {
           const userId = authData.user.id;
+
+          // If a new barangay was created, set the submitter to the new user's ID via Edge Function (bypass RLS)
+          if (values.barangayId === "new-barangay" && brgyId) {
+            try {
+              const { error: submitterErr } = await supabase.functions.invoke('set-barangay-submitter', {
+                body: { barangayId: brgyId, submitterId: userId },
+              });
+              if (submitterErr) {
+                console.error('Failed to set barangay submitter:', submitterErr);
+              }
+            } catch (e) {
+              console.error('Error invoking set-barangay-submitter:', e);
+            }
+          }
+
           const files = values.idFiles as unknown as FileList;
           const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
