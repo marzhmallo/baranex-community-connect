@@ -651,14 +651,28 @@ const Auth = () => {
       }
       const userStatus = "pending";
 
-      // Prevent duplicate signups by email
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', values.email)
-        .maybeSingle();
-      if (existingProfile) {
-        toast({ title: "Email already registered", description: "Please sign in or use a different email.", variant: "destructive" });
+      // Validate uniqueness of email and phone via Edge Function
+      const { data: identity, error: identityErr } = await supabase.functions.invoke('check-identity', {
+        body: { email: values.email, phone: values.phone || undefined },
+      });
+
+      if (identityErr) {
+        toast({ title: "Validation error", description: identityErr.message || "Unable to validate email/phone at the moment.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+
+      const emailTaken = identity?.emailTaken;
+      const phoneTaken = identity?.phoneTaken;
+
+      if (emailTaken || phoneTaken) {
+        if (emailTaken) {
+          signupForm.setError("email", { type: "manual", message: "This email is already in use." });
+        }
+        if (phoneTaken) {
+          signupForm.setError("phone", { type: "manual", message: "This phone number is already in use." });
+        }
+        toast({ title: "Duplicate information", description: `${emailTaken ? "Email already exists. " : ""}${phoneTaken ? "Phone already exists." : ""}`.trim(), variant: "destructive" });
         setIsLoading(false);
         return;
       }
