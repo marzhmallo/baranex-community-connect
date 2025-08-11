@@ -37,34 +37,34 @@ export const NotificationDropdown = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
+      <DropdownMenuContent align="end" className="w-96 p-0 rounded-xl bg-popover/95 supports-[backdrop-filter]:bg-popover/80 backdrop-blur shadow-xl ring-1 ring-border z-50 overflow-hidden">
+        <DropdownMenuLabel className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-popover border-b">
+          <span className="text-base font-semibold">Notifications</span>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={markAllAsRead}
-              className="h-auto p-1 text-xs"
+              className="h-7 px-2 text-xs"
             >
               <CheckCheck className="h-3 w-3 mr-1" />
-              Mark all read
+              Mark all
             </Button>
           )}
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="hidden" />
         
         {notifications.length === 0 ? (
-          <div className="p-4 text-center text-muted-foreground">
-            <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No notifications yet</p>
+          <div className="px-6 py-10 text-center text-muted-foreground">
+            <Bell className="h-10 w-10 mx-auto mb-3 opacity-60" />
+            <p className="text-sm">You’re all caught up</p>
           </div>
         ) : (
-          <ScrollArea className="h-[300px]">
+          <ScrollArea className="max-h-[420px]">
             {notifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
-                className="flex items-start gap-3 p-3 cursor-pointer"
+                className={`group flex items-start gap-3 p-4 cursor-pointer rounded-none border-b last:border-b-0 border-border/60 hover:bg-accent/40 focus:bg-accent/50 ${!notification.read ? 'bg-accent/25' : ''}`}
                 onClick={() => {
                   if (!notification.read) {
                     markAsRead(notification.id);
@@ -72,7 +72,7 @@ export const NotificationDropdown = () => {
                 }}
                 asChild
               >
-                <div className={`${(notification.type === 'dnexus' || notification.type === 'dnexus_status' || notification.linkurl) ? 'cursor-pointer' : 'cursor-default'}`}>
+                <div className={`${(notification.type === 'dnexus' || notification.type === 'dnexus_status' || notification.linkurl) ? 'cursor-pointer' : 'cursor-default'} w-full`}>
                   {(notification.type === 'dnexus' || notification.type === 'dnexus_status') ? (
                     <Link to="/nexus" className="w-full">
                       <NotificationContent notification={notification} />
@@ -104,7 +104,7 @@ const NotificationContent = ({ notification }: { notification: any }) => (
       )}
     </div>
     <div className="flex-1 min-w-0">
-      <p className={`text-sm ${!notification.read ? 'font-medium' : 'text-muted-foreground'}`}>
+      <p className={`text-sm leading-snug ${!notification.read ? 'font-medium' : 'text-muted-foreground'} group-hover:text-foreground`}>
         {notification.message || 'No message'}
       </p>
       <p className="text-xs text-muted-foreground mt-1">
@@ -118,7 +118,7 @@ const NotificationContent = ({ notification }: { notification: any }) => (
       <Button
         variant="ghost"
         size="sm"
-        className="h-auto p-1"
+        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
