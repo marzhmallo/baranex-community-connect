@@ -32,6 +32,7 @@ const DocumentRequestModal = ({
   const [orNumber, setOrNumber] = useState("");
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requireUpfront, setRequireUpfront] = useState(false);
 
   // Fetch barangay GCash info
   const {
@@ -50,11 +51,12 @@ const DocumentRequestModal = ({
     enabled: !!userProfile?.brgyid
   });
 
-  // Check if GCash is available for the barangay
-  const isGCashAvailable = barangayInfo && (
-    barangayInfo["gcash#"] || 
-    (barangayInfo.gcashname && barangayInfo.gcashname.length > 0) ||
-    barangayInfo.gcashurl
+  const isGCashAvailable = !!(
+    barangayInfo && (
+      barangayInfo["gcash#"] ||
+      (barangayInfo.gcashname && barangayInfo.gcashname.length > 0) ||
+      barangayInfo.gcashurl
+    )
   );
 
   // Reset payment method to walk-in if GCash becomes unavailable
@@ -63,6 +65,22 @@ const DocumentRequestModal = ({
       setPaymentMethod("walk-in");
     }
   }, [isGCashAvailable, paymentMethod]);
+
+  // Load per-barangay payment policy (no DB change)
+  useEffect(() => {
+    if (userProfile?.brgyid) {
+      const keyBase = `docpay:${userProfile.brgyid}`;
+      const upfront = localStorage.getItem(`${keyBase}:requireUpfront`);
+      setRequireUpfront(upfront === 'true');
+    }
+  }, [userProfile?.brgyid]);
+
+  // Enforce policy: if upfront required and GCash available, disable walk-in
+  useEffect(() => {
+    if (requireUpfront && isGCashAvailable && paymentMethod === 'walk-in') {
+      setPaymentMethod('gcash');
+    }
+  }, [requireUpfront, isGCashAvailable]);
 
   // Fetch available document types
   const {
@@ -255,8 +273,13 @@ const DocumentRequestModal = ({
                 </Label>
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-2">
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="walk-in" id="walk-in" />
-                    <Label htmlFor="walk-in">Walk-in Payment (Cash)</Label>
+                    <RadioGroupItem value="walk-in" id="walk-in" disabled={requireUpfront && isGCashAvailable} />
+                    <Label htmlFor="walk-in">
+                      Walk-in Payment (Cash)
+                      {requireUpfront && isGCashAvailable && (
+                        <span className="text-xs text-destructive ml-2">(Disabled by policy)</span>
+                      )}
+                    </Label>
                   </div>
                   <div className={`flex items-center space-x-2 ${!isGCashAvailable ? 'opacity-50' : ''}`}>
                     <RadioGroupItem value="gcash" id="gcash" disabled={!isGCashAvailable} />
