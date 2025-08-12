@@ -60,7 +60,7 @@ export const NotificationDropdown = () => {
             <p className="text-sm">You’re all caught up</p>
           </div>
         ) : (
-          <ScrollArea className="max-h-[420px]">
+          <ScrollArea className="h-[420px] max-h-[60vh]">
             {notifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
