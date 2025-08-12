@@ -22,7 +22,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
 import { formatDistanceToNow } from "date-fns";
 import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
-
 const DocumentsPage = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,43 +37,53 @@ const DocumentsPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Document requests state
   const [documentRequests, setDocumentRequests] = useState<any[]>([]);
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   // Document request details modal state
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isRequestDetailsOpen, setIsRequestDetailsOpen] = useState(false);
-  
+
   // Document tracking modals state
   const [selectedTrackingItem, setSelectedTrackingItem] = useState(null);
   const [isTrackingDetailsOpen, setIsTrackingDetailsOpen] = useState(false);
   const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
-  
+
   // Document tracking state  
   const [documentTracking, setDocumentTracking] = useState<any[]>([]);
   const [trackingCurrentPage, setTrackingCurrentPage] = useState(1);
   const [trackingTotalCount, setTrackingTotalCount] = useState(0);
-  
   const itemsPerPage = 3;
   const trackingItemsPerPage = 5;
-  const { toast } = useToast();
-  const { adminProfileId } = useCurrentAdmin();
+  const {
+    toast
+  } = useToast();
+  const {
+    adminProfileId
+  } = useCurrentAdmin();
 
   // Initial data fetch with master loading state
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         const [documentsData, requestsData, trackingData] = await Promise.all([
-          // Fetch document types
-          supabase.from('document_types').select('*').order('name'),
-          // Fetch document requests
-          supabase.from('docrequests').select('*', { count: 'exact' }).ilike('status', 'Request').range(0, itemsPerPage - 1).order('created_at', { ascending: false }),
-          // Fetch document tracking
-          supabase.from('docrequests').select('*', { count: 'exact' }).not('processedby', 'is', null).neq('status', 'Request').range(0, trackingItemsPerPage - 1).order('updated_at', { ascending: false })
-        ]);
+        // Fetch document types
+        supabase.from('document_types').select('*').order('name'),
+        // Fetch document requests
+        supabase.from('docrequests').select('*', {
+          count: 'exact'
+        }).ilike('status', 'Request').range(0, itemsPerPage - 1).order('created_at', {
+          ascending: false
+        }),
+        // Fetch document tracking
+        supabase.from('docrequests').select('*', {
+          count: 'exact'
+        }).not('processedby', 'is', null).neq('status', 'Request').range(0, trackingItemsPerPage - 1).order('updated_at', {
+          ascending: false
+        })]);
 
         // Process document requests
         const mappedRequests = requestsData.data?.map(doc => {
@@ -95,7 +104,9 @@ const DocumentsPage = () => {
             id: doc.id,
             name,
             document: doc.type,
-            timeAgo: formatDistanceToNow(new Date(doc.created_at), { addSuffix: true }),
+            timeAgo: formatDistanceToNow(new Date(doc.created_at), {
+              addSuffix: true
+            }),
             status: doc.status,
             docnumber: doc.docnumber,
             purpose: doc.purpose,
@@ -123,7 +134,6 @@ const DocumentsPage = () => {
               requestedBy = 'Unknown';
             }
           }
-
           const getStatusColor = (status: string) => {
             switch (status.toLowerCase()) {
               case 'approved':
@@ -141,7 +151,6 @@ const DocumentsPage = () => {
                 return 'bg-gray-500 text-white';
             }
           };
-
           const getDisplayStatus = (status: string) => {
             switch (status.toLowerCase()) {
               case 'approved':
@@ -159,76 +168,66 @@ const DocumentsPage = () => {
                 return status;
             }
           };
-
           return {
             id: doc.docnumber,
             document: doc.type,
             requestedBy,
             status: getDisplayStatus(doc.status),
             statusColor: getStatusColor(doc.status),
-            lastUpdate: doc.updated_at ? formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true }) : 'No updates',
+            lastUpdate: doc.updated_at ? formatDistanceToNow(new Date(doc.updated_at), {
+              addSuffix: true
+            }) : 'No updates',
             originalDoc: doc
           };
         }) || [];
-
         setDocumentRequests(mappedRequests);
         setTotalCount(requestsData.count || 0);
         setDocumentTracking(mappedTracking);
         setTrackingTotalCount(trackingData.count || 0);
-
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
         setIsInitialLoading(false);
       }
     };
-
     fetchAllData();
   }, []);
 
   // Set up real-time subscriptions after initial load
   useEffect(() => {
     if (!isInitialLoading) {
-      const channel = supabase
-        .channel('document-requests-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'docrequests'
-          },
-          () => {
-            fetchDocumentRequests();
-          }
-        )
-        .subscribe();
-
+      const channel = supabase.channel('document-requests-realtime').on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'docrequests'
+      }, () => {
+        fetchDocumentRequests();
+      }).subscribe();
       return () => {
         supabase.removeChannel(channel);
       };
     }
   }, [isInitialLoading, requestsCurrentPage]);
-
   const fetchDocumentRequests = async () => {
     try {
-      let query = supabase
-        .from('docrequests')
-        .select('*', { count: 'exact' })
-        .ilike('status', 'Request');
-
+      let query = supabase.from('docrequests').select('*', {
+        count: 'exact'
+      }).ilike('status', 'Request');
       const from = (requestsCurrentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
       query = query.range(from, to);
-      query = query.order('created_at', { ascending: false });
-
-      const { data, error, count } = await query;
-
+      query = query.order('created_at', {
+        ascending: false
+      });
+      const {
+        data,
+        error,
+        count
+      } = await query;
       if (error) {
         console.error('Error fetching document requests:', error);
         return;
       }
-
       const mappedData = data?.map(doc => {
         let name = 'Unknown';
         if (doc.receiver) {
@@ -247,7 +246,9 @@ const DocumentsPage = () => {
           id: doc.id,
           name,
           document: doc.type,
-          timeAgo: formatDistanceToNow(new Date(doc.created_at), { addSuffix: true }),
+          timeAgo: formatDistanceToNow(new Date(doc.created_at), {
+            addSuffix: true
+          }),
           status: doc.status,
           docnumber: doc.docnumber,
           purpose: doc.purpose,
@@ -259,26 +260,27 @@ const DocumentsPage = () => {
           created_at: doc.created_at
         };
       }) || [];
-
       setDocumentRequests(mappedData);
       setTotalCount(count || 0);
     } catch (error) {
       console.error('Error:', error);
     }
   };
-  const { data: documentTypes, isLoading: isLoadingDocuments, refetch: refetchDocuments } = useQuery({
+  const {
+    data: documentTypes,
+    isLoading: isLoadingDocuments,
+    refetch: refetchDocuments
+  } = useQuery({
     queryKey: ['document-types', searchQuery],
     queryFn: async () => {
-      let query = supabase
-        .from('document_types')
-        .select('*');
-      
+      let query = supabase.from('document_types').select('*');
       if (searchQuery) {
         query = query.ilike('name', `%${searchQuery}%`);
       }
-      
-      const { data, error } = await query.order('name');
-      
+      const {
+        data,
+        error
+      } = await query.order('name');
       if (error) throw error;
       return data || [];
     },
@@ -288,22 +290,14 @@ const DocumentsPage = () => {
 
   // Set up real-time subscription for document types
   useEffect(() => {
-    const channel = supabase
-      .channel('document-types-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'document_types'
-        },
-        () => {
-          // Refetch document types when changes occur
-          refetchDocuments();
-        }
-      )
-      .subscribe();
-
+    const channel = supabase.channel('document-types-realtime').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'document_types'
+    }, () => {
+      // Refetch document types when changes occur
+      refetchDocuments();
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
@@ -358,7 +352,9 @@ const DocumentsPage = () => {
     type: "template",
     status: "Active",
     size: "Template",
-    updatedAt: formatDistanceToNow(new Date(docType.updated_at || docType.created_at), { addSuffix: true }),
+    updatedAt: formatDistanceToNow(new Date(docType.updated_at || docType.created_at), {
+      addSuffix: true
+    }),
     icon: FileText,
     color: "text-blue-500",
     description: docType.description,
@@ -370,25 +366,16 @@ const DocumentsPage = () => {
   // Mock data for document requests - REPLACED WITH REAL DATA ABOVE
   // const documentRequests = [{...}];
 
-
   // Set up real-time subscription for document tracking after initial load
   useEffect(() => {
     if (!isInitialLoading) {
-      const channel = supabase
-        .channel('document-tracking-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'docrequests'
-          },
-          () => {
-            fetchDocumentTracking();
-          }
-        )
-        .subscribe();
-
+      const channel = supabase.channel('document-tracking-realtime').on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'docrequests'
+      }, () => {
+        fetchDocumentTracking();
+      }).subscribe();
       return () => {
         supabase.removeChannel(channel);
       };
@@ -401,14 +388,11 @@ const DocumentsPage = () => {
       setTrackingCurrentPage(1);
     }
   }, [trackingSearchQuery, trackingFilter]);
-
   const fetchDocumentTracking = async () => {
     try {
-      let query = supabase
-        .from('docrequests')
-        .select('*', { count: 'exact' })
-        .not('processedby', 'is', null)
-        .neq('status', 'Request');
+      let query = supabase.from('docrequests').select('*', {
+        count: 'exact'
+      }).not('processedby', 'is', null).neq('status', 'Request');
 
       // Apply search filter
       if (trackingSearchQuery) {
@@ -432,10 +416,14 @@ const DocumentsPage = () => {
       query = query.range(from, to);
 
       // Order by updated_at desc
-      query = query.order('updated_at', { ascending: false });
-
-      const { data, error, count } = await query;
-
+      query = query.order('updated_at', {
+        ascending: false
+      });
+      const {
+        data,
+        error,
+        count
+      } = await query;
       if (error) {
         console.error('Error fetching document tracking:', error);
         return;
@@ -456,7 +444,6 @@ const DocumentsPage = () => {
             requestedBy = 'Unknown';
           }
         }
-
         const getStatusColor = (status: string) => {
           switch (status.toLowerCase()) {
             case 'approved':
@@ -474,7 +461,6 @@ const DocumentsPage = () => {
               return 'bg-gray-500 text-white';
           }
         };
-
         const getDisplayStatus = (status: string) => {
           switch (status.toLowerCase()) {
             case 'approved':
@@ -492,19 +478,19 @@ const DocumentsPage = () => {
               return status;
           }
         };
-
         return {
           id: doc.docnumber,
           document: doc.type,
           requestedBy,
           status: getDisplayStatus(doc.status),
           statusColor: getStatusColor(doc.status),
-          lastUpdate: doc.updated_at ?
-            formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true }) : 
-            formatDistanceToNow(new Date(doc.created_at), { addSuffix: true })
+          lastUpdate: doc.updated_at ? formatDistanceToNow(new Date(doc.updated_at), {
+            addSuffix: true
+          }) : formatDistanceToNow(new Date(doc.created_at), {
+            addSuffix: true
+          })
         };
       }) || [];
-
       setDocumentTracking(mappedData);
       setTrackingTotalCount(count || 0);
     } catch (error) {
@@ -541,37 +527,33 @@ const DocumentsPage = () => {
   };
 
   // Fetch recent document status updates from docrequests table
-  const { data: statusUpdates } = useQuery({
+  const {
+    data: statusUpdates
+  } = useQuery({
     queryKey: ['document-status-updates', adminProfileId],
     queryFn: async () => {
       if (!adminProfileId) return [];
-      
-      // Get current admin's brgyid
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('brgyid')
-        .eq('id', adminProfileId)
-        .single();
 
+      // Get current admin's brgyid
+      const {
+        data: profile,
+        error: profileError
+      } = await supabase.from('profiles').select('brgyid').eq('id', adminProfileId).single();
       if (!profile?.brgyid) return [];
-      
-      const { data, error } = await supabase
-        .from('docrequests')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('docrequests').select(`
           id,
           docnumber,
           type,
           status,
           updated_at,
           receiver
-        `)
-        .eq('brgyid', profile.brgyid)
-        .not('status', 'eq', 'Request')
-        .order('updated_at', { ascending: false })
-        .limit(4);
-      
+        `).eq('brgyid', profile.brgyid).not('status', 'eq', 'Request').order('updated_at', {
+        ascending: false
+      }).limit(4);
       if (error) throw error;
-      
       return data?.map(doc => {
         let requesterName = 'Unknown';
         if (doc.receiver) {
@@ -586,7 +568,6 @@ const DocumentsPage = () => {
             requesterName = 'Unknown';
           }
         }
-
         const getStatusText = (status: string) => {
           switch (status.toLowerCase()) {
             case 'approved':
@@ -604,7 +585,6 @@ const DocumentsPage = () => {
               return status;
           }
         };
-
         const getDescriptionText = (status: string, type: string, name: string) => {
           switch (status.toLowerCase()) {
             case 'approved':
@@ -622,12 +602,13 @@ const DocumentsPage = () => {
               return `${type} for ${name} - Status: ${status}`;
           }
         };
-
         return {
           id: doc.id,
           title: `${doc.type} - ${getStatusText(doc.status)}`,
           description: getDescriptionText(doc.status, doc.type, requesterName),
-          time: formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true }),
+          time: formatDistanceToNow(new Date(doc.updated_at), {
+            addSuffix: true
+          }),
           status: doc.status.toLowerCase(),
           trackingId: doc.docnumber
         };
@@ -646,17 +627,15 @@ const DocumentsPage = () => {
   const handleViewTrackingDetails = async (trackingItem: any) => {
     try {
       // Fetch full request details using docnumber
-      const { data, error } = await supabase
-        .from('docrequests')
-        .select('*')
-        .eq('docnumber', trackingItem.id)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('docrequests').select('*').eq('docnumber', trackingItem.id).single();
       if (error) {
         toast({
           title: "Error",
           description: "Failed to fetch request details",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
@@ -675,12 +654,10 @@ const DocumentsPage = () => {
           name = 'Unknown';
         }
       }
-
       const requestData = {
         ...data,
         name
       };
-
       setSelectedRequest(requestData);
       setIsRequestDetailsOpen(true);
     } catch (error) {
@@ -688,7 +665,7 @@ const DocumentsPage = () => {
       toast({
         title: "Error",
         description: "Failed to fetch request details",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -705,28 +682,24 @@ const DocumentsPage = () => {
       toast({
         title: "Error",
         description: "Admin profile not found",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     try {
-      const { error } = await supabase
-        .from('docrequests')
-        .update({ 
-          status: newStatus,
-          processedby: adminProfileId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('docnumber', docnumber);
-
+      const {
+        error
+      } = await supabase.from('docrequests').update({
+        status: newStatus,
+        processedby: adminProfileId,
+        updated_at: new Date().toISOString()
+      }).eq('docnumber', docnumber);
       if (error) {
         throw error;
       }
-
       toast({
         title: "Status Updated",
-        description: `Request status updated to ${newStatus}`,
+        description: `Request status updated to ${newStatus}`
       });
 
       // Refresh tracking data
@@ -738,7 +711,7 @@ const DocumentsPage = () => {
       toast({
         title: "Error",
         description: "Failed to update request status",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -749,28 +722,24 @@ const DocumentsPage = () => {
       toast({
         title: "Error",
         description: "Admin profile not found",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     try {
-      const { error } = await supabase
-        .from('docrequests')
-        .update({ 
-          status: 'Pending',
-          processedby: adminProfileId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('docrequests').update({
+        status: 'Pending',
+        processedby: adminProfileId,
+        updated_at: new Date().toISOString()
+      }).eq('id', id);
       if (error) {
         throw error;
       }
-
       toast({
         title: "Request Approved",
-        description: `Approved request for ${name}`,
+        description: `Approved request for ${name}`
       });
 
       // Refresh the list
@@ -780,34 +749,29 @@ const DocumentsPage = () => {
       toast({
         title: "Error",
         description: "Failed to approve request",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleDenyRequest = async (id: string, name: string) => {
     if (!adminProfileId) {
       toast({
         title: "Error",
         description: "Admin profile not found",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     try {
-      const { error } = await supabase
-        .from('docrequests')
-        .delete()
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('docrequests').delete().eq('id', id);
       if (error) {
         throw error;
       }
-
       toast({
         title: "Request Denied",
-        description: `Denied and removed request for ${name}`,
+        description: `Denied and removed request for ${name}`
       });
 
       // Refresh the list
@@ -817,43 +781,36 @@ const DocumentsPage = () => {
       toast({
         title: "Error",
         description: "Failed to deny request",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
-  const handleEditTemplate = (template) => {
+  const handleEditTemplate = template => {
     setEditingTemplate(template);
     setIsAddDocumentOpen(true);
   };
-
-  const handleDeleteClick = (template) => {
+  const handleDeleteClick = template => {
     setSelectedTemplate(template);
     setDeleteDialogOpen(true);
   };
-
   const handleDeleteSuccess = () => {
     // Refetch the data instead of reloading the page
     refetchDocuments();
     setSelectedTemplate(null);
   };
-
-  const handleViewTemplate = (template) => {
+  const handleViewTemplate = template => {
     setSelectedTemplate(template);
     setViewDialogOpen(true);
   };
-
   const handleTemplateSuccess = () => {
     setEditingTemplate(null);
     // Refetch the data instead of reloading the page
     refetchDocuments();
   };
-
   const handleCloseAddDocument = () => {
     setIsAddDocumentOpen(false);
     setEditingTemplate(null);
   };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -865,15 +822,11 @@ const DocumentsPage = () => {
 
   // Show loading screen on initial page load only
   if (isInitialLoading) {
-    return (
-      <div className="relative w-full min-h-screen">
+    return <div className="relative w-full min-h-screen">
         <LocalizedLoadingScreen isLoading={true} />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="w-full p-6 bg-background min-h-screen">
+  return <div className="w-full p-6 bg-background min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
@@ -1035,21 +988,12 @@ const DocumentsPage = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {false ? (
-              <div className="flex items-center justify-center py-8">
+            {false ? <div className="flex items-center justify-center py-8">
                 <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
                 <p className="ml-2 text-sm text-muted-foreground">Loading requests...</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {documentRequests.length > 0 ? (
-                  <>
-                    {documentRequests.map(request => 
-                      <div 
-                        key={request.id} 
-                        className="flex items-center justify-between p-4 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
-                        onClick={() => handleRequestClick(request)}
-                      >
+              </div> : <div className="space-y-4">
+                {documentRequests.length > 0 ? <>
+                    {documentRequests.map(request => <div key={request.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => handleRequestClick(request)}>
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                             <span className="text-sm font-medium text-foreground">{request.name.split(' ').map((n: string) => n[0]).join('')}</span>
@@ -1061,68 +1005,41 @@ const DocumentsPage = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleApproveRequest(request.id, request.name);
-                            }}
-                            className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:text-green-300"
-                          >
+                          <Button size="sm" variant="outline" onClick={e => {
+                    e.stopPropagation();
+                    handleApproveRequest(request.id, request.name);
+                  }} className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:text-green-300">
                             <Check className="h-3 w-3 mr-1" />
                             Approve
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDenyRequest(request.id, request.name);
-                            }}
-                            className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:text-red-300"
-                          >
+                          <Button size="sm" variant="outline" onClick={e => {
+                    e.stopPropagation();
+                    handleDenyRequest(request.id, request.name);
+                  }} className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:text-red-300">
                             <X className="h-3 w-3 mr-1" />
                             Deny
                           </Button>
                         </div>
-                      </div>
-                    )}
+                      </div>)}
                     
                      {/* Pagination */}
-                     {Math.ceil(totalCount / itemsPerPage) > 1 && (
-                       <div className="flex items-center justify-between pt-4">
+                     {Math.ceil(totalCount / itemsPerPage) > 1 && <div className="flex items-center justify-between pt-4">
                          <p className="text-xs text-muted-foreground">
                            Page {requestsCurrentPage} of {Math.ceil(totalCount / itemsPerPage)}
                          </p>
                          <div className="flex items-center space-x-2">
-                           <Button
-                             variant="outline"
-                             size="sm"
-                             onClick={() => setRequestsCurrentPage(prev => Math.max(prev - 1, 1))}
-                             disabled={requestsCurrentPage === 1}
-                           >
+                           <Button variant="outline" size="sm" onClick={() => setRequestsCurrentPage(prev => Math.max(prev - 1, 1))} disabled={requestsCurrentPage === 1}>
                              <ChevronLeft className="h-3 w-3" />
                            </Button>
-                           <Button
-                             variant="outline"
-                             size="sm"
-                             onClick={() => setRequestsCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalCount / itemsPerPage)))}
-                             disabled={requestsCurrentPage === Math.ceil(totalCount / itemsPerPage)}
-                           >
+                           <Button variant="outline" size="sm" onClick={() => setRequestsCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalCount / itemsPerPage)))} disabled={requestsCurrentPage === Math.ceil(totalCount / itemsPerPage)}>
                              <ChevronRight className="h-3 w-3" />
                            </Button>
                          </div>
-                       </div>
-                     )}
-                  </>
-                ) : (
-                  <div className="text-center py-8">
+                       </div>}
+                  </> : <div className="text-center py-8">
                     <p className="text-sm text-muted-foreground">No pending requests found</p>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>}
+              </div>}
           </CardContent>
         </Card>
 
@@ -1136,10 +1053,7 @@ const DocumentsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-4">
-              <Button 
-                className="flex items-center gap-2 justify-start h-auto p-4 bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800"
-                onClick={() => setIsIssueDocumentOpen(true)}
-              >
+              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800" onClick={() => setIsIssueDocumentOpen(true)}>
                 <Plus className="h-4 w-4" />
                 <div className="text-left">
                   <div className="font-medium">Issue New Document</div>
@@ -1166,8 +1080,8 @@ const DocumentsPage = () => {
               <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 hover:bg-orange-200 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800" onClick={() => setIsSettingsDialogOpen(true)}>
                 <Settings className="h-4 w-4" />
                 <div className="text-left">
-                  <div className="font-medium">System Settings</div>
-                  <div className="text-xs">Configure document settings</div>
+                  <div className="font-medium">Payment Setup</div>
+                  <div className="text-xs">Configure document payment settings</div>
                 </div>
               </Button>
             </div>
@@ -1224,20 +1138,10 @@ const DocumentsPage = () => {
                   <TableCell className="text-muted-foreground">{doc.lastUpdate}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="hover:bg-accent"
-                        onClick={() => handleViewTrackingDetails(doc)}
-                      >
+                      <Button variant="ghost" size="sm" className="hover:bg-accent" onClick={() => handleViewTrackingDetails(doc)}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="hover:bg-accent"
-                        onClick={() => handleEditTrackingStatus(doc)}
-                      >
+                      <Button variant="ghost" size="sm" className="hover:bg-accent" onClick={() => handleEditTrackingStatus(doc)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
@@ -1251,23 +1155,13 @@ const DocumentsPage = () => {
               Showing {Math.min(trackingItemsPerPage, trackingTotalCount)} of {trackingTotalCount} documents
             </div>
             <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setTrackingCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={trackingCurrentPage === 1}
-              >
+              <Button variant="outline" size="sm" onClick={() => setTrackingCurrentPage(prev => Math.max(prev - 1, 1))} disabled={trackingCurrentPage === 1}>
                 <ChevronLeft className="h-3 w-3" />
               </Button>
               <span className="text-sm text-muted-foreground">
                 Page {trackingCurrentPage} of {Math.ceil(trackingTotalCount / trackingItemsPerPage)}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setTrackingCurrentPage(prev => Math.min(prev + 1, Math.ceil(trackingTotalCount / trackingItemsPerPage)))}
-                disabled={trackingCurrentPage === Math.ceil(trackingTotalCount / trackingItemsPerPage)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setTrackingCurrentPage(prev => Math.min(prev + 1, Math.ceil(trackingTotalCount / trackingItemsPerPage)))} disabled={trackingCurrentPage === Math.ceil(trackingTotalCount / trackingItemsPerPage)}>
                 <ChevronRight className="h-3 w-3" />
               </Button>
             </div>
@@ -1287,10 +1181,7 @@ const DocumentsPage = () => {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64 border-border bg-background text-foreground" />
                   </div>
-                  <Button 
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => setIsAddDocumentOpen(true)}
-                  >
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setIsAddDocumentOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Document
                   </Button>
@@ -1336,10 +1227,7 @@ const DocumentsPage = () => {
                     </div>
 
                     <div className="space-y-3">
-                      {isLoadingDocuments ? (
-                        <div className="text-center py-8 text-muted-foreground">Loading document templates...</div>
-                      ) : paginatedDocumentTypes && paginatedDocumentTypes.length > 0 ? (
-                        paginatedDocumentTypes.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                      {isLoadingDocuments ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedDocumentTypes && paginatedDocumentTypes.length > 0 ? paginatedDocumentTypes.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
                             <div className="flex items-center gap-4">
                               <input type="checkbox" className="rounded border-border" />
                               <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
@@ -1368,13 +1256,10 @@ const DocumentsPage = () => {
                                 <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                               </Button>
                             </div>
-                          </div>)
-                      ) : (
-                        <div className="text-center py-8">
+                          </div>) : <div className="text-center py-8">
                           <p className="text-muted-foreground">No document templates found.</p>
                           <p className="text-sm text-muted-foreground">Add a new template to get started.</p>
-                        </div>
-                      )}
+                        </div>}
                     </div>
 
                     <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
@@ -1386,27 +1271,17 @@ const DocumentsPage = () => {
                         <Pagination>
                           <PaginationContent>
                             <PaginationItem>
-                              <PaginationPrevious 
-                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                                className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`}
-                              />
+                              <PaginationPrevious onClick={() => handlePageChange(Math.max(1, currentPage - 1))} className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`} />
                             </PaginationItem>
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                              <PaginationItem key={page}>
-                                <PaginationLink 
-                                  onClick={() => handlePageChange(page)}
-                                  isActive={currentPage === page}
-                                  className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                                >
+                            {Array.from({
+                            length: totalPages
+                          }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
+                                <PaginationLink onClick={() => handlePageChange(page)} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
                                   {page}
                                 </PaginationLink>
-                              </PaginationItem>
-                            ))}
+                              </PaginationItem>)}
                             <PaginationItem>
-                              <PaginationNext 
-                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                                className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`}
-                              />
+                              <PaginationNext onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`} />
                             </PaginationItem>
                           </PaginationContent>
                         </Pagination>
@@ -1463,11 +1338,7 @@ const DocumentsPage = () => {
       {/* Add Document Template Dialog */}
       <Dialog open={isAddDocumentOpen} onOpenChange={setIsAddDocumentOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-background border-border">
-          <DocumentTemplateForm 
-            template={editingTemplate}
-            onClose={handleCloseAddDocument} 
-            onSuccess={handleTemplateSuccess}
-          />
+          <DocumentTemplateForm template={editingTemplate} onClose={handleCloseAddDocument} onSuccess={handleTemplateSuccess} />
         </DialogContent>
       </Dialog>
 
@@ -1482,34 +1353,16 @@ const DocumentsPage = () => {
       </Dialog>
 
       {/* View Document Template Dialog */}
-      <DocumentViewDialog 
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-        template={selectedTemplate}
-      />
+      <DocumentViewDialog open={viewDialogOpen} onOpenChange={setViewDialogOpen} template={selectedTemplate} />
 
       {/* Delete Document Template Dialog */}
-      <DocumentDeleteDialog 
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        template={selectedTemplate}
-        onDeleteSuccess={handleDeleteSuccess}
-      />
+      <DocumentDeleteDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} template={selectedTemplate} onDeleteSuccess={handleDeleteSuccess} />
 
       {/* Document Settings Dialog */}
-      <DocumentSettingsDialog 
-        open={isSettingsDialogOpen}
-        onOpenChange={setIsSettingsDialogOpen}
-      />
+      <DocumentSettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen} />
 
       {/* Document Request Details Modal */}
-      <DocumentRequestDetailsModal
-        isOpen={isRequestDetailsOpen}
-        onClose={() => setIsRequestDetailsOpen(false)}
-        request={selectedRequest}
-        onApprove={handleApproveRequest}
-        onDeny={handleDenyRequest}
-      />
+      <DocumentRequestDetailsModal isOpen={isRequestDetailsOpen} onClose={() => setIsRequestDetailsOpen(false)} request={selectedRequest} onApprove={handleApproveRequest} onDeny={handleDenyRequest} />
 
       {/* Edit Status Modal */}
       <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
@@ -1517,8 +1370,7 @@ const DocumentsPage = () => {
           <DialogHeader>
             <DialogTitle>Edit Request Status</DialogTitle>
           </DialogHeader>
-          {selectedTrackingItem && (
-            <div className="space-y-4">
+          {selectedTrackingItem && <div className="space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground">Document: {selectedTrackingItem.document}</p>
                 <p className="text-sm text-muted-foreground">Tracking ID: {selectedTrackingItem.id}</p>
@@ -1527,42 +1379,23 @@ const DocumentsPage = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Update Status:</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Processing')}
-                    variant="outline"
-                    className="bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700 hover:text-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400"
-                  >
+                  <Button onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Processing')} variant="outline" className="bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700 hover:text-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400">
                     Processing
                   </Button>
-                  <Button
-                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Ready')}
-                    variant="outline"
-                    className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400"
-                  >
+                  <Button onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Ready')} variant="outline" className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400">
                     Ready
                   </Button>
-                  <Button
-                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Rejected')}
-                    variant="outline"
-                    className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400"
-                  >
+                  <Button onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Rejected')} variant="outline" className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400">
                     Rejected
                   </Button>
-                  <Button
-                    onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Released')}
-                    variant="outline"
-                    className="bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700 hover:text-purple-800 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400"
-                  >
+                  <Button onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Released')} variant="outline" className="bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700 hover:text-purple-800 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400">
                     Released
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
-
 export default DocumentsPage;
