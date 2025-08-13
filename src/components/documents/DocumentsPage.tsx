@@ -1102,10 +1102,10 @@ const DocumentsPage = () => {
                 </div>
               </Button>
               
-              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
+              <Button className="flex items-center gap-2 justify-start h-auto p-4 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800" onClick={() => setIsAddDocumentOpen(true)}>
                 <Upload className="h-4 w-4" />
                 <div className="text-left">
-                  <div className="font-medium">Upload Template</div>
+                  <div className="font-medium">Add Document Template</div>
                   <div className="text-xs">Add new document templates</div>
                 </div>
               </Button>
