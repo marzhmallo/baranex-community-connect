@@ -74,6 +74,26 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
           const hasName = Boolean(credz.name);
           const hasQR = Boolean(gc?.url);
           setIsSetupComplete(Boolean(gc ? (hasNumber && hasName && hasQR) : false));
+
+          // Fetch barangay-level payment policy and instructions
+          const { data: brgyRow, error: brgyError } = await supabase
+            .from('barangays')
+            .select('payreq, instructions')
+            .eq('id', profile.brgyid)
+            .maybeSingle();
+
+          if (brgyError) throw brgyError;
+
+          if (brgyRow) {
+            if (brgyRow.payreq !== null) {
+              setRequireUpfront(Boolean(brgyRow.payreq));
+            } else {
+              // Legacy fallback to localStorage if DB not yet set
+              const keyBase = `docpay:${profile.brgyid}`;
+              const upfront = localStorage.getItem(`${keyBase}:requireUpfront`);
+              setRequireUpfront(upfront === 'true');
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -85,14 +105,8 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
     }
   }, [adminProfileId, open]);
 
-  // Load local (per-barangay) policies from localStorage when dialog opens
-  useEffect(() => {
-    if (open && adminProfile?.brgyid) {
-      const keyBase = `docpay:${adminProfile.brgyid}`;
-      const upfront = localStorage.getItem(`${keyBase}:requireUpfront`);
-      setRequireUpfront(upfront === 'true');
-    }
-  }, [open, adminProfile?.brgyid]);
+  // Policies now persisted in DB (barangays.payreq). Legacy localStorage fallback handled in fetchData.
+  // No separate effect needed here to avoid overriding DB values.
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -216,9 +230,21 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
             }
           })
       );
+      // Persist barangay-level policy and generated instructions
+      mutations.push(
+        supabase
+          .from('barangays')
+          .update({
+            payreq: requireUpfront,
+            instructions: `Payment Instructions:\n- ${instructions()}`,
+          })
+          .eq('id', adminProfile.brgyid)
+          .select()
+          .then((r) => r)
+      );
 
       const results = await Promise.all(mutations);
-      const dbError = results.find((r) => r.error)?.error;
+      const dbError = (results as any[]).find((r: any) => r?.error)?.error;
       if (dbError) throw dbError;
 
       toast({
