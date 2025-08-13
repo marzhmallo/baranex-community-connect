@@ -147,44 +147,74 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
         qrCodeUrl = publicUrl;
       }
 
-      // Build mutations
+      // Build mutations using update-or-insert to avoid unique constraint errors
       const mutations: any[] = [];
 
       if (willUpdateGcash) {
+        const gcashData = {
+          brgyid: adminProfile.brgyid,
+          gname: 'GCash',
+          enabled: gcashEnabled,
+          url: qrCodeUrl,
+          credz: { name: gcashName || null, number: gcashNumber || null },
+        };
+
         mutations.push(
           supabase
             .from('payme')
-            .upsert(
-              [{
-                brgyid: adminProfile.brgyid,
-                gname: 'GCash',
-                enabled: gcashEnabled,
-                url: qrCodeUrl,
-                credz: { name: gcashName || null, number: gcashNumber || null },
-              }],
-              { onConflict: 'brgyid,gname' }
-            )
-            .select()
-            .then((r) => r)
+            .select('id')
+            .eq('brgyid', adminProfile.brgyid)
+            .eq('gname', 'GCash')
+            .maybeSingle()
+            .then(async ({ data, error }) => {
+              if (error) return { error };
+              if (data?.id) {
+                return await supabase
+                  .from('payme')
+                  .update(gcashData)
+                  .eq('id', data.id)
+                  .select();
+              } else {
+                return await supabase
+                  .from('payme')
+                  .insert([gcashData])
+                  .select();
+              }
+            })
         );
       }
 
       // Always reflect Cash toggle
+      const cashData = {
+        brgyid: adminProfile.brgyid,
+        gname: 'Cash',
+        enabled: cashEnabled,
+        url: null,
+        credz: {},
+      };
+
       mutations.push(
         supabase
           .from('payme')
-          .upsert(
-            [{
-              brgyid: adminProfile.brgyid,
-              gname: 'Cash',
-              enabled: cashEnabled,
-              url: null,
-              credz: {},
-            }],
-            { onConflict: 'brgyid,gname' }
-          )
-          .select()
-          .then((r) => r)
+          .select('id')
+          .eq('brgyid', adminProfile.brgyid)
+          .eq('gname', 'Cash')
+          .maybeSingle()
+          .then(async ({ data, error }) => {
+            if (error) return { error };
+            if (data?.id) {
+              return await supabase
+                .from('payme')
+                .update(cashData)
+                .eq('id', data.id)
+                .select();
+            } else {
+              return await supabase
+                .from('payme')
+                .insert([cashData])
+                .select();
+            }
+          })
       );
 
       const results = await Promise.all(mutations);
