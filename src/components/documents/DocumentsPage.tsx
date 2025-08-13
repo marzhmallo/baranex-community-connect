@@ -366,20 +366,24 @@ const DocumentsPage = () => {
   // Mock data for document requests - REPLACED WITH REAL DATA ABOVE
   // const documentRequests = [{...}];
 
-  // Set up real-time subscription for document tracking after initial load
+  // Set up real-time subscription for document tracking and refetch on filters/page change
   useEffect(() => {
-    if (!isInitialLoading) {
-      const channel = supabase.channel('document-tracking-realtime').on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'docrequests'
-      }, () => {
+    if (isInitialLoading) return;
+
+    // Always refetch when dependencies change to make the search/filter line functional
+    fetchDocumentTracking();
+
+    // Realtime updates from DB changes
+    const channel = supabase
+      .channel('document-tracking-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'docrequests' }, () => {
         fetchDocumentTracking();
-      }).subscribe();
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isInitialLoading, trackingCurrentPage, trackingSearchQuery, trackingFilter]);
 
   // Reset page when search or filter changes
