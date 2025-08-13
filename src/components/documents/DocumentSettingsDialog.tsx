@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
@@ -20,6 +21,7 @@ const DocumentSettingsDialog = ({
   const [adminProfile, setAdminProfile] = useState<any>(null);
   const [providers, setProviders] = useState<any[]>([]);
   const [requireUpfront, setRequireUpfront] = useState(false);
+  const [customInstructions, setCustomInstructions] = useState("");
   const {
     toast
   } = useToast();
@@ -52,6 +54,7 @@ const DocumentSettingsDialog = ({
               const upfront = localStorage.getItem(`${keyBase}:requireUpfront`);
               setRequireUpfront(upfront === 'true');
             }
+            setCustomInstructions(brgyRow.instructions || "");
           }
         }
       } catch (error) {
@@ -82,7 +85,7 @@ const DocumentSettingsDialog = ({
         error
       } = await supabase.from('barangays').update({
         payreq: requireUpfront,
-        instructions: `Payment Instructions:\n- ${instructions()}`
+        instructions: customInstructions?.trim() ? customInstructions.trim() : `Payment Instructions:\n- ${instructions()}`
       }).eq('id', adminProfile.brgyid);
       if (error) throw error;
       const keyBase = `docpay:${adminProfile.brgyid}`;
@@ -125,7 +128,8 @@ const DocumentSettingsDialog = ({
   };
   const copyInstructions = async () => {
     try {
-      await navigator.clipboard.writeText(`Payment Instructions:\n- ${instructions()}`);
+      const text = (customInstructions?.trim() ? customInstructions : `Payment Instructions:\n- ${instructions()}`);
+      await navigator.clipboard.writeText(text);
       toast({
         title: "Copied",
         description: "Instructions copied to clipboard"
@@ -192,11 +196,14 @@ const DocumentSettingsDialog = ({
 
           <TabsContent value="instructions" className="space-y-3 pt-4">
             <div className="rounded-lg border border-border p-3 bg-muted/20">
-              <p className="text-sm font-medium mb-2 text-foreground">Preview Instructions</p>
-              <pre className="whitespace-pre-wrap text-xs text-muted-foreground">
-              {`Payment Instructions:
-- ${instructions()}`}
-              </pre>
+              <p className="text-sm font-medium mb-2 text-foreground">Edit Instructions</p>
+              <Textarea
+                rows={8}
+                value={customInstructions}
+                onChange={(e) => setCustomInstructions(e.target.value)}
+                placeholder={`Payment Instructions:\n- ${instructions()}`}
+                className="border-border bg-background text-foreground"
+              />
               <div className="flex justify-end mt-2">
                 <Button type="button" variant="outline" onClick={copyInstructions}>
                   <Copy className="h-4 w-4 mr-2" /> Copy
