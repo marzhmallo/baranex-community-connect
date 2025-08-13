@@ -50,23 +50,14 @@ const DocumentTemplatesList = ({
       if (searchQuery) {
         query = query.ilike('name', `%${searchQuery}%`);
       }
-      const { 
+      const {
         data,
         error
-      } = await query;
+      } = await query.order('name');
       if (error) {
         throw error;
       }
-      const sorted = (data || []).slice().sort((a: any, b: any) => {
-        const ta = (a.type || '').toString().toLowerCase();
-        const tb = (b.type || '').toString().toLowerCase();
-        if (ta < tb) return -1;
-        if (ta > tb) return 1;
-        const na = (a.name || '').toString().toLowerCase();
-        const nb = (b.name || '').toString().toLowerCase();
-        return na.localeCompare(nb);
-      });
-      setTemplates(sorted);
+      setTemplates(data || []);
     } catch (error) {
       console.error("Error fetching templates:", error);
       toast({
