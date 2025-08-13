@@ -277,12 +277,23 @@ const DocumentsPage = () => {
       if (searchQuery) {
         query = query.ilike('name', `%${searchQuery}%`);
       }
-      const {
-        data,
-        error
-      } = await query.order('name');
+      // Order by type then name (DB-level), then enforce case-insensitive sort client-side
+      const { data, error } = await query
+        .order('type', { ascending: true })
+        .order('name', { ascending: true });
       if (error) throw error;
-      return data || [];
+      const sorted = (data || []).slice().sort((a: any, b: any) => {
+        const at = String(a.type || '').toLowerCase();
+        const bt = String(b.type || '').toLowerCase();
+        if (at < bt) return -1;
+        if (at > bt) return 1;
+        const an = String(a.name || '').toLowerCase();
+        const bn = String(b.name || '').toLowerCase();
+        if (an < bn) return -1;
+        if (an > bn) return 1;
+        return 0;
+      });
+      return sorted;
     },
     staleTime: 0,
     refetchOnWindowFocus: false
@@ -821,10 +832,34 @@ const DocumentsPage = () => {
     setCurrentPage(page);
   };
 
-  // Calculate pagination for document types
-  const totalPages = Math.ceil((documentTypes?.length || 0) / itemsPerPage);
+  // Calculate filtering, sorting and pagination for document types
+  const normalize = (s: any) => String(s || '').trim().toLowerCase();
+  const knownTypes = ['certificate','certificates','permit','permits','clearance','clearances','ids','identification','other'];
+
+  const filteredDocumentTypes = (documentTypes || []).filter((dt: any) => {
+    const t = normalize(dt.type);
+    if (activeTab === 'all') return true;
+    if (activeTab === 'certificates') return t === 'certificate' || t === 'certificates';
+    if (activeTab === 'permits') return t === 'permit' || t === 'permits';
+    if (activeTab === 'clearances') return t === 'clearance' || t === 'clearances';
+    if (activeTab === 'ids') return t === 'ids' || t === 'identification';
+    if (activeTab === 'other') return t === 'other' || !knownTypes.includes(t);
+    return true;
+  });
+
+  const sortedDocumentTypes = filteredDocumentTypes.slice().sort((a: any, b: any) => {
+    const at = normalize(a.type);
+    const bt = normalize(b.type);
+    if (at < bt) return -1; if (at > bt) return 1;
+    const an = normalize(a.name);
+    const bn = normalize(b.name);
+    if (an < bn) return -1; if (an > bn) return 1;
+    return 0;
+  });
+
+  const totalPages = Math.ceil((sortedDocumentTypes.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedDocumentTypes = documentTypes?.slice(startIndex, startIndex + itemsPerPage) || [];
+  const paginatedDocumentTypes = sortedDocumentTypes.slice(startIndex, startIndex + itemsPerPage);
 
   // Show loading screen on initial page load only
   if (isInitialLoading) {
@@ -1209,6 +1244,12 @@ const DocumentsPage = () => {
                     </TabsTrigger>
                     <TabsTrigger value="clearances" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
                       Clearances
+                    </TabsTrigger>
+                    <TabsTrigger value="ids" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
+                      IDs
+                    </TabsTrigger>
+                    <TabsTrigger value="other" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
+                      Other
                     </TabsTrigger>
                   </TabsList>
                 </div>
