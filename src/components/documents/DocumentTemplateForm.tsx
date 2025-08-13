@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,25 +33,36 @@ const DocumentTemplateForm = ({
   const {
     register,
     handleSubmit,
-    formState: {
-      errors
-    },
-    reset
+    formState: { errors },
+    reset,
+    watch,
+    control
   } = useForm({
     defaultValues: {
       name: template?.name || "",
       description: template?.description || "",
       fee: template?.fee || 0,
-      validity_days: template?.validity_days || null
+      validity_days: template?.validity_days || null,
+      type: template?.type || "",
+      other_type: ""
     }
   });
+  const selectedType = watch("type");
   useEffect(() => {
     if (template) {
+      const known = [
+        "certificate","clearance","permit","identification","endorsement","residency","indigency",
+        "business","building","sanitation","summons","referral","report","ordinance","misc","other"
+      ];
+      const t = (template.type || "").toLowerCase();
+      const isKnown = t && known.includes(t);
       reset({
         name: template.name,
         description: template.description,
         fee: template.fee,
-        validity_days: template.validity_days
+        validity_days: template.validity_days,
+        type: isKnown ? t : (t ? "other" : ""),
+        other_type: isKnown ? "" : (template.type || "")
       });
       setContent(template.content || "");
     }
@@ -58,11 +70,13 @@ const DocumentTemplateForm = ({
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
+      const resolvedType = data.type === "other" ? (data.other_type?.trim() || "Other") : data.type;
       const templateData = {
         name: data.name,
         description: data.description,
         template: content,
         content: content,
+        type: resolvedType,
         fee: Number(data.fee),
         validity_days: data.validity_days ? Number(data.validity_days) : null,
         required_fields: {},
@@ -114,6 +128,58 @@ const DocumentTemplateForm = ({
             <Input id="fee" type="number" step="0.01" min="0" {...register("fee")} placeholder="0.00" />
           </div>
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="type">Document Type *</Label>
+          <Controller
+            name="type"
+            control={control}
+            rules={{ required: "Document type is required" }}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Select a type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="certificate">Certificate</SelectItem>
+                  <SelectItem value="clearance">Clearance</SelectItem>
+                  <SelectItem value="permit">Permit</SelectItem>
+                  <SelectItem value="identification">Identification</SelectItem>
+                  <SelectItem value="endorsement">Endorsement</SelectItem>
+                  <SelectItem value="residency">Residency</SelectItem>
+                  <SelectItem value="indigency">Indigency</SelectItem>
+                  <SelectItem value="business">Business</SelectItem>
+                  <SelectItem value="building">Building</SelectItem>
+                  <SelectItem value="sanitation">Sanitation</SelectItem>
+                  <SelectItem value="summons">Summons</SelectItem>
+                  <SelectItem value="referral">Referral</SelectItem>
+                  <SelectItem value="report">Report</SelectItem>
+                  <SelectItem value="ordinance">Ordinance</SelectItem>
+                  <SelectItem value="misc">Misc</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.type && <p className="text-sm text-red-600 mt-1">{String((errors as any).type.message)}</p>}
+        </div>
+
+        {selectedType === "other" && (
+          <div>
+            <Label htmlFor="other_type">Specify Type</Label>
+            <Input
+              id="other_type"
+              placeholder="Enter custom document type"
+              {...register("other_type", {
+                validate: (val: string) =>
+                  (selectedType !== "other" || (val && val.trim().length > 0)) || "Please specify a type",
+              })}
+            />
+            {(errors as any).other_type && (
+              <p className="text-sm text-red-600 mt-1">{String((errors as any).other_type.message)}</p>
+            )}
+          </div>
+        )}
 
         <div>
           <Label htmlFor="description">Description</Label>
