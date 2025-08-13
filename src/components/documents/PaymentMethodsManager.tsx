@@ -38,7 +38,7 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
         .order("gname", { ascending: true });
       if (error) throw error;
       const rows: PayMethodRow[] = (data || []).map((r: any) => ({
-        id: r.id,
+        id: String(r.id),
         gname: r.gname,
         url: r.url,
         enabled: !!r.enabled,
@@ -86,7 +86,7 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
     }
     try {
       setLoading(true);
-      const { error } = await supabase.from("payme").delete().eq("id", Number(id));
+      const { error } = await supabase.from("payme").delete().eq("id", id as any);
       if (error) throw error;
       toast({ title: "Removed", description: "Payment method deleted" });
       await fetchMethods();
@@ -136,7 +136,7 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
       } as const;
 
       if (row.id && !row.id.startsWith("new-")) {
-        const { error } = await supabase.from("payme").update(payload).eq("id", Number(row.id));
+        const { error } = await supabase.from("payme").update(payload).eq("id", row.id as any);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("payme").insert([payload]);
@@ -209,7 +209,7 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
                       // Persist toggle immediately if row exists
                       if (m.id && !m.id.startsWith("new-")) {
                         try {
-                          await supabase.from("payme").update({ enabled: v }).eq("id", Number(m.id));
+                          await supabase.from("payme").update({ enabled: v }).eq("id", m.id as any);
                           fetchMethods();
                         } catch (e) {
                           console.error(e);
