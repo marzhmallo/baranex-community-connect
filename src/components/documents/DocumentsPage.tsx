@@ -403,16 +403,18 @@ const DocumentsPage = () => {
         query = query.or(`docnumber.ilike.%${trackingSearchQuery}%,receiver->>name.ilike.%${trackingSearchQuery}%`);
       }
 
-      // Apply status filter
-      if (trackingFilter !== 'All Documents') {
-        if (trackingFilter === 'In Progress') {
-          query = query.in('status', ['pending', 'processing']);
-        } else if (trackingFilter === 'Completed') {
-          query = query.in('status', ['approved', 'completed', 'released']);
-        } else if (trackingFilter === 'Rejected') {
-          query = query.eq('status', 'rejected');
-        }
+    // Apply status filter
+    if (trackingFilter !== 'All Documents') {
+      if (trackingFilter === 'Processing') {
+        query = query.eq('status', 'processing');
+      } else if (trackingFilter === 'Released') {
+        query = query.eq('status', 'released');
+      } else if (trackingFilter === 'Rejected') {
+        query = query.eq('status', 'rejected');
+      } else if (trackingFilter === 'Ready') {
+        query = query.eq('status', 'ready');
       }
+    }
 
       // Apply pagination
       const from = (trackingCurrentPage - 1) * trackingItemsPerPage;
@@ -1110,9 +1112,17 @@ const DocumentsPage = () => {
               <Input placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10 border-border bg-background text-foreground" />
             </div>
             <div className="flex gap-2">
-              {["All Documents", "In Progress", "Completed", "Rejected"].map(filter => <Button key={filter} variant={trackingFilter === filter ? "default" : "outline"} size="sm" onClick={() => setTrackingFilter(filter)} className={trackingFilter === filter ? "bg-purple-600 hover:bg-purple-700 text-white" : "border-border text-foreground hover:bg-accent"}>
+              {["All Documents", "Processing", "Released", "Rejected", "Ready"].map(filter => (
+                <Button
+                  key={filter}
+                  variant={trackingFilter === filter ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setTrackingFilter(filter)}
+                  className={trackingFilter === filter ? "bg-purple-600 hover:bg-purple-700 text-white" : "border-border text-foreground hover:bg-accent"}
+                >
                   {filter}
-                </Button>)}
+                </Button>
+              ))}
             </div>
           </div>
 
