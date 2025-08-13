@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
 import { Upload, Save, Copy } from "lucide-react";
-
+import isEqual from "lodash.isequal";
 interface DocumentSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +27,7 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
   const [cashEnabled, setCashEnabled] = useState(true);
   const [gcashEnabled, setGcashEnabled] = useState(true);
   const [requireUpfront, setRequireUpfront] = useState(false);
+  const [initialSettings, setInitialSettings] = useState<any>(null);
   const { toast } = useToast();
   const { adminProfileId } = useCurrentAdmin();
 
@@ -85,14 +86,33 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
           if (brgyError) throw brgyError;
 
           if (brgyRow) {
+            let effectiveUpfront = false;
             if (brgyRow.payreq !== null) {
-              setRequireUpfront(Boolean(brgyRow.payreq));
+              effectiveUpfront = Boolean(brgyRow.payreq);
             } else {
               // Legacy fallback to localStorage if DB not yet set
               const keyBase = `docpay:${profile.brgyid}`;
               const upfront = localStorage.getItem(`${keyBase}:requireUpfront`);
-              setRequireUpfront(upfront === 'true');
+              effectiveUpfront = upfront === 'true';
             }
+            setRequireUpfront(effectiveUpfront);
+
+            // Capture initial settings snapshot for change detection
+            const initial = {
+              gcash: {
+                enabled: gc?.enabled ?? true,
+                number: credz.number ?? null,
+                name: credz.name ?? null,
+                url: gc?.url ?? null,
+              },
+              cash: {
+                enabled: cash?.enabled ?? true,
+              },
+              policies: {
+                requireUpfront: effectiveUpfront,
+              },
+            };
+            setInitialSettings(initial);
           }
         }
       } catch (error) {
@@ -132,6 +152,24 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
         variant: "destructive",
       });
       return;
+    }
+
+    // Early no-change check to avoid unnecessary writes
+    if (!qrCodeFile && initialSettings) {
+      const current = {
+        gcash: {
+          enabled: gcashEnabled,
+          number: gcashNumber || null,
+          name: gcashName || null,
+          url: gcashProvider?.url || null,
+        },
+        cash: { enabled: cashEnabled },
+        policies: { requireUpfront },
+      };
+      if (isEqual(initialSettings, current)) {
+        toast({ title: "No changes", description: "These settings are already saved." });
+        return;
+      }
     }
 
     setLoading(true);
@@ -250,6 +288,18 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
       toast({
         title: "Settings Saved",
         description: "Payment providers and policies saved.",
+      });
+
+      // Refresh the initial snapshot with what was just saved
+      setInitialSettings({
+        gcash: {
+          enabled: gcashEnabled,
+          number: gcashNumber || null,
+          name: gcashName || null,
+          url: qrCodeUrl || null,
+        },
+        cash: { enabled: cashEnabled },
+        policies: { requireUpfront },
       });
 
       onOpenChange(false);
