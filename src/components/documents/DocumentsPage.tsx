@@ -71,7 +71,7 @@ const DocumentsPage = () => {
       try {
         const [documentsData, requestsData, trackingData] = await Promise.all([
         // Fetch document types
-        supabase.from('document_types').select('*').order('name'),
+        supabase.from('document_types').select('*'),
         // Fetch document requests
         supabase.from('docrequests').select('*', {
           count: 'exact'
@@ -280,9 +280,18 @@ const DocumentsPage = () => {
       const {
         data,
         error
-      } = await query.order('name');
+      } = await query;
       if (error) throw error;
-      return data || [];
+      const sorted = (data || []).slice().sort((a: any, b: any) => {
+        const ta = (a.type || '').toString().toLowerCase();
+        const tb = (b.type || '').toString().toLowerCase();
+        if (ta < tb) return -1;
+        if (ta > tb) return 1;
+        const na = (a.name || '').toString().toLowerCase();
+        const nb = (b.name || '').toString().toLowerCase();
+        return na.localeCompare(nb);
+      });
+      return sorted;
     },
     staleTime: 0,
     refetchOnWindowFocus: false
