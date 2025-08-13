@@ -26,6 +26,7 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [methods, setMethods] = useState<PayMethodRow[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const fetchMethods = async () => {
     if (!brgyId) return;
@@ -60,17 +61,17 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
   }, [brgyId]);
 
   const addMethod = () => {
-    setMethods((prev) => [
-      ...prev,
-      {
-        id: `new-${Date.now()}`,
-        gname: "",
-        url: null,
-        enabled: true,
-        credz: { account_name: "", account_number: "" },
-        _isNew: true,
-      },
-    ]);
+    const newId = `new-${Date.now()}`;
+    const newRow: PayMethodRow = {
+      id: newId,
+      gname: "",
+      url: null,
+      enabled: true,
+      credz: { account_name: "", account_number: "" },
+      _isNew: true,
+    };
+    setMethods((prev) => [...prev, newRow]);
+    setEditingId(newId);
   };
 
   const updateLocal = (id: string | undefined, patch: Partial<PayMethodRow>) => {
@@ -82,6 +83,7 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
     // New unsaved rows can just be removed locally
     if (id.startsWith("new-")) {
       setMethods((prev) => prev.filter((m) => m.id !== id));
+      if (editingId === id) setEditingId(null);
       return;
     }
     try {
@@ -89,6 +91,7 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
       const { error } = await supabase.from("payme").delete().eq("id", id as any);
       if (error) throw error;
       toast({ title: "Removed", description: "Payment method deleted" });
+      if (editingId === id) setEditingId(null);
       await fetchMethods();
     } catch (e) {
       console.error(e);
@@ -167,39 +170,14 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
 
       <div className="space-y-3">
         {methods.map((m) => (
-          <div key={m.id} className="rounded-lg border border-border p-3">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-              <div className="space-y-1">
-                <Label className="text-foreground">Name</Label>
-                <Input
-                  value={m.gname}
-                  onChange={(e) => updateLocal(m.id, { gname: e.target.value })}
-                  placeholder="e.g., GCash, Maya"
-                  className="border-border bg-background text-foreground"
-                />
+          <div key={m.id} className="rounded-lg border border-border overflow-hidden">
+            <div className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-foreground">{m.gname || "Untitled method"}</span>
+                {m.url && <span className="text-xs text-muted-foreground">QR uploaded</span>}
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-foreground">Account Name</Label>
-                <Input
-                  value={m.credz?.account_name || ""}
-                  onChange={(e) => updateLocal(m.id, { credz: { ...m.credz, account_name: e.target.value } })}
-                  placeholder="Juan Dela Cruz"
-                  className="border-border bg-background text-foreground"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-foreground">Account Number</Label>
-                <Input
-                  value={m.credz?.account_number || ""}
-                  onChange={(e) => updateLocal(m.id, { credz: { ...m.credz, account_number: e.target.value } })}
-                  placeholder="09XXXXXXXXX / 1234XXXX"
-                  className="border-border bg-background text-foreground"
-                />
-              </div>
-
-              <div className="flex items-center justify-between md:justify-end gap-3">
+              <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Enabled</span>
                   <Switch
@@ -218,35 +196,76 @@ export default function PaymentMethodsManager({ brgyId, onChange }: PaymentMetho
                     }}
                   />
                 </div>
+                <Button size="sm" variant="outline" onClick={() => setEditingId(editingId === m.id ? null : m.id)}>
+                  {editingId === m.id ? "Close" : "Edit"}
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => removeMethod(m.id)} disabled={loading}>
                   Delete
                 </Button>
               </div>
-
-              <div className="space-y-1 md:col-span-3">
-                <Label className="text-foreground">QR Code Image</Label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => updateLocal(m.id, { _tempFile: e.target.files?.[0] || null })}
-                  className="border-border bg-background text-foreground"
-                />
-                {m.url && (
-                  <img
-                    src={m.url}
-                    alt={`${m.gname} QR`}
-                    className="mt-2 w-32 h-32 object-contain border rounded"
-                    loading="lazy"
-                  />
-                )}
-              </div>
-
-              <div className="md:col-span-1 flex md:items-end">
-                <Button size="sm" onClick={() => saveMethod(m)} disabled={loading} className="w-full md:w-auto">
-                  Save
-                </Button>
-              </div>
             </div>
+
+            {editingId === m.id && (
+              <div className="border-t border-border p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-foreground">Name</Label>
+                    <Input
+                      value={m.gname}
+                      onChange={(e) => updateLocal(m.id, { gname: e.target.value })}
+                      placeholder="e.g., GCash, Maya"
+                      className="border-border bg-background text-foreground"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-foreground">Account Name</Label>
+                    <Input
+                      value={m.credz?.account_name || ""}
+                      onChange={(e) => updateLocal(m.id, { credz: { ...m.credz, account_name: e.target.value } })}
+                      placeholder="Juan Dela Cruz"
+                      className="border-border bg-background text-foreground"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-foreground">Account Number</Label>
+                    <Input
+                      value={m.credz?.account_number || ""}
+                      onChange={(e) => updateLocal(m.id, { credz: { ...m.credz, account_number: e.target.value } })}
+                      placeholder="09XXXXXXXXX / 1234XXXX"
+                      className="border-border bg-background text-foreground"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                  <div className="md:col-span-2 space-y-1">
+                    <Label className="text-foreground">QR Code Image</Label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => updateLocal(m.id, { _tempFile: e.target.files?.[0] || null })}
+                      className="border-border bg-background text-foreground"
+                    />
+                    {m.url && (
+                      <img
+                        src={m.url}
+                        alt={`${m.gname} QR`}
+                        className="mt-2 w-32 h-32 object-contain border rounded"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex md:items-end">
+                    <Button size="sm" onClick={() => saveMethod(m)} disabled={loading} className="w-full md:w-auto">
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
 
