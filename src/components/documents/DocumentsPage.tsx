@@ -406,13 +406,13 @@ const DocumentsPage = () => {
     // Apply status filter
     if (trackingFilter !== 'All Documents') {
       if (trackingFilter === 'Processing') {
-        query = query.eq('status', 'processing');
+        query = query.in('status', ['processing', 'Processing', 'pending', 'Pending']);
       } else if (trackingFilter === 'Released') {
-        query = query.eq('status', 'released');
+        query = query.in('status', ['released', 'Released', 'completed', 'Completed']);
       } else if (trackingFilter === 'Rejected') {
-        query = query.eq('status', 'rejected');
+        query = query.in('status', ['rejected', 'Rejected']);
       } else if (trackingFilter === 'Ready') {
-        query = query.eq('status', 'ready');
+        query = query.in('status', ['ready', 'Ready', 'approved', 'Approved']);
       }
     }
 
