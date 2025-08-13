@@ -374,13 +374,13 @@ const DocumentsPage = () => {
     fetchDocumentTracking();
 
     // Realtime updates from DB changes
-    const channel = supabase
-      .channel('document-tracking-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'docrequests' }, () => {
-        fetchDocumentTracking();
-      })
-      .subscribe();
-
+    const channel = supabase.channel('document-tracking-realtime').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'docrequests'
+    }, () => {
+      fetchDocumentTracking();
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
@@ -403,18 +403,18 @@ const DocumentsPage = () => {
         query = query.or(`docnumber.ilike.%${trackingSearchQuery}%,receiver->>name.ilike.%${trackingSearchQuery}%`);
       }
 
-    // Apply status filter
-    if (trackingFilter !== 'All Documents') {
-      if (trackingFilter === 'Processing') {
-        query = query.in('status', ['processing', 'Processing', 'pending', 'Pending']);
-      } else if (trackingFilter === 'Released') {
-        query = query.in('status', ['released', 'Released', 'completed', 'Completed']);
-      } else if (trackingFilter === 'Rejected') {
-        query = query.in('status', ['rejected', 'Rejected']);
-      } else if (trackingFilter === 'Ready') {
-        query = query.in('status', ['ready', 'Ready', 'approved', 'Approved']);
+      // Apply status filter
+      if (trackingFilter !== 'All Documents') {
+        if (trackingFilter === 'Processing') {
+          query = query.in('status', ['processing', 'Processing', 'pending', 'Pending']);
+        } else if (trackingFilter === 'Released') {
+          query = query.in('status', ['released', 'Released', 'completed', 'Completed']);
+        } else if (trackingFilter === 'Rejected') {
+          query = query.in('status', ['rejected', 'Rejected']);
+        } else if (trackingFilter === 'Ready') {
+          query = query.in('status', ['ready', 'Ready', 'approved', 'Approved']);
+        }
       }
-    }
 
       // Apply pagination
       const from = (trackingCurrentPage - 1) * trackingItemsPerPage;
@@ -1112,17 +1112,9 @@ const DocumentsPage = () => {
               <Input placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10 border-border bg-background text-foreground" />
             </div>
             <div className="flex gap-2">
-              {["All Documents", "Processing", "Released", "Rejected", "Ready"].map(filter => (
-                <Button
-                  key={filter}
-                  variant={trackingFilter === filter ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTrackingFilter(filter)}
-                  className={trackingFilter === filter ? "bg-purple-600 hover:bg-purple-700 text-white" : "border-border text-foreground hover:bg-accent"}
-                >
+              {["All Documents", "Processing", "Released", "Rejected", "Ready"].map(filter => <Button key={filter} variant={trackingFilter === filter ? "default" : "outline"} size="sm" onClick={() => setTrackingFilter(filter)} className={trackingFilter === filter ? "bg-purple-600 hover:bg-purple-700 text-white" : "border-border text-foreground hover:bg-accent"}>
                   {filter}
-                </Button>
-              ))}
+                </Button>)}
             </div>
           </div>
 
@@ -1223,22 +1215,7 @@ const DocumentsPage = () => {
 
                 <TabsContent value={activeTab} className="mt-0">
                   <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
-                          <Filter className="h-4 w-4 mr-2" />
-                          Advanced Filters
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
-                          Bulk Actions
-                        </Button>
-                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
-                          Apply
-                        </Button>
-                      </div>
-                    </div>
+                    
 
                     <div className="space-y-3">
                       {isLoadingDocuments ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedDocumentTypes && paginatedDocumentTypes.length > 0 ? paginatedDocumentTypes.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
