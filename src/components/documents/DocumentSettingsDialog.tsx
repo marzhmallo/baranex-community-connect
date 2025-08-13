@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
 import { Upload, Save, Copy } from "lucide-react";
-import isEqual from "lodash.isequal";
+
 interface DocumentSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -21,17 +21,14 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
   const [qrCodeFile, setQrCodeFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [adminProfile, setAdminProfile] = useState<any>(null);
-  const [gcashProvider, setGcashProvider] = useState<any>(null);
-  const [cashProvider, setCashProvider] = useState<any>(null);
+  const [existingGcashData, setExistingGcashData] = useState<any>(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [cashEnabled, setCashEnabled] = useState(true);
-  const [gcashEnabled, setGcashEnabled] = useState(true);
   const [requireUpfront, setRequireUpfront] = useState(false);
-  const [initialSettings, setInitialSettings] = useState<any>(null);
   const { toast } = useToast();
   const { adminProfileId } = useCurrentAdmin();
 
-  // Fetch admin profile and payment providers from payme table
+  // Fetch admin profile and existing GCash data
   useEffect(() => {
     const fetchData = async () => {
       if (!adminProfileId) return;
@@ -42,77 +39,37 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
           .from('profiles')
           .select('brgyid')
           .eq('id', adminProfileId)
-          .maybeSingle();
+          .single();
 
         if (profileError) throw profileError;
         setAdminProfile(profile);
 
-        // Fetch providers from payme table
+        // Fetch existing GCash data from barangays table
         if (profile?.brgyid) {
-          const { data: providers, error: paymeError } = await supabase
-            .from('payme')
-            .select('gname, url, enabled, credz, brgyid')
-            .eq('brgyid', profile.brgyid);
-
-          if (paymeError) throw paymeError;
-
-          const gc = providers?.find((p: any) => p.gname?.toLowerCase() === 'gcash') || null;
-          const cash = providers?.find((p: any) => p.gname?.toLowerCase() === 'cash') || null;
-
-          setGcashProvider(gc);
-          setCashProvider(cash);
-
-          // Pre-populate form if GCASH exists
-          const credz = (gc?.credz as any) || {};
-          if (credz.number) setGcashNumber(String(credz.number));
-          if (credz.name) setGcashName(String(credz.name));
-
-          setGcashEnabled(gc?.enabled ?? true);
-          setCashEnabled(cash?.enabled ?? true);
-
-          // Setup complete if gcash enabled and has name, number, and QR url
-          const hasNumber = Boolean(credz.number);
-          const hasName = Boolean(credz.name);
-          const hasQR = Boolean(gc?.url);
-          setIsSetupComplete(Boolean(gc ? (hasNumber && hasName && hasQR) : false));
-
-          // Fetch barangay-level payment policy and instructions
-          const { data: brgyRow, error: brgyError } = await supabase
+          const { data: barangayData, error: barangayError } = await supabase
             .from('barangays')
-            .select('payreq, instructions')
+            .select('"gcash#", gcashname, gcashurl')
             .eq('id', profile.brgyid)
-            .maybeSingle();
+            .single();
 
-          if (brgyError) throw brgyError;
+          if (barangayError) throw barangayError;
 
-          if (brgyRow) {
-            let effectiveUpfront = false;
-            if (brgyRow.payreq !== null) {
-              effectiveUpfront = Boolean(brgyRow.payreq);
-            } else {
-              // Legacy fallback to localStorage if DB not yet set
-              const keyBase = `docpay:${profile.brgyid}`;
-              const upfront = localStorage.getItem(`${keyBase}:requireUpfront`);
-              effectiveUpfront = upfront === 'true';
+          if (barangayData) {
+            setExistingGcashData(barangayData);
+
+            // Pre-populate form if data exists
+            if (barangayData['gcash#']) {
+              setGcashNumber(barangayData['gcash#'].toString());
             }
-            setRequireUpfront(effectiveUpfront);
+            if (barangayData.gcashname && Array.isArray(barangayData.gcashname) && barangayData.gcashname.length > 0) {
+              setGcashName(barangayData.gcashname[0]);
+            }
 
-            // Capture initial settings snapshot for change detection
-            const initial = {
-              gcash: {
-                enabled: gc?.enabled ?? true,
-                number: credz.number ?? null,
-                name: credz.name ?? null,
-                url: gc?.url ?? null,
-              },
-              cash: {
-                enabled: cash?.enabled ?? true,
-              },
-              policies: {
-                requireUpfront: effectiveUpfront,
-              },
-            };
-            setInitialSettings(initial);
+            // Check if setup is complete
+            const hasNumber = !!barangayData['gcash#'];
+            const hasName = !!(barangayData.gcashname && Array.isArray(barangayData.gcashname) && barangayData.gcashname.length > 0);
+            const hasQR = !!barangayData.gcashurl;
+            setIsSetupComplete(hasNumber && hasName && hasQR);
           }
         }
       } catch (error) {
@@ -125,8 +82,16 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
     }
   }, [adminProfileId, open]);
 
-  // Policies now persisted in DB (barangays.payreq). Legacy localStorage fallback handled in fetchData.
-  // No separate effect needed here to avoid overriding DB values.
+  // Load local (per-barangay) policies from localStorage when dialog opens
+  useEffect(() => {
+    if (open && adminProfile?.brgyid) {
+      const keyBase = `docpay:${adminProfile.brgyid}`;
+      const cash = localStorage.getItem(`${keyBase}:cashEnabled`);
+      const upfront = localStorage.getItem(`${keyBase}:requireUpfront`);
+      setCashEnabled(cash === null ? true : cash === 'true');
+      setRequireUpfront(upfront === 'true');
+    }
+  }, [open, adminProfile?.brgyid]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -154,155 +119,74 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
       return;
     }
 
-    // Early no-change check to avoid unnecessary writes
-    if (!qrCodeFile && initialSettings) {
-      const current = {
-        gcash: {
-          enabled: gcashEnabled,
-          number: gcashNumber || null,
-          name: gcashName || null,
-          url: gcashProvider?.url || null,
-        },
-        cash: { enabled: cashEnabled },
-        policies: { requireUpfront },
-      };
-      if (isEqual(initialSettings, current)) {
-        toast({ title: "No changes", description: "These settings are already saved." });
-        return;
-      }
-    }
-
     setLoading(true);
     try {
-      // Persist local policy only (no DB for policies)
+      // Persist local policies (no DB changes)
       const keyBase = `docpay:${adminProfile.brgyid}`;
+      localStorage.setItem(`${keyBase}:cashEnabled`, String(cashEnabled));
       localStorage.setItem(`${keyBase}:requireUpfront`, String(requireUpfront));
 
-      // Prepare GCash QR upload if provided
-      const willUpdateGcash = Boolean(gcashEnabled || gcashNumber || gcashName || qrCodeFile);
-      let qrCodeUrl = gcashProvider?.url || null;
-
-      if (qrCodeFile) {
-        const fileExt = qrCodeFile.name.split('.').pop();
-        const fileName = `${adminProfile.brgyid}/gcash-qr.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('cashqr')
-          .upload(fileName, qrCodeFile, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('cashqr')
-          .getPublicUrl(fileName);
-
-        qrCodeUrl = publicUrl;
-      }
-
-      // Build mutations using update-or-insert to avoid unique constraint errors
-      const mutations: any[] = [];
-
+      // Only update GCash info in DB if provided
+      const willUpdateGcash = Boolean((gcashNumber && gcashName) || qrCodeFile);
       if (willUpdateGcash) {
-        const gcashData = {
-          brgyid: adminProfile.brgyid,
-          gname: 'GCash',
-          enabled: gcashEnabled,
-          url: qrCodeUrl,
-          credz: { name: gcashName || null, number: gcashNumber || null },
+        let qrCodeUrl = existingGcashData?.gcashurl || null;
+
+        // Upload QR code image if provided
+        if (qrCodeFile) {
+          const fileExt = qrCodeFile.name.split('.').pop();
+          const fileName = `${adminProfile.brgyid}/gcash-qr.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('cashqr')
+            .upload(fileName, qrCodeFile, {
+              upsert: true,
+            });
+
+          if (uploadError) {
+            throw uploadError;
+          }
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('cashqr')
+            .getPublicUrl(fileName);
+
+          qrCodeUrl = publicUrl;
+        }
+
+        // Update barangay information
+        const updateData: any = {
+          'gcash#': gcashNumber ? parseInt(gcashNumber) : undefined,
+          gcashname: gcashName ? [gcashName] : undefined,
+          updated_at: new Date().toISOString()
         };
 
-        mutations.push(
-          supabase
-            .from('payme')
-            .select('id')
-            .eq('brgyid', adminProfile.brgyid)
-            .eq('gname', 'GCash')
-            .maybeSingle()
-            .then(async ({ data, error }) => {
-              if (error) return { error };
-              if (data?.id) {
-                return await supabase
-                  .from('payme')
-                  .update(gcashData)
-                  .eq('id', data.id)
-                  .select();
-              } else {
-                return await supabase
-                  .from('payme')
-                  .insert([gcashData])
-                  .select();
-              }
-            })
-        );
-      }
+        // Only update QR URL if we have one
+        if (qrCodeUrl) {
+          updateData.gcashurl = qrCodeUrl;
+        }
 
-      // Always reflect Cash toggle
-      const cashData = {
-        brgyid: adminProfile.brgyid,
-        gname: 'Cash',
-        enabled: cashEnabled,
-        url: null,
-        credz: {},
-      };
+        // Remove undefined keys
+        Object.keys(updateData).forEach((k) => updateData[k] === undefined && delete updateData[k]);
 
-      mutations.push(
-        supabase
-          .from('payme')
-          .select('id')
-          .eq('brgyid', adminProfile.brgyid)
-          .eq('gname', 'Cash')
-          .maybeSingle()
-          .then(async ({ data, error }) => {
-            if (error) return { error };
-            if (data?.id) {
-              return await supabase
-                .from('payme')
-                .update(cashData)
-                .eq('id', data.id)
-                .select();
-            } else {
-              return await supabase
-                .from('payme')
-                .insert([cashData])
-                .select();
-            }
-          })
-      );
-      // Persist barangay-level policy and generated instructions
-      mutations.push(
-        supabase
+        const { error } = await supabase
           .from('barangays')
-          .update({
-            payreq: requireUpfront,
-            instructions: `Payment Instructions:\n- ${instructions()}`,
-          })
-          .eq('id', adminProfile.brgyid)
-          .select()
-          .then((r) => r)
-      );
+          .update(updateData)
+          .eq('id', adminProfile.brgyid);
 
-      const results = await Promise.all(mutations);
-      const dbError = (results as any[]).find((r: any) => r?.error)?.error;
-      if (dbError) throw dbError;
+        if (error) throw error;
+      }
 
       toast({
         title: "Settings Saved",
-        description: "Payment providers and policies saved.",
-      });
-
-      // Refresh the initial snapshot with what was just saved
-      setInitialSettings({
-        gcash: {
-          enabled: gcashEnabled,
-          number: gcashNumber || null,
-          name: gcashName || null,
-          url: qrCodeUrl || null,
-        },
-        cash: { enabled: cashEnabled },
-        policies: { requireUpfront },
+        description: willUpdateGcash
+          ? "Payment providers and GCash details have been saved."
+          : "Payment policies have been saved.",
       });
 
       onOpenChange(false);
+
+      // Reset file input only (keep text for convenience next time)
       setQrCodeFile(null);
     } catch (error) {
       console.error('Error updating settings:', error);
@@ -321,23 +205,18 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
     if (requireUpfront) {
       steps.push("This barangay requires upfront payment for online requests.");
     } else {
-      if (cashEnabled) steps.push("You may pay via GCash now or pay in cash upon pickup.");
-      else steps.push("You may pay via GCash to proceed with your request.");
+      steps.push("You may pay via GCash now or pay in cash upon pickup.");
     }
-    if (gcashEnabled) {
-      const name = gcashName || (gcashProvider?.credz?.name ?? "");
-      const number = gcashNumber || (gcashProvider?.credz?.number ?? "");
-      if (name || number) {
-        steps.push(`GCash: Send the exact amount to ${name}${number ? ` (${number})` : ''}.`);
-      }
-      if (gcashProvider?.url) {
-        steps.push("Scan the GCash QR code provided to pay quickly.");
-      }
+    if (gcashNumber || existingGcashData?.["gcash#"]) {
+      const number = gcashNumber || existingGcashData?.["gcash#"]; 
+      const name = gcashName || existingGcashData?.gcashname?.[0] || "";
+      steps.push(`GCash: Send the exact amount to ${name}${number ? ` (${number})` : ''}.`);
+    }
+    if (existingGcashData?.gcashurl) {
+      steps.push("Scan the GCash QR code provided to pay quickly.");
     }
     steps.push("If paying via GCash, upload your payment screenshot and reference number in the request form.");
-    if (cashEnabled) {
-      steps.push("If paying in cash, choose Walk‑in Payment and settle at the office upon pickup.");
-    }
+    steps.push("If paying in cash, choose Walk‑in Payment and settle at the office upon pickup.");
     return steps.join("\n- ");
   };
 
@@ -350,7 +229,7 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
     }
   };
 
-  const hasExistingQR = Boolean(gcashProvider?.url);
+  const hasExistingQR = Boolean(existingGcashData?.gcashurl);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -361,7 +240,7 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
 
         {/* Status */}
         <div className="space-y-4 py-2">
-          {gcashProvider && (
+          {existingGcashData && (
             <div
               className={`p-3 rounded-lg border ${
                 isSetupComplete
@@ -400,15 +279,6 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
           </TabsList>
 
           <TabsContent value="providers" className="space-y-5 pt-4">
-            {/* GCash Toggle */}
-            <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">Enable GCash</p>
-                <p className="text-xs text-muted-foreground">Toggle availability of GCash as a payment method.</p>
-              </div>
-              <Switch checked={gcashEnabled} onCheckedChange={setGcashEnabled} />
-            </div>
-
             {/* GCash Config */}
             <div className="space-y-2">
               <Label htmlFor="gcash-number" className="text-foreground">GCash Number</Label>
@@ -419,7 +289,6 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
                 value={gcashNumber}
                 onChange={(e) => setGcashNumber(e.target.value)}
                 className="border-border bg-background text-foreground"
-                disabled={!gcashEnabled}
               />
             </div>
 
@@ -432,7 +301,6 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
                 value={gcashName}
                 onChange={(e) => setGcashName(e.target.value)}
                 className="border-border bg-background text-foreground"
-                disabled={!gcashEnabled}
               />
             </div>
 
@@ -445,20 +313,18 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
                   accept="image/*"
                   onChange={handleFileChange}
                   className="border-border bg-background text-foreground"
-                  disabled={!gcashEnabled}
                 />
                 <Upload className="h-4 w-4 text-muted-foreground" />
               </div>
               {qrCodeFile && (
                 <p className="text-sm text-muted-foreground">Selected: {qrCodeFile.name}</p>
               )}
-              {gcashProvider?.url && !qrCodeFile && (
+              {existingGcashData?.gcashurl && !qrCodeFile && (
                 <div className="mt-2">
                   <img
-                    src={gcashProvider.url}
-                    alt="GCash QR code"
+                    src={existingGcashData.gcashurl}
+                    alt="GCash QR"
                     className="w-32 h-32 object-contain border rounded"
-                    loading="lazy"
                   />
                 </div>
               )}
