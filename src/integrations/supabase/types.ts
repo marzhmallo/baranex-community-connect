@@ -116,10 +116,12 @@ export type Database = {
           halllat: number | null
           halllong: number | null
           id: string
+          instructions: string | null
           is_custom: boolean
           logo_url: string | null
           municipality: string
           officehours: string | null
+          payreq: boolean | null
           phone: string | null
           plazid: string | null
           province: string
@@ -139,10 +141,12 @@ export type Database = {
           halllat?: number | null
           halllong?: number | null
           id?: string
+          instructions?: string | null
           is_custom?: boolean
           logo_url?: string | null
           municipality: string
           officehours?: string | null
+          payreq?: boolean | null
           phone?: string | null
           plazid?: string | null
           province: string
@@ -162,10 +166,12 @@ export type Database = {
           halllat?: number | null
           halllong?: number | null
           id?: string
+          instructions?: string | null
           is_custom?: boolean
           logo_url?: string | null
           municipality?: string
           officehours?: string | null
+          payreq?: boolean | null
           phone?: string | null
           plazid?: string | null
           province?: string
@@ -1525,6 +1531,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payme: {
+        Row: {
+          brgyid: string
+          created_at: string
+          credz: Json
+          enabled: boolean
+          gname: string
+          id: number
+          url: string | null
+        }
+        Insert: {
+          brgyid?: string
+          created_at?: string
+          credz: Json
+          enabled?: boolean
+          gname: string
+          id?: number
+          url?: string | null
+        }
+        Update: {
+          brgyid?: string
+          created_at?: string
+          credz?: Json
+          enabled?: boolean
+          gname?: string
+          id?: number
+          url?: string | null
+        }
+        Relationships: []
       }
       plaza: {
         Row: {
