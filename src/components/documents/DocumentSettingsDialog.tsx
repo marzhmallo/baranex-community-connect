@@ -161,7 +161,6 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
                 enabled: gcashEnabled,
                 url: qrCodeUrl,
                 credz: { name: gcashName || null, number: gcashNumber || null },
-                updated_at: new Date().toISOString(),
               }],
               { onConflict: 'brgyid,gname' }
             )
@@ -181,7 +180,6 @@ const DocumentSettingsDialog = ({ open, onOpenChange }: DocumentSettingsDialogPr
               enabled: cashEnabled,
               url: null,
               credz: {},
-              updated_at: new Date().toISOString(),
             }],
             { onConflict: 'brgyid,gname' }
           )
