@@ -278,9 +278,14 @@ const DocumentsPage = () => {
         query = query.ilike('name', `%${searchQuery}%`);
       }
       // Order by type then name (DB-level), then enforce case-insensitive sort client-side
-      const { data, error } = await query
-        .order('type', { ascending: true })
-        .order('name', { ascending: true });
+      const {
+        data,
+        error
+      } = await query.order('type', {
+        ascending: true
+      }).order('name', {
+        ascending: true
+      });
       if (error) throw error;
       const sorted = (data || []).slice().sort((a: any, b: any) => {
         const at = String(a.type || '').toLowerCase();
@@ -834,8 +839,7 @@ const DocumentsPage = () => {
 
   // Calculate filtering, sorting and pagination for document types
   const normalize = (s: any) => String(s || '').trim().toLowerCase();
-  const knownTypes = ['certificate','certificates','permit','permits','clearance','clearances','ids','identification','other'];
-
+  const knownTypes = ['certificate', 'certificates', 'permit', 'permits', 'clearance', 'clearances', 'ids', 'identification', 'other'];
   const filteredDocumentTypes = (documentTypes || []).filter((dt: any) => {
     const t = normalize(dt.type);
     if (activeTab === 'all') return true;
@@ -846,17 +850,17 @@ const DocumentsPage = () => {
     if (activeTab === 'other') return t === 'other' || !knownTypes.includes(t);
     return true;
   });
-
   const sortedDocumentTypes = filteredDocumentTypes.slice().sort((a: any, b: any) => {
     const at = normalize(a.type);
     const bt = normalize(b.type);
-    if (at < bt) return -1; if (at > bt) return 1;
+    if (at < bt) return -1;
+    if (at > bt) return 1;
     const an = normalize(a.name);
     const bn = normalize(b.name);
-    if (an < bn) return -1; if (an > bn) return 1;
+    if (an < bn) return -1;
+    if (an > bn) return 1;
     return 0;
   });
-
   const totalPages = Math.ceil((sortedDocumentTypes.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDocumentTypes = sortedDocumentTypes.slice(startIndex, startIndex + itemsPerPage);
@@ -1359,9 +1363,7 @@ const DocumentsPage = () => {
                   </div>)}
               </div>
               <div className="p-4 border-t border-border">
-                <Button variant="outline" className="w-full text-sm border-border text-foreground hover:bg-accent">
-                  View All Updates →
-                </Button>
+                
               </div>
             </CardContent>
           </Card>
