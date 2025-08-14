@@ -1296,8 +1296,9 @@ const DocumentsPage = () => {
 
                     <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
                       <div className="flex items-center gap-2">
-                        <input type="checkbox" className="border-border" />
-                        <span className="text-sm text-muted-foreground">Select All</span>
+                        <span className="text-sm text-muted-foreground">
+                          Showing {Math.min(paginatedDocumentTypes.length, itemsPerPage)} of {sortedDocumentTypes.length} documents
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Pagination>
