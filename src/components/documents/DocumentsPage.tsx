@@ -1197,7 +1197,7 @@ const DocumentsPage = () => {
 
           <div className="flex items-center justify-between mt-6">
             <div className="text-sm text-muted-foreground">
-              Showing {Math.min(trackingItemsPerPage, trackingTotalCount)} of {trackingTotalCount} documents
+              Showing {Math.min(trackingItemsPerPage, trackingTotalCount)} of {trackingTotalCount} documents requests.
             </div>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" onClick={() => setTrackingCurrentPage(prev => Math.max(prev - 1, 1))} disabled={trackingCurrentPage === 1}>
