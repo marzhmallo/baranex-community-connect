@@ -39,7 +39,7 @@ const PublicSidebar = () => {
           </Button>
         </div>
 
-        <nav className="flex-1 space-y-1 p-2">
+        <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
           <Link to="/hub" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
             <Home className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Home</span>}

@@ -69,7 +69,7 @@ export const EcheSidebar = ({
   return (
     <>
       {isLoggingOut && <GlobalLoadingScreen message="Logging out..." />}
-      <div className="w-64 bg-slate-800 text-white fixed h-full">
+      <div className="w-64 bg-slate-800 text-white fixed h-full flex flex-col">
         <div className="p-6 border-b border-slate-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -85,7 +85,7 @@ export const EcheSidebar = ({
           </div>
         </div>
         
-        <nav className="mt-6 px-4">
+        <nav className="flex-1 px-4 py-6 overflow-y-auto">
           <ul className="space-y-2">
             {sidebarNavItems.map((item, index) => (
               <li key={index}>
@@ -109,7 +109,7 @@ export const EcheSidebar = ({
           </ul>
         </nav>
         
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700">
+        <div className="p-4 border-t border-slate-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center">

@@ -43,7 +43,7 @@ const Sidebar = () => {
           </Button>
         </div>
 
-        <nav className="flex-1 space-y-1 p-2">
+        <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
           <Link to="/dashboard" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/dashboard") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
             <LayoutDashboard className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Dashboard</span>}
