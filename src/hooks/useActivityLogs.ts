@@ -199,7 +199,7 @@ export function useActivityLogs(params: UseActivityLogsParams): UseActivityLogsR
 
       setLoading(true);
 
-      // Fetch all logs for this barangay (we'll filter client-side)
+      // Fetch all logs for this barangay
       const { data: logs, error } = await supabase
         .from('activity_logs')
         .select('*')
@@ -208,11 +208,11 @@ export function useActivityLogs(params: UseActivityLogsParams): UseActivityLogsR
 
       if (error) throw error;
 
-      setActivities(logs || []);
-
-      // Fetch user profiles for all unique user_ids
+      // Get unique user IDs from logs
       const userIds = [...new Set(logs?.map(log => log.user_id) || [])];
+      
       if (userIds.length > 0) {
+        // Fetch only profiles with allowed roles (excluding glyph and overseer)
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, firstname, lastname, username, email, role')
@@ -224,10 +224,17 @@ export function useActivityLogs(params: UseActivityLogsParams): UseActivityLogsR
           [profile.id]: profile
         }), {}) || {};
 
+        // Filter logs to only include those from users with allowed roles
+        const filteredLogs = logs?.filter(log => profileMap[log.user_id]) || [];
+
+        setActivities(filteredLogs);
         setUserProfiles(profileMap);
 
-        // Cache the data
-        setCachedData(logs || [], profileMap);
+        // Cache the filtered data
+        setCachedData(filteredLogs, profileMap);
+      } else {
+        setActivities([]);
+        setUserProfiles({});
       }
     } catch (error) {
       console.error('Error fetching activity logs:', error);
