@@ -78,7 +78,7 @@ const UserAccountManagement = () => {
       const {
         data,
         error
-      } = await supabase.from('profiles').select('*').eq('brgyid', userProfile.brgyid).in('role', ['user', 'admin']).order('created_at', {
+      } = await supabase.from('profiles').select('*').eq('brgyid', userProfile.brgyid).in('role', ['user', 'admin', 'staff']).order('created_at', {
         ascending: false
       });
       if (error) {
