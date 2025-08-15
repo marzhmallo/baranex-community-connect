@@ -216,7 +216,8 @@ export function useActivityLogs(params: UseActivityLogsParams): UseActivityLogsR
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, firstname, lastname, username, email, role')
-          .in('id', userIds);
+          .in('id', userIds)
+          .in('role', ['user', 'admin', 'staff']);
 
         const profileMap = profiles?.reduce((acc, profile) => ({
           ...acc,
