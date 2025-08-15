@@ -7,6 +7,7 @@ import AnnouncementsList from '@/components/announcements/AnnouncementsList';
 import CreateAnnouncementForm from '@/components/announcements/CreateAnnouncementForm';
 import { Search, Users, FolderOpen, ArrowUpDown, Plus, Megaphone, CheckCircle, Calendar, AlertTriangle, Clock, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
 
 export interface Announcement {
   id: string;
@@ -109,6 +110,19 @@ const AnnouncementsPage = () => {
   const activeAnnouncements = announcements?.filter(a => a.is_public)?.length || 0;
   const emergencyAnnouncements = announcements?.filter(a => a.category.toLowerCase() === 'emergency')?.length || 0;
   const pinnedAnnouncements = announcements?.filter(a => a.is_pinned)?.length || 0;
+
+  // Show loading screen while data is being fetched
+  if (isLoading) {
+    return (
+      <div className="relative w-full min-h-screen">
+        <LocalizedLoadingScreen 
+          isLoading={true} 
+          icon={Megaphone} 
+          loadingText="Loading announcements" 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
