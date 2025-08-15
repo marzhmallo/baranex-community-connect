@@ -202,26 +202,16 @@ export function useActivityLogs(params: UseActivityLogsParams): UseActivityLogsR
       // Fetch all logs for this barangay (we'll filter client-side)
       const { data: logs, error } = await supabase
         .from('activity_logs')
-        .select(`
-          *,
-          profiles!inner(role)
-        `)
+        .select('*')
         .eq('brgyid', userBrgyId)
-        .in('profiles.role', ['user', 'admin', 'staff'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Extract just the activity log data (without the joined profile data)
-      const cleanedLogs = logs?.map(log => {
-        const { profiles, ...activityLog } = log as any;
-        return activityLog;
-      }) || [];
-
-      setActivities(cleanedLogs);
+      setActivities(logs || []);
 
       // Fetch user profiles for all unique user_ids
-      const userIds = [...new Set(cleanedLogs?.map(log => log.user_id) || [])];
+      const userIds = [...new Set(logs?.map(log => log.user_id) || [])];
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
@@ -237,7 +227,7 @@ export function useActivityLogs(params: UseActivityLogsParams): UseActivityLogsR
         setUserProfiles(profileMap);
 
         // Cache the data
-        setCachedData(cleanedLogs || [], profileMap);
+        setCachedData(logs || [], profileMap);
       }
     } catch (error) {
       console.error('Error fetching activity logs:', error);
