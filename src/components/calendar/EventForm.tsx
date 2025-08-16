@@ -39,13 +39,19 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
   const [startDate, setStartDate] = useState<Date>(
     event?.start_time ? new Date(event.start_time) : defaultStartTime
   );
-  const [endDate, setEndDate] = useState<Date>(
+  const [eventEndDate, setEventEndDate] = useState<Date>(
     event?.end_time ? new Date(event.end_time) : defaultEndTime
   );
   const [eventType, setEventType] = useState(event?.event_type || "meeting");
   const [targetAudience, setTargetAudience] = useState(event?.target_audience || "All");
   const [visibility, setVisibility] = useState(event?.visibility || "public");
   const [isAllDay, setIsAllDay] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(event?.is_recurring || event?.reccuring || false);
+  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
+  const [interval, setInterval] = useState(1);
+  const [endType, setEndType] = useState<'never' | 'after' | 'on'>('never');
+  const [occurrences, setOccurrences] = useState(10);
+  const [endDate, setRecurrenceEndDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
@@ -76,7 +82,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
       
       const newEndDate = new Date(startDate);
       newEndDate.setHours(23, 59, 0);
-      setEndDate(newEndDate);
+      setEventEndDate(newEndDate);
     }
   }, [isAllDay, startDate]);
 
@@ -108,7 +114,33 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         endTime = endOfDay.toISOString();
       } else {
         startTime = startDate.toISOString();
-        endTime = endDate.toISOString();
+        endTime = eventEndDate.toISOString();
+      }
+
+      // Generate RRULE for recurring events
+      let rrule = null;
+      if (isRecurring) {
+        const freqMap = {
+          daily: 'DAILY',
+          weekly: 'WEEKLY', 
+          monthly: 'MONTHLY',
+          yearly: 'YEARLY'
+        };
+        
+        let rruleString = `FREQ=${freqMap[frequency]}`;
+        
+        if (interval > 1) {
+          rruleString += `;INTERVAL=${interval}`;
+        }
+        
+        if (endType === 'after') {
+          rruleString += `;COUNT=${occurrences}`;
+        } else if (endType === 'on') {
+          const formattedEndDate = endDate.toISOString().split('T')[0].replace(/-/g, '');
+          rruleString += `;UNTIL=${formattedEndDate}T235959Z`;
+        }
+        
+        rrule = rruleString;
       }
 
       const eventData = {
@@ -121,7 +153,9 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         target_audience: targetAudience,
         visibility: visibility,
         created_by: createdBy,
-        brgyid: brgyid
+        brgyid: brgyid,
+        is_recurring: isRecurring,
+        rrule: rrule
       };
       
       let response;
@@ -265,14 +299,14 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         variant="outline"
                         className="w-full justify-start text-left font-normal bg-[#171f2e] border-gray-700"
                       >
-                        {format(endDate, "PPP")}
+                        {format(eventEndDate, "PPP")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-[#171f2e] border-gray-700">
                       <Calendar
                         mode="single"
-                        selected={endDate}
-                        onSelect={(date) => date && setEndDate(new Date(date))}
+                         selected={eventEndDate}
+                         onSelect={(date) => date && setEventEndDate(new Date(date))}
                         initialFocus
                         className="p-3 pointer-events-auto"
                       />
@@ -282,13 +316,13 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                   {!isAllDay && (
                     <Input
                       type="time"
-                      value={format(endDate, "HH:mm")}
-                      onChange={(e) => {
-                        const [hours, minutes] = e.target.value.split(":");
-                        const newDate = new Date(endDate);
-                        newDate.setHours(parseInt(hours), parseInt(minutes));
-                        setEndDate(newDate);
-                      }}
+                       value={format(eventEndDate, "HH:mm")}
+                       onChange={(e) => {
+                         const [hours, minutes] = e.target.value.split(":");
+                         const newDate = new Date(eventEndDate);
+                         newDate.setHours(parseInt(hours), parseInt(minutes));
+                         setEventEndDate(newDate);
+                       }}
                       className="w-24 bg-[#171f2e] border-gray-700"
                     />
                   )}
@@ -345,6 +379,105 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="recurring"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+              />
+              <Label htmlFor="recurring">Recurring event</Label>
+            </div>
+
+            {isRecurring && (
+              <div className="space-y-4 p-4 border border-gray-700 rounded-lg bg-[#171f2e]">
+                <h4 className="font-medium text-sm">Recurrence Settings</h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="frequency">Repeat</Label>
+                    <Select value={frequency} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'yearly') => setFrequency(value)}>
+                      <SelectTrigger className="bg-[#0f1623] border-gray-600">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#0f1623] border-gray-600">
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="interval">Every</Label>
+                    <Input
+                      id="interval"
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={interval}
+                      onChange={(e) => setInterval(parseInt(e.target.value) || 1)}
+                      className="bg-[#0f1623] border-gray-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="end-type">Ends</Label>
+                  <Select value={endType} onValueChange={(value: 'never' | 'after' | 'on') => setEndType(value)}>
+                    <SelectTrigger className="bg-[#0f1623] border-gray-600">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#0f1623] border-gray-600">
+                      <SelectItem value="never">Never</SelectItem>
+                      <SelectItem value="after">After a number of occurrences</SelectItem>
+                      <SelectItem value="on">On a specific date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {endType === 'after' && (
+                  <div>
+                    <Label htmlFor="occurrences">Number of occurrences</Label>
+                    <Input
+                      id="occurrences"
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={occurrences}
+                      onChange={(e) => setOccurrences(parseInt(e.target.value) || 1)}
+                      className="bg-[#0f1623] border-gray-600"
+                    />
+                  </div>
+                )}
+
+                {endType === 'on' && (
+                  <div>
+                    <Label htmlFor="end-date">End date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal bg-[#0f1623] border-gray-600"
+                        >
+                          {format(endDate, "PPP")}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-[#0f1623] border-gray-600">
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={(date) => date && setRecurrenceEndDate(new Date(date))}
+                          initialFocus
+                          className="p-3"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="flex justify-end gap-2">
