@@ -93,6 +93,23 @@ const CalendarPage = () => {
   });
 
   const [isAllDayCreate, setIsAllDayCreate] = useState(false);
+  const [isAllDayEdit, setIsAllDayEdit] = useState(false);
+
+  // Auto-set times when all-day is toggled
+  useEffect(() => {
+    if (isAllDayCreate) {
+      setValue("start_time", "00:00");
+      setValue("end_time", "23:59");
+    }
+  }, [isAllDayCreate, setValue]);
+
+  // Auto-set times when all-day edit is toggled
+  useEffect(() => {
+    if (isAllDayEdit) {
+      setValue("start_time", "00:00");
+      setValue("end_time", "23:59");
+    }
+  }, [isAllDayEdit, setValue]);
 
   // Fetch events from Supabase
   const { data: events, isLoading } = useQuery({
@@ -265,8 +282,6 @@ const CalendarPage = () => {
     setSelectedEvent(event);
     setShowEventDetails(true);
   };
-
-  const [isAllDayEdit, setIsAllDayEdit] = useState(false);
 
   const handleEditEvent = (event: any) => {
     setSelectedEvent(event);
@@ -464,11 +479,12 @@ const CalendarPage = () => {
                       </div>
                       <div>
                         <Label htmlFor="start_time" className="text-card-foreground">Start Time</Label>
-                        <Input
-                          type="time"
-                          {...register("start_time", { required: "Start time is required" })}
-                          className="bg-background border-border text-foreground"
-                        />
+                         <Input
+                           type="time"
+                           {...register("start_time", { required: !isAllDayCreate && "Start time is required" })}
+                           className="bg-background border-border text-foreground"
+                           disabled={isAllDayCreate}
+                         />
                         {errors.start_time && <p className="text-destructive text-sm mt-1">{errors.start_time.message}</p>}
                       </div>
                     </div>
@@ -485,11 +501,12 @@ const CalendarPage = () => {
                       </div>
                       <div>
                         <Label htmlFor="end_time" className="text-card-foreground">End Time</Label>
-                        <Input
-                          type="time"
-                          {...register("end_time", { required: "End time is required" })}
-                          className="bg-background border-border text-foreground"
-                        />
+                         <Input
+                           type="time"
+                           {...register("end_time", { required: !isAllDayCreate && "End time is required" })}
+                           className="bg-background border-border text-foreground"
+                           disabled={isAllDayCreate}
+                         />
                         {errors.end_time && <p className="text-destructive text-sm mt-1">{errors.end_time.message}</p>}
                       </div>
                     </div>
@@ -1066,11 +1083,12 @@ const CalendarPage = () => {
               </div>
               <div>
                 <Label htmlFor="start_time" className="text-card-foreground">Start Time</Label>
-                <Input
-                  type="time"
-                  {...register("start_time", { required: "Start time is required" })}
-                  className="bg-background border-border text-foreground"
-                />
+                 <Input
+                   type="time"
+                   {...register("start_time", { required: !isAllDayEdit && "Start time is required" })}
+                   className="bg-background border-border text-foreground"
+                   disabled={isAllDayEdit}
+                 />
                 {errors.start_time && <p className="text-destructive text-sm mt-1">{errors.start_time.message}</p>}
               </div>
             </div>
@@ -1087,11 +1105,12 @@ const CalendarPage = () => {
               </div>
               <div>
                 <Label htmlFor="end_time" className="text-card-foreground">End Time</Label>
-                <Input
-                  type="time"
-                  {...register("end_time", { required: "End time is required" })}
-                  className="bg-background border-border text-foreground"
-                />
+                 <Input
+                   type="time"
+                   {...register("end_time", { required: !isAllDayEdit && "End time is required" })}
+                   className="bg-background border-border text-foreground"
+                   disabled={isAllDayEdit}
+                 />
                 {errors.end_time && <p className="text-destructive text-sm mt-1">{errors.end_time.message}</p>}
               </div>
             </div>
