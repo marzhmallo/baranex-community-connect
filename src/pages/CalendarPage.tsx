@@ -36,7 +36,8 @@ export type Event = {
   created_by?: string;
   target_audience?: string;
   event_type?: string;
-  is_public: boolean;
+  visibility: string;
+  is_all_day?: boolean;
   is_recurring?: boolean;
   recurrence_pattern?: string;
   reminder_enabled?: boolean;
