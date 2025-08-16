@@ -37,7 +37,6 @@ export type Event = {
   target_audience?: string;
   event_type?: string;
   visibility: string;
-  allday?: boolean;
   is_recurring?: boolean;
   recurrence_pattern?: string;
   reminder_enabled?: boolean;
@@ -55,7 +54,6 @@ type EventFormData = {
   event_type: string;
   target_audience: string;
   visibility: string;
-  allday: boolean;
   is_recurring: boolean;
   recurrence_pattern: string;
   reminder_enabled: boolean;
@@ -87,13 +85,14 @@ const CalendarPage = () => {
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormData>({
     defaultValues: {
       visibility: 'public',
-      allday: false,
       is_recurring: false,
       recurrence_pattern: 'weekly',
       reminder_enabled: false,
       reminder_time: 30
     }
   });
+
+  const [isAllDayCreate, setIsAllDayCreate] = useState(false);
 
   // Fetch events from Supabase
   const { data: events, isLoading } = useQuery({
@@ -119,8 +118,16 @@ const CalendarPage = () => {
   // Create event mutation
   const createEventMutation = useMutation({
     mutationFn: async (eventData: EventFormData) => {
-      const startDateTime = new Date(`${eventData.start_date}T${eventData.start_time}`);
-      const endDateTime = new Date(`${eventData.end_date}T${eventData.end_time}`);
+      let startDateTime = new Date(`${eventData.start_date}T${eventData.start_time}`);
+      let endDateTime = new Date(`${eventData.end_date}T${eventData.end_time}`);
+
+      // If all-day is checked, set times to beginning and end of day
+      if (isAllDayCreate) {
+        startDateTime = new Date(eventData.start_date);
+        startDateTime.setHours(0, 0, 0, 0);
+        endDateTime = new Date(eventData.end_date);
+        endDateTime.setHours(23, 59, 59, 999);
+      }
 
       const { error } = await supabase
         .from('events')
@@ -133,7 +140,6 @@ const CalendarPage = () => {
           event_type: eventData.event_type,
           target_audience: eventData.target_audience,
           visibility: eventData.visibility,
-          allday: eventData.allday,
           brgyid: userProfile?.brgyid || "",
           created_by: user?.id || ""
         });
@@ -143,6 +149,7 @@ const CalendarPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       setShowEventForm(false);
+      setIsAllDayCreate(false);
       reset();
       toast({
         title: "Success",
@@ -160,9 +167,17 @@ const CalendarPage = () => {
 
   // Update event mutation
   const updateEventMutation = useMutation({
-    mutationFn: async (eventData: EventFormData & { id: string }) => {
-      const startDateTime = new Date(`${eventData.start_date}T${eventData.start_time}`);
-      const endDateTime = new Date(`${eventData.end_date}T${eventData.end_time}`);
+    mutationFn: async (eventData: EventFormData & { id: string; isAllDay?: boolean }) => {
+      let startDateTime = new Date(`${eventData.start_date}T${eventData.start_time}`);
+      let endDateTime = new Date(`${eventData.end_date}T${eventData.end_time}`);
+
+      // If all-day is checked, set times to beginning and end of day
+      if (eventData.isAllDay) {
+        startDateTime = new Date(eventData.start_date);
+        startDateTime.setHours(0, 0, 0, 0);
+        endDateTime = new Date(eventData.end_date);
+        endDateTime.setHours(23, 59, 59, 999);
+      }
 
       const { error } = await supabase
         .from('events')
@@ -175,7 +190,6 @@ const CalendarPage = () => {
           event_type: eventData.event_type,
           target_audience: eventData.target_audience,
           visibility: eventData.visibility,
-          allday: eventData.allday,
         })
         .eq('id', eventData.id);
 
@@ -248,28 +262,23 @@ const CalendarPage = () => {
   };
 
   const handleEventClick = (event: any) => {
-    // Transform the event data to match our Event type
-    const transformedEvent: Event = {
-      ...event,
-      visibility: event.visibility || (event.is_public ? 'public' : 'private'),
-      allday: event.allday || false
-    };
-    setSelectedEvent(transformedEvent);
+    setSelectedEvent(event);
     setShowEventDetails(true);
   };
 
+  const [isAllDayEdit, setIsAllDayEdit] = useState(false);
+
   const handleEditEvent = (event: any) => {
-    // Transform the event data
-    const transformedEvent: Event = {
-      ...event,
-      visibility: event.visibility || (event.is_public ? 'public' : 'private'),
-      allday: event.allday || false
-    };
-    setSelectedEvent(transformedEvent);
-    // Populate form with event data
+    setSelectedEvent(event);
+    // Check if event is all-day by comparing times
     const startDate = new Date(event.start_time);
     const endDate = new Date(event.end_time);
+    const isAllDay = startDate.getHours() === 0 && startDate.getMinutes() === 0 && 
+                     endDate.getHours() === 23 && endDate.getMinutes() === 59;
     
+    setIsAllDayEdit(isAllDay);
+    
+    // Populate form with event data
     setValue("title", event.title);
     setValue("description", event.description || "");
     setValue("location", event.location || "");
@@ -279,8 +288,7 @@ const CalendarPage = () => {
     setValue("end_time", format(endDate, "HH:mm"));
     setValue("event_type", event.event_type || "");
     setValue("target_audience", event.target_audience || "");
-    setValue("visibility", transformedEvent.visibility);
-    setValue("allday", transformedEvent.allday);
+    setValue("visibility", event.visibility || 'public');
     
     setShowEditForm(true);
     setShowEventDetails(false);
@@ -303,7 +311,7 @@ const CalendarPage = () => {
 
   const onEditSubmit = (data: EventFormData) => {
     if (selectedEvent) {
-      updateEventMutation.mutate({ ...data, id: selectedEvent.id });
+      updateEventMutation.mutate({ ...data, id: selectedEvent.id, isAllDay: isAllDayEdit });
     }
   };
 
@@ -496,7 +504,10 @@ const CalendarPage = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Checkbox {...register("allday")} />
+                      <Checkbox 
+                        checked={isAllDayCreate}
+                        onCheckedChange={(checked) => setIsAllDayCreate(checked === true)}
+                      />
                       <Label className="text-card-foreground">All-day Event</Label>
                     </div>
 
@@ -1095,7 +1106,10 @@ const CalendarPage = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox {...register("allday")} />
+              <Checkbox 
+                checked={isAllDayEdit}
+                onCheckedChange={(checked) => setIsAllDayEdit(checked === true)}
+              />
               <Label className="text-card-foreground">All-day Event</Label>
             </div>
 

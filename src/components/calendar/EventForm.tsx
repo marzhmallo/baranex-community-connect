@@ -45,16 +45,14 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
   const [eventType, setEventType] = useState(event?.event_type || "meeting");
   const [targetAudience, setTargetAudience] = useState(event?.target_audience || "All");
   const [visibility, setVisibility] = useState(event?.visibility || "public");
-  const [isAllDay, setIsAllDay] = useState(event?.allday || false);
+  const [isAllDay, setIsAllDay] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
   // If all-day is detected, set the switch
   useEffect(() => {
-    if (event?.allday !== undefined) {
-      setIsAllDay(event.allday);
-    } else if (event?.start_time && event?.end_time) {
+    if (event?.start_time && event?.end_time) {
       const startTime = new Date(event.start_time);
       const endTime = new Date(event.end_time);
       
@@ -97,18 +95,33 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
       // Get the user's barangay ID from their profile
       const brgyid = userProfile?.brgyid || "00000000-0000-0000-0000-000000000000";
       
+      let startTime: string;
+      let endTime: string;
+
+      if (isAllDay) {
+        const startOfDay = new Date(startDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(startDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        startTime = startOfDay.toISOString();
+        endTime = endOfDay.toISOString();
+      } else {
+        startTime = startDate.toISOString();
+        endTime = endDate.toISOString();
+      }
+
       const eventData = {
         title,
         description,
         location,
-        start_time: startDate.toISOString(),
-        end_time: endDate.toISOString(),
+        start_time: startTime,
+        end_time: endTime,
         event_type: eventType,
         target_audience: targetAudience,
         visibility: visibility,
-        allday: isAllDay,
         created_by: createdBy,
-        brgyid: brgyid  // Add the required brgyid field
+        brgyid: brgyid
       };
       
       let response;
@@ -125,7 +138,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
           .from('events')
           .insert(eventData);
       }
-      
+
       const { error } = response;
       
       if (error) throw error;
