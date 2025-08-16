@@ -168,29 +168,37 @@ const DashboardCharts = () => {
         }
 
         const activities = data || [];
-        setRecentActivities(activities);
 
-        // Fetch user profiles for the activities
+        // Fetch user profiles for the activities and filter by allowed roles
         let profiles: Record<string, UserProfile> = {};
+        let filteredActivities: ActivityLog[] = [];
         if (activities.length > 0) {
           const userIds = [...new Set(activities.map(activity => activity.user_id))];
           const { data: profilesData, error: profilesError } = await supabase
             .from('profiles')
-            .select('id, firstname, lastname, username')
-            .in('id', userIds);
+            .select('id, firstname, lastname, username, role')
+            .in('id', userIds)
+            .in('role', ['user', 'admin', 'staff']);
 
           if (!profilesError && profilesData) {
+            const allowedUserIds = new Set(profilesData.map(profile => profile.id));
+            
+            // Filter activities to only include those from users with allowed roles
+            filteredActivities = activities.filter(activity => allowedUserIds.has(activity.user_id));
+            
             profiles = profilesData.reduce((acc, profile) => {
               acc[profile.id] = profile;
               return acc;
             }, {} as Record<string, UserProfile>);
+            
+            setRecentActivities(filteredActivities);
             setUserProfiles(profiles);
           }
         }
 
-        // Cache the activities and profiles data
+        // Cache the filtered activities and profiles data
         localStorage.setItem(`dashboardActivities_${userProfile.brgyid}`, JSON.stringify({
-          activities,
+          activities: filteredActivities,
           profiles
         }));
       } catch (err) {
