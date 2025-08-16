@@ -285,23 +285,13 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
             name="audience"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Audience</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  value={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select target audience" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Public">Public</SelectItem>
-                    <SelectItem value="Officials">Officials Only</SelectItem>
-                    <SelectItem value="SK">SK Members</SelectItem>
-                    <SelectItem value="Internal">Internal Staff</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormLabel>Target Audience</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Enter target audience (e.g., Public, Officials, SK Members, etc.)"
+                    {...field}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
