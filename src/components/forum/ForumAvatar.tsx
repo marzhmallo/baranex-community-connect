@@ -40,7 +40,7 @@ const ForumAvatar = ({ userId, name, profilePicture, initials, className }: Foru
 
   return (
     <Avatar className={className}>
-      {url && !isLoading && (
+      {url && (
         <AvatarImage
           src={url}
           alt={name || 'User'}
