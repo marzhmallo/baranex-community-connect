@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import ForumAvatar from '@/components/forum/ForumAvatar';
+
 import CachedAvatar from '@/components/ui/CachedAvatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
@@ -625,11 +625,10 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
         <div className="w-full mx-auto bg-card rounded-xl shadow-lg overflow-hidden border border-border">
           <div className="p-6 border-b border-border">
             <div className="flex items-start space-x-4">
-              <ForumAvatar
+              <CachedAvatar
                 userId={thread.created_by}
-                name={thread.authorName || 'User'}
                 profilePicture={thread.authorAvatarUrl || undefined}
-                initials={thread.authorName?.substring(0, 2) || 'UN'}
+                fallback={thread.authorName?.substring(0, 2) || 'UN'}
                 className="w-12 h-12"
               />
               
