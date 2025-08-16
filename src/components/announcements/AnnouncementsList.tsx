@@ -188,12 +188,13 @@ const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Emergency">Emergency</SelectItem>
                         <SelectItem value="Event">Event</SelectItem>
-                        <SelectItem value="Health">Health</SelectItem>
-                        <SelectItem value="Service">Service</SelectItem>
                         <SelectItem value="News">News</SelectItem>
+                        <SelectItem value="Alert">Alert</SelectItem>
+                        <SelectItem value="Service">Service</SelectItem>
+                        <SelectItem value="Health">Health</SelectItem>
                         <SelectItem value="Education">Education</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -214,10 +215,10 @@ const EditAnnouncementDialog: React.FC<EditAnnouncementDialogProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="All Residents">All Residents</SelectItem>
-                        <SelectItem value="Senior Citizens">Senior Citizens</SelectItem>
-                        <SelectItem value="Business Owners">Business Owners</SelectItem>
-                        <SelectItem value="Students">Students</SelectItem>
+                        <SelectItem value="Public">Public</SelectItem>
+                        <SelectItem value="Officials">Officials Only</SelectItem>
+                        <SelectItem value="SK">SK Members</SelectItem>
+                        <SelectItem value="Internal">Internal Staff</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
