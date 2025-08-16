@@ -38,9 +38,12 @@ export type Event = {
   event_type?: string;
   visibility: string;
   is_recurring?: boolean;
+  reccuring?: boolean;
   rrule?: string;
   reminder_enabled?: boolean;
   reminder_time?: number;
+  isRecurringInstance?: boolean;
+  originalEventId?: string;
 };
 
 type EventFormData = {
@@ -135,6 +138,155 @@ const CalendarPage = () => {
       return data || [];
     }
   });
+
+  // Helper function to describe RRULE in human-readable format
+  const describeRecurrence = (rrule: string | null | undefined) => {
+    if (!rrule) return null;
+    
+    const parts = rrule.split(';');
+    let frequency = '';
+    let interval = 1;
+    let byDay: string[] = [];
+    
+    parts.forEach(part => {
+      const [key, value] = part.split('=');
+      switch (key) {
+        case 'FREQ':
+          frequency = value;
+          break;
+        case 'INTERVAL':
+          interval = parseInt(value);
+          break;
+        case 'BYDAY':
+          byDay = value.split(',');
+          break;
+      }
+    });
+    
+    const dayMap: { [key: string]: string } = {
+      'MO': 'Monday', 'TU': 'Tuesday', 'WE': 'Wednesday', 
+      'TH': 'Thursday', 'FR': 'Friday', 'SA': 'Saturday', 'SU': 'Sunday'
+    };
+    
+    switch (frequency) {
+      case 'DAILY':
+        return interval === 1 ? 'Repeats daily' : `Repeats every ${interval} days`;
+      case 'WEEKLY':
+        if (byDay.length > 0) {
+          const dayNames = byDay.map(day => dayMap[day]).join(', ');
+          return interval === 1 ? `Repeats weekly on ${dayNames}` : `Repeats every ${interval} weeks on ${dayNames}`;
+        }
+        return interval === 1 ? 'Repeats weekly' : `Repeats every ${interval} weeks`;
+      case 'MONTHLY':
+        return interval === 1 ? 'Repeats monthly' : `Repeats every ${interval} months`;
+      case 'YEARLY':
+        return interval === 1 ? 'Repeats yearly' : `Repeats every ${interval} years`;
+      default:
+        return 'Recurring event';
+    }
+  };
+
+  // Helper function to generate recurring event instances from RRULE
+  const generateRecurringEvents = (event: any, startDate: Date, endDate: Date) => {
+    if (!event.reccuring || !event.rrule) return [event];
+    
+    const instances = [event]; // Include the original event
+    const rruleParts = event.rrule.split(';');
+    let frequency = '';
+    let interval = 1;
+    let byDay: string[] = [];
+    let until: Date | null = null;
+    
+    // Parse RRULE
+    rruleParts.forEach((part: string) => {
+      const [key, value] = part.split('=');
+      switch (key) {
+        case 'FREQ':
+          frequency = value;
+          break;
+        case 'INTERVAL':
+          interval = parseInt(value);
+          break;
+        case 'BYDAY':
+          byDay = value.split(',');
+          break;
+        case 'UNTIL':
+          until = new Date(value.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/, '$1-$2-$3T$4:$5:$6Z'));
+          break;
+      }
+    });
+    
+    const eventStart = new Date(event.start_time);
+    const eventEnd = new Date(event.end_time);
+    const eventDuration = eventEnd.getTime() - eventStart.getTime();
+    
+    let currentDate = new Date(eventStart);
+    
+    // Generate instances up to endDate or until date
+    const maxDate = until && until < endDate ? until : endDate;
+    
+    while (currentDate <= maxDate) {
+      let nextDate = new Date(currentDate);
+      
+      // Calculate next occurrence based on frequency
+      switch (frequency) {
+        case 'DAILY':
+          nextDate.setDate(currentDate.getDate() + interval);
+          break;
+        case 'WEEKLY':
+          if (byDay.length > 0) {
+            // For weekly with specific days
+            const dayMap: { [key: string]: number } = {
+              'SU': 0, 'MO': 1, 'TU': 2, 'WE': 3, 'TH': 4, 'FR': 5, 'SA': 6
+            };
+            let found = false;
+            for (let i = 1; i <= 7; i++) {
+              const testDate = new Date(currentDate);
+              testDate.setDate(currentDate.getDate() + i);
+              if (byDay.includes(Object.keys(dayMap)[testDate.getDay()])) {
+                nextDate = testDate;
+                found = true;
+                break;
+              }
+            }
+            if (!found) {
+              nextDate.setDate(currentDate.getDate() + (7 * interval));
+            }
+          } else {
+            nextDate.setDate(currentDate.getDate() + (7 * interval));
+          }
+          break;
+        case 'MONTHLY':
+          nextDate.setMonth(currentDate.getMonth() + interval);
+          break;
+        case 'YEARLY':
+          nextDate.setFullYear(currentDate.getFullYear() + interval);
+          break;
+        default:
+          return instances; // Unknown frequency
+      }
+      
+      // If we've moved beyond our original event date, create instance
+      if (nextDate > eventStart && nextDate >= startDate && nextDate <= maxDate) {
+        const instanceEnd = new Date(nextDate.getTime() + eventDuration);
+        instances.push({
+          ...event,
+          id: `${event.id}-${nextDate.getTime()}`, // Unique ID for each instance
+          start_time: nextDate.toISOString(),
+          end_time: instanceEnd.toISOString(),
+          isRecurringInstance: true,
+          originalEventId: event.id
+        });
+      }
+      
+      currentDate = nextDate;
+      
+      // Safety check to prevent infinite loops
+      if (instances.length > 365) break;
+    }
+    
+    return instances;
+  };
 
   // Helper function to parse RRULE string into form fields
   const parseRRule = (rrule: string | null | undefined) => {
@@ -332,7 +484,26 @@ const CalendarPage = () => {
   const getEventsForDate = (date: Date) => {
     if (!events) return [];
     
-    return events.filter((event: any) => {
+    // Get all events and generate recurring instances
+    const allEventInstances: any[] = [];
+    
+    events.forEach((event: any) => {
+      if (event.reccuring && event.rrule) {
+        // Generate recurring instances for a reasonable time window
+        const windowStart = new Date(date);
+        windowStart.setMonth(windowStart.getMonth() - 2); // 2 months before
+        const windowEnd = new Date(date);
+        windowEnd.setMonth(windowEnd.getMonth() + 12); // 12 months after
+        
+        const instances = generateRecurringEvents(event, windowStart, windowEnd);
+        allEventInstances.push(...instances);
+      } else {
+        allEventInstances.push(event);
+      }
+    });
+    
+    // Filter events for the specific date
+    return allEventInstances.filter((event: any) => {
       const eventDate = new Date(event.start_time);
       return eventDate.getDate() === date.getDate() &&
              eventDate.getMonth() === date.getMonth() &&
@@ -354,30 +525,35 @@ const CalendarPage = () => {
   };
 
   const handleEditEvent = (event: any) => {
-    setSelectedEvent(event);
+    // For recurring instances, find and edit the original event
+    const eventToEdit = event.isRecurringInstance && events 
+      ? events.find(e => e.id === event.originalEventId) || event
+      : event;
+      
+    setSelectedEvent(eventToEdit);
     // Check if event is all-day by comparing times
-    const startDate = new Date(event.start_time);
-    const endDate = new Date(event.end_time);
+    const startDate = new Date(eventToEdit.start_time);
+    const endDate = new Date(eventToEdit.end_time);
     const isAllDay = startDate.getHours() === 0 && startDate.getMinutes() === 0 && 
                      endDate.getHours() === 23 && endDate.getMinutes() === 59;
     
     setIsAllDayEdit(isAllDay);
     
     // Parse RRULE for recurring event fields
-    const rruleData = parseRRule(event.rrule);
+    const rruleData = parseRRule(eventToEdit.rrule);
     
     // Populate form with event data
-    setValue("title", event.title);
-    setValue("description", event.description || "");
-    setValue("location", event.location || "");
+    setValue("title", eventToEdit.title);
+    setValue("description", eventToEdit.description || "");
+    setValue("location", eventToEdit.location || "");
     setValue("start_date", format(startDate, "yyyy-MM-dd"));
     setValue("start_time", format(startDate, "HH:mm"));
     setValue("end_date", format(endDate, "yyyy-MM-dd"));
     setValue("end_time", format(endDate, "HH:mm"));
-    setValue("event_type", event.event_type || "");
-    setValue("target_audience", event.target_audience || "");
-    setValue("visibility", event.visibility || 'public');
-    setValue("is_recurring", event.reccuring || false);
+    setValue("event_type", eventToEdit.event_type || "");
+    setValue("target_audience", eventToEdit.target_audience || "");
+    setValue("visibility", eventToEdit.visibility || 'public');
+    setValue("is_recurring", eventToEdit.reccuring || false);
     setValue("frequency", rruleData.frequency);
     setValue("interval", rruleData.interval);
     setValue("weekly_days", rruleData.weekly_days);
@@ -392,7 +568,11 @@ const CalendarPage = () => {
 
   const confirmDelete = () => {
     if (selectedEvent) {
-      deleteEventMutation.mutate(selectedEvent.id);
+      // For recurring instances, delete the original event
+      const eventIdToDelete = selectedEvent.isRecurringInstance && selectedEvent.originalEventId 
+        ? selectedEvent.originalEventId 
+        : selectedEvent.id;
+      deleteEventMutation.mutate(eventIdToDelete);
     }
     setShowDeleteDialog(false);
   };
@@ -456,10 +636,32 @@ const CalendarPage = () => {
 
   const calendarDays = generateCalendarDays();
   
-  // Separate upcoming and past events
+  // Separate upcoming and past events (including recurring instances)
   const now = new Date();
-  const upcomingEvents = events?.filter(event => new Date(event.start_time) >= now) || [];
-  const pastEvents = events?.filter(event => new Date(event.start_time) < now) || [];
+  const getAllEventInstances = () => {
+    if (!events) return [];
+    
+    const allInstances: any[] = [];
+    const windowStart = new Date(now);
+    windowStart.setMonth(windowStart.getMonth() - 1); // 1 month ago
+    const windowEnd = new Date(now);
+    windowEnd.setMonth(windowEnd.getMonth() + 6); // 6 months ahead
+    
+    events.forEach((event: any) => {
+      if (event.reccuring && event.rrule) {
+        const instances = generateRecurringEvents(event, windowStart, windowEnd);
+        allInstances.push(...instances);
+      } else {
+        allInstances.push(event);
+      }
+    });
+    
+    return allInstances;
+  };
+  
+  const allEventInstances = getAllEventInstances();
+  const upcomingEvents = allEventInstances?.filter(event => new Date(event.start_time) >= now) || [];
+  const pastEvents = allEventInstances?.filter(event => new Date(event.start_time) < now) || [];
 
   // Show loading screen similar to feedback page
   if (isLoading) {
@@ -1120,7 +1322,7 @@ const CalendarPage = () => {
             <div className="space-y-6">
               {/* Event Category Badge */}
               {selectedEvent.event_type && (
-                <div className="flex justify-start">
+                <div className="flex justify-start gap-2">
                   {(() => {
                     const category = eventCategories.find(cat => cat.value === selectedEvent.event_type);
                     return (
@@ -1131,6 +1333,24 @@ const CalendarPage = () => {
                       </span>
                     );
                   })()}
+                  
+                  {/* Recurring Event Badge */}
+                  {(selectedEvent.reccuring || selectedEvent.isRecurringInstance) && selectedEvent.rrule && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                      <Repeat className="h-3 w-3 mr-1" />
+                      {describeRecurrence(selectedEvent.rrule)}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Show recurring badge even if no event_type */}
+              {!selectedEvent.event_type && (selectedEvent.reccuring || selectedEvent.isRecurringInstance) && selectedEvent.rrule && (
+                <div className="flex justify-start">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                    <Repeat className="h-3 w-3 mr-1" />
+                    {describeRecurrence(selectedEvent.rrule)}
+                  </span>
                 </div>
               )}
 
