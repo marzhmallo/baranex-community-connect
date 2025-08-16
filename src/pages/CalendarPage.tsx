@@ -467,6 +467,14 @@ const CalendarPage = () => {
                       />
                     </div>
 
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        checked={isAllDayCreate}
+                        onCheckedChange={(checked) => setIsAllDayCreate(checked === true)}
+                      />
+                      <Label className="text-card-foreground">All-day Event</Label>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="start_date" className="text-card-foreground">Start Date</Label>
@@ -518,14 +526,6 @@ const CalendarPage = () => {
                         placeholder="e.g., All residents, Youth, Seniors"
                         className="bg-background border-border text-foreground"
                       />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        checked={isAllDayCreate}
-                        onCheckedChange={(checked) => setIsAllDayCreate(checked === true)}
-                      />
-                      <Label className="text-card-foreground">All-day Event</Label>
                     </div>
 
                     <div>
