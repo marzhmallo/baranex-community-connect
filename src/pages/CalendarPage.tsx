@@ -38,7 +38,7 @@ export type Event = {
   event_type?: string;
   visibility: string;
   is_recurring?: boolean;
-  recurrence_pattern?: string;
+  rrule?: string;
   reminder_enabled?: boolean;
   reminder_time?: number;
 };
@@ -55,7 +55,9 @@ type EventFormData = {
   target_audience: string;
   visibility: string;
   is_recurring: boolean;
-  recurrence_pattern: string;
+  frequency: string;
+  interval: number;
+  weekly_days: string[];
   reminder_enabled: boolean;
   reminder_time: number;
 };
@@ -86,7 +88,9 @@ const CalendarPage = () => {
     defaultValues: {
       visibility: 'public',
       is_recurring: false,
-      recurrence_pattern: 'weekly',
+      frequency: 'none',
+      interval: 1,
+      weekly_days: [],
       reminder_enabled: false,
       reminder_time: 30
     }
@@ -132,6 +136,64 @@ const CalendarPage = () => {
     }
   });
 
+  // Helper function to parse RRULE string into form fields
+  const parseRRule = (rrule: string | null | undefined) => {
+    if (!rrule) return { frequency: 'none', interval: 1, weekly_days: [] };
+    
+    const parts = rrule.split(';');
+    const result = { frequency: 'none', interval: 1, weekly_days: [] as string[] };
+    
+    parts.forEach(part => {
+      const [key, value] = part.split('=');
+      switch (key) {
+        case 'FREQ':
+          result.frequency = value.toLowerCase();
+          break;
+        case 'INTERVAL':
+          result.interval = parseInt(value);
+          break;
+        case 'BYDAY':
+          const dayMap: { [key: string]: string } = {
+            'MO': 'monday', 'TU': 'tuesday', 'WE': 'wednesday', 
+            'TH': 'thursday', 'FR': 'friday', 'SA': 'saturday', 'SU': 'sunday'
+          };
+          result.weekly_days = value.split(',').map(day => dayMap[day]).filter(Boolean);
+          break;
+      }
+    });
+    
+    return result;
+  };
+
+  // Helper function to generate RRULE string
+  const generateRRule = (data: EventFormData) => {
+    if (!data.is_recurring || data.frequency === 'none') return null;
+    
+    let rrule = `FREQ=${data.frequency.toUpperCase()}`;
+    
+    if (data.interval > 1) {
+      rrule += `;INTERVAL=${data.interval}`;
+    }
+    
+    if (data.frequency === 'weekly' && data.weekly_days.length > 0) {
+      const dayMap: { [key: string]: string } = {
+        'monday': 'MO', 'tuesday': 'TU', 'wednesday': 'WE', 
+        'thursday': 'TH', 'friday': 'FR', 'saturday': 'SA', 'sunday': 'SU'
+      };
+      const days = data.weekly_days.map(day => dayMap[day]).join(',');
+      rrule += `;BYDAY=${days}`;
+    }
+    
+    // Use end date as UNTIL condition
+    if (data.end_date) {
+      const endDate = new Date(data.end_date);
+      endDate.setHours(23, 59, 59, 999);
+      rrule += `;UNTIL=${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
+    }
+    
+    return rrule;
+  };
+
   // Create event mutation
   const createEventMutation = useMutation({
     mutationFn: async (eventData: EventFormData) => {
@@ -146,6 +208,8 @@ const CalendarPage = () => {
         endDateTime.setHours(23, 59, 59, 999);
       }
 
+      const rrule = generateRRule(eventData);
+
       const { error } = await supabase
         .from('events')
         .insert({
@@ -157,6 +221,8 @@ const CalendarPage = () => {
           event_type: eventData.event_type,
           target_audience: eventData.target_audience,
           visibility: eventData.visibility,
+          reccuring: eventData.is_recurring,
+          rrule: rrule,
           brgyid: userProfile?.brgyid || "",
           created_by: user?.id || ""
         });
@@ -196,6 +262,8 @@ const CalendarPage = () => {
         endDateTime.setHours(23, 59, 59, 999);
       }
 
+      const rrule = generateRRule(eventData);
+
       const { error } = await supabase
         .from('events')
         .update({
@@ -207,6 +275,8 @@ const CalendarPage = () => {
           event_type: eventData.event_type,
           target_audience: eventData.target_audience,
           visibility: eventData.visibility,
+          reccuring: eventData.is_recurring,
+          rrule: rrule,
         })
         .eq('id', eventData.id);
 
@@ -293,6 +363,9 @@ const CalendarPage = () => {
     
     setIsAllDayEdit(isAllDay);
     
+    // Parse RRULE for recurring event fields
+    const rruleData = parseRRule(event.rrule);
+    
     // Populate form with event data
     setValue("title", event.title);
     setValue("description", event.description || "");
@@ -304,6 +377,10 @@ const CalendarPage = () => {
     setValue("event_type", event.event_type || "");
     setValue("target_audience", event.target_audience || "");
     setValue("visibility", event.visibility || 'public');
+    setValue("is_recurring", event.reccuring || false);
+    setValue("frequency", rruleData.frequency);
+    setValue("interval", rruleData.interval);
+    setValue("weekly_days", rruleData.weekly_days);
     
     setShowEditForm(true);
     setShowEventDetails(false);
@@ -550,19 +627,62 @@ const CalendarPage = () => {
                     </div>
 
                     {watch("is_recurring") && (
-                      <div>
-                        <Label htmlFor="recurrence_pattern" className="text-card-foreground">Recurrence Pattern</Label>
-                        <Select onValueChange={(value) => setValue("recurrence_pattern", value)}>
-                          <SelectTrigger className="bg-background border-border text-foreground">
-                            <SelectValue placeholder="Select recurrence" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover border-border">
-                            <SelectItem value="daily" className="text-popover-foreground hover:bg-accent">Daily</SelectItem>
-                            <SelectItem value="weekly" className="text-popover-foreground hover:bg-accent">Weekly</SelectItem>
-                            <SelectItem value="monthly" className="text-popover-foreground hover:bg-accent">Monthly</SelectItem>
-                            <SelectItem value="yearly" className="text-popover-foreground hover:bg-accent">Yearly</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="frequency" className="text-card-foreground">Frequency</Label>
+                          <Select onValueChange={(value) => setValue("frequency", value)}>
+                            <SelectTrigger className="bg-background border-border text-foreground">
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover border-border">
+                              <SelectItem value="none" className="text-popover-foreground hover:bg-accent">Does not repeat</SelectItem>
+                              <SelectItem value="daily" className="text-popover-foreground hover:bg-accent">Daily</SelectItem>
+                              <SelectItem value="weekly" className="text-popover-foreground hover:bg-accent">Weekly</SelectItem>
+                              <SelectItem value="monthly" className="text-popover-foreground hover:bg-accent">Monthly</SelectItem>
+                              <SelectItem value="yearly" className="text-popover-foreground hover:bg-accent">Yearly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {watch("frequency") && watch("frequency") !== "none" && (
+                          <div>
+                            <Label htmlFor="interval" className="text-card-foreground">
+                              Repeats every {watch("frequency") === "daily" ? "day(s)" : 
+                                           watch("frequency") === "weekly" ? "week(s)" :
+                                           watch("frequency") === "monthly" ? "month(s)" : "year(s)"}
+                            </Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              {...register("interval", { min: 1 })}
+                              className="bg-background border-border text-foreground"
+                            />
+                          </div>
+                        )}
+
+                        {watch("frequency") === "weekly" && (
+                          <div>
+                            <Label className="text-card-foreground">Days of the week</Label>
+                            <div className="grid grid-cols-4 gap-2 mt-2">
+                              {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                                <div key={day} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={watch("weekly_days")?.includes(day)}
+                                    onCheckedChange={(checked) => {
+                                      const currentDays = watch("weekly_days") || [];
+                                      if (checked) {
+                                        setValue("weekly_days", [...currentDays, day]);
+                                      } else {
+                                        setValue("weekly_days", currentDays.filter(d => d !== day));
+                                      }
+                                    }}
+                                  />
+                                  <Label className="text-sm text-card-foreground capitalize">{day.slice(0, 3)}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1257,6 +1377,71 @@ const CalendarPage = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox {...register("is_recurring")} />
+              <Label className="text-card-foreground">Recurring Event</Label>
+            </div>
+
+            {watch("is_recurring") && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="frequency" className="text-card-foreground">Frequency</Label>
+                  <Select onValueChange={(value) => setValue("frequency", value)}>
+                    <SelectTrigger className="bg-background border-border text-foreground">
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="none" className="text-popover-foreground hover:bg-accent">Does not repeat</SelectItem>
+                      <SelectItem value="daily" className="text-popover-foreground hover:bg-accent">Daily</SelectItem>
+                      <SelectItem value="weekly" className="text-popover-foreground hover:bg-accent">Weekly</SelectItem>
+                      <SelectItem value="monthly" className="text-popover-foreground hover:bg-accent">Monthly</SelectItem>
+                      <SelectItem value="yearly" className="text-popover-foreground hover:bg-accent">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {watch("frequency") && watch("frequency") !== "none" && (
+                  <div>
+                    <Label htmlFor="interval" className="text-card-foreground">
+                      Repeats every {watch("frequency") === "daily" ? "day(s)" : 
+                                   watch("frequency") === "weekly" ? "week(s)" :
+                                   watch("frequency") === "monthly" ? "month(s)" : "year(s)"}
+                    </Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      {...register("interval", { min: 1 })}
+                      className="bg-background border-border text-foreground"
+                    />
+                  </div>
+                )}
+
+                {watch("frequency") === "weekly" && (
+                  <div>
+                    <Label className="text-card-foreground">Days of the week</Label>
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                      {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                        <div key={day} className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={watch("weekly_days")?.includes(day)}
+                            onCheckedChange={(checked) => {
+                              const currentDays = watch("weekly_days") || [];
+                              if (checked) {
+                                setValue("weekly_days", [...currentDays, day]);
+                              } else {
+                                setValue("weekly_days", currentDays.filter(d => d !== day));
+                              }
+                            }}
+                          />
+                          <Label className="text-sm text-card-foreground capitalize">{day.slice(0, 3)}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setShowEditForm(false)} className="border-border">
