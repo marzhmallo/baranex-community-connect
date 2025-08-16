@@ -74,12 +74,7 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
         .createSignedUrl(filePath, 600); // 10 minutes expiration
 
       if (!signedUrlError && signedUrlData?.signedUrl) {
-        // Convert relative URLs to full URLs
-        const signedUrl = signedUrlData.signedUrl;
-        if (signedUrl.startsWith('/')) {
-          return `https://dssjspakagyerrmtaakm.supabase.co/storage/v1${signedUrl}`;
-        }
-        return signedUrl;
+        return signedUrlData.signedUrl;
       }
 
       // Fallback to public URL if bucket is public
@@ -102,21 +97,16 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
   };
 
   useEffect(() => {
-    console.log('CachedAvatar useEffect triggered:', { userId, profilePicture });
     if (profilePicture) {
       // Check cache first (cache lifetime < signed URL expiry)
       const cacheKey = `signed_url_${profilePicture}`;
       const cachedUrl = getCachedData(cacheKey, 480000);
-      console.log('Cached URL found:', cachedUrl);
       if (cachedUrl) {
-        console.log('Using cached URL:', cachedUrl);
         setAvatarUrl(cachedUrl);
         return;
       }
 
-      console.log('Generating new signed URL for:', profilePicture);
       generateSignedUrl(profilePicture).then(url => {
-        console.log('Generated signed URL:', url);
         if (url) {
           setAvatarUrl(url);
           setCachedData(cacheKey, url);
@@ -125,27 +115,22 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
         }
       });
     } else {
-      console.log('No profile picture provided');
       setAvatarUrl(undefined);
     }
   }, [profilePicture, userId]);
 
-  console.log('CachedAvatar rendering with avatarUrl:', avatarUrl);
-  
   return (
     <Avatar className={className}>
       {avatarUrl && (
         <AvatarImage 
           src={avatarUrl} 
           alt="Profile picture" 
-          onLoad={() => console.log('Avatar image loaded successfully:', avatarUrl)}
-          onError={(e) => {
-            console.error('Failed to load avatar image:', avatarUrl, e);
+          onError={() => {
+            console.error('Failed to load avatar image:', avatarUrl);
             const cacheKey = `signed_url_${profilePicture || ''}`;
             clearCachedData(cacheKey);
             if (profilePicture) {
               generateSignedUrl(profilePicture).then((newUrl) => {
-                console.log('Retry generated URL:', newUrl);
                 if (newUrl) {
                   setAvatarUrl(newUrl);
                   setCachedData(cacheKey, newUrl);
