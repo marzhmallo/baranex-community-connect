@@ -726,13 +726,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
           {/* Comment Input - Hidden when thread is locked */}
           {(isPublicForum && !thread.locked) && (
             <div className="border-t border-border p-4">
-              <div className="flex items-start space-x-3">
-              <CachedAvatar
-                userId={userProfile?.id || ''}
-                profilePicture={userProfile?.profile_picture}
-                fallback={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}` || 'U'}
-                className="w-10 h-10 flex-shrink-0"
-              />
+            <div className="flex items-start space-x-3">
                 <div className="flex-1 rounded-full px-4 py-2 border border-border">
                   <input 
                     type="text" 
