@@ -622,7 +622,10 @@ const CalendarPage = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Checkbox {...register("is_recurring")} />
+                      <Checkbox 
+                        checked={watch("is_recurring")}
+                        onCheckedChange={(checked) => setValue("is_recurring", checked === true)}
+                      />
                       <Label className="text-card-foreground">Recurring Event</Label>
                     </div>
 
