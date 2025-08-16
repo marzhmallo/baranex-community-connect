@@ -21,7 +21,7 @@ const formSchema = z.object({
   category: z.string().min(1, { message: 'Please select a category' }),
   audience: z.string().min(1, { message: 'Please select an audience' }),
   is_pinned: z.boolean().default(false),
-  is_public: z.boolean().default(true),
+  visibility: z.string().min(1, { message: 'Please select visibility' }),
   photo_url: z.string().optional(),
   attachment_url: z.string().optional(),
 });
@@ -33,7 +33,7 @@ export interface Announcement {
   category: string;
   audience: string;
   is_pinned: boolean;
-  is_public: boolean;
+  visibility?: string;
   photo_url?: string;
   attachment_url?: string;
   created_at: string;
@@ -64,7 +64,7 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
       category: '',
       audience: 'Public',
       is_pinned: false,
-      is_public: true,
+      visibility: 'public',
       photo_url: '',
       attachment_url: '',
     },
@@ -79,7 +79,7 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
         category: announcement.category,
         audience: announcement.audience,
         is_pinned: announcement.is_pinned,
-        is_public: announcement.is_public,
+        visibility: announcement.visibility || 'public',
         photo_url: announcement.photo_url || '',
         attachment_url: announcement.attachment_url || '',
       });
@@ -90,7 +90,7 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
         category: '',
         audience: 'Public',
         is_pinned: false,
-        is_public: true,
+        visibility: 'public',
         photo_url: '',
         attachment_url: '',
       });
@@ -157,7 +157,7 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
         category: values.category,
         audience: values.audience,
         is_pinned: values.is_pinned,
-        is_public: values.is_public,
+        visibility: values.visibility,
         photo_url: photoUrl || null,
         attachment_url: attachmentUrl || null,
         created_by: userProfile?.id!,
@@ -361,21 +361,26 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
 
           <FormField
             control={form.control}
-            name="is_public"
+            name="visibility"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Public Visibility</FormLabel>
-                  <FormDescription>
-                    Make this announcement visible to the public
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
+              <FormItem>
+                <FormLabel>Visibility</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select visibility" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="internal">Internal</SelectItem>
+                    <SelectItem value="users">All Logged-in Users</SelectItem>
+                    <SelectItem value="public">Public</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
