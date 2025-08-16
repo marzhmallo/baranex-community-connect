@@ -11,6 +11,7 @@ interface CachedAvatarProps {
 
 const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAvatarProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Cache utilities
   const getCacheKey = (key: string) => `avatar_${userId}_${key}`;
@@ -97,12 +98,14 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
   };
 
   useEffect(() => {
+    setIsLoading(true);
     if (profilePicture) {
       // Check cache first (cache lifetime < signed URL expiry)
       const cacheKey = `signed_url_${profilePicture}`;
       const cachedUrl = getCachedData(cacheKey, 480000);
       if (cachedUrl) {
         setAvatarUrl(cachedUrl);
+        setIsLoading(false);
         return;
       }
 
@@ -113,22 +116,26 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
         } else {
           setAvatarUrl(undefined);
         }
+        setIsLoading(false);
       });
     } else {
       setAvatarUrl(undefined);
+      setIsLoading(false);
     }
   }, [profilePicture, userId]);
 
   return (
     <Avatar className={className}>
-      {avatarUrl && (
+      {avatarUrl && !isLoading && (
         <AvatarImage 
           src={avatarUrl} 
           alt="Profile picture" 
+          onLoad={() => setIsLoading(false)}
           onError={() => {
             console.error('Failed to load avatar image:', avatarUrl);
             const cacheKey = `signed_url_${profilePicture || ''}`;
             clearCachedData(cacheKey);
+            setIsLoading(true);
             if (profilePicture) {
               generateSignedUrl(profilePicture).then((newUrl) => {
                 if (newUrl) {
@@ -137,15 +144,23 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
                 } else {
                   setAvatarUrl(undefined);
                 }
+                setIsLoading(false);
               });
             } else {
               setAvatarUrl(undefined);
+              setIsLoading(false);
             }
           }}
         />
       )}
       <AvatarFallback className="bg-gradient-to-br from-primary-500 to-primary-600 text-foreground font-semibold">
-        {fallback}
+        {isLoading && avatarUrl ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          fallback
+        )}
       </AvatarFallback>
     </Avatar>
   );
