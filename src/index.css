@@ -171,8 +171,3 @@
   background: transparent !important;
   border: none !important;
 }
-
-/* Hide fallback avatars while keeping image avatars */
-[data-lov-name="AvatarFallback"] {
-  display: none;
-}
