@@ -15,7 +15,7 @@ export interface Announcement {
   category: string;
   audience: string;
   is_pinned: boolean;
-  is_public: boolean;
+  visibility?: string;
   photo_url?: string;
   attachment_url?: string;
   created_by: string;
@@ -110,7 +110,7 @@ const AnnouncementsPage = () => {
 
   // Calculate stats
   const totalAnnouncements = announcements?.length || 0;
-  const activeAnnouncements = announcements?.filter(a => a.is_public)?.length || 0;
+  const activeAnnouncements = announcements?.filter(a => a.visibility === 'public')?.length || 0;
   const emergencyAnnouncements = announcements?.filter(a => a.category.toLowerCase() === 'emergency')?.length || 0;
   const pinnedAnnouncements = announcements?.filter(a => a.is_pinned)?.length || 0;
 

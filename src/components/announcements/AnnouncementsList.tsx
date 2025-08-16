@@ -53,7 +53,7 @@ interface AnnouncementWithAuthor {
   category: string;
   audience: string;
   is_pinned: boolean;
-  is_public: boolean;
+  visibility?: string;
   photo_url?: string;
   attachment_url?: string;
   created_at: string;
@@ -129,7 +129,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
         const getPriorityScore = (ann: AnnouncementWithAuthor) => {
           if (ann.category.toLowerCase() === 'emergency') return 4;
           if (ann.is_pinned) return 3;
-          if (ann.is_public) return 2;
+          if (ann.visibility === 'public') return 2;
           return 1;
         };
         const priorityDiff = getPriorityScore(b) - getPriorityScore(a);
@@ -210,7 +210,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
     if (announcement.is_pinned) {
       return <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-3 py-1 rounded-full text-sm font-medium">Pinned</span>;
     }
-    if (announcement.is_public) {
+    if (announcement.visibility === 'public') {
       return <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-3 py-1 rounded-full text-sm font-medium">Active</span>;
     }
     return <span className="bg-gray-100 dark:bg-gray-800/50 text-gray-800 dark:text-gray-300 px-3 py-1 rounded-full text-sm font-medium">Draft</span>;
