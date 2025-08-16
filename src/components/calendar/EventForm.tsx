@@ -45,15 +45,15 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
   const [eventType, setEventType] = useState(event?.event_type || "meeting");
   const [targetAudience, setTargetAudience] = useState(event?.target_audience || "All");
   const [visibility, setVisibility] = useState(event?.visibility || "public");
-  const [isAllDay, setIsAllDay] = useState(event?.is_all_day || false);
+  const [isAllDay, setIsAllDay] = useState(event?.allday || false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
   // If all-day is detected, set the switch
   useEffect(() => {
-    if (event?.is_all_day !== undefined) {
-      setIsAllDay(event.is_all_day);
+    if (event?.allday !== undefined) {
+      setIsAllDay(event.allday);
     } else if (event?.start_time && event?.end_time) {
       const startTime = new Date(event.start_time);
       const endTime = new Date(event.end_time);
@@ -106,7 +106,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         event_type: eventType,
         target_audience: targetAudience,
         visibility: visibility,
-        is_all_day: isAllDay,
+        allday: isAllDay,
         created_by: createdBy,
         brgyid: brgyid  // Add the required brgyid field
       };

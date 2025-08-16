@@ -37,7 +37,7 @@ export type Event = {
   target_audience?: string;
   event_type?: string;
   visibility: string;
-  is_all_day?: boolean;
+  allday?: boolean;
   is_recurring?: boolean;
   recurrence_pattern?: string;
   reminder_enabled?: boolean;
@@ -55,7 +55,7 @@ type EventFormData = {
   event_type: string;
   target_audience: string;
   visibility: string;
-  is_all_day: boolean;
+  allday: boolean;
   is_recurring: boolean;
   recurrence_pattern: string;
   reminder_enabled: boolean;
@@ -87,7 +87,7 @@ const CalendarPage = () => {
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormData>({
     defaultValues: {
       visibility: 'public',
-      is_all_day: false,
+      allday: false,
       is_recurring: false,
       recurrence_pattern: 'weekly',
       reminder_enabled: false,
@@ -133,7 +133,7 @@ const CalendarPage = () => {
           event_type: eventData.event_type,
           target_audience: eventData.target_audience,
           visibility: eventData.visibility,
-          is_all_day: eventData.is_all_day,
+          allday: eventData.allday,
           brgyid: userProfile?.brgyid || "",
           created_by: user?.id || ""
         });
@@ -175,7 +175,7 @@ const CalendarPage = () => {
           event_type: eventData.event_type,
           target_audience: eventData.target_audience,
           visibility: eventData.visibility,
-          is_all_day: eventData.is_all_day,
+          allday: eventData.allday,
         })
         .eq('id', eventData.id);
 
@@ -252,7 +252,7 @@ const CalendarPage = () => {
     const transformedEvent: Event = {
       ...event,
       visibility: event.visibility || (event.is_public ? 'public' : 'private'),
-      is_all_day: event.is_all_day || false
+      allday: event.allday || false
     };
     setSelectedEvent(transformedEvent);
     setShowEventDetails(true);
@@ -263,7 +263,7 @@ const CalendarPage = () => {
     const transformedEvent: Event = {
       ...event,
       visibility: event.visibility || (event.is_public ? 'public' : 'private'),
-      is_all_day: event.is_all_day || false
+      allday: event.allday || false
     };
     setSelectedEvent(transformedEvent);
     // Populate form with event data
@@ -280,7 +280,7 @@ const CalendarPage = () => {
     setValue("event_type", event.event_type || "");
     setValue("target_audience", event.target_audience || "");
     setValue("visibility", transformedEvent.visibility);
-    setValue("is_all_day", transformedEvent.is_all_day);
+    setValue("allday", transformedEvent.allday);
     
     setShowEditForm(true);
     setShowEventDetails(false);
@@ -496,7 +496,7 @@ const CalendarPage = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Checkbox {...register("is_all_day")} />
+                      <Checkbox {...register("allday")} />
                       <Label className="text-card-foreground">All-day Event</Label>
                     </div>
 
@@ -1095,7 +1095,7 @@ const CalendarPage = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox {...register("is_all_day")} />
+              <Checkbox {...register("allday")} />
               <Label className="text-card-foreground">All-day Event</Label>
             </div>
 
