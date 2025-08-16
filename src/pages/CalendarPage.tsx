@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
+import { useAuth } from "@/components/AuthProvider";
 
 export type Event = {
   id: string;
@@ -79,6 +80,7 @@ const CalendarPage = () => {
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { userProfile, user } = useAuth();
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormData>({
     defaultValues: {
@@ -128,8 +130,8 @@ const CalendarPage = () => {
           event_type: eventData.event_type,
           target_audience: eventData.target_audience,
           is_public: eventData.is_public,
-          brgyid: 'default-brgy-id', // Replace with actual brgy ID
-          created_by: 'current-user-id' // Replace with actual user ID
+          brgyid: userProfile?.brgyid || "",
+          created_by: user?.id || ""
         });
 
       if (error) throw error;
