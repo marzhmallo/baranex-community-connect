@@ -26,6 +26,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/components/AuthProvider";
+import EventForm from "@/components/calendar/EventForm";
 
 export type Event = {
   id: string;
@@ -566,6 +567,25 @@ const CalendarPage = () => {
     setShowEventDetails(false);
   };
 
+  const closeEventForm = () => {
+    setShowEventForm(false);
+    setSelectedDate(null);
+  };
+
+  const closeEditForm = () => {
+    setShowEditForm(false);
+    setSelectedEvent(null);
+  };
+
+  const handleFormSubmit = () => {
+    // Refetch events after create/update
+    queryClient.invalidateQueries({ queryKey: ['events'] });
+    setShowEventForm(false);
+    setShowEditForm(false);
+    setSelectedDate(null);
+    setSelectedEvent(null);
+  };
+
   const handleDeleteEvent = (eventId: string) => {
     setShowDeleteDialog(true);
   };
@@ -723,237 +743,28 @@ const CalendarPage = () => {
                 <h1 className="text-3xl font-bold">Barangay Calendar</h1>
                 <p className="text-primary-foreground/80 mt-1">Manage community events and activities</p>
               </div>
-              <Dialog open={showEventForm} onOpenChange={setShowEventForm}>
-                <DialogTrigger asChild>
-                  <Button className="bg-background text-foreground hover:bg-muted border border-border">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Event
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
-                  <DialogHeader>
-                    <DialogTitle className="text-card-foreground">Create New Event</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="title" className="text-card-foreground">Event Title</Label>
-                        <Input
-                          {...register("title", { required: "Title is required" })}
-                          placeholder="Enter event title"
-                          className="bg-background border-border text-foreground"
-                        />
-                        {errors.title && <p className="text-destructive text-sm mt-1">{errors.title.message}</p>}
-                      </div>
-                      <div>
-                        <Label htmlFor="event_type" className="text-card-foreground">Category</Label>
-                        <Select onValueChange={(value) => setValue("event_type", value)}>
-                          <SelectTrigger className="bg-background border-border text-foreground">
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover border-border">
-                            {eventCategories.map(category => (
-                              <SelectItem key={category.value} value={category.value} className="text-popover-foreground hover:bg-accent">
-                                {category.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+              <Button 
+                onClick={() => setShowEventForm(true)}
+                className="bg-background text-foreground hover:bg-muted border border-border"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Event
+              </Button>
+              {showEventForm && (
+                <EventForm
+                  selectedDate={selectedDate}
+                  onClose={closeEventForm}
+                  onSubmit={handleFormSubmit}
+                />
+              )}
 
-                    <div>
-                      <Label htmlFor="description" className="text-card-foreground">Description</Label>
-                      <Textarea
-                        {...register("description")}
-                        placeholder="Enter event description"
-                        rows={3}
-                        className="bg-background border-border text-foreground"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="location" className="text-card-foreground">Location</Label>
-                      <Input
-                        {...register("location")}
-                        placeholder="Enter event location"
-                        className="bg-background border-border text-foreground"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        checked={isAllDayCreate}
-                        onCheckedChange={(checked) => setIsAllDayCreate(checked === true)}
-                      />
-                      <Label className="text-card-foreground">All-day Event</Label>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="start_date" className="text-card-foreground">Start Date</Label>
-                        <Input
-                          type="date"
-                          {...register("start_date", { required: "Start date is required" })}
-                          className="bg-background border-border text-foreground"
-                        />
-                        {errors.start_date && <p className="text-destructive text-sm mt-1">{errors.start_date.message}</p>}
-                      </div>
-                      <div>
-                        <Label htmlFor="start_time" className="text-card-foreground">Start Time</Label>
-                         <Input
-                           type="time"
-                           {...register("start_time", { required: !isAllDayCreate && "Start time is required" })}
-                           className="bg-background border-border text-foreground"
-                           disabled={isAllDayCreate}
-                         />
-                        {errors.start_time && <p className="text-destructive text-sm mt-1">{errors.start_time.message}</p>}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="end_date" className="text-card-foreground">End Date</Label>
-                        <Input
-                          type="date"
-                          {...register("end_date", { required: "End date is required" })}
-                          className="bg-background border-border text-foreground"
-                        />
-                        {errors.end_date && <p className="text-destructive text-sm mt-1">{errors.end_date.message}</p>}
-                      </div>
-                      <div>
-                        <Label htmlFor="end_time" className="text-card-foreground">End Time</Label>
-                         <Input
-                           type="time"
-                           {...register("end_time", { required: !isAllDayCreate && "End time is required" })}
-                           className="bg-background border-border text-foreground"
-                           disabled={isAllDayCreate}
-                         />
-                        {errors.end_time && <p className="text-destructive text-sm mt-1">{errors.end_time.message}</p>}
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="target_audience" className="text-card-foreground">Target Audience</Label>
-                      <Input
-                        {...register("target_audience")}
-                        placeholder="e.g., All residents, Youth, Seniors"
-                        className="bg-background border-border text-foreground"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="visibility" className="text-card-foreground">Event Visibility</Label>
-                      <Select onValueChange={(value) => setValue("visibility", value)}>
-                        <SelectTrigger className="bg-background border-border text-foreground">
-                          <SelectValue placeholder="Select visibility" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover border-border">
-                          {userProfile?.role === 'admin' && (
-                            <SelectItem value="internal" className="text-popover-foreground hover:bg-accent">Internal</SelectItem>
-                          )}
-                          <SelectItem value="users" className="text-popover-foreground hover:bg-accent">All Logged-in Users</SelectItem>
-                          <SelectItem value="public" className="text-popover-foreground hover:bg-accent">Public</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        checked={watch("is_recurring")}
-                        onCheckedChange={(checked) => setValue("is_recurring", checked === true)}
-                      />
-                      <Label className="text-card-foreground">Recurring Event</Label>
-                    </div>
-
-                    {watch("is_recurring") && (
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="frequency" className="text-card-foreground">Frequency</Label>
-                          <Select onValueChange={(value) => setValue("frequency", value)}>
-                            <SelectTrigger className="bg-background border-border text-foreground">
-                              <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-popover border-border">
-                              <SelectItem value="none" className="text-popover-foreground hover:bg-accent">Does not repeat</SelectItem>
-                              <SelectItem value="daily" className="text-popover-foreground hover:bg-accent">Daily</SelectItem>
-                              <SelectItem value="weekly" className="text-popover-foreground hover:bg-accent">Weekly</SelectItem>
-                              <SelectItem value="monthly" className="text-popover-foreground hover:bg-accent">Monthly</SelectItem>
-                              <SelectItem value="yearly" className="text-popover-foreground hover:bg-accent">Yearly</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {watch("frequency") && watch("frequency") !== "none" && (
-                          <div>
-                            <Label htmlFor="interval" className="text-card-foreground">
-                              Repeats every {watch("frequency") === "daily" ? "day(s)" : 
-                                           watch("frequency") === "weekly" ? "week(s)" :
-                                           watch("frequency") === "monthly" ? "month(s)" : "year(s)"}
-                            </Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              {...register("interval", { min: 1 })}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </div>
-                        )}
-
-                        {watch("frequency") === "weekly" && (
-                          <div>
-                            <Label className="text-card-foreground">Days of the week</Label>
-                            <div className="grid grid-cols-4 gap-2 mt-2">
-                              {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
-                                <div key={day} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={watch("weekly_days")?.includes(day)}
-                                    onCheckedChange={(checked) => {
-                                      const currentDays = watch("weekly_days") || [];
-                                      if (checked) {
-                                        setValue("weekly_days", [...currentDays, day]);
-                                      } else {
-                                        setValue("weekly_days", currentDays.filter(d => d !== day));
-                                      }
-                                    }}
-                                  />
-                                  <Label className="text-sm text-card-foreground capitalize">{day.slice(0, 3)}</Label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox {...register("reminder_enabled")} />
-                      <Label className="text-card-foreground">Enable Reminders</Label>
-                    </div>
-
-                    {watch("reminder_enabled") && (
-                      <div>
-                        <Label htmlFor="reminder_time" className="text-card-foreground">Reminder Time (minutes before)</Label>
-                        <Input
-                          type="number"
-                          {...register("reminder_time")}
-                          placeholder="30"
-                          className="bg-background border-border text-foreground"
-                        />
-                      </div>
-                    )}
-
-                    <div className="flex justify-end space-x-2 pt-4">
-                      <Button type="button" variant="outline" onClick={() => setShowEventForm(false)} className="border-border">
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={createEventMutation.isPending}>
-                        {createEventMutation.isPending ? "Creating..." : "Create Event"}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              {showEditForm && selectedEvent && (
+                <EventForm
+                  event={selectedEvent}
+                  onClose={closeEditForm}
+                  onSubmit={handleFormSubmit}
+                />
+              )}
             </div>
           </div>
 
@@ -1568,212 +1379,6 @@ const CalendarPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Event Dialog */}
-      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-card-foreground">Edit Event</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="title" className="text-card-foreground">Event Title</Label>
-                <Input
-                  {...register("title", { required: "Title is required" })}
-                  placeholder="Enter event title"
-                  className="bg-background border-border text-foreground"
-                />
-                {errors.title && <p className="text-destructive text-sm mt-1">{errors.title.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="event_type" className="text-card-foreground">Category</Label>
-                <Select onValueChange={(value) => setValue("event_type", value)}>
-                  <SelectTrigger className="bg-background border-border text-foreground">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-border">
-                    {eventCategories.map(category => (
-                      <SelectItem key={category.value} value={category.value} className="text-popover-foreground hover:bg-accent">
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="description" className="text-card-foreground">Description</Label>
-              <Textarea
-                {...register("description")}
-                placeholder="Enter event description"
-                rows={3}
-                className="bg-background border-border text-foreground"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="location" className="text-card-foreground">Location</Label>
-              <Input
-                {...register("location")}
-                placeholder="Enter event location"
-                className="bg-background border-border text-foreground"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                checked={isAllDayEdit}
-                onCheckedChange={(checked) => setIsAllDayEdit(checked === true)}
-              />
-              <Label className="text-card-foreground">All-day Event</Label>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start_date" className="text-card-foreground">Start Date</Label>
-                <Input
-                  type="date"
-                  {...register("start_date", { required: "Start date is required" })}
-                  className="bg-background border-border text-foreground"
-                />
-                {errors.start_date && <p className="text-destructive text-sm mt-1">{errors.start_date.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="start_time" className="text-card-foreground">Start Time</Label>
-                 <Input
-                   type="time"
-                   {...register("start_time", { required: !isAllDayEdit && "Start time is required" })}
-                   className="bg-background border-border text-foreground"
-                   disabled={isAllDayEdit}
-                 />
-                {errors.start_time && <p className="text-destructive text-sm mt-1">{errors.start_time.message}</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="end_date" className="text-card-foreground">End Date</Label>
-                <Input
-                  type="date"
-                  {...register("end_date", { required: "End date is required" })}
-                  className="bg-background border-border text-foreground"
-                />
-                {errors.end_date && <p className="text-destructive text-sm mt-1">{errors.end_date.message}</p>}
-              </div>
-              <div>
-                <Label htmlFor="end_time" className="text-card-foreground">End Time</Label>
-                 <Input
-                   type="time"
-                   {...register("end_time", { required: !isAllDayEdit && "End time is required" })}
-                   className="bg-background border-border text-foreground"
-                   disabled={isAllDayEdit}
-                 />
-                {errors.end_time && <p className="text-destructive text-sm mt-1">{errors.end_time.message}</p>}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="target_audience" className="text-card-foreground">Target Audience</Label>
-              <Input
-                {...register("target_audience")}
-                placeholder="e.g., All residents, Youth, Seniors"
-                className="bg-background border-border text-foreground"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="visibility" className="text-card-foreground">Event Visibility</Label>
-              <Select onValueChange={(value) => setValue("visibility", value)}>
-                <SelectTrigger className="bg-background border-border text-foreground">
-                  <SelectValue placeholder="Select visibility" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  {userProfile?.role === 'admin' && (
-                    <SelectItem value="internal" className="text-popover-foreground hover:bg-accent">Internal</SelectItem>
-                  )}
-                  <SelectItem value="users" className="text-popover-foreground hover:bg-accent">All Logged-in Users</SelectItem>
-                  <SelectItem value="public" className="text-popover-foreground hover:bg-accent">Public</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox {...register("is_recurring")} />
-              <Label className="text-card-foreground">Recurring Event</Label>
-            </div>
-
-            {watch("is_recurring") && (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="frequency" className="text-card-foreground">Frequency</Label>
-                  <Select onValueChange={(value) => setValue("frequency", value)}>
-                    <SelectTrigger className="bg-background border-border text-foreground">
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border">
-                      <SelectItem value="none" className="text-popover-foreground hover:bg-accent">Does not repeat</SelectItem>
-                      <SelectItem value="daily" className="text-popover-foreground hover:bg-accent">Daily</SelectItem>
-                      <SelectItem value="weekly" className="text-popover-foreground hover:bg-accent">Weekly</SelectItem>
-                      <SelectItem value="monthly" className="text-popover-foreground hover:bg-accent">Monthly</SelectItem>
-                      <SelectItem value="yearly" className="text-popover-foreground hover:bg-accent">Yearly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {watch("frequency") && watch("frequency") !== "none" && (
-                  <div>
-                    <Label htmlFor="interval" className="text-card-foreground">
-                      Repeats every {watch("frequency") === "daily" ? "day(s)" : 
-                                   watch("frequency") === "weekly" ? "week(s)" :
-                                   watch("frequency") === "monthly" ? "month(s)" : "year(s)"}
-                    </Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      {...register("interval", { min: 1 })}
-                      className="bg-background border-border text-foreground"
-                    />
-                  </div>
-                )}
-
-                {watch("frequency") === "weekly" && (
-                  <div>
-                    <Label className="text-card-foreground">Days of the week</Label>
-                    <div className="grid grid-cols-4 gap-2 mt-2">
-                      {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
-                        <div key={day} className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={watch("weekly_days")?.includes(day)}
-                            onCheckedChange={(checked) => {
-                              const currentDays = watch("weekly_days") || [];
-                              if (checked) {
-                                setValue("weekly_days", [...currentDays, day]);
-                              } else {
-                                setValue("weekly_days", currentDays.filter(d => d !== day));
-                              }
-                            }}
-                          />
-                          <Label className="text-sm text-card-foreground capitalize">{day.slice(0, 3)}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowEditForm(false)} className="border-border">
-                Cancel
-              </Button>
-              <Button type="submit" disabled={updateEventMutation.isPending}>
-                {updateEventMutation.isPending ? "Updating..." : "Update Event"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
