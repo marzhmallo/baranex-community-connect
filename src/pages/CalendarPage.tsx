@@ -54,7 +54,8 @@ type EventFormData = {
   end_time: string;
   event_type: string;
   target_audience: string;
-  is_public: boolean;
+  visibility: string;
+  is_all_day: boolean;
   is_recurring: boolean;
   recurrence_pattern: string;
   reminder_enabled: boolean;
@@ -85,7 +86,8 @@ const CalendarPage = () => {
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormData>({
     defaultValues: {
-      is_public: true,
+      visibility: 'public',
+      is_all_day: false,
       is_recurring: false,
       recurrence_pattern: 'weekly',
       reminder_enabled: false,
@@ -130,7 +132,8 @@ const CalendarPage = () => {
           end_time: endDateTime.toISOString(),
           event_type: eventData.event_type,
           target_audience: eventData.target_audience,
-          is_public: eventData.is_public,
+          visibility: eventData.visibility,
+          is_all_day: eventData.is_all_day,
           brgyid: userProfile?.brgyid || "",
           created_by: user?.id || ""
         });
@@ -171,7 +174,8 @@ const CalendarPage = () => {
           end_time: endDateTime.toISOString(),
           event_type: eventData.event_type,
           target_audience: eventData.target_audience,
-          is_public: eventData.is_public,
+          visibility: eventData.visibility,
+          is_all_day: eventData.is_all_day,
         })
         .eq('id', eventData.id);
 
@@ -227,7 +231,7 @@ const CalendarPage = () => {
   const getEventsForDate = (date: Date) => {
     if (!events) return [];
     
-    return events.filter((event: Event) => {
+    return events.filter((event: any) => {
       const eventDate = new Date(event.start_time);
       return eventDate.getDate() === date.getDate() &&
              eventDate.getMonth() === date.getMonth() &&
@@ -243,13 +247,25 @@ const CalendarPage = () => {
     }
   };
 
-  const handleEventClick = (event: Event) => {
-    setSelectedEvent(event);
+  const handleEventClick = (event: any) => {
+    // Transform the event data to match our Event type
+    const transformedEvent: Event = {
+      ...event,
+      visibility: event.visibility || (event.is_public ? 'public' : 'private'),
+      is_all_day: event.is_all_day || false
+    };
+    setSelectedEvent(transformedEvent);
     setShowEventDetails(true);
   };
 
-  const handleEditEvent = (event: Event) => {
-    setSelectedEvent(event);
+  const handleEditEvent = (event: any) => {
+    // Transform the event data
+    const transformedEvent: Event = {
+      ...event,
+      visibility: event.visibility || (event.is_public ? 'public' : 'private'),
+      is_all_day: event.is_all_day || false
+    };
+    setSelectedEvent(transformedEvent);
     // Populate form with event data
     const startDate = new Date(event.start_time);
     const endDate = new Date(event.end_time);
@@ -263,7 +279,8 @@ const CalendarPage = () => {
     setValue("end_time", format(endDate, "HH:mm"));
     setValue("event_type", event.event_type || "");
     setValue("target_audience", event.target_audience || "");
-    setValue("is_public", event.is_public);
+    setValue("visibility", transformedEvent.visibility);
+    setValue("is_all_day", transformedEvent.is_all_day);
     
     setShowEditForm(true);
     setShowEventDetails(false);
@@ -479,8 +496,24 @@ const CalendarPage = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Checkbox {...register("is_public")} />
-                      <Label className="text-card-foreground">Public Event</Label>
+                      <Checkbox {...register("is_all_day")} />
+                      <Label className="text-card-foreground">All-day Event</Label>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="visibility" className="text-card-foreground">Event Visibility</Label>
+                      <Select onValueChange={(value) => setValue("visibility", value)}>
+                        <SelectTrigger className="bg-background border-border text-foreground">
+                          <SelectValue placeholder="Select visibility" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover border-border">
+                          {userProfile?.role === 'admin' && (
+                            <SelectItem value="internal" className="text-popover-foreground hover:bg-accent">Internal</SelectItem>
+                          )}
+                          <SelectItem value="users" className="text-popover-foreground hover:bg-accent">All Logged-in Users</SelectItem>
+                          <SelectItem value="public" className="text-popover-foreground hover:bg-accent">Public</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="flex items-center space-x-2">
@@ -668,33 +701,33 @@ const CalendarPage = () => {
                               <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
                             )}
                             <div className="flex items-center space-x-2 mt-2">
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => handleEventClick(event)}
-                                className="hover:bg-muted"
-                              >
-                                <Eye className="h-3 w-3 mr-1" />
-                                View
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => handleEditEvent(event)}
-                                className="hover:bg-muted"
-                              >
-                                <Edit className="h-3 w-3 mr-1" />
-                                Edit
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => {
-                                  setSelectedEvent(event);
-                                  handleDeleteEvent(event.id);
-                                }}
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              >
+                               <Button 
+                                 size="sm" 
+                                 variant="ghost" 
+                                 onClick={() => handleEventClick(event as any)}
+                                 className="hover:bg-muted"
+                               >
+                                 <Eye className="h-3 w-3 mr-1" />
+                                 View
+                               </Button>
+                               <Button 
+                                 size="sm" 
+                                 variant="ghost" 
+                                 onClick={() => handleEditEvent(event as any)}
+                                 className="hover:bg-muted"
+                               >
+                                 <Edit className="h-3 w-3 mr-1" />
+                                 Edit
+                               </Button>
+                               <Button 
+                                 size="sm" 
+                                 variant="ghost" 
+                                 onClick={() => {
+                                   setSelectedEvent(event as any);
+                                   handleDeleteEvent(event.id);
+                                 }}
+                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
                                 Delete
                               </Button>
@@ -726,24 +759,24 @@ const CalendarPage = () => {
                               <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
                             )}
                             <div className="flex items-center space-x-2 mt-2">
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => handleEventClick(event)}
-                                className="hover:bg-muted"
-                              >
-                                <Eye className="h-3 w-3 mr-1" />
-                                View
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => {
-                                  setSelectedEvent(event);
-                                  handleDeleteEvent(event.id);
-                                }}
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              >
+                               <Button 
+                                 size="sm" 
+                                 variant="ghost" 
+                                 onClick={() => handleEventClick(event as any)}
+                                 className="hover:bg-muted"
+                               >
+                                 <Eye className="h-3 w-3 mr-1" />
+                                 View
+                               </Button>
+                               <Button 
+                                 size="sm" 
+                                 variant="ghost" 
+                                 onClick={() => {
+                                   setSelectedEvent(event as any);
+                                   handleDeleteEvent(event.id);
+                                 }}
+                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
                                 Delete
                               </Button>
@@ -898,7 +931,9 @@ const CalendarPage = () => {
                     <div>
                       <p className="text-sm font-medium text-card-foreground">Visibility</p>
                       <p className="text-sm text-muted-foreground">
-                        {selectedEvent.is_public ? "Public Event" : "Private Event"}
+                        {selectedEvent.visibility === 'public' ? "Public Event" : 
+                         selectedEvent.visibility === 'users' ? "All Logged-in Users" : 
+                         selectedEvent.visibility === 'internal' ? "Internal" : "Private Event"}
                       </p>
                     </div>
                   </div>
@@ -1060,8 +1095,24 @@ const CalendarPage = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox {...register("is_public")} />
-              <Label className="text-card-foreground">Public Event</Label>
+              <Checkbox {...register("is_all_day")} />
+              <Label className="text-card-foreground">All-day Event</Label>
+            </div>
+
+            <div>
+              <Label htmlFor="visibility" className="text-card-foreground">Event Visibility</Label>
+              <Select onValueChange={(value) => setValue("visibility", value)}>
+                <SelectTrigger className="bg-background border-border text-foreground">
+                  <SelectValue placeholder="Select visibility" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  {userProfile?.role === 'admin' && (
+                    <SelectItem value="internal" className="text-popover-foreground hover:bg-accent">Internal</SelectItem>
+                  )}
+                  <SelectItem value="users" className="text-popover-foreground hover:bg-accent">All Logged-in Users</SelectItem>
+                  <SelectItem value="public" className="text-popover-foreground hover:bg-accent">Public</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">

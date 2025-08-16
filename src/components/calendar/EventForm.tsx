@@ -44,15 +44,17 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
   );
   const [eventType, setEventType] = useState(event?.event_type || "meeting");
   const [targetAudience, setTargetAudience] = useState(event?.target_audience || "All");
-  const [isPublic, setIsPublic] = useState(event?.is_public !== false);
-  const [isAllDay, setIsAllDay] = useState(false);
+  const [visibility, setVisibility] = useState(event?.visibility || "public");
+  const [isAllDay, setIsAllDay] = useState(event?.is_all_day || false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
   // If all-day is detected, set the switch
   useEffect(() => {
-    if (event?.start_time && event?.end_time) {
+    if (event?.is_all_day !== undefined) {
+      setIsAllDay(event.is_all_day);
+    } else if (event?.start_time && event?.end_time) {
       const startTime = new Date(event.start_time);
       const endTime = new Date(event.end_time);
       
@@ -103,7 +105,8 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         end_time: endDate.toISOString(),
         event_type: eventType,
         target_audience: targetAudience,
-        is_public: isPublic,
+        visibility: visibility,
+        is_all_day: isAllDay,
         created_by: createdBy,
         brgyid: brgyid  // Add the required brgyid field
       };
@@ -314,13 +317,20 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is-public"
-                checked={isPublic}
-                onCheckedChange={setIsPublic}
-              />
-              <Label htmlFor="is-public">Make this event public</Label>
+            <div>
+              <Label htmlFor="visibility">Event Visibility</Label>
+              <Select value={visibility} onValueChange={setVisibility}>
+                <SelectTrigger className="bg-[#171f2e] border-gray-700">
+                  <SelectValue placeholder="Select visibility" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#171f2e] border-gray-700">
+                  {userProfile?.role === 'admin' && (
+                    <SelectItem value="internal">Internal</SelectItem>
+                  )}
+                  <SelectItem value="users">All Logged-in Users</SelectItem>
+                  <SelectItem value="public">Public</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
