@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +84,9 @@ const CalendarPage = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+  const [upcomingPage, setUpcomingPage] = useState(1);
+  const [pastPage, setPastPage] = useState(1);
+  const eventsPerPage = 5;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { userProfile, user } = useAuth();
@@ -1148,57 +1152,88 @@ const CalendarPage = () => {
                 
                 <TabsContent value="upcoming" className="space-y-4 mt-4">
                   {upcomingEvents.length > 0 ? (
-                    upcomingEvents.slice(0, 5).map((event) => {
-                      const category = eventCategories.find(cat => cat.value === event.event_type);
-                      return (
-                        <div key={event.id} className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 bg-card">
-                          <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
-                            <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-card-foreground">{event.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(event.start_time), "MMMM d, yyyy - h:mm a")}
-                            </p>
-                            {event.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
-                            )}
-                            <div className="flex items-center space-x-2 mt-2">
-                               <Button 
-                                 size="sm" 
-                                 variant="ghost" 
-                                 onClick={() => handleEventClick(event as any)}
-                                 className="hover:bg-muted"
-                               >
-                                 <Eye className="h-3 w-3 mr-1" />
-                                 View
-                               </Button>
-                               <Button 
-                                 size="sm" 
-                                 variant="ghost" 
-                                 onClick={() => handleEditEvent(event as any)}
-                                 className="hover:bg-muted"
-                               >
-                                 <Edit className="h-3 w-3 mr-1" />
-                                 Edit
-                               </Button>
-                               <Button 
-                                 size="sm" 
-                                 variant="ghost" 
-                                 onClick={() => {
-                                   setSelectedEvent(event as any);
-                                   handleDeleteEvent(event.id);
-                                 }}
-                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                               >
-                                <Trash2 className="h-3 w-3 mr-1" />
-                                Delete
-                              </Button>
+                    <>
+                      {upcomingEvents.slice((upcomingPage - 1) * eventsPerPage, upcomingPage * eventsPerPage).map((event) => {
+                        const category = eventCategories.find(cat => cat.value === event.event_type);
+                        return (
+                          <div key={event.id} className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 bg-card">
+                            <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
+                              <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-card-foreground">{event.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(event.start_time), "MMMM d, yyyy - h:mm a")}
+                              </p>
+                              {event.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                              )}
+                              <div className="flex items-center space-x-2 mt-2">
+                                 <Button 
+                                   size="sm" 
+                                   variant="ghost" 
+                                   onClick={() => handleEventClick(event as any)}
+                                   className="hover:bg-muted"
+                                 >
+                                   <Eye className="h-3 w-3 mr-1" />
+                                   View
+                                 </Button>
+                                 <Button 
+                                   size="sm" 
+                                   variant="ghost" 
+                                   onClick={() => handleEditEvent(event as any)}
+                                   className="hover:bg-muted"
+                                 >
+                                   <Edit className="h-3 w-3 mr-1" />
+                                   Edit
+                                 </Button>
+                                 <Button 
+                                   size="sm" 
+                                   variant="ghost" 
+                                   onClick={() => {
+                                     setSelectedEvent(event as any);
+                                     handleDeleteEvent(event.id);
+                                   }}
+                                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                 >
+                                  <Trash2 className="h-3 w-3 mr-1" />
+                                  Delete
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })}
+                      {upcomingEvents.length > eventsPerPage && (
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious 
+                                onClick={() => setUpcomingPage(prev => Math.max(prev - 1, 1))}
+                                className={upcomingPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                            {Array.from({ length: Math.ceil(upcomingEvents.length / eventsPerPage) }, (_, i) => i + 1).map((page) => (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => setUpcomingPage(page)}
+                                  isActive={page === upcomingPage}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                              <PaginationNext 
+                                onClick={() => setUpcomingPage(prev => Math.min(prev + 1, Math.ceil(upcomingEvents.length / eventsPerPage)))}
+                                className={upcomingPage === Math.ceil(upcomingEvents.length / eventsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      )}
+                    </>
                   ) : (
                     <p className="text-muted-foreground text-center py-8">No upcoming events.</p>
                   )}
@@ -1206,48 +1241,79 @@ const CalendarPage = () => {
 
                 <TabsContent value="past" className="space-y-4 mt-4">
                   {pastEvents.length > 0 ? (
-                    pastEvents.slice(0, 5).map((event) => {
-                      const category = eventCategories.find(cat => cat.value === event.event_type);
-                      return (
-                        <div key={event.id} className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 bg-card opacity-75">
-                          <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
-                            <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-card-foreground">{event.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(event.start_time), "MMMM d, yyyy - h:mm a")}
-                            </p>
-                            {event.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
-                            )}
-                            <div className="flex items-center space-x-2 mt-2">
-                               <Button 
-                                 size="sm" 
-                                 variant="ghost" 
-                                 onClick={() => handleEventClick(event as any)}
-                                 className="hover:bg-muted"
-                               >
-                                 <Eye className="h-3 w-3 mr-1" />
-                                 View
-                               </Button>
-                               <Button 
-                                 size="sm" 
-                                 variant="ghost" 
-                                 onClick={() => {
-                                   setSelectedEvent(event as any);
-                                   handleDeleteEvent(event.id);
-                                 }}
-                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                               >
-                                <Trash2 className="h-3 w-3 mr-1" />
-                                Delete
-                              </Button>
+                    <>
+                      {pastEvents.slice((pastPage - 1) * eventsPerPage, pastPage * eventsPerPage).map((event) => {
+                        const category = eventCategories.find(cat => cat.value === event.event_type);
+                        return (
+                          <div key={event.id} className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 bg-card opacity-75">
+                            <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
+                              <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-card-foreground">{event.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(event.start_time), "MMMM d, yyyy - h:mm a")}
+                              </p>
+                              {event.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                              )}
+                              <div className="flex items-center space-x-2 mt-2">
+                                 <Button 
+                                   size="sm" 
+                                   variant="ghost" 
+                                   onClick={() => handleEventClick(event as any)}
+                                   className="hover:bg-muted"
+                                 >
+                                   <Eye className="h-3 w-3 mr-1" />
+                                   View
+                                 </Button>
+                                 <Button 
+                                   size="sm" 
+                                   variant="ghost" 
+                                   onClick={() => {
+                                     setSelectedEvent(event as any);
+                                     handleDeleteEvent(event.id);
+                                   }}
+                                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                 >
+                                  <Trash2 className="h-3 w-3 mr-1" />
+                                  Delete
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })}
+                      {pastEvents.length > eventsPerPage && (
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious 
+                                onClick={() => setPastPage(prev => Math.max(prev - 1, 1))}
+                                className={pastPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                            {Array.from({ length: Math.ceil(pastEvents.length / eventsPerPage) }, (_, i) => i + 1).map((page) => (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => setPastPage(page)}
+                                  isActive={page === pastPage}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                              <PaginationNext 
+                                onClick={() => setPastPage(prev => Math.min(prev + 1, Math.ceil(pastEvents.length / eventsPerPage)))}
+                                className={pastPage === Math.ceil(pastEvents.length / eventsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      )}
+                    </>
                   ) : (
                     <p className="text-muted-foreground text-center py-8">No past events.</p>
                   )}
