@@ -645,59 +645,169 @@ const CalendarPage = () => {
             </div>
 
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-1 bg-muted p-1 rounded-lg">
-              {calendarDays.map((day, index) => {
-                const isSelected = selectedDate && isEqual(day.date, selectedDate);
-                const hasEvents = day.events.length > 0;
-                
-                return (
-                  <div
-                    key={index}
-                    onClick={() => handleDateClick(day.date)}
-                    className={`
-                      bg-card border border-border p-2 min-h-24 rounded hover:bg-accent cursor-pointer transition-colors duration-200
-                      ${!day.isCurrentMonth ? "text-muted-foreground opacity-50" : ""}
-                      ${isToday(day.date) ? "bg-primary/10 border-primary/30" : ""}
-                      ${isSelected ? "ring-2 ring-primary" : ""}
-                    `}
-                  >
-                    <div className={`text-sm ${isToday(day.date) ? "font-bold text-primary" : "font-semibold text-card-foreground"}`}>
-                      {format(day.date, "d")}
+            {view === 'month' && (
+              <div className="grid grid-cols-7 gap-1 bg-muted p-1 rounded-lg">
+                {calendarDays.map((day, index) => {
+                  const isSelected = selectedDate && isEqual(day.date, selectedDate);
+                  const hasEvents = day.events.length > 0;
+                  
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => handleDateClick(day.date)}
+                      className={`
+                        bg-card border border-border p-2 min-h-24 rounded hover:bg-accent cursor-pointer transition-colors duration-200
+                        ${!day.isCurrentMonth ? "text-muted-foreground opacity-50" : ""}
+                        ${isToday(day.date) ? "bg-primary/10 border-primary/30" : ""}
+                        ${isSelected ? "ring-2 ring-primary" : ""}
+                      `}
+                    >
+                      <div className={`text-sm ${isToday(day.date) ? "font-bold text-primary" : "font-semibold text-card-foreground"}`}>
+                        {format(day.date, "d")}
+                      </div>
+                      {hasEvents && (
+                        <div className="mt-1 space-y-1">
+                          {day.events.slice(0, 2).map((event, i) => {
+                            const category = eventCategories.find(cat => cat.value === event.event_type);
+                            return (
+                              <div
+                                key={i}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEventClick(event);
+                                }}
+                                className={`text-xs px-2 py-1 rounded truncate cursor-pointer transition-colors duration-200
+                                  ${category ? `${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}` : 'bg-muted text-muted-foreground'}
+                                  hover:opacity-80
+                                `}
+                              >
+                                {event.title}
+                              </div>
+                            );
+                          })}
+                          {day.events.length > 2 && (
+                            <div className="text-xs text-muted-foreground">+{day.events.length - 2} more</div>
+                          )}
+                        </div>
+                      )}
+                      {isToday(day.date) && (
+                        <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded mt-1">
+                          Today
+                        </div>
+                      )}
                     </div>
-                    {hasEvents && (
-                      <div className="mt-1 space-y-1">
-                        {day.events.slice(0, 2).map((event, i) => {
-                          const category = eventCategories.find(cat => cat.value === event.event_type);
-                          return (
-                            <div
-                              key={i}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEventClick(event);
-                              }}
-                              className={`text-xs px-2 py-1 rounded truncate cursor-pointer transition-colors duration-200
-                                ${category ? `${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}` : 'bg-muted text-muted-foreground'}
-                                hover:opacity-80
-                              `}
-                            >
-                              {event.title}
-                            </div>
-                          );
-                        })}
-                        {day.events.length > 2 && (
-                          <div className="text-xs text-muted-foreground">+{day.events.length - 2} more</div>
-                        )}
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Week View */}
+            {view === 'week' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-7 gap-1">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                    <div key={day} className="p-3 text-sm font-semibold text-muted-foreground text-center">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1 bg-muted p-1 rounded-lg">
+                  {Array.from({ length: 7 }, (_, i) => {
+                    const weekStart = new Date(currentDate);
+                    weekStart.setDate(currentDate.getDate() - currentDate.getDay() + i);
+                    const dayEvents = getEventsForDate(weekStart);
+                    const isSelected = selectedDate && isEqual(weekStart, selectedDate);
+                    
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => handleDateClick(weekStart)}
+                        className={`
+                          bg-card border border-border p-4 min-h-32 rounded hover:bg-accent cursor-pointer transition-colors duration-200
+                          ${isToday(weekStart) ? "bg-primary/10 border-primary/30" : ""}
+                          ${isSelected ? "ring-2 ring-primary" : ""}
+                        `}
+                      >
+                        <div className={`text-lg font-bold mb-2 ${isToday(weekStart) ? "text-primary" : "text-card-foreground"}`}>
+                          {format(weekStart, "d")}
+                        </div>
+                        <div className="space-y-1">
+                          {dayEvents.map((event, j) => {
+                            const category = eventCategories.find(cat => cat.value === event.event_type);
+                            return (
+                              <div
+                                key={j}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEventClick(event);
+                                }}
+                                className={`text-xs px-2 py-1 rounded cursor-pointer transition-colors duration-200
+                                  ${category ? `${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}` : 'bg-muted text-muted-foreground'}
+                                  hover:opacity-80
+                                `}
+                              >
+                                {event.title}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    )}
-                    {isToday(day.date) && (
-                      <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded mt-1">
-                        Today
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Day View */}
+            {view === 'day' && (
+              <div className="bg-card border border-border rounded-lg p-6">
+                <div className="mb-4">
+                  <h3 className="text-2xl font-bold text-card-foreground">
+                    {format(currentDate, "EEEE, MMMM d, yyyy")}
+                  </h3>
+                  {isToday(currentDate) && (
+                    <span className="text-sm bg-primary/20 text-primary px-2 py-1 rounded mt-2 inline-block">
+                      Today
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  {getEventsForDate(currentDate).length > 0 ? (
+                    getEventsForDate(currentDate).map((event) => {
+                      const category = eventCategories.find(cat => cat.value === event.event_type);
+                      return (
+                        <div
+                          key={event.id}
+                          onClick={() => handleEventClick(event)}
+                          className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                        >
+                          <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
+                            <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-card-foreground">{event.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(event.start_time), "h:mm a")} - {format(new Date(event.end_time), "h:mm a")}
+                            </p>
+                            {event.location && (
+                              <p className="text-sm text-muted-foreground">{event.location}</p>
+                            )}
+                            {event.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No events scheduled for this day.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
