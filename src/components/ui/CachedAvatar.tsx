@@ -153,11 +153,9 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
           }}
         />
       )}
-      <AvatarFallback className="bg-gradient-to-br from-primary-500 to-primary-600 text-foreground font-semibold">
-        {isLoading && avatarUrl ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          </div>
+      <AvatarFallback className={isLoading && profilePicture ? "p-0 bg-transparent overflow-hidden" : "bg-gradient-to-br from-primary-500 to-primary-600 text-foreground font-semibold"}>
+        {isLoading && profilePicture ? (
+          <div className={`skeleton-avatar w-full h-full`} />
         ) : (
           fallback
         )}
