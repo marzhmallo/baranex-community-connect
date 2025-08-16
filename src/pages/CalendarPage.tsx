@@ -663,9 +663,40 @@ const CalendarPage = () => {
     return allInstances;
   };
   
+  // Helper function to deduplicate recurring events for list display
+  const deduplicateRecurringEvents = (eventList: Event[]) => {
+    const seenOriginalIds = new Set<string>();
+    return eventList.filter(event => {
+      // If it's a recurring instance, check if we've already seen the original
+      if (event.isRecurringInstance && event.originalEventId) {
+        if (seenOriginalIds.has(event.originalEventId)) {
+          return false; // Skip this instance
+        }
+        seenOriginalIds.add(event.originalEventId);
+        return false; // Skip instances, we want to show the original
+      }
+      
+      // If it's an original recurring event, check if we've seen it
+      if (event.rrule || event.is_recurring || event.reccuring) {
+        if (seenOriginalIds.has(event.id)) {
+          return false;
+        }
+        seenOriginalIds.add(event.id);
+        return true; // Show the original recurring event
+      }
+      
+      // For non-recurring events, always show
+      return true;
+    });
+  };
+  
   const allEventInstances = getAllEventInstances();
-  const upcomingEvents = allEventInstances?.filter(event => new Date(event.start_time) >= now) || [];
-  const pastEvents = allEventInstances?.filter(event => new Date(event.start_time) < now) || [];
+  const upcomingEventsAll = allEventInstances?.filter(event => new Date(event.start_time) >= now) || [];
+  const pastEventsAll = allEventInstances?.filter(event => new Date(event.start_time) < now) || [];
+  
+  // Deduplicate recurring events for the lists
+  const upcomingEvents = deduplicateRecurringEvents(upcomingEventsAll);
+  const pastEvents = deduplicateRecurringEvents(pastEventsAll);
 
   // Show loading screen similar to feedback page
   if (isLoading) {
