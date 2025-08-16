@@ -627,6 +627,13 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
         <div className="w-full mx-auto bg-card rounded-xl shadow-lg overflow-hidden border border-border">
           <div className="p-6 border-b border-border">
             <div className="flex items-start space-x-4">
+              <CachedAvatar
+                userId={thread.created_by}
+                profilePicture={thread.authorAvatarUrl || undefined}
+                fallback={thread.authorName?.substring(0, 2) || 'UN'}
+                className="w-12 h-12"
+              />
+              
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground">{thread.authorName}</h3>
                 <span className="text-muted-foreground text-sm">
