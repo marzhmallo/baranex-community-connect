@@ -144,7 +144,7 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
           }}
         />
       )}
-      <AvatarFallback className="bg-gradient-to-br from-primary-500 to-primary-600 text-foreground font-semibold">
+      <AvatarFallback className="bg-primary text-primary-foreground font-medium">
         {fallback}
       </AvatarFallback>
     </Avatar>
