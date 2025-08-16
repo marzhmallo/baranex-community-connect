@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import AnnouncementsList from '@/components/announcements/AnnouncementsList';
-import CreateAnnouncementForm from '@/components/announcements/CreateAnnouncementForm';
+import AnnouncementModal from '@/components/announcements/AnnouncementModal';
 import { Search, Users, FolderOpen, ArrowUpDown, Plus, Megaphone, CheckCircle, Calendar, AlertTriangle, Clock, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
@@ -302,9 +302,18 @@ const AnnouncementsPage = () => {
         </div>
 
         {showCreateForm && <div className="fixed inset-0 bg-black/50 z-20 flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
-              <CreateAnnouncementForm onAnnouncementCreated={handleAnnouncementCreated} onCancel={() => setShowCreateForm(false)} />
-            </div>
+            <AnnouncementModal 
+              mode="create"
+              open={showCreateForm}
+              onOpenChange={setShowCreateForm}
+              onSuccess={() => {
+                refetch();
+                toast({
+                  title: "Announcement created",
+                  description: "Your announcement has been published successfully.",
+                });
+              }}
+            />
           </div>}
       </div>
     </div>;
