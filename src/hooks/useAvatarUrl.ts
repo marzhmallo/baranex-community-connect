@@ -28,7 +28,7 @@ export const useAvatarUrl = ({
       if (!profilePicture) return null;
       return await fetchAvatarUrl(profilePicture);
     },
-    enabled: enabled && !!userId && (!!profilePicture || !!initialUrl),
+    enabled: enabled && !!userId, // Always enabled if user exists, even without profile picture
     staleTime: 8 * 60 * 1000, // 8 minutes (under 10m signed URL)
     gcTime: 24 * 60 * 60 * 1000, // 24 hours in cache
     initialData: initialUrl ?? undefined,
