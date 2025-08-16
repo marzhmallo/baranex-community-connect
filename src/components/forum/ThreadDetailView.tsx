@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import ForumAvatar from '@/components/forum/ForumAvatar';
+import CachedAvatar from '@/components/ui/CachedAvatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
 import {
@@ -487,11 +488,10 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
     return (
       <div key={comment.id} className={`${isReply ? 'ml-13 mt-3 rounded-lg p-3 border-l-2 border-border' : 'rounded-lg p-4'}`}>
         <div className="flex items-start space-x-3">
-          <ForumAvatar
+          <CachedAvatar
             userId={comment.created_by}
-            name={comment.authorName || 'User'}
             profilePicture={comment.authorAvatarUrl || undefined}
-            initials={comment.authorInitials}
+            fallback={comment.authorInitials || 'U'}
             className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} flex-shrink-0`}
           />
           
@@ -548,11 +548,10 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
             {replyingTo === comment.id && (
               <div className="mt-3">
                 <div className="flex items-start space-x-3">
-                  <ForumAvatar
-                    userId={userProfile?.id}
-                    name={userProfile ? `${userProfile.firstname || ''} ${userProfile.lastname || ''}` : 'You'}
+                  <CachedAvatar
+                    userId={userProfile?.id || ''}
                     profilePicture={userProfile?.profile_picture}
-                    initials={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}`}
+                    fallback={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}` || 'U'}
                     className="w-8 h-8 flex-shrink-0"
                   />
                   <div className="flex-1 rounded-full px-4 py-2 border border-border">
@@ -727,11 +726,10 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
           {(isPublicForum && !thread.locked) && (
             <div className="border-t border-border p-4">
               <div className="flex items-start space-x-3">
-              <ForumAvatar
-                userId={userProfile?.id}
-                name={userProfile ? `${userProfile.firstname || ''} ${userProfile.lastname || ''}` : 'You'}
+              <CachedAvatar
+                userId={userProfile?.id || ''}
                 profilePicture={userProfile?.profile_picture}
-                initials={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}`}
+                fallback={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}` || 'U'}
                 className="w-10 h-10 flex-shrink-0"
               />
                 <div className="flex-1 rounded-full px-4 py-2 border border-border">
