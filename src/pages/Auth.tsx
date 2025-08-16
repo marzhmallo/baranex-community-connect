@@ -227,14 +227,31 @@ const Auth = () => {
       const isEmail = values.emailOrUsername.includes('@');
       let email = values.emailOrUsername;
 
-      // If it's not an email, look up the email from username in profiles table
+      // If it's not an email, look up the email from username using SECURITY DEFINER function
       if (!isEmail) {
         console.log("Looking up email for username:", values.emailOrUsername);
         const {
-          data: profileData
-        } = await supabase.from('profiles').select('email').eq('username', values.emailOrUsername).maybeSingle();
-        if (profileData?.email) {
-          email = profileData.email;
+          data: lookupData,
+          error: lookupError
+        } = await supabase.rpc('auth_lookup_email_by_username', {
+          username_input: values.emailOrUsername
+        });
+        
+        if (lookupError) {
+          console.error("Error looking up username:", lookupError);
+          toast({
+            title: "Error",
+            description: "An error occurred while looking up the username",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          captchaRef.current?.resetCaptcha();
+          setCaptchaToken(null);
+          return;
+        }
+        
+        if (lookupData && lookupData.length > 0 && lookupData[0].email) {
+          email = lookupData[0].email;
         } else {
           toast({
             title: "User Not Found",

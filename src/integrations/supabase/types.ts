@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -58,10 +58,10 @@ export type Database = {
           created_by: string
           id: string
           is_pinned: boolean | null
-          is_public: boolean | null
           photo_url: string | null
           title: string
           updated_at: string
+          visibility: string | null
         }
         Insert: {
           attachment_url?: string | null
@@ -73,10 +73,10 @@ export type Database = {
           created_by: string
           id?: string
           is_pinned?: boolean | null
-          is_public?: boolean | null
           photo_url?: string | null
           title: string
           updated_at?: string
+          visibility?: string | null
         }
         Update: {
           attachment_url?: string | null
@@ -88,10 +88,10 @@ export type Database = {
           created_by?: string
           id?: string
           is_pinned?: boolean | null
-          is_public?: boolean | null
           photo_url?: string | null
           title?: string
           updated_at?: string
+          visibility?: string | null
         }
         Relationships: [
           {
@@ -559,6 +559,7 @@ export type Database = {
           name: string
           required_fields: Json
           template: string
+          type: string
           updated_at: string | null
           validity_days: number | null
         }
@@ -572,6 +573,7 @@ export type Database = {
           name: string
           required_fields?: Json
           template: string
+          type: string
           updated_at?: string | null
           validity_days?: number | null
         }
@@ -585,6 +587,7 @@ export type Database = {
           name?: string
           required_fields?: Json
           template?: string
+          type?: string
           updated_at?: string | null
           validity_days?: number | null
         }
@@ -804,45 +807,51 @@ export type Database = {
           created_at: string | null
           created_by: string
           description: string | null
-          end_time: string
+          end_time: string | null
           event_type: string | null
           id: string
-          is_public: boolean | null
           location: string | null
+          reccuring: boolean | null
+          rrule: string | null
           start_time: string
           target_audience: string | null
           title: string
           updated_at: string | null
+          visibility: string | null
         }
         Insert: {
           brgyid: string
           created_at?: string | null
           created_by: string
           description?: string | null
-          end_time: string
+          end_time?: string | null
           event_type?: string | null
           id?: string
-          is_public?: boolean | null
           location?: string | null
+          reccuring?: boolean | null
+          rrule?: string | null
           start_time: string
           target_audience?: string | null
           title: string
           updated_at?: string | null
+          visibility?: string | null
         }
         Update: {
           brgyid?: string
           created_at?: string | null
           created_by?: string
           description?: string | null
-          end_time?: string
+          end_time?: string | null
           event_type?: string | null
           id?: string
-          is_public?: boolean | null
           location?: string | null
+          reccuring?: boolean | null
+          rrule?: string | null
           start_time?: string
           target_audience?: string | null
           title?: string
           updated_at?: string | null
+          visibility?: string | null
         }
         Relationships: [
           {
@@ -1539,7 +1548,8 @@ export type Database = {
           credz: Json
           enabled: boolean
           gname: string
-          id: number
+          id: string
+          updated_at: string | null
           url: string | null
         }
         Insert: {
@@ -1548,7 +1558,8 @@ export type Database = {
           credz: Json
           enabled?: boolean
           gname: string
-          id?: number
+          id?: string
+          updated_at?: string | null
           url?: string | null
         }
         Update: {
@@ -1557,7 +1568,8 @@ export type Database = {
           credz?: Json
           enabled?: boolean
           gname?: string
-          id?: number
+          id?: string
+          updated_at?: string | null
           url?: string | null
         }
         Relationships: []
@@ -2328,15 +2340,22 @@ export type Database = {
       airtable_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       airtable_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
+      }
+      auth_lookup_email_by_username: {
+        Args: { username_input: string }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
       }
       auth0_fdw_handler: {
         Args: Record<PropertyKey, never>
@@ -2345,14 +2364,14 @@ export type Database = {
       auth0_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       auth0_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       big_query_fdw_handler: {
@@ -2362,14 +2381,14 @@ export type Database = {
       big_query_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       big_query_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       click_house_fdw_handler: {
@@ -2379,14 +2398,14 @@ export type Database = {
       click_house_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       click_house_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       cognito_fdw_handler: {
@@ -2396,14 +2415,14 @@ export type Database = {
       cognito_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       cognito_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       delete_rejected_unprocessed_requests: {
@@ -2417,14 +2436,14 @@ export type Database = {
       firebase_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       firebase_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       get_age_distribution: {
@@ -2437,22 +2456,22 @@ export type Database = {
       get_current_user_admin_info: {
         Args: Record<PropertyKey, never>
         Returns: {
-          is_admin: boolean
           brgyid: string
+          is_admin: boolean
         }[]
       }
       get_gender_distribution: {
         Args: Record<PropertyKey, never>
         Returns: {
-          gender: string
           count: number
+          gender: string
         }[]
       }
       get_purok_distribution: {
         Args: Record<PropertyKey, never>
         Returns: {
-          purok: string
           count: number
+          purok: string
         }[]
       }
       hello_world_fdw_handler: {
@@ -2462,14 +2481,14 @@ export type Database = {
       hello_world_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       hello_world_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       is_admin: {
@@ -2487,14 +2506,14 @@ export type Database = {
       logflare_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       logflare_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       mssql_fdw_handler: {
@@ -2504,14 +2523,14 @@ export type Database = {
       mssql_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       mssql_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       redis_fdw_handler: {
@@ -2521,14 +2540,14 @@ export type Database = {
       redis_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       redis_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       s3_fdw_handler: {
@@ -2538,14 +2557,14 @@ export type Database = {
       s3_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       s3_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       stripe_fdw_handler: {
@@ -2555,14 +2574,14 @@ export type Database = {
       stripe_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       stripe_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
       wasm_fdw_handler: {
@@ -2572,14 +2591,14 @@ export type Database = {
       wasm_fdw_meta: {
         Args: Record<PropertyKey, never>
         Returns: {
+          author: string
           name: string
           version: string
-          author: string
           website: string
         }[]
       }
       wasm_fdw_validator: {
-        Args: { options: string[]; catalog: unknown }
+        Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
     }
