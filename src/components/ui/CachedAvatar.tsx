@@ -74,7 +74,12 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
         .createSignedUrl(filePath, 600); // 10 minutes expiration
 
       if (!signedUrlError && signedUrlData?.signedUrl) {
-        return signedUrlData.signedUrl;
+        // Convert relative URLs to full URLs
+        const signedUrl = signedUrlData.signedUrl;
+        if (signedUrl.startsWith('/')) {
+          return `https://dssjspakagyerrmtaakm.supabase.co/storage/v1${signedUrl}`;
+        }
+        return signedUrl;
       }
 
       // Fallback to public URL if bucket is public
