@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import ForumAvatar from '@/components/forum/ForumAvatar';
+import CachedAvatar from '@/components/ui/CachedAvatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
 import {
@@ -727,11 +728,10 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
           {(isPublicForum && !thread.locked) && (
             <div className="border-t border-border p-4">
               <div className="flex items-start space-x-3">
-              <ForumAvatar
+              <CachedAvatar
                 userId={userProfile?.id || ''}
-                name={`${userProfile?.firstname || ''} ${userProfile?.lastname || ''}`.trim()}
                 profilePicture={userProfile?.profile_picture}
-                initials={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}` || 'U'}
+                fallback={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}` || 'U'}
                 className="w-10 h-10 flex-shrink-0"
               />
                 <div className="flex-1 rounded-full px-4 py-2 border border-border">
