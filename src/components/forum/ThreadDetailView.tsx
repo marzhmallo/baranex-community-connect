@@ -534,7 +534,7 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
                 <span>{comment.reactionCounts?.['😊'] || 0}</span>
               </button>
               
-              {isUserFromSameBarangay && !thread.locked && (
+              {(isUserFromSameBarangay || isPublicForum) && !thread.locked && (
                 <button 
                   className={`${isReply ? 'text-xs' : 'text-xs'} text-muted-foreground hover:text-primary transition-colors`}
                   onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
