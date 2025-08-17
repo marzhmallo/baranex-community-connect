@@ -52,6 +52,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
   const [endType, setEndType] = useState<'never' | 'after' | 'on'>('never');
   const [occurrences, setOccurrences] = useState(10);
   const [endDate, setRecurrenceEndDate] = useState<Date>(new Date());
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
@@ -131,6 +132,11 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         
         if (interval > 1) {
           rruleString += `;INTERVAL=${interval}`;
+        }
+        
+        // Add BYDAY for weekly events with selected days
+        if (frequency === 'weekly' && selectedDays.length > 0) {
+          rruleString += `;BYDAY=${selectedDays.join(',')}`;
         }
         
         if (endType === 'after') {
@@ -422,6 +428,41 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     />
                   </div>
                 </div>
+
+                {frequency === 'weekly' && (
+                  <div>
+                    <Label htmlFor="days">Repeat on</Label>
+                    <div className="grid grid-cols-7 gap-1 mt-2">
+                      {['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'].map((day, index) => {
+                        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        const isSelected = selectedDays.includes(day);
+                        return (
+                          <Button
+                            key={day}
+                            type="button"
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            className={`h-8 w-8 p-0 text-xs ${
+                              isSelected 
+                                ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                                : "bg-[#0f1623] border-gray-600 hover:bg-gray-600"
+                            }`}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedDays(selectedDays.filter(d => d !== day));
+                              } else {
+                                setSelectedDays([...selectedDays, day]);
+                              }
+                            }}
+                            title={dayNames[index]}
+                          >
+                            {day}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="end-type">Ends</Label>
