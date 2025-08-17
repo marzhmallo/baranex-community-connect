@@ -572,6 +572,23 @@ const ProfilePage = () => {
                     <span className="font-semibold text-muted-foreground italic">{userProfile?.phone || "Not set"}</span>
                   )}
                 </div>
+                <div className="flex justify-between items-start py-4 border-b border-border">
+                  <span className="text-muted-foreground">Bio</span>
+                  {editing ? (
+                    <textarea 
+                      name="bio"
+                      value={editData.bio}
+                      onChange={handleInputChange}
+                      placeholder="Write something about yourself..."
+                      rows={3}
+                      className="bg-input border border-border rounded px-2 py-1 text-foreground w-3/5 resize-none"
+                    />
+                  ) : (
+                    <span className="font-semibold text-muted-foreground italic w-3/5 text-right">
+                      {userProfile?.bio || "Not set"}
+                    </span>
+                  )}
+                </div>
                 <div className="flex justify-between items-center py-4 border-b border-border">
                   <span className="text-muted-foreground">Status</span>
                   <span className="font-semibold text-green-500">{userProfile?.status?.charAt(0).toUpperCase() + userProfile?.status?.slice(1) || ""}</span>

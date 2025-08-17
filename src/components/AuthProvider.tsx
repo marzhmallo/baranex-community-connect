@@ -15,6 +15,7 @@ interface UserProfile {
   lastname?: string;
   middlename?: string;
   phone?: string;
+  bio?: string;
   status?: string;
   adminid?: string;
   created_at?: string;
