@@ -53,6 +53,9 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
   const [occurrences, setOccurrences] = useState(10);
   const [endDate, setRecurrenceEndDate] = useState<Date>(new Date());
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [monthDay, setMonthDay] = useState(1);
+  const [yearMonth, setYearMonth] = useState(1);
+  const [yearDay, setYearDay] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
@@ -137,6 +140,16 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         // Add BYDAY for weekly events with selected days
         if (frequency === 'weekly' && selectedDays.length > 0) {
           rruleString += `;BYDAY=${selectedDays.join(',')}`;
+        }
+        
+        // Add BYMONTHDAY for monthly events
+        if (frequency === 'monthly') {
+          rruleString += `;BYMONTHDAY=${monthDay}`;
+        }
+        
+        // Add BYMONTH and BYMONTHDAY for yearly events
+        if (frequency === 'yearly') {
+          rruleString += `;BYMONTH=${yearMonth};BYMONTHDAY=${yearDay}`;
         }
         
         if (endType === 'after') {
@@ -460,6 +473,62 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                           </Button>
                         );
                       })}
+                    </div>
+                  </div>
+                )}
+
+                {frequency === 'monthly' && (
+                  <div>
+                    <Label htmlFor="month-day">Day of month</Label>
+                    <Select value={monthDay.toString()} onValueChange={(value) => setMonthDay(parseInt(value))}>
+                      <SelectTrigger className="bg-[#0f1623] border-gray-600">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#0f1623] border-gray-600">
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                          <SelectItem key={day} value={day.toString()}>
+                            {day}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {frequency === 'yearly' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="year-month">Month</Label>
+                      <Select value={yearMonth.toString()} onValueChange={(value) => setYearMonth(parseInt(value))}>
+                        <SelectTrigger className="bg-[#0f1623] border-gray-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#0f1623] border-gray-600">
+                          {[
+                            'January', 'February', 'March', 'April', 'May', 'June',
+                            'July', 'August', 'September', 'October', 'November', 'December'
+                          ].map((month, index) => (
+                            <SelectItem key={index + 1} value={(index + 1).toString()}>
+                              {month}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="year-day">Day</Label>
+                      <Select value={yearDay.toString()} onValueChange={(value) => setYearDay(parseInt(value))}>
+                        <SelectTrigger className="bg-[#0f1623] border-gray-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#0f1623] border-gray-600">
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                            <SelectItem key={day} value={day.toString()}>
+                              {day}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 )}
