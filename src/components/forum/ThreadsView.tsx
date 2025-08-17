@@ -379,7 +379,7 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
             <h1 className="text-3xl font-bold text-foreground mb-2">{forum.title}</h1>
             <p className="text-muted-foreground">{forum.description}</p>
           </div>
-          {isUserFromSameBarangay && (
+          {userProfile && (
             <Button 
               onClick={() => setShowCreateDialog(true)} 
               className="px-6 py-3 font-medium transition-colors duration-200 flex items-center gap-2"
