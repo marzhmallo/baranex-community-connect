@@ -53,9 +53,9 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
   const [occurrences, setOccurrences] = useState(10);
   const [endDate, setRecurrenceEndDate] = useState<Date>(new Date());
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [monthDay, setMonthDay] = useState(1);
-  const [yearMonth, setYearMonth] = useState(1);
-  const [yearDay, setYearDay] = useState(1);
+  const [monthDays, setMonthDays] = useState<number[]>([]);
+  const [yearMonths, setYearMonths] = useState<number[]>([]);
+  const [yearDays, setYearDays] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
@@ -143,13 +143,18 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         }
         
         // Add BYMONTHDAY for monthly events
-        if (frequency === 'monthly') {
-          rruleString += `;BYMONTHDAY=${monthDay}`;
+        if (frequency === 'monthly' && monthDays.length > 0) {
+          rruleString += `;BYMONTHDAY=${monthDays.join(',')}`;
         }
         
         // Add BYMONTH and BYMONTHDAY for yearly events
         if (frequency === 'yearly') {
-          rruleString += `;BYMONTH=${yearMonth};BYMONTHDAY=${yearDay}`;
+          if (yearMonths.length > 0) {
+            rruleString += `;BYMONTH=${yearMonths.join(',')}`;
+          }
+          if (yearDays.length > 0) {
+            rruleString += `;BYMONTHDAY=${yearDays.join(',')}`;
+          }
         }
         
         if (endType === 'after') {
@@ -479,56 +484,102 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
 
                 {frequency === 'monthly' && (
                   <div>
-                    <Label htmlFor="month-day">Day of month</Label>
-                    <Select value={monthDay.toString()} onValueChange={(value) => setMonthDay(parseInt(value))}>
-                      <SelectTrigger className="bg-[#0f1623] border-gray-600">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#0f1623] border-gray-600">
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                          <SelectItem key={day} value={day.toString()}>
+                    <Label htmlFor="month-days">Days of month</Label>
+                    <div className="grid grid-cols-7 gap-1 mt-2">
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+                        const isSelected = monthDays.includes(day);
+                        return (
+                          <Button
+                            key={day}
+                            type="button"
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            className={`h-8 w-8 p-0 text-xs ${
+                              isSelected 
+                                ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                                : "bg-[#0f1623] border-gray-600 hover:bg-gray-600"
+                            }`}
+                            onClick={() => {
+                              if (isSelected) {
+                                setMonthDays(monthDays.filter(d => d !== day));
+                              } else {
+                                setMonthDays([...monthDays, day]);
+                              }
+                            }}
+                          >
                             {day}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          </Button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
 
                 {frequency === 'yearly' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div>
-                      <Label htmlFor="year-month">Month</Label>
-                      <Select value={yearMonth.toString()} onValueChange={(value) => setYearMonth(parseInt(value))}>
-                        <SelectTrigger className="bg-[#0f1623] border-gray-600">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#0f1623] border-gray-600">
-                          {[
-                            'January', 'February', 'March', 'April', 'May', 'June',
-                            'July', 'August', 'September', 'October', 'November', 'December'
-                          ].map((month, index) => (
-                            <SelectItem key={index + 1} value={(index + 1).toString()}>
+                      <Label htmlFor="year-months">Months</Label>
+                      <div className="grid grid-cols-3 gap-1 mt-2">
+                        {[
+                          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                        ].map((month, index) => {
+                          const monthNumber = index + 1;
+                          const isSelected = yearMonths.includes(monthNumber);
+                          return (
+                            <Button
+                              key={monthNumber}
+                              type="button"
+                              variant={isSelected ? "default" : "outline"}
+                              size="sm"
+                              className={`h-8 text-xs ${
+                                isSelected 
+                                  ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                                  : "bg-[#0f1623] border-gray-600 hover:bg-gray-600"
+                              }`}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setYearMonths(yearMonths.filter(m => m !== monthNumber));
+                                } else {
+                                  setYearMonths([...yearMonths, monthNumber]);
+                                }
+                              }}
+                            >
                               {month}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </div>
                     <div>
-                      <Label htmlFor="year-day">Day</Label>
-                      <Select value={yearDay.toString()} onValueChange={(value) => setYearDay(parseInt(value))}>
-                        <SelectTrigger className="bg-[#0f1623] border-gray-600">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#0f1623] border-gray-600">
-                          {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                            <SelectItem key={day} value={day.toString()}>
+                      <Label htmlFor="year-days">Days of month</Label>
+                      <div className="grid grid-cols-7 gap-1 mt-2">
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+                          const isSelected = yearDays.includes(day);
+                          return (
+                            <Button
+                              key={day}
+                              type="button"
+                              variant={isSelected ? "default" : "outline"}
+                              size="sm"
+                              className={`h-8 w-8 p-0 text-xs ${
+                                isSelected 
+                                  ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                                  : "bg-[#0f1623] border-gray-600 hover:bg-gray-600"
+                              }`}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setYearDays(yearDays.filter(d => d !== day));
+                                } else {
+                                  setYearDays([...yearDays, day]);
+                                }
+                              }}
+                            >
                               {day}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
