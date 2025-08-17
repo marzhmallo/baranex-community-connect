@@ -417,7 +417,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               <div className="space-y-4 p-4 border border-gray-700 rounded-lg bg-[#171f2e]">
                 <h4 className="font-medium text-sm">Recurrence Settings</h4>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
                   <div>
                     <Label htmlFor="frequency">Repeat</Label>
                     <Select value={frequency} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'yearly') => setFrequency(value)}>
@@ -431,19 +431,6 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         <SelectItem value="yearly">Yearly</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="interval">Every</Label>
-                    <Input
-                      id="interval"
-                      type="number"
-                      min="1"
-                      max="99"
-                      value={interval}
-                      onChange={(e) => setInterval(parseInt(e.target.value) || 1)}
-                      className="bg-[#0f1623] border-gray-600"
-                    />
                   </div>
                 </div>
 
