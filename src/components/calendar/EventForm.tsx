@@ -178,7 +178,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         visibility: visibility,
         created_by: createdBy,
         brgyid: brgyid,
-        is_recurring: isRecurring,
+        reccuring: isRecurring,
         rrule: rrule
       };
       
