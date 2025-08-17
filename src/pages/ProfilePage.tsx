@@ -44,6 +44,7 @@ const ProfilePage = () => {
     middlename: userProfile?.middlename || "",
     lastname: userProfile?.lastname || "",
     phone: userProfile?.phone || "",
+    bio: userProfile?.bio || "",
   });
 
   // Generate initials from name
@@ -170,6 +171,7 @@ const ProfilePage = () => {
         middlename: userProfile.middlename || "",
         lastname: userProfile.lastname || "",
         phone: userProfile.phone || "",
+        bio: userProfile.bio || "",
       });
       
       fetchBarangayData();
@@ -229,7 +231,7 @@ const ProfilePage = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
@@ -246,6 +248,7 @@ const ProfilePage = () => {
           middlename: editData.middlename,
           lastname: editData.lastname,
           phone: editData.phone,
+          bio: editData.bio,
         })
         .eq("id", user.id);
 
@@ -278,6 +281,7 @@ const ProfilePage = () => {
       middlename: userProfile?.middlename || "",
       lastname: userProfile.lastname || "",
       phone: userProfile?.phone || "",
+      bio: userProfile?.bio || "",
     });
     setEditing(false);
   };
