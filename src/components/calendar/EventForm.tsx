@@ -160,7 +160,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
         if (endType === 'after') {
           rruleString += `;COUNT=${occurrences}`;
         } else if (endType === 'on') {
-          const formattedEndDate = endDate.toISOString().split('T')[0].replace(/-/g, '');
+          const formattedEndDate = eventEndDate.toISOString().split('T')[0].replace(/-/g, '');
           rruleString += `;UNTIL=${formattedEndDate}T235959Z`;
         }
         
@@ -580,7 +580,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <SelectContent className="bg-[#0f1623] border-gray-600">
                       <SelectItem value="never">Never</SelectItem>
                       <SelectItem value="after">After a number of occurrences</SelectItem>
-                      <SelectItem value="on">On a specific date</SelectItem>
+                      <SelectItem value="on">On the end date</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -602,26 +602,10 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
 
                 {endType === 'on' && (
                   <div>
-                    <Label htmlFor="end-date">End date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal bg-[#0f1623] border-gray-600"
-                        >
-                          {format(endDate, "PPP")}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#0f1623] border-gray-600">
-                        <Calendar
-                          mode="single"
-                          selected={endDate}
-                          onSelect={(date) => date && setRecurrenceEndDate(new Date(date))}
-                          initialFocus
-                          className="p-3"
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <Label>End date</Label>
+                    <div className="text-sm text-gray-400 p-2 bg-[#0f1623] border border-gray-600 rounded">
+                      Will end on: {format(eventEndDate, "PPP")}
+                    </div>
                   </div>
                 )}
               </div>
