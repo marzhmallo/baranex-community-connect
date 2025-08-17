@@ -199,7 +199,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
 
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[600px] bg-[#0f1623] text-white border-gray-800">
+      <DialogContent className="sm:max-w-[480px] max-h-[80vh] overflow-y-auto bg-[#0f1623] text-white border-gray-800">
         <DialogHeader>
           <DialogTitle>{event?.id ? "Edit Event" : "Create New Event"}</DialogTitle>
         </DialogHeader>
