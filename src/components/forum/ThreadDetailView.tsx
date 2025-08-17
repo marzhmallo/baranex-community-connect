@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ThumbsUp, MessageSquare, Share, Send, Heart, Smile } from 'lucide-react';
+import { ChevronLeft, ThumbsUp, MessageSquare, Share, Send, Heart, Smile, Camera, X } from 'lucide-react';
 import SmartPhotoDisplay from '@/components/ui/SmartPhotoDisplay';
 import { Thread } from './ThreadsView';
 import { formatDistanceToNow } from 'date-fns';
@@ -32,6 +32,7 @@ interface Comment {
   created_by: string;
   created_at: string;
   updated_at: string;
+  photo_url?: string | null;
   authorName?: string;
   authorInitials?: string;
   authorAvatarUrl?: string | null;
@@ -70,9 +71,15 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [commentContent, setCommentContent] = useState('');
+  const [commentPhoto, setCommentPhoto] = useState<File | null>(null);
+  const [commentPhotoPreview, setCommentPhotoPreview] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<{[key: string]: string}>({});
+  const [replyPhotos, setReplyPhotos] = useState<{[key: string]: File | null}>({});
+  const [replyPhotosPreviews, setReplyPhotosPreviews] = useState<{[key: string]: string | null}>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const replyPhotoInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
   const [threadReactions, setThreadReactions] = useState<{[key: string]: number}>({});
   const [userThreadReaction, setUserThreadReaction] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -327,25 +334,75 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
     };
   }, [thread.id, refetchComments]);
 
+  const handlePhotoSelect = (file: File | null) => {
+    setCommentPhoto(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setCommentPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setCommentPhotoPreview(null);
+    }
+  };
+
+  const handleReplyPhotoSelect = (commentId: string, file: File | null) => {
+    setReplyPhotos(prev => ({...prev, [commentId]: file}));
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setReplyPhotosPreviews(prev => ({...prev, [commentId]: reader.result as string}));
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setReplyPhotosPreviews(prev => ({...prev, [commentId]: null}));
+    }
+  };
+
+  const uploadPhoto = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userProfile?.id}-${Date.now()}.${fileExt}`;
+      const { data, error } = await supabase.storage
+        .from('forum')
+        .upload(fileName, file);
+
+      if (error) throw error;
+      return data.path;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      return null;
+    }
+  };
+
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentContent.trim() || !userProfile) return;
+    if ((!commentContent.trim() && !commentPhoto) || !userProfile) return;
 
     setIsSubmitting(true);
     try {
+      let photoUrl = null;
+      if (commentPhoto) {
+        photoUrl = await uploadPhoto(commentPhoto);
+      }
+
       const { data, error } = await supabase
         .from('comments')
         .insert({
           thread_id: thread.id,
           content: commentContent.trim(),
           created_by: userProfile.id,
-          parent_id: null
+          parent_id: null,
+          photo_url: photoUrl
         })
         .select();
 
       if (error) throw error;
       
       setCommentContent('');
+      setCommentPhoto(null);
+      setCommentPhotoPreview(null);
       refetchComments();
     } catch (error: any) {
       console.error('Error posting comment:', error);
@@ -360,23 +417,31 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
   };
 
   const handleSubmitReply = async (parentId: string) => {
-    if (!replyContent[parentId]?.trim() || !userProfile) return;
+    if ((!replyContent[parentId]?.trim() && !replyPhotos[parentId]) || !userProfile) return;
 
     setIsSubmitting(true);
     try {
+      let photoUrl = null;
+      if (replyPhotos[parentId]) {
+        photoUrl = await uploadPhoto(replyPhotos[parentId]!);
+      }
+
       const { data, error } = await supabase
         .from('comments')
         .insert({
           thread_id: thread.id,
           content: replyContent[parentId].trim(),
           created_by: userProfile.id,
-          parent_id: parentId
+          parent_id: parentId,
+          photo_url: photoUrl
         })
         .select();
 
       if (error) throw error;
       
       setReplyContent(prev => ({...prev, [parentId]: ''}));
+      setReplyPhotos(prev => ({...prev, [parentId]: null}));
+      setReplyPhotosPreviews(prev => ({...prev, [parentId]: null}));
       setReplyingTo(null);
       refetchComments();
     } catch (error: any) {
@@ -509,6 +574,20 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
             <p className={`text-foreground mb-2 ${isReply ? 'text-xs' : 'text-sm'}`}>
               {comment.content}
             </p>
+
+            {/* Photo attachment */}
+            {comment.photo_url && (
+              <div className="mb-3">
+                <SmartPhotoDisplay 
+                  bucketName="forum" 
+                  filePath={comment.photo_url} 
+                  isPublic={true}
+                  alt="Comment attachment"
+                  className={`${isReply ? 'max-w-48' : 'max-w-64'} h-auto rounded-lg`}
+                  enableZoom={true}
+                />
+              </div>
+            )}
             
             <div className={`flex items-center ${isReply ? 'space-x-3' : 'space-x-4'}`}>
               <button 
@@ -556,27 +635,60 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
                     initials={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}` || 'U'}
                     className="w-8 h-8 flex-shrink-0"
                   />
-                  <div className="flex-1 rounded-full px-4 py-2 border border-border">
-                    <input 
-                      type="text" 
-                      placeholder="Write a reply..." 
-                      value={replyContent[comment.id] || ''}
-                      onChange={(e) => setReplyContent(prev => ({...prev, [comment.id]: e.target.value}))}
-                      className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-sm"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          handleSubmitReply(comment.id);
-                        }
-                      }}
-                    />
+                  <div className="flex-1">
+                    <div className="rounded-full px-4 py-2 border border-border">
+                      <input 
+                        type="text" 
+                        placeholder="Write a reply..." 
+                        value={replyContent[comment.id] || ''}
+                        onChange={(e) => setReplyContent(prev => ({...prev, [comment.id]: e.target.value}))}
+                        className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-sm"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSubmitReply(comment.id);
+                          }
+                        }}
+                      />
+                    </div>
+                    {/* Photo preview for reply */}
+                    {replyPhotosPreviews[comment.id] && (
+                      <div className="mt-2 relative inline-block">
+                        <img 
+                          src={replyPhotosPreviews[comment.id]} 
+                          alt="Photo preview"
+                          className="w-24 h-24 object-cover rounded-lg border border-border"
+                        />
+                        <button
+                          onClick={() => handleReplyPhotoSelect(comment.id, null)}
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <button 
-                    onClick={() => handleSubmitReply(comment.id)}
-                    disabled={isSubmitting || !replyContent[comment.id]}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors hover:scale-105 transform disabled:opacity-50"
-                  >
-                    Post
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleReplyPhotoSelect(comment.id, e.target.files?.[0] || null)}
+                      className="hidden"
+                      ref={(el) => replyPhotoInputRefs.current[comment.id] = el}
+                    />
+                    <button 
+                      onClick={() => replyPhotoInputRefs.current[comment.id]?.click()}
+                      className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all duration-200 hover:scale-105"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleSubmitReply(comment.id)}
+                      disabled={isSubmitting || !replyContent[comment.id]?.trim()}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors hover:scale-105 transform disabled:opacity-50"
+                    >
+                      Post
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -728,33 +840,64 @@ const ThreadDetailView = ({ thread, onBack, isUserFromSameBarangay, isPublicForu
           {(isPublicForum && !thread.locked) && (
             <div className="border-t border-border p-4">
               <div className="flex items-start space-x-3">
-              <CachedAvatar
-                userId={userProfile?.id || ''}
-                profilePicture={userProfile?.profile_picture}
-                fallback={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}` || 'U'}
-                className="w-10 h-10 flex-shrink-0"
-              />
-                <div className="flex-1 rounded-full px-4 py-2 border border-border">
-                  <input 
-                    type="text" 
-                    placeholder="Write a comment..." 
-                    value={commentContent}
-                    onChange={(e) => setCommentContent(e.target.value)}
-                    className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-sm"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSubmitComment(e);
-                      }
-                    }}
-                  />
+                <CachedAvatar
+                  userId={userProfile?.id || ''}
+                  profilePicture={userProfile?.profile_picture}
+                  fallback={`${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}` || 'U'}
+                  className="w-10 h-10 flex-shrink-0"
+                />
+                <div className="flex-1">
+                  <div className="rounded-full px-4 py-2 border border-border">
+                    <input 
+                      type="text" 
+                      placeholder="Write a comment..." 
+                      value={commentContent}
+                      onChange={(e) => setCommentContent(e.target.value)}
+                      className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-sm"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSubmitComment(e);
+                        }
+                      }}
+                    />
+                  </div>
+                  {/* Photo preview */}
+                  {commentPhotoPreview && (
+                    <div className="mt-2 relative inline-block">
+                      <img 
+                        src={commentPhotoPreview} 
+                        alt="Photo preview"
+                        className="w-24 h-24 object-cover rounded-lg border border-border"
+                      />
+                      <button
+                        onClick={() => handlePhotoSelect(null)}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center space-x-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handlePhotoSelect(e.target.files?.[0] || null)}
+                    className="hidden"
+                    ref={photoInputRef}
+                  />
+                  <button 
+                    onClick={() => photoInputRef.current?.click()}
+                    className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all duration-200 hover:scale-105"
+                  >
+                    <Camera className="text-lg" />
+                  </button>
                   <button className="p-2 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-full transition-all duration-200 hover:scale-105">
                     <Smile className="text-lg" />
                   </button>
                   <button 
                     onClick={handleSubmitComment}
-                    disabled={isSubmitting || !commentContent.trim()}
+                    disabled={isSubmitting || (!commentContent.trim() && !commentPhoto)}
                     className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors hover:scale-105 transform disabled:opacity-50"
                   >
                     Post

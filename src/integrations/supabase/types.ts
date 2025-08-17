@@ -101,6 +101,13 @@ export type Database = {
             referencedRelation: "barangays"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "announcements_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
         ]
       }
       barangays: {
@@ -289,6 +296,7 @@ export type Database = {
           created_by: string
           id: string
           parent_id: string | null
+          photo_url: string | null
           thread_id: string
           updated_at: string
         }
@@ -298,6 +306,7 @@ export type Database = {
           created_by: string
           id?: string
           parent_id?: string | null
+          photo_url?: string | null
           thread_id: string
           updated_at?: string
         }
@@ -307,6 +316,7 @@ export type Database = {
           created_by?: string
           id?: string
           parent_id?: string | null
+          photo_url?: string | null
           thread_id?: string
           updated_at?: string
         }
@@ -372,6 +382,13 @@ export type Database = {
             referencedRelation: "barangays"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "disaster_zones_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
         ]
       }
       dnexus: {
@@ -426,10 +443,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "dnexus_destination_fkey"
+            columns: ["destination"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "dnexus_source_fkey"
             columns: ["source"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dnexus_source_fkey"
+            columns: ["source"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
             referencedColumns: ["id"]
           },
         ]
@@ -507,6 +538,13 @@ export type Database = {
             columns: ["brgyid"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
             referencedColumns: ["id"]
           },
           {
@@ -683,6 +721,13 @@ export type Database = {
             referencedRelation: "barangays"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "emergency_contacts_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
         ]
       }
       evacuation_centers: {
@@ -749,6 +794,13 @@ export type Database = {
             referencedRelation: "barangays"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "evacuation_centers_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
         ]
       }
       evacuation_routes: {
@@ -797,6 +849,13 @@ export type Database = {
             columns: ["brgyid"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evacuation_routes_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
             referencedColumns: ["id"]
           },
         ]
@@ -861,6 +920,13 @@ export type Database = {
             referencedRelation: "barangays"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "events_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
         ]
       }
       feedback_reports: {
@@ -914,6 +980,13 @@ export type Database = {
             referencedRelation: "barangays"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "feedback_reports_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
         ]
       }
       flagged_individuals: {
@@ -962,6 +1035,13 @@ export type Database = {
             columns: ["brgyid"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flagged_individuals_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
             referencedColumns: ["id"]
           },
           {
@@ -1172,6 +1252,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "households_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "households_head_of_family_fkey"
             columns: ["head_of_family"]
             isOneToOne: true
@@ -1291,6 +1378,13 @@ export type Database = {
             columns: ["brgyid"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_reports_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
             referencedColumns: ["id"]
           },
         ]
@@ -1539,6 +1633,13 @@ export type Database = {
             referencedRelation: "barangays"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "officials_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
         ]
       }
       payme: {
@@ -1695,6 +1796,13 @@ export type Database = {
             columns: ["brgyid"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
             referencedColumns: ["id"]
           },
         ]
@@ -1970,6 +2078,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "residents_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "residents_household_id_fkey"
             columns: ["household_id"]
             isOneToOne: false
@@ -2140,6 +2255,13 @@ export type Database = {
             columns: ["brgyid"]
             isOneToOne: false
             referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
             referencedColumns: ["id"]
           },
         ]
@@ -2319,6 +2441,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "residents_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "residents_household_id_fkey"
             columns: ["household_id"]
             isOneToOne: false
@@ -2326,6 +2455,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      public_barangays: {
+        Row: {
+          backgroundurl: string | null
+          barangayname: string | null
+          email: string | null
+          gcashname: string[] | null
+          gcashurl: string | null
+          halllat: number | null
+          halllong: number | null
+          id: string | null
+          instructions: string | null
+          logo_url: string | null
+          municipality: string | null
+          officehours: string | null
+          phone: string | null
+          province: string | null
+          region: string | null
+        }
+        Insert: {
+          backgroundurl?: string | null
+          barangayname?: string | null
+          email?: string | null
+          gcashname?: string[] | null
+          gcashurl?: string | null
+          halllat?: number | null
+          halllong?: number | null
+          id?: string | null
+          instructions?: string | null
+          logo_url?: string | null
+          municipality?: string | null
+          officehours?: string | null
+          phone?: string | null
+          province?: string | null
+          region?: string | null
+        }
+        Update: {
+          backgroundurl?: string | null
+          barangayname?: string | null
+          email?: string | null
+          gcashname?: string[] | null
+          gcashurl?: string | null
+          halllat?: number | null
+          halllong?: number | null
+          id?: string | null
+          instructions?: string | null
+          logo_url?: string | null
+          municipality?: string | null
+          officehours?: string | null
+          phone?: string | null
+          province?: string | null
+          region?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
