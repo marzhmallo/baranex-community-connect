@@ -110,7 +110,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
     // Handle visibility filtering
     const matchesVisibility = !selectedVisibility || 
       (selectedVisibility === 'internal' && announcement.visibility === 'internal') ||
-      (selectedVisibility === 'logged_in' && announcement.visibility === 'logged_in') ||
+      (selectedVisibility === 'users' && announcement.visibility === 'users') ||
       (selectedVisibility === 'public' && announcement.visibility === 'public');
     
     return matchesSearch && matchesCategory && matchesVisibility;
