@@ -22,6 +22,7 @@ interface UserProfile {
   username: string;
   email: string;
   role: string;
+  profile_picture?: string;
 }
 
 interface UseActivityLogsParams {
@@ -215,7 +216,7 @@ export function useActivityLogs(params: UseActivityLogsParams): UseActivityLogsR
         // Fetch only profiles with allowed roles (excluding glyph and overseer)
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('id, firstname, lastname, username, email, role')
+          .select('id, firstname, lastname, username, email, role, profile_picture')
           .in('id', userIds)
           .in('role', ['user', 'admin', 'staff']);
 

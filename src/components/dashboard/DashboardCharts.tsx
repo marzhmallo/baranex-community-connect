@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from 'react';
 import { UAParser } from 'ua-parser-js';
 import { Phone, Mail, Clock } from 'lucide-react';
+import CachedAvatar from "@/components/ui/CachedAvatar";
 
 interface ActivityLog {
   id: string;
@@ -25,9 +26,11 @@ interface ActivityLog {
 
 interface UserProfile {
   id: string;
-  firstname: string;
-  lastname: string;
+  firstname?: string;
+  lastname?: string;
   username: string;
+  role: string;
+  profile_picture?: string;
 }
 
 interface BarangayContact {
@@ -173,11 +176,11 @@ const DashboardCharts = () => {
       let filteredActivities: ActivityLog[] = [];
       if (activities.length > 0) {
         const userIds = [...new Set(activities.map(activity => activity.user_id))];
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, firstname, lastname, username, role')
-          .in('id', userIds)
-          .in('role', ['user', 'admin', 'staff']);
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, firstname, lastname, username, role, profile_picture')
+            .in('id', userIds)
+            .in('role', ['user', 'admin', 'staff']);
 
         if (!profilesError && profilesData) {
           const allowedUserIds = new Set(profilesData.map(profile => profile.id));
@@ -325,7 +328,16 @@ const DashboardCharts = () => {
     return '#6b7280'; // Gray for any other values
   };
 
-  // Helper function to format activity message with user name
+  // Helper function to get user initials for avatar fallback
+  const getUserInitials = (userId: string) => {
+    const profile = userProfiles[userId];
+    if (!profile) return 'U';
+    
+    if (profile.firstname && profile.lastname) {
+      return `${profile.firstname[0]}${profile.lastname[0]}`;
+    }
+    return profile.username ? profile.username.substring(0, 2).toUpperCase() : 'U';
+  };
   const formatActivityMessage = (activity: ActivityLog) => {
     const userProfile = userProfiles[activity.user_id];
     const userName = userProfile 
@@ -560,9 +572,12 @@ const DashboardCharts = () => {
               ) : recentActivities.length > 0 ? (
                 recentActivities.map(activity => (
                   <div key={activity.id} className="flex items-start gap-3 p-2 hover:bg-muted/50 rounded-md transition-colors">
-                    <div className="rounded-full bg-primary/10 p-2 mt-1">
-                      {getActivityIcon(activity.action)}
-                    </div>
+                    <CachedAvatar
+                      userId={activity.user_id}
+                      profilePicture={userProfiles[activity.user_id]?.profile_picture}
+                      fallback={getUserInitials(activity.user_id)}
+                      className="w-8 h-8 mt-1"
+                    />
                     <div className="space-y-1 flex-1">
                       <p className="text-sm font-medium leading-none">
                         {formatActivityMessage(activity)}

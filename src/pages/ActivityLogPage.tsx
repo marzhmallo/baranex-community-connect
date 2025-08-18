@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import { UAParser } from 'ua-parser-js';
+import CachedAvatar from "@/components/ui/CachedAvatar";
 
 interface ActivityLog {
   id: string;
@@ -28,6 +29,7 @@ interface UserProfile {
   username: string;
   email: string;
   role: string;
+  profile_picture?: string;
 }
 
 export default function ActivityLogPage() {
@@ -500,9 +502,12 @@ export default function ActivityLogPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                          <span className="text-primary-foreground text-xs font-medium">{getUserInitials(activity.user_id)}</span>
-                        </div>
+                        <CachedAvatar
+                          userId={activity.user_id}
+                          profilePicture={userProfiles[activity.user_id]?.profile_picture}
+                          fallback={getUserInitials(activity.user_id)}
+                          className="w-8 h-8"
+                        />
                         <div className="ml-3">
                           <div className="text-sm font-medium text-foreground">{getUserName(activity.user_id)}</div>
                           <div className="text-sm text-muted-foreground capitalize">{getUserRole(activity.user_id)}</div>
