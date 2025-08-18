@@ -34,9 +34,9 @@ const AnnouncementsPage = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedAudiences, setSelectedAudiences] = useState<string[]>([]);
+  const [selectedVisibility, setSelectedVisibility] = useState<string>('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'priority' | 'alphabetical' | 'category'>('newest');
-  const [openDropdown, setOpenDropdown] = useState<'category' | 'audience' | 'sort' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'category' | 'visibility' | 'sort' | null>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -160,25 +160,32 @@ const AnnouncementsPage = () => {
                   </div>}
               </div>
 
-              {/* Audience Filter */}
+              {/* Visibility Filter */}
               <div className="relative dropdown-container">
-                <button onClick={() => setOpenDropdown(openDropdown === 'audience' ? null : 'audience')} className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
+                <button onClick={() => setOpenDropdown(openDropdown === 'visibility' ? null : 'visibility')} className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
                   <Users className="text-secondary-foreground h-4 w-4" />
-                  Audience {selectedAudiences.length > 0 && `(${selectedAudiences.length})`}
+                  Visibility {selectedVisibility && `(${selectedVisibility})`}
                   <span className="text-muted-foreground">▼</span>
                 </button>
-                {openDropdown === 'audience' && <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
+                {openDropdown === 'visibility' && <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[180px]">
                     <div className="p-2">
-                      {['All Residents', 'Senior Citizens', 'Business Owners', 'Students'].map(audience => <label key={audience} className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer border-b border-border/50 last:border-b-0">
-                          <input type="checkbox" className="rounded" checked={selectedAudiences.includes(audience)} onChange={e => {
-                      if (e.target.checked) {
-                        setSelectedAudiences([...selectedAudiences, audience]);
-                      } else {
-                        setSelectedAudiences(selectedAudiences.filter(a => a !== audience));
-                      }
-                    }} />
-                          <span className="text-popover-foreground">{audience}</span>
-                        </label>)}
+                      {[
+                        { value: '', label: 'All Announcements' },
+                        { value: 'internal', label: 'Internal' },
+                        { value: 'logged_in', label: 'All Logged In Users' },
+                        { value: 'public', label: 'Public' }
+                      ].map(visibility => (
+                        <button 
+                          key={visibility.value}
+                          onClick={() => {
+                            setSelectedVisibility(visibility.value);
+                            setOpenDropdown(null);
+                          }}
+                          className={`w-full text-left p-2 hover:bg-accent rounded cursor-pointer border-b border-border/50 last:border-b-0 ${selectedVisibility === visibility.value ? 'bg-accent' : ''}`}
+                        >
+                          <span className="text-popover-foreground">{visibility.label}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>}
               </div>
@@ -245,7 +252,7 @@ const AnnouncementsPage = () => {
               </AlertDescription>
             </Alert>}
 
-          <AnnouncementsList announcements={announcements || []} isLoading={isLoading} refetch={refetch} searchQuery={searchQuery} selectedCategories={selectedCategories} selectedAudiences={selectedAudiences} sortBy={sortBy} />
+          <AnnouncementsList announcements={announcements || []} isLoading={isLoading} refetch={refetch} searchQuery={searchQuery} selectedCategories={selectedCategories} selectedVisibility={selectedVisibility} sortBy={sortBy} />
         </div>
 
         <div className="bg-card border border-border rounded-xl shadow-lg p-6">

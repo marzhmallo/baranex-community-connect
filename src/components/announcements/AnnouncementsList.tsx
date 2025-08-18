@@ -73,7 +73,7 @@ interface AnnouncementsListProps {
   refetch: () => void;
   searchQuery?: string;
   selectedCategories?: string[];
-  selectedAudiences?: string[];
+  selectedVisibility?: string;
   sortBy?: 'newest' | 'oldest' | 'priority' | 'alphabetical' | 'category';
 }
 
@@ -83,7 +83,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
   refetch,
   searchQuery = '',
   selectedCategories = [],
-  selectedAudiences = [],
+  selectedVisibility = '',
   sortBy = 'newest'
 }) => {
   const { userProfile } = useAuth();
@@ -106,9 +106,14 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
       announcement.content.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(announcement.category);
-    const matchesAudience = selectedAudiences.length === 0 || selectedAudiences.includes(announcement.audience);
     
-    return matchesSearch && matchesCategory && matchesAudience;
+    // Handle visibility filtering
+    const matchesVisibility = !selectedVisibility || 
+      (selectedVisibility === 'internal' && announcement.visibility === 'internal') ||
+      (selectedVisibility === 'logged_in' && announcement.visibility === 'logged_in') ||
+      (selectedVisibility === 'public' && announcement.visibility === 'public');
+    
+    return matchesSearch && matchesCategory && matchesVisibility;
   });
 
   // Sort announcements based on the selected sort option
