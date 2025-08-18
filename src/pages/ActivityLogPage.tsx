@@ -610,19 +610,6 @@ export default function ActivityLogPage() {
           {/* Footer Actions */}
           <div className="px-6 py-4 bg-card border-t border-border">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <button 
-                  onClick={handleExport}
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors duration-200"
-                >
-                  <Download size={16} />
-                  <span>Export Logs</span>
-                </button>
-                <button className="flex items-center space-x-2 px-4 py-2 border border-input rounded-lg hover:bg-muted transition-colors duration-200">
-                  <Filter size={16} />
-                  <span>Advanced Filter</span>
-                </button>
-              </div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Activity size={16} />
                 <span>Last updated: {formatDistanceToNow(new Date())} ago</span>
