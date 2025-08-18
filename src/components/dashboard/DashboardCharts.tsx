@@ -139,76 +139,103 @@ const DashboardCharts = () => {
   const isLoading = dataLoading || dashboardLoading;
 
   // Fetch recent activities from activity_logs table with cache refresh
-  useEffect(() => {
-    const fetchRecentActivities = async () => {
-      if (!userProfile?.brgyid) return;
-      
-      // Check if cached data is stale (older than 5 minutes)
-      const cachedData = getCachedActivities(userProfile.brgyid);
-      const cacheAge = cachedData ? Date.now() - new Date(cachedData.activities[0]?.created_at || 0).getTime() : Infinity;
-      const isCacheStale = cacheAge > 5 * 60 * 1000; // 5 minutes
-      
-      // Skip if we have fresh cached data
-      if (cachedData && !isCacheStale) {
+  const fetchRecentActivities = async (useCache = true) => {
+    if (!userProfile?.brgyid) return;
+    
+    // Check if cached data is stale (older than 5 minutes)
+    const cachedData = getCachedActivities(userProfile.brgyid);
+    const cacheAge = cachedData ? Date.now() - new Date(cachedData.activities[0]?.created_at || 0).getTime() : Infinity;
+    const isCacheStale = cacheAge > 5 * 60 * 1000; // 5 minutes
+    
+    // Skip if we have fresh cached data and useCache is true
+    if (cachedData && !isCacheStale && useCache) {
+      return;
+    }
+    
+    try {
+      setActivitiesLoading(true);
+      const { data, error } = await supabase
+        .from('activity_logs')
+        .select('*, ip, agent')
+        .eq('brgyid', userProfile.brgyid)
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (error) {
+        console.error('Error fetching activity logs:', error);
         return;
       }
-      
-      try {
-        setActivitiesLoading(true);
-        const { data, error } = await supabase
-          .from('activity_logs')
-          .select('*, ip, agent')
-          .eq('brgyid', userProfile.brgyid)
-          .order('created_at', { ascending: false })
-          .limit(4);
 
-        if (error) {
-          console.error('Error fetching activity logs:', error);
-          return;
+      const activities = data || [];
+
+      // Fetch user profiles for the activities and filter by allowed roles
+      let profiles: Record<string, UserProfile> = {};
+      let filteredActivities: ActivityLog[] = [];
+      if (activities.length > 0) {
+        const userIds = [...new Set(activities.map(activity => activity.user_id))];
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, firstname, lastname, username, role')
+          .in('id', userIds)
+          .in('role', ['user', 'admin', 'staff']);
+
+        if (!profilesError && profilesData) {
+          const allowedUserIds = new Set(profilesData.map(profile => profile.id));
+          
+          // Filter activities to only include those from users with allowed roles
+          filteredActivities = activities.filter(activity => allowedUserIds.has(activity.user_id));
+          
+          profiles = profilesData.reduce((acc, profile) => {
+            acc[profile.id] = profile;
+            return acc;
+          }, {} as Record<string, UserProfile>);
+          
+          setRecentActivities(filteredActivities);
+          setUserProfiles(profiles);
         }
-
-        const activities = data || [];
-
-        // Fetch user profiles for the activities and filter by allowed roles
-        let profiles: Record<string, UserProfile> = {};
-        let filteredActivities: ActivityLog[] = [];
-        if (activities.length > 0) {
-          const userIds = [...new Set(activities.map(activity => activity.user_id))];
-          const { data: profilesData, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, firstname, lastname, username, role')
-            .in('id', userIds)
-            .in('role', ['user', 'admin', 'staff']);
-
-          if (!profilesError && profilesData) {
-            const allowedUserIds = new Set(profilesData.map(profile => profile.id));
-            
-            // Filter activities to only include those from users with allowed roles
-            filteredActivities = activities.filter(activity => allowedUserIds.has(activity.user_id));
-            
-            profiles = profilesData.reduce((acc, profile) => {
-              acc[profile.id] = profile;
-              return acc;
-            }, {} as Record<string, UserProfile>);
-            
-            setRecentActivities(filteredActivities);
-            setUserProfiles(profiles);
-          }
-        }
-
-        // Cache the filtered activities and profiles data
-        localStorage.setItem(`dashboardActivities_${userProfile.brgyid}`, JSON.stringify({
-          activities: filteredActivities,
-          profiles
-        }));
-      } catch (err) {
-        console.error('Error in fetchRecentActivities:', err);
-      } finally {
-        setActivitiesLoading(false);
       }
-    };
 
+      // Cache the filtered activities and profiles data
+      localStorage.setItem(`dashboardActivities_${userProfile.brgyid}`, JSON.stringify({
+        activities: filteredActivities,
+        profiles
+      }));
+    } catch (err) {
+      console.error('Error in fetchRecentActivities:', err);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
+  // Initial fetch on mount
+  useEffect(() => {
     fetchRecentActivities();
+  }, [userProfile?.brgyid]);
+
+  // Set up real-time subscription for activity logs
+  useEffect(() => {
+    if (!userProfile?.brgyid) return;
+
+    const channel = supabase
+      .channel(`dashboard_activity_logs_${userProfile.brgyid}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'activity_logs',
+          filter: `brgyid=eq.${userProfile.brgyid}`
+        },
+        (payload) => {
+          // Refresh activity logs in real-time when changes occur
+          fetchRecentActivities(false);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userProfile?.brgyid]);
 
   // Fetch barangay contact information
