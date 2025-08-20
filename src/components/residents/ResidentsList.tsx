@@ -770,6 +770,40 @@ const ResidentsList: React.FC = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center">
+                    <ArrowUpDown className="h-4 w-4 mr-2" />
+                    Sort by Age Group
+                    {getSortIcon('ageGroup')}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Sort by Age Group</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleSort('ageGroup')}>
+                    <div className="flex items-center">
+                      {sortField === 'ageGroup' && sortDirection === 'asc' && (
+                        <ArrowUp className="h-4 w-4 mr-2 text-primary" />
+                      )}
+                      <span className={sortField === 'ageGroup' && sortDirection === 'asc' ? "ml-6" : ""}>
+                        Age Group A-Z
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setSortField('ageGroup'); setSortDirection('desc'); }}>
+                    <div className="flex items-center">
+                      {sortField === 'ageGroup' && sortDirection === 'desc' && (
+                        <ArrowDown className="h-4 w-4 mr-2 text-primary" />
+                      )}
+                      <span className={sortField === 'ageGroup' && sortDirection === 'desc' ? "ml-6" : ""}>
+                        Age Group Z-A
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               <Dialog 
                 open={isAddResidentOpen} 
