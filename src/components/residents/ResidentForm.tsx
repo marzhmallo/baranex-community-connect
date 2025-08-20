@@ -813,6 +813,7 @@ const ResidentForm = ({
                           <SelectItem value="Temporary">Temporary</SelectItem>
                           <SelectItem value="Deceased">Deceased</SelectItem>
                           <SelectItem value="Relocated">Relocated</SelectItem>
+                          <SelectItem value="Missing">Missing</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
