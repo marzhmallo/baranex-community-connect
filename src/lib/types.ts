@@ -11,7 +11,7 @@ export interface Resident {
   address: string;
   mobile_number?: string;
   email?: string;
-  status: 'Permanent' | 'Temporary' | 'Deceased' | 'Relocated';
+  status: 'Permanent' | 'Temporary' | 'Deceased' | 'Relocated' | 'Missing';
   civil_status?: string;
   occupation?: string;
   years_in_barangay?: number;

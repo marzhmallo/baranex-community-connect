@@ -71,7 +71,7 @@ const formSchema = z.object({
   emergencyContactName: z.string().optional().or(z.literal('')),
   emergencyContactRelationship: z.string().optional().or(z.literal('')),
   emergencyContactNumber: z.string().optional().or(z.literal('')),
-  status: z.enum(["Permanent", "Temporary", "Deceased", "Relocated"]),
+  status: z.enum(["Permanent", "Temporary", "Deceased", "Relocated", "Missing"]),
   diedOn: z.date().optional().nullable(),
   remarks: z.string().optional(),
   photoUrl: z.string().optional()
@@ -85,7 +85,7 @@ interface ResidentFormProps {
 }
 
 // Map database status to form status
-const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
+const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" | "Missing" => {
   switch (dbStatus) {
     case 'Permanent':
       return 'Permanent';
@@ -95,6 +95,8 @@ const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Decea
       return 'Deceased';
     case 'Relocated':
       return 'Relocated';
+    case 'Missing':
+      return 'Missing';
     default:
       return 'Temporary';
     // Default fallback
@@ -102,7 +104,7 @@ const mapDBStatusToForm = (dbStatus: string): "Permanent" | "Temporary" | "Decea
 };
 
 // Map form status to database format
-const mapFormStatusToDB = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" => {
+const mapFormStatusToDB = (formStatus: string): "Permanent" | "Temporary" | "Deceased" | "Relocated" | "Missing" => {
   switch (formStatus) {
     case 'Permanent':
       return 'Permanent';
@@ -112,6 +114,8 @@ const mapFormStatusToDB = (formStatus: string): "Permanent" | "Temporary" | "Dec
       return 'Deceased';
     case 'Relocated':
       return 'Relocated';
+    case 'Missing':
+      return 'Missing';
     default:
       return 'Temporary';
     // Default fallback
