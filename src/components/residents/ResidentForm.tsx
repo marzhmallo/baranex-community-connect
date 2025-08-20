@@ -37,8 +37,11 @@ const residentClassifications = [{
   id: "PWD",
   label: "PWD"
 }, {
-  id: "Missing",
-  label: "Missing"
+  id: "Illiterate",
+  label: "Illiterate"
+}, {
+  id: "Solo Parent",
+  label: "Solo Parent"
 }];
 
 // Form schema using zod
