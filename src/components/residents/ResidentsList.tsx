@@ -192,6 +192,7 @@ const ResidentsList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [selectedClassifications, setSelectedClassifications] = useState<string[]>([]);
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
   const [isAddResidentOpen, setIsAddResidentOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
@@ -337,7 +338,21 @@ const ResidentsList: React.FC = () => {
         matchesClassifications = false;
       }
       
-      return matchesSearch && matchesStatus && matchesClassifications;
+      // Age group filter
+      let matchesAgeGroup = true;
+      if (selectedAgeGroup !== null) {
+        const today = new Date();
+        const birthDateObj = new Date(resident.birthDate);
+        let age = today.getFullYear() - birthDateObj.getFullYear();
+        const m = today.getMonth() - birthDateObj.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
+          age--;
+        }
+        const residentAgeGroup = getAgeGroup(age);
+        matchesAgeGroup = residentAgeGroup === selectedAgeGroup;
+      }
+      
+      return matchesSearch && matchesStatus && matchesClassifications && matchesAgeGroup;
     });
     
     // Apply sorting with null safety
@@ -396,7 +411,8 @@ const ResidentsList: React.FC = () => {
     activeStatusCard, 
     activeClassificationCard,
     selectedStatus,
-    selectedClassifications
+    selectedClassifications,
+    selectedAgeGroup
   ]);
 
   // Calculate pagination
@@ -421,6 +437,11 @@ const ResidentsList: React.FC = () => {
     } else {
       setSelectedClassifications(prev => [...prev, classification]);
     }
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+
+  const handleAgeGroupFilter = (ageGroup: AgeGroup | null) => {
+    setSelectedAgeGroup(ageGroup);
     setCurrentPage(1); // Reset to first page on filter change
   };
 
@@ -679,6 +700,7 @@ const ResidentsList: React.FC = () => {
               onClick={() => {
                 setActiveStatusCard(null);
                 setActiveClassificationCard(null);
+                setSelectedAgeGroup(null);
                 setCurrentPage(1);
               }}
             >
@@ -774,33 +796,31 @@ const ResidentsList: React.FC = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="flex items-center">
-                    <ArrowUpDown className="h-4 w-4 mr-2" />
-                    Sort by Age Group
-                    {getSortIcon('ageGroup')}
+                    <Filter className="h-4 w-4 mr-2" />
+                    {selectedAgeGroup || "All Age Groups"}
+                    <ChevronDown className="h-4 w-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Sort by Age Group</DropdownMenuLabel>
+                  <DropdownMenuLabel>Filter by Age Group</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleSort('ageGroup')}>
-                    <div className="flex items-center">
-                      {sortField === 'ageGroup' && sortDirection === 'asc' && (
-                        <ArrowUp className="h-4 w-4 mr-2 text-primary" />
-                      )}
-                      <span className={sortField === 'ageGroup' && sortDirection === 'asc' ? "ml-6" : ""}>
-                        Age Group A-Z
-                      </span>
-                    </div>
+                  <DropdownMenuItem onClick={() => handleAgeGroupFilter(null)}>
+                    All Age Groups
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { setSortField('ageGroup'); setSortDirection('desc'); }}>
-                    <div className="flex items-center">
-                      {sortField === 'ageGroup' && sortDirection === 'desc' && (
-                        <ArrowDown className="h-4 w-4 mr-2 text-primary" />
-                      )}
-                      <span className={sortField === 'ageGroup' && sortDirection === 'desc' ? "ml-6" : ""}>
-                        Age Group Z-A
-                      </span>
-                    </div>
+                  <DropdownMenuItem onClick={() => handleAgeGroupFilter('Child')}>
+                    Child (0-12)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAgeGroupFilter('Teen')}>
+                    Teen (13-19)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAgeGroupFilter('Young Adult')}>
+                    Young Adult (20-29)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAgeGroupFilter('Adult')}>
+                    Adult (30-59)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAgeGroupFilter('Elderly')}>
+                    Elderly (60+)
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
