@@ -2,9 +2,11 @@
 import { formatDistanceToNow } from 'date-fns';
 import { Thread } from './ThreadsView';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, ThumbsUp, Eye, Share2, Flag, Pin } from 'lucide-react';
+import { MessageSquare, ThumbsUp, Eye, Share2, Flag, Pin, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ForumAvatar from '@/components/forum/ForumAvatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/components/AuthProvider';
 
 interface ThreadListProps {
   threads: Thread[];
@@ -12,9 +14,12 @@ interface ThreadListProps {
   onPinToggle: (threadId: string, isPinned: boolean) => void;
   onLockToggle: (threadId: string, isLocked: boolean) => void;
   canModerate?: boolean;
+  onEditThread?: (thread: Thread) => void;
+  onDeleteThread?: (threadId: string) => void;
 }
 
-const ThreadList = ({ threads, onThreadSelect, onPinToggle, onLockToggle, canModerate = false }: ThreadListProps) => {
+const ThreadList = ({ threads, onThreadSelect, onPinToggle, onLockToggle, canModerate = false, onEditThread, onDeleteThread }: ThreadListProps) => {
+  const { userProfile } = useAuth();
   if (threads.length === 0) {
     return (
       <div className="p-6 text-center text-muted-foreground">
@@ -76,16 +81,50 @@ const ThreadList = ({ threads, onThreadSelect, onPinToggle, onLockToggle, canMod
                       {tag}
                     </Badge>
                   ))}
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-auto p-1 text-muted-foreground hover:text-foreground"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                    </svg>
-                  </Button>
+                  {(userProfile?.role === 'admin' && (thread.created_by === userProfile.id || canModerate)) ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-auto p-1 text-muted-foreground hover:text-foreground"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditThread?.(thread);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Thread
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteThread?.(thread.id);
+                          }}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Thread
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-auto p-1 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
 

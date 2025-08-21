@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Plus, Search, Loader2 } from 'lucide-react';
+import { ChevronLeft, Plus, Search, Loader2, Trash2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Forum } from '@/pages/ForumPage';
@@ -11,6 +11,8 @@ import ThreadDetailView from './ThreadDetailView';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/AuthProvider';
+import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export interface Thread {
   id: string;
@@ -39,6 +41,7 @@ export interface Thread {
 interface ThreadsViewProps {
   forum: Forum;
   onBack: () => void;
+  onDeleteForum?: (forumId: string) => void;
 }
 
 // Add after the interface
@@ -72,13 +75,15 @@ const toggleLockThread = async (threadId: string, isLocked: boolean) => {
   }
 };
 
-const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
+const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
   const { userProfile } = useAuth();
+  const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular' | 'most_replies' | 'recent_activity'>('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserFromSameBarangay, setIsUserFromSameBarangay] = useState(false);
+  const [editingThread, setEditingThread] = useState<Thread | null>(null);
   
   // Dropdown states
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -295,6 +300,75 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
     }
   };
 
+  const handleEditThread = (thread: Thread) => {
+    setEditingThread(thread);
+    setShowCreateDialog(true);
+  };
+
+  const handleDeleteThread = async (threadId: string) => {
+    try {
+      // First delete related data
+      await supabase.from('comments').delete().eq('thread_id', threadId);
+      await supabase.from('reactions').delete().eq('thread_id', threadId);
+      
+      // Then delete the thread
+      const { error } = await supabase.from('threads').delete().eq('id', threadId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Thread deleted successfully",
+      });
+      
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete thread: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteForum = async () => {
+    if (!userProfile || forum.created_by !== userProfile.id) return;
+    
+    try {
+      // First delete all threads and their related data
+      const { data: forumThreads } = await supabase
+        .from('threads')
+        .select('id')
+        .eq('forum_id', forum.id);
+      
+      if (forumThreads) {
+        for (const thread of forumThreads) {
+          await supabase.from('comments').delete().eq('thread_id', thread.id);
+          await supabase.from('reactions').delete().eq('thread_id', thread.id);
+        }
+        await supabase.from('threads').delete().eq('forum_id', forum.id);
+      }
+      
+      // Then delete the forum
+      const { error } = await supabase.from('forums').delete().eq('id', forum.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Forum deleted successfully",
+      });
+      
+      onDeleteForum?.(forum.id);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete forum: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (selectedThread) {
     return (
       <ThreadDetailView 
@@ -379,15 +453,44 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
             <h1 className="text-3xl font-bold text-foreground mb-2">{forum.title}</h1>
             <p className="text-muted-foreground">{forum.description}</p>
           </div>
-          {userProfile && (
-            <Button 
-              onClick={() => setShowCreateDialog(true)} 
-              className="px-6 py-3 font-medium transition-colors duration-200 flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Start New Thread
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {userProfile && (
+              <Button 
+                onClick={() => setShowCreateDialog(true)} 
+                className="px-6 py-3 font-medium transition-colors duration-200 flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Start New Thread
+              </Button>
+            )}
+            {userProfile?.role === 'admin' && userProfile.id === forum.created_by && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="destructive"
+                    className="px-4 py-3 font-medium transition-colors duration-200 flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Forum
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Forum</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this forum? This action will permanently delete the forum and all its threads and comments. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteForum} className="bg-destructive hover:bg-destructive/90">
+                      Delete Forum
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -663,13 +766,18 @@ const ThreadsView = ({ forum, onBack }: ThreadsViewProps) => {
           onPinToggle={handlePinToggle}
           onLockToggle={handleLockToggle}
           canModerate={userProfile?.id === forum.created_by}
+          onEditThread={handleEditThread}
+          onDeleteThread={handleDeleteThread}
         />
       </div>
 
       {showCreateDialog && (
         <CreateThreadDialog 
           open={showCreateDialog} 
-          onOpenChange={setShowCreateDialog} 
+          onOpenChange={(open) => {
+            setShowCreateDialog(open);
+            if (!open) setEditingThread(null);
+          }} 
           onThreadCreated={handleThreadCreated}
           forum={forum}
         />

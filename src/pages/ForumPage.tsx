@@ -169,6 +169,12 @@ const ForumPage = () => {
 
   const handleBackToForums = () => {
     setSelectedForum(null);
+    refetch(); // Refetch forums in case any were deleted
+  };
+
+  const handleForumDeleted = (forumId: string) => {
+    setSelectedForum(null);
+    refetch(); // Refetch the forum list after deletion
   };
 
   const isAdmin = userProfile?.role === 'admin';
@@ -180,7 +186,8 @@ const ForumPage = () => {
     return (
       <ThreadsView 
         forum={selectedForum} 
-        onBack={handleBackToForums} 
+        onBack={handleBackToForums}
+        onDeleteForum={handleForumDeleted}
       />
     );
   }
