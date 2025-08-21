@@ -42,7 +42,7 @@ const AnnouncementsPage = () => {
   const visibilityOptions = [
     { value: '', label: 'All Announcements' },
     { value: 'internal', label: 'Internal' },
-    { value: 'logged_in', label: 'Users' },
+    { value: 'users', label: 'Users' },
     { value: 'public', label: 'Public' }
   ];
 
