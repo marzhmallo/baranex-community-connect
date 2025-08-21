@@ -38,6 +38,19 @@ const AnnouncementsPage = () => {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'priority' | 'alphabetical' | 'category'>('newest');
   const [openDropdown, setOpenDropdown] = useState<'category' | 'visibility' | 'sort' | null>(null);
 
+  // Visibility options mapping
+  const visibilityOptions = [
+    { value: '', label: 'All Announcements' },
+    { value: 'internal', label: 'Internal' },
+    { value: 'logged_in', label: 'Users' },
+    { value: 'public', label: 'Public' }
+  ];
+
+  const getVisibilityLabel = (value: string) => {
+    const option = visibilityOptions.find(opt => opt.value === value);
+    return option ? option.label : 'All Announcements';
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -164,17 +177,12 @@ const AnnouncementsPage = () => {
               <div className="relative dropdown-container">
                 <button onClick={() => setOpenDropdown(openDropdown === 'visibility' ? null : 'visibility')} className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
                   <Users className="text-secondary-foreground h-4 w-4" />
-                  Visibility {selectedVisibility && `(${selectedVisibility})`}
+                  Visibility {selectedVisibility && `: ${getVisibilityLabel(selectedVisibility)}`}
                   <span className="text-muted-foreground">▼</span>
                 </button>
                 {openDropdown === 'visibility' && <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[180px]">
                     <div className="p-2">
-                      {[
-                        { value: '', label: 'All Announcements' },
-                        { value: 'internal', label: 'Internal' },
-                        { value: 'logged_in', label: 'All Logged In Users' },
-                        { value: 'public', label: 'Public' }
-                      ].map(visibility => (
+                      {visibilityOptions.map(visibility => (
                         <button 
                           key={visibility.value}
                           onClick={() => {
