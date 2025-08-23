@@ -491,10 +491,9 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
                         </svg>
                         Edit Forum
                       </button>
-                      <AlertDialog>
+                      <AlertDialog onOpenChange={(open) => open && setShowForumActions(false)}>
                         <AlertDialogTrigger asChild>
                           <button
-                            onClick={() => setShowForumActions(false)}
                             className="w-full px-4 py-2 text-left hover:bg-muted transition-colors duration-200 flex items-center gap-2 text-sm text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
