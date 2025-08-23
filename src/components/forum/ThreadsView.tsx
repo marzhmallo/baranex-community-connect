@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Plus, Search, Loader2, Trash2 } from 'lucide-react';
+import { ChevronLeft, Plus, Search, Loader2, Trash2, MoreHorizontal } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Forum } from '@/pages/ForumPage';
 import { Skeleton } from '@/components/ui/skeleton';
 import ThreadList from './ThreadList';
 import CreateThreadDialog from './CreateThreadDialog';
+import EditForumDialog from './EditForumDialog';
 import ThreadDetailView from './ThreadDetailView';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from '@/components/ui/badge';
@@ -88,6 +89,8 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
   // Dropdown states
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showForumActions, setShowForumActions] = useState(false);
+  const [showEditForumDialog, setShowEditForumDialog] = useState(false);
   
   // Filter states
   const [statusFilter, setStatusFilter] = useState<'all' | 'pinned' | 'locked' | 'open'>('all');
@@ -463,32 +466,59 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
                 Start New Thread
               </Button>
             )}
-            {userProfile?.role === 'admin' && userProfile.id === forum.created_by && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="destructive"
-                    className="px-4 py-3 font-medium transition-colors duration-200 flex items-center gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Forum
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Forum</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete this forum? This action will permanently delete the forum and all its threads and comments. This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteForum} className="bg-destructive hover:bg-destructive/90">
-                      Delete Forum
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+            {userProfile?.id === forum.created_by && (
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowForumActions(!showForumActions)}
+                  className="p-2"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+                {showForumActions && (
+                  <div className="absolute right-0 top-full mt-1 bg-background border border-border rounded-lg shadow-lg z-50 w-48">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setShowEditForumDialog(true);
+                          setShowForumActions(false);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-muted transition-colors duration-200 flex items-center gap-2 text-sm"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit Forum
+                      </button>
+                      <AlertDialog onOpenChange={(open) => open && setShowForumActions(false)}>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            className="w-full px-4 py-2 text-left hover:bg-muted transition-colors duration-200 flex items-center gap-2 text-sm text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete Forum
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Forum</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this forum? This action will permanently delete the forum and all its threads and comments. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteForum} className="bg-destructive hover:bg-destructive/90">
+                              Delete Forum
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -780,6 +810,15 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
           }} 
           onThreadCreated={handleThreadCreated}
           forum={forum}
+        />
+      )}
+
+      {showEditForumDialog && (
+        <EditForumDialog
+          open={showEditForumDialog}
+          onOpenChange={setShowEditForumDialog}
+          forum={forum}
+          onForumUpdated={refetch}
         />
       )}
     </div>
