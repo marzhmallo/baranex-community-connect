@@ -22,6 +22,7 @@ interface ThreadListProps {
 
 const ThreadList = ({ threads, onThreadSelect, onPinToggle, onLockToggle, canModerate = false, onEditThread, onDeleteThread }: ThreadListProps) => {
   const { userProfile } = useAuth();
+  const [deleteThreadId, setDeleteThreadId] = useState<string | null>(null);
   if (threads.length === 0) {
     return (
       <div className="p-6 text-center text-muted-foreground">
@@ -105,34 +106,16 @@ const ThreadList = ({ threads, onThreadSelect, onPinToggle, onLockToggle, canMod
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Thread
                         </DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem 
-                              onSelect={(e) => e.preventDefault()}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Thread
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Thread</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this thread? This action cannot be undone and will permanently remove the thread and all its replies.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => onDeleteThread?.(thread.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete Thread
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteThreadId(thread.id);
+                          }}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Thread
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
@@ -243,6 +226,31 @@ const ThreadList = ({ threads, onThreadSelect, onPinToggle, onLockToggle, canMod
           </div>
         );
       })}
+      
+      <AlertDialog open={deleteThreadId !== null} onOpenChange={() => setDeleteThreadId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Thread</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this thread? This action cannot be undone and will permanently remove the thread and all its replies.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteThreadId) {
+                  onDeleteThread?.(deleteThreadId);
+                  setDeleteThreadId(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Thread
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
