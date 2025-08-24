@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Forum } from '@/pages/ForumPage';
+import { Thread } from './ThreadsView';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,7 @@ interface CreateThreadDialogProps {
   onOpenChange: (open: boolean) => void;
   onThreadCreated: () => void;
   forum: Forum;
+  editingThread?: Thread | null;
 }
 
 const SUGGESTED_TAGS = [
@@ -25,7 +27,7 @@ const SUGGESTED_TAGS = [
   'Infrastructure', 'Security', 'Education', 'Environment'
 ];
 
-const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: CreateThreadDialogProps) => {
+const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum, editingThread }: CreateThreadDialogProps) => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [title, setTitle] = useState('');
@@ -38,6 +40,34 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const isAdmin = userProfile?.role === 'admin';
+  const isEditing = !!editingThread;
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editingThread && open) {
+      setTitle(editingThread.title);
+      setContent(editingThread.content);
+      setTags(editingThread.tags || []);
+      setIsPinned(editingThread.pinned || false);
+      
+      // Handle existing photo
+      if (editingThread.photo_url) {
+        setPhotoPreview(editingThread.photo_url);
+        setSelectedPhoto(null); // No new file selected yet
+      } else {
+        setPhotoPreview(null);
+        setSelectedPhoto(null);
+      }
+    } else if (!editingThread && open) {
+      // Reset form for new thread
+      setTitle('');
+      setContent('');
+      setTags([]);
+      setIsPinned(false);
+      setPhotoPreview(null);
+      setSelectedPhoto(null);
+    }
+  }, [editingThread, open]);
 
   const handleTagAdd = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim()) && tags.length < 5) {
@@ -119,7 +149,7 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
     if (!userProfile) {
       toast({
         title: "Error",
-        description: "You must be logged in to create a thread",
+        description: `You must be logged in to ${isEditing ? 'edit' : 'create'} a thread`,
         variant: "destructive",
       });
       return;
@@ -127,38 +157,67 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
 
     setIsSubmitting(true);
     try {
-      // Upload photo first if selected
-      let photoUrl = null;
+      // Handle photo upload
+      let photoUrl = photoPreview; // Keep existing photo if no new one selected
+      
       if (selectedPhoto) {
+        // New photo selected, upload it
         photoUrl = await uploadPhoto();
         if (!photoUrl && selectedPhoto) {
           // Photo upload failed but was selected
           return;
         }
+      } else if (!photoPreview) {
+        // No photo selected and no existing photo
+        photoUrl = null;
       }
 
-      const { data, error } = await supabase
-        .from('threads')
-        .insert({
-          forum_id: forum.id,
-          brgyid: forum.brgyid,
-          title: title.trim(),
-          content: content.trim(),
-          tags,
-          pinned: isAdmin ? isPinned : false,
-          created_by: userProfile.id,
-          photo_url: photoUrl
-        })
-        .select();
+      if (isEditing && editingThread) {
+        // Update existing thread
+        const { error } = await supabase
+          .from('threads')
+          .update({
+            title: title.trim(),
+            content: content.trim(),
+            tags,
+            pinned: isAdmin ? isPinned : editingThread.pinned,
+            photo_url: photoUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingThread.id);
 
-      if (error) throw error;
-      
-      toast({
-        title: "Thread Created",
-        description: "Your thread has been posted successfully."
-      });
+        if (error) throw error;
+        
+        toast({
+          title: "Thread Updated",
+          description: "Your thread has been updated successfully."
+        });
+      } else {
+        // Create new thread
+        const { data, error } = await supabase
+          .from('threads')
+          .insert({
+            forum_id: forum.id,
+            brgyid: forum.brgyid,
+            title: title.trim(),
+            content: content.trim(),
+            tags,
+            pinned: isAdmin ? isPinned : false,
+            created_by: userProfile.id,
+            photo_url: photoUrl
+          })
+          .select();
+
+        if (error) throw error;
+        
+        toast({
+          title: "Thread Created",
+          description: "Your thread has been posted successfully."
+        });
+      }
       
       onThreadCreated();
+      // Reset form
       setTitle('');
       setContent('');
       setTags([]);
@@ -166,10 +225,10 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
       setSelectedPhoto(null);
       setPhotoPreview(null);
     } catch (error: any) {
-      console.error('Error creating thread:', error);
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} thread:`, error);
       toast({
         title: "Error",
-        description: "Failed to create thread: " + error.message,
+        description: `Failed to ${isEditing ? 'update' : 'create'} thread: ` + error.message,
         variant: "destructive",
       });
     } finally {
@@ -182,9 +241,9 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
       <DialogContent className="sm:max-w-[600px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create New Thread</DialogTitle>
+            <DialogTitle>{isEditing ? 'Edit Thread' : 'Create New Thread'}</DialogTitle>
             <DialogDescription>
-              Create a new discussion thread in {forum.title}
+              {isEditing ? `Edit your thread in ${forum.title}` : `Create a new discussion thread in ${forum.title}`}
             </DialogDescription>
           </DialogHeader>
           
@@ -330,7 +389,7 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum }: Crea
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Posting..." : "Post Thread"}
+              {isSubmitting ? (isEditing ? "Updating..." : "Posting...") : (isEditing ? "Update Thread" : "Post Thread")}
             </Button>
           </DialogFooter>
         </form>

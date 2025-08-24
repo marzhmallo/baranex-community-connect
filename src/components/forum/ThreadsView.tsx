@@ -787,9 +787,14 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
           onOpenChange={(open) => {
             setShowCreateDialog(open);
             if (!open) setEditingThread(null);
-          }} 
-          onThreadCreated={handleThreadCreated}
+          }}
+          onThreadCreated={() => {
+            setShowCreateDialog(false);
+            setEditingThread(null);
+            refetch();
+          }}
           forum={forum}
+          editingThread={editingThread}
         />
       )}
 
