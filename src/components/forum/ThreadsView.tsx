@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Plus, Search, Loader2, Trash2 } from 'lucide-react';
+import { ChevronLeft, Plus, Search, Loader2, Trash2, MoreVertical, Edit } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Forum } from '@/pages/ForumPage';
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export interface Thread {
   id: string;
@@ -84,6 +85,7 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserFromSameBarangay, setIsUserFromSameBarangay] = useState(false);
   const [editingThread, setEditingThread] = useState<Thread | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   
   // Dropdown states
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -464,31 +466,39 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
               </Button>
             )}
             {userProfile?.role === 'admin' && userProfile.id === forum.created_by && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="destructive"
-                    className="px-4 py-3 font-medium transition-colors duration-200 flex items-center gap-2"
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 p-0"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-background border border-border z-50">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      // Add edit forum functionality here
+                      toast({
+                        title: "Info",
+                        description: "Edit forum functionality coming soon!",
+                      });
+                    }}
+                    className="flex items-center gap-2 hover:bg-muted"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit Forum
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    className="flex items-center gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                     Delete Forum
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Forum</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete this forum? This action will permanently delete the forum and all its threads and comments. This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteForum} className="bg-destructive hover:bg-destructive/90">
-                      Delete Forum
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
@@ -782,6 +792,24 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
           forum={forum}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Forum</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this forum? This action will permanently delete the forum and all its threads and comments. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteForum} className="bg-destructive hover:bg-destructive/90">
+              Delete Forum
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
