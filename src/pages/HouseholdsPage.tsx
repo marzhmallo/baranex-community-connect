@@ -50,9 +50,9 @@ const HouseholdPage = () => {
       
       <Card className="shadow-lg border-t-4 border-t-baranex-primary bg-card text-card-foreground">
         <CardContent className="p-6 px-0 py-0">
-          <ScrollArea className="h-[calc(100vh-200px)]">
+          <div className="max-h-[calc(100vh-200px)] overflow-auto">
             <HouseholdList />
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
       
