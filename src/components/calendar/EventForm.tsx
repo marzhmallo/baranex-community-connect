@@ -223,7 +223,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
 
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[550px] max-h-[80vh] overflow-y-auto bg-[#0f1623] text-white border-gray-800">
+      <DialogContent className="sm:max-w-[550px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{event?.id ? "Edit Event" : "Create New Event"}</DialogTitle>
         </DialogHeader>
@@ -237,7 +237,6 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter event title"
-                className="bg-[#171f2e] border-gray-700"
                 required
               />
             </div>
@@ -249,7 +248,6 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter event description"
-                className="bg-[#171f2e] border-gray-700"
                 rows={3}
               />
             </div>
@@ -261,7 +259,6 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Enter event location"
-                className="bg-[#171f2e] border-gray-700"
               />
             </div>
             
@@ -282,12 +279,12 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal bg-[#171f2e] border-gray-700"
+                        className="w-full justify-start text-left font-normal"
                       >
                         {format(startDate, "PPP")}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[#171f2e] border-gray-700">
+                    <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
                         selected={startDate}
@@ -308,7 +305,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         newDate.setHours(parseInt(hours), parseInt(minutes));
                         setStartDate(newDate);
                       }}
-                      className="w-24 bg-[#171f2e] border-gray-700"
+                      className="w-24"
                     />
                   )}
                 </div>
@@ -321,12 +318,12 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal bg-[#171f2e] border-gray-700"
+                        className="w-full justify-start text-left font-normal"
                       >
                         {format(eventEndDate, "PPP")}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[#171f2e] border-gray-700">
+                    <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
                          selected={eventEndDate}
@@ -347,7 +344,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                          newDate.setHours(parseInt(hours), parseInt(minutes));
                          setEventEndDate(newDate);
                        }}
-                      className="w-24 bg-[#171f2e] border-gray-700"
+                      className="w-24"
                     />
                   )}
                 </div>
@@ -358,10 +355,10 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               <div>
                 <Label htmlFor="event-type">Event Type</Label>
                 <Select value={eventType} onValueChange={setEventType}>
-                  <SelectTrigger className="bg-[#171f2e] border-gray-700">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select event type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#171f2e] border-gray-700">
+                  <SelectContent>
                     <SelectItem value="meeting">Meeting</SelectItem>
                     <SelectItem value="health">Health</SelectItem>
                     <SelectItem value="environment">Environment</SelectItem>
@@ -374,10 +371,10 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               <div>
                 <Label htmlFor="target-audience">Target Audience</Label>
                 <Select value={targetAudience} onValueChange={setTargetAudience}>
-                  <SelectTrigger className="bg-[#171f2e] border-gray-700">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select target audience" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#171f2e] border-gray-700">
+                  <SelectContent>
                     <SelectItem value="All">All</SelectItem>
                     <SelectItem value="SK Youth">SK Youth</SelectItem>
                     <SelectItem value="Officials only">Officials only</SelectItem>
@@ -391,10 +388,10 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
             <div>
               <Label htmlFor="visibility">Event Visibility</Label>
               <Select value={visibility} onValueChange={setVisibility}>
-                <SelectTrigger className="bg-[#171f2e] border-gray-700">
+                <SelectTrigger>
                   <SelectValue placeholder="Select visibility" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#171f2e] border-gray-700">
+                <SelectContent>
                   {userProfile?.role === 'admin' && (
                     <SelectItem value="internal">Internal</SelectItem>
                   )}
@@ -414,17 +411,17 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
             </div>
 
             {isRecurring && (
-              <div className="space-y-4 p-4 border border-gray-700 rounded-lg bg-[#171f2e]">
+              <div className="space-y-4 p-4 border rounded-lg">
                 <h4 className="font-medium text-sm">Recurrence Settings</h4>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
                   <div>
                     <Label htmlFor="frequency">Repeat</Label>
                     <Select value={frequency} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'yearly') => setFrequency(value)}>
-                      <SelectTrigger className="bg-[#0f1623] border-gray-600">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#0f1623] border-gray-600">
+                      <SelectContent>
                         <SelectItem value="daily">Daily</SelectItem>
                         <SelectItem value="weekly">Weekly</SelectItem>
                         <SelectItem value="monthly">Monthly</SelectItem>
@@ -449,8 +446,8 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                             size="sm"
                             className={`h-8 w-8 p-0 text-xs ${
                               isSelected 
-                                ? "bg-blue-500 hover:bg-blue-600 text-white" 
-                                : "bg-[#0f1623] border-gray-600 hover:bg-gray-600"
+                                ? "" 
+                                : ""
                             }`}
                             onClick={() => {
                               if (isSelected) {
@@ -483,8 +480,8 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                             size="sm"
                             className={`h-8 w-8 p-0 text-xs ${
                               isSelected 
-                                ? "bg-blue-500 hover:bg-blue-600 text-white" 
-                                : "bg-[#0f1623] border-gray-600 hover:bg-gray-600"
+                                ? "" 
+                                : ""
                             }`}
                             onClick={() => {
                               if (isSelected) {
@@ -521,8 +518,8 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                               size="sm"
                               className={`h-8 text-xs ${
                                 isSelected 
-                                  ? "bg-blue-500 hover:bg-blue-600 text-white" 
-                                  : "bg-[#0f1623] border-gray-600 hover:bg-gray-600"
+                                  ? "" 
+                                  : ""
                               }`}
                               onClick={() => {
                                 if (isSelected) {
@@ -551,8 +548,8 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                               size="sm"
                               className={`h-8 w-8 p-0 text-xs ${
                                 isSelected 
-                                  ? "bg-blue-500 hover:bg-blue-600 text-white" 
-                                  : "bg-[#0f1623] border-gray-600 hover:bg-gray-600"
+                                  ? "" 
+                                  : ""
                               }`}
                               onClick={() => {
                                 if (isSelected) {
@@ -574,10 +571,10 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 <div>
                   <Label htmlFor="end-type">Ends</Label>
                   <Select value={endType} onValueChange={(value: 'never' | 'after' | 'on') => setEndType(value)}>
-                    <SelectTrigger className="bg-[#0f1623] border-gray-600">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#0f1623] border-gray-600">
+                    <SelectContent>
                       <SelectItem value="never">Never</SelectItem>
                       <SelectItem value="after">After a number of occurrences</SelectItem>
                       <SelectItem value="on">On the end date</SelectItem>
@@ -595,7 +592,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                       max="365"
                       value={occurrences}
                       onChange={(e) => setOccurrences(parseInt(e.target.value) || 1)}
-                      className="bg-[#0f1623] border-gray-600"
+                      className=""
                     />
                   </div>
                 )}
@@ -603,7 +600,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 {endType === 'on' && (
                   <div>
                     <Label>End date</Label>
-                    <div className="text-sm text-gray-400 p-2 bg-[#0f1623] border border-gray-600 rounded">
+                    <div className="text-sm text-muted-foreground p-2 border rounded">
                       Will end on: {format(eventEndDate, "PPP")}
                     </div>
                   </div>
@@ -617,14 +614,14 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               type="button" 
               variant="outline" 
               onClick={onClose}
-              className="border-gray-700"
+              className=""
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={isLoading}
-              className="bg-blue-500 hover:bg-blue-600"
+              className=""
             >
               {isLoading ? "Saving..." : event?.id ? "Update Event" : "Create Event"}
             </Button>
