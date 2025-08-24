@@ -279,7 +279,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal"
+                        className="w-[140px] justify-start text-left font-normal"
                       >
                         {format(startDate, "PPP")}
                       </Button>
@@ -305,7 +305,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         newDate.setHours(parseInt(hours), parseInt(minutes));
                         setStartDate(newDate);
                       }}
-                      className="w-24"
+                      className="w-32"
                     />
                   )}
                 </div>
@@ -318,7 +318,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal"
+                        className="w-[140px] justify-start text-left font-normal"
                       >
                         {format(eventEndDate, "PPP")}
                       </Button>
@@ -344,7 +344,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                          newDate.setHours(parseInt(hours), parseInt(minutes));
                          setEventEndDate(newDate);
                        }}
-                      className="w-24"
+                      className="w-32"
                     />
                   )}
                 </div>
