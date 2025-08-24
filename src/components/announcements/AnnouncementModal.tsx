@@ -14,18 +14,28 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
-
 const formSchema = z.object({
-  title: z.string().min(5, { message: 'Title must be at least 5 characters' }).max(100, { message: 'Title must be less than 100 characters' }),
-  content: z.string().min(10, { message: 'Content must be at least 10 characters' }),
-  category: z.string().min(1, { message: 'Please select a category' }),
-  audience: z.string().min(1, { message: 'Please select an audience' }),
+  title: z.string().min(5, {
+    message: 'Title must be at least 5 characters'
+  }).max(100, {
+    message: 'Title must be less than 100 characters'
+  }),
+  content: z.string().min(10, {
+    message: 'Content must be at least 10 characters'
+  }),
+  category: z.string().min(1, {
+    message: 'Please select a category'
+  }),
+  audience: z.string().min(1, {
+    message: 'Please select an audience'
+  }),
   is_pinned: z.boolean().default(false),
-  visibility: z.string().min(1, { message: 'Please select visibility' }),
+  visibility: z.string().min(1, {
+    message: 'Please select visibility'
+  }),
   photo_url: z.string().optional(),
-  attachment_url: z.string().optional(),
+  attachment_url: z.string().optional()
 });
-
 export interface Announcement {
   id: string;
   title: string;
@@ -40,7 +50,6 @@ export interface Announcement {
   created_by: string;
   brgyid: string;
 }
-
 interface AnnouncementModalProps {
   mode: 'create' | 'edit';
   open: boolean;
@@ -48,14 +57,22 @@ interface AnnouncementModalProps {
   onSuccess: () => void;
   announcement?: Announcement | null;
 }
-
-const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }: AnnouncementModalProps) => {
-  const { userProfile } = useAuth();
-  const { toast } = useToast();
+const AnnouncementModal = ({
+  mode,
+  open,
+  onOpenChange,
+  onSuccess,
+  announcement
+}: AnnouncementModalProps) => {
+  const {
+    userProfile
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -66,8 +83,8 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
       is_pinned: false,
       visibility: 'public',
       photo_url: '',
-      attachment_url: '',
-    },
+      attachment_url: ''
+    }
   });
 
   // Reset form when modal opens/closes or announcement changes
@@ -81,7 +98,7 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
         is_pinned: announcement.is_pinned,
         visibility: announcement.visibility || 'public',
         photo_url: announcement.photo_url || '',
-        attachment_url: announcement.attachment_url || '',
+        attachment_url: announcement.attachment_url || ''
       });
     } else if (open && mode === 'create') {
       form.reset({
@@ -92,52 +109,42 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
         is_pinned: false,
         visibility: 'public',
         photo_url: '',
-        attachment_url: '',
+        attachment_url: ''
       });
     }
   }, [open, mode, announcement, form]);
-
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setPhotoFile(file);
     }
   };
-
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setAttachmentFile(file);
     }
   };
-
   const uploadFile = async (file: File, bucket: string): Promise<string> => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
     const filePath = `${userProfile?.id}/${fileName}`;
-
-    const { data, error } = await supabase
-      .storage
-      .from(bucket)
-      .upload(filePath, file);
-
+    const {
+      data,
+      error
+    } = await supabase.storage.from(bucket).upload(filePath, file);
     if (error) {
       console.error(`Error uploading ${bucket} file:`, error);
       throw error;
     }
-
-    const { data: publicUrlData } = supabase
-      .storage
-      .from(bucket)
-      .getPublicUrl(filePath);
-
+    const {
+      data: publicUrlData
+    } = supabase.storage.from(bucket).getPublicUrl(filePath);
     return publicUrlData.publicUrl;
   };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsSubmitting(true);
-
       let photoUrl = values.photo_url || '';
       let attachmentUrl = values.attachment_url || '';
 
@@ -150,7 +157,6 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
       if (attachmentFile && mode === 'create') {
         attachmentUrl = await uploadFile(attachmentFile, 'announcements');
       }
-
       const announcementData = {
         title: values.title,
         content: values.content,
@@ -161,39 +167,34 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
         photo_url: photoUrl || null,
         attachment_url: attachmentUrl || null,
         created_by: userProfile?.id!,
-        brgyid: userProfile?.brgyid!,
+        brgyid: userProfile?.brgyid!
       };
-
       let error;
       if (mode === 'create') {
-        const result = await supabase
-          .from('announcements')
-          .insert(announcementData);
+        const result = await supabase.from('announcements').insert(announcementData);
         error = result.error;
       } else {
-        const { created_by, brgyid, ...updateData } = announcementData;
-        const result = await supabase
-          .from('announcements')
-          .update(updateData)
-          .eq('id', announcement?.id);
+        const {
+          created_by,
+          brgyid,
+          ...updateData
+        } = announcementData;
+        const result = await supabase.from('announcements').update(updateData).eq('id', announcement?.id);
         error = result.error;
       }
-
       if (error) {
         console.error(`Error ${mode === 'create' ? 'creating' : 'updating'} announcement:`, error);
         toast({
           title: "Error",
           description: `Failed to ${mode === 'create' ? 'create' : 'update'} announcement. Please try again.`,
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
       toast({
         title: `Announcement ${mode === 'create' ? 'created' : 'updated'}`,
-        description: `The announcement has been successfully ${mode === 'create' ? 'created' : 'updated'}.`,
+        description: `The announcement has been successfully ${mode === 'create' ? 'created' : 'updated'}.`
       });
-
       onSuccess();
       onOpenChange(false);
     } catch (error) {
@@ -201,65 +202,45 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
   const handleCancel = () => {
     onOpenChange(false);
     setPhotoFile(null);
     setAttachmentFile(null);
   };
-
-  const FormContent = () => (
-    <Form {...form}>
+  const FormContent = () => <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
+        <FormField control={form.control} name="title" render={({
+        field
+      }) => <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
                 <Input placeholder="Enter announcement title" {...field} />
               </FormControl>
               <FormMessage />
-            </FormItem>
-          )}
-        />
+            </FormItem>} />
 
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormItem>
+        <FormField control={form.control} name="content" render={({
+        field
+      }) => <FormItem>
               <FormLabel>Content</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Enter announcement content" 
-                  className="min-h-[150px]"
-                  {...field}
-                />
+                <Textarea placeholder="Enter announcement content" className="min-h-[150px]" {...field} />
               </FormControl>
               <FormMessage />
-            </FormItem>
-          )}
-        />
+            </FormItem>} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
+          <FormField control={form.control} name="category" render={({
+          field
+        }) => <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  value={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category" />
@@ -276,38 +257,23 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
                   </SelectContent>
                 </Select>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
+              </FormItem>} />
 
-          <FormField
-            control={form.control}
-            name="audience"
-            render={({ field }) => (
-              <FormItem>
+          <FormField control={form.control} name="audience" render={({
+          field
+        }) => <FormItem>
                 <FormLabel>Target Audience</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Enter target audience (e.g., Public, Officials, SK Members, etc.)"
-                    {...field}
-                  />
+                  <Input placeholder="Enter target audience (e.g., Public, Officials, SK Members, etc.)" {...field} />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
+              </FormItem>} />
         </div>
 
-        {mode === 'create' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {mode === 'create' && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <FormLabel>Photo</FormLabel>
-              <Input 
-                type="file" 
-                accept="image/*" 
-                onChange={handlePhotoChange}
-                className="mt-1"
-              />
+              <Input type="file" accept="image/*" onChange={handlePhotoChange} className="mt-1" />
               <FormDescription>
                 Optional: Upload an image for this announcement (max 5MB)
               </FormDescription>
@@ -315,50 +281,31 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
 
             <div>
               <FormLabel>Attachment</FormLabel>
-              <Input 
-                type="file" 
-                onChange={handleAttachmentChange}
-                className="mt-1"
-              />
+              <Input type="file" onChange={handleAttachmentChange} className="mt-1" />
               <FormDescription>
                 Optional: Attach a document (PDF, DOC, etc. - max 10MB)
               </FormDescription>
             </div>
-          </div>
-        )}
+          </div>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <FormField
-            control={form.control}
-            name="is_pinned"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-4">
+          <FormField control={form.control} name="is_pinned" render={({
+          field
+        }) => <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Pin Announcement</FormLabel>
-                  <FormDescription>
-                    Pinned announcements appear at the top of the list
-                  </FormDescription>
+                  
                 </div>
                 <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
-              </FormItem>
-            )}
-          />
+              </FormItem>} />
 
-          <FormField
-            control={form.control}
-            name="visibility"
-            render={({ field }) => (
-              <FormItem>
+          <FormField control={form.control} name="visibility" render={({
+          field
+        }) => <FormItem>
                 <FormLabel>Visibility</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  value={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select visibility" />
@@ -371,39 +318,24 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
                   </SelectContent>
                 </Select>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
+              </FormItem>} />
         </div>
 
         <div className="flex justify-end space-x-4">
-          <Button 
-            variant="outline" 
-            onClick={handleCancel}
-            disabled={isSubmitting}
-            type="button"
-          >
+          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting} type="button">
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
                 {mode === 'create' ? 'Creating...' : 'Updating...'}
-              </>
-            ) : (mode === 'create' ? 'Publish Announcement' : 'Update Announcement')}
+              </> : mode === 'create' ? 'Publish Announcement' : 'Update Announcement'}
           </Button>
         </div>
       </form>
-    </Form>
-  );
-
+    </Form>;
   if (mode === 'edit') {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+    return <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Announcement</DialogTitle>
@@ -413,12 +345,9 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
           </DialogHeader>
           <FormContent />
         </DialogContent>
-      </Dialog>
-    );
+      </Dialog>;
   }
-
-  return (
-    <div className="w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+  return <div className="w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
       <Card className="mb-6 border-none shadow-none">
         <CardHeader className="px-0 pt-0">
           <CardTitle>Create New Announcement</CardTitle>
@@ -427,8 +356,6 @@ const AnnouncementModal = ({ mode, open, onOpenChange, onSuccess, announcement }
           <FormContent />
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default AnnouncementModal;
