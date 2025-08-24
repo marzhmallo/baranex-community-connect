@@ -89,9 +89,9 @@ const ResidentsPage = () => {
       
       <Card className="shadow-lg border-t-4 border-t-baranex-primary bg-card text-card-foreground">
         <CardContent className="p-0">
-          <ScrollArea className="h-[calc(100vh-200px)]">
+          <div className="max-h-[calc(100vh-200px)] overflow-auto">
             <ResidentsList />
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
       
