@@ -42,32 +42,48 @@ const CreateThreadDialog = ({ open, onOpenChange, onThreadCreated, forum, editin
   const isAdmin = userProfile?.role === 'admin';
   const isEditing = !!editingThread;
 
-  // Populate form when editing
+  // Populate form when editing or reset when creating new thread
   useEffect(() => {
-    if (editingThread && open) {
-      setTitle(editingThread.title);
-      setContent(editingThread.content);
-      setTags(editingThread.tags || []);
-      setIsPinned(editingThread.pinned || false);
-      
-      // Handle existing photo
-      if (editingThread.photo_url) {
-        setPhotoPreview(editingThread.photo_url);
-        setSelectedPhoto(null); // No new file selected yet
+    if (open) {
+      if (editingThread) {
+        // Populate form with existing thread data
+        setTitle(editingThread.title || '');
+        setContent(editingThread.content || '');
+        setTags(editingThread.tags || []);
+        setIsPinned(editingThread.pinned || false);
+        
+        // Handle existing photo
+        if (editingThread.photo_url) {
+          setPhotoPreview(editingThread.photo_url);
+          setSelectedPhoto(null); // No new file selected yet
+        } else {
+          setPhotoPreview(null);
+          setSelectedPhoto(null);
+        }
       } else {
+        // Reset form for new thread
+        setTitle('');
+        setContent('');
+        setTags([]);
+        setIsPinned(false);
         setPhotoPreview(null);
         setSelectedPhoto(null);
       }
-    } else if (!editingThread && open) {
-      // Reset form for new thread
+    }
+  }, [editingThread, open]);
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
       setTitle('');
       setContent('');
       setTags([]);
       setIsPinned(false);
       setPhotoPreview(null);
       setSelectedPhoto(null);
+      setTagInput('');
     }
-  }, [editingThread, open]);
+  }, [open]);
 
   const handleTagAdd = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim()) && tags.length < 5) {
