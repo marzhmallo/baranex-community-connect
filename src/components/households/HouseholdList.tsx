@@ -413,171 +413,141 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
         </div>
       </div>
       
-      {/* Pagination controls and info */}
-      <div className="flex justify-between items-center mb-4 px-4">
-        <div className="text-sm text-muted-foreground">
-          {isLoading ? (
-            "Loading households..."
-          ) : (
-            <>
-              Showing <span className="font-medium">{totalItems > 0 ? startIndex + 1 : 0}</span>-<span className="font-medium">{endIndex}</span> of{" "}
-              <span className="font-medium">{totalItems}</span> households
-            </>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center">
-            <span className="text-sm text-muted-foreground mr-2">Show:</span>
-            <Select value={itemsPerPage.toString()} onValueChange={handlePageSizeChange}>
-              <SelectTrigger className="w-[70px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="15">15</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
       
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('name')}
-            >
-              Name <SortIcon field="name" />
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('address')}
-            >
-              Address <SortIcon field="address" />
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('head_of_family_name')}
-            >
-              Head of Family <SortIcon field="head_of_family_name" />
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('contact_number')}
-            >
-              Contact Number <SortIcon field="contact_number" />
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('status')}
-            >
-              Status <SortIcon field="status" />
-            </TableHead>
-            <TableHead className="text-right px-[60px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {currentHouseholds.length > 0 ? (
-            currentHouseholds.map((household: Household) => (
-              <TableRow key={household.id}>
-                <TableCell className="font-medium">{household.name}</TableCell>
-                <TableCell>{household.address}</TableCell>
-                <TableCell>{headNamesMap?.[household.id] || "Not specified"}</TableCell>
-                <TableCell>{household.contact_number || "Not available"}</TableCell>
-                <TableCell>{getStatusBadge(household.status)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleViewDetails(household)}>
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">View Details</span>
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEditHousehold(household)}>
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => confirmDelete(household.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </div>
+      {/* Compact Table Container - adaptable height */}
+      <div className="border rounded-lg bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
+                Household Name
+                <SortIcon field="name" />
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('address')}>
+                Address
+                <SortIcon field="address" />
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('head_of_family_name')}>
+                Head of Family
+                <SortIcon field="head_of_family_name" />
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('contact_number')}>
+                Contact
+                <SortIcon field="contact_number" />
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('status')}>
+                Status
+                <SortIcon field="status" />
+              </TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {currentHouseholds.length > 0 ? (
+              currentHouseholds.map((household) => (
+                <TableRow key={household.id}>
+                  <TableCell className="font-medium">{household.name}</TableCell>
+                  <TableCell>{household.address}</TableCell>
+                  <TableCell>
+                    {headNamesMap?.[household.id] || household.head_of_family_name || 'Not assigned'}
+                  </TableCell>
+                  <TableCell>{household.contact_number || 'N/A'}</TableCell>
+                  <TableCell>{getStatusBadge(household.status)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleViewDetails(household)}>
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View details</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleEditHousehold(household)}>
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleViewMore(household)}>
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View more</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => confirmDelete(household.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  {searchQuery || statusFilter || purokFilter ? 
+                    "No households found matching your search criteria." : 
+                    "No households available. Add a household to get started."
+                  }
                 </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-4">
-                {searchQuery || statusFilter || purokFilter ? 
-                  "No households found matching your search criteria." : 
-                  "No households available. Add a household to get started."
-                }
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      
-      {/* Enhanced Pagination - matching residents page style */}
-      {totalItems > 0 && (
-        <div className="flex justify-between items-center p-4 border-t">
-          <div className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {endIndex} of {totalItems} households
+            )}
+          </TableBody>
+        </Table>
+        
+        {/* Compact Pagination - only shown when needed */}
+        {totalItems > 0 && totalPages > 1 && (
+          <div className="flex justify-between items-center p-4 border-t bg-muted/50">
+            <div className="text-sm text-muted-foreground">
+              Showing {startIndex + 1} to {endIndex} of {totalItems} households
+            </div>
+            
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const pageNum = i + 1;
+                  
+                  // Show first page, last page, and pages around current page
+                  if (
+                    pageNum === 1 || 
+                    pageNum === totalPages || 
+                    (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                  ) {
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          isActive={pageNum === currentPage}
+                          onClick={() => handlePageChange(pageNum)}
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  }
+                  
+                  // Show ellipsis for gaps
+                  if (pageNum === 2 || pageNum === totalPages - 1) {
+                    return (
+                      <PaginationItem key={`ellipsis-${pageNum}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    );
+                  }
+                  
+                  return null;
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
-          
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-              
-              {Array.from({ length: totalPages }).map((_, i) => {
-                const pageNum = i + 1;
-                
-                // Show first page, last page, and pages around current page
-                if (
-                  pageNum === 1 || 
-                  pageNum === totalPages || 
-                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                ) {
-                  return (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        isActive={pageNum === currentPage}
-                        onClick={() => handlePageChange(pageNum)}
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                }
-                
-                // Show ellipsis for gaps
-                if (pageNum === 2 || pageNum === totalPages - 1) {
-                  return (
-                    <PaginationItem key={`ellipsis-${pageNum}`}>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  );
-                }
-                
-                return null;
-              })}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+        )}
+      </div>
       
       {/* Household Details Dialog */}
       <HouseholdDetails 
