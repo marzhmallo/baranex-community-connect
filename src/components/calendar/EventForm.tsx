@@ -271,7 +271,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               <Label htmlFor="all-day">All-day event</Label>
             </div>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="start-date">Start Date</Label>
                 <div className="flex space-x-2">
@@ -279,7 +279,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-[140px] justify-start text-left font-normal"
+                        className="w-[130px] justify-start text-left font-normal"
                       >
                         {format(startDate, "PPP")}
                       </Button>
@@ -305,7 +305,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         newDate.setHours(parseInt(hours), parseInt(minutes));
                         setStartDate(newDate);
                       }}
-                      className="w-32"
+                      className="w-[90px]"
                     />
                   )}
                 </div>
@@ -318,7 +318,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-[140px] justify-start text-left font-normal"
+                        className="w-[130px] justify-start text-left font-normal"
                       >
                         {format(eventEndDate, "PPP")}
                       </Button>
@@ -344,7 +344,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                          newDate.setHours(parseInt(hours), parseInt(minutes));
                          setEventEndDate(newDate);
                        }}
-                      className="w-32"
+                      className="w-[90px]"
                     />
                   )}
                 </div>
