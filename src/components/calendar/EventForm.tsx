@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/AuthProvider";
 import { Event } from "@/pages/CalendarPage";
-import { TimePicker } from "@/components/ui/time-picker";
 import {
   Dialog,
   DialogContent,
@@ -272,7 +271,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               <Label htmlFor="all-day">All-day event</Label>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
                 <Label htmlFor="start-date">Start Date</Label>
                 <div className="flex space-x-2">
@@ -280,9 +279,9 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-[130px] justify-start text-left font-normal"
+                        className="w-[140px] justify-start text-left font-normal"
                       >
-                        {format(startDate, "MMM d, yyyy")}
+                        {format(startDate, "PPP")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -297,10 +296,16 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                   </Popover>
                   
                   {!isAllDay && (
-                    <TimePicker
-                      value={startDate}
-                      onChange={setStartDate}
-                      className="w-[110px]"
+                    <Input
+                      type="time"
+                      value={format(startDate, "HH:mm")}
+                      onChange={(e) => {
+                        const [hours, minutes] = e.target.value.split(":");
+                        const newDate = new Date(startDate);
+                        newDate.setHours(parseInt(hours), parseInt(minutes));
+                        setStartDate(newDate);
+                      }}
+                      className="w-32"
                     />
                   )}
                 </div>
@@ -313,9 +318,9 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-[130px] justify-start text-left font-normal"
+                        className="w-[140px] justify-start text-left font-normal"
                       >
-                        {format(eventEndDate, "MMM d, yyyy")}
+                        {format(eventEndDate, "PPP")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -330,10 +335,16 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                   </Popover>
                   
                   {!isAllDay && (
-                    <TimePicker
-                      value={eventEndDate}
-                      onChange={setEventEndDate}
-                      className="w-[110px]"
+                    <Input
+                      type="time"
+                       value={format(eventEndDate, "HH:mm")}
+                       onChange={(e) => {
+                         const [hours, minutes] = e.target.value.split(":");
+                         const newDate = new Date(eventEndDate);
+                         newDate.setHours(parseInt(hours), parseInt(minutes));
+                         setEventEndDate(newDate);
+                       }}
+                      className="w-32"
                     />
                   )}
                 </div>
