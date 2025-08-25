@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/AuthProvider";
 import { Event } from "@/pages/CalendarPage";
+import { TimePicker } from "@/components/ui/time-picker";
 import {
   Dialog,
   DialogContent,
@@ -296,16 +297,10 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                   </Popover>
                   
                   {!isAllDay && (
-                    <Input
-                      type="time"
-                      value={format(startDate, "HH:mm")}
-                      onChange={(e) => {
-                        const [hours, minutes] = e.target.value.split(":");
-                        const newDate = new Date(startDate);
-                        newDate.setHours(parseInt(hours), parseInt(minutes));
-                        setStartDate(newDate);
-                      }}
-                      className="w-[90px]"
+                    <TimePicker
+                      value={startDate}
+                      onChange={setStartDate}
+                      className="w-[110px]"
                     />
                   )}
                 </div>
@@ -335,16 +330,10 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                   </Popover>
                   
                   {!isAllDay && (
-                    <Input
-                      type="time"
-                       value={format(eventEndDate, "HH:mm")}
-                       onChange={(e) => {
-                         const [hours, minutes] = e.target.value.split(":");
-                         const newDate = new Date(eventEndDate);
-                         newDate.setHours(parseInt(hours), parseInt(minutes));
-                         setEventEndDate(newDate);
-                       }}
-                      className="w-[90px]"
+                    <TimePicker
+                      value={eventEndDate}
+                      onChange={setEventEndDate}
+                      className="w-[110px]"
                     />
                   )}
                 </div>
