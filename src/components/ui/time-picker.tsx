@@ -15,18 +15,21 @@ interface TimePickerProps {
 export function TimePicker({ value, onChange, className }: TimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const hours = Array.from({ length: 12 }, (_, i) => i + 1); // 1-12
   const minutes = Array.from({ length: 60 }, (_, i) => i);
 
-  const handleTimeChange = (hour: number, minute: number) => {
+  const handleTimeChange = (hour12: number, minute: number, isPM: boolean) => {
     const newDate = new Date(value);
-    newDate.setHours(hour, minute, 0, 0);
+    const hour24 = isPM ? (hour12 === 12 ? 12 : hour12 + 12) : (hour12 === 12 ? 0 : hour12);
+    newDate.setHours(hour24, minute, 0, 0);
     onChange(newDate);
     setIsOpen(false);
   };
 
-  const currentHour = value.getHours();
+  const currentHour24 = value.getHours();
   const currentMinute = value.getMinutes();
+  const currentHour12 = currentHour24 === 0 ? 12 : currentHour24 > 12 ? currentHour24 - 12 : currentHour24;
+  const currentPeriod = currentHour24 >= 12 ? 'PM' : 'AM';
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -39,7 +42,7 @@ export function TimePicker({ value, onChange, className }: TimePickerProps) {
           )}
         >
           <Clock className="mr-2 h-4 w-4" />
-          {format(value, "HH:mm")}
+          {format(value, "h:mm a")}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -51,12 +54,12 @@ export function TimePicker({ value, onChange, className }: TimePickerProps) {
                 {hours.map((hour) => (
                   <Button
                     key={hour}
-                    variant={currentHour === hour ? "default" : "ghost"}
+                    variant={currentHour12 === hour ? "default" : "ghost"}
                     size="sm"
                     className="w-full h-8 justify-center text-sm mb-1"
-                    onClick={() => handleTimeChange(hour, currentMinute)}
+                    onClick={() => handleTimeChange(hour, currentMinute, currentPeriod === 'PM')}
                   >
-                    {hour.toString().padStart(2, '0')}
+                    {hour}
                   </Button>
                 ))}
               </div>
@@ -72,13 +75,34 @@ export function TimePicker({ value, onChange, className }: TimePickerProps) {
                     variant={currentMinute === minute ? "default" : "ghost"}
                     size="sm"
                     className="w-full h-8 justify-center text-sm mb-1"
-                    onClick={() => handleTimeChange(currentHour, minute)}
+                    onClick={() => handleTimeChange(currentHour12, minute, currentPeriod === 'PM')}
                   >
                     {minute.toString().padStart(2, '0')}
                   </Button>
                 ))}
               </div>
             </ScrollArea>
+          </div>
+          <div className="flex flex-col border-l">
+            <div className="p-2 text-sm font-medium text-center border-b">Period</div>
+            <div className="p-1 space-y-1">
+              <Button
+                variant={currentPeriod === 'AM' ? "default" : "ghost"}
+                size="sm"
+                className="w-full h-8 justify-center text-sm"
+                onClick={() => handleTimeChange(currentHour12, currentMinute, false)}
+              >
+                AM
+              </Button>
+              <Button
+                variant={currentPeriod === 'PM' ? "default" : "ghost"}
+                size="sm"
+                className="w-full h-8 justify-center text-sm"
+                onClick={() => handleTimeChange(currentHour12, currentMinute, true)}
+              >
+                PM
+              </Button>
+            </div>
           </div>
         </div>
       </PopoverContent>
