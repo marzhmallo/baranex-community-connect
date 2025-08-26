@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Edit, Users, Calendar, DollarSign, MapPin, Home, Droplet, Zap, Trash2, Clock, RefreshCcw } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getHouseholdById } from '@/lib/api/households';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
@@ -21,6 +21,7 @@ const HouseholdMoreDetailsPage = () => {
   const { householdId } = useParams<{ householdId: string }>();
   const navigate = useNavigate();
   const [isEditMode, setIsEditMode] = useState(false);
+  const queryClient = useQueryClient();
   
   const { data: householdData, isLoading, error } = useQuery({
     queryKey: ['household', householdId],
@@ -66,6 +67,9 @@ const HouseholdMoreDetailsPage = () => {
 
   const handleEditSuccess = () => {
     setIsEditMode(false);
+    // Invalidate queries to refresh the data
+    queryClient.invalidateQueries({ queryKey: ['household', householdId] });
+    queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
   };
 
   // Helper function to get status badge
