@@ -12,7 +12,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { saveHousehold } from "@/lib/api/households";
 import { Household } from "@/lib/types";
-import HeadOfFamilyInput from "./HeadOfFamilyInput";
 import { useAutoFillAddress } from "@/hooks/useAutoFillAddress";
 
 // Define status values as a constant for reuse
@@ -42,7 +41,6 @@ const householdFormSchema = z.object({
   purok: z.string().min(1, {
     message: "Purok is required"
   }),
-  head_of_family_input: z.string().optional(),
   contact_number: z.string().optional(),
   year_established: z.coerce.number().int().optional(),
   status: z.enum(HOUSEHOLD_STATUSES),
@@ -68,8 +66,6 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
     toast
   } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedResidentId, setSelectedResidentId] = useState<string | null>(household?.head_of_family || null);
-  const [isHeadOfFamilyValid, setIsHeadOfFamilyValid] = useState(true);
   const queryClient = useQueryClient();
   const {
     isAutoFillEnabled,
@@ -107,7 +103,6 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
     region: household.region || "",
     country: household.country || "",
     purok: household.purok,
-    head_of_family_input: household.head_of_family_name || household.headname || "",
     contact_number: household.contact_number || "",
     year_established: household.year_established || undefined,
     status: household.status as HouseholdStatus,
@@ -127,7 +122,6 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
     region: "",
     country: "",
     purok: "",
-    head_of_family_input: "",
     contact_number: "",
     year_established: undefined,
     status: "Temporary" as HouseholdStatus,
@@ -167,18 +161,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
   };
 
   const handleSubmit = async (values: HouseholdFormValues) => {
-    // Check if head of family validation is valid before proceeding
-    if (!isHeadOfFamilyValid) {
-      toast({
-        title: "Cannot save household",
-        description: "Please resolve the head of family validation error before saving.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     console.log("Form submitted with values:", values);
-    console.log("Selected resident ID:", selectedResidentId);
     setIsSubmitting(true);
     try {
       // Create the household data object based on form values
@@ -191,8 +174,6 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
         region: values.region,
         country: values.country,
         purok: values.purok,
-        head_of_family: selectedResidentId,
-        headname: selectedResidentId ? null : values.head_of_family_input || null,
         contact_number: values.contact_number || null,
         year_established: values.year_established || null,
         status: values.status,
@@ -345,28 +326,8 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
                   </FormItem>} />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField control={form.control} name="head_of_family_input" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Head of Family</FormLabel>
-                    <FormControl>
-                      <HeadOfFamilyInput 
-                        value={field.value || ""} 
-                        onValueChange={field.onChange} 
-                        onResidentSelect={setSelectedResidentId} 
-                        selectedResidentId={selectedResidentId} 
-                        placeholder="Search residents or enter name"
-                        currentHouseholdId={household?.id || null}
-                        onValidationChange={setIsHeadOfFamilyValid}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    {selectedResidentId && isHeadOfFamilyValid && <p className="text-xs text-green-600">✓ Registered resident selected</p>}
-                    {!selectedResidentId && field.value && <p className="text-xs text-gray-500">Will be saved as text</p>}
-                  </FormItem>} />
-              
-              <FormField control={form.control} name="contact_number" render={({
+            
+            <FormField control={form.control} name="contact_number" render={({
               field
             }) => <FormItem>
                     <FormLabel>Contact Number</FormLabel>
@@ -375,7 +336,6 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
-            </div>
             
             <FormField control={form.control} name="year_established" render={({
             field
@@ -553,8 +513,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({
           </Button>
           <Button 
             type="submit" 
-            disabled={isSubmitting || !isHeadOfFamilyValid}
-            className={!isHeadOfFamilyValid ? "opacity-50 cursor-not-allowed" : ""}
+            disabled={isSubmitting}
           >
             {isSubmitting ? "Saving..." : household ? "Update Household" : "Save Household"}
           </Button>
