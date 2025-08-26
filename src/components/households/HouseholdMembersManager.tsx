@@ -597,6 +597,7 @@ const HouseholdMembersManager = ({
                           profilePicture={member.photo_url}
                           fallback={`${member.first_name.charAt(0)}${member.last_name.charAt(0)}`}
                           className="w-12 h-12"
+                          bucketName="residentphotos"
                         />
                         <div>
                           <div className="flex items-center space-x-2">

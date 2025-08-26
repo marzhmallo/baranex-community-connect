@@ -7,9 +7,10 @@ interface CachedAvatarProps {
   profilePicture?: string;
   fallback: string;
   className?: string;
+  bucketName?: string; // Add bucket name parameter
 }
 
-const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAvatarProps) => {
+const CachedAvatar = ({ userId, profilePicture, fallback, className, bucketName = 'profilepictures' }: CachedAvatarProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
 
   // Cache utilities
@@ -52,11 +53,11 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
   // Extract file path from possible full URLs
   const extractFilePath = (urlOrPath: string) => {
     if (!urlOrPath) return '';
-    if (urlOrPath.includes('/storage/v1/object/public/profilepictures/')) {
-      return urlOrPath.split('/storage/v1/object/public/profilepictures/')[1];
+    if (urlOrPath.includes(`/storage/v1/object/public/${bucketName}/`)) {
+      return urlOrPath.split(`/storage/v1/object/public/${bucketName}/`)[1];
     }
-    if (urlOrPath.includes('/storage/v1/object/sign/profilepictures/')) {
-      return urlOrPath.split('/storage/v1/object/sign/profilepictures/')[1].split('?')[0];
+    if (urlOrPath.includes(`/storage/v1/object/sign/${bucketName}/`)) {
+      return urlOrPath.split(`/storage/v1/object/sign/${bucketName}/`)[1].split('?')[0];
     }
     // If it already looks like a path, return as-is
     return urlOrPath;
@@ -70,7 +71,7 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
 
     try {
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from('profilepictures')
+        .from(bucketName)
         .createSignedUrl(filePath, 600); // 10 minutes expiration
 
       if (!signedUrlError && signedUrlData?.signedUrl) {
@@ -79,7 +80,7 @@ const CachedAvatar = ({ userId, profilePicture, fallback, className }: CachedAva
 
       // Fallback to public URL if bucket is public
       const { data: publicUrlData } = supabase.storage
-        .from('profilepictures')
+        .from(bucketName)
         .getPublicUrl(filePath);
 
       if (publicUrlData?.publicUrl) {
