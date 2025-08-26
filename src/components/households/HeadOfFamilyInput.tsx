@@ -44,21 +44,21 @@ const HeadOfFamilyInput: React.FC<HeadOfFamilyInputProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Check if a resident is already a member of another household
+  // Check if a resident is already a member of another household via householdmembers table
   const checkResidentHousehold = async (residentId: string) => {
     try {
       const { data, error } = await supabase
-        .from('residents')
-        .select('household_id')
-        .eq('id', residentId)
+        .from('householdmembers')
+        .select('householdid')
+        .eq('residentid', residentId)
         .single();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
         console.error('Error checking resident household:', error);
         return null;
       }
 
-      return data?.household_id || null;
+      return data?.householdid || null;
     } catch (error) {
       console.error('Error in checkResidentHousehold:', error);
       return null;
