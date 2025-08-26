@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import CachedAvatar from '@/components/ui/CachedAvatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -591,12 +592,12 @@ const HouseholdMembersManager = ({
                 <div className="space-y-3">
                   {registeredMembers.map(member => <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 dark:hover:bg-muted/50">
                       <div className="flex items-center space-x-4">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={member.photo_url} />
-                          <AvatarFallback>
-                            {member.first_name.charAt(0)}{member.last_name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <CachedAvatar
+                          userId={member.id}
+                          profilePicture={member.photo_url}
+                          fallback={`${member.first_name.charAt(0)}${member.last_name.charAt(0)}`}
+                          className="w-12 h-12"
+                        />
                         <div>
                           <div className="flex items-center space-x-2">
                             <p className="font-medium">
