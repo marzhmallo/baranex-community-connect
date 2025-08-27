@@ -675,12 +675,17 @@ const ResidentMoreDetailsPage = () => {
                       <Home className="mr-2 h-5 w-5" />
                       Family/Household Information
                     </div>
-                    <HouseholdSelector
-                      residentId={resident.id}
-                      residentName={residentFullName}
-                      currentHouseholdId={resident.household_id}
-                      onHouseholdUpdate={handleHouseholdUpdate}
-                    />
+                    <div className="flex gap-2">
+                      <Button onClick={handleViewHousehold} variant="outline" size="sm">
+                        View Household Details
+                      </Button>
+                      <HouseholdSelector
+                        residentId={resident.id}
+                        residentName={residentFullName}
+                        currentHouseholdId={resident.household_id}
+                        onHouseholdUpdate={handleHouseholdUpdate}
+                      />
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -693,7 +698,7 @@ const ResidentMoreDetailsPage = () => {
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Status</p>
-                          <Badge variant="outline">{household.status}</Badge>
+                          <p className="font-medium">{household.status}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Address</p>
@@ -709,11 +714,6 @@ const ResidentMoreDetailsPage = () => {
                             <p className="font-medium">{household.headname}</p>
                           </div>
                         )}
-                      </div>
-                      <div className="flex justify-end">
-                        <Button onClick={handleViewHousehold} variant="outline">
-                          View Household Details
-                        </Button>
                       </div>
                     </div>
                   ) : (
