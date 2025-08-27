@@ -230,21 +230,7 @@ export type Database = {
             foreignKeyName: "blotters_complainant_id_fkey"
             columns: ["complainant_id"]
             isOneToOne: false
-            referencedRelation: "admin_residents_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "blotters_complainant_id_fkey"
-            columns: ["complainant_id"]
-            isOneToOne: false
             referencedRelation: "residents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "blotters_respondent_id_fkey"
-            columns: ["respondent_id"]
-            isOneToOne: false
-            referencedRelation: "admin_residents_view"
             referencedColumns: ["id"]
           },
           {
@@ -664,13 +650,6 @@ export type Database = {
             foreignKeyName: "docx_resid_fkey"
             columns: ["resid"]
             isOneToOne: false
-            referencedRelation: "admin_residents_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "docx_resid_fkey"
-            columns: ["resid"]
-            isOneToOne: false
             referencedRelation: "residents"
             referencedColumns: ["id"]
           },
@@ -1055,13 +1034,6 @@ export type Database = {
             foreignKeyName: "flagged_individuals_residentname_fkey"
             columns: ["residentname"]
             isOneToOne: false
-            referencedRelation: "admin_residents_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "flagged_individuals_residentname_fkey"
-            columns: ["residentname"]
-            isOneToOne: false
             referencedRelation: "residents"
             referencedColumns: ["id"]
           },
@@ -1070,6 +1042,7 @@ export type Database = {
       forums: {
         Row: {
           brgyid: string
+          category: string
           created_at: string
           created_by: string
           description: string | null
@@ -1081,6 +1054,7 @@ export type Database = {
         }
         Insert: {
           brgyid: string
+          category?: string
           created_at?: string
           created_by: string
           description?: string | null
@@ -1092,6 +1066,7 @@ export type Database = {
         }
         Update: {
           brgyid?: string
+          category?: string
           created_at?: string
           created_by?: string
           description?: string | null
@@ -1131,13 +1106,6 @@ export type Database = {
             columns: ["householdid"]
             isOneToOne: false
             referencedRelation: "households"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "householdmembers_residentid_fkey"
-            columns: ["residentid"]
-            isOneToOne: true
-            referencedRelation: "admin_residents_view"
             referencedColumns: ["id"]
           },
           {
@@ -1262,13 +1230,6 @@ export type Database = {
             foreignKeyName: "households_head_of_family_fkey"
             columns: ["head_of_family"]
             isOneToOne: true
-            referencedRelation: "admin_residents_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "households_head_of_family_fkey"
-            columns: ["head_of_family"]
-            isOneToOne: true
             referencedRelation: "residents"
             referencedColumns: ["id"]
           },
@@ -1308,13 +1269,6 @@ export type Database = {
             columns: ["incident_id"]
             isOneToOne: false
             referencedRelation: "incident_reports"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "incident_parties_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: false
-            referencedRelation: "admin_residents_view"
             referencedColumns: ["id"]
           },
           {
@@ -1876,21 +1830,7 @@ export type Database = {
             foreignKeyName: "relationships_related_resident_id_fkey"
             columns: ["related_resident_id"]
             isOneToOne: false
-            referencedRelation: "admin_residents_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "relationships_related_resident_id_fkey"
-            columns: ["related_resident_id"]
-            isOneToOne: false
             referencedRelation: "residents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "relationships_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: false
-            referencedRelation: "admin_residents_view"
             referencedColumns: ["id"]
           },
           {
@@ -2266,196 +2206,8 @@ export type Database = {
           },
         ]
       }
-      wrappers_fdw_stats: {
-        Row: {
-          bytes_in: number | null
-          bytes_out: number | null
-          create_times: number | null
-          created_at: string
-          fdw_name: string
-          metadata: Json | null
-          rows_in: number | null
-          rows_out: number | null
-          updated_at: string
-        }
-        Insert: {
-          bytes_in?: number | null
-          bytes_out?: number | null
-          create_times?: number | null
-          created_at?: string
-          fdw_name: string
-          metadata?: Json | null
-          rows_in?: number | null
-          rows_out?: number | null
-          updated_at?: string
-        }
-        Update: {
-          bytes_in?: number | null
-          bytes_out?: number | null
-          create_times?: number | null
-          created_at?: string
-          fdw_name?: string
-          metadata?: Json | null
-          rows_in?: number | null
-          rows_out?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
-      admin_residents_view: {
-        Row: {
-          address: string | null
-          barangaydb: string | null
-          birthdate: string | null
-          brgyid: string | null
-          civil_status: string | null
-          classifications: string[] | null
-          countryph: string | null
-          created_at: string | null
-          died_on: string | null
-          email: string | null
-          emcontact: number | null
-          emname: string | null
-          emrelation: string | null
-          first_name: string | null
-          gender: string | null
-          has_pagibig: boolean | null
-          has_philhealth: boolean | null
-          has_sss: boolean | null
-          has_tin: boolean | null
-          household_id: string | null
-          id: string | null
-          is_voter: boolean | null
-          last_name: string | null
-          middle_name: string | null
-          mobile_number: string | null
-          monthly_income: number | null
-          municipalitycity: string | null
-          nationality: string | null
-          occupation: string | null
-          photo_url: string | null
-          provinze: string | null
-          purok: string | null
-          regional: string | null
-          remarks: string | null
-          status: string | null
-          suffix: string | null
-          updated_at: string | null
-          years_in_barangay: number | null
-        }
-        Insert: {
-          address?: string | null
-          barangaydb?: string | null
-          birthdate?: string | null
-          brgyid?: string | null
-          civil_status?: string | null
-          classifications?: string[] | null
-          countryph?: string | null
-          created_at?: string | null
-          died_on?: string | null
-          email?: string | null
-          emcontact?: number | null
-          emname?: string | null
-          emrelation?: string | null
-          first_name?: string | null
-          gender?: string | null
-          has_pagibig?: boolean | null
-          has_philhealth?: boolean | null
-          has_sss?: boolean | null
-          has_tin?: boolean | null
-          household_id?: string | null
-          id?: string | null
-          is_voter?: boolean | null
-          last_name?: string | null
-          middle_name?: string | null
-          mobile_number?: string | null
-          monthly_income?: number | null
-          municipalitycity?: string | null
-          nationality?: string | null
-          occupation?: string | null
-          photo_url?: string | null
-          provinze?: string | null
-          purok?: string | null
-          regional?: string | null
-          remarks?: string | null
-          status?: string | null
-          suffix?: string | null
-          updated_at?: string | null
-          years_in_barangay?: number | null
-        }
-        Update: {
-          address?: string | null
-          barangaydb?: string | null
-          birthdate?: string | null
-          brgyid?: string | null
-          civil_status?: string | null
-          classifications?: string[] | null
-          countryph?: string | null
-          created_at?: string | null
-          died_on?: string | null
-          email?: string | null
-          emcontact?: number | null
-          emname?: string | null
-          emrelation?: string | null
-          first_name?: string | null
-          gender?: string | null
-          has_pagibig?: boolean | null
-          has_philhealth?: boolean | null
-          has_sss?: boolean | null
-          has_tin?: boolean | null
-          household_id?: string | null
-          id?: string | null
-          is_voter?: boolean | null
-          last_name?: string | null
-          middle_name?: string | null
-          mobile_number?: string | null
-          monthly_income?: number | null
-          municipalitycity?: string | null
-          nationality?: string | null
-          occupation?: string | null
-          photo_url?: string | null
-          provinze?: string | null
-          purok?: string | null
-          regional?: string | null
-          remarks?: string | null
-          status?: string | null
-          suffix?: string | null
-          updated_at?: string | null
-          years_in_barangay?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_household"
-            columns: ["household_id"]
-            isOneToOne: false
-            referencedRelation: "households"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "residents_brgyid_fkey"
-            columns: ["brgyid"]
-            isOneToOne: false
-            referencedRelation: "barangays"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "residents_brgyid_fkey"
-            columns: ["brgyid"]
-            isOneToOne: false
-            referencedRelation: "public_barangays"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "residents_household_id_fkey"
-            columns: ["household_id"]
-            isOneToOne: false
-            referencedRelation: "households"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       public_barangays: {
         Row: {
           backgroundurl: string | null
@@ -2516,23 +2268,6 @@ export type Database = {
         Args: { transferid: string }
         Returns: string
       }
-      airtable_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      airtable_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      airtable_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
       auth_lookup_email_by_username: {
         Args: { username_input: string }
         Returns: {
@@ -2540,94 +2275,9 @@ export type Database = {
           user_id: string
         }[]
       }
-      auth0_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      auth0_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      auth0_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
-      big_query_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      big_query_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      big_query_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
-      click_house_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      click_house_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      click_house_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
-      cognito_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      cognito_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      cognito_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
       delete_rejected_unprocessed_requests: {
         Args: Record<PropertyKey, never>
         Returns: number
-      }
-      firebase_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      firebase_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      firebase_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
       }
       get_age_distribution: {
         Args: Record<PropertyKey, never>
@@ -2657,23 +2307,6 @@ export type Database = {
           purok: string
         }[]
       }
-      hello_world_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      hello_world_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      hello_world_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -2681,108 +2314,6 @@ export type Database = {
       is_service_role: {
         Args: Record<PropertyKey, never>
         Returns: boolean
-      }
-      logflare_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      logflare_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      logflare_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
-      mssql_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      mssql_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      mssql_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
-      redis_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      redis_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      redis_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
-      s3_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      s3_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      s3_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
-      stripe_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      stripe_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      stripe_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
-      }
-      wasm_fdw_handler: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown
-      }
-      wasm_fdw_meta: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          author: string
-          name: string
-          version: string
-          website: string
-        }[]
-      }
-      wasm_fdw_validator: {
-        Args: { catalog: unknown; options: string[] }
-        Returns: undefined
       }
     }
     Enums: {

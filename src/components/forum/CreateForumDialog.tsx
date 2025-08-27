@@ -6,9 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { Megaphone, ShieldHalf, HeartPulse, Lightbulb, HelpCircle, TriangleAlert, Construction } from 'lucide-react';
 
 interface CreateForumDialogProps {
   open: boolean;
@@ -21,8 +23,19 @@ const CreateForumDialog = ({ open, onOpenChange, onForumCreated }: CreateForumDi
   const { toast } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('General Questions');
   const [isPublic, setIsPublic] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const categories = [
+    { value: 'Announcements', label: 'Announcements', icon: Megaphone },
+    { value: 'Peace & Order', label: 'Peace & Order', icon: ShieldHalf },
+    { value: 'Health & Wellness', label: 'Health & Wellness', icon: HeartPulse },
+    { value: 'Suggestions & Feedback', label: 'Suggestions & Feedback', icon: Lightbulb },
+    { value: 'General Questions', label: 'General Questions', icon: HelpCircle },
+    { value: 'Emergency Preparedness', label: 'Emergency Preparedness', icon: TriangleAlert },
+    { value: 'Public Works & Infrastructure', label: 'Public Works & Infrastructure', icon: Construction },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +64,7 @@ const CreateForumDialog = ({ open, onOpenChange, onForumCreated }: CreateForumDi
         .insert({
           title,
           description: description.trim() || null,
+          category,
           is_public: isPublic,
           brgyid: userProfile.brgyid,
           created_by: userProfile.id,
@@ -62,6 +76,7 @@ const CreateForumDialog = ({ open, onOpenChange, onForumCreated }: CreateForumDi
       onForumCreated();
       setTitle('');
       setDescription('');
+      setCategory('General Questions');
       setIsPublic(false);
     } catch (error: any) {
       console.error('Error creating forum:', error);
@@ -106,6 +121,28 @@ const CreateForumDialog = ({ open, onOpenChange, onForumCreated }: CreateForumDi
                 placeholder="Enter forum description"
                 rows={3}
               />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => {
+                    const Icon = cat.icon;
+                    return (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          <span>{cat.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="flex items-center justify-between">
