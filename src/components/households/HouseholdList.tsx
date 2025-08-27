@@ -13,18 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationEllipsis, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious 
-} from "@/components/ui/pagination";
-
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 const HouseholdList: React.FC = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,13 +28,12 @@ const HouseholdList: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [householdToDelete, setHouseholdToDelete] = useState<string | null>(null);
-  
+
   // Sorting and pagination states
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
   const {
     data: householdsData,
     isLoading,
@@ -50,7 +42,6 @@ const HouseholdList: React.FC = () => {
     queryKey: ['households'],
     queryFn: getHouseholds
   });
-  
   const deleteHouseholdMutation = useMutation({
     mutationFn: (id: string) => deleteHousehold(id),
     onSuccess: () => {
@@ -71,34 +62,28 @@ const HouseholdList: React.FC = () => {
       });
     }
   });
-
   const handleViewDetails = (household: Household) => {
     setSelectedHousehold(household);
     setIsEditMode(false);
     setIsDetailsOpen(true);
   };
-  
   const handleEditHousehold = (household: Household) => {
     setSelectedHousehold(household);
     setIsEditMode(true);
     setIsDetailsOpen(true);
   };
-  
   const handleViewMore = (household: Household) => {
     navigate(`/households/${household.id}`);
   };
-  
   const confirmDelete = (id: string) => {
     setHouseholdToDelete(id);
     setIsDeleteDialogOpen(true);
   };
-  
   const handleDelete = () => {
     if (householdToDelete) {
       deleteHouseholdMutation.mutate(householdToDelete);
     }
   };
-
   const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -108,14 +93,14 @@ const HouseholdList: React.FC = () => {
     }
     setCurrentPage(1); // Reset to first page when sorting
   };
-
-  const SortIcon = ({ field }: { field: string }) => {
+  const SortIcon = ({
+    field
+  }: {
+    field: string;
+  }) => {
     if (sortField !== field) return null;
-    return sortDirection === 'asc' ? 
-      <ChevronUp className="h-4 w-4 inline ml-1" /> : 
-      <ChevronDown className="h-4 w-4 inline ml-1" />;
+    return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 inline ml-1" /> : <ChevronDown className="h-4 w-4 inline ml-1" />;
   };
-
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'permanent':
@@ -130,7 +115,6 @@ const HouseholdList: React.FC = () => {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-
   const uniquePuroks = useMemo(() => {
     if (!householdsData?.data) return [];
     const puroks = new Set<string>();
@@ -141,7 +125,6 @@ const HouseholdList: React.FC = () => {
     });
     return Array.from(puroks).sort();
   }, [householdsData?.data]);
-
   const uniqueStatuses = useMemo(() => {
     if (!householdsData?.data) return [];
     const statuses = new Set<string>();
@@ -152,7 +135,6 @@ const HouseholdList: React.FC = () => {
     });
     return Array.from(statuses).sort();
   }, [householdsData?.data]);
-
   const householdStats = useMemo(() => {
     if (!householdsData?.data) return {
       total: 0,
@@ -169,32 +151,17 @@ const HouseholdList: React.FC = () => {
       abandoned: 0
     };
     householdsData.data.forEach((household: Household) => {
-      if (household.status?.toLowerCase() === 'permanent') stats.permanent++;
-      else if (household.status?.toLowerCase() === 'temporary') stats.temporary++;
-      else if (household.status?.toLowerCase() === 'relocated') stats.relocated++;
-      else if (household.status?.toLowerCase() === 'abandoned') stats.abandoned++;
+      if (household.status?.toLowerCase() === 'permanent') stats.permanent++;else if (household.status?.toLowerCase() === 'temporary') stats.temporary++;else if (household.status?.toLowerCase() === 'relocated') stats.relocated++;else if (household.status?.toLowerCase() === 'abandoned') stats.abandoned++;
     });
     return stats;
   }, [householdsData?.data]);
-
   const sortedAndFilteredHouseholds = useMemo(() => {
     if (!householdsData?.data) return [];
-    
     let filtered = householdsData.data.filter((household: Household) => {
       const query = searchQuery.toLowerCase();
-      const matchesSearch = 
-        household.name?.toLowerCase().includes(query) || false ||
-        household.address?.toLowerCase().includes(query) || false ||
-        household.head_of_family_name?.toLowerCase().includes(query) || false ||
-        household.purok?.toLowerCase().includes(query) || false ||
-        household.contact_number?.toLowerCase().includes(query) || false;
-      
-      const matchesStatus = !statusFilter || statusFilter === "all-statuses" ? 
-        true : household.status?.toLowerCase() === statusFilter.toLowerCase();
-      
-      const matchesPurok = !purokFilter || purokFilter === "all-puroks" ? 
-        true : household.purok?.toLowerCase() === purokFilter.toLowerCase();
-      
+      const matchesSearch = household.name?.toLowerCase().includes(query) || false || household.address?.toLowerCase().includes(query) || false || household.head_of_family_name?.toLowerCase().includes(query) || false || household.purok?.toLowerCase().includes(query) || false || household.contact_number?.toLowerCase().includes(query) || false;
+      const matchesStatus = !statusFilter || statusFilter === "all-statuses" ? true : household.status?.toLowerCase() === statusFilter.toLowerCase();
+      const matchesPurok = !purokFilter || purokFilter === "all-puroks" ? true : household.purok?.toLowerCase() === purokFilter.toLowerCase();
       return matchesSearch && matchesStatus && matchesPurok;
     });
 
@@ -203,7 +170,6 @@ const HouseholdList: React.FC = () => {
       filtered.sort((a: Household, b: Household) => {
         let aValue = '';
         let bValue = '';
-        
         switch (sortField) {
           case 'name':
             aValue = a.name || '';
@@ -228,33 +194,28 @@ const HouseholdList: React.FC = () => {
           default:
             return 0;
         }
-        
         const comparison = aValue.localeCompare(bValue);
         return sortDirection === 'asc' ? comparison : -comparison;
       });
     }
-
     return filtered;
   }, [householdsData?.data, searchQuery, statusFilter, purokFilter, sortField, sortDirection]);
-
   const totalItems = sortedAndFilteredHouseholds.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentHouseholds = sortedAndFilteredHouseholds.slice(startIndex, endIndex);
-
-  const currentHouseholdIds = useMemo(() => (
-    currentHouseholds.map(h => h?.id).filter(Boolean) as string[]
-  ), [currentHouseholds]);
-
-  const { data: headNamesMap } = useQuery({
+  const currentHouseholdIds = useMemo(() => currentHouseholds.map(h => h?.id).filter(Boolean) as string[], [currentHouseholds]);
+  const {
+    data: headNamesMap
+  } = useQuery({
     queryKey: ['household-heads', currentHouseholdIds],
     queryFn: async () => {
       if (!currentHouseholdIds.length) return {} as Record<string, string>;
-      const { data, error } = await supabase
-        .from('householdmembers')
-        .select('householdid, role, residents:residentid(first_name, middle_name, last_name)')
-        .in('householdid', currentHouseholdIds);
+      const {
+        data,
+        error
+      } = await supabase.from('householdmembers').select('householdid, role, residents:residentid(first_name, middle_name, last_name)').in('householdid', currentHouseholdIds);
       if (error) throw error;
       const map: Record<string, string> = {};
       (data || []).forEach((m: any) => {
@@ -262,9 +223,7 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
         const isHead = role.includes('head');
         if (isHead) {
           const r = m.residents;
-          const name = r ? [r.first_name, r.middle_name ? r.middle_name.charAt(0) + '.' : null, r.last_name]
-            .filter(Boolean)
-            .join(' ') : null;
+          const name = r ? [r.first_name, r.middle_name ? r.middle_name.charAt(0) + '.' : null, r.last_name].filter(Boolean).join(' ') : null;
           if (name) map[m.householdid] = name;
         }
       });
@@ -272,25 +231,19 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
     },
     enabled: currentHouseholdIds.length > 0
   });
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-
   const handlePageSizeChange = (value: string) => {
     setItemsPerPage(Number(value));
     setCurrentPage(1); // Reset to first page when changing page size
   };
-
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, purokFilter, itemsPerPage]);
-
   if (isLoading) return <div className="p-4 text-center">Loading households...</div>;
   if (error) return <div className="p-4 text-center text-red-500">Error loading households: {error.toString()}</div>;
-
-  return (
-    <>
+  return <>
       {/* Enhanced Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 p-2">
         {/* Total Households */}
@@ -307,7 +260,9 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
             </div>
           </div>
           <div className="h-2 bg-blue-200 dark:bg-blue-800 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 rounded-full" style={{ width: '100%' }}></div>
+            <div className="h-full bg-blue-500 rounded-full" style={{
+            width: '100%'
+          }}></div>
           </div>
         </div>
         
@@ -325,7 +280,9 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
             </div>
           </div>
           <div className="h-2 bg-green-200 dark:bg-green-800 rounded-full overflow-hidden">
-            <div className="h-full bg-green-500 rounded-full" style={{ width: householdStats.total > 0 ? `${(householdStats.permanent / householdStats.total) * 100}%` : '0%' }}></div>
+            <div className="h-full bg-green-500 rounded-full" style={{
+            width: householdStats.total > 0 ? `${householdStats.permanent / householdStats.total * 100}%` : '0%'
+          }}></div>
           </div>
         </div>
         
@@ -343,7 +300,9 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
             </div>
           </div>
           <div className="h-2 bg-yellow-200 dark:bg-yellow-800 rounded-full overflow-hidden">
-            <div className="h-full bg-yellow-500 rounded-full" style={{ width: householdStats.total > 0 ? `${(householdStats.temporary / householdStats.total) * 100}%` : '0%' }}></div>
+            <div className="h-full bg-yellow-500 rounded-full" style={{
+            width: householdStats.total > 0 ? `${householdStats.temporary / householdStats.total * 100}%` : '0%'
+          }}></div>
           </div>
         </div>
         
@@ -361,7 +320,9 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
             </div>
           </div>
           <div className="h-2 bg-purple-200 dark:bg-purple-800 rounded-full overflow-hidden">
-            <div className="h-full bg-purple-500 rounded-full" style={{ width: householdStats.total > 0 ? `${(householdStats.relocated / householdStats.total) * 100}%` : '0%' }}></div>
+            <div className="h-full bg-purple-500 rounded-full" style={{
+            width: householdStats.total > 0 ? `${householdStats.relocated / householdStats.total * 100}%` : '0%'
+          }}></div>
           </div>
         </div>
         
@@ -379,7 +340,9 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
             </div>
           </div>
           <div className="h-2 bg-red-200 dark:bg-red-800 rounded-full overflow-hidden">
-            <div className="h-full bg-red-500 rounded-full" style={{ width: householdStats.total > 0 ? `${(householdStats.abandoned / householdStats.total) * 100}%` : '0%' }}></div>
+            <div className="h-full bg-red-500 rounded-full" style={{
+            width: householdStats.total > 0 ? `${householdStats.abandoned / householdStats.total * 100}%` : '0%'
+          }}></div>
           </div>
         </div>
       </div>
@@ -415,16 +378,7 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
       
       {/* Pagination controls and info */}
       <div className="flex justify-between items-center mb-4 px-4">
-        <div className="text-sm text-muted-foreground">
-          {isLoading ? (
-            "Loading households..."
-          ) : (
-            <>
-              Showing <span className="font-medium">{totalItems > 0 ? startIndex + 1 : 0}</span>-<span className="font-medium">{endIndex}</span> of{" "}
-              <span className="font-medium">{totalItems}</span> households
-            </>
-          )}
-        </div>
+        
         
         <div className="flex items-center gap-4">
           <div className="flex items-center">
@@ -446,43 +400,26 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('name')}
-            >
+            <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort('name')}>
               Name <SortIcon field="name" />
             </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('address')}
-            >
+            <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort('address')}>
               Address <SortIcon field="address" />
             </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('head_of_family_name')}
-            >
+            <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort('head_of_family_name')}>
               Head of Family <SortIcon field="head_of_family_name" />
             </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('contact_number')}
-            >
+            <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort('contact_number')}>
               Contact Number <SortIcon field="contact_number" />
             </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-muted/50 select-none"
-              onClick={() => handleSort('status')}
-            >
+            <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort('status')}>
               Status <SortIcon field="status" />
             </TableHead>
             <TableHead className="text-right px-[60px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {currentHouseholds.length > 0 ? (
-            currentHouseholds.map((household: Household) => (
-              <TableRow key={household.id}>
+          {currentHouseholds.length > 0 ? currentHouseholds.map((household: Household) => <TableRow key={household.id}>
                 <TableCell className="font-medium">{household.name}</TableCell>
                 <TableCell>{household.address}</TableCell>
                 <TableCell>{headNamesMap?.[household.id] || "Not specified"}</TableCell>
@@ -504,24 +441,16 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
                     </Button>
                   </div>
                 </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
+              </TableRow>) : <TableRow>
               <TableCell colSpan={6} className="text-center py-4">
-                {searchQuery || statusFilter || purokFilter ? 
-                  "No households found matching your search criteria." : 
-                  "No households available. Add a household to get started."
-                }
+                {searchQuery || statusFilter || purokFilter ? "No households found matching your search criteria." : "No households available. Add a household to get started."}
               </TableCell>
-            </TableRow>
-          )}
+            </TableRow>}
         </TableBody>
       </Table>
       
       {/* Enhanced Pagination - matching residents page style */}
-      {totalItems > 0 && (
-        <div className="flex justify-between items-center p-4 border-t">
+      {totalItems > 0 && <div className="flex justify-between items-center p-4 border-t">
           <div className="text-sm text-muted-foreground">
             Showing {startIndex + 1} to {endIndex} of {totalItems} households
           </div>
@@ -529,63 +458,41 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
           <Pagination>
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                />
+                <PaginationPrevious onClick={() => handlePageChange(Math.max(1, currentPage - 1))} className={currentPage === 1 ? "pointer-events-none opacity-50" : ""} />
               </PaginationItem>
               
-              {Array.from({ length: totalPages }).map((_, i) => {
-                const pageNum = i + 1;
-                
-                // Show first page, last page, and pages around current page
-                if (
-                  pageNum === 1 || 
-                  pageNum === totalPages || 
-                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                ) {
-                  return (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        isActive={pageNum === currentPage}
-                        onClick={() => handlePageChange(pageNum)}
-                      >
+              {Array.from({
+            length: totalPages
+          }).map((_, i) => {
+            const pageNum = i + 1;
+
+            // Show first page, last page, and pages around current page
+            if (pageNum === 1 || pageNum === totalPages || pageNum >= currentPage - 1 && pageNum <= currentPage + 1) {
+              return <PaginationItem key={pageNum}>
+                      <PaginationLink isActive={pageNum === currentPage} onClick={() => handlePageChange(pageNum)}>
                         {pageNum}
                       </PaginationLink>
-                    </PaginationItem>
-                  );
-                }
-                
-                // Show ellipsis for gaps
-                if (pageNum === 2 || pageNum === totalPages - 1) {
-                  return (
-                    <PaginationItem key={`ellipsis-${pageNum}`}>
+                    </PaginationItem>;
+            }
+
+            // Show ellipsis for gaps
+            if (pageNum === 2 || pageNum === totalPages - 1) {
+              return <PaginationItem key={`ellipsis-${pageNum}`}>
                       <PaginationEllipsis />
-                    </PaginationItem>
-                  );
-                }
-                
-                return null;
-              })}
+                    </PaginationItem>;
+            }
+            return null;
+          })}
               
               <PaginationItem>
-                <PaginationNext 
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                />
+                <PaginationNext onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""} />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
-        </div>
-      )}
+        </div>}
       
       {/* Household Details Dialog */}
-      <HouseholdDetails 
-        household={selectedHousehold} 
-        open={isDetailsOpen} 
-        onOpenChange={setIsDetailsOpen}
-        initialEditMode={isEditMode}
-      />
+      <HouseholdDetails household={selectedHousehold} open={isDetailsOpen} onOpenChange={setIsDetailsOpen} initialEditMode={isEditMode} />
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -605,8 +512,6 @@ const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>;
 };
-
 export default HouseholdList;
