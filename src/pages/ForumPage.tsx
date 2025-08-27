@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import CreateForumDialog from '@/components/forum/CreateForumDialog';
 import { Button } from '@/components/ui/button';
-import { Plus, Megaphone, AlertTriangle, Calendar, ChevronRight } from 'lucide-react';
+import { Plus, Megaphone, AlertTriangle, Calendar, ChevronRight, ShieldHalf, HeartPulse, Lightbulb, HelpCircle, TriangleAlert, Construction } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -15,6 +15,7 @@ export interface Forum {
   id: string;
   title: string;
   description: string | null;
+  category: string;
   is_public: boolean;
   brgyid: string;
   created_by: string;
@@ -22,35 +23,58 @@ export interface Forum {
   updated_at: string;
 }
 
-// Icon mapping for different forum types
-const getForumIcon = (title: string, isPublic: boolean) => {
-  const titleLower = title.toLowerCase();
-  
-  if (titleLower.includes('announcement') || titleLower.includes('news')) {
-    return {
-      icon: Megaphone,
-      iconColor: "text-blue-400",
-      bgColor: "bg-blue-500/20"
-    };
-  } else if (titleLower.includes('concern') || titleLower.includes('issue') || titleLower.includes('problem')) {
-    return {
-      icon: AlertTriangle,
-      iconColor: "text-yellow-400",
-      bgColor: "bg-yellow-500/20"
-    };
-  } else if (titleLower.includes('event') || titleLower.includes('activity') || titleLower.includes('calendar')) {
-    return {
-      icon: Calendar,
-      iconColor: "text-green-400",
-      bgColor: "bg-green-500/20"
-    };
-  } else {
-    // Default forum appearance
-    return {
-      icon: isPublic ? Megaphone : AlertTriangle,
-      iconColor: isPublic ? "text-purple-400" : "text-orange-400",
-      bgColor: isPublic ? "bg-purple-500/20" : "bg-orange-500/20"
-    };
+// Icon mapping for different forum categories
+const getForumIcon = (category: string) => {
+  switch (category) {
+    case 'Announcements':
+      return {
+        icon: Megaphone,
+        iconColor: "text-blue-400",
+        bgColor: "bg-blue-500/20"
+      };
+    case 'Peace & Order':
+      return {
+        icon: ShieldHalf,
+        iconColor: "text-green-400",
+        bgColor: "bg-green-500/20"
+      };
+    case 'Health & Wellness':
+      return {
+        icon: HeartPulse,
+        iconColor: "text-red-400",
+        bgColor: "bg-red-500/20"
+      };
+    case 'Suggestions & Feedback':
+      return {
+        icon: Lightbulb,
+        iconColor: "text-yellow-400",
+        bgColor: "bg-yellow-500/20"
+      };
+    case 'General Questions':
+      return {
+        icon: HelpCircle,
+        iconColor: "text-purple-400",
+        bgColor: "bg-purple-500/20"
+      };
+    case 'Emergency Preparedness':
+      return {
+        icon: TriangleAlert,
+        iconColor: "text-orange-400",
+        bgColor: "bg-orange-500/20"
+      };
+    case 'Public Works & Infrastructure':
+      return {
+        icon: Construction,
+        iconColor: "text-indigo-400",
+        bgColor: "bg-indigo-500/20"
+      };
+    default:
+      // Default forum appearance
+      return {
+        icon: HelpCircle,
+        iconColor: "text-gray-400",
+        bgColor: "bg-gray-500/20"
+      };
   }
 };
 
@@ -194,7 +218,7 @@ const ForumPage = () => {
 
   const renderForumCard = (forum: Forum) => {
     const stats = forumStats[forum.id] || { threads: 0, posts: 0 };
-    const iconConfig = getForumIcon(forum.title, forum.is_public);
+    const iconConfig = getForumIcon(forum.category);
     const IconComponent = iconConfig.icon;
     
     const handleClick = () => {
