@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Plus, X, Search, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { syncAllHouseholdsHeadOfFamily } from '@/lib/api/households';
-
 interface HouseholdMembersManagerProps {
   householdId: string;
   householdName: string;
@@ -42,7 +41,7 @@ const HouseholdMembersManager = ({
 
   // Member form state with role
   const [memberRole, setMemberRole] = useState<'Head' | 'Spouse' | 'Child' | 'Other'>('Child');
-  
+
   // Non-registered member form state
   const [nonRegisteredForm, setNonRegisteredForm] = useState({
     first_name: '',
@@ -103,9 +102,7 @@ const HouseholdMembersManager = ({
       const {
         data,
         error
-      } = await supabase
-        .from('householdmembers' as any)
-        .select(`
+      } = await supabase.from('householdmembers' as any).select(`
           id,
           role,
           residentid,
@@ -121,9 +118,7 @@ const HouseholdMembersManager = ({
             gender,
             birthdate
           )
-        `)
-        .eq('householdid', householdId)
-        .order('created_at');
+        `).eq('householdid', householdId).order('created_at');
       if (error) throw error;
       return data?.map((member: any) => ({
         ...member.residents,
@@ -176,9 +171,7 @@ const HouseholdMembersManager = ({
     }
 
     // Check for unique constraint violation for household members
-    if (error.message && (error.message.includes('householdmembers_householdid_residentid_key') || 
-        error.message.includes('duplicate key value') || 
-        error.message.includes('unique constraint'))) {
+    if (error.message && (error.message.includes('householdmembers_householdid_residentid_key') || error.message.includes('duplicate key value') || error.message.includes('unique constraint'))) {
       toast({
         title: "Resident Already in Household",
         description: "This resident is already a member of this household. Each resident can only be added once to a household.",
@@ -216,7 +209,7 @@ const HouseholdMembersManager = ({
           gender,
           birthdate
         `).or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,middle_name.ilike.%${term}%`);
-        
+
       // Filter out residents that are already members if there are any
       if (registeredMembers && registeredMembers.length > 0) {
         const memberIds = registeredMembers.map(m => m.id).filter(Boolean);
@@ -224,9 +217,10 @@ const HouseholdMembersManager = ({
           query = query.not('id', 'in', `(${memberIds.join(',')})`);
         }
       }
-      
-      const { data, error } = await query.order('first_name');
-      
+      const {
+        data,
+        error
+      } = await query.order('first_name');
       if (error) {
         console.error('Error searching residents:', error);
         toast({
@@ -258,13 +252,9 @@ const HouseholdMembersManager = ({
     try {
       // Check if this role (Head) already exists for this household
       if (memberRole === 'Head') {
-        const { data: existingHead } = await supabase
-          .from('householdmembers' as any)
-          .select('id')
-          .eq('householdid', householdId)
-          .eq('role', 'Head')
-          .single();
-        
+        const {
+          data: existingHead
+        } = await supabase.from('householdmembers' as any).select('id').eq('householdid', householdId).eq('role', 'Head').single();
         if (existingHead) {
           toast({
             title: "Head of family already exists",
@@ -289,7 +279,6 @@ const HouseholdMembersManager = ({
       await supabase.from('residents').update({
         household_id: householdId
       }).eq('id', residentId);
-
       toast({
         title: "Member added successfully",
         description: `The resident has been added to this household as ${memberRole}.`
@@ -379,7 +368,6 @@ const HouseholdMembersManager = ({
       await supabase.from('residents').update({
         household_id: null
       }).eq('id', residentId);
-
       toast({
         title: "Member removed successfully",
         description: `${residentName} has been removed from this household.`
@@ -592,13 +580,7 @@ const HouseholdMembersManager = ({
                 <div className="space-y-3">
                   {registeredMembers.map(member => <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 dark:hover:bg-muted/50">
                       <div className="flex items-center space-x-4">
-                        <CachedAvatar
-                          userId={member.id}
-                          profilePicture={member.photo_url}
-                          fallback={`${member.first_name.charAt(0)}${member.last_name.charAt(0)}`}
-                          className="w-12 h-12"
-                          bucketName="residentphotos"
-                        />
+                        <CachedAvatar userId={member.id} profilePicture={member.photo_url} fallback={`${member.first_name.charAt(0)}${member.last_name.charAt(0)}`} className="w-12 h-12" bucketName="residentphotos" />
                         <div>
                           <div className="flex items-center space-x-2">
                             <p className="font-medium">
@@ -613,10 +595,8 @@ const HouseholdMembersManager = ({
                             <span>{member.gender}</span>
                             <span>•</span>
                             <span>{formatAge(member.birthdate)} years old</span>
-                            <span>•</span>
-                            <Badge variant="outline" className="text-xs">
-                              {member.status}
-                            </Badge>
+                            
+                            
                           </div>
                         </div>
                       </div>
