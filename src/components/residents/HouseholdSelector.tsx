@@ -129,15 +129,15 @@ const HouseholdSelector = ({
         
         <div className="space-y-4">
           {currentHouseholdId && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800 mb-2">
+            <div className="p-3 bg-muted border border-border rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">
                 This resident is currently assigned to a household.
               </p>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRemoveFromHousehold}
-                className="text-red-600 border-red-300 hover:bg-red-50"
+                className="text-destructive border-destructive hover:bg-destructive/10"
               >
                 Remove from Current Household
               </Button>
@@ -145,7 +145,7 @@ const HouseholdSelector = ({
           )}
           
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search households by name, address, or purok..."
               value={searchTerm}
@@ -155,7 +155,7 @@ const HouseholdSelector = ({
           </div>
           
           {isLoading && (
-            <p className="text-sm text-gray-500">Searching households...</p>
+            <p className="text-sm text-muted-foreground">Searching households...</p>
           )}
           
           <ScrollArea className="h-[300px]">
@@ -163,16 +163,16 @@ const HouseholdSelector = ({
               {households?.map((household) => (
                 <div
                   key={household.id}
-                  className={`flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 ${
-                    household.id === currentHouseholdId ? 'bg-blue-50 border-blue-300' : ''
+                  className={`flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 transition-colors ${
+                    household.id === currentHouseholdId ? 'bg-primary/10 border-primary/20' : ''
                   }`}
                 >
                   <div>
-                    <p className="font-medium">{household.name}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-foreground">{household.name}</p>
+                    <p className="text-sm text-muted-foreground">
                       {household.address} • Purok {household.purok}
                     </p>
-                    <p className="text-xs text-gray-400">Status: {household.status}</p>
+                    <p className="text-xs text-muted-foreground/80">Status: {household.status}</p>
                   </div>
                   <Button
                     size="sm"
@@ -185,13 +185,13 @@ const HouseholdSelector = ({
               ))}
               
               {searchTerm.length >= 2 && !isLoading && households?.length === 0 && (
-                <p className="text-sm text-gray-500 text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   No households found matching your search.
                 </p>
               )}
               
               {searchTerm.length < 2 && !isLoading && (
-                <p className="text-sm text-gray-500 text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   Type at least 2 characters to search households.
                 </p>
               )}
