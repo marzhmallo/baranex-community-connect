@@ -1,15 +1,18 @@
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, MessageSquare, Eye, Users, Search, Filter, Megaphone, ShieldHalf, HeartPulse, Lightbulb, HelpCircle, TriangleAlert, Construction, ChevronRight, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
-import CreateForumDialog from '@/components/forum/CreateForumDialog';
-import { Button } from '@/components/ui/button';
-import { Plus, Megaphone, AlertTriangle, Calendar, ChevronRight, ShieldHalf, HeartPulse, Lightbulb, HelpCircle, TriangleAlert, Construction } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import CreateForumDialog from '@/components/forum/CreateForumDialog';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
 
 export interface Forum {
   id: string;
@@ -87,6 +90,9 @@ const ForumPage = () => {
   const [selectedForum, setSelectedForum] = useState<Forum | null>(null);
   const [forumStats, setForumStats] = useState<{[key: string]: {threads: number, posts: number}}>({});
   const [statsLoading, setStatsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'all' | 'public' | 'private' | 'category'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   
   const fetchForums = async () => {
     try {
@@ -178,6 +184,37 @@ const ForumPage = () => {
 
     fetchAllStats();
   }, [forums]);
+
+  // Filter and search forums
+  const filteredForums = forums?.filter(forum => {
+    // Search filter
+    const matchesSearch = forum.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         forum.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         forum.category.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Sort/visibility filter
+    let matchesSort = true;
+    if (sortBy === 'public') {
+      matchesSort = forum.is_public;
+    } else if (sortBy === 'private') {
+      matchesSort = !forum.is_public;
+    }
+    
+    // Category filter
+    const matchesCategory = categoryFilter === 'all' || forum.category === categoryFilter;
+    
+    return matchesSearch && matchesSort && matchesCategory;
+  }) || [];
+
+  const categoryOptions = [
+    'Announcements',
+    'Peace & Order', 
+    'Health & Wellness',
+    'Suggestions & Feedback',
+    'General Questions',
+    'Emergency Preparedness',
+    'Public Works & Infrastructure'
+  ];
 
   const handleForumCreated = () => {
     setShowCreateDialog(false);
@@ -274,50 +311,107 @@ const ForumPage = () => {
           </div>
         </div>
       )}
-      <header className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Community Discussion Board</h1>
-          <p className="text-muted-foreground mt-1">Connect with your neighbors and barangay officials.</p>
+
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Community Forums</h1>
+            <p className="text-muted-foreground">
+              Connect with your community and discuss various topics
+            </p>
+          </div>
+          {userProfile && (
+            <Button 
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Forum
+            </Button>
+          )}
         </div>
-        {isAdmin && (
-          <Button 
-            onClick={() => setShowCreateDialog(true)} 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold hidden sm:flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            New Post
-          </Button>
+
+        {/* Search and Filter Section */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-card border border-border rounded-lg p-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search forums..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-background text-foreground border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all duration-200 placeholder:text-muted-foreground"
+            />
+          </div>
+          
+          <div className="flex gap-2 items-center">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            
+            <Select value={sortBy} onValueChange={(value: 'all' | 'public' | 'private' | 'category') => setSortBy(value)}>
+              <SelectTrigger className="w-32 bg-background">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                <SelectItem value="all">All Forums</SelectItem>
+                <SelectItem value="public">Public</SelectItem>
+                <SelectItem value="private">Private</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-48 bg-background">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                <SelectItem value="all">All Categories</SelectItem>
+                {categoryOptions.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load forums. Please try again later.
+            </AlertDescription>
+          </Alert>
         )}
-      </header>
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            Failed to load forums. Please try again later.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {showCreateDialog && (
-        <CreateForumDialog 
-          open={showCreateDialog} 
-          onOpenChange={setShowCreateDialog} 
-          onForumCreated={handleForumCreated}
-        />
-      )}
-
-      <div className="space-y-4">
-        {forums && forums.length > 0 ? (
-          forums.map((forum) => renderForumCard(forum))
-        ) : (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => (
+              <Card key={index} className="animate-pulse bg-card border border-border">
+                <CardHeader>
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-3 bg-muted rounded w-full mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-2/3"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filteredForums.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-muted-foreground mb-4">
-              <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold">No Forums Available</h3>
-              <p>No community forums have been created yet.</p>
-            </div>
-            {isAdmin && (
+            <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              {searchQuery || sortBy !== 'all' || categoryFilter !== 'all' 
+                ? 'No forums found' 
+                : 'No forums yet'}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {searchQuery || sortBy !== 'all' || categoryFilter !== 'all'
+                ? 'Try adjusting your search or filters'
+                : 'Be the first to create a forum for your community.'}
+            </p>
+            {userProfile && searchQuery === '' && sortBy === 'all' && categoryFilter === 'all' && (
               <Button 
                 onClick={() => setShowCreateDialog(true)}
                 className="mt-4"
@@ -327,8 +421,20 @@ const ForumPage = () => {
               </Button>
             )}
           </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredForums.map((forum) => renderForumCard(forum))}
+          </div>
         )}
       </div>
+
+      {showCreateDialog && (
+        <CreateForumDialog 
+          open={showCreateDialog} 
+          onOpenChange={setShowCreateDialog} 
+          onForumCreated={handleForumCreated}
+        />
+      )}
     </div>
   );
 };
