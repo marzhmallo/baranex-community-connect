@@ -14,6 +14,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EditForumDialog } from "./EditForumDialog";
 
 export interface Thread {
   id: string;
@@ -85,6 +86,7 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserFromSameBarangay, setIsUserFromSameBarangay] = useState(false);
   const [editingThread, setEditingThread] = useState<Thread | null>(null);
+  const [showEditForumDialog, setShowEditForumDialog] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   
   // Dropdown states
@@ -478,13 +480,7 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-background border border-border z-50">
                   <DropdownMenuItem
-                    onClick={() => {
-                      // Add edit forum functionality here
-                      toast({
-                        title: "Info",
-                        description: "Edit forum functionality coming soon!",
-                      });
-                    }}
+                    onClick={() => setShowEditForumDialog(true)}
                     className="flex items-center gap-2 hover:bg-muted"
                   >
                     <Edit className="h-4 w-4" />
@@ -795,6 +791,14 @@ const ThreadsView = ({ forum, onBack, onDeleteForum }: ThreadsViewProps) => {
           }}
           forum={forum}
           editingThread={editingThread}
+        />
+      )}
+
+      {showEditForumDialog && (
+        <EditForumDialog
+          forum={forum}
+          open={showEditForumDialog}
+          onOpenChange={setShowEditForumDialog}
         />
       )}
 

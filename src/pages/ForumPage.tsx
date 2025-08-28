@@ -21,6 +21,7 @@ export interface Forum {
   created_by: string;
   created_at: string;
   updated_at: string;
+  viewcount: number;
 }
 
 // Icon mapping for different forum categories
