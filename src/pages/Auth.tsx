@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Mail, User, Lock, Building, MapPin, X } from "lucide-react";
+import { Eye, EyeOff, Mail, User, Lock, Building, MapPin, X, AlertCircle } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
@@ -110,6 +111,14 @@ const Auth = () => {
     municipality: string;
     province: string;
   }[]>([]);
+  
+  // Email verification modal states
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  
   const captchaRef = useRef<HCaptcha>(null);
   const idFilesInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -279,11 +288,62 @@ const Auth = () => {
       });
       if (error) {
         console.error("Login error:", error);
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive"
-        });
+        
+        // Check if it's an email not confirmed error
+        if (error.message?.includes('Email not confirmed') || error.message?.includes('email_not_confirmed')) {
+          console.log("Email not confirmed error detected");
+          
+          // Increment login attempts
+          const newAttempts = loginAttempts + 1;
+          setLoginAttempts(newAttempts);
+          
+          // Get user creation time to check 15-minute rule
+          try {
+            const { data: verificationData } = await supabase.functions.invoke('resend-verification', {
+              body: { email, checkOnly: true }
+            });
+            
+            const createdAt = verificationData?.user_created_at;
+            const currentTime = new Date().getTime();
+            const userCreatedTime = new Date(createdAt).getTime();
+            const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
+            const timeSinceCreation = currentTime - userCreatedTime;
+            
+            console.log(`Login attempts: ${newAttempts}, Time since creation: ${timeSinceCreation}ms`);
+            
+            // Show modal if 3+ attempts or 15+ minutes since signup
+            if (newAttempts >= 3 || timeSinceCreation > fifteenMinutes) {
+              setUnverifiedEmail(email);
+              setUserCreatedAt(createdAt);
+              setShowVerificationModal(true);
+            } else {
+              toast({
+                title: "Email Not Verified",
+                description: `Please check your email and verify your account before logging in. (Attempt ${newAttempts}/3)`,
+                variant: "destructive"
+              });
+            }
+          } catch (err) {
+            console.error("Error getting user creation time:", err);
+            // Fallback to showing modal after 3 attempts
+            if (newAttempts >= 3) {
+              setUnverifiedEmail(email);
+              setShowVerificationModal(true);
+            } else {
+              toast({
+                title: "Email Not Verified",
+                description: `Please check your email and verify your account before logging in. (Attempt ${newAttempts}/3)`,
+                variant: "destructive"
+              });
+            }
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
       } else if (user) {
         console.log("Login successful, user authenticated");
 
@@ -367,6 +427,10 @@ const Auth = () => {
           return;
         }
 
+        // Reset login attempts on successful login
+        setLoginAttempts(0);
+        setShowVerificationModal(false);
+        
         // User is approved, proceed with Smart Login prefetch
         try {
           // Show full-screen loader and set smart flag to prevent auto-redirects
@@ -435,6 +499,68 @@ const Auth = () => {
       setIsLoading(false);
       captchaRef.current?.resetCaptcha();
       setCaptchaToken(null);
+    }
+  };
+
+  // Handle resend verification email
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return;
+    
+    setIsResendingVerification(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('resend-verification', {
+        body: { email: unverifiedEmail }
+      });
+      
+      if (error) {
+        console.error('Resend verification error:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to resend verification email",
+          variant: "destructive"
+        });
+      } else if (data?.verified) {
+        toast({
+          title: "Already Verified",
+          description: "Your email is already verified. Please try logging in again.",
+          variant: "default"
+        });
+        setShowVerificationModal(false);
+        setLoginAttempts(0);
+      } else {
+        toast({
+          title: "Verification Email Sent",
+          description: "Please check your email for the verification link.",
+          variant: "default"
+        });
+        setShowVerificationModal(false);
+        setLoginAttempts(0);
+      }
+    } catch (error: any) {
+      console.error('Resend verification error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to resend verification email. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
+  // Calculate time since signup for display
+  const getTimeSinceSignup = () => {
+    if (!userCreatedAt) return null;
+    
+    const currentTime = new Date().getTime();
+    const createdTime = new Date(userCreatedAt).getTime();
+    const diffMinutes = Math.floor((currentTime - createdTime) / (1000 * 60));
+    
+    if (diffMinutes < 60) {
+      return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`;
+    } else {
+      const diffHours = Math.floor(diffMinutes / 60);
+      return `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
     }
   };
 
@@ -1633,6 +1759,68 @@ const Auth = () => {
           </div>
         </div>
       </div>
+
+      {/* Email Verification Modal */}
+      <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
+        <DialogContent className={`sm:max-w-md ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-orange-500/20' : 'bg-orange-100'}`}>
+                <AlertCircle className={`h-5 w-5 ${theme === 'dark' ? 'text-orange-400' : 'text-orange-600'}`} />
+              </div>
+              <DialogTitle className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                Email Verification Required
+              </DialogTitle>
+            </div>
+            <DialogDescription className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+              Your account email hasn't been verified yet. We've detected multiple login attempts 
+              {userCreatedAt && getTimeSinceSignup() && (
+                <> or it's been {getTimeSinceSignup()} since you signed up</>
+              )}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 pt-4">
+            <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <Mail className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
+                <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  Verification Email
+                </span>
+              </div>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                Check your email <span className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  {unverifiedEmail}
+                </span> for a verification link. If you can't find it, check your spam folder.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setShowVerificationModal(false);
+                  setLoginAttempts(0);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleResendVerification}
+                disabled={isResendingVerification}
+                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+              >
+                {isResendingVerification ? "Sending..." : "Resend Link"}
+              </Button>
+            </div>
+
+            <div className={`text-xs text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              Still having trouble? Contact your barangay administrator for assistance.
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>;
 };
 export default Auth;
