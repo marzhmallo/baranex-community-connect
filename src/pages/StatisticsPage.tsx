@@ -292,21 +292,21 @@ const StatisticsPage = () => {
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-purple-500 h-2 rounded-full" style={{width: '85%'}}></div>
+              <div className="bg-purple-500 h-2 rounded-full" style={{width: `${statistics!.totalResidents > 0 ? ((((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0)) / statistics!.totalResidents) * 100) : 0}%`}}></div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Youth (18-29)</span>
               <span className="text-sm font-medium text-foreground">{(statistics!.ageDistribution['18-29 (Young Adult)'] || 0).toLocaleString()}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-green-500 h-2 rounded-full" style={{width: `${((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) / statistics!.totalResidents) * 100}%`}}></div>
+              <div className="bg-green-500 h-2 rounded-full" style={{width: `${statistics!.totalResidents > 0 ? (((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) / statistics!.totalResidents) * 100) : 0}%`}}></div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Senior Citizens (60+)</span>
               <span className="text-sm font-medium text-foreground">{(statistics!.ageDistribution['60+ (Senior Citizen)'] || 0).toLocaleString()}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-blue-500 h-2 rounded-full" style={{width: `${((statistics!.ageDistribution['60+ (Senior Citizen)'] || 0) / statistics!.totalResidents) * 100}%`}}></div>
+              <div className="bg-blue-500 h-2 rounded-full" style={{width: `${statistics!.totalResidents > 0 ? (((statistics!.ageDistribution['60+ (Senior Citizen)'] || 0) / statistics!.totalResidents) * 100) : 0}%`}}></div>
             </div>
           </div>
         </div>
@@ -322,14 +322,14 @@ const StatisticsPage = () => {
               <span className="text-sm font-medium text-foreground">{(statistics!.ageDistribution['0-12 (Child)'] || 0).toLocaleString()}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-blue-400 h-2 rounded-full" style={{width: `${((statistics!.ageDistribution['0-12 (Child)'] || 0) / statistics!.totalResidents) * 100}%`}}></div>
+              <div className="bg-blue-400 h-2 rounded-full" style={{width: `${statistics!.totalResidents > 0 ? (((statistics!.ageDistribution['0-12 (Child)'] || 0) / statistics!.totalResidents) * 100) : 0}%`}}></div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Adults (30-59)</span>
               <span className="text-sm font-medium text-foreground">{(statistics!.ageDistribution['30-59 (Adult)'] || 0).toLocaleString()}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full" style={{width: `${((statistics!.ageDistribution['30-59 (Adult)'] || 0) / statistics!.totalResidents) * 100}%`}}></div>
+              <div className="bg-blue-600 h-2 rounded-full" style={{width: `${statistics!.totalResidents > 0 ? (((statistics!.ageDistribution['30-59 (Adult)'] || 0) / statistics!.totalResidents) * 100) : 0}%`}}></div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Dependency Ratio</span>
@@ -342,7 +342,12 @@ const StatisticsPage = () => {
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-blue-700 h-2 rounded-full" style={{width: '45%'}}></div>
+              <div className="bg-blue-700 h-2 rounded-full" style={{width: `${(() => {
+                const dependents = (statistics!.ageDistribution['0-12 (Child)'] || 0) + (statistics!.ageDistribution['60+ (Senior Citizen)'] || 0);
+                const workers = (statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0);
+                const ratio = workers > 0 ? (dependents / workers) * 100 : 0;
+                return Math.min(ratio, 100); // Cap at 100% for visual display
+              })()}%`}}></div>
             </div>
           </div>
         </div>
