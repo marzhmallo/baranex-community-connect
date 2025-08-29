@@ -403,11 +403,21 @@ const StatisticsPage = () => {
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Working Age Population</span>
-              <span className="text-lg font-semibold text-blue-600">{((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0)).toLocaleString()} ({((((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0)) / statistics!.totalResidents) * 100).toFixed(1)}%)</span>
+              <span className="text-lg font-semibold text-blue-600">
+                {((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0)).toLocaleString()} 
+                ({statistics!.totalResidents > 0 
+                  ? ((((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) + (statistics!.ageDistribution['30-59 (Adult)'] || 0)) / statistics!.totalResidents) * 100).toFixed(1) 
+                  : '0.0'}%)
+              </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Youth Population</span>
-              <span className="text-lg font-semibold text-pink-600">{(statistics!.ageDistribution['18-29 (Young Adult)'] || 0).toLocaleString()} ({(((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) / statistics!.totalResidents) * 100).toFixed(1)}%)</span>
+              <span className="text-lg font-semibold text-pink-600">
+                {(statistics!.ageDistribution['18-29 (Young Adult)'] || 0).toLocaleString()} 
+                ({statistics!.totalResidents > 0 
+                  ? (((statistics!.ageDistribution['18-29 (Young Adult)'] || 0) / statistics!.totalResidents) * 100).toFixed(1) 
+                  : '0.0'}%)
+              </span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-foreground">Senior Citizens</span>
