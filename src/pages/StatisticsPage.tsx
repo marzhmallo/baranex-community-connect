@@ -242,7 +242,11 @@ const StatisticsPage = () => {
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Population Density</span>
-              <span className="text-lg font-semibold text-foreground">{(statistics!.totalResidents / statistics!.totalPuroks).toFixed(0)} per purok</span>
+              <span className="text-lg font-semibold text-foreground">
+                {statistics!.totalPuroks > 0 
+                  ? `${(statistics!.totalResidents / statistics!.totalPuroks).toFixed(0)} per purok`
+                  : '0 per purok'}
+              </span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-foreground">Voter Registration Rate</span>
@@ -443,7 +447,11 @@ const StatisticsPage = () => {
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Average per Purok</span>
-              <span className="text-lg font-semibold text-blue-600">{(statistics!.totalResidents / statistics!.totalPuroks).toFixed(0)} residents</span>
+              <span className="text-lg font-semibold text-blue-600">
+                {statistics!.totalPuroks > 0 
+                  ? `${(statistics!.totalResidents / statistics!.totalPuroks).toFixed(0)} residents`
+                  : '0 residents'}
+              </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-border">
               <span className="text-foreground">Youth Population (15-29)</span>
