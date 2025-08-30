@@ -11,7 +11,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
 import DocumentRequestModal from "./DocumentRequestModal";
-import { FileText, Clock, CheckCircle, BarChart3, Package, Hourglass, Eye, XCircle, TrendingUp, Search, Plus, Filter, Download, Edit, Trash2, RefreshCw, FileX, History, PlusCircle, Bell, Upload, ArrowRight, Settings, MoreHorizontal, MessageCircle } from "lucide-react";
+import { FileText, Clock, CheckCircle, BarChart3, Package, Hourglass, Eye, XCircle, TrendingUp, Search, Plus, Filter, Download, Edit, Trash2, RefreshCw, FileX, History, PlusCircle, Bell, Upload, ArrowRight, Settings, MoreHorizontal, MessageCircle, X } from "lucide-react";
 const UserDocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
@@ -19,6 +19,8 @@ const UserDocumentsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("all");
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [isTemplateDetailsOpen, setIsTemplateDetailsOpen] = useState(false);
   const {
     userProfile
   } = useAuth();
@@ -357,7 +359,15 @@ const UserDocumentsPage = () => {
                               <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
                                 Active
                               </Badge>
-                              <Button variant="ghost" size="sm" className="hover:bg-accent">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="hover:bg-accent"
+                                onClick={() => {
+                                  setSelectedTemplate(doc);
+                                  setIsTemplateDetailsOpen(true);
+                                }}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
                             </div>
@@ -631,6 +641,81 @@ const UserDocumentsPage = () => {
         </div>}
 
       {showRequestModal && <DocumentRequestModal onClose={() => setShowRequestModal(false)} />}
+
+      {/* Template Details Modal */}
+      {isTemplateDetailsOpen && selectedTemplate && (
+        <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border">
+            <div className="p-6 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-foreground">Document Template Details</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsTemplateDetailsOpen(false)}
+                  className="hover:bg-accent"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-6 flex-1 overflow-y-auto">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium text-foreground mb-2">Document Name</h3>
+                  <p className="text-muted-foreground">{selectedTemplate.name}</p>
+                </div>
+                
+                {selectedTemplate.description && (
+                  <div>
+                    <h3 className="font-medium text-foreground mb-2">Description</h3>
+                    <p className="text-muted-foreground">{selectedTemplate.description}</p>
+                  </div>
+                )}
+                
+                <div>
+                  <h3 className="font-medium text-foreground mb-2">Document Type</h3>
+                  <Badge variant="secondary" className="capitalize">
+                    {selectedTemplate.type}
+                  </Badge>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium text-foreground mb-2">Processing Fee</h3>
+                  <p className="text-muted-foreground">₱{selectedTemplate.fee || 0}</p>
+                </div>
+                
+                {selectedTemplate.content && (
+                  <div>
+                    <h3 className="font-medium text-foreground mb-2">Template Content</h3>
+                    <div className="bg-muted p-4 rounded-lg text-sm">
+                      <pre className="whitespace-pre-wrap text-muted-foreground">{selectedTemplate.content}</pre>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    onClick={() => {
+                      setIsTemplateDetailsOpen(false);
+                      setShowRequestModal(true);
+                    }}
+                  >
+                    Request This Document
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setIsTemplateDetailsOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>;
 };
 export default UserDocumentsPage;
