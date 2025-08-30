@@ -536,12 +536,12 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                         </div>
                         
                         <div>
-                          <Label htmlFor="paymentScreenshot" className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                            Payment Screenshot *
+                          <Label htmlFor="paymentScreenshots" className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            Payment Screenshots *
                           </Label>
                           <div className="mt-2">
                             <input 
-                              id="paymentScreenshot" 
+                              id="paymentScreenshots"
                               type="file" 
                               accept="image/*" 
                               multiple
