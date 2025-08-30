@@ -184,21 +184,24 @@ const UserDocumentsPage = () => {
       setRequestsCurrentPage(page);
     }
   };
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">Pending</Badge>;
+      case 'processing':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">Processing</Badge>;
+      case 'for review':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">For Review</Badge>;
+      case 'approved':
       case 'ready for pickup':
       case 'completed':
-        return 'bg-green-500';
-      case 'processing':
-        return 'bg-yellow-500';
-      case 'for review':
-        return 'bg-blue-500';
+        return <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Ready for Pickup</Badge>;
       case 'rejected':
-        return 'bg-red-500';
+        return <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-50">Rejected</Badge>;
       case 'released':
-        return 'bg-purple-500';
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 hover:bg-purple-50">Released</Badge>;
       default:
-        return 'bg-gray-500';
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 hover:bg-gray-50">{status}</Badge>;
     }
   };
 
@@ -671,12 +674,9 @@ const UserDocumentsPage = () => {
                           ? `${request.profiles.firstname} ${request.profiles.lastname}`
                           : 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className={`h-2.5 w-2.5 rounded-full mr-2 ${getStatusColor(request.status)}`}></div>
-                          <span className="text-sm text-foreground capitalize">{request.status}</span>
-                        </div>
-                      </td>
+                       <td className="px-6 py-4 whitespace-nowrap">
+                         {getStatusBadge(request.status)}
+                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {formatDate(request.updated_at || request.created_at)}
                       </td>
@@ -770,10 +770,7 @@ const UserDocumentsPage = () => {
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Status</Label>
-                  <div className="flex items-center gap-2">
-                    <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor(selectedRequest.status)}`}></div>
-                    <span className="text-sm capitalize">{selectedRequest.status}</span>
-                  </div>
+                  {getStatusBadge(selectedRequest.status)}
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Payment Method</Label>
