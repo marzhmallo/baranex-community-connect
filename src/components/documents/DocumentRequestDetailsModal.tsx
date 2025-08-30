@@ -123,37 +123,13 @@ const DocumentRequestDetailsModal = ({
                 </div>
               </div>
               
-            </CardContent>
-          </Card>
-
-          {/* Contact Information */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Phone className="h-5 w-5" />
-                Contact Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              
-              {request.email && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{request.email}</span>
-                </div>
-              )}
-              {request["contact#"] && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{request["contact#"]}</span>
-                </div>
-              )}
-              {(!request.email && !request["contact#"]) && (
+              {/* Additional contact info can be added here if available */}
+              <div className="grid grid-cols-1 gap-2 pt-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4" />
                   <span>Contact information not available</span>
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
