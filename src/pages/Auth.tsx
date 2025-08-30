@@ -520,7 +520,10 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: unverifiedEmail
+        email: unverifiedEmail,
+        options: {
+          captchaToken: captchaToken
+        }
       });
       
       if (error) {
