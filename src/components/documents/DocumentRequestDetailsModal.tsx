@@ -166,16 +166,34 @@ const DocumentRequestDetailsModal = ({
               {request.paymenturl && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">Payment Proof</p>
-                  <div className="mx-4">
-                    <SmartPhotoDisplay
-                      bucketName="cashg"
-                      filePath={request.paymenturl}
-                      isPublic={false}
-                      className="w-full h-64"
-                      alt="Payment Screenshot"
-                      fallbackContent="💳"
-                      enableZoom={true}
-                    />
+                  <div className="grid gap-4">
+                    {Array.isArray(request.paymenturl) ? (
+                      request.paymenturl.map((url: string, index: number) => (
+                        <div key={index} className="mx-4">
+                          <SmartPhotoDisplay
+                            bucketName="cashg"
+                            filePath={url}
+                            isPublic={false}
+                            className="w-full h-64"
+                            alt={`Payment Screenshot ${index + 1}`}
+                            fallbackContent="💳"
+                            enableZoom={true}
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="mx-4">
+                        <SmartPhotoDisplay
+                          bucketName="cashg"
+                          filePath={request.paymenturl}
+                          isPublic={false}
+                          className="w-full h-64"
+                          alt="Payment Screenshot"
+                          fallbackContent="💳"
+                          enableZoom={true}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
