@@ -46,7 +46,7 @@ const BarangaysPage: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('public_barangays')
+        .from('barangays')
         .select('*')
         .order('created_at', { ascending: false });
 

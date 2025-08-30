@@ -85,7 +85,7 @@ export default function UpdatePasswordPage() {
               .eq('id', user.id)
               .maybeSingle();
             if (profile && profile.padlock === true) {
-              await supabase.from('public_profiles').update({ padlock: false }).eq('id', user.id);
+              await supabase.from('profiles').update({ padlock: false }).eq('id', user.id);
             }
           }
         } catch (e) {

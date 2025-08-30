@@ -2219,6 +2219,8 @@ export type Database = {
         Row: {
           backgroundurl: string | null
           barangayname: string | null
+          country: string | null
+          created_at: string | null
           email: string | null
           gcashname: string[] | null
           gcashurl: string | null
@@ -2226,6 +2228,7 @@ export type Database = {
           halllong: number | null
           id: string | null
           instructions: string | null
+          is_custom: boolean | null
           logo_url: string | null
           municipality: string | null
           officehours: string | null
@@ -2236,6 +2239,8 @@ export type Database = {
         Insert: {
           backgroundurl?: string | null
           barangayname?: string | null
+          country?: string | null
+          created_at?: string | null
           email?: string | null
           gcashname?: string[] | null
           gcashurl?: string | null
@@ -2243,6 +2248,7 @@ export type Database = {
           halllong?: number | null
           id?: string | null
           instructions?: string | null
+          is_custom?: boolean | null
           logo_url?: string | null
           municipality?: string | null
           officehours?: string | null
@@ -2253,6 +2259,8 @@ export type Database = {
         Update: {
           backgroundurl?: string | null
           barangayname?: string | null
+          country?: string | null
+          created_at?: string | null
           email?: string | null
           gcashname?: string[] | null
           gcashurl?: string | null
@@ -2260,6 +2268,7 @@ export type Database = {
           halllong?: number | null
           id?: string | null
           instructions?: string | null
+          is_custom?: boolean | null
           logo_url?: string | null
           municipality?: string | null
           officehours?: string | null
@@ -2271,42 +2280,48 @@ export type Database = {
       }
       public_profiles: {
         Row: {
-          avatar_url: string | null
-          bio: string | null
+          brgyid: string | null
           created_at: string | null
+          email: string | null
           firstname: string | null
           id: string | null
           lastname: string | null
-          middlename: string | null
-          online: boolean | null
-          suffix: string | null
-          username: string | null
+          role: string | null
         }
         Insert: {
-          avatar_url?: string | null
-          bio?: string | null
+          brgyid?: string | null
           created_at?: string | null
+          email?: string | null
           firstname?: string | null
           id?: string | null
           lastname?: string | null
-          middlename?: string | null
-          online?: boolean | null
-          suffix?: string | null
-          username?: string | null
+          role?: string | null
         }
         Update: {
-          avatar_url?: string | null
-          bio?: string | null
+          brgyid?: string | null
           created_at?: string | null
+          email?: string | null
           firstname?: string | null
           id?: string | null
           lastname?: string | null
-          middlename?: string | null
-          online?: boolean | null
-          suffix?: string | null
-          username?: string | null
+          role?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {

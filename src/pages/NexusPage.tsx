@@ -228,7 +228,7 @@ const NexusPage = () => {
           break;
         case 'profiles':
           selectFields = 'id, firstname, lastname, email';
-          query = supabase.from('public_profiles').select(selectFields);
+          query = supabase.from('profiles').select(selectFields);
           orderField = 'lastname';
           break;
         default:
@@ -416,7 +416,7 @@ const NexusPage = () => {
           break;
         case 'profiles':
           selectFields = 'id, firstname, lastname, email';
-          query = supabase.from('public_profiles').select(selectFields);
+          query = supabase.from('profiles').select(selectFields);
           break;
         case 'officials':
           selectFields = 'id, name, position_no';
