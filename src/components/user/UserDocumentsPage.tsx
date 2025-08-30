@@ -7,24 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
 import DocumentRequestModal from "./DocumentRequestModal";
-import { FileText, Clock, CheckCircle, BarChart3, Package, Hourglass, Eye, XCircle, TrendingUp, Search, Plus, Filter, Download, Edit, Trash2, RefreshCw, FileX, History, PlusCircle, Bell, Upload, ArrowRight, Settings, MoreHorizontal, MessageCircle, X } from "lucide-react";
+import { FileText, Clock, CheckCircle, BarChart3, Package, Hourglass, Eye, XCircle, TrendingUp, Search, Plus, Filter, Download, Edit, Trash2, RefreshCw, FileX, History, PlusCircle, Bell, Upload, ArrowRight, Settings, MoreHorizontal, MessageCircle } from "lucide-react";
 const UserDocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState("all");
-  const [trackingFilter, setTrackingFilter] = useState("all");
-  const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-  const [isTemplateDetailsOpen, setIsTemplateDetailsOpen] = useState(false);
   const {
     userProfile
   } = useAuth();
@@ -83,116 +76,28 @@ const UserDocumentsPage = () => {
     }
   });
   const itemsPerPage = 5;
+  const totalPages = Math.ceil(documentTypes.length / itemsPerPage);
 
   // Pagination for document requests
   const requestsPerPage = 4;
   const requestsTotalPages = Math.ceil(documentRequests.length / requestsPerPage);
 
-  // Filter and sort document types by active tab and search query
-  const normalize = (s: any) => String(s || '').trim().toLowerCase();
-  const knownTypes = ['certificate', 'certificates', 'permit', 'permits', 'clearance', 'clearances', 'ids', 'identification', 'other'];
-  
-  const filteredDocumentTypes = (documentTypes || []).filter((dt: any) => {
-    // Filter by search query first
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase();
-      const matchesName = (dt.name || '').toLowerCase().includes(searchLower);
-      const matchesDescription = (dt.description || '').toLowerCase().includes(searchLower);
-      const matchesType = (dt.type || '').toLowerCase().includes(searchLower);
-      
-      if (!matchesName && !matchesDescription && !matchesType) {
-        return false;
-      }
-    }
-    
-    // Then filter by tab
-    const t = normalize(dt.type);
-    if (activeTab === 'all') return true;
-    if (activeTab === 'certificates') return t === 'certificate' || t === 'certificates';
-    if (activeTab === 'permits') return t === 'permit' || t === 'permits';
-    if (activeTab === 'clearances') return t === 'clearance' || t === 'clearances';
-    if (activeTab === 'ids') return t === 'ids' || t === 'identification';
-    if (activeTab === 'other') return t === 'other' || !knownTypes.includes(t);
-    return true;
-  });
-
-  const sortedDocumentTypes = filteredDocumentTypes.slice().sort((a: any, b: any) => {
-    const at = normalize(a.type);
-    const bt = normalize(b.type);
-    if (at < bt) return -1;
-    if (at > bt) return 1;
-    const an = normalize(a.name);
-    const bn = normalize(b.name);
-    if (an < bn) return -1;
-    if (an > bn) return 1;
-    return 0;
-  });
-
-  const totalPages = Math.ceil((sortedDocumentTypes.length || 0) / itemsPerPage);
-  
-  // Calculate paginated data using filtered and sorted data
+  // Calculate paginated data using real Supabase data
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedTemplates = sortedDocumentTypes.slice(startIndex, endIndex);
+  const paginatedTemplates = documentTypes.slice(startIndex, endIndex);
 
-  // Helper function for case-insensitive status matching
-  const matchesStatus = (requestStatus: string, targetStatus: string): boolean => {
-    return requestStatus.toLowerCase() === targetStatus.toLowerCase();
-  };
-
-  // Helper function for case-insensitive multiple status matching
-  const matchesAnyStatus = (requestStatus: string, targetStatuses: string[]): boolean => {
-    return targetStatuses.some(status => matchesStatus(requestStatus, status));
-  };
-
-  // Filter document requests based on tracking filter and search query
-  const filteredDocumentRequests = documentRequests.filter((request) => {
-    // First filter by tracking search query
-    if (trackingSearchQuery) {
-      const searchLower = trackingSearchQuery.toLowerCase();
-      const matchesTrackingId = (request.docnumber || '').toLowerCase().includes(searchLower);
-      const matchesType = (request.type || '').toLowerCase().includes(searchLower);
-      const matchesPurpose = (request.purpose || '').toLowerCase().includes(searchLower);
-      
-      if (!matchesTrackingId && !matchesType && !matchesPurpose) {
-        return false;
-      }
-    }
-    
-    // Then filter by status
-    if (trackingFilter === "all") return true;
-    if (trackingFilter === "processing") return matchesStatus(request.status, "processing");
-    if (trackingFilter === "released") return matchesAnyStatus(request.status, ["released", "completed"]);
-    if (trackingFilter === "rejected") return matchesStatus(request.status, "rejected");
-    if (trackingFilter === "ready") return matchesAnyStatus(request.status, ["approved", "ready", "ready for pickup"]);
-    return true;
-  });
-
-  // Calculate paginated document requests using filtered data
-  const filteredRequestsTotalPages = Math.ceil(filteredDocumentRequests.length / requestsPerPage);
+  // Calculate paginated document requests
   const requestsStartIndex = (requestsCurrentPage - 1) * requestsPerPage;
   const requestsEndIndex = requestsStartIndex + requestsPerPage;
-  const paginatedRequests = filteredDocumentRequests.slice(requestsStartIndex, requestsEndIndex);
-  
-  // Reset page when tracking filter or search changes
-  useEffect(() => {
-    if (requestsCurrentPage !== 1) {
-      setRequestsCurrentPage(1);
-    }
-  }, [trackingFilter, trackingSearchQuery]);
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    }
-  }, [searchQuery, activeTab]);
-
+  const paginatedRequests = documentRequests.slice(requestsStartIndex, requestsEndIndex);
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
   const handleRequestsPageChange = (page: number) => {
-    if (page >= 1 && page <= filteredRequestsTotalPages) {
+    if (page >= 1 && page <= requestsTotalPages) {
       setRequestsCurrentPage(page);
     }
   };
@@ -214,6 +119,15 @@ const UserDocumentsPage = () => {
     }
   };
 
+  // Helper function for case-insensitive status matching
+  const matchesStatus = (requestStatus: string, targetStatus: string): boolean => {
+    return requestStatus.toLowerCase() === targetStatus.toLowerCase();
+  };
+
+  // Helper function for case-insensitive multiple status matching
+  const matchesAnyStatus = (requestStatus: string, targetStatuses: string[]): boolean => {
+    return targetStatuses.some(status => matchesStatus(requestStatus, status));
+  };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -334,7 +248,7 @@ const UserDocumentsPage = () => {
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle className="text-foreground">Document Library</CardTitle>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 ml-auto">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64 border-border bg-background text-foreground" />
@@ -347,102 +261,100 @@ const UserDocumentsPage = () => {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs value="all" className="w-full">
                 <div className="px-6 border-b border-border">
-                  <TabsList className="bg-transparent h-auto p-0">
-                    <TabsTrigger value="all" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
-                      All
-                    </TabsTrigger>
-                    <TabsTrigger value="certificates" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
-                      Certificates
-                    </TabsTrigger>
-                    <TabsTrigger value="permits" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
-                      Permits
-                    </TabsTrigger>
-                    <TabsTrigger value="clearances" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
-                      Clearances
-                    </TabsTrigger>
-                    <TabsTrigger value="ids" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
-                      IDs
-                    </TabsTrigger>
-                    <TabsTrigger value="other" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
-                      Other
-                    </TabsTrigger>
-                  </TabsList>
+                  
                 </div>
 
-                <TabsContent value={activeTab} className="mt-0">
+                <TabsContent value="all" className="mt-0">
                   <div className="p-6">
-                    
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
+                          <Filter className="h-4 w-4 mr-2" />
+                          Advanced Filters
+                        </Button>
+                      </div>
+                      
+                    </div>
 
                     <div className="space-y-3">
-                      {isLoadingTemplates ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedTemplates && paginatedTemplates.length > 0 ? paginatedTemplates.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                      {isLoadingTemplates ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedTemplates.length > 0 ? paginatedTemplates.map(template => <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
                             <div className="flex items-center gap-4">
                               <input type="checkbox" className="rounded border-border" />
                               <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
                                 <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                               </div>
                               <div>
-                                <h4 className="font-medium text-foreground">{doc.name}</h4>
+                                <h4 className="font-medium text-foreground">{template.name}</h4>
                                 <p className="text-sm text-muted-foreground">
-                                  {doc.description ? `${doc.description} • ` : ''}
-                                  Fee: ₱{doc.fee || 0}
+                                  {template.description} • Fee: ₱{template.fee || 0}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
-                                Active
-                              </Badge>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="hover:bg-accent"
-                                onClick={() => {
-                                  setSelectedTemplate(doc);
-                                  setIsTemplateDetailsOpen(true);
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                              <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="hover:bg-accent">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="border-border bg-background">
+                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Template
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Download
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
-                          </div>) : <div className="text-center py-8">
-                          <p className="text-muted-foreground">No document templates found.</p>
-                          <p className="text-sm text-muted-foreground">Request documents from available templates.</p>
-                        </div>}
+                          </div>) : <div className="text-center py-8 text-muted-foreground">No document templates found</div>}
                     </div>
 
-                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                    <div className="flex items-center justify-between mt-6">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          Showing {Math.min(paginatedTemplates?.length || 0, itemsPerPage)} of {sortedDocumentTypes?.length || 0} documents
-                        </span>
+                        <input type="checkbox" className="rounded border-border" />
+                        <label className="text-sm text-foreground">Select All</label>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious onClick={() => handlePageChange(Math.max(1, currentPage - 1))} className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`} />
-                            </PaginationItem>
-                            {Array.from({
-                            length: totalPages
-                          }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
-                                <PaginationLink onClick={() => handlePageChange(page)} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
-                                  {page}
-                                </PaginationLink>
-                              </PaginationItem>)}
-                            <PaginationItem>
-                              <PaginationNext onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`} />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(currentPage - 1);
+                          }} className={`hover:bg-accent cursor-pointer ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                          </PaginationItem>
+                          {Array.from({
+                          length: totalPages
+                        }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
+                              <PaginationLink onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>)}
+                          <PaginationItem>
+                            <PaginationNext onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(currentPage + 1);
+                          }} className={`hover:bg-accent cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
                     </div>
                   </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
+
+          
+
         </div>
 
         <div className="space-y-6">
@@ -580,65 +492,13 @@ const UserDocumentsPage = () => {
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input 
-                type="text" 
-                placeholder="Search by tracking ID..." 
-                value={trackingSearchQuery}
-                onChange={e => setTrackingSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" 
-              />
+              <input type="text" placeholder="Search by tracking ID..." className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" />
             </div>
             <div className="flex flex-wrap gap-2">
-              <button 
-                onClick={() => setTrackingFilter("all")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "all" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                All Documents
-              </button>
-              <button 
-                onClick={() => setTrackingFilter("processing")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "processing" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                Processing
-              </button>
-              <button 
-                onClick={() => setTrackingFilter("released")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "released" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                Released
-              </button>
-              <button 
-                onClick={() => setTrackingFilter("rejected")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "rejected" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                Rejected
-              </button>
-              <button 
-                onClick={() => setTrackingFilter("ready")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "ready" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                Ready
-              </button>
+              <button className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm hover:bg-primary/20 transition-colors">All Documents</button>
+              <button className="bg-muted text-foreground px-3 py-1 rounded-full text-sm hover:bg-muted/80 transition-colors">In Progress</button>
+              <button className="bg-muted text-foreground px-3 py-1 rounded-full text-sm hover:bg-muted/80 transition-colors">Completed</button>
+              <button className="bg-muted text-foreground px-3 py-1 rounded-full text-sm hover:bg-muted/80 transition-colors">Rejected</button>
             </div>
           </div>
           
@@ -670,9 +530,7 @@ const UserDocumentsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {request.type}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {userProfile?.firstname} {userProfile?.lastname}
-                      </td>
+                      
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className={`h-2.5 w-2.5 rounded-full mr-2 ${getStatusColor(request.status)}`}></div>
@@ -697,9 +555,9 @@ const UserDocumentsPage = () => {
             </table>
           </div>
           
-          {filteredRequestsTotalPages > 1 && <div className="mt-6 flex justify-between items-center">
+          {requestsTotalPages > 1 && <div className="mt-6 flex justify-between items-center">
               <div className="text-sm text-muted-foreground">
-                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredDocumentRequests.length)} of {filteredDocumentRequests.length} requests
+                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, documentRequests.length)} of {documentRequests.length} requests
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} disabled={requestsCurrentPage === 1} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === 1 ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
@@ -707,12 +565,12 @@ const UserDocumentsPage = () => {
                 </button>
                 <div className="flex">
                   {Array.from({
-                length: filteredRequestsTotalPages
+                length: requestsTotalPages
               }, (_, i) => i + 1).map(page => <button key={page} onClick={() => handleRequestsPageChange(page)} className={`px-3 py-1 text-sm rounded-md font-medium ${requestsCurrentPage === page ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'}`}>
                       {page}
                     </button>)}
                 </div>
-                <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === filteredRequestsTotalPages} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === filteredRequestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+                <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === requestsTotalPages} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === requestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
                   Next
                 </button>
               </div>
@@ -728,95 +586,6 @@ const UserDocumentsPage = () => {
         </div>}
 
       {showRequestModal && <DocumentRequestModal onClose={() => setShowRequestModal(false)} />}
-
-      {/* Template Details Modal */}
-      {isTemplateDetailsOpen && selectedTemplate && (
-        <Dialog open={isTemplateDetailsOpen} onOpenChange={setIsTemplateDetailsOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                Document Template Details
-                <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">
-                  Available
-                </Badge>
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{selectedTemplate.name}</h3>
-                {selectedTemplate.description && (
-                  <p className="text-muted-foreground">{selectedTemplate.description}</p>
-                )}
-              </div>
-
-              <Separator />
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Processing Fee</label>
-                    <p className="text-lg font-semibold text-foreground">
-                      {selectedTemplate.fee ? `₱${selectedTemplate.fee}` : 'Free'}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Document Type</label>
-                    <p className="text-lg font-semibold text-foreground capitalize">
-                      {selectedTemplate.type}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Status</label>
-                    <p className="text-sm text-foreground">
-                      Available for Request
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Required Action</label>
-                    <p className="text-sm text-foreground">
-                      Submit Request Form
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h4 className="font-medium text-blue-900 dark:text-blue-200 mb-2">Document Information</h4>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  To request this document, click "Request This Document" below. You'll need to provide the required 
-                  information and may need to pay the processing fee. Processing time may vary depending on document type.
-                </p>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button 
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                  onClick={() => {
-                    setIsTemplateDetailsOpen(false);
-                    setShowRequestModal(true);
-                  }}
-                >
-                  Request This Document
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => setIsTemplateDetailsOpen(false)}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>;
 };
 export default UserDocumentsPage;
