@@ -39,7 +39,7 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
   const [paymentMethod, setPaymentMethod] = useState(editingRequest?.method === 'Cash (Walk-in)' ? 'cash' : "");
   const [amount, setAmount] = useState(editingRequest?.amount?.toString() || "");
   const [orNumber, setOrNumber] = useState(editingRequest?.ornumber || "");
-  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
+  const [paymentScreenshots, setPaymentScreenshots] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requireUpfront, setRequireUpfront] = useState(false);
 
@@ -158,27 +158,29 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
     
     setIsSubmitting(true);
     try {
-      let paymentUrl = null;
+      let paymentUrls: string[] = [];
 
-      // Upload payment screenshot if provided
-      if (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && paymentScreenshot) {
-        const fileName = `${userProfile.id}/payment_${Date.now()}_${paymentScreenshot.name}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('cashg')
-          .upload(fileName, paymentScreenshot);
-        
-        if (uploadError) {
-          console.error('Error uploading payment screenshot:', uploadError);
-          toast({
-            title: "Upload Error",
-            description: "Failed to upload payment screenshot",
-            variant: "destructive"
-          });
-          return;
+      // Upload payment screenshots if provided
+      if (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && paymentScreenshots.length > 0) {
+        for (const screenshot of paymentScreenshots) {
+          const fileName = `${userProfile.id}/payment_${Date.now()}_${screenshot.name}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('cashg')
+            .upload(fileName, screenshot);
+          
+          if (uploadError) {
+            console.error('Error uploading payment screenshot:', uploadError);
+            toast({
+              title: "Upload Error",
+              description: "Failed to upload payment screenshot",
+              variant: "destructive"
+            });
+            return;
+          }
+
+          const { data: { publicUrl } } = supabase.storage.from('cashg').getPublicUrl(fileName);
+          paymentUrls.push(publicUrl);
         }
-
-        const { data: { publicUrl } } = supabase.storage.from('cashg').getPublicUrl(fileName);
-        paymentUrl = publicUrl;
       }
 
       const receiver = receiverType === "self" 
@@ -204,7 +206,8 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
         amount: selectedDoc?.fee || 0,
         ...(selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && {
           ornumber: orNumber,
-          paymenturl: paymentUrl,
+          paymenturl: paymentUrls.length > 0 ? paymentUrls[0] : null,
+          paymentgallery: paymentUrls,
           paydate: new Date().toISOString()
         }),
         status: 'Request',
@@ -541,21 +544,37 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                               id="paymentScreenshot" 
                               type="file" 
                               accept="image/*" 
-                              onChange={(e) => setPaymentScreenshot(e.target.files?.[0] || null)} 
+                              multiple
+                              onChange={(e) => setPaymentScreenshots(Array.from(e.target.files || []))} 
                               className="block w-full text-sm text-blue-700 dark:text-blue-300 file:mr-4 file:py-3 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:transition-colors cursor-pointer bg-white/70 dark:bg-black/20 border border-blue-200 dark:border-blue-700 rounded-lg" 
                             />
-                            {paymentScreenshot && (
+                            {paymentScreenshots.length > 0 && (
                               <div className="mt-3 animate-fade-in">
-                                <img 
-                                  src={URL.createObjectURL(paymentScreenshot)} 
-                                  alt="Payment screenshot preview" 
-                                  className="w-40 h-40 object-cover border-2 border-blue-200 dark:border-blue-700 rounded-lg shadow-sm" 
-                                />
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                  {paymentScreenshots.map((screenshot, index) => (
+                                    <div key={index} className="relative">
+                                      <img 
+                                        src={URL.createObjectURL(screenshot)} 
+                                        alt={`Payment screenshot ${index + 1}`} 
+                                        className="w-full h-32 object-cover border-2 border-blue-200 dark:border-blue-700 rounded-lg shadow-sm" 
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="sm"
+                                        className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                                        onClick={() => setPaymentScreenshots(prev => prev.filter((_, i) => i !== index))}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>
                           <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                            Upload a clear screenshot of your payment confirmation
+                            Upload clear screenshots of your payment confirmation (multiple files allowed)
                           </p>
                         </div>
                       </div>
@@ -585,7 +604,7 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                   !selectedDocumentType || 
                   !purpose || 
                   (receiverType === "other" && (!receiverName || !receiverEmail || !receiverContact)) ||
-                  (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || !paymentScreenshot)) ||
+                  (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || paymentScreenshots.length === 0)) ||
                   (selectedDoc?.fee > 0 && barangayInfo?.payreq && paymentMethod === 'cash')
                 }
                 className="px-8 py-2 h-11 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all"
