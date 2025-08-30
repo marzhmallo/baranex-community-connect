@@ -279,7 +279,9 @@ const UserDocumentsPage = () => {
             <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex justify-between items-center">
               <div>
                 <p className="text-xs text-muted-foreground">Ready to Pickup</p>
-                
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
+                </p>
               </div>
               <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
                 <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
