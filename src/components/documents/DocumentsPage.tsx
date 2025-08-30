@@ -1042,7 +1042,7 @@ const DocumentsPage = () => {
                   {documentRequests.length > 0 ? (
                     <div className="space-y-4">
                       {documentRequests.map(request => 
-                        <div key={request.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => handleRequestClick(request)}>
+                        <div key={request.id} className="flex items-center justify-between p-2 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => handleRequestClick(request)}>
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                               <span className="text-sm font-medium text-foreground">{request.name.split(' ').map((n: string) => n[0]).join('')}</span>
