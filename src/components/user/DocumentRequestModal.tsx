@@ -36,18 +36,12 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
   const [receiverContact, setReceiverContact] = useState(
     editingRequest?.receiver?.contact || ""
   );
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(editingRequest?.method === 'Cash (Walk-in)' ? 'cash' : "");
   const [amount, setAmount] = useState(editingRequest?.amount?.toString() || "");
   const [orNumber, setOrNumber] = useState(editingRequest?.ornumber || "");
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requireUpfront, setRequireUpfront] = useState(false);
-  
-  // Check if payment method should be locked (has existing payment URL or uploaded screenshot)
-  const hasExistingPayment = editingRequest?.paymenturl;
-  const hasUploadedScreenshot = paymentScreenshot !== null;
-  const isOnlinePayment = paymentMethod !== 'cash' && paymentMethod !== '';
-  const shouldLockPaymentMethod = isOnlinePayment && (hasExistingPayment || hasUploadedScreenshot);
 
   // Fetch payment methods from payme table
   const { data: paymentMethods = [], isLoading: isLoadingPaymentMethods } = useQuery({
@@ -66,24 +60,13 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
     enabled: !!userProfile?.brgyid
   });
 
-  // Set payment method correctly when editing or when payment methods load
+  // Set default payment method when payment methods load
   useEffect(() => {
-    if (editingRequest && paymentMethods.length > 0) {
-      // If editing, find the correct payment method ID based on the original method name
-      if (editingRequest.method === 'Cash (Walk-in)') {
-        setPaymentMethod('cash');
-      } else {
-        // Find the payment method by name for other payment methods
-        const originalMethod = paymentMethods.find(pm => pm.gname === editingRequest.method);
-        if (originalMethod) {
-          setPaymentMethod(originalMethod.id);
-        }
-      }
-    } else if (!editingRequest && !paymentMethod && paymentMethods.length > 0) {
-      // Set cash/walk-in as default for new requests
+    if (!paymentMethod) {
+      // Set cash/walk-in as default if available
       setPaymentMethod('cash');
     }
-  }, [editingRequest, paymentMethods, paymentMethod]);
+  }, [paymentMethod]);
 
   // Fetch barangay payment requirement setting
   const { data: barangayInfo = null } = useQuery({
@@ -445,75 +428,55 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                         No payment methods configured
                       </div>
                      ) : (
-                       <div>
-                         {shouldLockPaymentMethod && (
-                           <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg">
-                             <p className="text-sm text-orange-700 dark:text-orange-300 flex items-center gap-2">
-                               <AlertCircle className="h-4 w-4" />
-                               Payment method cannot be changed after a receipt has been uploaded.
-                             </p>
-                           </div>
-                         )}
-                         
-                         <RadioGroup 
-                           value={paymentMethod} 
-                           onValueChange={shouldLockPaymentMethod ? undefined : setPaymentMethod} 
-                           className="mt-3 space-y-3"
-                         >
-                           {/* Default Cash/Walk-in Payment Option */}
-                           <div className={`flex items-center space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all ${barangayInfo?.payreq || shouldLockPaymentMethod ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                             <RadioGroupItem 
-                               value="cash" 
-                               id="cash" 
-                               className="border-2" 
-                               disabled={barangayInfo?.payreq || shouldLockPaymentMethod}
-                             />
-                             <Label htmlFor="cash" className={`flex-1 ${!barangayInfo?.payreq && !shouldLockPaymentMethod ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                       <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-3 space-y-3">
+                         {/* Default Cash/Walk-in Payment Option */}
+                         <div className={`flex items-center space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all ${barangayInfo?.payreq ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                           <RadioGroupItem 
+                             value="cash" 
+                             id="cash" 
+                             className="border-2" 
+                             disabled={barangayInfo?.payreq}
+                           />
+                           <Label htmlFor="cash" className={`flex-1 ${!barangayInfo?.payreq ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                             <div className="flex items-center justify-between">
+                               <div>
+                                 <span className="font-medium">Cash Payment (Walk-in)</span>
+                                 <p className="text-xs text-muted-foreground mt-1">
+                                   {barangayInfo?.payreq ? 'Advance payment required' : 'Pay in person at the barangay office'}
+                                 </p>
+                               </div>
+                               <div className="w-8 h-8 flex items-center justify-center bg-green-100 dark:bg-green-900/30 rounded">
+                                 <span className="text-green-600 dark:text-green-400 text-lg">💰</span>
+                               </div>
+                             </div>
+                           </Label>
+                         </div>
+
+                         {/* Online Payment Methods */}
+                         {paymentMethods.map((method) => (
+                           <div key={method.id} className="flex items-center space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all">
+                             <RadioGroupItem value={method.id} id={method.id} className="border-2" />
+                             <Label htmlFor={method.id} className="flex-1 cursor-pointer">
                                <div className="flex items-center justify-between">
                                  <div>
-                                   <span className="font-medium">Cash Payment (Walk-in)</span>
-                                   <p className="text-xs text-muted-foreground mt-1">
-                                     {barangayInfo?.payreq ? 'Advance payment required' : 'Pay in person at the barangay office'}
-                                   </p>
+                                   <span className="font-medium">{method.gname}</span>
+                                   {method.credz && (
+                                     <p className="text-xs text-muted-foreground mt-1">
+                                       {method.gname?.toLowerCase().includes('gcash') ? 'Digital Payment' : 'Traditional Payment'}
+                                     </p>
+                                   )}
                                  </div>
-                                 <div className="w-8 h-8 flex items-center justify-center bg-green-100 dark:bg-green-900/30 rounded">
-                                   <span className="text-green-600 dark:text-green-400 text-lg">💰</span>
-                                 </div>
+                                 {method.url && (
+                                   <img src={method.url} alt={method.gname} className="w-8 h-8 object-contain rounded" />
+                                 )}
                                </div>
                              </Label>
                            </div>
-
-                           {/* Online Payment Methods */}
-                           {paymentMethods.map((method) => (
-                             <div key={method.id} className={`flex items-center space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all ${shouldLockPaymentMethod ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                               <RadioGroupItem 
-                                 value={method.id} 
-                                 id={method.id} 
-                                 className="border-2" 
-                                 disabled={shouldLockPaymentMethod}
-                               />
-                               <Label htmlFor={method.id} className={`flex-1 ${!shouldLockPaymentMethod ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                                 <div className="flex items-center justify-between">
-                                   <div>
-                                     <span className="font-medium">{method.gname}</span>
-                                     {method.credz && (
-                                       <p className="text-xs text-muted-foreground mt-1">
-                                         {method.gname?.toLowerCase().includes('gcash') ? 'Digital Payment' : 'Traditional Payment'}
-                                       </p>
-                                     )}
-                                   </div>
-                                   {method.url && (
-                                     <img src={method.url} alt={method.gname} className="w-8 h-8 object-contain rounded" />
-                                   )}
-                                 </div>
-                               </Label>
-                             </div>
-                           ))}
-                         </RadioGroup>
-                       </div>
+                         ))}
+                       </RadioGroup>
                     )}
 
-                    {selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && !shouldLockPaymentMethod && (
+                    {selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && (
                       <div className="mt-6 space-y-4 p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 animate-fade-in">
                         <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
                           <CreditCard className="h-5 w-5" />
@@ -581,20 +544,15 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                               onChange={(e) => setPaymentScreenshot(e.target.files?.[0] || null)} 
                               className="block w-full text-sm text-blue-700 dark:text-blue-300 file:mr-4 file:py-3 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:transition-colors cursor-pointer bg-white/70 dark:bg-black/20 border border-blue-200 dark:border-blue-700 rounded-lg" 
                             />
-                             {(paymentScreenshot || hasExistingPayment) && (
-                               <div className="mt-3 animate-fade-in">
-                                 <img 
-                                   src={paymentScreenshot ? URL.createObjectURL(paymentScreenshot) : editingRequest?.paymenturl} 
-                                   alt="Payment screenshot preview" 
-                                   className="w-40 h-40 object-cover border-2 border-blue-200 dark:border-blue-700 rounded-lg shadow-sm" 
-                                 />
-                                 {hasExistingPayment && !paymentScreenshot && (
-                                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                     Existing payment receipt
-                                   </p>
-                                 )}
-                               </div>
-                             )}
+                            {paymentScreenshot && (
+                              <div className="mt-3 animate-fade-in">
+                                <img 
+                                  src={URL.createObjectURL(paymentScreenshot)} 
+                                  alt="Payment screenshot preview" 
+                                  className="w-40 h-40 object-cover border-2 border-blue-200 dark:border-blue-700 rounded-lg shadow-sm" 
+                                />
+                              </div>
+                            )}
                           </div>
                           <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
                             Upload a clear screenshot of your payment confirmation
@@ -627,7 +585,7 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                   !selectedDocumentType || 
                   !purpose || 
                   (receiverType === "other" && (!receiverName || !receiverEmail || !receiverContact)) ||
-                  (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || (!paymentScreenshot && !hasExistingPayment))) ||
+                  (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || !paymentScreenshot)) ||
                   (selectedDoc?.fee > 0 && barangayInfo?.payreq && paymentMethod === 'cash')
                 }
                 className="px-8 py-2 h-11 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all"
