@@ -136,6 +136,8 @@ const UserDocumentsPage = () => {
       filteredByStatus = documentRequests.filter(request => {
         const status = request.status.toLowerCase();
         switch (trackingFilter) {
+          case "Requests":
+            return status === "request" || status === "pending";
           case "Processing":
             return status === "processing" || status === "pending" || status === "for review";
           case "Released":
@@ -578,6 +580,16 @@ const UserDocumentsPage = () => {
                 }`}
               >
                 All Documents
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("Requests")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "Requests" 
+                    ? "bg-primary/10 text-primary" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Requests
               </button>
               <button 
                 onClick={() => setTrackingFilter("Processing")}
