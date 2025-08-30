@@ -18,6 +18,7 @@ const UserDocumentsPage = () => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState("all");
   const {
     userProfile
   } = useAuth();
@@ -76,16 +77,43 @@ const UserDocumentsPage = () => {
     }
   });
   const itemsPerPage = 5;
-  const totalPages = Math.ceil(documentTypes.length / itemsPerPage);
 
   // Pagination for document requests
   const requestsPerPage = 4;
   const requestsTotalPages = Math.ceil(documentRequests.length / requestsPerPage);
 
-  // Calculate paginated data using real Supabase data
+  // Filter and sort document types by active tab
+  const normalize = (s: any) => String(s || '').trim().toLowerCase();
+  const knownTypes = ['certificate', 'certificates', 'permit', 'permits', 'clearance', 'clearances', 'ids', 'identification', 'other'];
+  const filteredDocumentTypes = (documentTypes || []).filter((dt: any) => {
+    const t = normalize(dt.type);
+    if (activeTab === 'all') return true;
+    if (activeTab === 'certificates') return t === 'certificate' || t === 'certificates';
+    if (activeTab === 'permits') return t === 'permit' || t === 'permits';
+    if (activeTab === 'clearances') return t === 'clearance' || t === 'clearances';
+    if (activeTab === 'ids') return t === 'ids' || t === 'identification';
+    if (activeTab === 'other') return t === 'other' || !knownTypes.includes(t);
+    return true;
+  });
+
+  const sortedDocumentTypes = filteredDocumentTypes.slice().sort((a: any, b: any) => {
+    const at = normalize(a.type);
+    const bt = normalize(b.type);
+    if (at < bt) return -1;
+    if (at > bt) return 1;
+    const an = normalize(a.name);
+    const bn = normalize(b.name);
+    if (an < bn) return -1;
+    if (an > bn) return 1;
+    return 0;
+  });
+
+  const totalPages = Math.ceil((sortedDocumentTypes.length || 0) / itemsPerPage);
+  
+  // Calculate paginated data using filtered and sorted data
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedTemplates = documentTypes.slice(startIndex, endIndex);
+  const paginatedTemplates = sortedDocumentTypes.slice(startIndex, endIndex);
 
   // Calculate paginated document requests
   const requestsStartIndex = (requestsCurrentPage - 1) * requestsPerPage;
@@ -261,7 +289,7 @@ const UserDocumentsPage = () => {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Tabs value="all" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <div className="px-6 border-b border-border">
                   <TabsList className="bg-transparent h-auto p-0">
                     <TabsTrigger value="all" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
@@ -285,7 +313,7 @@ const UserDocumentsPage = () => {
                   </TabsList>
                 </div>
 
-                <TabsContent value="all" className="mt-0">
+                <TabsContent value={activeTab} className="mt-0">
                   <div className="p-6">
                     
 
@@ -335,7 +363,7 @@ const UserDocumentsPage = () => {
                     <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
-                          Showing {Math.min(paginatedTemplates?.length || 0, itemsPerPage)} of {documentTypes?.length || 0} documents
+                          Showing {Math.min(paginatedTemplates?.length || 0, itemsPerPage)} of {sortedDocumentTypes?.length || 0} documents
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
