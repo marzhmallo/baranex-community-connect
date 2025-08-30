@@ -127,17 +127,17 @@ const DocumentRequestDetailsModal = ({
               <div className="grid grid-cols-1 gap-2 pt-2">
                 {request.email && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4" />
+                    <Mail className="h-4 w-4 text-muted-foreground" />
                     <span>{request.email}</span>
                   </div>
                 )}
                 {request["contact#"] && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4" />
+                    <Phone className="h-4 w-4 text-muted-foreground" />
                     <span>{request["contact#"]}</span>
                   </div>
                 )}
-                {!request.email && !request["contact#"] && (
+                {(!request.email && !request["contact#"]) && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Mail className="h-4 w-4" />
                     <span>Contact information not available</span>

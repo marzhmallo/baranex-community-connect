@@ -75,13 +75,13 @@ const DocumentsPage = () => {
         // Fetch document requests
         supabase.from('docrequests').select('*', {
           count: 'exact'
-        }).ilike('status', 'Request').range(0, itemsPerPage - 1).order('created_at', {
+        }).ilike('status', 'Request').range((requestsCurrentPage - 1) * itemsPerPage, requestsCurrentPage * itemsPerPage - 1).order('created_at', {
           ascending: false
         }),
         // Fetch document tracking
         supabase.from('docrequests').select('*', {
           count: 'exact'
-        }).not('processedby', 'is', null).neq('status', 'Request').range(0, trackingItemsPerPage - 1).order('updated_at', {
+        }).not('processedby', 'is', null).neq('status', 'Request').range((trackingCurrentPage - 1) * trackingItemsPerPage, trackingCurrentPage * trackingItemsPerPage - 1).order('updated_at', {
           ascending: false
         })]);
 
@@ -191,7 +191,7 @@ const DocumentsPage = () => {
       }
     };
     fetchAllData();
-  }, []);
+  }, [requestsCurrentPage, trackingCurrentPage]);
 
   // Set up real-time subscriptions after initial load
   useEffect(() => {
@@ -1032,59 +1032,71 @@ const DocumentsPage = () => {
               <CardTitle className="text-foreground">Document Requests</CardTitle>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col h-96">
             {false ? <div className="flex items-center justify-center py-8">
                 <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
                 <p className="ml-2 text-sm text-muted-foreground">Loading requests...</p>
-              </div> : <div className="space-y-4">
-                {documentRequests.length > 0 ? <>
-                    {documentRequests.map(request => <div key={request.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => handleRequestClick(request)}>
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium text-foreground">{request.name.split(' ').map((n: string) => n[0]).join('')}</span>
+              </div> : 
+              <>
+                <div className="flex-1 min-h-0">
+                  {documentRequests.length > 0 ? (
+                    <div className="space-y-4">
+                      {documentRequests.map(request => 
+                        <div key={request.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => handleRequestClick(request)}>
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-foreground">{request.name.split(' ').map((n: string) => n[0]).join('')}</span>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-foreground">{request.name}</h4>
+                              <p className="text-sm text-muted-foreground">{request.document}</p>
+                              <p className="text-xs text-muted-foreground">{request.timeAgo}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-medium text-foreground">{request.name}</h4>
-                            <p className="text-sm text-muted-foreground">{request.document}</p>
-                            <p className="text-xs text-muted-foreground">{request.timeAgo}</p>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" onClick={e => {
+                      e.stopPropagation();
+                      handleApproveRequest(request.id, request.name);
+                    }} className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:text-green-300">
+                              <Check className="h-3 w-3 mr-1" />
+                              Approve
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={e => {
+                      e.stopPropagation();
+                      handleDenyRequest(request.id, request.name);
+                    }} className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:text-red-300">
+                              <X className="h-3 w-3 mr-1" />
+                              Deny
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" onClick={e => {
-                    e.stopPropagation();
-                    handleApproveRequest(request.id, request.name);
-                  }} className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:text-green-300">
-                            <Check className="h-3 w-3 mr-1" />
-                            Approve
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={e => {
-                    e.stopPropagation();
-                    handleDenyRequest(request.id, request.name);
-                  }} className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:text-red-300">
-                            <X className="h-3 w-3 mr-1" />
-                            Deny
-                          </Button>
-                        </div>
-                      </div>)}
-                    
-                     {/* Pagination */}
-                     {Math.ceil(totalCount / itemsPerPage) > 1 && <div className="flex items-center justify-between pt-4">
-                         <p className="text-xs text-muted-foreground">
-                           Page {requestsCurrentPage} of {Math.ceil(totalCount / itemsPerPage)}
-                         </p>
-                         <div className="flex items-center space-x-2">
-                           <Button variant="outline" size="sm" onClick={() => setRequestsCurrentPage(prev => Math.max(prev - 1, 1))} disabled={requestsCurrentPage === 1}>
-                             <ChevronLeft className="h-3 w-3" />
-                           </Button>
-                           <Button variant="outline" size="sm" onClick={() => setRequestsCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalCount / itemsPerPage)))} disabled={requestsCurrentPage === Math.ceil(totalCount / itemsPerPage)}>
-                             <ChevronRight className="h-3 w-3" />
-                           </Button>
-                         </div>
-                       </div>}
-                  </> : <div className="text-center py-8">
-                    <p className="text-sm text-muted-foreground">No pending requests found</p>
-                  </div>}
-              </div>}
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-sm text-muted-foreground">No pending requests found</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Fixed Pagination Area */}
+                <div className="mt-2 pt-2 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Page {requestsCurrentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => setRequestsCurrentPage(prev => Math.max(prev - 1, 1))} disabled={requestsCurrentPage === 1}>
+                        <ChevronLeft className="h-3 w-3" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setRequestsCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalCount / itemsPerPage)))} disabled={requestsCurrentPage === Math.ceil(totalCount / itemsPerPage)}>
+                        <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            }
           </CardContent>
         </Card>
 
