@@ -15,21 +15,30 @@ import { useToast } from "@/hooks/use-toast";
 
 interface DocumentRequestModalProps {
   onClose: () => void;
+  editingRequest?: any;
 }
 
-const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
+const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalProps) => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedDocumentType, setSelectedDocumentType] = useState("");
-  const [purpose, setPurpose] = useState("");
-  const [receiverType, setReceiverType] = useState("self"); 
-  const [receiverName, setReceiverName] = useState("");
-  const [receiverEmail, setReceiverEmail] = useState("");
-  const [receiverContact, setReceiverContact] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [amount, setAmount] = useState("");
-  const [orNumber, setOrNumber] = useState("");
+  const [selectedDocumentType, setSelectedDocumentType] = useState(editingRequest?.type || "");
+  const [purpose, setPurpose] = useState(editingRequest?.purpose || "");
+  const [receiverType, setReceiverType] = useState(
+    editingRequest?.receiver?.id === userProfile?.id ? "self" : "other"
+  ); 
+  const [receiverName, setReceiverName] = useState(
+    editingRequest?.receiver?.name || ""
+  );
+  const [receiverEmail, setReceiverEmail] = useState(
+    editingRequest?.receiver?.email || ""
+  );
+  const [receiverContact, setReceiverContact] = useState(
+    editingRequest?.receiver?.contact || ""
+  );
+  const [paymentMethod, setPaymentMethod] = useState(editingRequest?.method === 'Cash (Walk-in)' ? 'cash' : "");
+  const [amount, setAmount] = useState(editingRequest?.amount?.toString() || "");
+  const [orNumber, setOrNumber] = useState(editingRequest?.ornumber || "");
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requireUpfront, setRequireUpfront] = useState(false);
@@ -96,32 +105,48 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
     enabled: !!userProfile?.brgyid
   });
 
-  const selectedDoc = documentTypes.find(doc => doc.id === selectedDocumentType);
+  const selectedDoc = documentTypes.find(doc => doc.name === selectedDocumentType || doc.id === selectedDocumentType);
   const selectedPaymentMethod = paymentMethods.find(pm => pm.id === paymentMethod);
 
-  const createDocumentRequest = useMutation({
+  const createOrUpdateDocumentRequest = useMutation({
     mutationFn: async (requestData: any) => {
-      const { data, error } = await supabase
-        .from('docrequests')
-        .insert([requestData])
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+      if (editingRequest) {
+        // Update existing request
+        const { data, error } = await supabase
+          .from('docrequests')
+          .update({
+            ...requestData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingRequest.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } else {
+        // Create new request
+        const { data, error } = await supabase
+          .from('docrequests')
+          .insert([requestData])
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Document request submitted successfully"
+        description: editingRequest ? "Document request updated successfully" : "Document request submitted successfully"
       });
       queryClient.invalidateQueries({ queryKey: ['user-document-requests'] });
       onClose();
     },
     onError: (error) => {
-      console.error('Error creating document request:', error);
+      console.error('Error with document request:', error);
       toast({
         title: "Error",
-        description: "Failed to submit document request",
+        description: editingRequest ? "Failed to update document request" : "Failed to submit document request",
         variant: "destructive"
       });
     }
@@ -186,7 +211,7 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
         issued_at: new Date().toISOString()
       };
 
-      await createDocumentRequest.mutateAsync(requestData);
+      await createOrUpdateDocumentRequest.mutateAsync(requestData);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -205,8 +230,12 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                 <FileText className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-foreground">Request Document</h2>
-                <p className="text-sm text-muted-foreground">Submit your document request with ease</p>
+                <h2 className="text-2xl font-bold text-foreground">
+                  {editingRequest ? 'Edit Document Request' : 'Request Document'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {editingRequest ? 'Update your document request details' : 'Submit your document request with ease'}
+                </p>
               </div>
             </div>
             <Button
@@ -247,7 +276,7 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                     </SelectTrigger>
                     <SelectContent>
                       {documentTypes.map(docType => (
-                        <SelectItem key={docType.id} value={docType.id} className="py-3">
+                        <SelectItem key={docType.id} value={editingRequest ? docType.name : docType.id} className="py-3">
                           <div className="flex justify-between items-center w-full">
                             <span className="font-medium">{docType.name}</span>
                             {docType.fee > 0 && (
@@ -567,7 +596,7 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                     Submitting...
                   </div>
                 ) : (
-                  "Submit Request"
+                  editingRequest ? "Update Request" : "Submit Request"
                 )}
               </Button>
             </div>

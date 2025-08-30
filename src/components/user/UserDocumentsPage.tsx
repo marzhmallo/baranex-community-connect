@@ -591,23 +591,23 @@ const UserDocumentsPage = () => {
                            >
                              <Eye className="h-4 w-4" />
                            </button>
-                           <button 
-                             onClick={() => {
-                               if (request.status === 'Request') {
-                                 setEditingRequest(request);
-                                 setShowEditDialog(true);
-                               }
-                             }}
-                             disabled={request.status !== 'Request'}
-                             className={`p-1 rounded transition-colors ${
-                               request.status === 'Request' 
-                                 ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' 
-                                 : 'text-muted-foreground/50 cursor-not-allowed'
-                             }`}
-                             title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}
-                           >
-                             <Edit className="h-4 w-4" />
-                           </button>
+                            <button 
+                              onClick={() => {
+                                if (request.status === 'Request') {
+                                  setEditingRequest(request);
+                                  setShowRequestModal(true);
+                                }
+                              }}
+                              disabled={request.status !== 'Request'}
+                              className={`p-1 rounded transition-colors ${
+                                request.status === 'Request' 
+                                  ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' 
+                                  : 'text-muted-foreground/50 cursor-not-allowed'
+                              }`}
+                              title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
                          </div>
                       </td>
                     </tr>)}
@@ -645,7 +645,10 @@ const UserDocumentsPage = () => {
           </div>
         </div>}
 
-      {showRequestModal && <DocumentRequestModal onClose={() => setShowRequestModal(false)} />}
+      {showRequestModal && <DocumentRequestModal onClose={() => {
+        setShowRequestModal(false);
+        setEditingRequest(null);
+      }} editingRequest={editingRequest} />}
 
       {/* View Request Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
