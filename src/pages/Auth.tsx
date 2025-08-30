@@ -508,8 +508,9 @@ const Auth = () => {
     
     setIsResendingVerification(true);
     try {
-      const { data, error } = await supabase.functions.invoke('resend-verification', {
-        body: { email: unverifiedEmail }
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: unverifiedEmail
       });
       
       if (error) {
@@ -519,14 +520,6 @@ const Auth = () => {
           description: error.message || "Failed to resend verification email",
           variant: "destructive"
         });
-      } else if (data?.verified) {
-        toast({
-          title: "Already Verified",
-          description: "Your email is already verified. Please try logging in again.",
-          variant: "default"
-        });
-        setShowVerificationModal(false);
-        setLoginAttempts(0);
       } else {
         toast({
           title: "Verification Email Sent",
