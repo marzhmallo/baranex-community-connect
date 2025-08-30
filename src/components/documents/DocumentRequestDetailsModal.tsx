@@ -135,6 +135,14 @@ const DocumentRequestDetailsModal = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              {/* Debug: Show what data we're receiving */}
+              <div className="text-xs text-red-500 bg-red-50 p-2 rounded border">
+                <div>DEBUG - Raw request object keys: {Object.keys(request).join(', ')}</div>
+                <div>email value: "{request.email || 'undefined'}"</div>
+                <div>contact# value: "{request["contact#"] || 'undefined'}"</div>
+                <div>receiver object: {JSON.stringify(request.receiver)}</div>
+              </div>
+              
               {request.email && (
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
