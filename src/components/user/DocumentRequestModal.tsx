@@ -36,7 +36,7 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
   const [receiverContact, setReceiverContact] = useState(
     editingRequest?.receiver?.contact || ""
   );
-  const [paymentMethod, setPaymentMethod] = useState(editingRequest?.method === 'Cash (Walk-in)' ? 'cash' : "");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [amount, setAmount] = useState(editingRequest?.amount?.toString() || "");
   const [orNumber, setOrNumber] = useState(editingRequest?.ornumber || "");
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
@@ -60,13 +60,24 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
     enabled: !!userProfile?.brgyid
   });
 
-  // Set default payment method when payment methods load
+  // Set payment method correctly when editing or when payment methods load
   useEffect(() => {
-    if (!paymentMethod) {
-      // Set cash/walk-in as default if available
+    if (editingRequest && paymentMethods.length > 0) {
+      // If editing, find the correct payment method ID based on the original method name
+      if (editingRequest.method === 'Cash (Walk-in)') {
+        setPaymentMethod('cash');
+      } else {
+        // Find the payment method by name for other payment methods
+        const originalMethod = paymentMethods.find(pm => pm.gname === editingRequest.method);
+        if (originalMethod) {
+          setPaymentMethod(originalMethod.id);
+        }
+      }
+    } else if (!editingRequest && !paymentMethod && paymentMethods.length > 0) {
+      // Set cash/walk-in as default for new requests
       setPaymentMethod('cash');
     }
-  }, [paymentMethod]);
+  }, [editingRequest, paymentMethods, paymentMethod]);
 
   // Fetch barangay payment requirement setting
   const { data: barangayInfo = null } = useQuery({
