@@ -540,6 +540,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "docrequests_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       document_logs: {
@@ -2259,6 +2266,45 @@ export type Database = {
           phone?: string | null
           province?: string | null
           region?: string | null
+        }
+        Relationships: []
+      }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          firstname: string | null
+          id: string | null
+          lastname: string | null
+          middlename: string | null
+          online: boolean | null
+          suffix: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          firstname?: string | null
+          id?: string | null
+          lastname?: string | null
+          middlename?: string | null
+          online?: boolean | null
+          suffix?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          firstname?: string | null
+          id?: string | null
+          lastname?: string | null
+          middlename?: string | null
+          online?: boolean | null
+          suffix?: string | null
+          username?: string | null
         }
         Relationships: []
       }
