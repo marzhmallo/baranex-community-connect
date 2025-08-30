@@ -248,7 +248,7 @@ const UserDocumentsPage = () => {
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle className="text-foreground">Document Library</CardTitle>
-                <div className="flex items-center gap-3 ml-auto">
+                <div className="flex items-center gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64 border-border bg-background text-foreground" />
@@ -276,37 +276,38 @@ const UserDocumentsPage = () => {
                     <TabsTrigger value="clearances" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
                       Clearances
                     </TabsTrigger>
+                    <TabsTrigger value="ids" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
+                      IDs
+                    </TabsTrigger>
+                    <TabsTrigger value="other" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
+                      Other
+                    </TabsTrigger>
                   </TabsList>
                 </div>
 
                 <TabsContent value="all" className="mt-0">
                   <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
-                          <Filter className="h-4 w-4 mr-2" />
-                          Advanced Filters
-                        </Button>
-                      </div>
-                      
-                    </div>
+                    
 
                     <div className="space-y-3">
-                      {isLoadingTemplates ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedTemplates.length > 0 ? paginatedTemplates.map(template => <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                      {isLoadingTemplates ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedTemplates && paginatedTemplates.length > 0 ? paginatedTemplates.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
                             <div className="flex items-center gap-4">
                               <input type="checkbox" className="rounded border-border" />
                               <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
                                 <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                               </div>
                               <div>
-                                <h4 className="font-medium text-foreground">{template.name}</h4>
+                                <h4 className="font-medium text-foreground">{doc.name}</h4>
                                 <p className="text-sm text-muted-foreground">
-                                  {template.description} • Fee: ₱{template.fee || 0}
+                                  {doc.description ? `${doc.description} • ` : ''}
+                                  Fee: ₱{doc.fee || 0}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
+                              <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
+                                Active
+                              </Badge>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="sm" className="hover:bg-accent">
@@ -325,49 +326,43 @@ const UserDocumentsPage = () => {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
-                          </div>) : <div className="text-center py-8 text-muted-foreground">No document templates found</div>}
+                          </div>) : <div className="text-center py-8">
+                          <p className="text-muted-foreground">No document templates found.</p>
+                          <p className="text-sm text-muted-foreground">Request documents from available templates.</p>
+                        </div>}
                     </div>
 
-                    <div className="flex items-center justify-between mt-6">
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
                       <div className="flex items-center gap-2">
-                        <input type="checkbox" className="rounded border-border" />
-                        <label className="text-sm text-foreground">Select All</label>
+                        <span className="text-sm text-muted-foreground">
+                          Showing {Math.min(paginatedTemplates?.length || 0, itemsPerPage)} of {documentTypes?.length || 0} documents
+                        </span>
                       </div>
-                      <Pagination>
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious onClick={e => {
-                            e.preventDefault();
-                            handlePageChange(currentPage - 1);
-                          }} className={`hover:bg-accent cursor-pointer ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`} />
-                          </PaginationItem>
-                          {Array.from({
-                          length: totalPages
-                        }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
-                              <PaginationLink onClick={e => {
-                            e.preventDefault();
-                            handlePageChange(page);
-                          }} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
-                                {page}
-                              </PaginationLink>
-                            </PaginationItem>)}
-                          <PaginationItem>
-                            <PaginationNext onClick={e => {
-                            e.preventDefault();
-                            handlePageChange(currentPage + 1);
-                          }} className={`hover:bg-accent cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`} />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
+                      <div className="flex items-center gap-2">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious onClick={() => handlePageChange(Math.max(1, currentPage - 1))} className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`} />
+                            </PaginationItem>
+                            {Array.from({
+                            length: totalPages
+                          }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
+                                <PaginationLink onClick={() => handlePageChange(page)} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>)}
+                            <PaginationItem>
+                              <PaginationNext onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`} />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
-
-          
-
         </div>
 
         <div className="space-y-6">
