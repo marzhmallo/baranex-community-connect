@@ -135,11 +135,6 @@ const DocumentRequestDetailsModal = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {/* Debug info */}
-              <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                Debug: email = "{request.email || 'undefined'}", contact# = "{request["contact#"] || 'undefined'}"
-              </div>
-              
               {request.email && (
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />

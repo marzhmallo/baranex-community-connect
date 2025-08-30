@@ -676,11 +676,11 @@ const DocumentsPage = () => {
           name = 'Unknown';
         }
       }
-      // Debug: Log the actual data structure
+      // Debug: Check the exact field names in the data
       console.log('Raw data from Supabase:', data);
+      console.log('All available fields:', Object.keys(data));
       console.log('Email field:', data.email);
       console.log('Contact# field:', data["contact#"]);
-      console.log('All fields:', Object.keys(data));
       
       const requestData = {
         ...data,
