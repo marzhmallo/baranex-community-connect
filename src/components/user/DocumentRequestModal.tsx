@@ -583,11 +583,29 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                             />
                              {(paymentScreenshot || hasExistingPayment) && (
                                <div className="mt-3 animate-fade-in">
-                                 <img 
-                                   src={paymentScreenshot ? URL.createObjectURL(paymentScreenshot) : editingRequest?.paymenturl} 
-                                   alt="Payment screenshot preview" 
-                                   className="w-40 h-40 object-cover border-2 border-blue-200 dark:border-blue-700 rounded-lg shadow-sm" 
-                                 />
+                                 {paymentScreenshot ? (
+                                   <img 
+                                     src={URL.createObjectURL(paymentScreenshot)} 
+                                     alt="Payment screenshot preview" 
+                                     className="w-40 h-40 object-cover border-2 border-blue-200 dark:border-blue-700 rounded-lg shadow-sm" 
+                                   />
+                                 ) : hasExistingPayment && editingRequest?.paymenturl ? (
+                                   <img 
+                                     src={editingRequest.paymenturl} 
+                                     alt="Existing payment receipt" 
+                                     className="w-40 h-40 object-cover border-2 border-blue-200 dark:border-blue-700 rounded-lg shadow-sm"
+                                     onError={(e) => {
+                                       console.log('Image failed to load:', editingRequest.paymenturl);
+                                       e.currentTarget.style.display = 'none';
+                                     }}
+                                   />
+                                 ) : (
+                                   <div className="w-40 h-40 border-2 border-dashed border-blue-200 dark:border-blue-700 rounded-lg flex items-center justify-center bg-blue-50 dark:bg-blue-950/30">
+                                     <p className="text-xs text-blue-600 dark:text-blue-400 text-center">
+                                       Payment receipt<br />not available
+                                     </p>
+                                   </div>
+                                 )}
                                  {hasExistingPayment && !paymentScreenshot && (
                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                                      Existing payment receipt
