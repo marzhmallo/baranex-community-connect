@@ -22,6 +22,7 @@ const UserDocumentsPage = () => {
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("all");
   const [trackingFilter, setTrackingFilter] = useState("all");
+  const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [isTemplateDetailsOpen, setIsTemplateDetailsOpen] = useState(false);
   const {
@@ -144,8 +145,21 @@ const UserDocumentsPage = () => {
     return targetStatuses.some(status => matchesStatus(requestStatus, status));
   };
 
-  // Filter document requests based on tracking filter
+  // Filter document requests based on tracking filter and search query
   const filteredDocumentRequests = documentRequests.filter((request) => {
+    // First filter by tracking search query
+    if (trackingSearchQuery) {
+      const searchLower = trackingSearchQuery.toLowerCase();
+      const matchesTrackingId = (request.docnumber || '').toLowerCase().includes(searchLower);
+      const matchesType = (request.type || '').toLowerCase().includes(searchLower);
+      const matchesPurpose = (request.purpose || '').toLowerCase().includes(searchLower);
+      
+      if (!matchesTrackingId && !matchesType && !matchesPurpose) {
+        return false;
+      }
+    }
+    
+    // Then filter by status
     if (trackingFilter === "all") return true;
     if (trackingFilter === "processing") return matchesStatus(request.status, "processing");
     if (trackingFilter === "released") return matchesAnyStatus(request.status, ["released", "completed"]);
@@ -160,12 +174,12 @@ const UserDocumentsPage = () => {
   const requestsEndIndex = requestsStartIndex + requestsPerPage;
   const paginatedRequests = filteredDocumentRequests.slice(requestsStartIndex, requestsEndIndex);
   
-  // Reset page when tracking filter changes
+  // Reset page when tracking filter or search changes
   useEffect(() => {
     if (requestsCurrentPage !== 1) {
       setRequestsCurrentPage(1);
     }
-  }, [trackingFilter]);
+  }, [trackingFilter, trackingSearchQuery]);
   useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
@@ -566,7 +580,13 @@ const UserDocumentsPage = () => {
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input type="text" placeholder="Search by tracking ID..." className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" />
+              <input 
+                type="text" 
+                placeholder="Search by tracking ID..." 
+                value={trackingSearchQuery}
+                onChange={e => setTrackingSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" 
+              />
             </div>
             <div className="flex flex-wrap gap-2">
               <button 
