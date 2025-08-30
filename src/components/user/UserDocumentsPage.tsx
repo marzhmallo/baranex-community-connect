@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,14 +14,44 @@ import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
 import DocumentRequestModal from "./DocumentRequestModal";
 import { FileText, Clock, CheckCircle, BarChart3, Package, Hourglass, Eye, XCircle, TrendingUp, Search, Plus, Filter, Download, Edit, Trash2, RefreshCw, FileX, History, PlusCircle, Bell, Upload, ArrowRight, Settings, MoreHorizontal, MessageCircle } from "lucide-react";
 const UserDocumentsPage = () => {
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
+  const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
+  const [trackingFilter, setTrackingFilter] = useState("All Documents");
   const {
     userProfile
   } = useAuth();
+
+  // Initial data fetch with master loading state
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        const [documentsData, requestsData] = await Promise.all([
+          // Fetch document types
+          supabase.from('document_types').select('*').order('name'),
+          // Fetch user's document requests
+          userProfile?.id ? supabase.from('docrequests').select('*').eq('resident_id', userProfile.id).order('created_at', { ascending: false }) : { data: [], error: null }
+        ]);
+        
+        // Initial loading is complete
+        setIsInitialLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setIsInitialLoading(false);
+      }
+    };
+
+    if (userProfile?.id) {
+      fetchAllData();
+    } else {
+      // If no user profile, still set loading to false
+      setIsInitialLoading(false);
+    }
+  }, [userProfile?.id]);
 
   // Fetch user's document requests from Supabase with real-time updates
   const {
@@ -137,6 +168,10 @@ const UserDocumentsPage = () => {
       minute: '2-digit'
     });
   };
+  if (isInitialLoading) {
+    return <LocalizedLoadingScreen isLoading={isInitialLoading} />;
+  }
+
   return <div className="w-full p-6 bg-background min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
