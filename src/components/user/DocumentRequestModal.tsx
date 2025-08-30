@@ -220,8 +220,8 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-background rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col border border-border/50 animate-scale-in">
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-background rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border/50 animate-scale-in">
         {/* Header */}
         <div className="p-6 border-b border-border bg-gradient-to-r from-primary/5 to-primary/10">
           <div className="flex justify-between items-center">
