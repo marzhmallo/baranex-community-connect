@@ -336,23 +336,9 @@ const UserDocumentsPage = () => {
                               <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
                                 Active
                               </Badge>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="hover:bg-accent">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="border-border bg-background">
-                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View Template
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Download
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <Button variant="ghost" size="sm" className="hover:bg-accent">
+                                <Eye className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>) : <div className="text-center py-8">
                           <p className="text-muted-foreground">No document templates found.</p>
