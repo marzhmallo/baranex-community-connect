@@ -221,7 +221,11 @@ const UserDocumentsPage = () => {
     });
   };
   if (isInitialLoading) {
-    return <LocalizedLoadingScreen isLoading={isInitialLoading} />;
+    return (
+      <div className="w-full p-6 bg-background min-h-screen relative">
+        <LocalizedLoadingScreen isLoading={isInitialLoading} />
+      </div>
+    );
   }
 
   return <div className="w-full p-6 bg-background min-h-screen">
