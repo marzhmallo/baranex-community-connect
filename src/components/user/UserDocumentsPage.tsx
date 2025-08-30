@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
@@ -644,77 +646,91 @@ const UserDocumentsPage = () => {
 
       {/* Template Details Modal */}
       {isTemplateDetailsOpen && selectedTemplate && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border">
-            <div className="p-6 border-b border-border">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground">Document Template Details</h2>
+        <Dialog open={isTemplateDetailsOpen} onOpenChange={setIsTemplateDetailsOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                Document Template Details
+                <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">
+                  Available
+                </Badge>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{selectedTemplate.name}</h3>
+                {selectedTemplate.description && (
+                  <p className="text-muted-foreground">{selectedTemplate.description}</p>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Processing Fee</label>
+                    <p className="text-lg font-semibold text-foreground">
+                      {selectedTemplate.fee ? `₱${selectedTemplate.fee}` : 'Free'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Document Type</label>
+                    <p className="text-lg font-semibold text-foreground capitalize">
+                      {selectedTemplate.type}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Status</label>
+                    <p className="text-sm text-foreground">
+                      Available for Request
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Required Action</label>
+                    <p className="text-sm text-foreground">
+                      Submit Request Form
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 className="font-medium text-blue-900 dark:text-blue-200 mb-2">Document Information</h4>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  To request this document, click "Request This Document" below. You'll need to provide the required 
+                  information and may need to pay the processing fee. Processing time may vary depending on document type.
+                </p>
+              </div>
+
+              <div className="flex gap-2 pt-4">
                 <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setIsTemplateDetailsOpen(false)}
-                  className="hover:bg-accent"
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  onClick={() => {
+                    setIsTemplateDetailsOpen(false);
+                    setShowRequestModal(true);
+                  }}
                 >
-                  <X className="h-4 w-4" />
+                  Request This Document
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setIsTemplateDetailsOpen(false)}
+                >
+                  Close
                 </Button>
               </div>
             </div>
-            <div className="p-6 flex-1 overflow-y-auto">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium text-foreground mb-2">Document Name</h3>
-                  <p className="text-muted-foreground">{selectedTemplate.name}</p>
-                </div>
-                
-                {selectedTemplate.description && (
-                  <div>
-                    <h3 className="font-medium text-foreground mb-2">Description</h3>
-                    <p className="text-muted-foreground">{selectedTemplate.description}</p>
-                  </div>
-                )}
-                
-                <div>
-                  <h3 className="font-medium text-foreground mb-2">Document Type</h3>
-                  <Badge variant="secondary" className="capitalize">
-                    {selectedTemplate.type}
-                  </Badge>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium text-foreground mb-2">Processing Fee</h3>
-                  <p className="text-muted-foreground">₱{selectedTemplate.fee || 0}</p>
-                </div>
-                
-                {selectedTemplate.content && (
-                  <div>
-                    <h3 className="font-medium text-foreground mb-2">Template Content</h3>
-                    <div className="bg-muted p-4 rounded-lg text-sm">
-                      <pre className="whitespace-pre-wrap text-muted-foreground">{selectedTemplate.content}</pre>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex gap-2 pt-4">
-                  <Button 
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => {
-                      setIsTemplateDetailsOpen(false);
-                      setShowRequestModal(true);
-                    }}
-                  >
-                    Request This Document
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsTemplateDetailsOpen(false)}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>;
 };
