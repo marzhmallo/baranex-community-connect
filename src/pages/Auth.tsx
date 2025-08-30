@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, setRememberMePreference } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,6 +118,9 @@ const Auth = () => {
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    return localStorage.getItem('rememberMe') === 'true';
+  });
   
   const captchaRef = useRef<HCaptcha>(null);
   const idFilesInputRef = useRef<HTMLInputElement>(null);
@@ -273,6 +276,10 @@ const Auth = () => {
           return;
         }
       }
+      
+      // Set remember me preference before login
+      setRememberMePreference(rememberMe);
+      
       const {
         data: {
           user,
@@ -1211,7 +1218,12 @@ const Auth = () => {
 
                   <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} />
+                      <input 
+                        type="checkbox" 
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} 
+                      />
                       <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
                     </label>
                     <button type="button" onClick={() => setActiveTab("forgot-password")} className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</button>
