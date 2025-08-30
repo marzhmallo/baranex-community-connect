@@ -288,14 +288,7 @@ const UserDocumentsPage = () => {
                           Advanced Filters
                         </Button>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
-                          Bulk Actions
-                        </Button>
-                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
-                          Apply
-                        </Button>
-                      </div>
+                      
                     </div>
 
                     <div className="space-y-3">
