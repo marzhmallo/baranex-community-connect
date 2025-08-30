@@ -21,6 +21,7 @@ const UserDocumentsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("all");
+  const [trackingFilter, setTrackingFilter] = useState("all");
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [isTemplateDetailsOpen, setIsTemplateDetailsOpen] = useState(false);
   const {
@@ -133,11 +134,28 @@ const UserDocumentsPage = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedTemplates = sortedDocumentTypes.slice(startIndex, endIndex);
 
-  // Calculate paginated document requests
+  // Filter document requests based on tracking filter
+  const filteredDocumentRequests = documentRequests.filter((request) => {
+    if (trackingFilter === "all") return true;
+    if (trackingFilter === "processing") return matchesStatus(request.status, "processing");
+    if (trackingFilter === "released") return matchesAnyStatus(request.status, ["released", "completed"]);
+    if (trackingFilter === "rejected") return matchesStatus(request.status, "rejected");
+    if (trackingFilter === "ready") return matchesAnyStatus(request.status, ["approved", "ready", "ready for pickup"]);
+    return true;
+  });
+
+  // Calculate paginated document requests using filtered data
+  const filteredRequestsTotalPages = Math.ceil(filteredDocumentRequests.length / requestsPerPage);
   const requestsStartIndex = (requestsCurrentPage - 1) * requestsPerPage;
   const requestsEndIndex = requestsStartIndex + requestsPerPage;
-  const paginatedRequests = documentRequests.slice(requestsStartIndex, requestsEndIndex);
-  // Reset page when search query or tab changes
+  const paginatedRequests = filteredDocumentRequests.slice(requestsStartIndex, requestsEndIndex);
+  
+  // Reset page when tracking filter changes
+  useEffect(() => {
+    if (requestsCurrentPage !== 1) {
+      setRequestsCurrentPage(1);
+    }
+  }, [trackingFilter]);
   useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
@@ -150,7 +168,7 @@ const UserDocumentsPage = () => {
     }
   };
   const handleRequestsPageChange = (page: number) => {
-    if (page >= 1 && page <= requestsTotalPages) {
+    if (page >= 1 && page <= filteredRequestsTotalPages) {
       setRequestsCurrentPage(page);
     }
   };
@@ -550,10 +568,56 @@ const UserDocumentsPage = () => {
               <input type="text" placeholder="Search by tracking ID..." className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" />
             </div>
             <div className="flex flex-wrap gap-2">
-              <button className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm hover:bg-primary/20 transition-colors">All Documents</button>
-              <button className="bg-muted text-foreground px-3 py-1 rounded-full text-sm hover:bg-muted/80 transition-colors">In Progress</button>
-              <button className="bg-muted text-foreground px-3 py-1 rounded-full text-sm hover:bg-muted/80 transition-colors">Completed</button>
-              <button className="bg-muted text-foreground px-3 py-1 rounded-full text-sm hover:bg-muted/80 transition-colors">Rejected</button>
+              <button 
+                onClick={() => setTrackingFilter("all")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "all" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                All Documents
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("processing")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "processing" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Processing
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("released")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "released" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Released
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("rejected")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "rejected" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Rejected
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("ready")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "ready" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Ready
+              </button>
             </div>
           </div>
           
@@ -612,9 +676,9 @@ const UserDocumentsPage = () => {
             </table>
           </div>
           
-          {requestsTotalPages > 1 && <div className="mt-6 flex justify-between items-center">
+          {filteredRequestsTotalPages > 1 && <div className="mt-6 flex justify-between items-center">
               <div className="text-sm text-muted-foreground">
-                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, documentRequests.length)} of {documentRequests.length} requests
+                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredDocumentRequests.length)} of {filteredDocumentRequests.length} requests
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} disabled={requestsCurrentPage === 1} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === 1 ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
@@ -622,12 +686,12 @@ const UserDocumentsPage = () => {
                 </button>
                 <div className="flex">
                   {Array.from({
-                length: requestsTotalPages
+                length: filteredRequestsTotalPages
               }, (_, i) => i + 1).map(page => <button key={page} onClick={() => handleRequestsPageChange(page)} className={`px-3 py-1 text-sm rounded-md font-medium ${requestsCurrentPage === page ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'}`}>
                       {page}
                     </button>)}
                 </div>
-                <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === requestsTotalPages} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === requestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+                <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === filteredRequestsTotalPages} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === filteredRequestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
                   Next
                 </button>
               </div>
