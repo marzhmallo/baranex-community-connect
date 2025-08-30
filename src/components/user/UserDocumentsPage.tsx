@@ -222,21 +222,6 @@ const UserDocumentsPage = () => {
             <span>Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
           </div>
           
-          {documentRequests.length > 0 && <>
-              <div className="w-full bg-muted rounded-full h-2.5 mb-1">
-                <div className="bg-primary h-2.5 rounded-full transition-all duration-500" style={{
-              width: `${Math.round(documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed', 'approved'])).length / documentRequests.length * 100)}%`
-            }}></div>
-              </div>
-              
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">0%</span>
-                <span className="font-medium text-primary">
-                  {Math.round(documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed', 'approved'])).length / documentRequests.length * 100)}% Completed
-                </span>
-                <span className="text-muted-foreground">100%</span>
-              </div>
-            </>}
         </div>
       </div>
 
