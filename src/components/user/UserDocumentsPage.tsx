@@ -65,9 +65,18 @@ const UserDocumentsPage = () => {
       const {
         data,
         error
-      } = await supabase.from('docrequests').select('*').eq('resident_id', userProfile.id).order('created_at', {
-        ascending: false
-      });
+      } = await supabase.from('docrequests')
+        .select(`
+          *,
+          profiles!inner(
+            firstname,
+            lastname
+          )
+        `)
+        .eq('resident_id', userProfile.id)
+        .order('created_at', {
+          ascending: false
+        });
       if (error) throw error;
       return data || [];
     },
@@ -549,18 +558,9 @@ const UserDocumentsPage = () => {
                         {request.type}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {(() => {
-                          try {
-                            const receiver = typeof request.receiver === 'string' 
-                              ? JSON.parse(request.receiver) 
-                              : request.receiver;
-                            return receiver?.first_name && receiver?.last_name 
-                              ? `${receiver.first_name} ${receiver.last_name}`
-                              : 'N/A';
-                          } catch {
-                            return 'N/A';
-                          }
-                        })()}
+                        {request.profiles?.firstname && request.profiles?.lastname 
+                          ? `${request.profiles.firstname} ${request.profiles.lastname}`
+                          : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
