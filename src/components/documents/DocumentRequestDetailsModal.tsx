@@ -144,6 +144,21 @@ const DocumentRequestDetailsModal = ({
                       <span>{request.receiver.address}</span>
                     </div>
                   )}
+                  {(!request.receiver.email && !request.receiver.phone && !request.receiver.address) && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Mail className="h-4 w-4" />
+                      <span>No contact information provided</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {!request.receiver && (
+                <div className="grid grid-cols-1 gap-2 pt-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <span>Contact information not available</span>
+                  </div>
                 </div>
               )}
             </CardContent>
