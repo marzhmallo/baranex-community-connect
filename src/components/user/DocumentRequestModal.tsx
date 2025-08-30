@@ -513,7 +513,7 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                        </div>
                     )}
 
-                    {selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && (
+                    {selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && !shouldLockPaymentMethod && (
                       <div className="mt-6 space-y-4 p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 animate-fade-in">
                         <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
                           <CreditCard className="h-5 w-5" />
