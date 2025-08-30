@@ -206,7 +206,7 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
         amount: selectedDoc?.fee || 0,
         ...(selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && {
           ornumber: orNumber,
-          paymenturl: paymentUrls.length > 0 ? paymentUrls[0] : null,
+          paymenturl: paymentUrls,
           paydate: new Date().toISOString()
         }),
         status: 'Request',
