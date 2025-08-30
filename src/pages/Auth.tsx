@@ -506,6 +506,16 @@ const Auth = () => {
   const handleResendVerification = async () => {
     if (!unverifiedEmail) return;
     
+    // Check captcha for resend verification
+    if (!captchaToken) {
+      toast({
+        title: "Captcha Required",
+        description: "Please complete the captcha verification.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsResendingVerification(true);
     try {
       const { error } = await supabase.auth.resend({
@@ -528,6 +538,9 @@ const Auth = () => {
         });
         setShowVerificationModal(false);
         setLoginAttempts(0);
+        // Reset captcha after successful resend
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
       }
     } catch (error: any) {
       console.error('Resend verification error:', error);
@@ -1786,6 +1799,18 @@ const Auth = () => {
                   {unverifiedEmail}
                 </span> for a verification link. If you can't find it, check your spam folder.
               </p>
+            </div>
+
+            {/* Captcha for resend verification */}
+            <div className="flex justify-center">
+              <HCaptcha
+                ref={captchaRef}
+                sitekey="10000000-ffff-ffff-ffff-000000000001"
+                onVerify={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                onError={() => setCaptchaToken(null)}
+                theme={theme === 'dark' ? 'dark' : 'light'}
+              />
             </div>
 
             <div className="flex gap-3 pt-2">
