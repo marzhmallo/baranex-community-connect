@@ -1080,7 +1080,7 @@ const DocumentsPage = () => {
                 </div>
                 
                 {/* Fixed Pagination Area */}
-                <div className="mt-4 pt-4 border-t border-border">
+                <div className="mt-2 pt-2 border-t border-border">
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">
                       Page {requestsCurrentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
