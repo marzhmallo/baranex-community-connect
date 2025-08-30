@@ -684,7 +684,9 @@ const DocumentsPage = () => {
       
       const requestData = {
         ...data,
-        name
+        name,
+        email: data.email,
+        "contact#": data["contact#"],
       };
       setSelectedRequest(requestData);
       setIsRequestDetailsOpen(true);
