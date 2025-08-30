@@ -31,10 +31,10 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
     editingRequest?.receiver?.name || ""
   );
   const [receiverEmail, setReceiverEmail] = useState(
-    editingRequest?.receiver?.email || ""
+    editingRequest?.email || editingRequest?.receiver?.email || ""
   );
   const [receiverContact, setReceiverContact] = useState(
-    editingRequest?.receiver?.contact || ""
+    editingRequest?.['contact#']?.toString() || editingRequest?.receiver?.contact || ""
   );
   const [paymentMethod, setPaymentMethod] = useState(editingRequest?.method === 'Cash (Walk-in)' ? 'cash' : "");
   const [amount, setAmount] = useState(editingRequest?.amount?.toString() || "");
@@ -183,9 +183,8 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
         }
       }
 
-      const receiver = receiverType === "self" 
+      const receiverData = receiverType === "self" 
         ? {
-            id: userProfile.id,
             name: `${userProfile.firstname} ${userProfile.lastname}`,
             email: userProfile.email,
             contact: userProfile.phone || 'N/A'
@@ -201,7 +200,9 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
         purpose,
         resident_id: userProfile.id,
         brgyid: userProfile.brgyid,
-        receiver,
+        email: receiverData.email,
+        'contact#': receiverData.contact && receiverData.contact !== 'N/A' ? parseInt(receiverData.contact.replace(/\D/g, '')) || null : null,
+        receiver: { name: receiverData.name },
         method: paymentMethod === 'cash' ? 'Cash (Walk-in)' : selectedPaymentMethod?.gname || 'walk-in',
         amount: selectedDoc?.fee || 0,
         ...(selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && {
