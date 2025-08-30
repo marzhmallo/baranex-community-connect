@@ -134,6 +134,16 @@ const UserDocumentsPage = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedTemplates = sortedDocumentTypes.slice(startIndex, endIndex);
 
+  // Helper function for case-insensitive status matching
+  const matchesStatus = (requestStatus: string, targetStatus: string): boolean => {
+    return requestStatus.toLowerCase() === targetStatus.toLowerCase();
+  };
+
+  // Helper function for case-insensitive multiple status matching
+  const matchesAnyStatus = (requestStatus: string, targetStatuses: string[]): boolean => {
+    return targetStatuses.some(status => matchesStatus(requestStatus, status));
+  };
+
   // Filter document requests based on tracking filter
   const filteredDocumentRequests = documentRequests.filter((request) => {
     if (trackingFilter === "all") return true;
@@ -190,15 +200,6 @@ const UserDocumentsPage = () => {
     }
   };
 
-  // Helper function for case-insensitive status matching
-  const matchesStatus = (requestStatus: string, targetStatus: string): boolean => {
-    return requestStatus.toLowerCase() === targetStatus.toLowerCase();
-  };
-
-  // Helper function for case-insensitive multiple status matching
-  const matchesAnyStatus = (requestStatus: string, targetStatuses: string[]): boolean => {
-    return targetStatuses.some(status => matchesStatus(requestStatus, status));
-  };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
