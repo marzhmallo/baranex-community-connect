@@ -75,13 +75,13 @@ const DocumentsPage = () => {
         // Fetch document requests
         supabase.from('docrequests').select('*', {
           count: 'exact'
-        }).ilike('status', 'Request').range(0, itemsPerPage - 1).order('created_at', {
+        }).ilike('status', 'Request').range((requestsCurrentPage - 1) * itemsPerPage, requestsCurrentPage * itemsPerPage - 1).order('created_at', {
           ascending: false
         }),
         // Fetch document tracking
         supabase.from('docrequests').select('*', {
           count: 'exact'
-        }).not('processedby', 'is', null).neq('status', 'Request').range(0, trackingItemsPerPage - 1).order('updated_at', {
+        }).not('processedby', 'is', null).neq('status', 'Request').range((trackingCurrentPage - 1) * trackingItemsPerPage, trackingCurrentPage * trackingItemsPerPage - 1).order('updated_at', {
           ascending: false
         })]);
 
@@ -191,7 +191,7 @@ const DocumentsPage = () => {
       }
     };
     fetchAllData();
-  }, []);
+  }, [requestsCurrentPage, trackingCurrentPage]);
 
   // Set up real-time subscriptions after initial load
   useEffect(() => {
