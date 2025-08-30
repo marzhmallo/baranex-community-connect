@@ -682,11 +682,12 @@ const DocumentsPage = () => {
       console.log('Email field:', data.email);
       console.log('Contact# field:', data["contact#"]);
       
+      const receiver = data.receiver && typeof data.receiver === 'object' && !Array.isArray(data.receiver) ? data.receiver as any : null;
       const requestData = {
         ...data,
         name,
-        email: data.email,
-        "contact#": data["contact#"],
+        email: data.email || (receiver?.email),
+        "contact#": data["contact#"] || (receiver?.contact),
       };
       setSelectedRequest(requestData);
       setIsRequestDetailsOpen(true);
