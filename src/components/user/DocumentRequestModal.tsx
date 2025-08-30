@@ -627,7 +627,7 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                   !selectedDocumentType || 
                   !purpose || 
                   (receiverType === "other" && (!receiverName || !receiverEmail || !receiverContact)) ||
-                  (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || !paymentScreenshot)) ||
+                  (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || (!paymentScreenshot && !hasExistingPayment))) ||
                   (selectedDoc?.fee > 0 && barangayInfo?.payreq && paymentMethod === 'cash')
                 }
                 className="px-8 py-2 h-11 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all"
