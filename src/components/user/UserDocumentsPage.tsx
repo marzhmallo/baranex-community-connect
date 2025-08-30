@@ -11,16 +11,13 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
 import DocumentRequestModal from "./DocumentRequestModal";
-import { FileText, Clock, CheckCircle, BarChart3, Package, Hourglass, Eye, XCircle, TrendingUp, Search, Plus, Filter, Download, Edit, Trash2, RefreshCw, FileX, History, PlusCircle, Bell, Upload, ArrowRight, Settings, MoreHorizontal, MessageCircle, X } from "lucide-react";
+import { FileText, Clock, CheckCircle, BarChart3, Package, Hourglass, Eye, XCircle, TrendingUp, Search, Plus, Filter, Download, Edit, Trash2, RefreshCw, FileX, History, PlusCircle, Bell, Upload, ArrowRight, Settings, MoreHorizontal, MessageCircle } from "lucide-react";
 const UserDocumentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showIssueForm, setShowIssueForm] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState("all");
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-  const [isTemplateDetailsOpen, setIsTemplateDetailsOpen] = useState(false);
   const {
     userProfile
   } = useAuth();
@@ -79,69 +76,21 @@ const UserDocumentsPage = () => {
     }
   });
   const itemsPerPage = 5;
+  const totalPages = Math.ceil(documentTypes.length / itemsPerPage);
 
   // Pagination for document requests
   const requestsPerPage = 4;
   const requestsTotalPages = Math.ceil(documentRequests.length / requestsPerPage);
 
-  // Filter and sort document types by active tab and search query
-  const normalize = (s: any) => String(s || '').trim().toLowerCase();
-  const knownTypes = ['certificate', 'certificates', 'permit', 'permits', 'clearance', 'clearances', 'ids', 'identification', 'other'];
-  
-  const filteredDocumentTypes = (documentTypes || []).filter((dt: any) => {
-    // Filter by search query first
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase();
-      const matchesName = (dt.name || '').toLowerCase().includes(searchLower);
-      const matchesDescription = (dt.description || '').toLowerCase().includes(searchLower);
-      const matchesType = (dt.type || '').toLowerCase().includes(searchLower);
-      
-      if (!matchesName && !matchesDescription && !matchesType) {
-        return false;
-      }
-    }
-    
-    // Then filter by tab
-    const t = normalize(dt.type);
-    if (activeTab === 'all') return true;
-    if (activeTab === 'certificates') return t === 'certificate' || t === 'certificates';
-    if (activeTab === 'permits') return t === 'permit' || t === 'permits';
-    if (activeTab === 'clearances') return t === 'clearance' || t === 'clearances';
-    if (activeTab === 'ids') return t === 'ids' || t === 'identification';
-    if (activeTab === 'other') return t === 'other' || !knownTypes.includes(t);
-    return true;
-  });
-
-  const sortedDocumentTypes = filteredDocumentTypes.slice().sort((a: any, b: any) => {
-    const at = normalize(a.type);
-    const bt = normalize(b.type);
-    if (at < bt) return -1;
-    if (at > bt) return 1;
-    const an = normalize(a.name);
-    const bn = normalize(b.name);
-    if (an < bn) return -1;
-    if (an > bn) return 1;
-    return 0;
-  });
-
-  const totalPages = Math.ceil((sortedDocumentTypes.length || 0) / itemsPerPage);
-  
-  // Calculate paginated data using filtered and sorted data
+  // Calculate paginated data using real Supabase data
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedTemplates = sortedDocumentTypes.slice(startIndex, endIndex);
+  const paginatedTemplates = documentTypes.slice(startIndex, endIndex);
 
   // Calculate paginated document requests
   const requestsStartIndex = (requestsCurrentPage - 1) * requestsPerPage;
   const requestsEndIndex = requestsStartIndex + requestsPerPage;
   const paginatedRequests = documentRequests.slice(requestsStartIndex, requestsEndIndex);
-  // Reset page when search query or tab changes
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    }
-  }, [searchQuery, activeTab]);
-
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -299,7 +248,7 @@ const UserDocumentsPage = () => {
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle className="text-foreground">Document Library</CardTitle>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 ml-auto">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64 border-border bg-background text-foreground" />
@@ -312,7 +261,7 @@ const UserDocumentsPage = () => {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs value="all" className="w-full">
                 <div className="px-6 border-b border-border">
                   <TabsList className="bg-transparent h-auto p-0">
                     <TabsTrigger value="all" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
@@ -327,87 +276,98 @@ const UserDocumentsPage = () => {
                     <TabsTrigger value="clearances" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
                       Clearances
                     </TabsTrigger>
-                    <TabsTrigger value="ids" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
-                      IDs
-                    </TabsTrigger>
-                    <TabsTrigger value="other" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-600 dark:data-[state=active]:border-purple-400 rounded-none text-foreground">
-                      Other
-                    </TabsTrigger>
                   </TabsList>
                 </div>
 
-                <TabsContent value={activeTab} className="mt-0">
+                <TabsContent value="all" className="mt-0">
                   <div className="p-6">
-                    
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
+                          <Filter className="h-4 w-4 mr-2" />
+                          Advanced Filters
+                        </Button>
+                      </div>
+                      
+                    </div>
 
                     <div className="space-y-3">
-                      {isLoadingTemplates ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedTemplates && paginatedTemplates.length > 0 ? paginatedTemplates.map(doc => <div key={doc.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                      {isLoadingTemplates ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedTemplates.length > 0 ? paginatedTemplates.map(template => <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
                             <div className="flex items-center gap-4">
                               <input type="checkbox" className="rounded border-border" />
                               <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
                                 <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                               </div>
                               <div>
-                                <h4 className="font-medium text-foreground">{doc.name}</h4>
+                                <h4 className="font-medium text-foreground">{template.name}</h4>
                                 <p className="text-sm text-muted-foreground">
-                                  {doc.description ? `${doc.description} • ` : ''}
-                                  Fee: ₱{doc.fee || 0}
+                                  {template.description} • Fee: ₱{template.fee || 0}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
-                                Active
-                              </Badge>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="hover:bg-accent"
-                                onClick={() => {
-                                  setSelectedTemplate(doc);
-                                  setIsTemplateDetailsOpen(true);
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                              <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="hover:bg-accent">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="border-border bg-background">
+                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Template
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Download
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
-                          </div>) : <div className="text-center py-8">
-                          <p className="text-muted-foreground">No document templates found.</p>
-                          <p className="text-sm text-muted-foreground">Request documents from available templates.</p>
-                        </div>}
+                          </div>) : <div className="text-center py-8 text-muted-foreground">No document templates found</div>}
                     </div>
 
-                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                    <div className="flex items-center justify-between mt-6">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          Showing {Math.min(paginatedTemplates?.length || 0, itemsPerPage)} of {sortedDocumentTypes?.length || 0} documents
-                        </span>
+                        <input type="checkbox" className="rounded border-border" />
+                        <label className="text-sm text-foreground">Select All</label>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious onClick={() => handlePageChange(Math.max(1, currentPage - 1))} className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`} />
-                            </PaginationItem>
-                            {Array.from({
-                            length: totalPages
-                          }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
-                                <PaginationLink onClick={() => handlePageChange(page)} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
-                                  {page}
-                                </PaginationLink>
-                              </PaginationItem>)}
-                            <PaginationItem>
-                              <PaginationNext onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-accent"}`} />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(currentPage - 1);
+                          }} className={`hover:bg-accent cursor-pointer ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                          </PaginationItem>
+                          {Array.from({
+                          length: totalPages
+                        }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
+                              <PaginationLink onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>)}
+                          <PaginationItem>
+                            <PaginationNext onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(currentPage + 1);
+                          }} className={`hover:bg-accent cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
                     </div>
                   </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
+
+          
+
         </div>
 
         <div className="space-y-6">
@@ -583,9 +543,7 @@ const UserDocumentsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {request.type}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {userProfile?.firstname} {userProfile?.lastname}
-                      </td>
+                      
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className={`h-2.5 w-2.5 rounded-full mr-2 ${getStatusColor(request.status)}`}></div>
@@ -641,81 +599,6 @@ const UserDocumentsPage = () => {
         </div>}
 
       {showRequestModal && <DocumentRequestModal onClose={() => setShowRequestModal(false)} />}
-
-      {/* Template Details Modal */}
-      {isTemplateDetailsOpen && selectedTemplate && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border">
-            <div className="p-6 border-b border-border">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground">Document Template Details</h2>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setIsTemplateDetailsOpen(false)}
-                  className="hover:bg-accent"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="p-6 flex-1 overflow-y-auto">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium text-foreground mb-2">Document Name</h3>
-                  <p className="text-muted-foreground">{selectedTemplate.name}</p>
-                </div>
-                
-                {selectedTemplate.description && (
-                  <div>
-                    <h3 className="font-medium text-foreground mb-2">Description</h3>
-                    <p className="text-muted-foreground">{selectedTemplate.description}</p>
-                  </div>
-                )}
-                
-                <div>
-                  <h3 className="font-medium text-foreground mb-2">Document Type</h3>
-                  <Badge variant="secondary" className="capitalize">
-                    {selectedTemplate.type}
-                  </Badge>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium text-foreground mb-2">Processing Fee</h3>
-                  <p className="text-muted-foreground">₱{selectedTemplate.fee || 0}</p>
-                </div>
-                
-                {selectedTemplate.content && (
-                  <div>
-                    <h3 className="font-medium text-foreground mb-2">Template Content</h3>
-                    <div className="bg-muted p-4 rounded-lg text-sm">
-                      <pre className="whitespace-pre-wrap text-muted-foreground">{selectedTemplate.content}</pre>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex gap-2 pt-4">
-                  <Button 
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={() => {
-                      setIsTemplateDetailsOpen(false);
-                      setShowRequestModal(true);
-                    }}
-                  >
-                    Request This Document
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsTemplateDetailsOpen(false)}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>;
 };
 export default UserDocumentsPage;
