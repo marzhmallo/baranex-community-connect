@@ -125,24 +125,43 @@ const DocumentRequestDetailsModal = ({
               
               {/* Contact information from receiver jsonb */}
               <div className="grid grid-cols-1 gap-2 pt-2">
-                {request.receiver && request.receiver.email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{request.receiver.email}</span>
-                  </div>
-                )}
-                {request.receiver && request.receiver.contact && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{request.receiver.contact}</span>
-                  </div>
-                )}
-                {(!request.receiver || (!request.receiver.email && !request.receiver.contact)) && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                    <span>Contact information not available</span>
-                  </div>
-                )}
+                {(() => {
+                  let receiverData = null;
+                  if (request.receiver) {
+                    try {
+                      if (typeof request.receiver === 'object' && request.receiver !== null && !Array.isArray(request.receiver)) {
+                        receiverData = request.receiver;
+                      } else if (typeof request.receiver === 'string') {
+                        receiverData = JSON.parse(request.receiver);
+                      }
+                    } catch {
+                      receiverData = null;
+                    }
+                  }
+
+                  return (
+                    <>
+                      {receiverData?.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span>{receiverData.email}</span>
+                        </div>
+                      )}
+                      {receiverData?.contact && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span>{receiverData.contact}</span>
+                        </div>
+                      )}
+                      {(!receiverData || (!receiverData.email && !receiverData.contact)) && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Mail className="h-4 w-4" />
+                          <span>Contact information not available</span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
