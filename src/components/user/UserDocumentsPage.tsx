@@ -127,27 +127,37 @@ const UserDocumentsPage = () => {
   const totalPages = Math.ceil(documentTypes.length / itemsPerPage);
   const requestsPerPage = 4;
 
-  // Filter document requests based on tracking filter
+  // Filter document requests based on tracking filter and search query
   const getFilteredRequests = () => {
-    if (trackingFilter === "All Documents") {
-      return documentRequests;
+    let filteredByStatus = documentRequests;
+    
+    // Apply status filter
+    if (trackingFilter !== "All Documents") {
+      filteredByStatus = documentRequests.filter(request => {
+        const status = request.status.toLowerCase();
+        switch (trackingFilter) {
+          case "Processing":
+            return status === "processing" || status === "pending" || status === "for review";
+          case "Released":
+            return status === "released" || status === "completed";
+          case "Rejected":
+            return status === "rejected";
+          case "Ready":
+            return status === "ready for pickup" || status === "ready" || status === "approved";
+          default:
+            return true;
+        }
+      });
     }
     
-    return documentRequests.filter(request => {
-      const status = request.status.toLowerCase();
-      switch (trackingFilter) {
-        case "Processing":
-          return status === "processing" || status === "pending" || status === "for review";
-        case "Released":
-          return status === "released" || status === "completed";
-        case "Rejected":
-          return status === "rejected";
-        case "Ready":
-          return status === "ready for pickup" || status === "ready" || status === "approved";
-        default:
-          return true;
-      }
-    });
+    // Apply search filter by tracking ID
+    if (trackingSearchQuery.trim()) {
+      filteredByStatus = filteredByStatus.filter(request => 
+        request.docnumber?.toLowerCase().includes(trackingSearchQuery.toLowerCase())
+      );
+    }
+    
+    return filteredByStatus;
   };
 
   const filteredRequests = getFilteredRequests();
@@ -550,7 +560,13 @@ const UserDocumentsPage = () => {
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input type="text" placeholder="Search by tracking ID..." className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" />
+              <input 
+                type="text" 
+                placeholder="Search by tracking ID..." 
+                value={trackingSearchQuery}
+                onChange={(e) => setTrackingSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" 
+              />
             </div>
             <div className="flex flex-wrap gap-2">
               <button 
