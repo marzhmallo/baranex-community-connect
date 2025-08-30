@@ -188,13 +188,27 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         .limit(5);
       
       if (officialsData && !officialsError) {
-        // Transform the data to match our interface
+        // Transform the data to match our interface - only include officials with current positions
+        const currentDate = new Date();
         const officialsWithPositions: OfficialWithPosition[] = officialsData
-          .filter(official => official.officialPositions && official.officialPositions.length > 0)
+          .filter(official => {
+            // Must have positions
+            if (!official.officialPositions || official.officialPositions.length === 0) {
+              return false;
+            }
+            
+            // Find current position (term_end is in the future)
+            const currentPosition = official.officialPositions.find(pos => 
+              pos.term_end && new Date(pos.term_end) > currentDate
+            );
+            
+            return currentPosition !== undefined;
+          })
           .map(official => {
-            // Get the current position (is_current = true) or the most recent one
-            const currentPosition = official.officialPositions.find(pos => pos.is_current) || 
-                                  official.officialPositions[0];
+            // Get the current position (term_end in the future)
+            const currentPosition = official.officialPositions.find(pos => 
+              pos.term_end && new Date(pos.term_end) > currentDate
+            );
             
             return {
               id: official.id,
