@@ -123,12 +123,26 @@ const DocumentRequestDetailsModal = ({
                 </div>
               </div>
               
-              {/* Additional contact info can be added here if available */}
+              {/* Contact information from direct columns */}
               <div className="grid grid-cols-1 gap-2 pt-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  <span>Contact information not available</span>
-                </div>
+                {request.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4" />
+                    <span>{request.email}</span>
+                  </div>
+                )}
+                {request["contact#"] && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4" />
+                    <span>{request["contact#"]}</span>
+                  </div>
+                )}
+                {!request.email && !request["contact#"] && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <span>Contact information not available</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
