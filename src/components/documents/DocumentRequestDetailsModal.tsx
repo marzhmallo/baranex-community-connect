@@ -123,13 +123,29 @@ const DocumentRequestDetailsModal = ({
                 </div>
               </div>
               
-              {/* Additional contact info can be added here if available */}
-              <div className="grid grid-cols-1 gap-2 pt-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  <span>Contact information not available</span>
+              {/* Contact information from receiver jsonb */}
+              {request.receiver && (
+                <div className="grid grid-cols-1 gap-2 pt-2">
+                  {request.receiver.email && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span>{request.receiver.email}</span>
+                    </div>
+                  )}
+                  {request.receiver.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span>{request.receiver.phone}</span>
+                    </div>
+                  )}
+                  {request.receiver.address && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{request.receiver.address}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
