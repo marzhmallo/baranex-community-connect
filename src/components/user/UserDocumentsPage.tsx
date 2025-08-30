@@ -82,10 +82,24 @@ const UserDocumentsPage = () => {
   const requestsPerPage = 4;
   const requestsTotalPages = Math.ceil(documentRequests.length / requestsPerPage);
 
-  // Filter and sort document types by active tab
+  // Filter and sort document types by active tab and search query
   const normalize = (s: any) => String(s || '').trim().toLowerCase();
   const knownTypes = ['certificate', 'certificates', 'permit', 'permits', 'clearance', 'clearances', 'ids', 'identification', 'other'];
+  
   const filteredDocumentTypes = (documentTypes || []).filter((dt: any) => {
+    // Filter by search query first
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesName = (dt.name || '').toLowerCase().includes(searchLower);
+      const matchesDescription = (dt.description || '').toLowerCase().includes(searchLower);
+      const matchesType = (dt.type || '').toLowerCase().includes(searchLower);
+      
+      if (!matchesName && !matchesDescription && !matchesType) {
+        return false;
+      }
+    }
+    
+    // Then filter by tab
     const t = normalize(dt.type);
     if (activeTab === 'all') return true;
     if (activeTab === 'certificates') return t === 'certificate' || t === 'certificates';
@@ -119,6 +133,13 @@ const UserDocumentsPage = () => {
   const requestsStartIndex = (requestsCurrentPage - 1) * requestsPerPage;
   const requestsEndIndex = requestsStartIndex + requestsPerPage;
   const paginatedRequests = documentRequests.slice(requestsStartIndex, requestsEndIndex);
+  // Reset page when search query or tab changes
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [searchQuery, activeTab]);
+
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
