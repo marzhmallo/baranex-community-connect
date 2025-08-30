@@ -208,6 +208,14 @@ const DocumentsPage = () => {
       };
     }
   }, [isInitialLoading, requestsCurrentPage]);
+
+  // Fetch document requests when page changes
+  useEffect(() => {
+    if (!isInitialLoading) {
+      fetchDocumentRequests();
+    }
+  }, [requestsCurrentPage]);
+
   const fetchDocumentRequests = async () => {
     try {
       let query = supabase.from('docrequests').select('*', {
