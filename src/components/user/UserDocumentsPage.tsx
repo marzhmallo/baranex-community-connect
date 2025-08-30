@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
@@ -13,6 +13,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
 import DocumentRequestModal from "./DocumentRequestModal";
 import { FileText, Clock, CheckCircle, BarChart3, Package, Hourglass, Eye, XCircle, TrendingUp, Search, Plus, Filter, Download, Edit, Trash2, RefreshCw, FileX, History, PlusCircle, Bell, Upload, ArrowRight, Settings, MoreHorizontal, MessageCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 const UserDocumentsPage = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,9 +26,13 @@ const UserDocumentsPage = () => {
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
   const [trackingFilter, setTrackingFilter] = useState("All Documents");
-  const {
-    userProfile
-  } = useAuth();
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingRequest, setEditingRequest] = useState(null);
+  const { userProfile } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Initial data fetch with master loading state
   useEffect(() => {
@@ -572,14 +580,35 @@ const UserDocumentsPage = () => {
                         {formatDate(request.updated_at || request.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end gap-2">
-                          <button className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors">
-                            <Edit className="h-4 w-4" />
-                          </button>
-                        </div>
+                         <div className="flex justify-end gap-2">
+                           <button 
+                             onClick={() => {
+                               setSelectedRequest(request);
+                               setShowViewDialog(true);
+                             }}
+                             className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                             title="View request details"
+                           >
+                             <Eye className="h-4 w-4" />
+                           </button>
+                           <button 
+                             onClick={() => {
+                               if (request.status === 'Request') {
+                                 setEditingRequest(request);
+                                 setShowEditDialog(true);
+                               }
+                             }}
+                             disabled={request.status !== 'Request'}
+                             className={`p-1 rounded transition-colors ${
+                               request.status === 'Request' 
+                                 ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' 
+                                 : 'text-muted-foreground/50 cursor-not-allowed'
+                             }`}
+                             title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}
+                           >
+                             <Edit className="h-4 w-4" />
+                           </button>
+                         </div>
                       </td>
                     </tr>)}
               </tbody>
@@ -617,6 +646,174 @@ const UserDocumentsPage = () => {
         </div>}
 
       {showRequestModal && <DocumentRequestModal onClose={() => setShowRequestModal(false)} />}
+
+      {/* View Request Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Request Details</DialogTitle>
+          </DialogHeader>
+          {selectedRequest && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Tracking ID</Label>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.docnumber}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Document Type</Label>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.type}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <div className="flex items-center gap-2">
+                    <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor(selectedRequest.status)}`}></div>
+                    <span className="text-sm capitalize">{selectedRequest.status}</span>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Payment Method</Label>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.method || 'N/A'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Amount</Label>
+                  <p className="text-sm text-muted-foreground">₱{selectedRequest.amount || 0}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Requested Date</Label>
+                  <p className="text-sm text-muted-foreground">{formatDate(selectedRequest.created_at)}</p>
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Purpose</Label>
+                <p className="text-sm text-muted-foreground mt-1">{selectedRequest.purpose}</p>
+              </div>
+              {selectedRequest.receiver && (
+                <div>
+                  <Label className="text-sm font-medium">Recipient</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {typeof selectedRequest.receiver === 'object' ? selectedRequest.receiver.name : selectedRequest.receiver}
+                  </p>
+                </div>
+              )}
+              {selectedRequest.notes && (
+                <div>
+                  <Label className="text-sm font-medium">Admin Notes</Label>
+                  <p className="text-sm text-muted-foreground mt-1">{selectedRequest.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Request Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Request</DialogTitle>
+          </DialogHeader>
+          {editingRequest && (
+            <EditRequestForm 
+              request={editingRequest} 
+              onSuccess={() => {
+                setShowEditDialog(false);
+                setEditingRequest(null);
+                refetch();
+              }}
+              onCancel={() => {
+                setShowEditDialog(false);
+                setEditingRequest(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>;
 };
+
+// Edit Request Form Component
+const EditRequestForm = ({ request, onSuccess, onCancel }: { request: any; onSuccess: () => void; onCancel: () => void }) => {
+  const [purpose, setPurpose] = useState(request.purpose || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const updateRequest = useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await supabase
+        .from('docrequests')
+        .update(data)
+        .eq('id', request.id);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Request updated successfully"
+      });
+      onSuccess();
+    },
+    onError: (error) => {
+      console.error('Error updating request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update request",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!purpose.trim()) return;
+    
+    setIsSubmitting(true);
+    try {
+      await updateRequest.mutateAsync({
+        purpose: purpose.trim(),
+        updated_at: new Date().toISOString()
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label className="text-sm font-medium">Document Type</Label>
+        <p className="text-sm text-muted-foreground mt-1">{request.type}</p>
+      </div>
+      <div>
+        <Label htmlFor="purpose" className="text-sm font-medium">Purpose *</Label>
+        <Textarea
+          id="purpose"
+          value={purpose}
+          onChange={(e) => setPurpose(e.target.value)}
+          placeholder="Enter the purpose for this document..."
+          className="mt-2 min-h-[100px]"
+          required
+        />
+      </div>
+      <div className="flex justify-end gap-3 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSubmitting || !purpose.trim()}
+        >
+          {isSubmitting ? 'Updating...' : 'Update Request'}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 export default UserDocumentsPage;
