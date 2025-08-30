@@ -51,19 +51,20 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
 
   // Set default payment method when payment methods load
   useEffect(() => {
-    if (paymentMethods.length > 0 && !paymentMethod) {
-      setPaymentMethod(paymentMethods[0].id);
+    if (!paymentMethod) {
+      // Set cash/walk-in as default if available
+      setPaymentMethod('cash');
     }
-  }, [paymentMethods, paymentMethod]);
+  }, [paymentMethod]);
 
-  // Fetch barangay GCash info (legacy support)
+  // Fetch barangay payment requirement setting
   const { data: barangayInfo = null } = useQuery({
     queryKey: ['barangay-info', userProfile?.brgyid],
     queryFn: async () => {
       if (!userProfile?.brgyid) return null;
       const { data, error } = await supabase
         .from('barangays')
-        .select('"gcash#", gcashname, gcashurl')
+        .select('"gcash#", gcashname, gcashurl, payreq')
         .eq('id', userProfile.brgyid)
         .single();
       if (error) throw error;
@@ -166,7 +167,7 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
         resident_id: userProfile.id,
         brgyid: userProfile.brgyid,
         receiver,
-        method: selectedPaymentMethod?.gname || 'walk-in',
+        method: paymentMethod === 'cash' ? 'Cash (Walk-in)' : selectedPaymentMethod?.gname || 'walk-in',
         amount: selectedDoc?.fee || 0,
         ...(selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && {
           ornumber: orNumber,
@@ -356,29 +357,53 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                       <div className="mt-3 p-4 text-center text-muted-foreground bg-muted/50 rounded-lg">
                         No payment methods configured
                       </div>
-                    ) : (
-                      <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-3 space-y-3">
-                        {paymentMethods.map((method) => (
-                          <div key={method.id} className="flex items-center space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all">
-                            <RadioGroupItem value={method.id} id={method.id} className="border-2" />
-                            <Label htmlFor={method.id} className="flex-1 cursor-pointer">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <span className="font-medium">{method.gname}</span>
-                                  {method.credz && (
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      {method.gname?.toLowerCase().includes('gcash') ? 'Digital Payment' : 'Traditional Payment'}
-                                    </p>
-                                  )}
-                                </div>
-                                {method.url && (
-                                  <img src={method.url} alt={method.gname} className="w-8 h-8 object-contain rounded" />
-                                )}
-                              </div>
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
+                     ) : (
+                       <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-3 space-y-3">
+                         {/* Default Cash/Walk-in Payment Option */}
+                         <div className={`flex items-center space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all ${barangayInfo?.payreq ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                           <RadioGroupItem 
+                             value="cash" 
+                             id="cash" 
+                             className="border-2" 
+                             disabled={barangayInfo?.payreq}
+                           />
+                           <Label htmlFor="cash" className={`flex-1 ${!barangayInfo?.payreq ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                             <div className="flex items-center justify-between">
+                               <div>
+                                 <span className="font-medium">Cash Payment (Walk-in)</span>
+                                 <p className="text-xs text-muted-foreground mt-1">
+                                   {barangayInfo?.payreq ? 'Advance payment required' : 'Pay in person at the barangay office'}
+                                 </p>
+                               </div>
+                               <div className="w-8 h-8 flex items-center justify-center bg-green-100 dark:bg-green-900/30 rounded">
+                                 <span className="text-green-600 dark:text-green-400 text-lg">💰</span>
+                               </div>
+                             </div>
+                           </Label>
+                         </div>
+
+                         {/* Online Payment Methods */}
+                         {paymentMethods.map((method) => (
+                           <div key={method.id} className="flex items-center space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all">
+                             <RadioGroupItem value={method.id} id={method.id} className="border-2" />
+                             <Label htmlFor={method.id} className="flex-1 cursor-pointer">
+                               <div className="flex items-center justify-between">
+                                 <div>
+                                   <span className="font-medium">{method.gname}</span>
+                                   {method.credz && (
+                                     <p className="text-xs text-muted-foreground mt-1">
+                                       {method.gname?.toLowerCase().includes('gcash') ? 'Digital Payment' : 'Traditional Payment'}
+                                     </p>
+                                   )}
+                                 </div>
+                                 {method.url && (
+                                   <img src={method.url} alt={method.gname} className="w-8 h-8 object-contain rounded" />
+                                 )}
+                               </div>
+                             </Label>
+                           </div>
+                         ))}
+                       </RadioGroup>
                     )}
 
                     {selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && (
@@ -490,7 +515,8 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                   !selectedDocumentType || 
                   !purpose || 
                   (receiverType === "other" && !receiverName) || 
-                  (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || !paymentScreenshot))
+                  (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || !paymentScreenshot)) ||
+                  (selectedDoc?.fee > 0 && barangayInfo?.payreq && paymentMethod === 'cash')
                 }
                 className="px-8 py-2 h-11 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all"
               >
