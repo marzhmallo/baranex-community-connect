@@ -548,7 +548,20 @@ const UserDocumentsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {request.type}
                       </td>
-                      
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {(() => {
+                          try {
+                            const receiver = typeof request.receiver === 'string' 
+                              ? JSON.parse(request.receiver) 
+                              : request.receiver;
+                            return receiver?.first_name && receiver?.last_name 
+                              ? `${receiver.first_name} ${receiver.last_name}`
+                              : 'N/A';
+                          } catch {
+                            return 'N/A';
+                          }
+                        })()}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className={`h-2.5 w-2.5 rounded-full mr-2 ${getStatusColor(request.status)}`}></div>
