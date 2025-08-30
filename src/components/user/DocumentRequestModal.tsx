@@ -25,6 +25,8 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
   const [purpose, setPurpose] = useState("");
   const [receiverType, setReceiverType] = useState("self"); 
   const [receiverName, setReceiverName] = useState("");
+  const [receiverEmail, setReceiverEmail] = useState("");
+  const [receiverContact, setReceiverContact] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [amount, setAmount] = useState("");
   const [orNumber, setOrNumber] = useState("");
@@ -157,9 +159,15 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
       const receiver = receiverType === "self" 
         ? {
             id: userProfile.id,
-            name: `${userProfile.firstname} ${userProfile.lastname}`
+            name: `${userProfile.firstname} ${userProfile.lastname}`,
+            email: userProfile.email,
+            contact: userProfile.phone || 'N/A'
           }
-        : { name: receiverName };
+        : { 
+            name: receiverName,
+            email: receiverEmail,
+            contact: receiverContact
+          };
 
       const requestData = {
         type: selectedDoc?.name,
@@ -300,6 +308,10 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           Document will be issued to {userProfile?.firstname} {userProfile?.lastname}
+                          <br />
+                          Email: {userProfile?.email}
+                          <br />
+                          Contact: {userProfile?.phone || 'Not provided'}
                         </p>
                       </Label>
                     </div>
@@ -318,17 +330,46 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                   </RadioGroup>
                   
                   {receiverType === "other" && (
-                    <div className="mt-4 animate-fade-in">
-                      <Label htmlFor="receiverName" className="text-sm font-medium text-foreground flex items-center gap-2">
-                        Recipient's Full Name <span className="text-destructive">*</span>
-                      </Label>
-                      <Input 
-                        id="receiverName" 
-                        value={receiverName} 
-                        onChange={(e) => setReceiverName(e.target.value)} 
-                        placeholder="Enter recipient's full name..." 
-                        className="mt-2 h-12 border-2 hover:border-primary/50 transition-colors" 
-                      />
+                    <div className="mt-4 space-y-4 animate-fade-in">
+                      <div>
+                        <Label htmlFor="receiverName" className="text-sm font-medium text-foreground flex items-center gap-2">
+                          Recipient's Full Name <span className="text-destructive">*</span>
+                        </Label>
+                        <Input 
+                          id="receiverName" 
+                          value={receiverName} 
+                          onChange={(e) => setReceiverName(e.target.value)} 
+                          placeholder="Enter recipient's full name..." 
+                          className="mt-2 h-12 border-2 hover:border-primary/50 transition-colors" 
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="receiverEmail" className="text-sm font-medium text-foreground flex items-center gap-2">
+                          Recipient's Email Address <span className="text-destructive">*</span>
+                        </Label>
+                        <Input 
+                          id="receiverEmail" 
+                          type="email"
+                          value={receiverEmail} 
+                          onChange={(e) => setReceiverEmail(e.target.value)} 
+                          placeholder="Enter recipient's email address..." 
+                          className="mt-2 h-12 border-2 hover:border-primary/50 transition-colors" 
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="receiverContact" className="text-sm font-medium text-foreground flex items-center gap-2">
+                          Recipient's Contact Number <span className="text-destructive">*</span>
+                        </Label>
+                        <Input 
+                          id="receiverContact" 
+                          value={receiverContact} 
+                          onChange={(e) => setReceiverContact(e.target.value)} 
+                          placeholder="Enter recipient's contact number..." 
+                          className="mt-2 h-12 border-2 hover:border-primary/50 transition-colors" 
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -514,7 +555,7 @@ const DocumentRequestModal = ({ onClose }: DocumentRequestModalProps) => {
                   isSubmitting || 
                   !selectedDocumentType || 
                   !purpose || 
-                  (receiverType === "other" && !receiverName) || 
+                  (receiverType === "other" && (!receiverName || !receiverEmail || !receiverContact)) ||
                   (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || !paymentScreenshot)) ||
                   (selectedDoc?.fee > 0 && barangayInfo?.payreq && paymentMethod === 'cash')
                 }
