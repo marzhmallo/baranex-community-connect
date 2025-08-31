@@ -18,7 +18,7 @@ import { Plus, Minus } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import OfficialPhotoUpload from './OfficialPhotoUpload';
 
-const createOfficialSchema = (isEditing: boolean) => z.object({
+const officialSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
@@ -35,16 +35,28 @@ const createOfficialSchema = (isEditing: boolean) => z.object({
     value: z.string().optional().or(z.literal(''))
   })),
   is_sk: z.boolean().optional(),
-  // Only required for creating new officials
-  position: isEditing ? z.string().optional() : z.string().min(1, 'Position is required'),
+  position: z.string().optional(),
   committee: z.string().optional().or(z.literal('')),
-  term_start: isEditing ? z.string().optional() : z.string().min(1, 'Start date is required'),
+  term_start: z.string().optional(),
   term_end: z.string().optional().or(z.literal('')),
   is_current: z.boolean().optional(),
   photo_url: z.string().optional().or(z.literal(''))
 });
 
-type OfficialFormValues = z.infer<ReturnType<typeof createOfficialSchema>>;
+// Create dynamic validation based on editing state
+const createValidationSchema = (isEditing: boolean) => {
+  if (isEditing) {
+    return officialSchema;
+  }
+  
+  // For new officials, position and term_start are required
+  return officialSchema.extend({
+    position: z.string().min(1, 'Position is required'),
+    term_start: z.string().min(1, 'Start date is required')
+  });
+};
+
+type OfficialFormValues = z.infer<typeof officialSchema>;
 
 interface AddEditOfficialDialogProps {
   open: boolean;
@@ -69,7 +81,7 @@ export function AddEditOfficialDialog({
   const isEditing = !!official;
   
   const form = useForm<OfficialFormValues>({
-    resolver: zodResolver(createOfficialSchema(isEditing)),
+    resolver: zodResolver(createValidationSchema(isEditing)),
     defaultValues: {
       name: '',
       email: '',
