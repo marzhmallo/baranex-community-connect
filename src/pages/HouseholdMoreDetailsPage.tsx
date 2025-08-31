@@ -126,7 +126,7 @@ const HouseholdMoreDetailsPage = () => {
         <div className="flex items-center mb-6">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/households')} 
+            onClick={() => navigate(-1)}
             className="mr-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
@@ -147,7 +147,7 @@ const HouseholdMoreDetailsPage = () => {
       <div className="p-6 max-w-[1600px] mx-auto">
         <Button 
           variant="ghost" 
-          onClick={() => navigate('/households')} 
+          onClick={() => navigate(-1)}
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Households
@@ -170,7 +170,7 @@ const HouseholdMoreDetailsPage = () => {
         <div className="flex items-center">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/households')} 
+            onClick={() => navigate(-1)} 
             className="mr-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back

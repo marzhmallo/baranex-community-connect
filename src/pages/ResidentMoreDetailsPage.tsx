@@ -186,7 +186,7 @@ const ResidentMoreDetailsPage = () => {
     return (
       <div className="p-6 max-w-[1600px] mx-auto">
         <div className="flex items-center mb-8">
-          <Button onClick={() => navigate('/residents')} variant="ghost" className="mr-4">
+          <Button onClick={() => navigate(-1)} variant="ghost" className="mr-4">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <Skeleton className="h-10 w-64" />
@@ -204,7 +204,7 @@ const ResidentMoreDetailsPage = () => {
     return (
       <div className="p-6 max-w-[1600px] mx-auto">
         <div className="flex items-center mb-8">
-          <Button onClick={() => navigate('/residents')} variant="ghost" className="mr-4">
+          <Button onClick={() => navigate(-1)} variant="ghost" className="mr-4">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <h1 className="text-3xl font-bold text-foreground">Resident Not Found</h1>
@@ -215,8 +215,8 @@ const ResidentMoreDetailsPage = () => {
               The resident information could not be loaded or does not exist.
             </p>
             <div className="flex justify-center mt-4">
-              <Button onClick={() => navigate('/residents')}>
-                Return to Residents List
+              <Button onClick={() => navigate(-1)}>
+                Go Back
               </Button>
             </div>
           </CardContent>
@@ -260,7 +260,7 @@ const ResidentMoreDetailsPage = () => {
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex items-center mb-8">
-        <Button onClick={() => navigate('/residents')} variant="ghost" className="mr-4">
+        <Button onClick={() => navigate(-1)} variant="ghost" className="mr-4">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
         <div>
