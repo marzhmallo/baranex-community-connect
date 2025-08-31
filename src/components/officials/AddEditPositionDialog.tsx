@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { OfficialPosition } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrentAdmin } from '@/hooks/useCurrentAdmin';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -103,9 +104,8 @@ export function AddEditPositionDialog({
   onSuccess
 }: AddEditPositionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const { adminProfileId } = useCurrentAdmin();
   const isEditMode = !!position;
   const form = useForm<PositionFormValues>({
     resolver: zodResolver(positionSchema),
@@ -183,15 +183,23 @@ export function AddEditPositionDialog({
         throw result.error;
       }
 
-      // Update the officials table with the same position_no
-      if (data.position_no !== undefined) {
-        const {
-          error: officialError
-        } = await supabase.from('officials').update({
-          position_no: data.position_no
-        }).eq('id', officialId);
+      // Update the officials table with the same position_no and editedby
+      if (data.position_no !== undefined || adminProfileId) {
+        const updateData: any = {};
+        if (data.position_no !== undefined) {
+          updateData.position_no = data.position_no;
+        }
+        if (adminProfileId) {
+          updateData.editedby = adminProfileId;
+        }
+        
+        const { error: officialError } = await supabase
+          .from('officials')
+          .update(updateData)
+          .eq('id', officialId);
+          
         if (officialError) {
-          console.error('Error updating official position_no:', officialError);
+          console.error('Error updating official:', officialError);
           // Don't throw here as the position was already saved successfully
         }
       }

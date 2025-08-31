@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { useAutoFillAddress } from '@/hooks/useAutoFillAddress';
+import { useCurrentAdmin } from '@/hooks/useCurrentAdmin';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -76,6 +77,7 @@ export function AddEditOfficialDialog({
   const { toast } = useToast();
   const { userProfile } = useAuth();
   const { getAutoFillData } = useAutoFillAddress();
+  const { adminProfileId } = useCurrentAdmin();
   const autoFillData = getAutoFillData(); // Get this once outside useEffect
   
   const isEditing = !!official;
@@ -276,7 +278,8 @@ export function AddEditOfficialDialog({
           educ: educArray.length > 0 ? educArray : null,
           achievements: achievementsArray.length > 0 ? achievementsArray : null,
           committees: committeesArray.length > 0 ? committeesArray : null,
-          photo_url: data.photo_url || null
+          photo_url: data.photo_url || null,
+          editedby: adminProfileId
         };
         
         const { error: officialError } = await supabase
