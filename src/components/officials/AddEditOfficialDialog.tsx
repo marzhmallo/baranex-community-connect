@@ -77,6 +77,7 @@ export function AddEditOfficialDialog({
   const { toast } = useToast();
   const { userProfile } = useAuth();
   const { getAutoFillData } = useAutoFillAddress();
+  const autoFillData = getAutoFillData(); // Get this once outside useEffect
   
   const isEditing = !!official;
   
@@ -189,7 +190,6 @@ export function AddEditOfficialDialog({
       console.log("Parsed committees:", committeesArray); // Debug log
 
       // Handle address autofill for editing
-      const autoFillData = getAutoFillData();
       let addressToUse = official.address || '';
       
       if (autoFillData) {
@@ -211,15 +211,12 @@ export function AddEditOfficialDialog({
         is_sk: official.is_sk?.[0] || false,
         photo_url: official.photo_url || ''
       });
-    } else if (!official && open) {
+    } else if (!official && open && autoFillData) {
       // Auto-fill address for new officials if setting is enabled
-      const autoFillData = getAutoFillData();
-      if (autoFillData) {
-        const fullAddress = `${autoFillData.barangayname}, ${autoFillData.municipality}, ${autoFillData.province}, ${autoFillData.region}, ${autoFillData.country}`;
-        form.setValue('address', fullAddress);
-      }
+      const fullAddress = `${autoFillData.barangayname}, ${autoFillData.municipality}, ${autoFillData.province}, ${autoFillData.region}, ${autoFillData.country}`;
+      form.setValue('address', fullAddress);
     }
-  }, [official, position, open, form, getAutoFillData]);
+  }, [official, position, open, form, autoFillData]);
   
   const handleIsCurrentChange = (checked: boolean) => {
     if (checked) {
@@ -466,7 +463,7 @@ export function AddEditOfficialDialog({
                         placeholder="Official's address"
                         {...field}
                         className="bg-input border-border"
-                        readOnly={getAutoFillData() !== null}
+                        readOnly={autoFillData !== null}
                       />
                     </FormControl>
                     <FormMessage />
