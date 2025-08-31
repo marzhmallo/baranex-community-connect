@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
-import { useAutoFillAddress } from '@/hooks/useAutoFillAddress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -76,7 +75,6 @@ export function AddEditOfficialDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
-  const { getAutoFillData } = useAutoFillAddress();
   
   const isEditing = !!official;
   
@@ -188,22 +186,13 @@ export function AddEditOfficialDialog({
       console.log("Parsed achievements:", achievementsArray); // Debug log
       console.log("Parsed committees:", committeesArray); // Debug log
 
-      // Get the address to use - if autofill is enabled, use admin's address, otherwise use official's address
-      const autoFillData = getAutoFillData();
-      let addressToUse = official.address || '';
-      
-      if (autoFillData) {
-        // Use admin's address when autofill is enabled
-        addressToUse = `${autoFillData.barangayname}, ${autoFillData.municipality}, ${autoFillData.province}, ${autoFillData.region}, ${autoFillData.country}`;
-      }
-
       // Reset form with official data
       form.reset({
         name: official.name || '',
         email: official.email || '',
         phone: official.phone || '',
         bio: official.bio || '',
-        address: addressToUse,
+        address: official.address || '',
         birthdate: official.birthdate || '',
         educ: educArray,
         achievements: achievementsArray,
@@ -211,15 +200,8 @@ export function AddEditOfficialDialog({
         is_sk: official.is_sk?.[0] || false,
         photo_url: official.photo_url || ''
       });
-    } else if (!official && open) {
-      // Auto-fill address for new officials if setting is enabled
-      const autoFillData = getAutoFillData();
-      if (autoFillData) {
-        const fullAddress = `${autoFillData.barangayname}, ${autoFillData.municipality}, ${autoFillData.province}, ${autoFillData.region}, ${autoFillData.country}`;
-        form.setValue('address', fullAddress);
-      }
     }
-  }, [official, position, open, form, getAutoFillData]);
+  }, [official, position, open, form]);
   
   const handleIsCurrentChange = (checked: boolean) => {
     if (checked) {
@@ -455,7 +437,7 @@ export function AddEditOfficialDialog({
                 )}
               />
               
-              <FormField
+               <FormField
                 control={form.control}
                 name="address"
                 render={({ field }) => (
@@ -466,7 +448,6 @@ export function AddEditOfficialDialog({
                         placeholder="Official's address"
                         {...field}
                         className="bg-input border-border"
-                        readOnly={getAutoFillData() !== null}
                       />
                     </FormControl>
                     <FormMessage />
