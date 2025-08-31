@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/AuthProvider';
+import { useAutoFillAddress } from '@/hooks/useAutoFillAddress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,7 @@ export function AddOfficialDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
+  const { getAutoFillData } = useAutoFillAddress();
   
   const isEditing = !!official;
   
@@ -155,7 +157,7 @@ export function AddOfficialDialog({
     return defaultValue;
   };
 
-  // Effect to populate form when editing
+  // Effect to populate form when editing or auto-fill for new officials
   useEffect(() => {
     if (official && open) {
       console.log("Official data:", official); // Debug log
@@ -187,8 +189,15 @@ export function AddOfficialDialog({
         is_sk: official.is_sk?.[0] || false,
         photo_url: official.photo_url || ''
       });
+    } else if (!official && open) {
+      // Auto-fill address for new officials if setting is enabled
+      const autoFillData = getAutoFillData();
+      if (autoFillData) {
+        const fullAddress = `${autoFillData.barangayname}, ${autoFillData.municipality}, ${autoFillData.province}, ${autoFillData.region}, ${autoFillData.country}`;
+        form.setValue('address', fullAddress);
+      }
     }
-  }, [official, position, open, form]);
+  }, [official, position, open, form, getAutoFillData]);
   
   const handleIsCurrentChange = (checked: boolean) => {
     if (checked) {
