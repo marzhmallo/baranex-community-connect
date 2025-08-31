@@ -4,7 +4,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { useAutoFillAddress } from '@/hooks/useAutoFillAddress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -322,7 +322,7 @@ export function AddOfficialDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-background border-border max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Official' : 'Add New Official'}</DialogTitle>
         </DialogHeader>
@@ -348,7 +348,7 @@ export function AddOfficialDialog({
                       <Input
                         placeholder="Enter full name"
                         {...field}
-                        className="bg-[#2a3649] border-[#3a4659]"
+                        className="bg-input border-border"
                       />
                     </FormControl>
                     <FormMessage />
@@ -368,7 +368,7 @@ export function AddOfficialDialog({
                           type="email"
                           placeholder="email@example.com"
                           {...field}
-                          className="bg-[#2a3649] border-[#3a4659]"
+                          className="bg-input border-border"
                         />
                       </FormControl>
                       <FormMessage />
@@ -386,7 +386,7 @@ export function AddOfficialDialog({
                         <Input
                           placeholder="Contact number"
                           {...field}
-                          className="bg-[#2a3649] border-[#3a4659]"
+                          className="bg-input border-border"
                         />
                       </FormControl>
                       <FormMessage />
@@ -405,7 +405,7 @@ export function AddOfficialDialog({
                       <Input
                         type="date"
                         {...field}
-                        className="bg-[#2a3649] border-[#3a4659]"
+                        className="bg-input border-border"
                       />
                     </FormControl>
                     <FormMessage />
@@ -423,7 +423,7 @@ export function AddOfficialDialog({
                       <Input
                         placeholder="Official's address"
                         {...field}
-                        className="bg-[#2a3649] border-[#3a4659]"
+                        className="bg-input border-border"
                       />
                     </FormControl>
                     <FormMessage />
@@ -455,7 +455,7 @@ export function AddOfficialDialog({
                             <Input
                               {...field}
                               placeholder="Educational background"
-                              className="bg-[#2a3649] border-[#3a4659]"
+                              className="bg-input border-border"
                             />
                           </FormControl>
                           <FormMessage />
@@ -487,7 +487,7 @@ export function AddOfficialDialog({
                       <Textarea
                         placeholder="Brief biography"
                         {...field}
-                        className="bg-[#2a3649] border-[#3a4659] min-h-[100px]"
+                        className="bg-input border-border min-h-[100px]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -519,7 +519,7 @@ export function AddOfficialDialog({
                             <Input
                               {...field}
                               placeholder="Notable achievement"
-                              className="bg-[#2a3649] border-[#3a4659]"
+                              className="bg-input border-border"
                             />
                           </FormControl>
                           <FormMessage />
@@ -565,7 +565,7 @@ export function AddOfficialDialog({
                             <Input
                               {...field}
                               placeholder="Committee name"
-                              className="bg-[#2a3649] border-[#3a4659]"
+                              className="bg-input border-border"
                             />
                           </FormControl>
                           <FormMessage />
@@ -591,7 +591,7 @@ export function AddOfficialDialog({
                 control={form.control}
                 name="is_sk"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649]">
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-muted/50">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -610,7 +610,7 @@ export function AddOfficialDialog({
             </div>
             
             {!isEditing && (
-              <div className="border-t border-[#3a4659] pt-4 mt-6">
+              <div className="border-t border-border pt-4 mt-6">
                 <h3 className="text-lg font-medium mb-4">Position Information</h3>
                 
                 <FormField
@@ -623,7 +623,7 @@ export function AddOfficialDialog({
                         <Input
                           placeholder="e.g., Barangay Captain"
                           {...field}
-                          className="bg-[#2a3649] border-[#3a4659]"
+                          className="bg-input border-border"
                         />
                       </FormControl>
                       <FormMessage />
@@ -641,7 +641,7 @@ export function AddOfficialDialog({
                         <Input
                           placeholder="e.g., Peace & Order"
                           {...field}
-                          className="bg-[#2a3649] border-[#3a4659]"
+                          className="bg-input border-border"
                         />
                       </FormControl>
                       <FormMessage />
@@ -660,7 +660,7 @@ export function AddOfficialDialog({
                           <Input
                             type="date"
                             {...field}
-                            className="bg-[#2a3649] border-[#3a4659]"
+                            className="bg-input border-border"
                           />
                         </FormControl>
                         <FormMessage />
@@ -679,7 +679,7 @@ export function AddOfficialDialog({
                             type="date"
                             {...field}
                             disabled={form.watch('is_current')}
-                            className="bg-[#2a3649] border-[#3a4659]"
+                            className="bg-input border-border"
                           />
                         </FormControl>
                         <FormMessage />
@@ -692,7 +692,7 @@ export function AddOfficialDialog({
                   control={form.control}
                   name="is_current"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649] mt-4">
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-muted/50 mt-4">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
@@ -719,7 +719,7 @@ export function AddOfficialDialog({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="border-[#3a4659]"
+                className="border-border"
               >
                 Cancel
               </Button>
