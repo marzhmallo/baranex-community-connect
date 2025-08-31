@@ -166,7 +166,7 @@ const DocumentRequestDetailsModal = ({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Payment Method</p>
-                  <p className="font-medium">{request.method || 'Not specified'}</p>
+                  <p className="font-medium">{request.payme || 'Not specified'}</p>
                 </div>
               </div>
               
