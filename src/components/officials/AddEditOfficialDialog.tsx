@@ -34,7 +34,6 @@ const officialSchema = z.object({
   committees: z.array(z.object({
     value: z.string().optional().or(z.literal(''))
   })),
-  is_sk: z.boolean().optional(),
   position: z.string().optional(),
   committee: z.string().optional().or(z.literal('')),
   term_start: z.string().optional(),
@@ -94,7 +93,6 @@ export function AddEditOfficialDialog({
       educ: [{ value: '' }],
       achievements: [{ value: '' }],
       committees: [{ value: '' }],
-      is_sk: false,
       position: '',
       committee: '',
       term_start: '',
@@ -208,7 +206,6 @@ export function AddEditOfficialDialog({
         educ: educArray,
         achievements: achievementsArray,
         committees: committeesArray,
-        is_sk: official.is_sk?.[0] || false,
         photo_url: official.photo_url || ''
       });
     } else if (!official && open && autoFillData) {
@@ -279,7 +276,6 @@ export function AddEditOfficialDialog({
           educ: educArray.length > 0 ? educArray : null,
           achievements: achievementsArray.length > 0 ? achievementsArray : null,
           committees: committeesArray.length > 0 ? committeesArray : null,
-          is_sk: data.is_sk ? [true] : [false], // Database expects an array
           photo_url: data.photo_url || null
         };
         
@@ -306,7 +302,6 @@ export function AddEditOfficialDialog({
           educ: educArray.length > 0 ? educArray : null,
           achievements: achievementsArray.length > 0 ? achievementsArray : null,
           committees: committeesArray.length > 0 ? committeesArray : null,
-          is_sk: data.is_sk ? [true] : [false], // Database expects an array
           position: data.position, // Add position to satisfy type requirements
           brgyid: userProfile.brgyid, // Use current user's brgyid
           photo_url: data.photo_url || null,
@@ -626,27 +621,6 @@ export function AddEditOfficialDialog({
                   </div>
                 ))}
               </div>
-              
-              <FormField
-                control={form.control}
-                name="is_sk"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-muted/50">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>SK Official</FormLabel>
-                      <p className="text-xs text-gray-400">
-                        Check if this person is an SK official
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
             </div>
             
             {!isEditing && (
