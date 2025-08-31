@@ -213,7 +213,7 @@ export function AddEditPositionDialog({
     }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1e2637] border-[#2a3649] text-white">
+      <DialogContent className="bg-background border-border text-foreground">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Position' : 'Add Position'}</DialogTitle>
         </DialogHeader>
@@ -225,7 +225,7 @@ export function AddEditPositionDialog({
           }) => <FormItem>
                   <FormLabel>Position</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Barangay Captain" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                    <Input placeholder="e.g., Barangay Captain" {...field} className="bg-input border-border" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>} />
@@ -236,7 +236,7 @@ export function AddEditPositionDialog({
                   <FormLabel>Position Rank (optional)</FormLabel>
                   <FormControl>
                     <Select value={field.value?.toString() || ""} onValueChange={value => field.onChange(value ? Number(value) : undefined)}>
-                      <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
+                      <SelectTrigger className="bg-input border-border">
                         <SelectValue placeholder="Select position rank" />
                       </SelectTrigger>
                       <SelectContent>
@@ -246,7 +246,7 @@ export function AddEditPositionDialog({
                       </SelectContent>
                     </Select>
                   </FormControl>
-                  <div className="text-xs text-gray-400 mt-1">Lower numbers appear first (1 = highest priority).</div>
+                  <div className="text-xs text-muted-foreground mt-1">Lower numbers appear first (1 = highest priority).</div>
                   <FormMessage />
                 </FormItem>} />
 
@@ -256,7 +256,7 @@ export function AddEditPositionDialog({
                   <FormLabel>Tenure</FormLabel>
                   <FormControl>
                     <Select value={field.value || "Elected"} onValueChange={field.onChange}>
-                      <SelectTrigger className="bg-[#2a3649] border-[#3a4659]">
+                      <SelectTrigger className="bg-input border-border">
                         <SelectValue placeholder="Select tenure type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -273,7 +273,7 @@ export function AddEditPositionDialog({
           }) => <FormItem>
                   <FormLabel>Committee (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Peace & Order" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                    <Input placeholder="e.g., Peace & Order" {...field} className="bg-input border-border" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>} />
@@ -284,7 +284,7 @@ export function AddEditPositionDialog({
             }) => <FormItem>
                     <FormLabel>Term Start Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                      <Input type="date" {...field} className="bg-input border-border" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -294,7 +294,7 @@ export function AddEditPositionDialog({
             }) => <FormItem>
                     <FormLabel>Term End Date (optional)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                      <Input type="date" {...field} className="bg-input border-border" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -302,13 +302,13 @@ export function AddEditPositionDialog({
             
             <FormField control={form.control} name="sk" render={({
             field
-          }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-[#2a3649]">
+          }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-muted/50">
                   <FormControl>
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>Is SK</FormLabel>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       Check if this is a Sangguniang Kabataan (SK) position
                     </p>
                   </div>
@@ -319,16 +319,16 @@ export function AddEditPositionDialog({
           }) => <FormItem>
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Brief description of the role" {...field} className="bg-[#2a3649] border-[#3a4659]" />
+                    <Input placeholder="Brief description of the role" {...field} className="bg-input border-border" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>} />
             
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="border-[#3a4659]">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Saving...' : isEditMode ? 'Update' : 'Add'}
               </Button>
             </DialogFooter>
