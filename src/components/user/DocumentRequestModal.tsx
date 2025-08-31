@@ -203,7 +203,7 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
         email: receiverData.email,
         'contact#': receiverData.contact && receiverData.contact !== 'N/A' ? parseInt(receiverData.contact.replace(/\D/g, '')) || null : null,
         receiver: { name: receiverData.name },
-        method: paymentMethod === 'cash' ? 'Cash (Walk-in)' : selectedPaymentMethod?.gname || 'walk-in',
+        method: paymentMethod === 'cash' ? 'walk-in' : selectedPaymentMethod?.gname || 'walk-in',
         amount: selectedDoc?.fee || 0,
         ...(selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && {
           ornumber: orNumber,
