@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { RefreshCw, Plus, ArrowLeft, LayoutGrid, Users, Settings } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
-import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
+import { AddEditOfficialDialog } from '@/components/officials/AddEditOfficialDialog';
 import { OrganizationalChart } from '@/components/officials/OrganizationalChart';
 import { RankManagementDialog } from '@/components/officials/RankManagementDialog';
 import { AssignOfficialToRankDialog } from '@/components/officials/AssignOfficialToRankDialog';
@@ -389,7 +389,7 @@ const OfficialsPage = () => {
       )}
 
       {/* Dialogs */}
-      <AddOfficialDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={handleAddSuccess} />
+      <AddEditOfficialDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={handleAddSuccess} />
       <RankManagementDialog open={showRankManagement} onOpenChange={setShowRankManagement} />
       <AssignOfficialToRankDialog 
         open={showAssignRank} 

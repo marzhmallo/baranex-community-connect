@@ -46,7 +46,7 @@ const officialSchema = z.object({
 
 type OfficialFormValues = z.infer<typeof officialSchema>;
 
-interface AddOfficialDialogProps {
+interface AddEditOfficialDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
@@ -54,13 +54,13 @@ interface AddOfficialDialogProps {
   position?: OfficialPosition | null;
 }
 
-export function AddOfficialDialog({
-  open,
-  onOpenChange,
-  onSuccess,
-  official,
-  position
-}: AddOfficialDialogProps) {
+export function AddEditOfficialDialog({ 
+  open, 
+  onOpenChange, 
+  onSuccess, 
+  official, 
+  position 
+}: AddEditOfficialDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
@@ -743,3 +743,5 @@ export function AddOfficialDialog({
     </Dialog>
   );
 }
+
+export default AddEditOfficialDialog;

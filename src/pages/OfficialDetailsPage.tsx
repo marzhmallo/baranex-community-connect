@@ -10,7 +10,7 @@ import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefca
 import { Official, OfficialPosition } from '@/lib/types';
 import { AddEditPositionDialog } from '@/components/officials/AddEditPositionDialog';
 import { Badge } from '@/components/ui/badge';
-import { AddOfficialDialog } from '@/components/officials/AddOfficialDialog';
+import { AddEditOfficialDialog } from '@/components/officials/AddEditOfficialDialog';
 import { OfficialCoverPhotoUpload } from '@/components/officials/OfficialCoverPhotoUpload';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
@@ -663,7 +663,7 @@ const OfficialDetailsPage = () => {
       />
 
       {/* Edit Official Dialog */}
-      <AddOfficialDialog 
+      <AddEditOfficialDialog 
         open={isEditDialogOpen} 
         onOpenChange={setIsEditDialogOpen} 
         onSuccess={handleEditSuccess} 
