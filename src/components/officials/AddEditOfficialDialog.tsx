@@ -81,7 +81,8 @@ export function AddEditOfficialDialog({
   const isEditing = !!official;
   
   const form = useForm<OfficialFormValues>({
-    resolver: zodResolver(createValidationSchema(isEditing)),
+    resolver: zodResolver(officialSchema),
+    mode: 'onChange',
     defaultValues: {
       name: '',
       email: '',
@@ -244,6 +245,26 @@ export function AddEditOfficialDialog({
         return;
       }
 
+      // Additional validation for new officials
+      if (!isEditing) {
+        if (!data.position) {
+          toast({
+            title: 'Error',
+            description: 'Position is required for new officials.',
+            variant: 'destructive'
+          });
+          return;
+        }
+        if (!data.term_start) {
+          toast({
+            title: 'Error',
+            description: 'Start date is required for new officials.',
+            variant: 'destructive'
+          });
+          return;
+        }
+      }
+
       // Format the arrays for JSONB storage - filter out empty values
       const educArray = data.educ.map(item => item.value).filter(Boolean);
       const achievementsArray = data.achievements.map(item => item.value).filter(Boolean);
@@ -343,7 +364,7 @@ export function AddEditOfficialDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background border-border max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-background border-border max-w-2xl max-h-[90vh] overflow-y-auto z-50">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Official' : 'Add New Official'}</DialogTitle>
         </DialogHeader>
