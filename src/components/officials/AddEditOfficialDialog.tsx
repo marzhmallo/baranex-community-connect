@@ -18,7 +18,7 @@ import { Plus, Minus } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import OfficialPhotoUpload from './OfficialPhotoUpload';
 
-const officialSchema = z.object({
+const createOfficialSchema = (isEditing: boolean) => z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
@@ -36,15 +36,15 @@ const officialSchema = z.object({
   })),
   is_sk: z.boolean().optional(),
   // Only required for creating new officials
-  position: z.string().min(1, 'Position is required').optional(),
+  position: isEditing ? z.string().optional() : z.string().min(1, 'Position is required'),
   committee: z.string().optional().or(z.literal('')),
-  term_start: z.string().min(1, 'Start date is required').optional(),
+  term_start: isEditing ? z.string().optional() : z.string().min(1, 'Start date is required'),
   term_end: z.string().optional().or(z.literal('')),
   is_current: z.boolean().optional(),
   photo_url: z.string().optional().or(z.literal(''))
 });
 
-type OfficialFormValues = z.infer<typeof officialSchema>;
+type OfficialFormValues = z.infer<ReturnType<typeof createOfficialSchema>>;
 
 interface AddEditOfficialDialogProps {
   open: boolean;
@@ -69,7 +69,7 @@ export function AddEditOfficialDialog({
   const isEditing = !!official;
   
   const form = useForm<OfficialFormValues>({
-    resolver: zodResolver(officialSchema),
+    resolver: zodResolver(createOfficialSchema(isEditing)),
     defaultValues: {
       name: '',
       email: '',
