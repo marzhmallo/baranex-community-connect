@@ -18,16 +18,6 @@ interface Barangay {
   barangayname: string;
   municipality: string;
   province: string;
-  logo_url?: string;
-  backgroundurl?: string;
-  halllat?: number;
-  halllong?: number;
-  phone?: string;
-  email?: string;
-  officehours?: string;
-  instructions?: string;
-  gcashname?: string[];
-  gcashurl?: string;
 }
 
 export const BarangaySelectionModal: React.FC<BarangaySelectionModalProps> = ({
@@ -44,14 +34,15 @@ export const BarangaySelectionModal: React.FC<BarangaySelectionModalProps> = ({
     queryKey: ['municipalities'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .rpc('get_public_barangay_data' as any);
+        .from('public_barangays')
+        .select('municipality')
+        .order('municipality');
       
       if (error) throw error;
       
       // Get unique municipalities
-      const barangayData = data as Barangay[];
-      const uniqueMunicipalities = [...new Set(barangayData.map(item => item.municipality))];
-      return uniqueMunicipalities.sort();
+      const uniqueMunicipalities = [...new Set(data.map(item => item.municipality))];
+      return uniqueMunicipalities;
     }
   });
 
@@ -62,14 +53,13 @@ export const BarangaySelectionModal: React.FC<BarangaySelectionModalProps> = ({
       if (!selectedMunicipality) return [];
       
       const { data, error } = await supabase
-        .rpc('get_public_barangay_data' as any);
+        .from('public_barangays')
+        .select('id, barangayname, municipality, province')
+        .eq('municipality', selectedMunicipality)
+        .order('barangayname');
       
       if (error) throw error;
-      
-      const barangayData = data as Barangay[];
-      return barangayData
-        .filter(barangay => barangay.municipality === selectedMunicipality)
-        .sort((a, b) => a.barangayname.localeCompare(b.barangayname));
+      return data as Barangay[];
     },
     enabled: !!selectedMunicipality
   });
