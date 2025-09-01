@@ -34,7 +34,7 @@ export const BarangaySelectionModal: React.FC<BarangaySelectionModalProps> = ({
     queryKey: ['municipalities'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('barangays')
+        .from('public_barangays')
         .select('municipality')
         .order('municipality');
       
@@ -53,7 +53,7 @@ export const BarangaySelectionModal: React.FC<BarangaySelectionModalProps> = ({
       if (!selectedMunicipality) return [];
       
       const { data, error } = await supabase
-        .from('barangays')
+        .from('public_barangays')
         .select('id, barangayname, municipality, province')
         .eq('municipality', selectedMunicipality)
         .order('barangayname');
