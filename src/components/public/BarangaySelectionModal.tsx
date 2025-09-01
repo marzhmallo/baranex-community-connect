@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,8 +16,6 @@ interface BarangaySelectionModalProps {
 interface Barangay {
   id: string;
   barangayname: string;
-  municipality: string;
-  province: string;
 }
 
 export const BarangaySelectionModal: React.FC<BarangaySelectionModalProps> = ({
@@ -25,49 +23,20 @@ export const BarangaySelectionModal: React.FC<BarangaySelectionModalProps> = ({
   onClose,
   contentType
 }) => {
-  const [selectedMunicipality, setSelectedMunicipality] = useState<string>('');
   const [selectedBarangay, setSelectedBarangay] = useState<string>('');
   const navigate = useNavigate();
 
-  // Get municipalities
-  const { data: municipalities, isLoading: municipalitiesLoading } = useQuery({
-    queryKey: ['municipalities'],
+  // Get all barangays using the security definer function
+  const { data: barangays, isLoading: barangaysLoading } = useQuery({
+    queryKey: ['barangays'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('public_barangays')
-        .select('municipality')
-        .order('municipality');
+        .rpc('get_barangay_list' as any);
       
       if (error) throw error;
-      
-      // Get unique municipalities
-      const uniqueMunicipalities = [...new Set(data.map(item => item.municipality))];
-      return uniqueMunicipalities;
+      return data as { id: string; barangayname: string }[];
     }
   });
-
-  // Get barangays for selected municipality
-  const { data: barangays, isLoading: barangaysLoading } = useQuery({
-    queryKey: ['barangays', selectedMunicipality],
-    queryFn: async () => {
-      if (!selectedMunicipality) return [];
-      
-      const { data, error } = await supabase
-        .from('public_barangays')
-        .select('id, barangayname, municipality, province')
-        .eq('municipality', selectedMunicipality)
-        .order('barangayname');
-      
-      if (error) throw error;
-      return data as Barangay[];
-    },
-    enabled: !!selectedMunicipality
-  });
-
-  // Reset barangay selection when municipality changes
-  useEffect(() => {
-    setSelectedBarangay('');
-  }, [selectedMunicipality]);
 
   const handleProceed = () => {
     if (!selectedBarangay) return;
@@ -75,12 +44,12 @@ export const BarangaySelectionModal: React.FC<BarangaySelectionModalProps> = ({
     const selectedBarangayData = barangays?.find(b => b.id === selectedBarangay);
     if (!selectedBarangayData) return;
 
-    // Save selection to localStorage
+    // Save selection to localStorage (limited data available)
     localStorage.setItem('selectedBarangay', JSON.stringify({
       id: selectedBarangayData.id,
       name: selectedBarangayData.barangayname,
-      municipality: selectedBarangayData.municipality,
-      province: selectedBarangayData.province
+      municipality: 'Unknown', // Not available from function
+      province: 'Unknown' // Not available from function
     }));
 
     // Navigate to the selected content page
@@ -114,33 +83,10 @@ export const BarangaySelectionModal: React.FC<BarangaySelectionModalProps> = ({
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Municipality/City</label>
-            <Select value={selectedMunicipality} onValueChange={setSelectedMunicipality}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Municipality/City" />
-              </SelectTrigger>
-              <SelectContent>
-                {municipalitiesLoading ? (
-                  <div className="flex items-center justify-center p-4">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  </div>
-                ) : (
-                  municipalities?.map((municipality) => (
-                    <SelectItem key={municipality} value={municipality}>
-                      {municipality}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
             <label className="text-sm font-medium">Barangay</label>
             <Select 
               value={selectedBarangay} 
               onValueChange={setSelectedBarangay}
-              disabled={!selectedMunicipality}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select Barangay" />
