@@ -898,8 +898,8 @@ const DocumentsPage = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Pending Requests</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{documentStats?.pending || 0}</p>
+                <p className="text-sm font-medium text-muted-foreground">Document Requests</p>
+                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{totalCount || 0}</p>
               </div>
               <div className="bg-orange-100 dark:bg-orange-900/20 p-3 rounded-full">
                 <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
