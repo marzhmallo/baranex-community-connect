@@ -26,13 +26,34 @@ const UserDocumentsPage = () => {
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
   const [trackingFilter, setTrackingFilter] = useState("All Documents");
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editingRequest, setEditingRequest] = useState(null);
+  const [editingRequest, setEditingRequest] = useState<any>(null);
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Define the enriched request type
+  type EnrichedDocumentRequest = {
+    id: string;
+    resident_id: string;
+    type: string;
+    status: string;
+    purpose: string;
+    docnumber: string;
+    created_at: string;
+    updated_at: string;
+    amount?: number;
+    method?: string;
+    notes?: string;
+    receiver?: any;
+    profiles?: {
+      id: string;
+      firstname: string;
+      lastname: string;
+    } | null;
+  } & Record<string, any>;
 
   // Initial data fetch with master loading state
   useEffect(() => {
@@ -68,25 +89,50 @@ const UserDocumentsPage = () => {
     refetch
   } = useQuery({
     queryKey: ['user-document-requests', userProfile?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<EnrichedDocumentRequest[]> => {
       if (!userProfile?.id) return [];
-      const {
-        data,
-        error
-      } = await supabase.from('docrequests')
-        .select(`
-          *,
-          profiles!inner(
-            firstname,
-            lastname
-          )
-        `)
+      
+      // First get all document requests for the user
+      const { data: requests, error: requestsError } = await supabase
+        .from('docrequests')
+        .select('*')
         .eq('resident_id', userProfile.id)
-        .order('created_at', {
-          ascending: false
-        });
-      if (error) throw error;
-      return data || [];
+        .order('created_at', { ascending: false });
+      
+      if (requestsError) throw requestsError;
+      if (!requests || requests.length === 0) return [];
+      
+      // Get all unique resident IDs from the requests
+      const residentIds = [...new Set(requests.map(req => req.resident_id))];
+      
+      // Fetch profile data for all resident IDs
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, firstname, lastname')
+        .in('id', residentIds);
+      
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Still return requests even if profile fetch fails, just without profile data
+        return requests.map(request => ({
+          ...request,
+          profiles: null
+        }));
+      }
+      
+      // Create a map of profile data for quick lookup
+      const profileMap = (profiles || []).reduce((acc: any, profile: any) => {
+        acc[profile.id] = profile;
+        return acc;
+      }, {});
+      
+      // Combine requests with profile data
+      const enrichedRequests: EnrichedDocumentRequest[] = requests.map(request => ({
+        ...request,
+        profiles: profileMap[request.resident_id] || null
+      }));
+      
+      return enrichedRequests;
     },
     enabled: !!userProfile?.id
   });
