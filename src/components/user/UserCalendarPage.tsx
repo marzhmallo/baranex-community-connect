@@ -1,35 +1,16 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from 'react-router-dom';
 import { format, isToday, isEqual, isSameMonth, parse, addDays, subDays, addMonths, subMonths } from "date-fns";
-import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Download, Upload, Edit, Trash2, X, Clock, MapPin, Users, Repeat, Bell, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Eye, Clock, MapPin, Users, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
 import { useBarangaySelection } from '@/hooks/useBarangaySelection';
-import EventForm from "@/components/calendar/EventForm";
 
 export type Event = {
   id: string;
@@ -51,25 +32,6 @@ export type Event = {
   originalEventId?: string;
 };
 
-type EventFormData = {
-  title: string;
-  description: string;
-  location: string;
-  start_date: string;
-  start_time: string;
-  end_date: string;
-  end_time: string;
-  event_type: string;
-  target_audience: string;
-  visibility: string;
-  is_recurring: boolean;
-  frequency: string;
-  interval: number;
-  weekly_days: string[];
-  reminder_enabled: boolean;
-  reminder_time: number;
-};
-
 const eventCategories = [
   { value: "meeting", label: "Meetings", color: "bg-blue-500", bgLight: "bg-blue-100", bgDark: "bg-blue-900/30", text: "text-blue-800", textDark: "text-blue-300" },
   { value: "health", label: "Health", color: "bg-green-500", bgLight: "bg-green-100", bgDark: "bg-green-900/30", text: "text-green-800", textDark: "text-green-300" },
@@ -84,52 +46,16 @@ const UserCalendarPage = () => {
   const { selectedBarangay } = useBarangaySelection();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [showEventForm, setShowEventForm] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [pastPage, setPastPage] = useState(1);
   const eventsPerPage = 5;
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { userProfile, user } = useAuth();
   
   // Get barangay ID from URL params (for public access) or selected barangay (from localStorage)
   const barangayId = searchParams.get('barangay') || selectedBarangay?.id;
-
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormData>({
-    defaultValues: {
-      visibility: 'public',
-      is_recurring: false,
-      frequency: 'none',
-      interval: 1,
-      weekly_days: [],
-      reminder_enabled: false,
-      reminder_time: 30
-    }
-  });
-
-  const [isAllDayCreate, setIsAllDayCreate] = useState(false);
-  const [isAllDayEdit, setIsAllDayEdit] = useState(false);
-
-  // Auto-set times when all-day is toggled
-  useEffect(() => {
-    if (isAllDayCreate) {
-      setValue("start_time", "00:00");
-      setValue("end_time", "23:59");
-    }
-  }, [isAllDayCreate, setValue]);
-
-  // Auto-set times when all-day edit is toggled
-  useEffect(() => {
-    if (isAllDayEdit) {
-      setValue("start_time", "00:00");
-      setValue("end_time", "23:59");
-    }
-  }, [isAllDayEdit, setValue]);
 
   // Fetch events from Supabase
   const { data: events, isLoading } = useQuery({
@@ -146,11 +72,7 @@ const UserCalendarPage = () => {
         .order('start_time', { ascending: true });
       
       if (error) {
-        toast({
-          title: "Error fetching events",
-          description: error.message,
-          variant: "destructive"
-        });
+        console.error('Error fetching events:', error);
         return [];
       }
       return data || [];
@@ -307,191 +229,6 @@ const UserCalendarPage = () => {
     return instances;
   };
 
-  // Helper function to parse RRULE string into form fields
-  const parseRRule = (rrule: string | null | undefined) => {
-    if (!rrule) return { frequency: 'none', interval: 1, weekly_days: [] };
-    
-    const parts = rrule.split(';');
-    const result = { frequency: 'none', interval: 1, weekly_days: [] as string[] };
-    
-    parts.forEach(part => {
-      const [key, value] = part.split('=');
-      switch (key) {
-        case 'FREQ':
-          result.frequency = value.toLowerCase();
-          break;
-        case 'INTERVAL':
-          result.interval = parseInt(value);
-          break;
-        case 'BYDAY':
-          const dayMap: { [key: string]: string } = {
-            'MO': 'monday', 'TU': 'tuesday', 'WE': 'wednesday', 
-            'TH': 'thursday', 'FR': 'friday', 'SA': 'saturday', 'SU': 'sunday'
-          };
-          result.weekly_days = value.split(',').map(day => dayMap[day]).filter(Boolean);
-          break;
-      }
-    });
-    
-    return result;
-  };
-
-  // Helper function to generate RRULE string
-  const generateRRule = (data: EventFormData) => {
-    if (!data.is_recurring || data.frequency === 'none') return null;
-    
-    let rrule = `FREQ=${data.frequency.toUpperCase()}`;
-    
-    if (data.interval > 1) {
-      rrule += `;INTERVAL=${data.interval}`;
-    }
-    
-    if (data.frequency === 'weekly' && data.weekly_days.length > 0) {
-      const dayMap: { [key: string]: string } = {
-        'monday': 'MO', 'tuesday': 'TU', 'wednesday': 'WE', 
-        'thursday': 'TH', 'friday': 'FR', 'saturday': 'SA', 'sunday': 'SU'
-      };
-      const days = data.weekly_days.map(day => dayMap[day]).join(',');
-      rrule += `;BYDAY=${days}`;
-    }
-    
-    // Use end date as UNTIL condition
-    if (data.end_date) {
-      const endDate = new Date(data.end_date);
-      endDate.setHours(23, 59, 59, 999);
-      rrule += `;UNTIL=${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
-    }
-    
-    return rrule;
-  };
-
-  // Create event mutation
-  const createEventMutation = useMutation({
-    mutationFn: async (eventData: EventFormData) => {
-      let startDateTime = new Date(`${eventData.start_date}T${eventData.start_time}`);
-      let endDateTime = new Date(`${eventData.end_date}T${eventData.end_time}`);
-
-      // If all-day is checked, set times to beginning and end of day
-      if (isAllDayCreate) {
-        startDateTime = new Date(eventData.start_date);
-        startDateTime.setHours(0, 0, 0, 0);
-        endDateTime = new Date(eventData.end_date);
-        endDateTime.setHours(23, 59, 59, 999);
-      }
-
-      const rrule = generateRRule(eventData);
-
-      const { error } = await supabase
-        .from('events')
-        .insert({
-          title: eventData.title,
-          description: eventData.description,
-          location: eventData.location,
-          start_time: startDateTime.toISOString(),
-          end_time: endDateTime.toISOString(),
-          event_type: eventData.event_type,
-          target_audience: eventData.target_audience,
-          visibility: eventData.visibility,
-          reccuring: eventData.is_recurring,
-          rrule: rrule,
-          brgyid: userProfile?.brgyid || "",
-          created_by: user?.id || ""
-        });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
-      setShowEventForm(false);
-      setIsAllDayCreate(false);
-      reset();
-      toast({
-        title: "Success",
-        description: "Event created successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error creating event",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Update event mutation
-  const updateEventMutation = useMutation({
-    mutationFn: async (eventData: EventFormData & { id: string; isAllDay?: boolean }) => {
-      let startDateTime = new Date(`${eventData.start_date}T${eventData.start_time}`);
-      let endDateTime = new Date(`${eventData.end_date}T${eventData.end_time}`);
-
-      // If all-day is checked, set times to beginning and end of day
-      if (eventData.isAllDay) {
-        startDateTime = new Date(eventData.start_date);
-        startDateTime.setHours(0, 0, 0, 0);
-        endDateTime = new Date(eventData.end_date);
-        endDateTime.setHours(23, 59, 59, 999);
-      }
-
-      const rrule = generateRRule(eventData);
-
-      const { error } = await supabase
-        .from('events')
-        .update({
-          title: eventData.title,
-          description: eventData.description,
-          location: eventData.location,
-          start_time: startDateTime.toISOString(),
-          end_time: endDateTime.toISOString(),
-          event_type: eventData.event_type,
-          target_audience: eventData.target_audience,
-          visibility: eventData.visibility,
-          reccuring: eventData.is_recurring,
-          rrule: rrule,
-        })
-        .eq('id', eventData.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
-      setShowEditForm(false);
-      setSelectedEvent(null);
-      reset();
-      toast({
-        title: "Success",
-        description: "Event updated successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error updating event",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Delete event mutation
-  const deleteEventMutation = useMutation({
-    mutationFn: async (eventId: string) => {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', eventId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
-      setShowEventDetails(false);
-      toast({
-        title: "Success",
-        description: "Event deleted successfully",
-      });
-    }
-  });
-
   const handlePreviousMonth = () => {
     setCurrentDate(prev => subMonths(prev, 1));
   };
@@ -500,202 +237,72 @@ const UserCalendarPage = () => {
     setCurrentDate(prev => addMonths(prev, 1));
   };
 
-  const getEventsForDate = (date: Date) => {
-    if (!events) return [];
-    
-    // Get all events and generate recurring instances
-    const allEventInstances: any[] = [];
-    
-    events.forEach((event: any) => {
-      if (event.reccuring && event.rrule) {
-        // Generate recurring instances for a reasonable time window
-        const windowStart = new Date(date);
-        windowStart.setMonth(windowStart.getMonth() - 2); // 2 months before
-        const windowEnd = new Date(date);
-        windowEnd.setMonth(windowEnd.getMonth() + 12); // 12 months after
-        
-        const instances = generateRecurringEvents(event, windowStart, windowEnd);
-        allEventInstances.push(...instances);
-      } else {
-        allEventInstances.push(event);
-      }
-    });
-    
-    // Filter events for the specific date
-    return allEventInstances.filter((event: any) => {
-      const eventDate = new Date(event.start_time);
-      return eventDate.getDate() === date.getDate() &&
-             eventDate.getMonth() === date.getMonth() &&
-             eventDate.getFullYear() === date.getFullYear();
-    });
-  };
-
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
-    const dateEvents = getEventsForDate(date);
-    if (dateEvents.length > 0) {
-      setShowEventDetails(true);
-    }
+    setShowEventDetails(true);
   };
 
-  const handleEventClick = (event: any) => {
+  const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
     setShowEventDetails(true);
   };
 
-  const handleEditEvent = (event: any) => {
-    // For recurring instances, find and edit the original event
-    const eventToEdit = event.isRecurringInstance && events 
-      ? events.find(e => e.id === event.originalEventId) || event
-      : event;
-      
-    setSelectedEvent(eventToEdit);
-    // Check if event is all-day by comparing times
-    const startDate = new Date(eventToEdit.start_time);
-    const endDate = new Date(eventToEdit.end_time);
-    const isAllDay = startDate.getHours() === 0 && startDate.getMinutes() === 0 && 
-                     endDate.getHours() === 23 && endDate.getMinutes() === 59;
+  // Helper function to get events for a specific date
+  const getEventsForDate = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return getAllEventInstances()?.filter(event => {
+      const eventDate = format(new Date(event.start_time), 'yyyy-MM-dd');
+      return eventDate === dateStr;
+    }) || [];
+  };
+
+  // Helper function to get all event instances including recurring ones
+  const getAllEventInstances = () => {
+    if (!events) return [];
     
-    setIsAllDayEdit(isAllDay);
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     
-    // Parse RRULE for recurring event fields
-    const rruleData = parseRRule(eventToEdit.rrule);
+    // Extend date range to cover the entire calendar view (includes previous/next month days)
+    const calendarStart = subDays(startOfMonth, startOfMonth.getDay());
+    const calendarEnd = addDays(endOfMonth, 6 - endOfMonth.getDay());
     
-    // Populate form with event data
-    setValue("title", eventToEdit.title);
-    setValue("description", eventToEdit.description || "");
-    setValue("location", eventToEdit.location || "");
-    setValue("start_date", format(startDate, "yyyy-MM-dd"));
-    setValue("start_time", format(startDate, "HH:mm"));
-    setValue("end_date", format(endDate, "yyyy-MM-dd"));
-    setValue("end_time", format(endDate, "HH:mm"));
-    setValue("event_type", eventToEdit.event_type || "");
-    setValue("target_audience", eventToEdit.target_audience || "");
-    setValue("visibility", eventToEdit.visibility || 'public');
-    setValue("is_recurring", eventToEdit.reccuring || false);
-    setValue("frequency", rruleData.frequency);
-    setValue("interval", rruleData.interval);
-    setValue("weekly_days", rruleData.weekly_days);
+    const allInstances: Event[] = [];
     
-    setShowEditForm(true);
-    setShowEventDetails(false);
-  };
-
-  const closeEventForm = () => {
-    setShowEventForm(false);
-    setSelectedDate(null);
-  };
-
-  const closeEditForm = () => {
-    setShowEditForm(false);
-    setSelectedEvent(null);
-  };
-
-  const handleFormSubmit = () => {
-    // Refetch events after create/update
-    queryClient.invalidateQueries({ queryKey: ['events'] });
-    setShowEventForm(false);
-    setShowEditForm(false);
-    setSelectedDate(null);
-    setSelectedEvent(null);
-  };
-
-  const handleDeleteEvent = (eventId: string) => {
-    setShowDeleteDialog(true);
-  };
-
-  const confirmDelete = () => {
-    if (selectedEvent) {
-      // For recurring instances, delete the original event
-      const eventIdToDelete = selectedEvent.isRecurringInstance && selectedEvent.originalEventId 
-        ? selectedEvent.originalEventId 
-        : selectedEvent.id;
-      deleteEventMutation.mutate(eventIdToDelete);
-    }
-    setShowDeleteDialog(false);
-  };
-
-  const onSubmit = (data: EventFormData) => {
-    createEventMutation.mutate(data);
-  };
-
-  const onEditSubmit = (data: EventFormData) => {
-    if (selectedEvent) {
-      updateEventMutation.mutate({ ...data, id: selectedEvent.id, isAllDay: isAllDayEdit });
-    }
+    events.forEach(event => {
+      const eventInstances = generateRecurringEvents(event, calendarStart, calendarEnd);
+      allInstances.push(...eventInstances);
+    });
+    
+    return allInstances;
   };
 
   // Generate calendar days
   const generateCalendarDays = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
-    
-    const daysInMonth = lastDayOfMonth.getDate();
-    const startDayOfWeek = firstDayOfMonth.getDay();
-    
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const startOfCalendar = subDays(startOfMonth, startOfMonth.getDay());
+    const endOfCalendar = addDays(endOfMonth, 6 - endOfMonth.getDay());
+
     const days = [];
-    
-    // Previous month days
-    for (let i = 0; i < startDayOfWeek; i++) {
-      const prevMonthDay = new Date(year, month, -startDayOfWeek + i + 1);
+    let day = startOfCalendar;
+
+    while (day <= endOfCalendar) {
+      const eventsForDay = getEventsForDate(day);
       days.push({
-        date: prevMonthDay,
-        isCurrentMonth: false,
-        events: getEventsForDate(prevMonthDay)
+        date: new Date(day),
+        isCurrentMonth: isSameMonth(day, currentDate),
+        events: eventsForDay
       });
+      day = addDays(day, 1);
     }
-    
-    // Current month days
-    for (let i = 1; i <= daysInMonth; i++) {
-      const currentDay = new Date(year, month, i);
-      days.push({
-        date: currentDay,
-        isCurrentMonth: true,
-        events: getEventsForDate(currentDay)
-      });
-    }
-    
-    // Next month days
-    const remainingDays = 42 - days.length;
-    for (let i = 1; i <= remainingDays; i++) {
-      const nextMonthDay = new Date(year, month + 1, i);
-      days.push({
-        date: nextMonthDay,
-        isCurrentMonth: false,
-        events: getEventsForDate(nextMonthDay)
-      });
-    }
-    
+
     return days;
   };
 
   const calendarDays = generateCalendarDays();
   
-  // Separate upcoming and past events (including recurring instances)
   const now = new Date();
-  const getAllEventInstances = () => {
-    if (!events) return [];
-    
-    const allInstances: any[] = [];
-    const windowStart = new Date(now);
-    windowStart.setMonth(windowStart.getMonth() - 1); // 1 month ago
-    const windowEnd = new Date(now);
-    windowEnd.setMonth(windowEnd.getMonth() + 6); // 6 months ahead
-    
-    events.forEach((event: any) => {
-      if (event.reccuring && event.rrule) {
-        const instances = generateRecurringEvents(event, windowStart, windowEnd);
-        allInstances.push(...instances);
-      } else {
-        allInstances.push(event);
-      }
-    });
-    
-    return allInstances;
-  };
   
   // Helper function to deduplicate recurring events for list display
   const deduplicateRecurringEvents = (eventList: Event[]) => {
@@ -755,30 +362,8 @@ const UserCalendarPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold">Barangay Calendar</h1>
-                <p className="text-primary-foreground/80 mt-1">Manage community events and activities</p>
+                <p className="text-primary-foreground/80 mt-1">View community events and activities</p>
               </div>
-              <Button 
-                onClick={() => setShowEventForm(true)}
-                className="bg-background text-foreground hover:bg-muted border border-border"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Event
-              </Button>
-              {showEventForm && (
-                <EventForm
-                  selectedDate={selectedDate}
-                  onClose={closeEventForm}
-                  onSubmit={handleFormSubmit}
-                />
-              )}
-
-              {showEditForm && selectedEvent && (
-                <EventForm
-                  event={selectedEvent}
-                  onClose={closeEditForm}
-                  onSubmit={handleFormSubmit}
-                />
-              )}
             </div>
           </div>
 
@@ -898,35 +483,30 @@ const UserCalendarPage = () => {
                 </div>
                 <div className="grid grid-cols-7 gap-1 bg-muted p-1 rounded-lg">
                   {Array.from({ length: 7 }, (_, i) => {
-                    const weekStart = new Date(currentDate);
-                    weekStart.setDate(currentDate.getDate() - currentDate.getDay() + i);
-                    const dayEvents = getEventsForDate(weekStart);
-                    const isSelected = selectedDate && isEqual(weekStart, selectedDate);
+                    const weekStart = subDays(currentDate, currentDate.getDay());
+                    const dayDate = addDays(weekStart, i);
+                    const dayEvents = getEventsForDate(dayDate);
                     
                     return (
                       <div
                         key={i}
-                        onClick={() => handleDateClick(weekStart)}
-                        className={`
-                          bg-card border border-border p-4 min-h-32 rounded hover:bg-accent cursor-pointer transition-colors duration-200
-                          ${isToday(weekStart) ? "bg-primary/10 border-primary/30" : ""}
-                          ${isSelected ? "ring-2 ring-primary" : ""}
-                        `}
+                        className="bg-card border border-border p-3 min-h-32 rounded hover:bg-accent cursor-pointer transition-colors"
+                        onClick={() => handleDateClick(dayDate)}
                       >
-                        <div className={`text-lg font-bold mb-2 ${isToday(weekStart) ? "text-primary" : "text-card-foreground"}`}>
-                          {format(weekStart, "d")}
+                        <div className={`text-sm font-semibold mb-2 ${isToday(dayDate) ? "text-primary" : "text-card-foreground"}`}>
+                          {format(dayDate, "d")}
                         </div>
                         <div className="space-y-1">
-                          {dayEvents.map((event, j) => {
+                          {dayEvents.map((event, eventIndex) => {
                             const category = eventCategories.find(cat => cat.value === event.event_type);
                             return (
                               <div
-                                key={j}
+                                key={eventIndex}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEventClick(event);
                                 }}
-                                className={`text-xs px-2 py-1 rounded cursor-pointer transition-colors duration-200
+                                className={`text-xs px-2 py-1 rounded cursor-pointer transition-colors
                                   ${category ? `${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}` : 'bg-muted text-muted-foreground'}
                                   hover:opacity-80
                                 `}
@@ -945,31 +525,21 @@ const UserCalendarPage = () => {
 
             {/* Day View */}
             {view === 'day' && (
-              <div className="bg-card border border-border rounded-lg p-6">
-                <div className="mb-4">
-                  <h3 className="text-2xl font-bold text-card-foreground">
-                    {format(currentDate, "EEEE, MMMM d, yyyy")}
-                  </h3>
-                  {isToday(currentDate) && (
-                    <span className="text-sm bg-primary/20 text-primary px-2 py-1 rounded mt-2 inline-block">
-                      Today
-                    </span>
-                  )}
-                </div>
+              <div className="bg-card border border-border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4 text-card-foreground">
+                  Events for {format(currentDate, "EEEE, MMMM d, yyyy")}
+                </h3>
                 <div className="space-y-3">
-                  {getEventsForDate(currentDate).length > 0 ? (
-                    getEventsForDate(currentDate).map((event) => {
-                      const category = eventCategories.find(cat => cat.value === event.event_type);
-                      return (
-                        <div
-                          key={event.id}
-                          onClick={() => handleEventClick(event)}
-                          className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                        >
-                          <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
-                            <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
-                          </div>
-                          <div className="flex-1">
+                  {getEventsForDate(currentDate).map((event) => {
+                    const category = eventCategories.find(cat => cat.value === event.event_type);
+                    return (
+                      <div
+                        key={event.id}
+                        onClick={() => handleEventClick(event)}
+                        className="p-3 border border-border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
                             <h4 className="font-semibold text-card-foreground">{event.title}</h4>
                             <p className="text-sm text-muted-foreground">
                               {format(new Date(event.start_time), "h:mm a")} - {format(new Date(event.end_time), "h:mm a")}
@@ -977,36 +547,33 @@ const UserCalendarPage = () => {
                             {event.location && (
                               <p className="text-sm text-muted-foreground">{event.location}</p>
                             )}
-                            {event.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
-                            )}
                           </div>
+                          {category && (
+                            <span className={`px-2 py-1 text-xs rounded-full ${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}`}>
+                              {category.label}
+                            </span>
+                          )}
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No events scheduled for this day.</p>
-                    </div>
+                      </div>
+                    );
+                  })}
+                  {getEventsForDate(currentDate).length === 0 && (
+                    <p className="text-muted-foreground text-center py-8">No events scheduled for this day.</p>
                   )}
                 </div>
               </div>
             )}
           </div>
-        </div>
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 bg-muted/30">
             <div className="bg-card border border-border rounded-lg shadow-lg p-6">
-              <h3 className="text-xl font-bold text-card-foreground mb-4">Events</h3>
+              <h3 className="text-xl font-bold text-card-foreground mb-4">Upcoming Events</h3>
               <Tabs defaultValue="upcoming" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="upcoming">Upcoming ({upcomingEvents.length})</TabsTrigger>
-                  <TabsTrigger value="past">Past ({pastEvents.length})</TabsTrigger>
+                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                  <TabsTrigger value="past">Past Events</TabsTrigger>
                 </TabsList>
-                
-                <TabsContent value="upcoming" className="space-y-4 mt-4">
+                <TabsContent value="upcoming" className="space-y-4">
                   {upcomingEvents.length > 0 ? (
                     <>
                       {upcomingEvents.slice((upcomingPage - 1) * eventsPerPage, upcomingPage * eventsPerPage).map((event) => {
@@ -1025,35 +592,14 @@ const UserCalendarPage = () => {
                                 <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
                               )}
                               <div className="flex items-center space-x-2 mt-2">
-                                 <Button 
-                                   size="sm" 
-                                   variant="ghost" 
-                                   onClick={() => handleEventClick(event as any)}
-                                   className="hover:bg-muted"
-                                 >
-                                   <Eye className="h-3 w-3 mr-1" />
-                                   View
-                                 </Button>
-                                 <Button 
-                                   size="sm" 
-                                   variant="ghost" 
-                                   onClick={() => handleEditEvent(event as any)}
-                                   className="hover:bg-muted"
-                                 >
-                                   <Edit className="h-3 w-3 mr-1" />
-                                   Edit
-                                 </Button>
-                                 <Button 
-                                   size="sm" 
-                                   variant="ghost" 
-                                   onClick={() => {
-                                     setSelectedEvent(event as any);
-                                     handleDeleteEvent(event.id);
-                                   }}
-                                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                 >
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  Delete
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => handleEventClick(event as any)}
+                                  className="hover:bg-muted"
+                                >
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  View
                                 </Button>
                               </div>
                             </div>
@@ -1094,8 +640,7 @@ const UserCalendarPage = () => {
                     <p className="text-muted-foreground text-center py-8">No upcoming events.</p>
                   )}
                 </TabsContent>
-
-                <TabsContent value="past" className="space-y-4 mt-4">
+                <TabsContent value="past" className="space-y-4">
                   {pastEvents.length > 0 ? (
                     <>
                       {pastEvents.slice((pastPage - 1) * eventsPerPage, pastPage * eventsPerPage).map((event) => {
@@ -1114,26 +659,14 @@ const UserCalendarPage = () => {
                                 <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
                               )}
                               <div className="flex items-center space-x-2 mt-2">
-                                 <Button 
-                                   size="sm" 
-                                   variant="ghost" 
-                                   onClick={() => handleEventClick(event as any)}
-                                   className="hover:bg-muted"
-                                 >
-                                   <Eye className="h-3 w-3 mr-1" />
-                                   View
-                                 </Button>
-                                 <Button 
-                                   size="sm" 
-                                   variant="ghost" 
-                                   onClick={() => {
-                                     setSelectedEvent(event as any);
-                                     handleDeleteEvent(event.id);
-                                   }}
-                                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                 >
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  Delete
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => handleEventClick(event as any)}
+                                  className="hover:bg-muted"
+                                >
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  View
                                 </Button>
                               </div>
                             </div>
@@ -1176,55 +709,24 @@ const UserCalendarPage = () => {
                 </TabsContent>
               </Tabs>
             </div>
-          </div>
 
-          <div className="space-y-6">
-            <div className="bg-card border border-border rounded-lg shadow-lg p-6">
-              <h3 className="text-xl font-bold text-card-foreground mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between hover:bg-muted" 
-                  onClick={() => setShowEventForm(true)}
-                >
-                  <div className="flex items-center">
-                    <Plus className="mr-3 h-4 w-4 text-primary" />
-                    <span className="font-medium">Add New Event</span>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </Button>
-                <Button variant="ghost" className="w-full justify-between hover:bg-muted">
-                  <div className="flex items-center">
-                    <Upload className="mr-3 h-4 w-4 text-primary" />
-                    <span className="font-medium">Import Events</span>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </Button>
-                <Button variant="ghost" className="w-full justify-between hover:bg-muted">
-                  <div className="flex items-center">
-                    <Download className="mr-3 h-4 w-4 text-primary" />
-                    <span className="font-medium">Export Calendar</span>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="bg-card border border-border rounded-lg shadow-lg p-6">
-              <h3 className="text-xl font-bold text-card-foreground mb-4">Event Categories</h3>
-              <div className="space-y-3">
-                {eventCategories.map((category) => {
-                  const categoryCount = events?.filter(event => event.event_type === category.value).length || 0;
-                  return (
-                    <div key={category.value} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className={`w-3 h-3 ${category.color} rounded-full mr-3`}></div>
-                        <span className="text-sm text-card-foreground">{category.label}</span>
+            <div className="space-y-6">
+              <div className="bg-card border border-border rounded-lg shadow-lg p-6">
+                <h3 className="text-xl font-bold text-card-foreground mb-4">Event Categories</h3>
+                <div className="space-y-3">
+                  {eventCategories.map((category) => {
+                    const categoryCount = events?.filter(event => event.event_type === category.value).length || 0;
+                    return (
+                      <div key={category.value} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 ${category.color} rounded-full mr-3`}></div>
+                          <span className="text-sm text-card-foreground">{category.label}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{categoryCount}</span>
                       </div>
-                      <span className="text-sm text-muted-foreground">{categoryCount}</span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -1344,30 +846,10 @@ const UserCalendarPage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-between pt-6 border-t">
+              <div className="flex justify-end pt-6 border-t">
                 <Button variant="outline" onClick={() => setShowEventDetails(false)} className="border-border">
                   Close
                 </Button>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleEditEvent(selectedEvent)}
-                    className="border-border"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Event
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => {
-                      setShowEventDetails(false);
-                      handleDeleteEvent(selectedEvent.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Event
-                  </Button>
-                </div>
               </div>
             </div>
           ) : (
@@ -1392,28 +874,6 @@ const UserCalendarPage = () => {
           )}
         </DialogContent>
       </Dialog>
-
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-card-foreground">Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
-              This will permanently delete the event "{selectedEvent?.title}". This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-border">Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-            >
-              Delete Event
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
