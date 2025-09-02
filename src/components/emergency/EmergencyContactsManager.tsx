@@ -227,22 +227,33 @@ const EmergencyContactsManager = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Emergency Contacts ({contacts.length})</h3>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-500/20 rounded-full">
+            <Phone className="h-6 w-6 text-red-600 dark:text-red-400" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Emergency Contacts</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{contacts.length} contacts available</p>
+          </div>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={openAddDialog}>
+            <Button 
+              onClick={openAddDialog}
+              className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Contact
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>
+          <DialogContent className="sm:max-w-[500px] border-0 shadow-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm">
+            <DialogHeader className="space-y-3">
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
                 {editingContact ? 'Edit Emergency Contact' : 'Add Emergency Contact'}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-gray-600 dark:text-gray-300">
                 {editingContact ? 'Update the emergency contact information.' : 'Add a new emergency contact for your barangay.'}
               </DialogDescription>
             </DialogHeader>
@@ -337,11 +348,19 @@ const EmergencyContactsManager = () => {
                   )}
                 />
 
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <DialogFooter className="gap-2 pt-6">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsDialogOpen(false)}
+                    className="border-gray-300 dark:border-gray-600"
+                  >
                     Cancel
                   </Button>
-                  <Button type="submit">
+                  <Button 
+                    type="submit"
+                    className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
                     {editingContact ? 'Update Contact' : 'Add Contact'}
                   </Button>
                 </DialogFooter>
@@ -352,56 +371,67 @@ const EmergencyContactsManager = () => {
       </div>
 
       {contacts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {contacts.map((contact) => (
-            <Card key={contact.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
+            <Card key={contact.id} className="group border-0 shadow-xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden">
+              <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 border-b border-gray-200/50 dark:border-gray-600/50">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{getTypeIcon(contact.type)}</span>
-                    <Badge variant={getTypeColor(contact.type) as any}>
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm group-hover:scale-110 transition-transform duration-200">
+                      {getTypeIcon(contact.type)}
+                    </div>
+                    <Badge 
+                      variant={getTypeColor(contact.type) as any}
+                      className="px-3 py-1 font-medium shadow-sm group-hover:shadow-md transition-shadow duration-200"
+                    >
                       {lowercaseToCapitalize(contact.type)}
                     </Badge>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => openEditDialog(contact)}
+                      className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => deleteContact(contact.id)}
+                      className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                     </Button>
                   </div>
                 </div>
-                <CardTitle className="text-lg">{contact.name}</CardTitle>
+                <CardTitle className="text-lg text-gray-800 dark:text-gray-200 mt-2">{contact.name}</CardTitle>
                 {contact.description && (
-                  <CardDescription>{contact.description}</CardDescription>
+                  <CardDescription className="text-gray-600 dark:text-gray-400">{contact.description}</CardDescription>
                 )}
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3 p-4">
                 <Button 
                   variant="outline" 
-                  className="w-full justify-start"
+                  className="w-full justify-start h-11 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-700 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/50 dark:hover:to-emerald-900/50 hover:shadow-md transition-all duration-200"
                   onClick={() => callContact(contact.phone_number, contact.name)}
                 >
-                  <Phone className="h-4 w-4 mr-2" />
-                  {contact.phone_number}
+                  <div className="p-1 bg-green-500/20 rounded-full mr-3">
+                    <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <span className="font-medium">{contact.phone_number}</span>
                 </Button>
                 {contact.email && (
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-start"
+                    className="w-full justify-start h-11 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:shadow-sm transition-all duration-200"
                     onClick={() => window.open(`mailto:${contact.email}`)}
                   >
-                    <Mail className="h-4 w-4 mr-2" />
-                    {contact.email}
+                    <div className="p-1 bg-blue-500/20 rounded-full mr-3">
+                      <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{contact.email}</span>
                   </Button>
                 )}
               </CardContent>
@@ -409,14 +439,19 @@ const EmergencyContactsManager = () => {
           ))}
         </div>
       ) : (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Phone className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Emergency Contacts</h3>
-            <p className="text-muted-foreground mb-4">
-              Start by adding emergency contacts for your barangay.
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+          <CardContent className="text-center py-12">
+            <div className="p-4 bg-red-500/10 rounded-full w-fit mx-auto mb-6">
+              <Phone className="h-12 w-12 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">No Emergency Contacts</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+              Start by adding emergency contacts for your barangay to ensure quick access during emergencies.
             </p>
-            <Button onClick={openAddDialog}>
+            <Button 
+              onClick={openAddDialog}
+              className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add First Contact
             </Button>

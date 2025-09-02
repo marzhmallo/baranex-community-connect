@@ -431,73 +431,88 @@ const EmergencyDashboard = () => {
     <div className="space-y-6">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 hover:shadow-2xl transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Emergency Contacts</CardTitle>
-            <Phone className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Emergency Contacts</CardTitle>
+            <div className="p-2 bg-blue-500/20 rounded-full">
+              <Phone className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.emergencyContacts}</div>
-            <p className="text-xs text-muted-foreground">Active contacts</p>
+            <div className="text-3xl font-bold text-blue-800 dark:text-blue-200">{stats.emergencyContacts}</div>
+            <p className="text-xs text-blue-600/80 dark:text-blue-400/80">Active contacts</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50 hover:shadow-2xl transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Risk Zones</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-red-700 dark:text-red-300">Risk Zones</CardTitle>
+            <div className="p-2 bg-red-500/20 rounded-full">
+              <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.disasterZones}</div>
-            <p className="text-xs text-muted-foreground">Mapped areas</p>
+            <div className="text-3xl font-bold text-red-800 dark:text-red-200">{stats.disasterZones}</div>
+            <p className="text-xs text-red-600/80 dark:text-red-400/80">Mapped areas</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 hover:shadow-2xl transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Evacuation Centers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Evacuation Centers</CardTitle>
+            <div className="p-2 bg-green-500/20 rounded-full">
+              <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.availableCenters}/{stats.evacuationCenters}</div>
-            <p className="text-xs text-muted-foreground">Available centers</p>
+            <div className="text-3xl font-bold text-green-800 dark:text-green-200">{stats.availableCenters}/{stats.evacuationCenters}</div>
+            <p className="text-xs text-green-600/80 dark:text-green-400/80">Available centers</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 hover:shadow-2xl transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Capacity</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Capacity</CardTitle>
+            <div className="p-2 bg-purple-500/20 rounded-full">
+              <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.currentOccupancy}/{stats.totalCapacity}</div>
-            <p className="text-xs text-muted-foreground">Current occupancy</p>
+            <div className="text-3xl font-bold text-purple-800 dark:text-purple-200">{stats.currentOccupancy}/{stats.totalCapacity}</div>
+            <p className="text-xs text-purple-600/80 dark:text-purple-400/80">Current occupancy</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Emergency Contacts */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Phone className="h-5 w-5" />
+      <Card className="border-0 shadow-xl bg-gradient-to-r from-orange-50/50 via-red-50/50 to-pink-50/50 dark:from-orange-950/30 dark:via-red-950/30 dark:to-pink-950/30 backdrop-blur-sm">
+        <CardHeader className="bg-gradient-to-r from-red-500/10 to-orange-500/10 dark:from-red-500/20 dark:to-orange-500/20 rounded-t-lg border-b border-red-200/30 dark:border-red-700/30">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 bg-red-500/20 rounded-full">
+              <Phone className="h-5 w-5 text-red-600 dark:text-red-400" />
+            </div>
             Quick Emergency Contacts
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {quickContacts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {quickContacts.map((contact) => (
-                <Card key={contact.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                <Card key={contact.id} className="group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-105 border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-lg">{getContactTypeIcon(contact.type)}</span>
-                      <Badge variant={getContactTypeColor(contact.type) as any}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-2xl group-hover:scale-110 transition-transform duration-200">
+                        {getContactTypeIcon(contact.type)}
+                      </div>
+                      <Badge 
+                        variant={getContactTypeColor(contact.type) as any}
+                        className="group-hover:shadow-lg transition-shadow duration-200"
+                      >
                         {lowercaseToCapitalize(contact.type)}
                       </Badge>
                     </div>
-                    <h4 className="font-semibold text-sm mb-1">{contact.name}</h4>
-                    <Button 
+                    <h4 className="font-semibold text-sm mb-3 text-gray-800 dark:text-gray-200">{contact.name}</h4>
+                    <Button
                       variant="outline" 
                       size="sm" 
                       className="w-full"
@@ -520,47 +535,76 @@ const EmergencyDashboard = () => {
 
       {/* Status Indicators */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">System Status</CardTitle>
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/50 dark:to-emerald-900/50">
+          <CardHeader className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 dark:from-green-500/20 dark:to-emerald-500/20 rounded-t-lg border-b border-green-200/30 dark:border-green-700/30">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <div className="p-2 bg-green-500/20 rounded-full">
+                <Shield className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+              System Status
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span>Emergency Response System</span>
-              <Badge variant="default" className="bg-green-500">Online</Badge>
+          <CardContent className="space-y-4 p-6">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+              <span className="font-medium">Emergency Response System</span>
+              <Badge className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700">
+                🟢 Online
+              </Badge>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Contact Database</span>
-              <Badge variant="default" className="bg-green-500">Active</Badge>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+              <span className="font-medium">Contact Database</span>
+              <Badge className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700">
+                🟢 Active
+              </Badge>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Evacuation Centers</span>
-              <Badge variant={stats.availableCenters > 0 ? "default" : "destructive"}>
-                {stats.availableCenters > 0 ? "Ready" : "Unavailable"}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+              <span className="font-medium">Evacuation Centers</span>
+              <Badge className={stats.availableCenters > 0 
+                ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700" 
+                : "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"
+              }>
+                {stats.availableCenters > 0 ? "🟢 Ready" : "🔴 Unavailable"}
               </Badge>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Quick Actions</CardTitle>
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-50 to-red-100 dark:from-orange-950/50 dark:to-red-900/50">
+          <CardHeader className="bg-gradient-to-r from-orange-500/10 to-red-500/10 dark:from-orange-500/20 dark:to-red-500/20 rounded-t-lg border-b border-orange-200/30 dark:border-orange-700/30">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <div className="p-2 bg-orange-500/20 rounded-full">
+                <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              </div>
+              Quick Actions
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              <AlertTriangle className="h-4 w-4 mr-2" />
+          <CardContent className="space-y-3 p-6">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start h-12 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 hover:bg-orange-100/80 dark:hover:bg-orange-900/30 hover:shadow-lg transition-all duration-200"
+            >
+              <div className="p-1 bg-red-500/20 rounded-full mr-3">
+                <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+              </div>
               Send Emergency Alert
             </Button>
             <Button 
               variant="outline" 
-              className="w-full justify-start"
+              className="w-full justify-start h-12 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 hover:bg-orange-100/80 dark:hover:bg-orange-900/30 hover:shadow-lg transition-all duration-200"
               onClick={handleViewRiskMap}
             >
-              <MapPin className="h-4 w-4 mr-2" />
+              <div className="p-1 bg-blue-500/20 rounded-full mr-3">
+                <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
               View Risk Map
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Navigation className="h-4 w-4 mr-2" />
+            <Button 
+              variant="outline" 
+              className="w-full justify-start h-12 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 hover:bg-orange-100/80 dark:hover:bg-orange-900/30 hover:shadow-lg transition-all duration-200"
+            >
+              <div className="p-1 bg-green-500/20 rounded-full mr-3">
+                <Navigation className="h-4 w-4 text-green-600 dark:text-green-400" />
+              </div>
               Plan Evacuation
             </Button>
           </CardContent>
