@@ -308,7 +308,15 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
             <h3 className="text-xl font-semibold text-card-foreground mb-2">{announcement.title}</h3>
             <p className="text-muted-foreground mb-4 line-clamp-3">{announcement.content}</p>
             
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                {announcement.audience}
+              </div>
+              <span>{formatTimeAgo(announcement.created_at)}</span>
+            </div>
+            
+            <div className="flex items-center justify-center">
               <Button 
                 variant="outline" 
                 size="sm"
@@ -318,14 +326,6 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
                 <Eye className="h-4 w-4" />
                 Read More
               </Button>
-            </div>
-            
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                {announcement.audience}
-              </div>
-              <span>{formatTimeAgo(announcement.created_at)}</span>
             </div>
           </div>
         ))}
