@@ -276,33 +276,37 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
                 {getStatusBadge(announcement)}
               </div>
               
-              {userProfile?.role === 'admin' && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="p-2 hover:bg-muted rounded-full transition-colors duration-200">
-                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-[120px]">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="p-2 hover:bg-muted rounded-full transition-colors duration-200">
+                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[120px]">
+                  {userProfile?.role === 'admin' && (
                     <DropdownMenuItem onClick={() => openEditDialog(announcement)} className="flex items-center gap-2">
                       <Edit className="h-4 w-4 text-blue-600" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openViewDialog(announcement)} className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-green-600" />
-                      View
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => openDeleteDialog(announcement)} 
-                      className="flex items-center gap-2 text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                  )}
+                  <DropdownMenuItem onClick={() => openViewDialog(announcement)} className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-green-600" />
+                    View
+                  </DropdownMenuItem>
+                  {userProfile?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => openDeleteDialog(announcement)} 
+                        className="flex items-center gap-2 text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <h3 className="text-xl font-semibold text-card-foreground mb-2">{announcement.title}</h3>
