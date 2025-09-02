@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Network, Send, Users, Home, FileText, Calendar, MessageSquare, CheckCircle, XCircle, Clock, ArrowRight, Bell, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -29,6 +30,12 @@ const NexusPage = () => {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedViewRequest, setSelectedViewRequest] = useState<any>(null);
+  
+  // Pagination states
+  const [incomingCurrentPage, setIncomingCurrentPage] = useState(1);
+  const [outgoingCurrentPage, setOutgoingCurrentPage] = useState(1);
+  const [incomingItemsPerPage, setIncomingItemsPerPage] = useState(10);
+  const [outgoingItemsPerPage, setOutgoingItemsPerPage] = useState(10);
 
   const dataTypes = [
     { value: 'residents', label: 'Residents', icon: Users },
@@ -608,6 +615,24 @@ const NexusPage = () => {
     }
   };
 
+  // Pagination helpers
+  const getPaginatedData = (data: any[], currentPage: number, itemsPerPage: number) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = (totalItems: number, itemsPerPage: number) => {
+    return Math.ceil(totalItems / itemsPerPage);
+  };
+
+  // Paginated data
+  const paginatedIncomingRequests = getPaginatedData(incomingRequests, incomingCurrentPage, incomingItemsPerPage);
+  const paginatedOutgoingRequests = getPaginatedData(outgoingRequests, outgoingCurrentPage, outgoingItemsPerPage);
+  
+  const incomingTotalPages = getTotalPages(incomingRequests.length, incomingItemsPerPage);
+  const outgoingTotalPages = getTotalPages(outgoingRequests.length, outgoingItemsPerPage);
+
   const pendingIncomingCount = incomingRequests.filter(req => req.status === 'Pending').length;
 
   return (
@@ -774,8 +799,24 @@ const NexusPage = () => {
 
         <TabsContent value="incoming">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Incoming Transfer Requests</CardTitle>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Items per page:</span>
+                <Select value={incomingItemsPerPage.toString()} onValueChange={(value) => {
+                  setIncomingItemsPerPage(parseInt(value));
+                  setIncomingCurrentPage(1);
+                }}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               {incomingRequests.length === 0 ? (
@@ -783,55 +824,94 @@ const NexusPage = () => {
                   No incoming transfer requests
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>From</TableHead>
-                      <TableHead>Data Type</TableHead>
-                      <TableHead>Items</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {incomingRequests.map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {request.source_barangay?.barangayname}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              by {request.initiator_profile?.firstname} {request.initiator_profile?.lastname}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="capitalize">{request.datatype}</TableCell>
-                        <TableCell>{request.dataid?.length || 0} items</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(request.status)}>
-                            {request.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(request.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => (request.status === 'Pending' ? handleReviewRequest(request) : handleViewRequest(request))}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                <div className="space-y-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>From</TableHead>
+                        <TableHead>Data Type</TableHead>
+                        <TableHead>Items</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedIncomingRequests.map((request) => (
+                        <TableRow key={request.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">
+                                {request.source_barangay?.barangayname}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                by {request.initiator_profile?.firstname} {request.initiator_profile?.lastname}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="capitalize">{request.datatype}</TableCell>
+                          <TableCell>{request.dataid?.length || 0} items</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(request.status)}>
+                              {request.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(request.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => (request.status === 'Pending' ? handleReviewRequest(request) : handleViewRequest(request))}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  
+                  {incomingTotalPages > 1 && (
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {((incomingCurrentPage - 1) * incomingItemsPerPage) + 1} to {Math.min(incomingCurrentPage * incomingItemsPerPage, incomingRequests.length)} of {incomingRequests.length} requests
+                      </div>
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              onClick={() => setIncomingCurrentPage(Math.max(1, incomingCurrentPage - 1))}
+                              className={incomingCurrentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                          
+                          {Array.from({ length: incomingTotalPages }, (_, i) => i + 1).map((page) => (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                onClick={() => setIncomingCurrentPage(page)}
+                                isActive={page === incomingCurrentPage}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+                          
+                          <PaginationItem>
+                            <PaginationNext 
+                              onClick={() => setIncomingCurrentPage(Math.min(incomingTotalPages, incomingCurrentPage + 1))}
+                              className={incomingCurrentPage === incomingTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -839,8 +919,24 @@ const NexusPage = () => {
 
         <TabsContent value="outgoing">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Outgoing Transfer Requests</CardTitle>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Items per page:</span>
+                <Select value={outgoingItemsPerPage.toString()} onValueChange={(value) => {
+                  setOutgoingItemsPerPage(parseInt(value));
+                  setOutgoingCurrentPage(1);
+                }}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               {outgoingRequests.length === 0 ? (
@@ -848,53 +944,92 @@ const NexusPage = () => {
                   No outgoing transfer requests
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>To</TableHead>
-                      <TableHead>Data Type</TableHead>
-                      <TableHead>Items</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Reviewed By</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {outgoingRequests.map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell>
-                          {request.destination_barangay?.barangayname}
-                        </TableCell>
-                        <TableCell className="capitalize">{request.datatype}</TableCell>
-                        <TableCell>{request.dataid?.length || 0} items</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(request.status)}>
-                            {request.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(request.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {request.reviewer_profile?.firstname && request.reviewer_profile?.lastname ? 
-                            `${request.reviewer_profile.firstname} ${request.reviewer_profile.lastname}` : 
-                            '-'
-                          }
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewRequest(request)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+                <div className="space-y-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>To</TableHead>
+                        <TableHead>Data Type</TableHead>
+                        <TableHead>Items</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Reviewed By</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedOutgoingRequests.map((request) => (
+                        <TableRow key={request.id}>
+                          <TableCell>
+                            {request.destination_barangay?.barangayname}
+                          </TableCell>
+                          <TableCell className="capitalize">{request.datatype}</TableCell>
+                          <TableCell>{request.dataid?.length || 0} items</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(request.status)}>
+                              {request.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(request.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {request.reviewer_profile?.firstname && request.reviewer_profile?.lastname ? 
+                              `${request.reviewer_profile.firstname} ${request.reviewer_profile.lastname}` : 
+                              '-'
+                            }
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewRequest(request)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  
+                  {outgoingTotalPages > 1 && (
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {((outgoingCurrentPage - 1) * outgoingItemsPerPage) + 1} to {Math.min(outgoingCurrentPage * outgoingItemsPerPage, outgoingRequests.length)} of {outgoingRequests.length} requests
+                      </div>
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              onClick={() => setOutgoingCurrentPage(Math.max(1, outgoingCurrentPage - 1))}
+                              className={outgoingCurrentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                          
+                          {Array.from({ length: outgoingTotalPages }, (_, i) => i + 1).map((page) => (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                onClick={() => setOutgoingCurrentPage(page)}
+                                isActive={page === outgoingCurrentPage}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+                          
+                          <PaginationItem>
+                            <PaginationNext 
+                              onClick={() => setOutgoingCurrentPage(Math.min(outgoingTotalPages, outgoingCurrentPage + 1))}
+                              className={outgoingCurrentPage === outgoingTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
