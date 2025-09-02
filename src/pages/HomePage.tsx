@@ -185,19 +185,24 @@ const HomePage = () => {
   return (
     <div className="p-6 bg-background min-h-screen">
       {/* Header Card */}
-      <div className="relative bg-gradient-to-r from-primary to-secondary rounded-2xl p-8 mb-6 text-primary-foreground">
-        <div className="flex justify-between items-start">
+      <div className="relative overflow-hidden rounded-2xl p-8 mb-6 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 dark:from-blue-500 dark:via-indigo-600 dark:to-purple-700">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative z-10 flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-3xl font-bold mb-2 text-white drop-shadow-sm">
               Welcome back, {userProfile?.firstname}!
             </h1>
-            <p className="text-primary-foreground/80">
+            <p className="text-white/90 drop-shadow-sm">
               Here's what's happening in {barangayName || 'your barangay'} today
             </p>
           </div>
-          <div className="flex items-center space-x-2 bg-primary-foreground/20 rounded-lg px-3 py-2">
-            <Calendar className="h-4 w-4" />
-            <span className="text-sm">{currentDate}</span>
+          <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-2 shadow-lg">
+            <Calendar className="h-4 w-4 text-white" />
+            <span className="text-sm text-white font-medium">{currentDate}</span>
           </div>
         </div>
       </div>
