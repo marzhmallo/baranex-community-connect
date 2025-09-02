@@ -223,13 +223,13 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
 
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[550px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{event?.id ? "Edit Event" : "Create New Event"}</DialogTitle>
+      <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-xl">{event?.id ? "Edit Event" : "Create New Event"}</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-8 py-2">
+          <div className="space-y-6">
             <div>
               <Label htmlFor="title">Event Title</Label>
               <Input
@@ -271,26 +271,26 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               <Label htmlFor="all-day">All-day event</Label>
             </div>
             
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="start-date">Start Date</Label>
-                <div className="flex space-x-2">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="start-date" className="text-sm font-medium">Start Date</Label>
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-[140px] justify-start text-left font-normal"
+                        className="w-full sm:w-[160px] justify-start text-left font-normal"
                       >
                         {format(startDate, "PPP")}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 z-50 bg-popover border shadow-lg">
                       <Calendar
                         mode="single"
                         selected={startDate}
                         onSelect={(date) => date && setStartDate(new Date(date))}
                         initialFocus
-                        className="p-3 pointer-events-auto"
+                        className="p-3"
                       />
                     </PopoverContent>
                   </Popover>
@@ -305,31 +305,31 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         newDate.setHours(parseInt(hours), parseInt(minutes));
                         setStartDate(newDate);
                       }}
-                      className="w-32"
+                      className="w-full sm:w-36"
                     />
                   )}
                 </div>
               </div>
               
-              <div>
-                <Label htmlFor="end-date">End Date</Label>
-                <div className="flex space-x-2">
+              <div className="space-y-2">
+                <Label htmlFor="end-date" className="text-sm font-medium">End Date</Label>
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-[140px] justify-start text-left font-normal"
+                        className="w-full sm:w-[160px] justify-start text-left font-normal"
                       >
                         {format(eventEndDate, "PPP")}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 z-50 bg-popover border shadow-lg">
                       <Calendar
                         mode="single"
                          selected={eventEndDate}
                          onSelect={(date) => date && setEventEndDate(new Date(date))}
                         initialFocus
-                        className="p-3 pointer-events-auto"
+                        className="p-3"
                       />
                     </PopoverContent>
                   </Popover>
@@ -344,21 +344,21 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                          newDate.setHours(parseInt(hours), parseInt(minutes));
                          setEventEndDate(newDate);
                        }}
-                      className="w-32"
+                      className="w-full sm:w-36"
                     />
                   )}
                 </div>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="event-type">Event Type</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="event-type" className="text-sm font-medium">Event Type</Label>
                 <Select value={eventType} onValueChange={setEventType}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select event type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50 bg-popover border shadow-lg">
                     <SelectItem value="meeting">Meeting</SelectItem>
                     <SelectItem value="health">Health</SelectItem>
                     <SelectItem value="environment">Environment</SelectItem>
@@ -368,13 +368,13 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 </Select>
               </div>
               
-              <div>
-                <Label htmlFor="target-audience">Target Audience</Label>
+              <div className="space-y-2">
+                <Label htmlFor="target-audience" className="text-sm font-medium">Target Audience</Label>
                 <Select value={targetAudience} onValueChange={setTargetAudience}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select target audience" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50 bg-popover border shadow-lg">
                     <SelectItem value="All">All</SelectItem>
                     <SelectItem value="SK Youth">SK Youth</SelectItem>
                     <SelectItem value="Officials only">Officials only</SelectItem>
@@ -385,13 +385,13 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               </div>
             </div>
             
-            <div>
-              <Label htmlFor="visibility">Event Visibility</Label>
+            <div className="space-y-2">
+              <Label htmlFor="visibility" className="text-sm font-medium">Event Visibility</Label>
               <Select value={visibility} onValueChange={setVisibility}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select visibility" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50 bg-popover border shadow-lg">
                   {userProfile?.role === 'admin' && (
                     <SelectItem value="internal">Internal</SelectItem>
                   )}
@@ -411,17 +411,17 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
             </div>
 
             {isRecurring && (
-              <div className="space-y-4 p-4 border rounded-lg">
-                <h4 className="font-medium text-sm">Recurrence Settings</h4>
+              <div className="space-y-6 p-6 border rounded-lg bg-muted/20">
+                <h4 className="font-semibold text-base">Recurrence Settings</h4>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
-                  <div>
-                    <Label htmlFor="frequency">Repeat</Label>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="frequency" className="text-sm font-medium">Repeat</Label>
                     <Select value={frequency} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'yearly') => setFrequency(value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-50 bg-popover border shadow-lg">
                         <SelectItem value="daily">Daily</SelectItem>
                         <SelectItem value="weekly">Weekly</SelectItem>
                         <SelectItem value="monthly">Monthly</SelectItem>
@@ -432,9 +432,9 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 </div>
 
                 {frequency === 'weekly' && (
-                  <div>
-                    <Label htmlFor="days">Repeat on</Label>
-                    <div className="grid grid-cols-7 gap-1 mt-2">
+                  <div className="space-y-3">
+                    <Label htmlFor="days" className="text-sm font-medium">Repeat on</Label>
+                    <div className="grid grid-cols-7 gap-2">
                       {['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'].map((day, index) => {
                         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                         const isSelected = selectedDays.includes(day);
@@ -444,11 +444,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                             type="button"
                             variant={isSelected ? "default" : "outline"}
                             size="sm"
-                            className={`h-8 w-8 p-0 text-xs ${
-                              isSelected 
-                                ? "" 
-                                : ""
-                            }`}
+                            className="h-9 w-full p-0 text-xs font-medium"
                             onClick={() => {
                               if (isSelected) {
                                 setSelectedDays(selectedDays.filter(d => d !== day));
@@ -467,9 +463,9 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 )}
 
                 {frequency === 'monthly' && (
-                  <div>
-                    <Label htmlFor="month-days">Days of month</Label>
-                    <div className="grid grid-cols-7 gap-1 mt-2">
+                  <div className="space-y-3">
+                    <Label htmlFor="month-days" className="text-sm font-medium">Days of month</Label>
+                    <div className="grid grid-cols-7 gap-1.5 max-h-32 overflow-y-auto p-2 border rounded">
                       {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
                         const isSelected = monthDays.includes(day);
                         return (
@@ -478,11 +474,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                             type="button"
                             variant={isSelected ? "default" : "outline"}
                             size="sm"
-                            className={`h-8 w-8 p-0 text-xs ${
-                              isSelected 
-                                ? "" 
-                                : ""
-                            }`}
+                            className="h-8 w-8 p-0 text-xs font-medium"
                             onClick={() => {
                               if (isSelected) {
                                 setMonthDays(monthDays.filter(d => d !== day));
@@ -500,10 +492,10 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 )}
 
                 {frequency === 'yearly' && (
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="year-months">Months</Label>
-                      <div className="grid grid-cols-3 gap-1 mt-2">
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="year-months" className="text-sm font-medium">Months</Label>
+                      <div className="grid grid-cols-4 gap-2">
                         {[
                           'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
@@ -516,11 +508,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                               type="button"
                               variant={isSelected ? "default" : "outline"}
                               size="sm"
-                              className={`h-8 text-xs ${
-                                isSelected 
-                                  ? "" 
-                                  : ""
-                              }`}
+                              className="h-9 text-xs font-medium"
                               onClick={() => {
                                 if (isSelected) {
                                   setYearMonths(yearMonths.filter(m => m !== monthNumber));
@@ -535,9 +523,9 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         })}
                       </div>
                     </div>
-                    <div>
-                      <Label htmlFor="year-days">Days of month</Label>
-                      <div className="grid grid-cols-7 gap-1 mt-2">
+                    <div className="space-y-3">
+                      <Label htmlFor="year-days" className="text-sm font-medium">Days of month</Label>
+                      <div className="grid grid-cols-7 gap-1.5 max-h-32 overflow-y-auto p-2 border rounded">
                         {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
                           const isSelected = yearDays.includes(day);
                           return (
@@ -546,11 +534,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                               type="button"
                               variant={isSelected ? "default" : "outline"}
                               size="sm"
-                              className={`h-8 w-8 p-0 text-xs ${
-                                isSelected 
-                                  ? "" 
-                                  : ""
-                              }`}
+                              className="h-8 w-8 p-0 text-xs font-medium"
                               onClick={() => {
                                 if (isSelected) {
                                   setYearDays(yearDays.filter(d => d !== day));
@@ -568,13 +552,13 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                   </div>
                 )}
 
-                <div>
-                  <Label htmlFor="end-type">Ends</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="end-type" className="text-sm font-medium">Ends</Label>
                   <Select value={endType} onValueChange={(value: 'never' | 'after' | 'on') => setEndType(value)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-50 bg-popover border shadow-lg">
                       <SelectItem value="never">Never</SelectItem>
                       <SelectItem value="after">After a number of occurrences</SelectItem>
                       <SelectItem value="on">On the end date</SelectItem>
@@ -609,19 +593,19 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
             )}
           </div>
           
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
             <Button 
               type="button" 
               variant="outline" 
               onClick={onClose}
-              className=""
+              className="w-full sm:w-auto px-6 py-2"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={isLoading}
-              className=""
+              className="w-full sm:w-auto px-6 py-2"
             >
               {isLoading ? "Saving..." : event?.id ? "Update Event" : "Create Event"}
             </Button>
