@@ -1,7 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { useBarangaySelection } from '@/hooks/useBarangaySelection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,53 +12,70 @@ import { Shield, MapPin, Users, Phone, AlertTriangle, Clock } from "lucide-react
 
 const UserEmergencyPage = () => {
   const { userProfile } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { selectedBarangay } = useBarangaySelection();
+  
+  // Get barangay ID from URL params (for public access) or user profile (for authenticated users) or selected barangay (from localStorage)
+  const barangayId = searchParams.get('barangay') || userProfile?.brgyid || selectedBarangay?.id;
 
   // Fetch emergency contacts using correct field names
   const { data: contacts, isLoading: contactsLoading } = useQuery({
-    queryKey: ['user-emergency-contacts'],
+    queryKey: ['user-emergency-contacts', barangayId],
     queryFn: async () => {
+      if (!barangayId) {
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('emergency_contacts')
         .select('*')
-        .eq('brgyid', userProfile?.brgyid)
+        .eq('brgyid', barangayId)
         .order('type', { ascending: true });
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!userProfile?.brgyid
+    enabled: !!barangayId
   });
 
   // Fetch disaster zones
   const { data: zones, isLoading: zonesLoading } = useQuery({
-    queryKey: ['user-disaster-zones'],
+    queryKey: ['user-disaster-zones', barangayId],
     queryFn: async () => {
+      if (!barangayId) {
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('disaster_zones')
         .select('*')
-        .eq('brgyid', userProfile?.brgyid)
+        .eq('brgyid', barangayId)
         .order('risk_level', { ascending: false });
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!userProfile?.brgyid
+    enabled: !!barangayId
   });
 
   // Fetch evacuation centers
   const { data: centers, isLoading: centersLoading } = useQuery({
-    queryKey: ['user-evacuation-centers'],
+    queryKey: ['user-evacuation-centers', barangayId],
     queryFn: async () => {
+      if (!barangayId) {
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('evacuation_centers')
         .select('*')
-        .eq('brgyid', userProfile?.brgyid)
+        .eq('brgyid', barangayId)
         .order('capacity', { ascending: false });
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!userProfile?.brgyid
+    enabled: !!barangayId
   });
 
   if (contactsLoading || zonesLoading || centersLoading) {

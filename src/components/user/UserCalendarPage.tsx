@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from 'react-router-dom';
 import { format, isToday, isEqual, isSameMonth, parse, addDays, subDays, addMonths, subMonths } from "date-fns";
 import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Download, Upload, Edit, Trash2, X, Clock, MapPin, Users, Repeat, Bell, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/components/AuthProvider";
+import { useBarangaySelection } from '@/hooks/useBarangaySelection';
 import EventForm from "@/components/calendar/EventForm";
 
 export type Event = {
@@ -78,6 +80,8 @@ const eventCategories = [
 ];
 
 const UserCalendarPage = () => {
+  const [searchParams] = useSearchParams();
+  const { selectedBarangay } = useBarangaySelection();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
@@ -92,6 +96,9 @@ const UserCalendarPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { userProfile, user } = useAuth();
+  
+  // Get barangay ID from URL params (for public access) or selected barangay (from localStorage)
+  const barangayId = searchParams.get('barangay') || selectedBarangay?.id;
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormData>({
     defaultValues: {
@@ -126,11 +133,16 @@ const UserCalendarPage = () => {
 
   // Fetch events from Supabase
   const { data: events, isLoading } = useQuery({
-    queryKey: ['events'],
+    queryKey: ['events', barangayId],
     queryFn: async () => {
+      if (!barangayId) {
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('events')
         .select('*')
+        .eq('brgyid', barangayId)
         .order('start_time', { ascending: true });
       
       if (error) {
@@ -142,7 +154,8 @@ const UserCalendarPage = () => {
         return [];
       }
       return data || [];
-    }
+    },
+    enabled: !!barangayId
   });
 
   // Helper function to describe RRULE in human-readable format

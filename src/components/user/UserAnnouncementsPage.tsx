@@ -1,9 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { useBarangaySelection } from '@/hooks/useBarangaySelection';
 import AnnouncementsList from '@/components/announcements/AnnouncementsList';
 import { Search, Users, FolderOpen, ArrowUpDown, Megaphone, CheckCircle, Calendar, AlertTriangle, Clock, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -29,6 +31,11 @@ export interface Announcement {
 const UserAnnouncementsPage = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const { selectedBarangay } = useBarangaySelection();
+  
+  // Get barangay ID from URL params (for public access) or selected barangay (from localStorage)
+  const barangayId = searchParams.get('barangay') || selectedBarangay?.id;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedVisibility, setSelectedVisibility] = useState<string>('');
@@ -68,18 +75,22 @@ const UserAnnouncementsPage = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['announcements'],
+    queryKey: ['announcements', barangayId],
     queryFn: async () => {
+      if (!barangayId) {
+        return [];
+      }
+      
       try {
-        // Fetch announcements
-        const {
-          data: announcementsData,
-          error: announcementsError
-        } = await supabase.from('announcements').select('*').order('is_pinned', {
-          ascending: false
-        }).order('created_at', {
-          ascending: false
-        });
+        // Fetch announcements filtered by barangay
+        let query = supabase
+          .from('announcements')
+          .select('*')
+          .eq('brgyid', barangayId)
+          .order('is_pinned', { ascending: false })
+          .order('created_at', { ascending: false });
+        
+        const { data: announcementsData, error: announcementsError } = await query;
         if (announcementsError) throw announcementsError;
 
         // Fetch user profiles to get author names
@@ -106,7 +117,8 @@ const UserAnnouncementsPage = () => {
         console.error('Error fetching announcements:', error);
         throw error;
       }
-    }
+    },
+    enabled: !!barangayId
   });
 
   // Calculate stats

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { useBarangaySelection } from '@/hooks/useBarangaySelection';
 import CreateForumDialog from '@/components/forum/CreateForumDialog';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -86,6 +88,11 @@ const UserForumPage = () => {
   console.log('UserForumPage component loaded - updated version');
   const { userProfile } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const { selectedBarangay } = useBarangaySelection();
+  
+  // Get barangay ID from URL params (for public access) or selected barangay (from localStorage)
+  const barangayId = searchParams.get('barangay') || selectedBarangay?.id;
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedForum, setSelectedForum] = useState<Forum | null>(null);
   const [forumStats, setForumStats] = useState<{[key: string]: {threads: number, posts: number}}>({});
@@ -95,10 +102,15 @@ const UserForumPage = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   
   const fetchForums = async () => {
+    if (!barangayId) {
+      return [];
+    }
+    
     try {
       const { data, error } = await supabase
         .from('forums')
         .select('*')
+        .eq('brgyid', barangayId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -115,10 +127,11 @@ const UserForumPage = () => {
   };
 
   const { data: forums, isLoading, error, refetch } = useQuery({
-    queryKey: ['forums'],
+    queryKey: ['forums', barangayId],
     queryFn: fetchForums,
     staleTime: 0,
     gcTime: 0,
+    enabled: !!barangayId
   });
 
   console.log('Forum loading state:', { isLoading, forumsCount: forums?.length });
