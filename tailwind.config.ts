@@ -64,14 +64,14 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				baranex: {
-					primary: '#1e40af',
-					secondary: '#0ea5e9',
-					accent: '#06b6d4',
-					success: '#10b981',
-					warning: '#f59e0b',
-					danger: '#ef4444',
-					light: '#f0f9ff',
-					dark: '#0f172a'
+					primary: 'hsl(var(--primary))',
+					secondary: 'hsl(var(--secondary))',
+					accent: 'hsl(var(--accent))',
+					success: 'hsl(142 76% 36%)',
+					warning: 'hsl(43 96% 56%)',
+					danger: 'hsl(var(--destructive))',
+					light: 'hsl(var(--background))',
+					dark: 'hsl(var(--foreground))'
 				}
 			},
 			borderRadius: {

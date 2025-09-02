@@ -99,27 +99,31 @@
 
 /* React Quill Custom Styles */
 .ql-toolbar {
-  border-top: 1px solid #ccc !important;
-  border-left: 1px solid #ccc !important;
-  border-right: 1px solid #ccc !important;
+  border-top: 1px solid hsl(var(--border)) !important;
+  border-left: 1px solid hsl(var(--border)) !important;
+  border-right: 1px solid hsl(var(--border)) !important;
   border-bottom: none !important;
+  background-color: hsl(var(--background));
 }
 
 .ql-container {
-  border-bottom: 1px solid #ccc !important;
-  border-left: 1px solid #ccc !important;
-  border-right: 1px solid #ccc !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  border-left: 1px solid hsl(var(--border)) !important;
+  border-right: 1px solid hsl(var(--border)) !important;
   border-top: none !important;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 .ql-editor {
   min-height: 200px;
+  color: hsl(var(--foreground));
 }
 
 /* Data Field Styling */
 .data-field {
-  background-color: #3b82f6;
-  color: white;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
@@ -131,7 +135,7 @@
 }
 
 .data-field:hover {
-  background-color: #2563eb;
+  background-color: hsl(var(--primary) / 0.9);
 }
 
 /* Custom scrollbar styles - Webkit browsers */

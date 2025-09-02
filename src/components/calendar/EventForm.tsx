@@ -284,13 +284,13 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         {format(startDate, "PPP")}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-50 bg-popover border shadow-lg">
+                    <PopoverContent className="w-auto p-0 z-50 bg-popover border border-border shadow-lg">
                       <Calendar
                         mode="single"
                         selected={startDate}
                         onSelect={(date) => date && setStartDate(new Date(date))}
                         initialFocus
-                        className="p-3"
+                        className="p-3 bg-popover text-foreground"
                       />
                     </PopoverContent>
                   </Popover>
@@ -323,13 +323,13 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         {format(eventEndDate, "PPP")}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-50 bg-popover border shadow-lg">
+                    <PopoverContent className="w-auto p-0 z-50 bg-popover border border-border shadow-lg">
                       <Calendar
                         mode="single"
                          selected={eventEndDate}
                          onSelect={(date) => date && setEventEndDate(new Date(date))}
                         initialFocus
-                        className="p-3"
+                        className="p-3 bg-popover text-foreground"
                       />
                     </PopoverContent>
                   </Popover>
@@ -358,7 +358,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select event type" />
                   </SelectTrigger>
-                  <SelectContent className="z-50 bg-popover border shadow-lg">
+                  <SelectContent className="z-50 bg-popover border border-border shadow-lg text-foreground">
                     <SelectItem value="meeting">Meeting</SelectItem>
                     <SelectItem value="health">Health</SelectItem>
                     <SelectItem value="environment">Environment</SelectItem>
@@ -374,7 +374,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select target audience" />
                   </SelectTrigger>
-                  <SelectContent className="z-50 bg-popover border shadow-lg">
+                  <SelectContent className="z-50 bg-popover border border-border shadow-lg text-foreground">
                     <SelectItem value="All">All</SelectItem>
                     <SelectItem value="SK Youth">SK Youth</SelectItem>
                     <SelectItem value="Officials only">Officials only</SelectItem>
@@ -391,7 +391,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select visibility" />
                 </SelectTrigger>
-                <SelectContent className="z-50 bg-popover border shadow-lg">
+                <SelectContent className="z-50 bg-popover border border-border shadow-lg text-foreground">
                   {userProfile?.role === 'admin' && (
                     <SelectItem value="internal">Internal</SelectItem>
                   )}
@@ -421,7 +421,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                       <SelectTrigger className="w-full">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="z-50 bg-popover border shadow-lg">
+                      <SelectContent className="z-50 bg-popover border border-border shadow-lg text-foreground">
                         <SelectItem value="daily">Daily</SelectItem>
                         <SelectItem value="weekly">Weekly</SelectItem>
                         <SelectItem value="monthly">Monthly</SelectItem>
@@ -558,7 +558,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="z-50 bg-popover border shadow-lg">
+                    <SelectContent className="z-50 bg-popover border border-border shadow-lg text-foreground">
                       <SelectItem value="never">Never</SelectItem>
                       <SelectItem value="after">After a number of occurrences</SelectItem>
                       <SelectItem value="on">On the end date</SelectItem>
@@ -584,7 +584,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                 {endType === 'on' && (
                   <div>
                     <Label>End date</Label>
-                    <div className="text-sm text-muted-foreground p-2 border rounded">
+                    <div className="text-sm text-muted-foreground p-2 border border-border rounded bg-muted/30">
                       Will end on: {format(eventEndDate, "PPP")}
                     </div>
                   </div>
