@@ -49,6 +49,12 @@ import UserDocumentsPage from "./components/user/UserDocumentsPage";
 import UserEmergencyPage from "./components/user/UserEmergencyPage";
 import UserSettingsPage from "./components/user/UserSettingsPage";
 import UserOfficialDetailsPage from "./components/user/UserOfficialDetailsPage";
+import PublicAnnouncementsPage from "./pages/PublicAnnouncementsPage";
+import PublicEventsPage from "./pages/PublicEventsPage";
+import PublicOfficialsPage from "./pages/PublicOfficialsPage";
+import PublicEmergencyPage from "./pages/PublicEmergencyPage";
+import PublicForumPage from "./pages/PublicForumPage";
+import PublicOfficialDetailsPage from "./pages/PublicOfficialDetailsPage";
 import EchelonPage from "./pages/EchelonPage";
 import MunicipalitiesPage from "./pages/MunicipalitiesPage";
 import BarangaysPage from "./pages/BarangaysPage";
@@ -280,12 +286,12 @@ const AppContent = () => {
             <Route path="/plaza" element={<OverseerRoute><PlazaPage /></OverseerRoute>} />
             
             {/* Public Routes - Available to everyone */}
-            <Route path="/public/announcements" element={<UserAnnouncementsPage />} />
-            <Route path="/public/events" element={<UserCalendarPage />} />
-            <Route path="/public/officials" element={<UserOfficialsPage />} />
-            <Route path="/public/officials/:id" element={<UserOfficialDetailsPage />} />
-            <Route path="/public/emergency" element={<UserEmergencyPage />} />
-            <Route path="/public/forum" element={<UserForumPage />} />
+            <Route path="/public/announcements" element={<PublicAnnouncementsPage />} />
+            <Route path="/public/events" element={<PublicEventsPage />} />
+            <Route path="/public/officials" element={<PublicOfficialsPage />} />
+            <Route path="/public/officials/:id" element={<PublicOfficialDetailsPage />} />
+            <Route path="/public/emergency" element={<PublicEmergencyPage />} />
+            <Route path="/public/forum" element={<PublicForumPage />} />
             
             {/* Default route - public home for non-authenticated, dashboard for authenticated */}
             <Route path="/" element={
