@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -361,6 +362,51 @@ const DocumentsPage = () => {
       };
     }
   });
+
+  // Calculate filtered stats based on current tracking filter
+  const filteredStats = React.useMemo(() => {
+    let dataToCount = documentTracking;
+    
+    // Filter data based on current trackingFilter
+    if (trackingFilter !== 'All Documents') {
+      dataToCount = documentTracking.filter(doc => {
+        const status = doc.status.toLowerCase();
+        switch (trackingFilter) {
+          case 'Processing':
+            return status === 'processing';
+          case 'Released':
+            return status === 'released';
+          case 'Rejected':
+            return status === 'rejected';
+          case 'Ready':
+            return status === 'ready for pickup' || status === 'ready';
+          default:
+            return true;
+        }
+      });
+    }
+
+    const stats = dataToCount.reduce((acc, doc) => {
+      const status = doc.status.toLowerCase();
+      if (status === 'ready for pickup' || status === 'ready') {
+        acc.readyForPickup++;
+      } else if (status === 'processing') {
+        acc.processing++;
+      } else if (status === 'released') {
+        acc.released++;
+      } else if (status === 'rejected') {
+        acc.rejected++;
+      }
+      return acc;
+    }, {
+      readyForPickup: 0,
+      processing: 0,
+      released: 0,
+      rejected: 0
+    });
+
+    return stats;
+  }, [documentTracking, trackingFilter]);
 
   // Document templates from document_types table (connected)
   const documents = documentTypes?.map(docType => ({
@@ -977,7 +1023,7 @@ const DocumentsPage = () => {
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Ready for Pickup</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{processingStats?.readyForPickup || 0}</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{filteredStats.readyForPickup}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500 dark:text-green-400" />
             </div>
@@ -985,7 +1031,7 @@ const DocumentsPage = () => {
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Processing</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingStats?.processing || 0}</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{filteredStats.processing}</p>
               </div>
               <Clock className="h-8 w-8 text-blue-500 dark:text-blue-400" />
             </div>
@@ -993,7 +1039,7 @@ const DocumentsPage = () => {
             <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Released</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{processingStats?.released || 0}</p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{filteredStats.released}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-purple-500 dark:text-purple-400" />
             </div>
@@ -1001,7 +1047,7 @@ const DocumentsPage = () => {
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Rejected</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{processingStats?.rejected || 0}</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{filteredStats.rejected}</p>
               </div>
               <XCircle className="h-8 w-8 text-red-500 dark:text-red-400" />
             </div>
