@@ -367,6 +367,195 @@ const UserDocumentsPage = () => {
         </div>
       </div>
 
+      <div className="mb-8 bg-card rounded-lg shadow-sm border border-border">
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Document Tracking System
+            </h2>
+            <div className="flex gap-3">
+              <Button onClick={() => setShowRequestModal(true)} className="bg-blue-600 text-white hover:bg-blue-700">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Request Document
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <input 
+                type="text" 
+                placeholder="Search by tracking ID..." 
+                value={trackingSearchQuery}
+                onChange={(e) => setTrackingSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" 
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button 
+                onClick={() => setTrackingFilter("All Documents")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "All Documents" 
+                    ? "bg-primary/10 text-primary" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                All Documents
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("Requests")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "Requests" 
+                    ? "bg-primary/10 text-primary" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Requests
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("Processing")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "Processing" 
+                    ? "bg-primary/10 text-primary" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Processing
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("Released")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "Released" 
+                    ? "bg-primary/10 text-primary" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Released
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("Rejected")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "Rejected" 
+                    ? "bg-primary/10 text-primary" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Rejected
+              </button>
+              <button 
+                onClick={() => setTrackingFilter("Ready")}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  trackingFilter === "Ready" 
+                    ? "bg-primary/10 text-primary" 
+                    : "bg-muted text-foreground hover:bg-muted/80"
+                }`}
+              >
+                Ready
+              </button>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tracking ID</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Requested By</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Update</th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-card divide-y divide-border">
+                {isLoading ? <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
+                      Loading your document requests...
+                    </td>
+                  </tr> : documentRequests.length === 0 ? <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
+                      No document requests found
+                    </td>
+                  </tr> : paginatedRequests.map(request => <tr key={request.id} className="hover:bg-accent transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
+                        {request.docnumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {request.type}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {request.profiles?.firstname && request.profiles?.lastname 
+                          ? `${request.profiles.firstname} ${request.profiles.lastname}`
+                          : 'N/A'}
+                      </td>
+                       <td className="px-6 py-4 whitespace-nowrap">
+                         {getStatusBadge(request.status)}
+                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {formatDate(request.updated_at || request.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                         <div className="flex justify-end gap-2">
+                           <button 
+                             onClick={() => {
+                               setSelectedRequest(request);
+                               setShowViewDialog(true);
+                             }}
+                             className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                             title="View request details"
+                           >
+                             <Eye className="h-4 w-4" />
+                           </button>
+                            <button 
+                              onClick={() => {
+                                if (request.status === 'Request') {
+                                  setEditingRequest(request);
+                                  setShowRequestModal(true);
+                                }
+                              }}
+                              disabled={request.status !== 'Request'}
+                              className={`p-1 rounded transition-colors ${
+                                request.status === 'Request' 
+                                  ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' 
+                                  : 'text-muted-foreground/50 cursor-not-allowed'
+                              }`}
+                              title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                         </div>
+                      </td>
+                    </tr>)}
+              </tbody>
+            </table>
+          </div>
+          
+           {requestsTotalPages > 1 && <div className="mt-6 flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} requests
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} disabled={requestsCurrentPage === 1} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === 1 ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+                  Previous
+                </button>
+                <div className="flex">
+                  {Array.from({
+                length: requestsTotalPages
+              }, (_, i) => i + 1).map(page => <button key={page} onClick={() => handleRequestsPageChange(page)} className={`px-3 py-1 text-sm rounded-md font-medium ${requestsCurrentPage === page ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'}`}>
+                      {page}
+                    </button>)}
+                </div>
+                <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === requestsTotalPages} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === requestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+                  Next
+                </button>
+              </div>
+            </div>}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <Card className="border-border">
@@ -597,196 +786,6 @@ const UserDocumentsPage = () => {
           </div>
         </div>
       </div>
-
-      <div className="mb-8 bg-card rounded-lg shadow-sm border border-border">
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Document Tracking System
-            </h2>
-            <div className="flex gap-3">
-              <Button onClick={() => setShowRequestModal(true)} className="bg-blue-600 text-white hover:bg-blue-700">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Request Document
-              </Button>
-            </div>
-          </div>
-        </div>
-        <div className="p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input 
-                type="text" 
-                placeholder="Search by tracking ID..." 
-                value={trackingSearchQuery}
-                onChange={(e) => setTrackingSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" 
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button 
-                onClick={() => setTrackingFilter("All Documents")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "All Documents" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                All Documents
-              </button>
-              <button 
-                onClick={() => setTrackingFilter("Requests")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Requests" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                Requests
-              </button>
-              <button 
-                onClick={() => setTrackingFilter("Processing")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Processing" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                Processing
-              </button>
-              <button 
-                onClick={() => setTrackingFilter("Released")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Released" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                Released
-              </button>
-              <button 
-                onClick={() => setTrackingFilter("Rejected")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Rejected" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                Rejected
-              </button>
-              <button 
-                onClick={() => setTrackingFilter("Ready")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Ready" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                Ready
-              </button>
-            </div>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tracking ID</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Requested By</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Update</th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-card divide-y divide-border">
-                {isLoading ? <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
-                      Loading your document requests...
-                    </td>
-                  </tr> : documentRequests.length === 0 ? <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
-                      No document requests found
-                    </td>
-                  </tr> : paginatedRequests.map(request => <tr key={request.id} className="hover:bg-accent transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
-                        {request.docnumber}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {request.type}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {request.profiles?.firstname && request.profiles?.lastname 
-                          ? `${request.profiles.firstname} ${request.profiles.lastname}`
-                          : 'N/A'}
-                      </td>
-                       <td className="px-6 py-4 whitespace-nowrap">
-                         {getStatusBadge(request.status)}
-                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {formatDate(request.updated_at || request.created_at)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                         <div className="flex justify-end gap-2">
-                           <button 
-                             onClick={() => {
-                               setSelectedRequest(request);
-                               setShowViewDialog(true);
-                             }}
-                             className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
-                             title="View request details"
-                           >
-                             <Eye className="h-4 w-4" />
-                           </button>
-                            <button 
-                              onClick={() => {
-                                if (request.status === 'Request') {
-                                  setEditingRequest(request);
-                                  setShowRequestModal(true);
-                                }
-                              }}
-                              disabled={request.status !== 'Request'}
-                              className={`p-1 rounded transition-colors ${
-                                request.status === 'Request' 
-                                  ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' 
-                                  : 'text-muted-foreground/50 cursor-not-allowed'
-                              }`}
-                              title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                         </div>
-                      </td>
-                    </tr>)}
-              </tbody>
-            </table>
-          </div>
-          
-           {requestsTotalPages > 1 && <div className="mt-6 flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} requests
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} disabled={requestsCurrentPage === 1} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === 1 ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
-                  Previous
-                </button>
-                <div className="flex">
-                  {Array.from({
-                length: requestsTotalPages
-              }, (_, i) => i + 1).map(page => <button key={page} onClick={() => handleRequestsPageChange(page)} className={`px-3 py-1 text-sm rounded-md font-medium ${requestsCurrentPage === page ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'}`}>
-                      {page}
-                    </button>)}
-                </div>
-                <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === requestsTotalPages} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === requestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
-                  Next
-                </button>
-              </div>
-            </div>}
-        </div>
-      </div>
-
 
       {showIssueForm && <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border">
