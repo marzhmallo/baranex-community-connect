@@ -55,11 +55,6 @@ import BarangaysPage from "./pages/BarangaysPage";
 import PlazaPage from "./pages/PlazaPage";
 import ActivityLogPage from "./pages/ActivityLogPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
-import PublicAnnouncementsPage from "./pages/PublicAnnouncementsPage";
-import PublicEventsPage from "./pages/PublicEventsPage";
-import PublicOfficialsPage from "./pages/PublicOfficialsPage";
-import PublicEmergencyPage from "./pages/PublicEmergencyPage";
-import PublicForumPage from "./pages/PublicForumPage";
 
 // Component to protect glyph-only routes
 const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
@@ -285,12 +280,12 @@ const AppContent = () => {
             <Route path="/plaza" element={<OverseerRoute><PlazaPage /></OverseerRoute>} />
             
             {/* Public Routes - Available to everyone */}
-            <Route path="/public/announcements" element={<PublicAnnouncementsPage />} />
-            <Route path="/public/events" element={<PublicEventsPage />} />
-            <Route path="/public/officials" element={<PublicOfficialsPage />} />
+            <Route path="/public/announcements" element={<UserAnnouncementsPage />} />
+            <Route path="/public/events" element={<UserCalendarPage />} />
+            <Route path="/public/officials" element={<UserOfficialsPage />} />
             <Route path="/public/officials/:id" element={<UserOfficialDetailsPage />} />
-            <Route path="/public/emergency" element={<PublicEmergencyPage />} />
-            <Route path="/public/forum" element={<PublicForumPage />} />
+            <Route path="/public/emergency" element={<UserEmergencyPage />} />
+            <Route path="/public/forum" element={<UserForumPage />} />
             
             {/* Default route - public home for non-authenticated, dashboard for authenticated */}
             <Route path="/" element={
