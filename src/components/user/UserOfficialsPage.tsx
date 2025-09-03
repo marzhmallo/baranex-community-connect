@@ -14,7 +14,6 @@ import { AddEditOfficialDialog } from '@/components/officials/AddEditOfficialDia
 import { OrganizationalChart } from '@/components/officials/OrganizationalChart';
 import { RankManagementDialog } from '@/components/officials/RankManagementDialog';
 import { AssignOfficialToRankDialog } from '@/components/officials/AssignOfficialToRankDialog';
-import { PublicPageHeader } from '@/components/public/PublicPageHeader';
 
 const UserOfficialsPage = () => {
   const { userProfile } = useAuth();
@@ -285,7 +284,6 @@ const UserOfficialsPage = () => {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <PublicPageHeader title="Barangay Officials" />
       {/* Header with title, subtitle, and action buttons */}
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -293,13 +291,14 @@ const UserOfficialsPage = () => {
             <Button variant="ghost" className="p-0 hover:bg-transparent">
               
             </Button>
-            <p className="text-muted-foreground mx-0">
+            <h1 className="text-3xl font-bold text-foreground mx-0">
               {barangayInfo 
-                ? `Meet the elected officials serving ${barangayInfo.barangayname}, ${barangayInfo.municipality}`
-                : 'Meet the elected officials serving our barangay'
+                ? `Officials of ${barangayInfo.barangayname}, ${barangayInfo.municipality}`
+                : 'Barangay Officials'
               }
-            </p>
+            </h1>
           </div>
+          <p className="text-muted-foreground mx-[10px]">Meet the elected officials serving our barangay</p>
         </div>
         <div className="flex gap-3">
           <div className="flex gap-1 bg-muted p-1 rounded-lg">

@@ -11,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
 import { useBarangaySelection } from '@/hooks/useBarangaySelection';
-import { PublicPageHeader } from '@/components/public/PublicPageHeader';
 
 export type Event = {
   id: string;
@@ -359,10 +358,10 @@ const UserCalendarPage = () => {
     <div className="w-full p-6 bg-background min-h-screen">
       <div className="max-w-none mx-auto">
         <div className="bg-card border border-border rounded-lg shadow-lg overflow-hidden">
-          <PublicPageHeader title="Events Calendar" />
           <div className="bg-primary text-primary-foreground p-6">
             <div className="flex items-center justify-between">
               <div>
+                <h1 className="text-3xl font-bold">Barangay Calendar</h1>
                 <p className="text-primary-foreground/80 mt-1">View community events and activities</p>
               </div>
             </div>
