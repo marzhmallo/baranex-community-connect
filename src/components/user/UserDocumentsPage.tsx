@@ -31,6 +31,8 @@ const UserDocumentsPage = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingRequest, setEditingRequest] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const {
     userProfile
   } = useAuth();
@@ -552,23 +554,16 @@ const UserDocumentsPage = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="hover:bg-accent">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="border-border bg-background">
-                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View Template
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Download
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <button
+                                onClick={() => {
+                                  setSelectedTemplate(template);
+                                  setShowTemplateDialog(true);
+                                }}
+                                className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                                title="View template details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
                             </div>
                           </div>) : <div className="text-center py-8 text-muted-foreground">No document templates found</div>}
                     </div>
@@ -804,6 +799,48 @@ const UserDocumentsPage = () => {
           setShowEditDialog(false);
           setEditingRequest(null);
         }} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Template Details Dialog */}
+      <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Document Template Details</DialogTitle>
+          </DialogHeader>
+          {selectedTemplate && <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Template Name</Label>
+                  <p className="text-sm text-muted-foreground mt-1">{selectedTemplate.name}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Description</Label>
+                  <p className="text-sm text-muted-foreground mt-1">{selectedTemplate.description || 'No description available'}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Document Fee</Label>
+                    <p className="text-sm text-muted-foreground mt-1">₱{selectedTemplate.fee || 0}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Status</Label>
+                    <Badge className="bg-green-500 hover:bg-green-600 text-white mt-1">Active</Badge>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                <Button onClick={() => setShowTemplateDialog(false)} variant="outline">
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  setShowTemplateDialog(false);
+                  setShowRequestModal(true);
+                }} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Request This Document
+                </Button>
+              </div>
+            </div>}
         </DialogContent>
       </Dialog>
     </div>;
