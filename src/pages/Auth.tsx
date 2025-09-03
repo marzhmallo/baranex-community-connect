@@ -1290,11 +1290,11 @@ const Auth = () => {
                       <FormField control={signupForm.control} name="username" render={({
                       field
                     }) => <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Username</FormLabel>
+                            <FormLabel className={`block text-sm md:text-base font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Username</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <User className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                                <Input placeholder="lordjay01" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                                <Input placeholder="lordjay01" className={`w-full pl-11 pr-4 py-3 md:py-4 text-base rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -1303,11 +1303,11 @@ const Auth = () => {
                       <FormField control={signupForm.control} name="email" render={({
                       field
                     }) => <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email</FormLabel>
+                            <FormLabel className={`block text-sm md:text-base font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                                <Input placeholder="francisjaypon@gmail.com" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                                <Input placeholder="francisjaypon@gmail.com" className={`w-full pl-11 pr-4 py-3 md:py-4 text-base rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -1316,21 +1316,21 @@ const Auth = () => {
                       <FormField control={signupForm.control} name="phone" render={({
                       field
                     }) => <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Phone Number (Optional)</FormLabel>
+                            <FormLabel className={`block text-sm md:text-base font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Phone Number (Optional)</FormLabel>
                             <FormControl>
-                              <Input type="tel" placeholder="+63 912 345 6789" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                              <Input type="tel" placeholder="+63 912 345 6789" className={`w-full px-4 py-3 md:py-4 text-base rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>} />
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField control={signupForm.control} name="gender" render={({
                         field
                       }) => <FormItem>
-                              <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Gender</FormLabel>
+                              <FormLabel className={`block text-sm md:text-base font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Gender</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                  <SelectTrigger className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`}>
+                                  <SelectTrigger className={`w-full px-4 py-3 md:py-4 text-base rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`}>
                                     <SelectValue placeholder="Select gender" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -1345,9 +1345,9 @@ const Auth = () => {
                         <FormField control={signupForm.control} name="purok" render={({
                         field
                       }) => <FormItem>
-                              <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Purok</FormLabel>
+                              <FormLabel className={`block text-sm md:text-base font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Purok</FormLabel>
                               <FormControl>
-                                <Input placeholder="Purok 1" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                                <Input placeholder="Purok 1" className={`w-full px-4 py-3 md:py-4 text-base rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>} />
@@ -1356,9 +1356,9 @@ const Auth = () => {
                       <FormField control={signupForm.control} name="bday" render={({
                       field
                     }) => <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Date of Birth</FormLabel>
+                            <FormLabel className={`block text-sm md:text-base font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Date of Birth</FormLabel>
                             <FormControl>
-                              <Input type="date" className={`w-full px-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`} {...field} />
+                              <Input type="date" className={`w-full px-4 py-3 md:py-4 text-base rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500'}`} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>} />
@@ -1783,17 +1783,17 @@ const Auth = () => {
 
       {/* Email Verification Modal */}
       <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
-        <DialogContent className={`sm:max-w-md ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <DialogContent className={`max-w-xs sm:max-w-md mx-4 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-orange-500/20' : 'bg-orange-100'}`}>
                 <AlertCircle className={`h-5 w-5 ${theme === 'dark' ? 'text-orange-400' : 'text-orange-600'}`} />
               </div>
-              <DialogTitle className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              <DialogTitle className={`text-base md:text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 Email Verification Required
               </DialogTitle>
             </div>
-            <DialogDescription className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+            <DialogDescription className={`text-xs md:text-sm leading-relaxed ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               Your account email hasn't been verified yet. We've detected multiple login attempts 
               {userCreatedAt && getTimeSinceSignup() && (
                 <> or it's been {getTimeSinceSignup()} since you signed up</>
@@ -1802,14 +1802,14 @@ const Auth = () => {
           </DialogHeader>
           
           <div className="space-y-4 pt-4">
-            <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`p-3 md:p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
               <div className="flex items-center gap-2 mb-2">
                 <Mail className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-                <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                <span className={`text-xs md:text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                   Verification Email
                 </span>
               </div>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+              <p className={`text-xs md:text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                 Check your email <span className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                   {unverifiedEmail}
                 </span> for a verification link. If you can't find it, check your spam folder.
@@ -1828,10 +1828,10 @@ const Auth = () => {
               />
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button
                 variant="outline"
-                className="flex-1"
+                className="flex-1 py-2 md:py-3 text-sm md:text-base"
                 onClick={() => {
                   setShowVerificationModal(false);
                   setLoginAttempts(0);
@@ -1842,13 +1842,13 @@ const Auth = () => {
               <Button
                 onClick={handleResendVerification}
                 disabled={isResendingVerification}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 py-2 md:py-3 text-sm md:text-base"
               >
                 {isResendingVerification ? "Sending..." : "Resend Link"}
               </Button>
             </div>
 
-            <div className={`text-xs text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+            <div className={`text-xs md:text-sm text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               Still having trouble? Contact your barangay administrator for assistance.
             </div>
           </div>
