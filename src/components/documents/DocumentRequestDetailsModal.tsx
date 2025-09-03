@@ -98,10 +98,36 @@ const DocumentRequestDetailsModal = ({
             {/* Status Description */}
             <div className="mt-3 p-3 bg-background rounded-md border border-border">
               <p className="text-sm text-foreground">
-                {request.status.toLowerCase() === 'pending' && 'This request is awaiting administrative review and approval.'}
-                {request.status.toLowerCase() === 'processing' && 'The document is currently being prepared and processed.'}
-                {request.status.toLowerCase() === 'approved' && 'Request has been approved and document is ready for release.'}
-                {request.status.toLowerCase() === 'rejected' && 'Request has been denied. Please review the notes below for details.'}
+                {request.status.toLowerCase() === 'pending' && (
+                  <>
+                    <span className="font-medium text-amber-600 dark:text-amber-400">Awaiting Review:</span> Your document request has been submitted and is currently in the queue for administrative review. Our staff will verify your information and process your request within 1-3 business days.
+                  </>
+                )}
+                {request.status.toLowerCase() === 'processing' && (
+                  <>
+                    <span className="font-medium text-blue-600 dark:text-blue-400">In Progress:</span> Your request has been approved and the document is currently being prepared. This includes verification of details, document generation, and quality checks. Processing typically takes 2-5 business days.
+                  </>
+                )}
+                {(request.status.toLowerCase() === 'approved' || request.status.toLowerCase() === 'ready') && (
+                  <>
+                    <span className="font-medium text-green-600 dark:text-green-400">Ready for Pickup:</span> Great news! Your document has been completed and is ready for collection. Please visit the barangay office during office hours with a valid ID to claim your document.
+                  </>
+                )}
+                {(request.status.toLowerCase() === 'released' || request.status.toLowerCase() === 'completed') && (
+                  <>
+                    <span className="font-medium text-purple-600 dark:text-purple-400">Released:</span> Your document has been successfully released and the transaction is now complete. Thank you for using our services!
+                  </>
+                )}
+                {request.status.toLowerCase() === 'rejected' && (
+                  <>
+                    <span className="font-medium text-red-600 dark:text-red-400">Request Denied:</span> Unfortunately, your request could not be processed due to incomplete information or other requirements not met. Please check the administrative notes below for specific details and resubmit if possible.
+                  </>
+                )}
+                {!['pending', 'processing', 'approved', 'ready', 'released', 'completed', 'rejected'].includes(request.status.toLowerCase()) && (
+                  <>
+                    <span className="font-medium">Status Update:</span> Your request status has been updated. Please contact the barangay office if you need clarification about the current status.
+                  </>
+                )}
               </p>
             </div>
           </div>
