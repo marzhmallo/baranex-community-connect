@@ -31,14 +31,6 @@ const PublicHomePage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Barangay Banner */}
-      {showBanner && selectedBarangay && (
-        <BarangayBanner 
-          onChangeBarangay={handleChangeBarangay}
-          onDismiss={clearSelection}
-        />
-      )}
-
       {/* Public Header */}
       <header className="border-b bg-background">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
