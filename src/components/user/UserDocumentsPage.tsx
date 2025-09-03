@@ -854,7 +854,10 @@ const UserDocumentsPage = () => {
                       <Label className="text-sm font-medium text-foreground">Processing Time</Label>
                     </div>
                     <p className="text-sm text-muted-foreground pl-6">
-                      {selectedTemplate.processing_time || '1-3 business days'}
+                      {selectedTemplate.validity_days 
+                        ? `${selectedTemplate.validity_days} days`
+                        : '1-3 business days'
+                      }
                     </p>
                   </div>
                 </div>
