@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
 import { useBarangaySelection } from '@/hooks/useBarangaySelection';
+import { PublicPageHeader } from '@/components/public/PublicPageHeader';
 
 export type Event = {
   id: string;

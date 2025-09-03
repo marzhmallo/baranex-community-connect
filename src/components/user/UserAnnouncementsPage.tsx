@@ -10,6 +10,7 @@ import AnnouncementsList from '@/components/announcements/AnnouncementsList';
 import { Search, Users, FolderOpen, ArrowUpDown, Megaphone, CheckCircle, Calendar, AlertTriangle, Clock, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
+import { PublicPageHeader } from '@/components/public/PublicPageHeader';
 
 export interface Announcement {
   id: string;

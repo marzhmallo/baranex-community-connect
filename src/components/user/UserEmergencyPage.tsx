@@ -95,10 +95,10 @@ const UserEmergencyPage = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
+      <PublicPageHeader title="Emergency Information" />
       <div className="flex items-center gap-3 mb-6">
         <Shield className="h-8 w-8 text-red-600" />
         <div>
-          <h1 className="text-2xl font-bold">Emergency Information</h1>
           <p className="text-muted-foreground">Important safety information and emergency contacts</p>
         </div>
       </div>
