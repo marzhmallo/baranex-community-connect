@@ -1160,26 +1160,26 @@ const Auth = () => {
         </div>
         
         {/* Right side - Auth Form */}
-        <div className="w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto lg:mx-0 px-2 sm:px-0">
-          <div className={`backdrop-blur-sm rounded-lg sm:rounded-2xl md:rounded-3xl shadow-2xl p-3 sm:p-4 md:p-6 lg:p-8 w-full ${theme === 'dark' ? 'bg-slate-800/90 border border-slate-700/50' : 'bg-white/95 border border-blue-200/50'}`}>
+        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg mx-auto lg:mx-0 px-2 sm:px-0">
+          <div className={`backdrop-blur-sm rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl p-4 sm:p-5 md:p-6 lg:p-8 w-full ${theme === 'dark' ? 'bg-slate-800/90 border border-slate-700/50' : 'bg-white/95 border border-blue-200/50'}`}>
             {/* Mobile header */}
             <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:hidden">
-              <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-2 sm:mb-3 md:mb-4 shadow-lg">
-                <Building className="text-white text-sm sm:text-lg md:text-2xl" />
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-2 sm:mb-3 md:mb-4 shadow-lg">
+                <Building className="text-white text-base sm:text-lg md:text-2xl" />
               </div>
-              <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Baranex</h1>
-              <p className={`font-semibold text-xs sm:text-sm md:text-base ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'}`}>Next-Gen Barangay Management</p>
+              <h1 className={`text-xl sm:text-2xl md:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Baranex</h1>
+              <p className={`font-semibold text-sm sm:text-sm md:text-base ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-600'}`}>Next-Gen Barangay Management</p>
             </div>
             
             <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "login" | "signup" | "forgot-password" | "reset-password")} className="w-full">
               
               
               {/* Header text */}
-              <div className="text-center mb-3 sm:mb-4 md:mb-6">
-                <h2 className={`text-base sm:text-lg md:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
+              <div className="text-center mb-4 sm:mb-5 md:mb-6">
+                <h2 className={`text-lg sm:text-xl md:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
                   {activeTab === "login" ? "Welcome Back!" : activeTab === "signup" ? "Create an Account" : activeTab === "forgot-password" ? "Reset Password" : "Set New Password"}
                 </h2>
-                <p className={`text-xs sm:text-sm md:text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                <p className={`text-sm sm:text-sm md:text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                   {activeTab === "login" ? "Sign in to your dashboard" : activeTab === "signup" ? "Join Baranex to manage your community" : activeTab === "forgot-password" ? "Enter your email to receive a password reset link" : "Enter your new password"}
                 </p>
               </div>
