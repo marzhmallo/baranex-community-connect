@@ -51,7 +51,6 @@ const DocumentsPage = () => {
   // Document tracking modals state
   const [selectedTrackingItem, setSelectedTrackingItem] = useState(null);
   const [isTrackingDetailsOpen, setIsTrackingDetailsOpen] = useState(false);
-  const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
 
   // Document tracking state  
   const [documentTracking, setDocumentTracking] = useState<any[]>([]);
@@ -751,9 +750,50 @@ const DocumentsPage = () => {
   };
 
   // Handler to edit tracking item status
-  const handleEditTrackingStatus = (trackingItem: any) => {
-    setSelectedTrackingItem(trackingItem);
-    setIsEditStatusOpen(true);
+  const handleEditTrackingStatus = async (trackingItem: any) => {
+    try {
+      // Fetch full request details using docnumber
+      const {
+        data,
+        error
+      } = await supabase.from('docrequests').select('*').eq('docnumber', trackingItem.id).single();
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch request details",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Transform data to match expected format
+      let name = 'Unknown';
+      if (data.receiver) {
+        try {
+          if (typeof data.receiver === 'object' && data.receiver !== null && !Array.isArray(data.receiver)) {
+            name = (data.receiver as any).name || 'Unknown';
+          } else if (typeof data.receiver === 'string') {
+            const parsed = JSON.parse(data.receiver);
+            name = parsed.name || 'Unknown';
+          }
+        } catch {
+          name = 'Unknown';
+        }
+      }
+      const requestData = {
+        ...data,
+        name
+      };
+      setSelectedRequest(requestData);
+      setIsRequestDetailsOpen(true);
+    } catch (error) {
+      console.error('Error fetching tracking details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch request details",
+        variant: "destructive"
+      });
+    }
   };
 
   // Handler to update request status
@@ -784,8 +824,8 @@ const DocumentsPage = () => {
 
       // Refresh tracking data
       fetchDocumentTracking();
-      setIsEditStatusOpen(false);
-      setSelectedTrackingItem(null);
+      setIsRequestDetailsOpen(false);
+      setSelectedRequest(null);
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
@@ -1525,38 +1565,6 @@ const DocumentsPage = () => {
       {/* Document Request Details Modal */}
       <DocumentRequestDetailsModal isOpen={isRequestDetailsOpen} onClose={() => setIsRequestDetailsOpen(false)} request={selectedRequest} onApprove={handleApproveRequest} onDeny={handleDenyRequest} />
 
-      {/* Edit Status Modal */}
-      <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
-        <DialogContent className="max-w-md bg-background border-border">
-          <DialogHeader>
-            <DialogTitle>Edit Request Status</DialogTitle>
-          </DialogHeader>
-          {selectedTrackingItem && <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Document: {selectedTrackingItem.document}</p>
-                <p className="text-sm text-muted-foreground">Tracking ID: {selectedTrackingItem.id}</p>
-                <p className="text-sm text-muted-foreground">Requested by: {selectedTrackingItem.requestedBy}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Update Status:</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Processing')} variant="outline" className="bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700 hover:text-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400">
-                    Processing
-                  </Button>
-                  <Button onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Ready')} variant="outline" className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400">
-                    Ready
-                  </Button>
-                  <Button onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Rejected')} variant="outline" className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400">
-                    Rejected
-                  </Button>
-                  <Button onClick={() => handleUpdateStatus(selectedTrackingItem.id, 'Released')} variant="outline" className="bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700 hover:text-purple-800 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400">
-                    Released
-                  </Button>
-                </div>
-              </div>
-            </div>}
-        </DialogContent>
-      </Dialog>
     </div>;
 };
 export default DocumentsPage;
