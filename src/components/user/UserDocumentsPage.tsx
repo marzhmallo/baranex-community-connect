@@ -736,52 +736,204 @@ const UserDocumentsPage = () => {
 
       {/* View Request Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Request Details</DialogTitle>
-          </DialogHeader>
-          {selectedRequest && <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">Tracking ID</Label>
-                  <p className="text-sm text-muted-foreground">{selectedRequest.docnumber}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Document Type</Label>
-                  <p className="text-sm text-muted-foreground">{selectedRequest.type}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Status</Label>
-                  {getStatusBadge(selectedRequest.status)}
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Payment Method</Label>
-                  <p className="text-sm text-muted-foreground">{selectedRequest.method || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Amount</Label>
-                  <p className="text-sm text-muted-foreground">₱{selectedRequest.amount || 0}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Requested Date</Label>
-                  <p className="text-sm text-muted-foreground">{formatDate(selectedRequest.created_at)}</p>
-                </div>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader className="pb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <Label className="text-sm font-medium">Purpose</Label>
-                <p className="text-sm text-muted-foreground mt-1">{selectedRequest.purpose}</p>
+                <DialogTitle className="text-xl font-semibold">Document Request Details</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">Complete information about your document request</p>
               </div>
-              {selectedRequest.receiver && <div>
-                  <Label className="text-sm font-medium">Recipient</Label>
-                  <p className="text-sm text-muted-foreground mt-1">
+            </div>
+          </DialogHeader>
+          
+          {selectedRequest && (
+            <div className="space-y-6">
+              {/* Status Banner */}
+              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">Current Status</h3>
+                      <p className="text-sm text-muted-foreground">Track your request progress</p>
+                    </div>
+                  </div>
+                  {getStatusBadge(selectedRequest.status)}
+                </div>
+                
+                {/* Status Description */}
+                <div className="mt-3 p-3 bg-background rounded-md border border-border">
+                  <p className="text-sm text-foreground">
+                    {selectedRequest.status.toLowerCase() === 'pending' && 'Your request is being reviewed by the barangay office.'}
+                    {selectedRequest.status.toLowerCase() === 'processing' && 'Your document is currently being processed.'}
+                    {(selectedRequest.status.toLowerCase() === 'ready' || selectedRequest.status.toLowerCase() === 'approved') && 'Your document is ready for pickup at the barangay office.'}
+                    {selectedRequest.status.toLowerCase() === 'released' && 'Your document has been successfully released.'}
+                    {selectedRequest.status.toLowerCase() === 'rejected' && 'Your request has been rejected. Please check admin notes below.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Request Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <Package className="h-5 w-5 text-primary" />
+                    Request Information
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Tracking ID</Label>
+                      </div>
+                      <p className="text-lg font-mono font-semibold text-primary pl-6">{selectedRequest.docnumber}</p>
+                    </div>
+                    
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Document Type</Label>
+                      </div>
+                      <p className="text-sm text-foreground pl-6">{selectedRequest.type}</p>
+                    </div>
+                    
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Request Date</Label>
+                      </div>
+                      <p className="text-sm text-foreground pl-6">{formatDate(selectedRequest.created_at)}</p>
+                    </div>
+                    
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <History className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Last Updated</Label>
+                      </div>
+                      <p className="text-sm text-foreground pl-6">{formatDate(selectedRequest.updated_at || selectedRequest.created_at)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment & Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Payment & Details
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <BarChart3 className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Amount</Label>
+                      </div>
+                      <p className="text-lg font-semibold text-green-600 dark:text-green-400 pl-6">₱{selectedRequest.amount || 0}</p>
+                    </div>
+                    
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Package className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Payment Method</Label>
+                      </div>
+                      <p className="text-sm text-foreground pl-6">{selectedRequest.method || 'Not specified'}</p>
+                    </div>
+                    
+                    {selectedRequest.ornumber && (
+                      <div className="p-3 border border-border rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FileText className="h-4 w-4 text-primary" />
+                          <Label className="text-sm font-medium text-foreground">OR Number</Label>
+                        </div>
+                        <p className="text-sm font-mono text-foreground pl-6">{selectedRequest.ornumber}</p>
+                      </div>
+                    )}
+                    
+                    {selectedRequest.paydate && (
+                      <div className="p-3 border border-border rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="h-4 w-4 text-primary" />
+                          <Label className="text-sm font-medium text-foreground">Payment Date</Label>
+                        </div>
+                        <p className="text-sm text-foreground pl-6">{formatDate(selectedRequest.paydate)}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Purpose Section */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <Label className="text-sm font-medium text-blue-800 dark:text-blue-200">Purpose</Label>
+                </div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 pl-6 leading-relaxed">{selectedRequest.purpose}</p>
+              </div>
+
+              {/* Recipient Information */}
+              {selectedRequest.receiver && (
+                <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <Label className="text-sm font-medium text-green-800 dark:text-green-200">Recipient Information</Label>
+                  </div>
+                  <p className="text-sm text-green-700 dark:text-green-300 pl-6">
                     {typeof selectedRequest.receiver === 'object' ? selectedRequest.receiver.name : selectedRequest.receiver}
                   </p>
-                </div>}
-              {selectedRequest.notes && <div>
-                  <Label className="text-sm font-medium">Admin Notes</Label>
-                  <p className="text-sm text-muted-foreground mt-1">{selectedRequest.notes}</p>
-                </div>}
-            </div>}
+                </div>
+              )}
+
+              {/* Admin Notes */}
+              {selectedRequest.notes && (
+                <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bell className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <Label className="text-sm font-medium text-amber-800 dark:text-amber-200">Administrative Notes</Label>
+                  </div>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 pl-6 leading-relaxed">{selectedRequest.notes}</p>
+                </div>
+              )}
+
+              {/* Contact Information */}
+              {(selectedRequest.email || selectedRequest['contact#']) && (
+                <div className="p-4 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MessageCircle className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    <Label className="text-sm font-medium text-purple-800 dark:text-purple-200">Contact Information</Label>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                    {selectedRequest.email && (
+                      <div>
+                        <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">Email</Label>
+                        <p className="text-sm text-purple-600 dark:text-purple-300">{selectedRequest.email}</p>
+                      </div>
+                    )}
+                    {selectedRequest['contact#'] && (
+                      <div>
+                        <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">Contact Number</Label>
+                        <p className="text-sm text-purple-600 dark:text-purple-300">{selectedRequest['contact#']}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Action Buttons */}
+              <div className="flex justify-end pt-4 border-t border-border">
+                <Button onClick={() => setShowViewDialog(false)} className="px-6">
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
