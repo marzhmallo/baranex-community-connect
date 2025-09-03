@@ -943,7 +943,7 @@ const DocumentsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Documents</p>
-                <p className="text-2xl font-bold text-foreground">{documentStats?.total || 0}</p>
+                <p className="text-2xl font-bold text-foreground">{filteredStats.readyForPickup + filteredStats.processing + filteredStats.released + filteredStats.rejected}</p>
               </div>
               <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full">
                 <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
