@@ -1734,13 +1734,13 @@ const Auth = () => {
               </TabsContent>
             </Tabs>
             
-            <div className={`mt-6 pt-6 ${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'}`}>
-              <div className="text-center space-y-3">
-                <Button onClick={() => navigate('/')} variant="ghost" size="sm" className={`text-sm transition-all duration-200 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-600'}`}>
+            <div className={`mt-3 sm:mt-4 md:mt-6 pt-3 sm:pt-4 md:pt-6 ${theme === 'dark' ? 'border-t border-slate-700' : 'border-t border-blue-200'}`}>
+              <div className="text-center space-y-2 sm:space-y-3">
+                <Button onClick={() => navigate('/')} variant="ghost" size="sm" className={`text-xs sm:text-sm transition-all duration-200 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-600'}`}>
                   ← Back to Home
                 </Button>
                 
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                   {activeTab === "login" ? <>
                       New to Baranex?{" "}
                       <button onClick={() => setActiveTab("signup")} className={`font-medium hover:underline transition-all duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>
@@ -1761,13 +1761,13 @@ const Auth = () => {
               </div>
             </div>
             
-            <div className={`mt-6 flex items-center justify-center gap-4 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+            <div className={`mt-3 sm:mt-4 md:mt-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               <span className="flex items-center gap-1">
-                <Lock className={`h-4 w-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'}`} />
+                <Lock className={`h-3 w-3 sm:h-4 sm:w-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'}`} />
                 SSL Secured
               </span>
               <span className="flex items-center gap-1">
-                <svg className={`h-4 w-4 ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-500'}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className={`h-3 w-3 sm:h-4 sm:w-4 ${theme === 'dark' ? 'text-indigo-400' : 'text-blue-500'}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 Gov Certified
@@ -1775,7 +1775,7 @@ const Auth = () => {
             </div>
           </div>
           
-          <div className={`mt-6 text-center text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+          <div className={`mt-3 sm:mt-4 md:mt-6 text-center text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
             <p>© 2025 Baranex. Empowering Filipino Communities.</p>
           </div>
         </div>
