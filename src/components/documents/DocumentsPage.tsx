@@ -1072,86 +1072,6 @@ const DocumentsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Document Tracking System */}
-      <Card className="mb-8 border-border">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
-              <CardTitle className="text-foreground">Document Tracking System</CardTitle>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10 border-border bg-background text-foreground" />
-            </div>
-            <div className="flex gap-2">
-              {["All Documents", "Processing", "Released", "Rejected", "Ready"].map(filter => <Button key={filter} variant={trackingFilter === filter ? "default" : "outline"} size="sm" onClick={() => setTrackingFilter(filter)} className={trackingFilter === filter ? "bg-purple-600 hover:bg-purple-700 text-white" : "border-border text-foreground hover:bg-accent"}>
-                  {filter}
-                </Button>)}
-            </div>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border">
-                <TableHead className="text-foreground">Tracking ID</TableHead>
-                <TableHead className="text-foreground">Document</TableHead>
-                <TableHead className="text-foreground">Requested By</TableHead>
-                <TableHead className="text-foreground">Status</TableHead>
-                <TableHead className="text-foreground">Last Update</TableHead>
-                <TableHead className="text-foreground">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {documentTracking.map(doc => <TableRow key={doc.id} className="border-border hover:bg-accent">
-                  <TableCell>
-                    <span className="text-purple-600 dark:text-purple-400 font-medium">{doc.id}</span>
-                  </TableCell>
-                  <TableCell className="text-foreground">{doc.document}</TableCell>
-                  <TableCell className="text-foreground">{doc.requestedBy}</TableCell>
-                  <TableCell>
-                    <Badge className={`${doc.statusColor} text-white`}>
-                      {doc.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{doc.lastUpdate}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="hover:bg-accent" onClick={() => handleViewTrackingDetails(doc)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="hover:bg-accent" onClick={() => handleEditTrackingStatus(doc)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>)}
-            </TableBody>
-          </Table>
-
-          <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-muted-foreground">
-              Showing {Math.min(trackingItemsPerPage, trackingTotalCount)} of {trackingTotalCount} documents requests
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={() => setTrackingCurrentPage(prev => Math.max(prev - 1, 1))} disabled={trackingCurrentPage === 1}>
-                <ChevronLeft className="h-3 w-3" />
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {trackingCurrentPage} of {Math.ceil(trackingTotalCount / trackingItemsPerPage)}
-              </span>
-              <Button variant="outline" size="sm" onClick={() => setTrackingCurrentPage(prev => Math.min(prev + 1, Math.ceil(trackingTotalCount / trackingItemsPerPage)))} disabled={trackingCurrentPage === Math.ceil(trackingTotalCount / trackingItemsPerPage)}>
-                <ChevronRight className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Document Requests and Quick Actions Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Document Requests Section with improved buttons */}
@@ -1339,6 +1259,86 @@ const DocumentsPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Document Tracking System */}
+      <Card className="mb-8 border-border">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              <CardTitle className="text-foreground">Document Tracking System</CardTitle>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10 border-border bg-background text-foreground" />
+            </div>
+            <div className="flex gap-2">
+              {["All Documents", "Processing", "Released", "Rejected", "Ready"].map(filter => <Button key={filter} variant={trackingFilter === filter ? "default" : "outline"} size="sm" onClick={() => setTrackingFilter(filter)} className={trackingFilter === filter ? "bg-purple-600 hover:bg-purple-700 text-white" : "border-border text-foreground hover:bg-accent"}>
+                  {filter}
+                </Button>)}
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border">
+                <TableHead className="text-foreground">Tracking ID</TableHead>
+                <TableHead className="text-foreground">Document</TableHead>
+                <TableHead className="text-foreground">Requested By</TableHead>
+                <TableHead className="text-foreground">Status</TableHead>
+                <TableHead className="text-foreground">Last Update</TableHead>
+                <TableHead className="text-foreground">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {documentTracking.map(doc => <TableRow key={doc.id} className="border-border hover:bg-accent">
+                  <TableCell>
+                    <span className="text-purple-600 dark:text-purple-400 font-medium">{doc.id}</span>
+                  </TableCell>
+                  <TableCell className="text-foreground">{doc.document}</TableCell>
+                  <TableCell className="text-foreground">{doc.requestedBy}</TableCell>
+                  <TableCell>
+                    <Badge className={`${doc.statusColor} text-white`}>
+                      {doc.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{doc.lastUpdate}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="hover:bg-accent" onClick={() => handleViewTrackingDetails(doc)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="hover:bg-accent" onClick={() => handleEditTrackingStatus(doc)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>)}
+            </TableBody>
+          </Table>
+
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-muted-foreground">
+              Showing {Math.min(trackingItemsPerPage, trackingTotalCount)} of {trackingTotalCount} documents requests
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={() => setTrackingCurrentPage(prev => Math.max(prev - 1, 1))} disabled={trackingCurrentPage === 1}>
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {trackingCurrentPage} of {Math.ceil(trackingTotalCount / trackingItemsPerPage)}
+              </span>
+              <Button variant="outline" size="sm" onClick={() => setTrackingCurrentPage(prev => Math.min(prev + 1, Math.ceil(trackingTotalCount / trackingItemsPerPage)))} disabled={trackingCurrentPage === Math.ceil(trackingTotalCount / trackingItemsPerPage)}>
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Document Library */}
