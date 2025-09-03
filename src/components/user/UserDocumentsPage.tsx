@@ -30,6 +30,7 @@ const UserDocumentsPage = () => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingRequest, setEditingRequest] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const {
     userProfile
   } = useAuth();
@@ -289,12 +290,19 @@ const UserDocumentsPage = () => {
               My Document Status
             </h2>
             <div className="flex gap-2">
-              <button onClick={() => {
-                // Invalidate all queries to refresh all data
-                queryClient.invalidateQueries({ queryKey: ['user-document-requests'] });
-                queryClient.invalidateQueries({ queryKey: ['document-types'] });
-              }} className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
-                <RefreshCw className="h-4 w-4" />
+              <button onClick={async () => {
+                setIsRefreshing(true);
+                try {
+                  // Invalidate all queries to refresh all data
+                  await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
+                    queryClient.invalidateQueries({ queryKey: ['document-types'] })
+                  ]);
+                } finally {
+                  setIsRefreshing(false);
+                }
+              }} disabled={isRefreshing} className={`p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
