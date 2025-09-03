@@ -56,7 +56,7 @@ const DocumentsPage = () => {
   const [documentTracking, setDocumentTracking] = useState<any[]>([]);
   const [trackingCurrentPage, setTrackingCurrentPage] = useState(1);
   const [trackingTotalCount, setTrackingTotalCount] = useState(0);
-  const itemsPerPage = 4;
+  const itemsPerPage = 3;
   const trackingItemsPerPage = 5;
   const {
     toast
