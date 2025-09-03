@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme/IconThemeToggle';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const PublicPagesSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -115,7 +115,7 @@ const PublicPagesSidebar = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-primary-foreground/20 space-y-2">
-          <ThemeToggle />
+          <ThemeToggle isCollapsed={isCollapsed} />
           
           <Link to="/">
             <Button 
