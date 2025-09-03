@@ -99,6 +99,14 @@ const PublicHomePage = () => {
         </div>
       </header>
 
+      {/* Barangay Banner */}
+      {showBanner && selectedBarangay && (
+        <BarangayBanner 
+          onChangeBarangay={handleChangeBarangay}
+          onDismiss={clearSelection}
+        />
+      )}
+
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-primary/5 to-background py-16">
         <div className="container mx-auto px-4 text-center">
