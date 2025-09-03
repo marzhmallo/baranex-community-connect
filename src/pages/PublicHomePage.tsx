@@ -35,7 +35,7 @@ const PublicHomePage = () => {
       {showBanner && selectedBarangay && (
         <BarangayBanner 
           onChangeBarangay={handleChangeBarangay}
-          onDismiss={dismissBanner}
+          onDismiss={clearSelection}
         />
       )}
 
