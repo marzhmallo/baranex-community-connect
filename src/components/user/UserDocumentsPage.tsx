@@ -874,7 +874,10 @@ const UserDocumentsPage = () => {
                       <Label className="text-sm font-medium text-foreground">Validity Period</Label>
                     </div>
                     <p className="text-sm text-muted-foreground pl-6">
-                      {selectedTemplate.validity_days || 180} days from issuance
+                      {selectedTemplate.validity_days 
+                        ? `${selectedTemplate.validity_days} days from issuance`
+                        : 'Indefinite'
+                      }
                     </p>
                   </div>
                 </div>
