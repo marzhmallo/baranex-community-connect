@@ -837,14 +837,14 @@ const UserDocumentsPage = () => {
 
               {/* Document Details Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
+              <div className="space-y-4">
                   <div className="p-4 border border-border rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Package className="h-4 w-4 text-primary" />
                       <Label className="text-sm font-medium text-foreground">Document Type</Label>
                     </div>
                     <p className="text-sm text-muted-foreground pl-6">
-                      {selectedTemplate.category || 'Barangay Certificate'}
+                      {selectedTemplate.type || 'Barangay Certificate'}
                     </p>
                   </div>
                   
@@ -874,25 +874,12 @@ const UserDocumentsPage = () => {
                       <Label className="text-sm font-medium text-foreground">Validity Period</Label>
                     </div>
                     <p className="text-sm text-muted-foreground pl-6">
-                      {selectedTemplate.validity || '6 months from issuance'}
+                      {selectedTemplate.validity_days 
+                        ? `${selectedTemplate.validity_days} days from issuance`
+                        : '6 months from issuance'
+                      }
                     </p>
                   </div>
-                </div>
-              </div>
-
-              {/* Requirements Section */}
-              <div className="p-4 border border-border rounded-lg">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <Label className="text-sm font-medium text-foreground">Required Documents</Label>
-                </div>
-                <div className="pl-6 space-y-2">
-                  <p className="text-sm text-muted-foreground">• Valid Government ID (Original and Photocopy)</p>
-                  <p className="text-sm text-muted-foreground">• Proof of Residency</p>
-                  <p className="text-sm text-muted-foreground">• Certificate of Indigency (if applicable)</p>
-                  {selectedTemplate.requirements && (
-                    <p className="text-sm text-muted-foreground">• {selectedTemplate.requirements}</p>
-                  )}
                 </div>
               </div>
 
