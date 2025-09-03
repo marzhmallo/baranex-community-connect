@@ -15,7 +15,14 @@ import {
   CreditCard,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Package,
+  BarChart3,
+  History,
+  MessageCircle,
+  Bell,
+  Eye,
+  Shield
 } from "lucide-react";
 
 interface DocumentRequestDetailsModalProps {
@@ -59,131 +66,201 @@ const DocumentRequestDetailsModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Document Request Details
-          </DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+              <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-semibold">Document Request Review</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-1">Complete details for administrative review</p>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Request Overview */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center justify-between">
-                <span>Request Overview</span>
-                {getStatusBadge(request.status)}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Document Number</p>
-                  <p className="font-mono text-sm bg-muted px-2 py-1 rounded">{request.docnumber}</p>
+          {/* Status Banner */}
+          <div className="bg-muted/50 rounded-lg p-4 border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Shield className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Document Type</p>
-                  <p className="font-medium">{request.document}</p>
+                  <h3 className="font-semibold text-foreground">Request Status</h3>
+                  <p className="text-sm text-muted-foreground">Current processing stage</p>
                 </div>
               </div>
-              
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Purpose</p>
-                <p className="text-sm bg-muted p-2 rounded">{request.purpose}</p>
-              </div>
+              {getStatusBadge(request.status)}
+            </div>
+            
+            {/* Status Description */}
+            <div className="mt-3 p-3 bg-background rounded-md border border-border">
+              <p className="text-sm text-foreground">
+                {request.status.toLowerCase() === 'pending' && 'This request is awaiting administrative review and approval.'}
+                {request.status.toLowerCase() === 'processing' && 'The document is currently being prepared and processed.'}
+                {request.status.toLowerCase() === 'approved' && 'Request has been approved and document is ready for release.'}
+                {request.status.toLowerCase() === 'rejected' && 'Request has been denied. Please review the notes below for details.'}
+              </p>
+            </div>
+          </div>
 
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>Requested {request.timeAgo}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Requester Information */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Requester Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-lg font-medium text-primary">
-                    {request.name.split(' ').map((n: string) => n[0]).join('')}
-                  </span>
-                </div>
-                <div>
-                  <p className="font-medium text-lg">{request.name}</p>
-                  <p className="text-sm text-muted-foreground">Resident</p>
-                </div>
-              </div>
+          {/* Main Information Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Request Details */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
+                Request Information
+              </h3>
               
-              {/* Contact information from direct columns */}
-              <div className="grid grid-cols-1 gap-2 pt-2">
-                {request.email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{request.email}</span>
+              <div className="space-y-3">
+                <div className="p-4 border border-border rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Document Number</p>
                   </div>
-                )}
-                {request["contact#"] && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{request["contact#"]}</span>
+                  <p className="text-lg font-mono font-semibold text-primary pl-6">{request.docnumber}</p>
+                </div>
+                
+                <div className="p-4 border border-border rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Document Type</p>
                   </div>
-                )}
-                {(!request.email && !request["contact#"]) && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                    <span>Contact information not available</span>
+                  <p className="font-medium text-foreground pl-6">{request.document || request.type}</p>
+                </div>
+                
+                <div className="p-4 border border-border rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Request Date</p>
                   </div>
-                )}
+                  <p className="text-foreground pl-6">{request.timeAgo || new Date(request.created_at).toLocaleDateString()}</p>
+                </div>
+                
+                <div className="p-4 border border-border rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <History className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Last Updated</p>
+                  </div>
+                  <p className="text-foreground pl-6">{new Date(request.updated_at || request.created_at).toLocaleDateString()}</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Requester Profile */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                Requester Profile
+              </h3>
+              
+              <div className="p-4 border border-border rounded-lg">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-xl font-bold text-primary">
+                      {request.name.split(' ').map((n: string) => n[0]).join('')}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg text-foreground">{request.name}</p>
+                    <p className="text-sm text-muted-foreground">Barangay Resident</p>
+                  </div>
+                </div>
+                
+                {/* Contact Information */}
+                <div className="space-y-2 pt-2 border-t border-border">
+                  {request.email && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-4 w-4 text-primary" />
+                      <span className="text-foreground">{request.email}</span>
+                    </div>
+                  )}
+                  {request["contact#"] && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-primary" />
+                      <span className="text-foreground">{request["contact#"]}</span>
+                    </div>
+                  )}
+                  {(!request.email && !request["contact#"]) && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Contact information not provided</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Purpose Section */}
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="font-semibold text-blue-800 dark:text-blue-200">Document Purpose</h3>
+            </div>
+            <p className="text-blue-700 dark:text-blue-300 leading-relaxed pl-7">{request.purpose}</p>
+          </div>
 
           {/* Payment Information */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center justify-between">
+          <div className="bg-card rounded-lg border border-border">
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Payment Information
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-foreground">Payment Information</h3>
                 </div>
                 {getPaymentStatus()}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Amount</p>
-                  <p className="font-medium">₱{request.amount || '0.00'}</p>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="p-3 border border-border rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Amount Due</p>
+                  </div>
+                  <p className="text-xl font-bold text-green-600 dark:text-green-400 pl-6">₱{request.amount || '0.00'}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Payment Method</p>
-                  <p className="font-medium">{request.method || 'Not specified'}</p>
+                
+                <div className="p-3 border border-border rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CreditCard className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Payment Method</p>
+                  </div>
+                  <p className="text-foreground pl-6">{request.method || 'Not specified'}</p>
                 </div>
               </div>
               
               {request.paydate && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Payment Date</p>
-                  <p className="font-medium">{new Date(request.paydate).toLocaleDateString()}</p>
+                <div className="p-3 border border-border rounded-lg mb-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Payment Date</p>
+                  </div>
+                  <p className="text-foreground pl-6">{new Date(request.paydate).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}</p>
                 </div>
               )}
 
               {request.paymenturl && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Payment Proof</p>
-                  <div className="grid gap-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Eye className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Payment Proof</p>
+                  </div>
+                  <div className="grid gap-4 pl-6">
                     {Array.isArray(request.paymenturl) ? (
                       request.paymenturl.map((url: string, index: number) => (
-                        <div key={index} className="mx-4">
+                        <div key={index} className="border border-border rounded-lg overflow-hidden">
                           <SmartPhotoDisplay
                             bucketName="cashg"
                             filePath={url}
@@ -196,7 +273,7 @@ const DocumentRequestDetailsModal = ({
                         </div>
                       ))
                     ) : (
-                      <div className="mx-4">
+                      <div className="border border-border rounded-lg overflow-hidden">
                         <SmartPhotoDisplay
                           bucketName="cashg"
                           filePath={request.paymenturl}
@@ -211,53 +288,52 @@ const DocumentRequestDetailsModal = ({
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Notes */}
+          {/* Additional Notes */}
           {request.notes && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Additional Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm bg-muted p-3 rounded">{request.notes}</p>
-              </CardContent>
-            </Card>
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <Bell className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <h3 className="font-semibold text-amber-800 dark:text-amber-200">Additional Notes</h3>
+              </div>
+              <p className="text-amber-700 dark:text-amber-300 leading-relaxed pl-7">{request.notes}</p>
+            </div>
           )}
         </div>
 
-        <Separator />
+        <Separator className="my-6" />
 
         {/* Action Buttons */}
-        {request.status === 'pending' && (
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                onDeny(request.id, request.name);
-                onClose();
-              }}
-              className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800"
-            >
-              <XCircle className="h-4 w-4 mr-2" />
-              Deny Request
-            </Button>
-            <Button
-              onClick={() => {
-                onApprove(request.id, request.name);
-                onClose();
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Approve Request
-            </Button>
-          </div>
-        )}
-        
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+          {request.status === 'pending' && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onDeny(request.id, request.name);
+                  onClose();
+                }}
+                className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-950/20 dark:border-red-800 dark:text-red-400"
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Deny Request
+              </Button>
+              <Button
+                onClick={() => {
+                  onApprove(request.id, request.name);
+                  onClose();
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Approve Request
+              </Button>
+            </>
+          )}
+          
+          <Button variant="outline" onClick={onClose} className="px-6">
             Close
           </Button>
         </div>
