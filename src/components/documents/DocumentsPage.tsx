@@ -1025,72 +1025,136 @@ const DocumentsPage = () => {
       {/* Document Requests and Quick Actions Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Document Requests Section with improved buttons */}
-        <Card className="border-border">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <FileCheck className="h-5 w-5" />
-              <CardTitle className="text-foreground">Document Requests</CardTitle>
+        <Card className="relative overflow-hidden bg-gradient-to-br from-background via-background/95 to-muted/20 border border-border/60 shadow-lg backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+          <CardHeader className="relative pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
+                  <FileCheck className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-foreground font-semibold">Document Requests</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">Pending approvals</p>
+                </div>
+              </div>
+              <div className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                <span className="text-xs font-medium text-primary">{documentRequests.length}</span>
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="flex flex-col h-96">
-            {false ? <div className="flex items-center justify-center py-8">
-                <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-                <p className="ml-2 text-sm text-muted-foreground">Loading requests...</p>
+          <CardContent className="relative flex flex-col h-96 pt-0">
+            {false ? 
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                    <div className="absolute inset-0 w-8 h-8 rounded-full bg-primary/10" />
+                  </div>
+                  <p className="text-sm text-muted-foreground font-medium">Loading requests...</p>
+                </div>
               </div> : 
               <>
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 overflow-hidden">
                   {documentRequests.length > 0 ? (
-                    <div className="space-y-4">
-                      {documentRequests.map(request => 
-                        <div key={request.id} className="flex items-center justify-between p-2 bg-card border border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => handleRequestClick(request)}>
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                              <span className="text-sm font-medium text-foreground">{request.name.split(' ').map((n: string) => n[0]).join('')}</span>
+                    <div className="space-y-3 h-full overflow-y-auto pr-2 -mr-2">
+                      {documentRequests.map((request, index) => 
+                        <div 
+                          key={request.id} 
+                          className="group relative p-4 bg-gradient-to-r from-card via-card/80 to-card/60 border border-border/60 rounded-xl cursor-pointer hover:border-primary/30 hover:shadow-md hover:bg-gradient-to-r hover:from-accent/20 hover:via-background hover:to-background/80 transition-all duration-300 animate-fade-in backdrop-blur-sm"
+                          style={{ animationDelay: `${index * 100}ms` }}
+                          onClick={() => handleRequestClick(request)}
+                        >
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <div className="relative flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="relative">
+                                <div className="w-12 h-12 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20 rounded-2xl flex items-center justify-center border border-primary/20 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
+                                  <span className="text-sm font-semibold text-primary/80 group-hover:text-primary transition-colors">
+                                    {request.name.split(' ').map((n: string) => n[0]).join('')}
+                                  </span>
+                                </div>
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full border-2 border-background shadow-sm animate-pulse" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">{request.name}</h4>
+                                <p className="text-sm text-muted-foreground/80 font-medium truncate">{request.document}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-pulse" />
+                                  <p className="text-xs text-muted-foreground">{request.timeAgo}</p>
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium text-foreground">{request.name}</h4>
-                              <p className="text-sm text-muted-foreground">{request.document}</p>
-                              <p className="text-xs text-muted-foreground">{request.timeAgo}</p>
+                            <div className="flex items-center gap-2 ml-4">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleApproveRequest(request.id, request.name);
+                                }} 
+                                className="relative overflow-hidden bg-gradient-to-r from-emerald-50 to-green-50 hover:from-emerald-100 hover:to-green-100 border-emerald-200/60 text-emerald-700 hover:text-emerald-800 hover:border-emerald-300 shadow-sm hover:shadow-md transition-all duration-300 dark:from-emerald-950/30 dark:to-green-950/30 dark:hover:from-emerald-900/40 dark:hover:to-green-900/40 dark:border-emerald-800/60 dark:text-emerald-400 dark:hover:text-emerald-300 dark:hover:border-emerald-700 backdrop-blur-sm"
+                              >
+                                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+                                <Check className="h-3.5 w-3.5 mr-1.5 relative z-10" />
+                                <span className="relative z-10 font-medium">Approve</span>
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleDenyRequest(request.id, request.name);
+                                }} 
+                                className="relative overflow-hidden bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border-red-200/60 text-red-700 hover:text-red-800 hover:border-red-300 shadow-sm hover:shadow-md transition-all duration-300 dark:from-red-950/30 dark:to-rose-950/30 dark:hover:from-red-900/40 dark:hover:to-rose-900/40 dark:border-red-800/60 dark:text-red-400 dark:hover:text-red-300 dark:hover:border-red-700 backdrop-blur-sm"
+                              >
+                                <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-rose-500/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+                                <X className="h-3.5 w-3.5 mr-1.5 relative z-10" />
+                                <span className="relative z-10 font-medium">Deny</span>
+                              </Button>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" onClick={e => {
-                      e.stopPropagation();
-                      handleApproveRequest(request.id, request.name);
-                    }} className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:text-green-300">
-                              <Check className="h-3 w-3 mr-1" />
-                              Approve
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={e => {
-                      e.stopPropagation();
-                      handleDenyRequest(request.id, request.name);
-                    }} className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:text-red-300">
-                              <X className="h-3 w-3 mr-1" />
-                              Deny
-                            </Button>
                           </div>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-sm text-muted-foreground">No pending requests found</p>
+                    <div className="flex flex-col items-center justify-center h-full py-12">
+                      <div className="w-16 h-16 bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl flex items-center justify-center mb-4 border border-border/60">
+                        <FileCheck className="h-7 w-7 text-muted-foreground/60" />
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">No pending requests</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">New requests will appear here</p>
                     </div>
                   )}
                 </div>
                 
-                {/* Fixed Pagination Area */}
-                <div className="mt-2 pt-2 border-t border-border">
+                {/* Modern Pagination */}
+                <div className="mt-4 pt-4 border-t border-gradient-to-r from-transparent via-border/60 to-transparent">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                      Page {requestsCurrentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
-                    </p>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => setRequestsCurrentPage(prev => Math.max(prev - 1, 1))} disabled={requestsCurrentPage === 1}>
-                        <ChevronLeft className="h-3 w-3" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-primary/60 rounded-full animate-pulse" />
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Page {requestsCurrentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setRequestsCurrentPage(prev => Math.max(prev - 1, 1))} 
+                        disabled={requestsCurrentPage === 1}
+                        className="h-8 w-8 p-0 bg-gradient-to-br from-background to-muted/20 border-border/60 hover:border-primary/30 hover:bg-gradient-to-br hover:from-accent/50 hover:to-background shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-sm backdrop-blur-sm"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => setRequestsCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalCount / itemsPerPage)))} disabled={requestsCurrentPage === Math.ceil(totalCount / itemsPerPage)}>
-                        <ChevronRight className="h-3 w-3" />
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setRequestsCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalCount / itemsPerPage)))} 
+                        disabled={requestsCurrentPage === Math.ceil(totalCount / itemsPerPage)}
+                        className="h-8 w-8 p-0 bg-gradient-to-br from-background to-muted/20 border-border/60 hover:border-primary/30 hover:bg-gradient-to-br hover:from-accent/50 hover:to-background shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-sm backdrop-blur-sm"
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
