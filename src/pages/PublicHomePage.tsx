@@ -216,25 +216,25 @@ const PublicHomePage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-muted py-12 mt-auto">
+      <footer className="bg-muted py-8 md:py-12 mt-auto">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="text-lg font-bold mb-4">Barangay Portal</h3>
-              <p className="text-muted-foreground mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            <div className="text-center md:text-left">
+              <h3 className="text-lg font-bold mb-3 md:mb-4">Barangay Portal</h3>
+              <p className="text-muted-foreground mb-3 md:mb-4 text-sm md:text-base">
                 Your gateway to community services and information
               </p>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm md:text-base">
                 Connecting communities, one click at a time
               </p>
             </div>
-            <div>
-              <h3 className="text-lg font-bold mb-4">Quick Links</h3>
+            <div className="text-center md:text-left">
+              <h3 className="text-lg font-bold mb-3 md:mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
                   <button 
                     onClick={() => handleContentNavigation('announcements')}
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="text-muted-foreground hover:text-primary transition-colors text-sm md:text-base"
                   >
                     Announcements
                   </button>
@@ -242,7 +242,7 @@ const PublicHomePage = () => {
                 <li>
                   <button 
                     onClick={() => handleContentNavigation('events')}
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="text-muted-foreground hover:text-primary transition-colors text-sm md:text-base"
                   >
                     Events Calendar
                   </button>
@@ -250,7 +250,7 @@ const PublicHomePage = () => {
                 <li>
                   <button 
                     onClick={() => handleContentNavigation('officials')}
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="text-muted-foreground hover:text-primary transition-colors text-sm md:text-base"
                   >
                     Barangay Officials
                   </button>
@@ -258,7 +258,7 @@ const PublicHomePage = () => {
                 <li>
                   <button 
                     onClick={() => handleContentNavigation('emergency')}
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="text-muted-foreground hover:text-primary transition-colors text-sm md:text-base"
                   >
                     Emergency Services
                   </button>
@@ -266,24 +266,24 @@ const PublicHomePage = () => {
                 <li>
                   <button 
                     onClick={() => handleContentNavigation('forum')}
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="text-muted-foreground hover:text-primary transition-colors text-sm md:text-base"
                   >
                     Community Forum
                   </button>
                 </li>
               </ul>
             </div>
-            <div>
-              <h3 className="text-lg font-bold mb-4">Information</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className="text-center md:text-left">
+              <h3 className="text-lg font-bold mb-3 md:mb-4">Information</h3>
+              <p className="text-muted-foreground mb-3 md:mb-4 text-sm md:text-base">
                 This portal provides access to public information and services
               </p>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm md:text-base">
                 For administrative access, please contact your local officials
               </p>
             </div>
           </div>
-          <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
+          <div className="border-t border-border mt-6 md:mt-8 pt-6 md:pt-8 text-center text-xs md:text-sm text-muted-foreground">
             <p>© {new Date().getFullYear()} Barangay Portal. All rights reserved.</p>
           </div>
         </div>
