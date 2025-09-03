@@ -42,15 +42,6 @@ const DocumentRequestDetailsModal = ({
 }: DocumentRequestDetailsModalProps) => {
   if (!request) return null;
 
-  // Debug logging to check contact information
-  console.log('DocumentRequestDetailsModal - Request data:', {
-    email: request.email,
-    contact: request["contact#"],
-    contactAlt: request.contact,
-    phone: request.phone,
-    fullRequest: request
-  });
-
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
