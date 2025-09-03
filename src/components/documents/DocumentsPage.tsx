@@ -134,23 +134,24 @@ const DocumentsPage = () => {
               requestedBy = 'Unknown';
             }
           }
-          const getStatusColor = (status: string) => {
-            switch (status.toLowerCase()) {
-              case 'approved':
-              case 'ready':
-                return 'bg-green-500 text-white';
-              case 'rejected':
-                return 'bg-red-500 text-white';
-              case 'pending':
-                return 'bg-yellow-500 text-white';
-              case 'processing':
-                return 'bg-blue-500 text-white';
-              case 'released':
-                return 'bg-purple-500 text-white';
-              default:
-                return 'bg-gray-500 text-white';
-            }
-          };
+        const getStatusColor = (status: string) => {
+          switch (status.toLowerCase()) {
+            case 'approved':
+            case 'ready':
+              return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800';
+            case 'rejected':
+              return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800';
+            case 'pending':
+            case 'request':
+              return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800';
+            case 'processing':
+              return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800';
+            case 'released':
+              return 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800';
+            default:
+              return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-700';
+          }
+        };
           const getDisplayStatus = (status: string) => {
             switch (status.toLowerCase()) {
               case 'approved':
@@ -470,17 +471,18 @@ const DocumentsPage = () => {
           switch (status.toLowerCase()) {
             case 'approved':
             case 'ready':
-              return 'bg-green-500 text-white';
+              return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800';
             case 'rejected':
-              return 'bg-red-500 text-white';
+              return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800';
             case 'pending':
-              return 'bg-yellow-500 text-white';
+            case 'request':
+              return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800';
             case 'processing':
-              return 'bg-blue-500 text-white';
+              return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800';
             case 'released':
-              return 'bg-purple-500 text-white';
+              return 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800';
             default:
-              return 'bg-gray-500 text-white';
+              return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-700';
           }
         };
         const getDisplayStatus = (status: string) => {
@@ -520,29 +522,39 @@ const DocumentsPage = () => {
     }
   };
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "ready":
-        return "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800";
+      case "approved":
+        return "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-900/20 dark:border-emerald-800";
       case "processing":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800";
-      case "review":
         return "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:border-blue-800";
+      case "review":
+      case "pending":
+      case "request":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800";
       case "rejected":
         return "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800";
+      case "released":
+        return "text-purple-600 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-900/20 dark:border-purple-800";
       default:
         return "text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/20 dark:border-gray-700";
     }
   };
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "ready":
+      case "approved":
         return <CheckCircle className="h-4 w-4" />;
       case "processing":
         return <Clock className="h-4 w-4" />;
       case "review":
-        return <Eye className="h-4 w-4" />;
+      case "pending":
+      case "request":
+        return <AlertCircle className="h-4 w-4" />;
       case "rejected":
         return <XCircle className="h-4 w-4" />;
+      case "released":
+        return <FileCheck className="h-4 w-4" />;
       default:
         return <AlertCircle className="h-4 w-4" />;
     }
