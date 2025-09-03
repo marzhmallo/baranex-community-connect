@@ -289,7 +289,11 @@ const UserDocumentsPage = () => {
               My Document Status
             </h2>
             <div className="flex gap-2">
-              <button onClick={() => refetch()} className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+              <button onClick={() => {
+                // Invalidate all queries to refresh all data
+                queryClient.invalidateQueries({ queryKey: ['user-document-requests'] });
+                queryClient.invalidateQueries({ queryKey: ['document-types'] });
+              }} className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
                 <RefreshCw className="h-4 w-4" />
               </button>
             </div>
