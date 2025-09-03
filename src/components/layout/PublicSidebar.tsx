@@ -1,15 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSquare, AlertTriangle, ChevronLeft, ChevronRight, Home, Award, Briefcase, BellRing, Settings, Sun, Moon, X, Menu, Shield, Users } from 'lucide-react';
+import { 
+  Home, 
+  FileText, 
+  Calendar, 
+  Users, 
+  AlertTriangle, 
+  MessageSquare, 
+  ChevronLeft, 
+  ChevronRight,
+  MapPin
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import GlobalLoadingScreen from '@/components/ui/GlobalLoadingScreen';
-import { useLogoutWithLoader } from '@/hooks/useLogoutWithLoader';
+import { ThemeToggle } from '@/components/theme/IconThemeToggle';
+
 const PublicSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Get current barangay from URL params
+  const searchParams = new URLSearchParams(location.search);
+  const barangayId = searchParams.get('barangay');
 
   // Dispatch a custom event when sidebar state changes
   useEffect(() => {
@@ -20,86 +33,137 @@ const PublicSidebar = () => {
     });
     window.dispatchEvent(event);
   }, [isCollapsed]);
-  const { isLoggingOut, handleLogout } = useLogoutWithLoader();
+
   const isActive = (path: string) => {
     return location.pathname === path;
   };
-  if (isLoggingOut) {
-    return <GlobalLoadingScreen message="Logging out..." />;
-  }
-  return <aside className={cn("fixed left-0 top-0 bottom-0 z-40 h-screen bg-sidebar transition-all duration-300 ease-in-out", isCollapsed ? "w-16" : "w-64")}>
+
+  const navigationItems = [
+    {
+      path: `/public/announcements${barangayId ? `?barangay=${barangayId}` : ''}`,
+      icon: FileText,
+      label: 'Announcements',
+      description: 'Latest news & updates'
+    },
+    {
+      path: `/public/events${barangayId ? `?barangay=${barangayId}` : ''}`,
+      icon: Calendar,
+      label: 'Events Calendar',
+      description: 'Community events'
+    },
+    {
+      path: `/public/officials${barangayId ? `?barangay=${barangayId}` : ''}`,
+      icon: Users,
+      label: 'Officials',
+      description: 'Meet your leaders'
+    },
+    {
+      path: `/public/emergency${barangayId ? `?barangay=${barangayId}` : ''}`,
+      icon: AlertTriangle,
+      label: 'Emergency',
+      description: 'Safety & response'
+    },
+    {
+      path: `/public/forum${barangayId ? `?barangay=${barangayId}` : ''}`,
+      icon: MessageSquare,
+      label: 'Community Forum',
+      description: 'Join discussions'
+    }
+  ];
+
+  return (
+    <aside className={cn(
+      "fixed left-0 top-0 bottom-0 z-40 h-screen bg-gradient-to-b from-primary/5 to-background border-r border-border transition-all duration-300 ease-in-out backdrop-blur-sm",
+      isCollapsed ? "w-16" : "w-72"
+    )}>
       <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between p-4">
-          {!isCollapsed && <Link to="/hub" className="text-xl font-bold tracking-tight flex items-center">
-              <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Bara</span>
-              <span className="text-baranex-accent">NEX</span>
-            </Link>}
-          <Button variant="sidebar" size="icon" onClick={() => setIsCollapsed(!isCollapsed)} className="ml-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border/50">
+          {!isCollapsed && (
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-foreground">Barangay</span>
+                <span className="text-xs text-muted-foreground">Public Portal</span>
+              </div>
+            </div>
+          )}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="h-8 w-8 p-0 hover:bg-primary/10"
+          >
             {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
 
-        <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
-          <Link to="/hub" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <Home className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Home</span>}
-          </Link>
-
-          <Link to="/hub/calendar" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub/calendar") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <Calendar className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Calendar</span>}
-          </Link>
-
-          <Link to="/hub/announcements" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub/announcements") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <BellRing className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Announcements</span>}
-          </Link>
-
-          <Link to="/hub/officials" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub/officials") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <Award className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Officials</span>}
-          </Link>
-
-          <Link to="/hub/forum" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub/forum") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <MessageSquare className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Forum</span>}
-          </Link>
-
-          <Link to="/hub/documents" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub/documents") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <FileText className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Documents</span>}
-          </Link>
-
-          <Link to="/hub/emergency" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub/emergency") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <AlertTriangle className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Emergency</span>}
-          </Link>
-
-          <Link to="/feedback" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/feedback") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <MessageSquare className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Feedback</span>}
-          </Link>
-
-          <Link to="/hub/settings" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/hub/settings") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <Settings className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Settings</span>}
-          </Link>
+        {/* Navigation */}
+        <nav className="flex-1 space-y-2 p-4 overflow-y-auto">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path.split('?')[0]);
+            
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
+                  active 
+                    ? "bg-primary/10 text-primary border border-primary/20 shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                {/* Active indicator */}
+                {active && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                )}
+                
+                <Icon className={cn(
+                  "h-5 w-5 shrink-0 transition-colors",
+                  active ? "text-primary" : "group-hover:text-foreground"
+                )} />
+                
+                {!isCollapsed && (
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className={cn(
+                      "text-sm font-medium truncate",
+                      active ? "text-primary" : "group-hover:text-foreground"
+                    )}>
+                      {item.label}
+                    </span>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {item.description}
+                    </span>
+                  </div>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="p-4 border-t border-sidebar-border">
-          <Link to="/profile" className={cn("flex items-center py-2 px-3 rounded-md mb-2", isActive("/profile") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-            <User className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Profile</span>}
-          </Link>
+        {/* Footer */}
+        <div className="p-4 border-t border-border/50 space-y-3">
+          <ThemeToggle />
           
-          <ThemeToggle isCollapsed={isCollapsed} />
-          
-          <Button variant="sidebar" className={cn("w-full justify-start mt-2", isCollapsed ? "px-2" : "")} onClick={handleLogout}>
-            <LogOut className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Sign Out</span>}
+          <Button 
+            variant="outline" 
+            className={cn(
+              "w-full justify-start gap-2 hover:bg-primary/5 hover:border-primary/20",
+              isCollapsed ? "px-2" : "px-3"
+            )}
+            onClick={() => navigate('/')}
+          >
+            <Home className="h-4 w-4" />
+            {!isCollapsed && <span className="text-sm">Back to Home</span>}
           </Button>
         </div>
       </div>
-    </aside>;
+    </aside>
+  );
 };
+
 export default PublicSidebar;
