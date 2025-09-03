@@ -30,8 +30,12 @@ const UserDocumentsPage = () => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingRequest, setEditingRequest] = useState<any>(null);
-  const { userProfile } = useAuth();
-  const { toast } = useToast();
+  const {
+    userProfile
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const queryClient = useQueryClient();
 
   // Define the enriched request type
@@ -60,12 +64,16 @@ const UserDocumentsPage = () => {
     const fetchAllData = async () => {
       try {
         const [documentsData, requestsData] = await Promise.all([
-          // Fetch document types
-          supabase.from('document_types').select('*').order('name'),
-          // Fetch user's document requests
-          userProfile?.id ? supabase.from('docrequests').select('*').eq('resident_id', userProfile.id).order('created_at', { ascending: false }) : { data: [], error: null }
-        ]);
-        
+        // Fetch document types
+        supabase.from('document_types').select('*').order('name'),
+        // Fetch user's document requests
+        userProfile?.id ? supabase.from('docrequests').select('*').eq('resident_id', userProfile.id).order('created_at', {
+          ascending: false
+        }) : {
+          data: [],
+          error: null
+        }]);
+
         // Initial loading is complete
         setIsInitialLoading(false);
       } catch (error) {
@@ -73,7 +81,6 @@ const UserDocumentsPage = () => {
         setIsInitialLoading(false);
       }
     };
-
     if (userProfile?.id) {
       fetchAllData();
     } else {
@@ -91,26 +98,25 @@ const UserDocumentsPage = () => {
     queryKey: ['user-document-requests', userProfile?.id],
     queryFn: async (): Promise<EnrichedDocumentRequest[]> => {
       if (!userProfile?.id) return [];
-      
+
       // First get all document requests for the user
-      const { data: requests, error: requestsError } = await supabase
-        .from('docrequests')
-        .select('*')
-        .eq('resident_id', userProfile.id)
-        .order('created_at', { ascending: false });
-      
+      const {
+        data: requests,
+        error: requestsError
+      } = await supabase.from('docrequests').select('*').eq('resident_id', userProfile.id).order('created_at', {
+        ascending: false
+      });
       if (requestsError) throw requestsError;
       if (!requests || requests.length === 0) return [];
-      
+
       // Get all unique resident IDs from the requests
       const residentIds = [...new Set(requests.map(req => req.resident_id))];
-      
+
       // Fetch profile data for all resident IDs
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, firstname, lastname')
-        .in('id', residentIds);
-      
+      const {
+        data: profiles,
+        error: profilesError
+      } = await supabase.from('profiles').select('id, firstname, lastname').in('id', residentIds);
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
         // Still return requests even if profile fetch fails, just without profile data
@@ -119,19 +125,18 @@ const UserDocumentsPage = () => {
           profiles: null
         }));
       }
-      
+
       // Create a map of profile data for quick lookup
       const profileMap = (profiles || []).reduce((acc: any, profile: any) => {
         acc[profile.id] = profile;
         return acc;
       }, {});
-      
+
       // Combine requests with profile data
       const enrichedRequests: EnrichedDocumentRequest[] = requests.map(request => ({
         ...request,
         profiles: profileMap[request.resident_id] || null
       }));
-      
       return enrichedRequests;
     },
     enabled: !!userProfile?.id
@@ -176,7 +181,7 @@ const UserDocumentsPage = () => {
   // Filter document requests based on tracking filter and search query
   const getFilteredRequests = () => {
     let filteredByStatus = documentRequests;
-    
+
     // Apply status filter
     if (trackingFilter !== "All Documents") {
       filteredByStatus = documentRequests.filter(request => {
@@ -197,17 +202,13 @@ const UserDocumentsPage = () => {
         }
       });
     }
-    
+
     // Apply search filter by tracking ID
     if (trackingSearchQuery.trim()) {
-      filteredByStatus = filteredByStatus.filter(request => 
-        request.docnumber?.toLowerCase().includes(trackingSearchQuery.toLowerCase())
-      );
+      filteredByStatus = filteredByStatus.filter(request => request.docnumber?.toLowerCase().includes(trackingSearchQuery.toLowerCase()));
     }
-    
     return filteredByStatus;
   };
-
   const filteredRequests = getFilteredRequests();
   const requestsTotalPages = Math.ceil(filteredRequests.length / requestsPerPage);
 
@@ -270,13 +271,10 @@ const UserDocumentsPage = () => {
     });
   };
   if (isInitialLoading) {
-    return (
-      <div className="w-full p-6 bg-background min-h-screen relative">
+    return <div className="w-full p-6 bg-background min-h-screen relative">
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
-      </div>
-    );
+      </div>;
   }
-
   return <div className="w-full p-6 bg-background min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
@@ -386,73 +384,25 @@ const UserDocumentsPage = () => {
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input 
-                type="text" 
-                placeholder="Search by tracking ID..." 
-                value={trackingSearchQuery}
-                onChange={(e) => setTrackingSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" 
-              />
+              <input type="text" placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" />
             </div>
             <div className="flex flex-wrap gap-2">
-              <button 
-                onClick={() => setTrackingFilter("All Documents")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "All Documents" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
+              <button onClick={() => setTrackingFilter("All Documents")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "All Documents" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
                 All Documents
               </button>
-              <button 
-                onClick={() => setTrackingFilter("Requests")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Requests" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
+              <button onClick={() => setTrackingFilter("Requests")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Requests" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
                 Requests
               </button>
-              <button 
-                onClick={() => setTrackingFilter("Processing")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Processing" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
+              <button onClick={() => setTrackingFilter("Processing")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Processing" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
                 Processing
               </button>
-              <button 
-                onClick={() => setTrackingFilter("Released")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Released" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
+              <button onClick={() => setTrackingFilter("Released")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Released" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
                 Released
               </button>
-              <button 
-                onClick={() => setTrackingFilter("Rejected")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Rejected" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
+              <button onClick={() => setTrackingFilter("Rejected")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Rejected" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
                 Rejected
               </button>
-              <button 
-                onClick={() => setTrackingFilter("Ready")}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  trackingFilter === "Ready" 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
+              <button onClick={() => setTrackingFilter("Ready")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Ready" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
                 Ready
               </button>
             </div>
@@ -487,9 +437,7 @@ const UserDocumentsPage = () => {
                         {request.type}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {request.profiles?.firstname && request.profiles?.lastname 
-                          ? `${request.profiles.firstname} ${request.profiles.lastname}`
-                          : 'N/A'}
+                        {request.profiles?.firstname && request.profiles?.lastname ? `${request.profiles.firstname} ${request.profiles.lastname}` : 'N/A'}
                       </td>
                        <td className="px-6 py-4 whitespace-nowrap">
                          {getStatusBadge(request.status)}
@@ -499,31 +447,18 @@ const UserDocumentsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                          <div className="flex justify-end gap-2">
-                           <button 
-                             onClick={() => {
-                               setSelectedRequest(request);
-                               setShowViewDialog(true);
-                             }}
-                             className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
-                             title="View request details"
-                           >
+                           <button onClick={() => {
+                      setSelectedRequest(request);
+                      setShowViewDialog(true);
+                    }} className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View request details">
                              <Eye className="h-4 w-4" />
                            </button>
-                            <button 
-                              onClick={() => {
-                                if (request.status === 'Request') {
-                                  setEditingRequest(request);
-                                  setShowRequestModal(true);
-                                }
-                              }}
-                              disabled={request.status !== 'Request'}
-                              className={`p-1 rounded transition-colors ${
-                                request.status === 'Request' 
-                                  ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' 
-                                  : 'text-muted-foreground/50 cursor-not-allowed'
-                              }`}
-                              title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}
-                            >
+                            <button onClick={() => {
+                      if (request.status === 'Request') {
+                        setEditingRequest(request);
+                        setShowRequestModal(true);
+                      }
+                    }} disabled={request.status !== 'Request'} className={`p-1 rounded transition-colors ${request.status === 'Request' ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' : 'text-muted-foreground/50 cursor-not-allowed'}`} title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}>
                               <Edit className="h-4 w-4" />
                             </button>
                          </div>
@@ -584,10 +519,7 @@ const UserDocumentsPage = () => {
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
-                          <Filter className="h-4 w-4 mr-2" />
-                          Advanced Filters
-                        </Button>
+                        
                       </div>
                       
                     </div>
@@ -630,10 +562,7 @@ const UserDocumentsPage = () => {
                     </div>
 
                     <div className="flex items-center justify-between mt-6">
-                      <div className="flex items-center gap-2">
-                        <input type="checkbox" className="rounded border-border" />
-                        <label className="text-sm text-foreground">Select All</label>
-                      </div>
+                      
                       <Pagination>
                         <PaginationContent>
                           <PaginationItem>
@@ -794,9 +723,9 @@ const UserDocumentsPage = () => {
         </div>}
 
       {showRequestModal && <DocumentRequestModal onClose={() => {
-        setShowRequestModal(false);
-        setEditingRequest(null);
-      }} editingRequest={editingRequest} />}
+      setShowRequestModal(false);
+      setEditingRequest(null);
+    }} editingRequest={editingRequest} />}
 
       {/* View Request Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
@@ -804,8 +733,7 @@ const UserDocumentsPage = () => {
           <DialogHeader>
             <DialogTitle>Request Details</DialogTitle>
           </DialogHeader>
-          {selectedRequest && (
-            <div className="space-y-4">
+          {selectedRequest && <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Tracking ID</Label>
@@ -836,22 +764,17 @@ const UserDocumentsPage = () => {
                 <Label className="text-sm font-medium">Purpose</Label>
                 <p className="text-sm text-muted-foreground mt-1">{selectedRequest.purpose}</p>
               </div>
-              {selectedRequest.receiver && (
-                <div>
+              {selectedRequest.receiver && <div>
                   <Label className="text-sm font-medium">Recipient</Label>
                   <p className="text-sm text-muted-foreground mt-1">
                     {typeof selectedRequest.receiver === 'object' ? selectedRequest.receiver.name : selectedRequest.receiver}
                   </p>
-                </div>
-              )}
-              {selectedRequest.notes && (
-                <div>
+                </div>}
+              {selectedRequest.notes && <div>
                   <Label className="text-sm font-medium">Admin Notes</Label>
                   <p className="text-sm text-muted-foreground mt-1">{selectedRequest.notes}</p>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
         </DialogContent>
       </Dialog>
 
@@ -861,37 +784,39 @@ const UserDocumentsPage = () => {
           <DialogHeader>
             <DialogTitle>Edit Request</DialogTitle>
           </DialogHeader>
-          {editingRequest && (
-            <EditRequestForm 
-              request={editingRequest} 
-              onSuccess={() => {
-                setShowEditDialog(false);
-                setEditingRequest(null);
-                refetch();
-              }}
-              onCancel={() => {
-                setShowEditDialog(false);
-                setEditingRequest(null);
-              }}
-            />
-          )}
+          {editingRequest && <EditRequestForm request={editingRequest} onSuccess={() => {
+          setShowEditDialog(false);
+          setEditingRequest(null);
+          refetch();
+        }} onCancel={() => {
+          setShowEditDialog(false);
+          setEditingRequest(null);
+        }} />}
         </DialogContent>
       </Dialog>
     </div>;
 };
 
 // Edit Request Form Component
-const EditRequestForm = ({ request, onSuccess, onCancel }: { request: any; onSuccess: () => void; onCancel: () => void }) => {
+const EditRequestForm = ({
+  request,
+  onSuccess,
+  onCancel
+}: {
+  request: any;
+  onSuccess: () => void;
+  onCancel: () => void;
+}) => {
   const [purpose, setPurpose] = useState(request.purpose || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const updateRequest = useMutation({
     mutationFn: async (data: any) => {
-      const { error } = await supabase
-        .from('docrequests')
-        .update(data)
-        .eq('id', request.id);
+      const {
+        error
+      } = await supabase.from('docrequests').update(data).eq('id', request.id);
       if (error) throw error;
       return data;
     },
@@ -902,7 +827,7 @@ const EditRequestForm = ({ request, onSuccess, onCancel }: { request: any; onSuc
       });
       onSuccess();
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Error updating request:', error);
       toast({
         title: "Error",
@@ -911,11 +836,9 @@ const EditRequestForm = ({ request, onSuccess, onCancel }: { request: any; onSuc
       });
     }
   });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!purpose.trim()) return;
-    
     setIsSubmitting(true);
     try {
       await updateRequest.mutateAsync({
@@ -926,42 +849,23 @@ const EditRequestForm = ({ request, onSuccess, onCancel }: { request: any; onSuc
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+  return <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label className="text-sm font-medium">Document Type</Label>
         <p className="text-sm text-muted-foreground mt-1">{request.type}</p>
       </div>
       <div>
         <Label htmlFor="purpose" className="text-sm font-medium">Purpose *</Label>
-        <Textarea
-          id="purpose"
-          value={purpose}
-          onChange={(e) => setPurpose(e.target.value)}
-          placeholder="Enter the purpose for this document..."
-          className="mt-2 min-h-[100px]"
-          required
-        />
+        <Textarea id="purpose" value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Enter the purpose for this document..." className="mt-2 min-h-[100px]" required />
       </div>
       <div className="flex justify-end gap-3 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting || !purpose.trim()}
-        >
+        <Button type="submit" disabled={isSubmitting || !purpose.trim()}>
           {isSubmitting ? 'Updating...' : 'Update Request'}
         </Button>
       </div>
-    </form>
-  );
+    </form>;
 };
-
 export default UserDocumentsPage;
