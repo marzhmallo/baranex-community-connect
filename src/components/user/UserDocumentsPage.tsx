@@ -804,43 +804,119 @@ const UserDocumentsPage = () => {
 
       {/* Template Details Dialog */}
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Document Template Details</DialogTitle>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader className="pb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-semibold">Document Information</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">Complete details about this document template</p>
+              </div>
+            </div>
           </DialogHeader>
-          {selectedTemplate && <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">Template Name</Label>
-                  <p className="text-sm text-muted-foreground mt-1">{selectedTemplate.name}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Description</Label>
-                  <p className="text-sm text-muted-foreground mt-1">{selectedTemplate.description || 'No description available'}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Document Fee</Label>
-                    <p className="text-sm text-muted-foreground mt-1">₱{selectedTemplate.fee || 0}</p>
+          
+          {selectedTemplate && (
+            <div className="space-y-6">
+              {/* Main Document Info */}
+              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">{selectedTemplate.name}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {selectedTemplate.description || 'Official barangay document for various administrative purposes.'}
+                    </p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium">Status</Label>
-                    <Badge className="bg-green-500 hover:bg-green-600 text-white mt-1">Active</Badge>
+                  <Badge className="bg-green-500 hover:bg-green-500 text-white ml-4">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Active
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Document Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Package className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium text-foreground">Document Type</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground pl-6">
+                      {selectedTemplate.category || 'Barangay Certificate'}
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium text-foreground">Processing Time</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground pl-6">
+                      {selectedTemplate.processing_time || '1-3 business days'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium text-foreground">Document Fee</Label>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground pl-6">₱{selectedTemplate.fee || 0}</p>
+                  </div>
+                  
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <History className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium text-foreground">Validity Period</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground pl-6">
+                      {selectedTemplate.validity || '6 months from issuance'}
+                    </p>
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <Button onClick={() => setShowTemplateDialog(false)} variant="outline">
+
+              {/* Requirements Section */}
+              <div className="p-4 border border-border rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <Label className="text-sm font-medium text-foreground">Required Documents</Label>
+                </div>
+                <div className="pl-6 space-y-2">
+                  <p className="text-sm text-muted-foreground">• Valid Government ID (Original and Photocopy)</p>
+                  <p className="text-sm text-muted-foreground">• Proof of Residency</p>
+                  <p className="text-sm text-muted-foreground">• Certificate of Indigency (if applicable)</p>
+                  {selectedTemplate.requirements && (
+                    <p className="text-sm text-muted-foreground">• {selectedTemplate.requirements}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              {(selectedTemplate.notes || selectedTemplate.usage) && (
+                <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bell className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <Label className="text-sm font-medium text-blue-800 dark:text-blue-200">Important Notes</Label>
+                  </div>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 pl-6">
+                    {selectedTemplate.notes || selectedTemplate.usage || 'Please ensure all requirements are complete before submitting your request.'}
+                  </p>
+                </div>
+              )}
+              
+              {/* Close Button */}
+              <div className="flex justify-end pt-4 border-t border-border">
+                <Button onClick={() => setShowTemplateDialog(false)} className="px-6">
                   Close
                 </Button>
-                <Button onClick={() => {
-                  setShowTemplateDialog(false);
-                  setShowRequestModal(true);
-                }} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Request This Document
-                </Button>
               </div>
-            </div>}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>;
