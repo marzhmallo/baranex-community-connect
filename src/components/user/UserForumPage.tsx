@@ -15,6 +15,7 @@ import { useBarangaySelection } from '@/hooks/useBarangaySelection';
 import CreateForumDialog from '@/components/forum/CreateForumDialog';
 import ThreadsView from '@/components/forum/ThreadsView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { PublicPageHeader } from '@/components/public/PublicPageHeader';
 
 export interface Forum {
   id: string;

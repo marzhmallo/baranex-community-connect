@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, MapPin, Users, Phone, AlertTriangle, Clock } from "lucide-react";
+import { PublicPageHeader } from '@/components/public/PublicPageHeader';
 
 const UserEmergencyPage = () => {
   const { userProfile } = useAuth();

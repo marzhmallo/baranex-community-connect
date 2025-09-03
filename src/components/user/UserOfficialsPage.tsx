@@ -14,6 +14,7 @@ import { AddEditOfficialDialog } from '@/components/officials/AddEditOfficialDia
 import { OrganizationalChart } from '@/components/officials/OrganizationalChart';
 import { RankManagementDialog } from '@/components/officials/RankManagementDialog';
 import { AssignOfficialToRankDialog } from '@/components/officials/AssignOfficialToRankDialog';
+import { PublicPageHeader } from '@/components/public/PublicPageHeader';
 
 const UserOfficialsPage = () => {
   const { userProfile } = useAuth();
