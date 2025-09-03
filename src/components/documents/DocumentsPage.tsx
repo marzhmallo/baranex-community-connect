@@ -973,7 +973,7 @@ const DocumentsPage = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Ready for Pickup</p>
@@ -982,20 +982,12 @@ const DocumentsPage = () => {
               <CheckCircle className="h-8 w-8 text-green-500 dark:text-green-400" />
             </div>
             
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Processing</p>
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{processingStats?.processing || 0}</p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
-            </div>
-            
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Pending</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingStats?.pending || 0}</p>
+                <p className="text-sm text-muted-foreground">Processing</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingStats?.processing || 0}</p>
               </div>
-              <Eye className="h-8 w-8 text-blue-500 dark:text-blue-400" />
+              <Clock className="h-8 w-8 text-blue-500 dark:text-blue-400" />
             </div>
             
             <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 flex items-center justify-between">
