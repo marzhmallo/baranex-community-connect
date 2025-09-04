@@ -616,12 +616,19 @@ const DocumentsPage = () => {
     queryFn: async () => {
       if (!adminProfileId) return [];
 
-      // Get current admin's brgyid
-      const {
-        data: profile,
-        error: profileError
-      } = await supabase.from('public_profiles').select('brgyid').eq('id', adminProfileId).single();
-      if (!profile?.brgyid) return [];
+      // Get current admin's brgyid from profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('brgyid')
+        .eq('id', adminProfileId)
+        .single();
+      
+      if (profileError || !profileData?.brgyid) {
+        console.error('Error fetching admin profile:', profileError);
+        return [];
+      }
+
+      // Query documents using the admin's brgyid
       const {
         data,
         error
@@ -632,10 +639,15 @@ const DocumentsPage = () => {
           status,
           updated_at,
           receiver
-        `).eq('brgyid', profile.brgyid).not('status', 'eq', 'Request').order('updated_at', {
+        `).eq('brgyid', profileData.brgyid).not('status', 'eq', 'Request').order('updated_at', {
         ascending: false
       }).limit(4);
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Error fetching status updates:', error);
+        throw error;
+      }
+      
       return data?.map(doc => {
         let requesterName = 'Unknown';
         if (doc.receiver) {
