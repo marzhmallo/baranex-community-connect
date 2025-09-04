@@ -146,10 +146,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('Fetching user profile for:', userId);
     try {
       const { data: profileData, error: profileError } = await supabase
-        .from('public_profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle() as { data: any, error: any };
+        .rpc('get_my_profile' as any)
+        .single() as { data: any, error: any };
 
       if (profileError) {
         console.error('Error fetching from profiles table:', profileError);
