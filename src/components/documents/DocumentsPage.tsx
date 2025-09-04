@@ -738,6 +738,13 @@ const DocumentsPage = () => {
         ...data,
         name
       };
+      
+      // Debug: Log the data to see what fields are available
+      console.log('Original Supabase data:', data);
+      console.log('Final requestData:', requestData);
+      console.log('Email field:', requestData.email);
+      console.log('Contact field:', requestData["contact#"]);
+      
       setSelectedRequest(requestData);
       setIsRequestDetailsOpen(true);
     } catch (error) {
