@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log(`Updating user ${userId} online status to: ${isOnline}`);
       
       const { error } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .update(updateData)
         .eq('id', userId);
 
@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('Fetching user profile for:', userId);
     try {
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle() as { data: any, error: any };
@@ -236,7 +236,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Check barangay approval for all roles: if barangay is not approved (is_custom = false), block login
         if (profileData.brgyid) {
           const { data: barangayData, error: barangayError } = await supabase
-            .from('barangays')
+            .from('public_barangays')
             .select('is_custom')
             .eq('id', profileData.brgyid)
             .single();

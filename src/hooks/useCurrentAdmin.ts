@@ -20,7 +20,7 @@ export const useCurrentAdmin = () => {
         
         // Get admin profile from profiles table
         const { data: profile, error } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id')
           .eq('id', user.id)
           .maybeSingle();

@@ -141,7 +141,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
       // Fetch barangay name
       const { data: barangayData, error: barangayError } = await supabase
-        .from('barangays')
+        .from('public_barangays')
         .select('barangayname')
         .eq('id', userProfile.brgyid)
         .single();

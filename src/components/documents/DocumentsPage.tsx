@@ -618,7 +618,7 @@ const DocumentsPage = () => {
       const {
         data: profile,
         error: profileError
-      } = await supabase.from('profiles').select('brgyid').eq('id', adminProfileId).single();
+      } = await supabase.from('public_profiles').select('brgyid').eq('id', adminProfileId).single();
       if (!profile?.brgyid) return [];
       const {
         data,

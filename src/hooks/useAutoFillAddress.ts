@@ -43,7 +43,7 @@ export const useAutoFillAddress = () => {
         // Fetch barangay data if user has brgyid
         if (userProfile?.brgyid) {
           const { data: brgyData } = await supabase
-            .from('barangays')
+            .from('public_barangays')
             .select('barangayname, municipality, province, region, country')
             .eq('id', userProfile.brgyid)
             .single();
