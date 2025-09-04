@@ -18,7 +18,7 @@ import IssueDocumentForm from "./IssueDocumentForm";
 import DocumentViewDialog from "./DocumentViewDialog";
 import DocumentDeleteDialog from "./DocumentDeleteDialog";
 import DocumentSettingsDialog from "./DocumentSettingsDialog";
-import DocumentRequestDetailsModal from "./DocumentRequestDetailsModal";
+
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
 import { formatDistanceToNow } from "date-fns";
@@ -44,9 +44,6 @@ const DocumentsPage = () => {
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Document request details modal state
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [isRequestDetailsOpen, setIsRequestDetailsOpen] = useState(false);
 
   // Document tracking modals state
   const [selectedTrackingItem, setSelectedTrackingItem] = useState(null);
@@ -697,11 +694,6 @@ const DocumentsPage = () => {
     enabled: !!adminProfileId
   });
 
-  // Handler to open request details modal
-  const handleRequestClick = (request: any) => {
-    setSelectedRequest(request);
-    setIsRequestDetailsOpen(true);
-  };
 
   // Handler to view tracking item details
   const handleViewTrackingDetails = async (trackingItem: any) => {
@@ -744,9 +736,6 @@ const DocumentsPage = () => {
       console.log('Final requestData:', requestData);
       console.log('Email field:', requestData.email);
       console.log('Contact field:', requestData["contact#"]);
-      
-      setSelectedRequest(requestData);
-      setIsRequestDetailsOpen(true);
     } catch (error) {
       console.error('Error fetching tracking details:', error);
       toast({
@@ -1120,7 +1109,7 @@ const DocumentsPage = () => {
                           key={request.id} 
                           className="group relative p-4 bg-gradient-to-r from-card via-card/80 to-card/60 border border-border/60 rounded-xl cursor-pointer hover:border-primary/30 hover:shadow-md hover:bg-gradient-to-r hover:from-accent/20 hover:via-background hover:to-background/80 transition-all duration-300 animate-fade-in backdrop-blur-sm"
                           style={{ animationDelay: `${index * 100}ms` }}
-                          onClick={() => handleRequestClick(request)}
+                          
                         >
                           <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           <div className="relative flex items-center justify-between">
@@ -1529,8 +1518,6 @@ const DocumentsPage = () => {
       {/* Document Settings Dialog */}
       <DocumentSettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen} />
 
-      {/* Document Request Details Modal */}
-      <DocumentRequestDetailsModal isOpen={isRequestDetailsOpen} onClose={() => setIsRequestDetailsOpen(false)} request={selectedRequest} onApprove={handleApproveRequest} onDeny={handleDenyRequest} />
 
       {/* Edit Status Modal */}
       <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
