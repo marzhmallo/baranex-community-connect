@@ -1493,7 +1493,19 @@ const DocumentsPage = () => {
                   </div>)}
               </div>
               <div className="p-4 border-t border-border">
-                
+                {statusUpdates && statusUpdates.length === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">No recent status updates</p>
+                    <p className="text-xs text-muted-foreground">Updates will appear when document statuses change</p>
+                  </div>
+                )}
+                {statusUpdates && statusUpdates.length > 0 && (
+                  <div className="text-center">
+                    <Button variant="ghost" size="sm" className="text-xs w-full justify-center hover:bg-accent">
+                      View All Updates
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
