@@ -18,6 +18,7 @@ import IssueDocumentForm from "./IssueDocumentForm";
 import DocumentViewDialog from "./DocumentViewDialog";
 import DocumentDeleteDialog from "./DocumentDeleteDialog";
 import DocumentSettingsDialog from "./DocumentSettingsDialog";
+import DocumentRequestDetailsModal from "./DocumentRequestDetailsModal";
 
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentAdmin } from "@/hooks/useCurrentAdmin";
@@ -44,6 +45,10 @@ const DocumentsPage = () => {
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
+
+  // Document request details modal state (for tracking system only)
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [isRequestDetailsOpen, setIsRequestDetailsOpen] = useState(false);
 
   // Document tracking modals state
   const [selectedTrackingItem, setSelectedTrackingItem] = useState(null);
@@ -736,6 +741,9 @@ const DocumentsPage = () => {
       console.log('Final requestData:', requestData);
       console.log('Email field:', requestData.email);
       console.log('Contact field:', requestData["contact#"]);
+      
+      setSelectedRequest(requestData);
+      setIsRequestDetailsOpen(true);
     } catch (error) {
       console.error('Error fetching tracking details:', error);
       toast({
@@ -1517,6 +1525,9 @@ const DocumentsPage = () => {
 
       {/* Document Settings Dialog */}
       <DocumentSettingsDialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen} />
+
+      {/* Document Request Details Modal (for tracking system only) */}
+      <DocumentRequestDetailsModal isOpen={isRequestDetailsOpen} onClose={() => setIsRequestDetailsOpen(false)} request={selectedRequest} onApprove={handleApproveRequest} onDeny={handleDenyRequest} />
 
 
       {/* Edit Status Modal */}
