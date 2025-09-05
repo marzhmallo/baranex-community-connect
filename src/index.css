@@ -87,6 +87,12 @@
   }
 }
 
+/* Prevent horizontal scrolling and wiggling */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 @layer base {
   * {
     @apply border-border;

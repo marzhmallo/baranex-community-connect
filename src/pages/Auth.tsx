@@ -1104,7 +1104,7 @@ const Auth = () => {
     }
   };
   if (smartLoading) return <GlobalLoadingScreen />;
-  return <div className={`w-full min-h-screen flex items-center justify-center p-6 ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'}`}>
+  return <div className={`w-full min-h-screen flex flex-col items-center justify-center p-4 overflow-x-hidden ${theme === 'dark' ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'}`}>
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
         {/* Left side - Brand/Info */}
@@ -1160,7 +1160,7 @@ const Auth = () => {
         </div>
         
         {/* Right side - Auth Form */}
-        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg mx-auto lg:mx-0 px-2 sm:px-0">
+        <div className="w-full max-w-sm mx-auto lg:mx-0">
           <div className={`backdrop-blur-sm rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl p-4 sm:p-5 md:p-6 lg:p-8 w-full ${theme === 'dark' ? 'bg-slate-800/90 border border-slate-700/50' : 'bg-white/95 border border-blue-200/50'}`}>
             {/* Mobile header */}
             <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:hidden">
