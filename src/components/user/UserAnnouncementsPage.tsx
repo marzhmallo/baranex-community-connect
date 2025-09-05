@@ -34,8 +34,8 @@ const UserAnnouncementsPage = () => {
   const [searchParams] = useSearchParams();
   const { selectedBarangay } = useBarangaySelection();
   
-  // Get barangay ID from URL params (for public access) or selected barangay (from localStorage)
-  const barangayId = searchParams.get('barangay') || selectedBarangay?.id;
+  // Get barangay ID from URL params (for public access), selected barangay (from localStorage), or user's barangay
+  const barangayId = searchParams.get('barangay') || selectedBarangay?.id || userProfile?.brgyid;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedVisibility, setSelectedVisibility] = useState<string>('');
