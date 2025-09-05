@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import CachedImage from '@/components/ui/CachedImage';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -429,10 +430,11 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
               {selectedAnnouncement.photo_url && (
                 <div>
                   <h4 className="font-semibold mb-2">Photo</h4>
-                  <img 
+                  <CachedImage 
                     src={selectedAnnouncement.photo_url} 
                     alt="Announcement photo" 
                     className="max-w-full h-auto rounded-lg border"
+                    cacheKey={`announcement_${selectedAnnouncement.id}`}
                   />
                 </div>
               )}
