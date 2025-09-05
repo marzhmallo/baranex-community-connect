@@ -64,7 +64,7 @@ const AnnouncementsPage = () => {
     };
   }, [openDropdown]);
 
-  // Fetch announcements from Supabase
+  // Fetch announcements from Supabase with localStorage caching
   const {
     data: announcements,
     isLoading,
@@ -104,12 +104,47 @@ const AnnouncementsPage = () => {
           ...announcement,
           authorName: userMap[announcement.created_by] || 'Unknown User'
         }));
+        
+        // Cache the data in localStorage
+        try {
+          const cacheKey = 'admin_announcements_cache';
+          const cacheData = {
+            data: announcementsWithAuthors,
+            timestamp: Date.now()
+          };
+          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        } catch (cacheError) {
+          console.warn('Failed to cache announcements:', cacheError);
+        }
+        
         return announcementsWithAuthors;
       } catch (error) {
         console.error('Error fetching announcements:', error);
         throw error;
       }
-    }
+    },
+    initialData: () => {
+      // Try to get cached data on initial load
+      try {
+        const cacheKey = 'admin_announcements_cache';
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          // Use cached data if it's less than 5 minutes old
+          const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+          if (Date.now() - timestamp < CACHE_DURATION) {
+            return data;
+          } else {
+            localStorage.removeItem(cacheKey);
+          }
+        }
+      } catch (error) {
+        console.error('Error reading cached announcements:', error);
+      }
+      return [];
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
   const toggleCreateForm = () => setShowCreateForm(!showCreateForm);
   const handleAnnouncementCreated = () => {
