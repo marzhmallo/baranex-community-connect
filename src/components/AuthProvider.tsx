@@ -234,7 +234,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Check barangay approval for all roles: if barangay is not approved (is_custom = false), block login
         if (profileData.brgyid) {
           const { data: barangayData, error: barangayError } = await supabase
-            .from('public_barangays')
+            .from('barangays')
             .select('is_custom')
             .eq('id', profileData.brgyid)
             .single();

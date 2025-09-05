@@ -50,10 +50,13 @@ interface DocumentRequest {
   brgyid: string;
   updated_at: string | null;
   resident_name?: string;
-  paymenturl: string | null;
+  paymenturl: any; // Changed from string | null to any to handle Json[] from database
   paydate: string | null;
   method: string | null;
   amount: number | null;
+  email?: string | null;
+  "contact#"?: number | null;
+  ornumber?: string;
 }
 
 interface DocumentsListProps {

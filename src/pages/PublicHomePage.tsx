@@ -100,19 +100,19 @@ const PublicHomePage = () => {
       )}
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-primary/5 to-background py-16">
+      <section className="bg-gradient-to-b from-primary/5 to-background py-8 md:py-12 lg:py-16">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-6xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl lg:text-6xl font-bold mb-4 md:mb-6">
             Welcome to Your <span className="text-primary">Barangay Portal</span>
           </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg lg:text-xl text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto px-4">
             Stay connected with your community. Access important announcements, events, 
             officials information, and emergency services all in one place.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center max-w-lg mx-auto">
             <Button 
               size="lg" 
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto text-sm md:text-base"
               onClick={() => handleContentNavigation('announcements')}
             >
               View Latest Announcements
@@ -120,7 +120,7 @@ const PublicHomePage = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto text-sm md:text-base"
               onClick={() => handleContentNavigation('emergency')}
             >
               <AlertTriangle className="mr-2 h-4 w-4" />
@@ -131,10 +131,10 @@ const PublicHomePage = () => {
       </section>
 
       {/* Services Grid */}
-      <section className="py-16">
+      <section className="py-8 md:py-12 lg:py-16">
         <div className="container mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center mb-12">Community Services</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12">Community Services</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-6xl mx-auto">
             <Card 
               className="h-full hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleContentNavigation('announcements')}
@@ -216,9 +216,9 @@ const PublicHomePage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-muted py-8 md:py-12 mt-auto">
+      <footer className="bg-muted py-6 md:py-8 lg:py-12 mt-auto">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
             <div className="text-center md:text-left">
               <h3 className="text-lg font-bold mb-3 md:mb-4">Barangay Portal</h3>
               <p className="text-muted-foreground mb-3 md:mb-4 text-sm md:text-base">
@@ -283,7 +283,7 @@ const PublicHomePage = () => {
               </p>
             </div>
           </div>
-          <div className="border-t border-border mt-6 md:mt-8 pt-6 md:pt-8 text-center text-xs md:text-sm text-muted-foreground">
+          <div className="border-t border-border mt-4 md:mt-6 lg:mt-8 pt-4 md:pt-6 lg:pt-8 text-center text-xs md:text-sm text-muted-foreground">
             <p>© {new Date().getFullYear()} Barangay Portal. All rights reserved.</p>
           </div>
         </div>
