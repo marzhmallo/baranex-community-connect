@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle, MoreVertical, Eye, Plus } from 'lucide-react';
+import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle, MoreVertical, Eye, Plus, FileCheck, FileCog, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import UserBarangayLocationMap from '@/components/user/UserBarangayLocationMap';
 
@@ -117,11 +117,14 @@ const HomePage = () => {
 
   const getDocumentStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'pending':
-        return Clock;
-      case 'approved':
+      case 'request':
+        return FileText;
+      case 'processing':
+        return FileCog;
       case 'ready':
         return CheckCircle;
+      case 'released':
+        return Package;
       case 'rejected':
       case 'declined':
         return XCircle;
@@ -132,13 +135,13 @@ const HomePage = () => {
 
   const getDocumentStatusStyle = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'pending':
+      case 'request':
         return {
           containerClass: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800',
-          iconClass: 'bg-yellow-400',
+          iconClass: 'bg-yellow-500',
           badgeClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
         };
-      case 'approved':
+      case 'processing':
         return {
           containerClass: 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800',
           iconClass: 'bg-blue-500',
@@ -149,6 +152,12 @@ const HomePage = () => {
           containerClass: 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800',
           iconClass: 'bg-green-500',
           badgeClass: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+        };
+      case 'released':
+        return {
+          containerClass: 'bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800',
+          iconClass: 'bg-purple-500',
+          badgeClass: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
         };
       case 'rejected':
       case 'declined':
