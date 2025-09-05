@@ -77,7 +77,10 @@ const UserAnnouncementsPage = () => {
   } = useQuery({
     queryKey: ['announcements', barangayId],
     queryFn: async () => {
+      console.log('Fetching announcements for barangayId:', barangayId);
+      
       if (!barangayId) {
+        console.log('No barangayId provided, returning empty array');
         return [];
       }
       
@@ -90,8 +93,18 @@ const UserAnnouncementsPage = () => {
           .order('is_pinned', { ascending: false })
           .order('created_at', { ascending: false });
         
+        console.log('Executing announcements query for barangayId:', barangayId);
         const { data: announcementsData, error: announcementsError } = await query;
-        if (announcementsError) throw announcementsError;
+        
+        if (announcementsError) {
+          console.error('Announcements query error:', announcementsError);
+          throw announcementsError;
+        }
+        
+        console.log('Announcements query result:', {
+          count: announcementsData?.length || 0,
+          data: announcementsData
+        });
 
         // Fetch user profiles to get author names
         const userIds = [...new Set(announcementsData.map(a => a.created_by))];
