@@ -67,20 +67,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Update user online status and last login
+  // Update user online status
   const updateUserOnlineStatus = async (userId: string, isOnline: boolean) => {
     try {
-      const updateData: any = { online: isOnline };
-      
-      if (isOnline) {
-        updateData.last_login = new Date().toISOString();
-      }
-
       console.log(`Updating user ${userId} online status to: ${isOnline}`);
       
       const { error } = await supabase
-        .from('public_profiles')
-        .update(updateData)
+        .from('profiles')
+        .update({ online: isOnline })
         .eq('id', userId);
 
       if (error) {

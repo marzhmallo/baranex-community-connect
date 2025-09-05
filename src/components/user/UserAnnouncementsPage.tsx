@@ -36,6 +36,15 @@ const UserAnnouncementsPage = () => {
   
   // Get barangay ID from URL params (for public access), selected barangay (from localStorage), or user's barangay
   const barangayId = searchParams.get('barangay') || selectedBarangay?.id || userProfile?.brgyid;
+  
+  // Debug logging for barangay ID resolution
+  console.log('Announcements - barangayId resolution:', {
+    fromURL: searchParams.get('barangay'),
+    fromSelection: selectedBarangay?.id,
+    fromProfile: userProfile?.brgyid,
+    final: barangayId,
+    userProfileLoaded: !!userProfile
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedVisibility, setSelectedVisibility] = useState<string>('');
@@ -68,7 +77,7 @@ const UserAnnouncementsPage = () => {
     };
   }, [openDropdown]);
 
-  // Fetch announcements from Supabase with localStorage caching
+  // Fetch announcements from Supabase
   const {
     data: announcements,
     isLoading,
@@ -77,7 +86,10 @@ const UserAnnouncementsPage = () => {
   } = useQuery({
     queryKey: ['announcements', barangayId],
     queryFn: async () => {
+      console.log('Announcements query running with barangayId:', barangayId);
+      
       if (!barangayId) {
+        console.log('No barangayId available, returning empty array');
         return [];
       }
       
@@ -141,47 +153,17 @@ const UserAnnouncementsPage = () => {
           authorName: userMap[announcement.created_by] || 'Unknown User'
         }));
         
-        // Cache the data in localStorage
-        try {
-          const cacheKey = `announcements_cache_${barangayId}`;
-          const cacheData = {
-            data: announcementsWithAuthors,
-            timestamp: Date.now()
-          };
-          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-        } catch (cacheError) {
-          console.warn('Failed to cache announcements:', cacheError);
-        }
-        
+        console.log('Announcements fetched successfully:', announcementsWithAuthors.length);
         return announcementsWithAuthors;
       } catch (error) {
         console.error('Error fetching announcements:', error);
         throw error;
       }
     },
-    enabled: !!barangayId,
-    initialData: () => {
-      // Try to get cached data on initial load
-      if (!barangayId) return [];
-      
-      try {
-        const cacheKey = `announcements_cache_${barangayId}`;
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const { data, timestamp } = JSON.parse(cached);
-          // Use cached data if it's less than 5 minutes old
-          const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-          if (Date.now() - timestamp < CACHE_DURATION) {
-            return data;
-          } else {
-            localStorage.removeItem(cacheKey);
-          }
-        }
-      } catch (error) {
-        console.error('Error reading cached announcements:', error);
-      }
-      return [];
-    },
+    // Always try to fetch when authenticated, let the query handle empty barangayId gracefully  
+    enabled: true,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -192,8 +174,8 @@ const UserAnnouncementsPage = () => {
   const emergencyAnnouncements = announcements?.filter(a => a.category.toLowerCase() === 'emergency')?.length || 0;
   const pinnedAnnouncements = announcements?.filter(a => a.is_pinned)?.length || 0;
 
-  // Show loading screen while data is being fetched
-  if (isLoading) {
+  // Show loading screen while data is being fetched or user profile is not ready
+  if (isLoading || (!userProfile && !searchParams.get('barangay') && !selectedBarangay?.id)) {
     return <div className="relative w-full min-h-screen">
         <LocalizedLoadingScreen isLoading={true} icon={Megaphone} loadingText="Loading announcements" />
       </div>;
@@ -366,12 +348,31 @@ const UserAnnouncementsPage = () => {
             </div>
           </div>
 
-          {error && <Alert variant="destructive" className="mb-6 border border-destructive/20">
-              <AlertTitle>Error</AlertTitle>
+          {error && (
+            <Alert variant="destructive" className="mb-6 border border-destructive/20">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error Loading Announcements</AlertTitle>
               <AlertDescription>
-                Failed to load announcements. Please try again later.
+                Unable to load announcements. Please check your connection and try again.
+                <button 
+                  onClick={() => refetch()} 
+                  className="ml-2 underline hover:no-underline font-medium"
+                >
+                  Retry
+                </button>
               </AlertDescription>
-            </Alert>}
+            </Alert>
+          )}
+          
+          {!barangayId && !error && (
+            <Alert className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>No Barangay Selected</AlertTitle>
+              <AlertDescription>
+                Please select a barangay to view announcements.
+              </AlertDescription>
+            </Alert>
+          )}
 
           <AnnouncementsList announcements={announcements || []} isLoading={isLoading} refetch={refetch} searchQuery={searchQuery} selectedCategories={selectedCategories} selectedVisibility={selectedVisibility} sortBy={sortBy} />
         </div>
