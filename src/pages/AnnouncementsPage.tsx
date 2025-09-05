@@ -8,6 +8,7 @@ import AnnouncementModal from '@/components/announcements/AnnouncementModal';
 import { Search, Users, FolderOpen, ArrowUpDown, Plus, Megaphone, CheckCircle, Calendar, AlertTriangle, Clock, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
+
 export interface Announcement {
   id: string;
   title: string;
@@ -24,6 +25,7 @@ export interface Announcement {
   brgyid: string;
   authorName: string;
 }
+
 const AnnouncementsPage = () => {
   const {
     userProfile
@@ -64,15 +66,17 @@ const AnnouncementsPage = () => {
     };
   }, [openDropdown]);
 
-  // Fetch announcements from Supabase with localStorage caching
+  // Fetch announcements from Supabase
   const {
     data: announcements,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['announcements'],
+    queryKey: ['admin-announcements'],
     queryFn: async () => {
+      console.log('Admin announcements query running...');
+      
       try {
         // Fetch announcements
         const {
@@ -83,21 +87,50 @@ const AnnouncementsPage = () => {
         }).order('created_at', {
           ascending: false
         });
+        
         if (announcementsError) throw announcementsError;
 
         // Fetch user profiles to get author names
         const userIds = [...new Set(announcementsData.map(a => a.created_by))];
-        const {
-          data: profilesData,
-          error: profilesError
-        } = await supabase.from('profiles').select('id, firstname, lastname').in('id', userIds);
-        if (profilesError) throw profilesError;
-
-        // Create a map of user IDs to names
-        const userMap = profilesData.reduce((acc, user) => {
-          acc[user.id] = `${user.firstname} ${user.lastname}`;
-          return acc;
-        }, {});
+        let userMap = {};
+        
+        if (userIds.length > 0) {
+          try {
+            const {
+              data: profilesData,
+              error: profilesError
+            } = await supabase.from('profiles').select('id, firstname, lastname').in('id', userIds);
+            
+            if (profilesError) {
+              console.warn('Profiles query error (using fallback):', profilesError);
+              // Create fallback userMap with "Unknown User" for all users
+              userMap = userIds.reduce((acc, userId) => {
+                acc[userId] = 'Unknown User';
+                return acc;
+              }, {});
+            } else if (profilesData) {
+              // Create a map of user IDs to names
+              userMap = profilesData.reduce((acc, user) => {
+                acc[user.id] = `${user.firstname} ${user.lastname}`;
+                return acc;
+              }, {});
+              
+              // Fill in any missing users with "Unknown User"
+              userIds.forEach(userId => {
+                if (!userMap[userId]) {
+                  userMap[userId] = 'Unknown User';
+                }
+              });
+            }
+          } catch (profilesQueryError) {
+            console.warn('Profiles query failed (using fallback):', profilesQueryError);
+            // Create fallback userMap with "Unknown User" for all users
+            userMap = userIds.reduce((acc, userId) => {
+              acc[userId] = 'Unknown User';
+              return acc;
+            }, {});
+          }
+        }
 
         // Add author names to announcements
         const announcementsWithAuthors = announcementsData.map(announcement => ({
@@ -105,47 +138,19 @@ const AnnouncementsPage = () => {
           authorName: userMap[announcement.created_by] || 'Unknown User'
         }));
         
-        // Cache the data in localStorage
-        try {
-          const cacheKey = 'admin_announcements_cache';
-          const cacheData = {
-            data: announcementsWithAuthors,
-            timestamp: Date.now()
-          };
-          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-        } catch (cacheError) {
-          console.warn('Failed to cache announcements:', cacheError);
-        }
-        
+        console.log('Admin announcements fetched successfully:', announcementsWithAuthors.length);
         return announcementsWithAuthors;
       } catch (error) {
-        console.error('Error fetching announcements:', error);
+        console.error('Error fetching admin announcements:', error);
         throw error;
       }
     },
-    initialData: () => {
-      // Try to get cached data on initial load
-      try {
-        const cacheKey = 'admin_announcements_cache';
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const { data, timestamp } = JSON.parse(cached);
-          // Use cached data if it's less than 5 minutes old
-          const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-          if (Date.now() - timestamp < CACHE_DURATION) {
-            return data;
-          } else {
-            localStorage.removeItem(cacheKey);
-          }
-        }
-      } catch (error) {
-        console.error('Error reading cached announcements:', error);
-      }
-      return [];
-    },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
+
   const toggleCreateForm = () => setShowCreateForm(!showCreateForm);
   const handleAnnouncementCreated = () => {
     setShowCreateForm(false);
@@ -168,6 +173,7 @@ const AnnouncementsPage = () => {
         <LocalizedLoadingScreen isLoading={true} icon={Megaphone} loadingText="Loading announcements" />
       </div>;
   }
+
   return <div className="w-full min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
@@ -340,12 +346,21 @@ const AnnouncementsPage = () => {
             </div>
           </div>
 
-          {error && <Alert variant="destructive" className="mb-6 border border-destructive/20">
-              <AlertTitle>Error</AlertTitle>
+          {error && (
+            <Alert variant="destructive" className="mb-6 border border-destructive/20">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error Loading Announcements</AlertTitle>
               <AlertDescription>
-                Failed to load announcements. Please try again later.
+                Unable to load announcements. Please check your connection and try again.
+                <button 
+                  onClick={() => refetch()} 
+                  className="ml-2 underline hover:no-underline font-medium"
+                >
+                  Retry
+                </button>
               </AlertDescription>
-            </Alert>}
+            </Alert>
+          )}
 
           <AnnouncementsList announcements={announcements || []} isLoading={isLoading} refetch={refetch} searchQuery={searchQuery} selectedCategories={selectedCategories} selectedVisibility={selectedVisibility} sortBy={sortBy} />
         </div>
@@ -367,4 +382,5 @@ const AnnouncementsPage = () => {
       </div>
     </div>;
 };
+
 export default AnnouncementsPage;
