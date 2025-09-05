@@ -1,32 +1,69 @@
 
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Clock } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Clock, Share, Check, X } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const UserOfficialDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isCoverPhotoModalOpen, setIsCoverPhotoModalOpen] = useState(false);
+  const [isProfilePhotoModalOpen, setIsProfilePhotoModalOpen] = useState(false);
 
-  // Fetch official details
+  // Fetch official details with barangay information
   const { data: official, isLoading: officialLoading } = useQuery({
     queryKey: ['user-official-details', id],
     queryFn: async () => {
       if (!id) return null;
       const { data, error } = await supabase
         .from('officials')
-        .select('*')
+        .select(`
+          *,
+          barangays (
+            barangayname,
+            municipality,
+            province,
+            region
+          )
+        `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data as Official;
+      return data as Official & { barangays?: { barangayname: string; municipality: string; province: string; region: string } } | null;
     },
     enabled: !!id
+  });
+
+  // Fetch profile names for created by and updated by
+  const { data: profileNames, isLoading: profileNamesLoading } = useQuery({
+    queryKey: ['user-profile-names', official?.recordedby, official?.editedby],
+    queryFn: async () => {
+      if (!official?.recordedby && !official?.editedby) return { createdBy: null, editedBy: null };
+      
+      const profileIds = [official?.recordedby, official?.editedby].filter(Boolean);
+      if (profileIds.length === 0) return { createdBy: null, editedBy: null };
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, firstname, lastname')
+        .in('id', profileIds);
+      
+      if (error) throw error;
+      
+      const createdBy = data?.find(p => p.id === official?.recordedby);
+      const editedBy = data?.find(p => p.id === official?.editedby);
+      
+      return {
+        createdBy: createdBy ? `${createdBy.firstname || ''} ${createdBy.lastname || ''}`.trim() : null,
+        editedBy: editedBy ? `${editedBy.firstname || ''} ${editedBy.lastname || ''}`.trim() : null
+      };
+    },
+    enabled: !!(official?.recordedby || official?.editedby)
   });
 
   // Fetch positions for the official
@@ -67,6 +104,16 @@ const UserOfficialDetailsPage = () => {
     });
   };
 
+  // Format date for short display (e.g., "Jan 15, 2024") 
+  const formatShortDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   // Format achievements into bullet points
   const formatAchievements = (achievements: any) => {
     if (!achievements) return null;
@@ -91,11 +138,16 @@ const UserOfficialDetailsPage = () => {
 
     if (achievementItems.length === 0) return null;
     return (
-      <ul className="list-disc pl-5 space-y-2">
+      <div className="space-y-4">
         {achievementItems.map((achievement, i) => (
-          <li key={i} className="text-muted-foreground whitespace-pre-line">{achievement}</li>
+          <div key={i} className="bg-card rounded-lg p-4 border-l-4 border-yellow-500 hover:shadow-md transition-all duration-300 border">
+            <div className="flex items-center space-x-3 mb-2">
+              <Award className="h-5 w-5 text-yellow-500" />
+              <h3 className="font-semibold text-card-foreground">{achievement}</h3>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     );
   };
 
@@ -123,11 +175,16 @@ const UserOfficialDetailsPage = () => {
 
     if (committeeItems.length === 0) return null;
     return (
-      <ul className="list-disc pl-5 space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {committeeItems.map((committee, i) => (
-          <li key={i} className="text-muted-foreground whitespace-pre-line">{committee}</li>
+          <div key={i} className="bg-card rounded-lg p-4 border-l-4 border-primary hover:shadow-md transition-all duration-300 hover:-translate-y-1 border">
+            <div className="flex items-center space-x-3 mb-2">
+              <Users className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-card-foreground">{committee}</h3>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     );
   };
 
@@ -155,11 +212,21 @@ const UserOfficialDetailsPage = () => {
 
     if (educItems.length === 0) return null;
     return (
-      <ul className="list-disc pl-5 space-y-2">
+      <div className="space-y-4">
         {educItems.map((education, i) => (
-          <li key={i} className="text-muted-foreground whitespace-pre-line">{education}</li>
+          <div key={i} className="bg-card rounded-lg p-4 hover:shadow-md transition-all duration-300 border">
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <GraduationCap className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-card-foreground">{education}</h3>
+                <p className="text-sm text-muted-foreground mt-1">Educational Achievement</p>
+              </div>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     );
   };
 
@@ -171,23 +238,44 @@ const UserOfficialDetailsPage = () => {
     position.term_end && new Date(position.term_end) < new Date()
   ) || [];
 
-  const goBack = () => {
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Add share functionality here if needed
+  };
+
+  const handleCoverPhotoClick = (e: React.MouseEvent) => {
+    if (official?.coverurl) {
+      setIsCoverPhotoModalOpen(true);
+    }
+  };
+
+  const handleProfilePhotoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (official?.photo_url) {
+      setIsProfilePhotoModalOpen(true);
+    }
+  };
+
+  const goBack = (e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate(-1);
   };
 
   if (officialLoading) {
     return (
-      <div className="p-6 min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto">
-          <Skeleton className="h-8 w-48 mb-8" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Skeleton className="h-80" />
-            <div className="md:col-span-2 space-y-4">
-              <Skeleton className="h-10 w-2/3" />
-              <Skeleton className="h-6 w-1/3" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-6" />
-              <Skeleton className="h-6" />
+      <div className="w-full px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
+        <div className="bg-card rounded-2xl shadow-xl overflow-hidden border">
+          <Skeleton className="h-64 w-full" />
+          <div className="p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-4">
+                <Skeleton className="h-32" />
+                <Skeleton className="h-32" />
+              </div>
+              <div className="space-y-4">
+                <Skeleton className="h-32" />
+                <Skeleton className="h-32" />
+              </div>
             </div>
           </div>
         </div>
@@ -197,10 +285,10 @@ const UserOfficialDetailsPage = () => {
 
   if (!official) {
     return (
-      <div className="p-6 min-h-screen bg-background text-foreground">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-4">Official Not Found</h2>
-          <p className="mb-4">The official you are looking for could not be found.</p>
+      <div className="w-full px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
+        <div className="bg-card rounded-2xl shadow-xl overflow-hidden p-8 text-center border">
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Official Not Found</h2>
+          <p className="mb-4 text-muted-foreground">The official you are looking for could not be found.</p>
           <Button onClick={goBack} variant="outline">Go Back</Button>
         </div>
       </div>
@@ -221,218 +309,310 @@ const UserOfficialDetailsPage = () => {
   const currentPosition = getCurrentPosition();
 
   return (
-    <div className="p-6 min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-2 mb-8">
-          <Button onClick={goBack} variant="ghost" className="p-1 hover:bg-accent">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold text-foreground">Official Details</h1>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left Column - Photo and basic info */}
-          <div className="space-y-6">
-            <Card className="overflow-hidden bg-card border">
-              <div className="h-80 relative">
-                {official?.photo_url ? (
-                  <img 
-                    src={official.photo_url} 
-                    alt={official.name} 
-                    className="w-full h-full object-cover object-center" 
-                  />
+    <div className="w-full px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
+      <div className="bg-card rounded-2xl shadow-xl overflow-hidden border">
+        {/* Header Section with Hero Background */}
+        <div 
+          className={`relative h-64 bg-gradient-to-r from-primary-600 to-primary-800 ${official?.coverurl ? 'cursor-pointer' : ''}`}
+          style={{
+            backgroundImage: official?.coverurl ? `url(${official.coverurl})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+          onClick={handleCoverPhotoClick}
+        >
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+          
+          <div className="absolute bottom-6 left-6 flex items-end space-x-6">
+            <div className="relative">
+              {official?.photo_url ? (
+                <img 
+                  src={official.photo_url} 
+                  alt={official.name}
+                  className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                  onClick={handleProfilePhotoClick}
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-muted flex items-center justify-center">
+                  <User className="h-16 w-16 text-muted-foreground" />
+                </div>
+              )}
+              <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center ${
+                currentPositions.length > 0 ? 'bg-green-500' : 'bg-red-500'
+              }`}>
+                {currentPositions.length > 0 ? (
+                  <Check className="h-4 w-4 text-white" />
                 ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <User className="h-24 w-24 text-muted-foreground" />
-                  </div>
+                  <X className="h-4 w-4 text-white" />
                 )}
               </div>
-              
-              <div className="p-4 space-y-4">
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">{official?.name}</h2>
-                  <p className="text-primary">{currentPosition?.position || 'Barangay Official'}</p>
-                </div>
-                
-                <div className="space-y-2 text-muted-foreground">
-                  {official?.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      <span>{official.email}</span>
-                    </div>
-                  )}
-                  
-                  {official?.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      <span>{official.phone}</span>
-                    </div>
-                  )}
-                  
-                  {official?.address && (
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
-                      <span>{official.address}</span>
-                    </div>
-                  )}
-                  
-                  {official?.birthdate && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>Born: {formatDate(official.birthdate)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </div>
-          
-          {/* Right Column - Detailed information */}
-          <div className="md:col-span-2 space-y-6">
-            {/* Biography Section */}
-            <Card className="bg-card border p-6">
-              <h2 className="text-xl font-bold text-foreground mb-4">Biography</h2>
-              <p className="text-muted-foreground whitespace-pre-line">
-                {official?.bio || `${official?.name || 'This official'} is a dedicated public servant working for the betterment of the community.`}
+            </div>
+            <div className="text-white pb-2">
+              <h1 className="text-3xl font-bold mb-1">{official?.name}</h1>
+              <p className="text-primary-100 text-lg">{currentPosition?.position || 'Barangay Official'}</p>
+              <p className="text-primary-200 text-sm">
+                {official.barangays ? 
+                  `${official.barangays.barangayname}, ${official.barangays.municipality}, ${official.barangays.province}, ${official.barangays.region}` 
+                  : currentPosition?.committee || 'Department'
+                }
               </p>
-            </Card>
-            
-            {/* Committees Section */}
-            {official?.committees && (
-              <Card className="bg-card border p-6">
-                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Committees
-                </h2>
-                <div className="text-muted-foreground">
-                  {formatCommittees(official.committees)}
-                </div>
-              </Card>
-            )}
-            
-            {/* Education Section */}
-            {official?.educ && (
-              <Card className="bg-card border p-6">
-                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  Education
-                </h2>
-                <div className="text-muted-foreground">
-                  {formatEducation(official.educ)}
-                </div>
-              </Card>
-            )}
-            
-            {/* Achievements Section */}
-            {official?.achievements && (
-              <Card className="bg-card border p-6">
-                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                  <Award className="h-5 w-5" />
-                  Achievements
-                </h2>
-                <div className="text-muted-foreground">
-                  {formatAchievements(official.achievements)}
-                </div>
-              </Card>
-            )}
-            
-            {/* Positions Section */}
-            <Card className="bg-card border p-6">
-              <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Briefcase className="h-5 w-5" />
-                Positions
-              </h2>
-              
-              <Tabs defaultValue="current" className="w-full">
-                <TabsList className="w-full bg-muted mb-4">
-                  <TabsTrigger value="current" className="flex-1">
-                    Current Positions ({currentPositions.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="past" className="flex-1">
-                    Past Positions ({pastPositions.length})
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="current">
-                  {positionsLoading ? (
-                    <Skeleton className="h-32 w-full" />
-                  ) : currentPositions.length > 0 ? (
-                    <div className="space-y-4">
-                      {currentPositions.map(position => (
-                        <Card key={position.id} className="bg-muted border p-4">
-                          <div>
-                            <h3 className="font-bold text-foreground">{position.position}</h3>
-                            {position.committee && (
-                              <p className="text-primary">Committee: {position.committee}</p>
-                            )}
-                            <p className="text-muted-foreground text-sm mt-2">
-                              {formatDate(position.term_start)} - {formatDate(position.term_end)}
-                            </p>
-                            {position.description && (
-                              <p className="text-muted-foreground mt-2">{position.description}</p>
-                            )}
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground py-4 text-center">
-                      No current positions found.
-                    </p>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="past">
-                  {positionsLoading ? (
-                    <Skeleton className="h-32 w-full" />
-                  ) : pastPositions.length > 0 ? (
-                    <div className="space-y-4">
-                      {pastPositions.map(position => (
-                        <Card key={position.id} className="bg-muted border p-4">
-                          <div>
-                            <h3 className="font-bold text-foreground">{position.position}</h3>
-                            {position.committee && (
-                              <p className="text-primary">Committee: {position.committee}</p>
-                            )}
-                            <p className="text-muted-foreground text-sm mt-2">
-                              {formatDate(position.term_start)} - {formatDate(position.term_end)}
-                            </p>
-                            {position.description && (
-                              <p className="text-muted-foreground mt-2">{position.description}</p>
-                            )}
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground py-4 text-center">
-                      No past positions found.
-                    </p>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </Card>
+            </div>
+          </div>
+          <div className="absolute top-6 right-6 flex space-x-2">
+            <button 
+              onClick={handleShareClick}
+              className="header-action-button bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
+            >
+              <Share className="h-5 w-5" />
+            </button>
+          </div>
+          <button 
+            onClick={goBack}
+            className="header-action-button absolute top-6 left-6 bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </div>
 
-            {/* Record Information Section */}
-            <Card className="bg-card border p-6">
-              <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Record Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-semibold text-foreground mb-2">Created</h3>
-                  <p className="text-muted-foreground">{formatDateTime(official.created_at)}</p>
+        <div className="p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Main Content */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Biography Section */}
+              <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
+                <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
+                  <User className="text-primary mr-3 h-6 w-6" />
+                  Biography
+                </h2>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  {official?.bio || `${official?.name || 'This official'} is a dedicated public servant working for the betterment of the community.`}
+                </p>
+                <p className="text-muted-foreground leading-relaxed">
+                  Born and raised in the community, this official has dedicated their career to public service, focusing on sustainable development and community engagement initiatives. Their leadership has been recognized both locally and regionally.
+                </p>
+              </section>
+
+              {/* Committees Section */}
+              {official?.committees && (
+                <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
+                  <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
+                    <Users className="text-primary mr-3 h-6 w-6" />
+                    Committees
+                  </h2>
+                  {formatCommittees(official.committees)}
+                </section>
+              )}
+
+              {/* Education Section */}
+              {official?.educ && (
+                <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
+                  <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
+                    <GraduationCap className="text-primary mr-3 h-6 w-6" />
+                    Education
+                  </h2>
+                  {formatEducation(official.educ)}
+                </section>
+              )}
+
+              {/* Achievements Section */}
+              {official?.achievements && (
+                <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
+                  <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
+                    <Award className="text-primary mr-3 h-6 w-6" />
+                    Achievements & Awards
+                  </h2>
+                  {formatAchievements(official.achievements)}
+                </section>
+              )}
+            </div>
+
+            {/* Right Column - Sidebar */}
+            <div className="space-y-6">
+              {/* Current Position */}
+              <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
+                  <Briefcase className="text-primary mr-2 h-5 w-5" />
+                  Current Position
+                </h2>
+                <div className="space-y-4">
+                  {currentPositions.length > 0 ? (
+                    currentPositions.map(position => (
+                      <div key={position.id} className="bg-primary/10 rounded-lg p-4 border border-primary/20">
+                        <h3 className="font-semibold text-foreground mb-2">{position.position}</h3>
+                        {position.committee && (
+                          <p className="text-sm text-primary mb-2">{position.committee}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mb-3">Since {formatDate(position.term_start)}</p>
+                        <div className="flex space-x-2">
+                          <span className="inline-block bg-primary/20 text-primary px-2 py-1 rounded-full text-xs">
+                            {position.sk ? 'SK' : 'Full-time'}
+                          </span>
+                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                            {position.tenure || 'Active'}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="bg-muted/30 rounded-lg p-4 border">
+                      <p className="text-muted-foreground text-sm">No current position found</p>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground mb-2">Last Updated</h3>
-                  <p className="text-muted-foreground">{formatDateTime(official.updated_at)}</p>
+              </section>
+
+              {/* Past Positions */}
+              {pastPositions.length > 0 && (
+                <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
+                  <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
+                    <Clock className="text-muted-foreground mr-2 h-5 w-5" />
+                    Past Positions
+                  </h2>
+                  <div className="space-y-3">
+                    {pastPositions.map(position => (
+                      <div key={position.id} className="bg-muted/30 rounded-lg p-3 hover:bg-muted/50 transition-colors duration-200 border">
+                        <h4 className="font-medium text-foreground text-sm mb-1">{position.position}</h4>
+                        {position.committee && (
+                          <p className="text-xs text-muted-foreground mb-1">{position.committee}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground">{formatDate(position.term_start)} - {formatDate(position.term_end)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Contact Information */}
+              <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
+                  <Mail className="text-muted-foreground mr-2 h-5 w-5" />
+                  Contact Information
+                </h2>
+                <div className="space-y-3">
+                  {official?.email && (
+                    <div className="flex items-center space-x-3 text-sm">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">{official.email}</span>
+                    </div>
+                  )}
+                  {official?.phone && (
+                    <div className="flex items-center space-x-3 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">{official.phone}</span>
+                    </div>
+                  )}
+                  {official?.address && (
+                    <div className="flex items-center space-x-3 text-sm">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">{official.address}</span>
+                    </div>
+                  )}
+                  {official?.birthdate && (
+                    <div className="flex items-center space-x-3 text-sm">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">Born: {formatDate(official.birthdate)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-3 text-sm">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-foreground">Mon-Fri, 9:00 AM - 5:00 PM</span>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </section>
+
+              {/* Record Information */}
+              <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
+                  <Clock className="text-muted-foreground mr-2 h-5 w-5" />
+                  Record Information
+                </h2>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Profile Created:</span>
+                    <span className="text-foreground font-medium">{formatShortDate(official.created_at)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Last Updated:</span>
+                    <span className="text-foreground font-medium">{formatShortDate(official.updated_at)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Created By:</span>
+                    <span className="text-foreground font-medium">
+                      {profileNames?.createdBy || (official.recordedby ? 'Admin User' : 'N/A')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Updated By:</span>
+                    <span className="text-foreground font-medium">
+                      {profileNames?.editedBy || (official.editedby ? 'Admin User' : 'N/A')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Status:</span>
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                      currentPositions.length > 0 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {currentPositions.length > 0 ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div className="pt-3 border-t border-border">
+                    <button className="w-full bg-muted hover:bg-muted/80 text-foreground py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
+                      <Clock className="h-4 w-4" />
+                      <span>View Edit History</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Cover Photo Modal */}
+      <Dialog open={isCoverPhotoModalOpen} onOpenChange={setIsCoverPhotoModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0" hideCloseButton>
+          <div className="relative">
+            <button
+              onClick={() => setIsCoverPhotoModalOpen(false)}
+              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {official?.coverurl && (
+              <img
+                src={official.coverurl}
+                alt={`${official.name} cover photo`}
+                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Photo Modal */}
+      <Dialog open={isProfilePhotoModalOpen} onOpenChange={setIsProfilePhotoModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0" hideCloseButton>
+          <div className="relative">
+            <button
+              onClick={() => setIsProfilePhotoModalOpen(false)}
+              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {official?.photo_url && (
+              <img
+                src={official.photo_url}
+                alt={`${official.name} profile photo`}
+                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
