@@ -179,6 +179,58 @@ const UserAnnouncementsPage = () => {
         </div>
 
         <div className="bg-card border border-border rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+            <h2 className="text-2xl font-bold text-foreground">Quick Stats</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white border border-blue-400/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm">Total Announcements</p>
+                  <p className="text-3xl font-bold">{totalAnnouncements}</p>
+                </div>
+                <div className="p-2 bg-blue-400/20 rounded-lg border border-blue-300/30">
+                  <Megaphone className="text-blue-200 h-10 w-10" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white border border-green-400/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm">Active</p>
+                  <p className="text-3xl font-bold">{activeAnnouncements}</p>
+                </div>
+                <div className="p-2 bg-green-400/20 rounded-lg border border-green-300/30">
+                  <CheckCircle className="text-green-200 h-10 w-10" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-6 text-white border border-yellow-400/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-yellow-100 text-sm">Pinned</p>
+                  <p className="text-3xl font-bold">{pinnedAnnouncements}</p>
+                </div>
+                <div className="p-2 bg-yellow-400/20 rounded-lg border border-yellow-300/30">
+                  <Calendar className="text-yellow-200 h-10 w-10" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white border border-red-400/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-100 text-sm">Emergency</p>
+                  <p className="text-3xl font-bold">{emergencyAnnouncements}</p>
+                </div>
+                <div className="p-2 bg-red-400/20 rounded-lg border border-red-300/30">
+                  <AlertTriangle className="text-red-200 h-10 w-10" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl shadow-lg p-6">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
             <div className="flex-1 max-w-md">
               <div className="relative">
@@ -294,58 +346,6 @@ const UserAnnouncementsPage = () => {
             </Alert>}
 
           <AnnouncementsList announcements={announcements || []} isLoading={isLoading} refetch={refetch} searchQuery={searchQuery} selectedCategories={selectedCategories} selectedVisibility={selectedVisibility} sortBy={sortBy} />
-        </div>
-
-        <div className="bg-card border border-border rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
-            <h2 className="text-2xl font-bold text-foreground">Quick Stats</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white border border-blue-400/30">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm">Total Announcements</p>
-                  <p className="text-3xl font-bold">{totalAnnouncements}</p>
-                </div>
-                <div className="p-2 bg-blue-400/20 rounded-lg border border-blue-300/30">
-                  <Megaphone className="text-blue-200 h-10 w-10" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white border border-green-400/30">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm">Active</p>
-                  <p className="text-3xl font-bold">{activeAnnouncements}</p>
-                </div>
-                <div className="p-2 bg-green-400/20 rounded-lg border border-green-300/30">
-                  <CheckCircle className="text-green-200 h-10 w-10" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-6 text-white border border-yellow-400/30">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-yellow-100 text-sm">Pinned</p>
-                  <p className="text-3xl font-bold">{pinnedAnnouncements}</p>
-                </div>
-                <div className="p-2 bg-yellow-400/20 rounded-lg border border-yellow-300/30">
-                  <Calendar className="text-yellow-200 h-10 w-10" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white border border-red-400/30">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-red-100 text-sm">Emergency</p>
-                  <p className="text-3xl font-bold">{emergencyAnnouncements}</p>
-                </div>
-                <div className="p-2 bg-red-400/20 rounded-lg border border-red-300/30">
-                  <AlertTriangle className="text-red-200 h-10 w-10" />
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>;
