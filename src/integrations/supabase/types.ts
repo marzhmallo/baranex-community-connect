@@ -465,7 +465,7 @@ export type Database = {
           notes: string | null
           ornumber: string | null
           paydate: string | null
-          paymenturl: string | null
+          paymenturl: Json[] | null
           processedby: string | null
           purpose: string
           receiver: Json | null
@@ -487,7 +487,7 @@ export type Database = {
           notes?: string | null
           ornumber?: string | null
           paydate?: string | null
-          paymenturl?: string | null
+          paymenturl?: Json[] | null
           processedby?: string | null
           purpose: string
           receiver?: Json | null
@@ -509,7 +509,7 @@ export type Database = {
           notes?: string | null
           ornumber?: string | null
           paydate?: string | null
-          paymenturl?: string | null
+          paymenturl?: Json[] | null
           processedby?: string | null
           purpose?: string
           receiver?: Json | null
@@ -2217,19 +2217,14 @@ export type Database = {
     Views: {
       public_barangays: {
         Row: {
-          backgroundurl: string | null
           barangayname: string | null
           country: string | null
-          created_at: string | null
           email: string | null
-          gcashname: string[] | null
           gcashurl: string | null
           halllat: number | null
           halllong: number | null
           id: string | null
           instructions: string | null
-          is_custom: boolean | null
-          logo_url: string | null
           municipality: string | null
           officehours: string | null
           phone: string | null
@@ -2237,19 +2232,14 @@ export type Database = {
           region: string | null
         }
         Insert: {
-          backgroundurl?: string | null
           barangayname?: string | null
           country?: string | null
-          created_at?: string | null
           email?: string | null
-          gcashname?: string[] | null
           gcashurl?: string | null
           halllat?: number | null
           halllong?: number | null
           id?: string | null
           instructions?: string | null
-          is_custom?: boolean | null
-          logo_url?: string | null
           municipality?: string | null
           officehours?: string | null
           phone?: string | null
@@ -2257,19 +2247,14 @@ export type Database = {
           region?: string | null
         }
         Update: {
-          backgroundurl?: string | null
           barangayname?: string | null
           country?: string | null
-          created_at?: string | null
           email?: string | null
-          gcashname?: string[] | null
           gcashurl?: string | null
           halllat?: number | null
           halllong?: number | null
           id?: string | null
           instructions?: string | null
-          is_custom?: boolean | null
-          logo_url?: string | null
           municipality?: string | null
           officehours?: string | null
           phone?: string | null
@@ -2280,48 +2265,36 @@ export type Database = {
       }
       public_profiles: {
         Row: {
-          brgyid: string | null
+          bio: string | null
           created_at: string | null
-          email: string | null
           firstname: string | null
           id: string | null
           lastname: string | null
-          role: string | null
+          middlename: string | null
+          suffix: string | null
+          username: string | null
         }
         Insert: {
-          brgyid?: string | null
+          bio?: string | null
           created_at?: string | null
-          email?: string | null
           firstname?: string | null
           id?: string | null
           lastname?: string | null
-          role?: string | null
+          middlename?: string | null
+          suffix?: string | null
+          username?: string | null
         }
         Update: {
-          brgyid?: string | null
+          bio?: string | null
           created_at?: string | null
-          email?: string | null
           firstname?: string | null
           id?: string | null
           lastname?: string | null
-          role?: string | null
+          middlename?: string | null
+          suffix?: string | null
+          username?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_brgyid_fkey"
-            columns: ["brgyid"]
-            isOneToOne: false
-            referencedRelation: "barangays"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_brgyid_fkey"
-            columns: ["brgyid"]
-            isOneToOne: false
-            referencedRelation: "public_barangays"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -2347,6 +2320,15 @@ export type Database = {
           count: number
         }[]
       }
+      get_barangay_list: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          barangayname: string
+          country: string
+          id: string
+          municipality: string
+        }[]
+      }
       get_current_user_admin_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -2359,6 +2341,65 @@ export type Database = {
         Returns: {
           count: number
           gender: string
+        }[]
+      }
+      get_my_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          adminid: string | null
+          bday: string
+          bio: string | null
+          brgyid: string | null
+          created_at: string | null
+          dis: Json | null
+          email: string
+          firstname: string | null
+          gender: string
+          id: string
+          last_login: string
+          lastname: string | null
+          mid: string | null
+          middlename: string | null
+          notes: Json | null
+          online: boolean | null
+          padlock: boolean | null
+          phone: string | null
+          plazid: string | null
+          profile_picture: string | null
+          purok: string
+          role: string
+          status: string
+          suffix: string | null
+          superior_admin: boolean
+          username: string
+        }[]
+      }
+      get_public_barangay_data: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          backgroundurl: string | null
+          barangayname: string
+          country: string
+          created_at: string
+          email: string | null
+          "gcash#": number | null
+          gcashname: string[] | null
+          gcashurl: string | null
+          halllat: number | null
+          halllong: number | null
+          id: string
+          instructions: string | null
+          is_custom: boolean
+          logo_url: string | null
+          municipality: string
+          officehours: string | null
+          payreq: boolean | null
+          phone: string | null
+          plazid: string | null
+          province: string
+          region: string
+          submitter: string | null
+          updated_at: string | null
         }[]
       }
       get_purok_distribution: {
