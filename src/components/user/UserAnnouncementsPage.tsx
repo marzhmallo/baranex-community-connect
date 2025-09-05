@@ -77,10 +77,7 @@ const UserAnnouncementsPage = () => {
   } = useQuery({
     queryKey: ['announcements', barangayId],
     queryFn: async () => {
-      console.log('Fetching announcements for barangayId:', barangayId);
-      
       if (!barangayId) {
-        console.log('No barangayId provided, returning empty array');
         return [];
       }
       
@@ -93,32 +90,50 @@ const UserAnnouncementsPage = () => {
           .order('is_pinned', { ascending: false })
           .order('created_at', { ascending: false });
         
-        console.log('Executing announcements query for barangayId:', barangayId);
         const { data: announcementsData, error: announcementsError } = await query;
-        
-        if (announcementsError) {
-          console.error('Announcements query error:', announcementsError);
-          throw announcementsError;
-        }
-        
-        console.log('Announcements query result:', {
-          count: announcementsData?.length || 0,
-          data: announcementsData
-        });
+        if (announcementsError) throw announcementsError;
 
         // Fetch user profiles to get author names
         const userIds = [...new Set(announcementsData.map(a => a.created_by))];
-        const {
-          data: profilesData,
-          error: profilesError
-        } = await supabase.from('profiles').select('id, firstname, lastname').in('id', userIds);
-        if (profilesError) throw profilesError;
-
-        // Create a map of user IDs to names
-        const userMap = profilesData.reduce((acc, user) => {
-          acc[user.id] = `${user.firstname} ${user.lastname}`;
-          return acc;
-        }, {});
+        let userMap = {};
+        
+        if (userIds.length > 0) {
+          try {
+            const {
+              data: profilesData,
+              error: profilesError
+            } = await supabase.from('profiles').select('id, firstname, lastname').in('id', userIds);
+            
+            if (profilesError) {
+              console.warn('Profiles query error (using fallback):', profilesError);
+              // Create fallback userMap with "Unknown User" for all users
+              userMap = userIds.reduce((acc, userId) => {
+                acc[userId] = 'Unknown User';
+                return acc;
+              }, {});
+            } else if (profilesData) {
+              // Create a map of user IDs to names
+              userMap = profilesData.reduce((acc, user) => {
+                acc[user.id] = `${user.firstname} ${user.lastname}`;
+                return acc;
+              }, {});
+              
+              // Fill in any missing users with "Unknown User"
+              userIds.forEach(userId => {
+                if (!userMap[userId]) {
+                  userMap[userId] = 'Unknown User';
+                }
+              });
+            }
+          } catch (profilesQueryError) {
+            console.warn('Profiles query failed (using fallback):', profilesQueryError);
+            // Create fallback userMap with "Unknown User" for all users
+            userMap = userIds.reduce((acc, userId) => {
+              acc[userId] = 'Unknown User';
+              return acc;
+            }, {});
+          }
+        }
 
         // Add author names to announcements
         const announcementsWithAuthors = announcementsData.map(announcement => ({
