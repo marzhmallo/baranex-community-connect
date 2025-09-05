@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, MessageSquare, FileText, Users, Clock, AlertTriangle, CheckCircle, XCircle, MoreVertical, Eye, Plus, FileCheck, FileCog, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import UserBarangayLocationMap from '@/components/user/UserBarangayLocationMap';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const HomePage = () => {
   const { userProfile } = useAuth();
@@ -24,6 +25,7 @@ const HomePage = () => {
   } = useData();
   
   const [currentDate, setCurrentDate] = useState('');
+  const isMobile = useIsMobile();
 
   // Fetch user's document requests
   const { data: documentRequests } = useQuery({
@@ -192,24 +194,24 @@ const HomePage = () => {
   }
 
   return (
-    <div className="p-6 bg-background min-h-screen">
+    <div className={`${isMobile ? 'p-4' : 'p-6'} bg-background min-h-screen`}>
       {/* Header Card */}
-      <div className="relative overflow-hidden rounded-2xl p-8 mb-6 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 dark:from-blue-500 dark:via-indigo-600 dark:to-purple-700">
+      <div className={`relative overflow-hidden rounded-2xl ${isMobile ? 'p-6' : 'p-8'} mb-6 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 dark:from-blue-500 dark:via-indigo-600 dark:to-purple-700`}>
         {/* Background decorative elements */}
         <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
         
-        <div className="relative z-10 flex justify-between items-start">
+        <div className={`relative z-10 ${isMobile ? 'flex-col space-y-4' : 'flex justify-between items-start'}`}>
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-white drop-shadow-sm">
+            <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold mb-2 text-white drop-shadow-sm`}>
               Welcome back, {userProfile?.firstname}!
             </h1>
             <p className="text-white/90 drop-shadow-sm">
               Here's what's happening in {barangayName || 'your barangay'} today
             </p>
           </div>
-          <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-2 shadow-lg">
+          <div className={`flex items-center space-x-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-2 shadow-lg ${isMobile ? 'self-start' : ''}`}>
             <Calendar className="h-4 w-4 text-white" />
             <span className="text-sm text-white font-medium">{currentDate}</span>
           </div>
@@ -217,7 +219,7 @@ const HomePage = () => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-3 gap-6'}`}>
         {/* Upcoming Events */}
         <Card className="lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -409,7 +411,7 @@ const HomePage = () => {
           </DropdownMenu>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4'}`}>
             {barangayOfficials.length > 0 ? (
               barangayOfficials.map((official) => (
                 <div key={official.id} className="text-center">

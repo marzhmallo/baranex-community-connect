@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/components/AuthProvider";
 import { useBarangaySelection } from '@/hooks/useBarangaySelection';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export type Event = {
   id: string;
@@ -53,6 +54,7 @@ const UserCalendarPage = () => {
   const [pastPage, setPastPage] = useState(1);
   const eventsPerPage = 5;
   const { userProfile, user } = useAuth();
+  const isMobile = useIsMobile();
   
   // Get barangay ID from URL params (for public access) or selected barangay (from localStorage)
   const barangayId = searchParams.get('barangay') || selectedBarangay?.id;
@@ -355,36 +357,37 @@ const UserCalendarPage = () => {
   }
 
   return (
-    <div className="w-full p-6 bg-background min-h-screen">
+    <div className={`w-full ${isMobile ? 'p-4' : 'p-6'} bg-background min-h-screen`}>
       <div className="max-w-none mx-auto">
         <div className="bg-card border border-border rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-primary text-primary-foreground p-6">
+          <div className={`bg-primary text-primary-foreground ${isMobile ? 'p-4' : 'p-6'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold">Barangay Calendar</h1>
+                <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>Barangay Calendar</h1>
                 <p className="text-primary-foreground/80 mt-1">View community events and activities</p>
               </div>
             </div>
           </div>
 
-          <div className="p-6 bg-card">
-            <div className="flex items-center justify-between mb-6">
+          <div className={`${isMobile ? 'p-4' : 'p-6'} bg-card`}>
+            <div className={`${isMobile ? 'flex-col space-y-4' : 'flex items-center justify-between'} mb-6`}>
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="icon" onClick={handlePreviousMonth} className="hover:bg-muted">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <h2 className="text-2xl font-bold text-card-foreground">
+                <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-card-foreground`}>
                   {format(currentDate, "MMMM yyyy")}
                 </h2>
                 <Button variant="ghost" size="icon" onClick={handleNextMonth} className="hover:bg-muted">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
                 <Button 
                   variant={view === 'month' ? 'default' : 'ghost'} 
                   onClick={() => setView('month')}
                   className={view !== 'month' ? 'hover:bg-muted' : ''}
+                  size={isMobile ? 'sm' : 'default'}
                 >
                   Month
                 </Button>
@@ -392,6 +395,7 @@ const UserCalendarPage = () => {
                   variant={view === 'week' ? 'default' : 'ghost'} 
                   onClick={() => setView('week')}
                   className={view !== 'week' ? 'hover:bg-muted' : ''}
+                  size={isMobile ? 'sm' : 'default'}
                 >
                   Week
                 </Button>
@@ -399,6 +403,7 @@ const UserCalendarPage = () => {
                   variant={view === 'day' ? 'default' : 'ghost'} 
                   onClick={() => setView('day')}
                   className={view !== 'day' ? 'hover:bg-muted' : ''}
+                  size={isMobile ? 'sm' : 'default'}
                 >
                   Day
                 </Button>
@@ -407,8 +412,8 @@ const UserCalendarPage = () => {
 
             {/* Calendar Headers */}
             <div className="grid grid-cols-7 gap-1 mb-2">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="p-3 text-sm font-semibold text-muted-foreground text-center">
+              {(isMobile ? ["S", "M", "T", "W", "T", "F", "S"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]).map((day, index) => (
+                <div key={day} className={`${isMobile ? 'p-2' : 'p-3'} text-sm font-semibold text-muted-foreground text-center`}>
                   {day}
                 </div>
               ))}
@@ -426,18 +431,18 @@ const UserCalendarPage = () => {
                       key={index}
                       onClick={() => handleDateClick(day.date)}
                       className={`
-                        bg-card border border-border p-2 min-h-24 rounded hover:bg-accent cursor-pointer transition-colors duration-200
+                        bg-card border border-border ${isMobile ? 'p-1 min-h-20' : 'p-2 min-h-24'} rounded hover:bg-accent cursor-pointer transition-colors duration-200
                         ${!day.isCurrentMonth ? "text-muted-foreground opacity-50" : ""}
                         ${isToday(day.date) ? "bg-primary/10 border-primary/30" : ""}
                         ${isSelected ? "ring-2 ring-primary" : ""}
                       `}
                     >
-                      <div className={`text-sm ${isToday(day.date) ? "font-bold text-primary" : "font-semibold text-card-foreground"}`}>
+                      <div className={`${isMobile ? 'text-xs' : 'text-sm'} ${isToday(day.date) ? "font-bold text-primary" : "font-semibold text-card-foreground"}`}>
                         {format(day.date, "d")}
                       </div>
                       {hasEvents && (
                         <div className="mt-1 space-y-1">
-                          {day.events.slice(0, 2).map((event, i) => {
+                          {day.events.slice(0, isMobile ? 1 : 2).map((event, i) => {
                             const category = eventCategories.find(cat => cat.value === event.event_type);
                             return (
                               <div
@@ -446,7 +451,7 @@ const UserCalendarPage = () => {
                                   e.stopPropagation();
                                   handleEventClick(event);
                                 }}
-                                className={`text-xs px-2 py-1 rounded truncate cursor-pointer transition-colors duration-200
+                                className={`${isMobile ? 'text-[10px] px-1 py-0.5' : 'text-xs px-2 py-1'} rounded truncate cursor-pointer transition-colors duration-200
                                   ${category ? `${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}` : 'bg-muted text-muted-foreground'}
                                   hover:opacity-80
                                 `}

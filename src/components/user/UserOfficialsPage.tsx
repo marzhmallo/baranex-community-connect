@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { RefreshCw, LayoutGrid, Users, Search, Calendar } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { OrganizationalChart } from '@/components/officials/OrganizationalChart';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const UserOfficialsPage = () => {
   const { userProfile } = useAuth();
@@ -23,6 +24,7 @@ const UserOfficialsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [termStartYear, setTermStartYear] = useState('');
   const [termEndYear, setTermEndYear] = useState('');
+  const isMobile = useIsMobile();
 
   // Get barangay ID from URL params (for public access) or user profile (for authenticated users)
   const barangayId = searchParams.get('barangay') || userProfile?.brgyid;
@@ -318,15 +320,15 @@ const UserOfficialsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className={`min-h-screen bg-background ${isMobile ? 'p-4' : 'p-6'}`}>
       {/* Header with title, subtitle, and action buttons */}
-      <div className="flex justify-between items-start mb-8">
+      <div className={`${isMobile ? 'flex-col space-y-4' : 'flex justify-between items-start'} mb-8`}>
         <div>
           <div className="flex items-center gap-2 mb-1 mx-0">
             <Button variant="ghost" className="p-0 hover:bg-transparent">
               
             </Button>
-            <h1 className="text-3xl font-bold text-foreground mx-0">
+            <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-foreground mx-0`}>
               {barangayInfo 
                 ? `Officials of ${barangayInfo.barangayname}, ${barangayInfo.municipality}`
                 : 'Barangay Officials'
@@ -335,40 +337,46 @@ const UserOfficialsPage = () => {
           </div>
           <p className="text-muted-foreground mx-[10px]">Meet the elected officials serving our barangay</p>
         </div>
-        <div className="flex gap-3">
-          <div className="flex gap-1 bg-muted p-1 rounded-lg">
+        <div className={`flex ${isMobile ? 'flex-col w-full space-y-2' : 'gap-3'}`}>
+          <div className={`flex gap-1 bg-muted p-1 rounded-lg ${isMobile ? 'w-full' : ''}`}>
             <Button
               variant={viewMode === 'cards' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('cards')}
-              className="flex items-center gap-2"
+              className={`flex items-center gap-2 ${isMobile ? 'flex-1' : ''}`}
             >
               <LayoutGrid className="h-4 w-4" />
-              Cards
+              {!isMobile && 'Cards'}
             </Button>
             <Button
               variant={viewMode === 'organizational' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('organizational')}
-              className="flex items-center gap-2"
+              className={`flex items-center gap-2 ${isMobile ? 'flex-1' : ''}`}
             >
               <Users className="h-4 w-4" />
-              Organization
+              {!isMobile && 'Organization'}
             </Button>
           </div>
-          <Button variant="outline" className="border-border text-foreground hover:bg-accent" onClick={handleRefreshTerms} disabled={isRefreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} /> 
-            {isRefreshing ? 'Refreshing...' : 'Refresh Terms'}
+          <Button 
+            variant="outline" 
+            className={`border-border text-foreground hover:bg-accent ${isMobile ? 'w-full' : ''}`} 
+            onClick={handleRefreshTerms} 
+            disabled={isRefreshing}
+            size={isMobile ? 'sm' : 'default'}
+          >
+            <RefreshCw className={`h-4 w-4 ${isMobile ? '' : 'mr-2'} ${isRefreshing ? 'animate-spin' : ''}`} /> 
+            {!isMobile && (isRefreshing ? 'Refreshing...' : 'Refresh Terms')}
           </Button>
         </div>
       </div>
 
       {/* Search and Filter Section - only show in cards view */}
       {viewMode === 'cards' && (
-        <div className="bg-secondary/50 rounded-lg p-4 mb-6 border border-border/50">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className={`bg-secondary/50 rounded-lg ${isMobile ? 'p-3' : 'p-4'} mb-6 border border-border/50`}>
+          <div className={`grid grid-cols-1 ${isMobile ? 'gap-3' : 'md:grid-cols-2 lg:grid-cols-4 gap-4'}`}>
             {/* Search Bar */}
-            <div className="lg:col-span-2">
+            <div className={isMobile ? 'col-span-1' : 'lg:col-span-2'}>
               <label className="block text-sm font-medium text-foreground mb-2">
                 Search Officials
               </label>
@@ -425,7 +433,7 @@ const UserOfficialsPage = () => {
 
           {/* Clear Filters */}
           {(searchQuery || termStartYear || termEndYear) && (
-            <div className="mt-4 flex justify-end">
+            <div className={`${isMobile ? 'mt-3' : 'mt-4'} flex justify-end`}>
               <Button
                 variant="outline"
                 size="sm"
@@ -434,6 +442,7 @@ const UserOfficialsPage = () => {
                   setTermStartYear('');
                   setTermEndYear('');
                 }}
+                className={isMobile ? 'w-full' : ''}
               >
                 Clear Filters
               </Button>
@@ -479,7 +488,7 @@ const UserOfficialsPage = () => {
           <OrganizationalChart officials={officialsData || []} isLoading={isLoading} error={error} />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8'}`}>
           {isLoading ?
             // Show skeleton loaders while loading
             Array.from({ length: 4 }).map((_, i) => (

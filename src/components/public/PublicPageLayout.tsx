@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PublicPagesSidebar from '@/components/layout/PublicPagesSidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PublicPageLayoutProps {
   children: React.ReactNode;
@@ -7,6 +8,7 @@ interface PublicPageLayoutProps {
 
 const PublicPageLayout = ({ children }: PublicPageLayoutProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleSidebarChange = (event: Event) => {
@@ -14,10 +16,10 @@ const PublicPageLayout = ({ children }: PublicPageLayoutProps) => {
       setIsSidebarCollapsed(customEvent.detail.isCollapsed);
     };
 
-    window.addEventListener('publicPagesSidebarStateChange', handleSidebarChange);
+    window.addEventListener('publicSidebarStateChange', handleSidebarChange);
 
     return () => {
-      window.removeEventListener('publicPagesSidebarStateChange', handleSidebarChange);
+      window.removeEventListener('publicSidebarStateChange', handleSidebarChange);
     };
   }, []);
 
@@ -26,7 +28,7 @@ const PublicPageLayout = ({ children }: PublicPageLayoutProps) => {
       <PublicPagesSidebar />
       <div 
         className={`flex-1 transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? 'ml-16' : 'ml-64'
+          isMobile ? 'ml-0' : (isSidebarCollapsed ? 'ml-16' : 'ml-64')
         }`}
       >
         {children}
