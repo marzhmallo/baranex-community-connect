@@ -8,7 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import OfficialCard from '@/components/officials/OfficialCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { RefreshCw, LayoutGrid, Users } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { RefreshCw, LayoutGrid, Users, Search, Calendar } from 'lucide-react';
 import { Official, OfficialPosition } from '@/lib/types';
 import { OrganizationalChart } from '@/components/officials/OrganizationalChart';
 
@@ -19,6 +20,9 @@ const UserOfficialsPage = () => {
   const [activeSKTab, setActiveSKTab] = useState('current');
   const [viewMode, setViewMode] = useState<'cards' | 'organizational'>('cards');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [termStartYear, setTermStartYear] = useState('');
+  const [termEndYear, setTermEndYear] = useState('');
 
   // Get barangay ID from URL params (for public access) or user profile (for authenticated users)
   const barangayId = searchParams.get('barangay') || userProfile?.brgyid;
@@ -170,7 +174,7 @@ const UserOfficialsPage = () => {
     };
   }, [refetch]);
 
-  // Filter and sort officials based on the active tab
+  // Filter and sort officials based on the active tab, search query, and term dates
   const filteredOfficials = officialsData ? officialsData.filter(official => {
     const now = new Date();
     
@@ -189,26 +193,73 @@ const UserOfficialsPage = () => {
     // Check if had SK positions that ended
     const hadSkPositionThatEnded = skPositions.some(pos => pos.term_end && new Date(pos.term_end) < now);
     
+    // Tab-based filtering
+    let passesTabFilter = false;
     if (activeTab === 'current') {
       // Show officials with current non-SK positions, excluding those with current SK positions
-      return hasCurrentNonSkPosition && !hasCurrentSkPosition;
+      passesTabFilter = hasCurrentNonSkPosition && !hasCurrentSkPosition;
     } else if (activeTab === 'sk') {
       if (activeSKTab === 'current') {
         // Show officials with current SK positions
-        return hasCurrentSkPosition;
+        passesTabFilter = hasCurrentSkPosition;
       } else if (activeSKTab === 'previous') {
         // Show officials who had SK positions that ended and either:
         // 1. Have no current positions at all, OR
         // 2. Have current non-SK positions (but not current SK positions)
-        return hadSkPositionThatEnded && !hasCurrentSkPosition;
+        passesTabFilter = hadSkPositionThatEnded && !hasCurrentSkPosition;
       }
-      return hasAnySkPosition;
+      if (!passesTabFilter) passesTabFilter = hasAnySkPosition;
     } else if (activeTab === 'previous') {
       // Show officials who had non-SK positions that ended and no current positions
       const hadNonSkPositionThatEnded = nonSkPositions.some(pos => pos.term_end && new Date(pos.term_end) < now);
-      return hadNonSkPositionThatEnded && !hasCurrentSkPosition && !hasCurrentNonSkPosition;
+      passesTabFilter = hadNonSkPositionThatEnded && !hasCurrentSkPosition && !hasCurrentNonSkPosition;
     }
-    return false;
+
+    if (!passesTabFilter) return false;
+
+    // Search query filtering
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const nameMatch = (official.name || '').toLowerCase().includes(query);
+      const positionMatch = allPositions.some(pos => 
+        (pos.position || '').toLowerCase().includes(query) ||
+        (pos.committee || '').toLowerCase().includes(query)
+      );
+      
+      if (!nameMatch && !positionMatch) return false;
+    }
+
+    // Term date filtering
+    if (termStartYear || termEndYear) {
+      const hasMatchingTerm = allPositions.some(pos => {
+        if (!pos.term_start) return false;
+        
+        const termStart = new Date(pos.term_start);
+        const termEnd = pos.term_end ? new Date(pos.term_end) : new Date();
+        
+        let passesTermFilter = true;
+        
+        if (termStartYear) {
+          const startYear = parseInt(termStartYear);
+          if (isNaN(startYear) || termStart.getFullYear() < startYear) {
+            passesTermFilter = false;
+          }
+        }
+        
+        if (termEndYear && passesTermFilter) {
+          const endYear = parseInt(termEndYear);
+          if (isNaN(endYear) || termEnd.getFullYear() > endYear) {
+            passesTermFilter = false;
+          }
+        }
+        
+        return passesTermFilter;
+      });
+      
+      if (!hasMatchingTerm) return false;
+    }
+
+    return true;
   }).sort((a, b) => {
     // Sort by position_no if available, otherwise put at the end
     const aPos = a.position_no || 999999; // Put unranked officials at the end
@@ -311,6 +362,85 @@ const UserOfficialsPage = () => {
           </Button>
         </div>
       </div>
+
+      {/* Search and Filter Section - only show in cards view */}
+      {viewMode === 'cards' && (
+        <div className="bg-secondary/50 rounded-lg p-4 mb-6 border border-border/50">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search Bar */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Search Officials
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Search by name, position, or committee..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Term Start Year */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Term Start Year
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  type="number"
+                  placeholder="e.g., 2022"
+                  value={termStartYear}
+                  onChange={(e) => setTermStartYear(e.target.value)}
+                  className="pl-10"
+                  min="1900"
+                  max="2100"
+                />
+              </div>
+            </div>
+
+            {/* Term End Year */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Term End Year
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  type="number"
+                  placeholder="e.g., 2025"
+                  value={termEndYear}
+                  onChange={(e) => setTermEndYear(e.target.value)}
+                  className="pl-10"
+                  min="1900"
+                  max="2100"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Clear Filters */}
+          {(searchQuery || termStartYear || termEndYear) && (
+            <div className="mt-4 flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery('');
+                  setTermStartYear('');
+                  setTermEndYear('');
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main tabbed navigation - only show in cards view */}
       {viewMode === 'cards' && (
