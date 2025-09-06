@@ -229,9 +229,9 @@ const AppContent = () => {
         <div 
           className={`flex-1 transition-all duration-300 ease-in-out ${
             showAdminSidebar ? (isSidebarCollapsed ? "ml-16" : "md:ml-64") : 
-            showUserSidebar ? (isPublicSidebarCollapsed ? "ml-16" : "md:ml-64") : ""
+            showUserSidebar ? (isPublicSidebarCollapsed ? "md:ml-16" : "md:ml-64") : ""
           }`}
-        > 
+        >
           <Routes>
             <Route path="/login" element={<Auth />} />
             <Route path="/update-password" element={<UpdatePasswordPage />} />
