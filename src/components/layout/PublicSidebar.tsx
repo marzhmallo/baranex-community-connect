@@ -102,19 +102,57 @@ const PublicSidebar = () => {
   if (isMobile) {
     return (
       <>
-        {/* Mobile Menu Trigger */}
-        <div className="fixed top-4 left-4 z-50 md:hidden">
-          <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="bg-background/95 backdrop-blur-sm">
-                <Menu className="h-4 w-4" />
+        {/* Mobile Top Navigation */}
+        <div className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-border">
+          {/* System Name */}
+          <div className="text-center py-2 border-b border-border">
+            <span className="text-lg font-bold tracking-tight">
+              <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Bara</span>
+              <span className="text-baranex-accent">NEX</span>
+            </span>
+          </div>
+          
+          {/* Icon Navigation */}
+          <div className="flex justify-around items-center py-3">
+            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="flex flex-col items-center">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0 bg-sidebar">
+                <SidebarContent />
+              </SheetContent>
+            </Sheet>
+            
+            <Link to="/hub/calendar" className="flex flex-col items-center">
+              <Button variant="ghost" size="icon" className={cn(isActive("/hub/calendar") && "bg-accent")}>
+                <Calendar className="h-5 w-5" />
               </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0 bg-sidebar">
-              <SidebarContent />
-            </SheetContent>
-          </Sheet>
+            </Link>
+            
+            <Link to="/hub/announcements" className="flex flex-col items-center">
+              <Button variant="ghost" size="icon" className={cn(isActive("/hub/announcements") && "bg-accent")}>
+                <BellRing className="h-5 w-5" />
+              </Button>
+            </Link>
+            
+            <Link to="/hub/documents" className="flex flex-col items-center">
+              <Button variant="ghost" size="icon" className={cn(isActive("/hub/documents") && "bg-accent")}>
+                <FileText className="h-5 w-5" />
+              </Button>
+            </Link>
+            
+            <Link to="/hub" className="flex flex-col items-center">
+              <Button variant="ghost" size="icon" className={cn(isActive("/hub") && "bg-accent")}>
+                <Home className="h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
         </div>
+        
+        {/* Spacer for fixed top navigation */}
+        <div className="h-24"></div>
       </>
     );
   }
