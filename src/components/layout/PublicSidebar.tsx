@@ -102,85 +102,57 @@ const PublicSidebar = () => {
   if (isMobile) {
     return (
       <>
-        {/* Facebook-Style Two-Tier Mobile Header */}
-        <header className="fixed top-0 left-0 right-0 z-40 bg-background shadow-md">
-          {/* Top Tier: App Bar with Branding + Global Actions */}
-          <div className="flex items-center justify-between h-14 px-4 border-b border-border">
-            <Link to="/hub" className="text-xl font-bold tracking-tight">
+        {/* Mobile Top Navigation */}
+        <div className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-border">
+          {/* System Name */}
+          <div className="text-center py-2 border-b border-border">
+            <span className="text-lg font-bold tracking-tight">
               <span className="text-white bg-baranex-accent px-2 py-1 rounded mr-1">Bara</span>
               <span className="text-baranex-accent">NEX</span>
-            </Link>
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <BellRing className="h-5 w-5" />
-              </Button>
-              <Link to="/profile">
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
+            </span>
           </div>
-
-          {/* Bottom Tier: Primary Navigation Tabs */}
-          <nav className="flex justify-around h-14">
-            {/* Home Tab */}
-            <Link 
-              to="/hub" 
-              className="flex-1 flex flex-col items-center justify-center relative group hover:bg-muted/50"
-            >
-              <Home className={cn("h-6 w-6", isActive("/hub") ? "text-primary" : "text-muted-foreground")} />
-              <div className={cn("h-1 w-8 mt-1 rounded-full transition-all", 
-                isActive("/hub") ? "bg-primary" : "bg-transparent")} />
-            </Link>
-
-            {/* Calendar Tab */}
-            <Link 
-              to="/hub/calendar" 
-              className="flex-1 flex flex-col items-center justify-center relative group hover:bg-muted/50"
-            >
-              <Calendar className={cn("h-6 w-6", isActive("/hub/calendar") ? "text-primary" : "text-muted-foreground")} />
-              <div className={cn("h-1 w-8 mt-1 rounded-full transition-all", 
-                isActive("/hub/calendar") ? "bg-primary" : "bg-transparent")} />
-            </Link>
-
-            {/* Announcements Tab */}
-            <Link 
-              to="/hub/announcements" 
-              className="flex-1 flex flex-col items-center justify-center relative group hover:bg-muted/50"
-            >
-              <BellRing className={cn("h-6 w-6", isActive("/hub/announcements") ? "text-primary" : "text-muted-foreground")} />
-              <div className={cn("h-1 w-8 mt-1 rounded-full transition-all", 
-                isActive("/hub/announcements") ? "bg-primary" : "bg-transparent")} />
-            </Link>
-
-            {/* Documents Tab */}
-            <Link 
-              to="/hub/documents" 
-              className="flex-1 flex flex-col items-center justify-center relative group hover:bg-muted/50"
-            >
-              <FileText className={cn("h-6 w-6", isActive("/hub/documents") ? "text-primary" : "text-muted-foreground")} />
-              <div className={cn("h-1 w-8 mt-1 rounded-full transition-all", 
-                isActive("/hub/documents") ? "bg-primary" : "bg-transparent")} />
-            </Link>
-
-            {/* Menu Tab */}
+          
+          {/* Icon Navigation */}
+          <div className="flex justify-around items-center py-3">
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
-                <button className="flex-1 flex flex-col items-center justify-center relative group hover:bg-muted/50">
-                  <Menu className="h-6 w-6 text-muted-foreground" />
-                  <div className="h-1 w-8 mt-1 rounded-full bg-transparent" />
-                </button>
+                <Button variant="ghost" size="icon" className="flex flex-col items-center">
+                  <Menu className="h-5 w-5" />
+                </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-64 p-0 bg-sidebar">
                 <SidebarContent />
               </SheetContent>
             </Sheet>
-          </nav>
-        </header>
+            
+            <Link to="/hub/calendar" className="flex flex-col items-center">
+              <Button variant="ghost" size="icon" className={cn(isActive("/hub/calendar") && "bg-accent")}>
+                <Calendar className="h-5 w-5" />
+              </Button>
+            </Link>
+            
+            <Link to="/hub/announcements" className="flex flex-col items-center">
+              <Button variant="ghost" size="icon" className={cn(isActive("/hub/announcements") && "bg-accent")}>
+                <BellRing className="h-5 w-5" />
+              </Button>
+            </Link>
+            
+            <Link to="/hub/documents" className="flex flex-col items-center">
+              <Button variant="ghost" size="icon" className={cn(isActive("/hub/documents") && "bg-accent")}>
+                <FileText className="h-5 w-5" />
+              </Button>
+            </Link>
+            
+            <Link to="/hub" className="flex flex-col items-center">
+              <Button variant="ghost" size="icon" className={cn(isActive("/hub") && "bg-accent")}>
+                <Home className="h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
         
-        {/* Spacer for fixed two-tier header */}
-        <div className="h-28"></div>
+        {/* Spacer for fixed top navigation */}
+        <div className="h-24"></div>
       </>
     );
   }
