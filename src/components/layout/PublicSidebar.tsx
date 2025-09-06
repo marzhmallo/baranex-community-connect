@@ -124,15 +124,18 @@ const PublicSidebar = () => {
 
           {/* Bottom Tier: Primary Navigation Tabs */}
           <nav className="flex justify-around h-14">
-            {/* Home Tab */}
-            <Link 
-              to="/hub" 
-              className="flex-1 flex flex-col items-center justify-center relative group hover:bg-muted/50"
-            >
-              <Home className={cn("h-6 w-6", isActive("/hub") ? "text-primary" : "text-muted-foreground")} />
-              <div className={cn("h-1 w-8 mt-1 rounded-full transition-all", 
-                isActive("/hub") ? "bg-primary" : "bg-transparent")} />
-            </Link>
+            {/* Menu Tab */}
+            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+              <SheetTrigger asChild>
+                <button className="flex-1 flex flex-col items-center justify-center relative group hover:bg-muted/50">
+                  <Menu className="h-6 w-6 text-muted-foreground" />
+                  <div className="h-1 w-8 mt-1 rounded-full bg-transparent" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0 bg-sidebar">
+                <SidebarContent />
+              </SheetContent>
+            </Sheet>
 
             {/* Calendar Tab */}
             <Link 
@@ -164,18 +167,15 @@ const PublicSidebar = () => {
                 isActive("/hub/documents") ? "bg-primary" : "bg-transparent")} />
             </Link>
 
-            {/* Menu Tab */}
-            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-              <SheetTrigger asChild>
-                <button className="flex-1 flex flex-col items-center justify-center relative group hover:bg-muted/50">
-                  <Menu className="h-6 w-6 text-muted-foreground" />
-                  <div className="h-1 w-8 mt-1 rounded-full bg-transparent" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0 bg-sidebar">
-                <SidebarContent />
-              </SheetContent>
-            </Sheet>
+            {/* Home Tab */}
+            <Link 
+              to="/hub" 
+              className="flex-1 flex flex-col items-center justify-center relative group hover:bg-muted/50"
+            >
+              <Home className={cn("h-6 w-6", isActive("/hub") ? "text-primary" : "text-muted-foreground")} />
+              <div className={cn("h-1 w-8 mt-1 rounded-full transition-all", 
+                isActive("/hub") ? "bg-primary" : "bg-transparent")} />
+            </Link>
           </nav>
         </header>
         
