@@ -278,212 +278,150 @@ const UserDocumentsPage = () => {
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
       </div>;
   }
-  return <div className="w-full p-4 md:p-6 bg-background min-h-screen">
-      {/* Mobile-first Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Documents</h1>
-        <p className="text-sm text-muted-foreground hidden md:block">Manage official documents, requests, and issuances for the barangay community</p>
+  return <div className="w-full p-6 bg-background min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
+        <p className="text-muted-foreground">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
 
-      {/* Status Cards - Horizontal Scroll on Mobile */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Status Overview
-          </h2>
-          <button onClick={async () => {
-            setIsRefreshing(true);
-            try {
-              await Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
-                queryClient.invalidateQueries({ queryKey: ['document-types'] })
-              ]);
-            } finally {
-              setIsRefreshing(false);
-            }
-          }} disabled={isRefreshing} className={`p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-        
-        {/* Horizontal Scrolling Status Cards */}
-        <div className="flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible">
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full mb-2">
-              <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-            </div>
-            <p className="text-xs text-muted-foreground">Requests</p>
-            <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
-              {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
-            </p>
-          </div>
-          
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full mb-2">
-              <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <p className="text-xs text-muted-foreground">Processing</p>
-            <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
-              {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
-            </p>
-          </div>
-          
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full mb-2">
-              <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-            <p className="text-xs text-muted-foreground">Ready</p>
-            <p className="text-xl font-bold text-green-600 dark:text-green-400">
-              {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
-            </p>
-          </div>
-          
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full mb-2">
-              <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <p className="text-xs text-muted-foreground">Released</p>
-            <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
-              {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
-            </p>
-          </div>
-          
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full mb-2">
-              <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-            </div>
-            <p className="text-xs text-muted-foreground">Rejected</p>
-            <p className="text-xl font-bold text-red-600 dark:text-red-400">
-              {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex justify-between items-center text-xs text-muted-foreground mt-3">
-          <span>Total: {documentRequests.length}</span>
-          <span className="hidden md:block">Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
-        </div>
-      </div>
-
-      {/* Document Tracking - Mobile Card Layout */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            <span className="hidden md:inline">Document Tracking System</span>
-            <span className="md:hidden">My Requests</span>
-          </h2>
-          {/* Desktop Request Button - Hidden on Mobile */}
-          <Button 
-            onClick={() => setShowRequestModal(true)} 
-            className="hidden md:flex bg-blue-600 text-white hover:bg-blue-700"
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Request Document
-          </Button>
-        </div>
-
-        {/* Mobile-first Search and Filters */}
-        <div className="space-y-3 md:space-y-0 md:flex md:items-center md:justify-between md:gap-4 mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <input 
-              type="text" 
-              placeholder="Search by tracking ID..." 
-              value={trackingSearchQuery} 
-              onChange={e => setTrackingSearchQuery(e.target.value)} 
-              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full bg-background text-foreground" 
-            />
-          </div>
-
-          {/* Simplified Mobile Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:flex-wrap">
-            {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
-              <button 
-                key={filter}
-                onClick={() => setTrackingFilter(filter)} 
-                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${
-                  trackingFilter === filter 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                {filter}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+        <div className="bg-card rounded-lg shadow-sm p-4 col-span-full border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              My Document Status
+            </h2>
+            <div className="flex gap-2">
+              <button onClick={async () => {
+                setIsRefreshing(true);
+                try {
+                  // Invalidate all queries to refresh all data
+                  await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
+                    queryClient.invalidateQueries({ queryKey: ['document-types'] })
+                  ]);
+                } finally {
+                  setIsRefreshing(false);
+                }
+              }} disabled={isRefreshing} className={`p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </button>
-            ))}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+            <div className="rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Requests</p>
+                <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
+                </p>
+              </div>
+              <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full">
+                <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Processing</p>
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
+                </p>
+              </div>
+              <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Ready to Pickup</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
+                </p>
+              </div>
+              <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Released</p>
+                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                  {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
+                </p>
+              </div>
+              <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full">
+                <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Rejected</p>
+                <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
+                </p>
+              </div>
+              <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full">
+                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center text-xs text-muted-foreground mb-2">
+            <span>Total Documents: {documentRequests.length}</span>
+            <span>Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
+          </div>
+          
+        </div>
+      </div>
+
+      <div className="mb-8 bg-card rounded-lg shadow-sm border border-border">
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Document Tracking System
+            </h2>
+            <div className="flex gap-3">
+              <Button onClick={() => setShowRequestModal(true)} className="bg-blue-600 text-white hover:bg-blue-700">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Request Document
+              </Button>
+            </div>
           </div>
         </div>
-        
-        {/* Card Feed for Mobile, Table for Desktop */}
-        <div className="md:hidden space-y-3">
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading your document requests...
+        <div className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <input type="text" placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" />
             </div>
-          ) : documentRequests.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No document requests found
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setTrackingFilter("All Documents")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "All Documents" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                All Documents
+              </button>
+              <button onClick={() => setTrackingFilter("Requests")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Requests" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Requests
+              </button>
+              <button onClick={() => setTrackingFilter("Processing")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Processing" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Processing
+              </button>
+              <button onClick={() => setTrackingFilter("Released")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Released" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Released
+              </button>
+              <button onClick={() => setTrackingFilter("Rejected")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Rejected" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Rejected
+              </button>
+              <button onClick={() => setTrackingFilter("Ready")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Ready" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Ready
+              </button>
             </div>
-          ) : paginatedRequests.map(request => (
-            <Card key={request.id} className="border border-border hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
-                    <div className="text-foreground font-semibold">{request.type}</div>
-                  </div>
-                  {getStatusBadge(request.status)}
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Requested by:</span>
-                    <span className="text-foreground font-medium">
-                      {request.profiles?.firstname && request.profiles?.lastname 
-                        ? `${request.profiles.firstname} ${request.profiles.lastname}` 
-                        : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Last update:</span>
-                    <span className="text-foreground">{formatDate(request.updated_at || request.created_at)}</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedRequest(request);
-                      setShowViewDialog(true);
-                    }}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
-                  </Button>
-                  {request.status === 'Request' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingRequest(request);
-                        setShowRequestModal(true);
-                      }}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Desktop Table - Hidden on Mobile */}
-        <div className="hidden md:block bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+          </div>
+          
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted">
@@ -497,147 +435,88 @@ const UserDocumentsPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
-                {isLoading ? (
-                  <tr>
+                {isLoading ? <tr>
                     <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
                       Loading your document requests...
                     </td>
-                  </tr>
-                ) : documentRequests.length === 0 ? (
-                  <tr>
+                  </tr> : documentRequests.length === 0 ? <tr>
                     <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
                       No document requests found
                     </td>
-                  </tr>
-                ) : paginatedRequests.map(request => (
-                  <tr key={request.id} className="hover:bg-accent transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
-                      {request.docnumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {request.type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {request.profiles?.firstname && request.profiles?.lastname 
-                        ? `${request.profiles.firstname} ${request.profiles.lastname}` 
-                        : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(request.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {formatDate(request.updated_at || request.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-2">
-                        <button 
-                          onClick={() => {
-                            setSelectedRequest(request);
-                            setShowViewDialog(true);
-                          }} 
-                          className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" 
-                          title="View request details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => {
-                            if (request.status === 'Request') {
-                              setEditingRequest(request);
-                              setShowRequestModal(true);
-                            }
-                          }} 
-                          disabled={request.status !== 'Request'} 
-                          className={`p-1 rounded transition-colors ${
-                            request.status === 'Request' 
-                              ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' 
-                              : 'text-muted-foreground/50 cursor-not-allowed'
-                          }`} 
-                          title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                  </tr> : paginatedRequests.map(request => <tr key={request.id} className="hover:bg-accent transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
+                        {request.docnumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {request.type}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {request.profiles?.firstname && request.profiles?.lastname ? `${request.profiles.firstname} ${request.profiles.lastname}` : 'N/A'}
+                      </td>
+                       <td className="px-6 py-4 whitespace-nowrap">
+                         {getStatusBadge(request.status)}
+                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {formatDate(request.updated_at || request.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                         <div className="flex justify-end gap-2">
+                           <button onClick={() => {
+                      setSelectedRequest(request);
+                      setShowViewDialog(true);
+                    }} className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View request details">
+                             <Eye className="h-4 w-4" />
+                           </button>
+                            <button onClick={() => {
+                      if (request.status === 'Request') {
+                        setEditingRequest(request);
+                        setShowRequestModal(true);
+                      }
+                    }} disabled={request.status !== 'Request'} className={`p-1 rounded transition-colors ${request.status === 'Request' ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' : 'text-muted-foreground/50 cursor-not-allowed'}`} title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}>
+                              <Edit className="h-4 w-4" />
+                            </button>
+                         </div>
+                      </td>
+                    </tr>)}
               </tbody>
             </table>
           </div>
-        </div>
-        
-        {/* Pagination */}
-        {requestsTotalPages > 1 && (
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-muted-foreground hidden md:block">
-              Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} requests
-            </div>
-            <div className="flex items-center gap-2 mx-auto md:mx-0">
-              <button 
-                onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} 
-                disabled={requestsCurrentPage === 1} 
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  requestsCurrentPage === 1 
-                    ? 'text-muted-foreground cursor-not-allowed' 
-                    : 'text-foreground hover:bg-accent'
-                }`}
-              >
-                Previous
-              </button>
-              <div className="flex">
-                {Array.from({ length: requestsTotalPages }, (_, i) => i + 1).map(page => (
-                  <button 
-                    key={page} 
-                    onClick={() => handleRequestsPageChange(page)} 
-                    className={`px-3 py-1 text-sm rounded-md font-medium ${
-                      requestsCurrentPage === page 
-                        ? 'bg-primary/10 text-primary' 
-                        : 'text-foreground hover:bg-accent'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+          
+           {requestsTotalPages > 1 && <div className="mt-6 flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} requests
               </div>
-              <button 
-                onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} 
-                disabled={requestsCurrentPage === requestsTotalPages} 
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  requestsCurrentPage === requestsTotalPages 
-                    ? 'text-muted-foreground cursor-not-allowed' 
-                    : 'text-foreground hover:bg-accent'
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} disabled={requestsCurrentPage === 1} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === 1 ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+                  Previous
+                </button>
+                <div className="flex">
+                  {Array.from({
+                length: requestsTotalPages
+              }, (_, i) => i + 1).map(page => <button key={page} onClick={() => handleRequestsPageChange(page)} className={`px-3 py-1 text-sm rounded-md font-medium ${requestsCurrentPage === page ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'}`}>
+                      {page}
+                    </button>)}
+                </div>
+                <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === requestsTotalPages} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === requestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+                  Next
+                </button>
+              </div>
+            </div>}
+        </div>
       </div>
 
-      {/* Document Library - Mobile Simplified */}
-      <div className="md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-6">
-        <div className="md:lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
           <Card className="border-border">
-            <CardHeader className="pb-4">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <CardTitle className="text-lg md:text-xl text-foreground">Available Documents</CardTitle>
-                <div className="flex items-center gap-3">
-                  {/* Mobile search - simplified */}
-                  <div className="relative flex-1 md:flex-initial">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <CardTitle className="text-foreground">Document Library</CardTitle>
+                <div className="flex items-center gap-3 ml-auto">
+                  <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input 
-                      placeholder="Search documents..." 
-                      value={searchQuery} 
-                      onChange={e => setSearchQuery(e.target.value)} 
-                      className="pl-10 md:w-64 border-border bg-background text-foreground" 
-                    />
+                    <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64 border-border bg-background text-foreground" />
                   </div>
-                  {/* Hide desktop request button */}
-                  <Button 
-                    className="hidden md:flex bg-purple-600 hover:bg-purple-700 text-white" 
-                    onClick={() => setShowRequestModal(true)}
-                  >
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setShowRequestModal(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Request Document
                   </Button>
@@ -645,93 +524,90 @@ const UserDocumentsPage = () => {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="p-4 md:p-6">
-                <div className="space-y-3">
-                  {isLoadingTemplates ? (
-                    <div className="text-center py-8 text-muted-foreground">Loading document templates...</div>
-                  ) : paginatedTemplates.length > 0 ? (
-                    paginatedTemplates.map(template => (
-                      <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
-                        <div className="flex items-center gap-3 md:gap-4 flex-1">
-                          {/* Hide checkbox on mobile for cleaner look */}
-                          <input type="checkbox" className="hidden md:block rounded border-border" />
-                          <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20 flex-shrink-0">
-                            <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-500 dark:text-blue-400" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-foreground text-sm md:text-base truncate">{template.name}</h4>
-                            <p className="text-xs md:text-sm text-muted-foreground">
-                              <span className="md:hidden">₱{template.fee || 0}</span>
-                              <span className="hidden md:inline">{template.description} • Fee: ₱{template.fee || 0}</span>
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge className="hidden md:block bg-green-500 hover:bg-green-600 text-white">Active</Badge>
-                          <button
-                            onClick={() => {
-                              setSelectedTemplate(template);
-                              setShowTemplateDialog(true);
-                            }}
-                            className="p-1.5 md:p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
-                            title="View template details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">No document templates found</div>
-                  )}
+              <Tabs value="all" className="w-full">
+                <div className="px-6 border-b border-border">
+                  
                 </div>
 
-                {/* Mobile-friendly pagination */}
-                <div className="flex items-center justify-center mt-6">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          onClick={e => {
+                <TabsContent value="all" className="mt-0">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        
+                      </div>
+                      
+                    </div>
+
+                    <div className="space-y-3">
+                      {isLoadingTemplates ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedTemplates.length > 0 ? paginatedTemplates.map(template => <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                            <div className="flex items-center gap-4">
+                              <input type="checkbox" className="rounded border-border" />
+                              <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
+                                <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-foreground">{template.name}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {template.description} • Fee: ₱{template.fee || 0}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
+                              <button
+                                onClick={() => {
+                                  setSelectedTemplate(template);
+                                  setShowTemplateDialog(true);
+                                }}
+                                className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                                title="View template details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>) : <div className="text-center py-8 text-muted-foreground">No document templates found</div>}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6">
+                      
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious onClick={e => {
                             e.preventDefault();
                             handlePageChange(currentPage - 1);
-                          }} 
-                          className={`hover:bg-accent cursor-pointer ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                        />
-                      </PaginationItem>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <PaginationItem key={page}>
-                          <PaginationLink 
-                            onClick={e => {
-                              e.preventDefault();
-                              handlePageChange(page);
-                            }} 
-                            isActive={currentPage === page} 
-                            className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-                      <PaginationItem>
-                        <PaginationNext 
-                          onClick={e => {
+                          }} className={`hover:bg-accent cursor-pointer ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                          </PaginationItem>
+                          {Array.from({
+                          length: totalPages
+                        }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
+                              <PaginationLink onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>)}
+                          <PaginationItem>
+                            <PaginationNext onClick={e => {
                             e.preventDefault();
                             handlePageChange(currentPage + 1);
-                          }} 
-                          className={`hover:bg-accent cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              </div>
+                          }} className={`hover:bg-accent cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
+
+          
+
         </div>
 
-        {/* Status Updates - Hidden on mobile for cleaner view */}
-        <div className="hidden md:block space-y-6">
+        <div className="space-y-6">
           <div className="mb-6 bg-card rounded-lg shadow-sm overflow-hidden border border-border">
             <div className="p-6 border-b border-border">
               <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
@@ -1182,15 +1058,6 @@ const UserDocumentsPage = () => {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Floating Action Button - Mobile Only */}
-      <Button
-        onClick={() => setShowRequestModal(true)}
-        className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 z-50"
-        size="icon"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
     </div>;
 };
 
