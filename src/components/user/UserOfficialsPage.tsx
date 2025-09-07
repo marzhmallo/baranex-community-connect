@@ -320,7 +320,7 @@ const UserOfficialsPage = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-background ${isMobile ? 'p-4 pt-20' : 'p-6 pt-20'}`}>
+    <div className={`min-h-screen bg-background ${isMobile ? 'p-4' : 'p-6'}`}>
       {/* Header with title, subtitle, and action buttons */}
       <div className={`${isMobile ? 'flex-col space-y-4' : 'flex justify-between items-start'} mb-8`}>
         <div>

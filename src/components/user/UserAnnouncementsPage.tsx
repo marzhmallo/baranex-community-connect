@@ -181,7 +181,7 @@ const UserAnnouncementsPage = () => {
       </div>;
   }
 
-  return <div className="w-full min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6 pt-20">
+  return <div className="w-full min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Barangay Announcements</h1>

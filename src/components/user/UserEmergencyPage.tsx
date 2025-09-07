@@ -80,7 +80,7 @@ const UserEmergencyPage = () => {
 
   if (contactsLoading || zonesLoading || centersLoading) {
     return (
-      <div className="container mx-auto py-8 pt-20 px-4">
+      <div className="container mx-auto py-8 px-4">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="space-y-4">
@@ -94,7 +94,7 @@ const UserEmergencyPage = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 pt-20 px-4">
+    <div className="container mx-auto py-8 px-4">
       <div className="flex items-center gap-3 mb-6">
         <Shield className="h-8 w-8 text-red-600" />
         <div>

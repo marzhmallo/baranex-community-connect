@@ -263,7 +263,7 @@ const UserOfficialDetailsPage = () => {
 
   if (officialLoading) {
     return (
-      <div className="w-full px-6 py-8 pt-20 bg-gradient-to-br from-background to-muted/30 min-h-screen">
+      <div className="w-full px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
         <div className="bg-card rounded-2xl shadow-xl overflow-hidden border">
           <Skeleton className="h-64 w-full" />
           <div className="p-8">
@@ -285,7 +285,7 @@ const UserOfficialDetailsPage = () => {
 
   if (!official) {
     return (
-      <div className="w-full px-6 py-8 pt-20 bg-gradient-to-br from-background to-muted/30 min-h-screen">
+      <div className="w-full px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
         <div className="bg-card rounded-2xl shadow-xl overflow-hidden p-8 text-center border">
           <h2 className="text-2xl font-bold mb-4 text-foreground">Official Not Found</h2>
           <p className="mb-4 text-muted-foreground">The official you are looking for could not be found.</p>
@@ -309,7 +309,7 @@ const UserOfficialDetailsPage = () => {
   const currentPosition = getCurrentPosition();
 
   return (
-    <div className="w-full px-6 py-8 pt-20 bg-gradient-to-br from-background to-muted/30 min-h-screen">
+    <div className="w-full px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
       <div className="bg-card rounded-2xl shadow-xl overflow-hidden border">
         {/* Header Section with Hero Background */}
         <div 
