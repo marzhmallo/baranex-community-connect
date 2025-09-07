@@ -357,29 +357,29 @@ const UserCalendarPage = () => {
   }
 
   return (
-    <div className={`w-full ${isMobile ? 'p-4' : 'p-6'} bg-background min-h-screen`}>
+    <div className={`w-full ${isMobile ? 'p-2 pt-20' : 'p-6'} bg-background min-h-screen`}>
       <div className="max-w-none mx-auto">
         <div className="bg-card border border-border rounded-lg shadow-lg overflow-hidden">
-          <div className={`bg-primary text-primary-foreground ${isMobile ? 'p-4' : 'p-6'}`}>
+          <div className={`bg-primary text-primary-foreground ${isMobile ? 'p-3' : 'p-6'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>Barangay Calendar</h1>
-                <p className="text-primary-foreground/80 mt-1">View community events and activities</p>
+                <h1 className={`${isMobile ? 'text-lg' : 'text-3xl'} font-bold`}>Barangay Calendar</h1>
+                <p className={`text-primary-foreground/80 mt-1 ${isMobile ? 'text-sm' : ''}`}>View community events and activities</p>
               </div>
             </div>
           </div>
 
-          <div className={`${isMobile ? 'p-4' : 'p-6'} bg-card`}>
-            <div className={`${isMobile ? 'flex-col space-y-4' : 'flex items-center justify-between'} mb-6`}>
-              <div className="flex items-center space-x-4">
-                <Button variant="ghost" size="icon" onClick={handlePreviousMonth} className="hover:bg-muted">
-                  <ChevronLeft className="h-4 w-4" />
+          <div className={`${isMobile ? 'p-2' : 'p-6'} bg-card`}>
+            <div className={`${isMobile ? 'flex-col space-y-3' : 'flex items-center justify-between'} mb-4`}>
+              <div className="flex items-center space-x-2">
+                <Button variant="ghost" size={isMobile ? "sm" : "icon"} onClick={handlePreviousMonth} className="hover:bg-muted">
+                  <ChevronLeft className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 </Button>
-                <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-card-foreground`}>
-                  {format(currentDate, "MMMM yyyy")}
+                <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-card-foreground`}>
+                  {format(currentDate, isMobile ? "MMM yyyy" : "MMMM yyyy")}
                 </h2>
-                <Button variant="ghost" size="icon" onClick={handleNextMonth} className="hover:bg-muted">
-                  <ChevronRight className="h-4 w-4" />
+                <Button variant="ghost" size={isMobile ? "sm" : "icon"} onClick={handleNextMonth} className="hover:bg-muted">
+                  <ChevronRight className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 </Button>
               </div>
               <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
@@ -389,7 +389,7 @@ const UserCalendarPage = () => {
                   className={view !== 'month' ? 'hover:bg-muted' : ''}
                   size={isMobile ? 'sm' : 'default'}
                 >
-                  Month
+                  {isMobile ? 'Mo' : 'Month'}
                 </Button>
                 <Button 
                   variant={view === 'week' ? 'default' : 'ghost'} 
@@ -397,7 +397,7 @@ const UserCalendarPage = () => {
                   className={view !== 'week' ? 'hover:bg-muted' : ''}
                   size={isMobile ? 'sm' : 'default'}
                 >
-                  Week
+                  {isMobile ? 'Wk' : 'Week'}
                 </Button>
                 <Button 
                   variant={view === 'day' ? 'default' : 'ghost'} 
@@ -411,9 +411,9 @@ const UserCalendarPage = () => {
             </div>
 
             {/* Calendar Headers */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
+            <div className={`grid grid-cols-7 ${isMobile ? 'gap-0.5' : 'gap-1'} mb-2`}>
               {(isMobile ? ["S", "M", "T", "W", "T", "F", "S"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]).map((day, index) => (
-                <div key={day} className={`${isMobile ? 'p-2' : 'p-3'} text-sm font-semibold text-muted-foreground text-center`}>
+                <div key={day} className={`${isMobile ? 'p-1' : 'p-3'} text-xs font-semibold text-muted-foreground text-center`}>
                   {day}
                 </div>
               ))}
@@ -421,7 +421,7 @@ const UserCalendarPage = () => {
 
             {/* Calendar Grid */}
             {view === 'month' && (
-              <div className="grid grid-cols-7 gap-1 bg-muted p-1 rounded-lg">
+              <div className={`grid grid-cols-7 ${isMobile ? 'gap-0.5' : 'gap-1'} bg-muted ${isMobile ? 'p-0.5' : 'p-1'} rounded-lg`}>
                 {calendarDays.map((day, index) => {
                   const isSelected = selectedDate && isEqual(day.date, selectedDate);
                   const hasEvents = day.events.length > 0;
@@ -431,78 +431,18 @@ const UserCalendarPage = () => {
                       key={index}
                       onClick={() => handleDateClick(day.date)}
                       className={`
-                        bg-card border border-border ${isMobile ? 'p-1 min-h-20' : 'p-2 min-h-24'} rounded hover:bg-accent cursor-pointer transition-colors duration-200
+                        bg-card border border-border ${isMobile ? 'p-0.5 min-h-14' : 'p-2 min-h-24'} rounded hover:bg-accent cursor-pointer transition-colors duration-200
                         ${!day.isCurrentMonth ? "text-muted-foreground opacity-50" : ""}
                         ${isToday(day.date) ? "bg-primary/10 border-primary/30" : ""}
                         ${isSelected ? "ring-2 ring-primary" : ""}
                       `}
                     >
-                      <div className={`${isMobile ? 'text-xs' : 'text-sm'} ${isToday(day.date) ? "font-bold text-primary" : "font-semibold text-card-foreground"}`}>
+                      <div className={`text-xs ${isToday(day.date) ? "font-bold text-primary" : "font-semibold text-card-foreground"}`}>
                         {format(day.date, "d")}
                       </div>
                       {hasEvents && (
-                        <div className="mt-1 space-y-1">
-                          {day.events.slice(0, isMobile ? 1 : 2).map((event, i) => {
-                            const category = eventCategories.find(cat => cat.value === event.event_type);
-                            return (
-                              <div
-                                key={i}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEventClick(event);
-                                }}
-                                className={`${isMobile ? 'text-[10px] px-1 py-0.5' : 'text-xs px-2 py-1'} rounded truncate cursor-pointer transition-colors duration-200
-                                  ${category ? `${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}` : 'bg-muted text-muted-foreground'}
-                                  hover:opacity-80
-                                `}
-                              >
-                                {event.title}
-                              </div>
-                            );
-                          })}
-                          {day.events.length > 2 && (
-                            <div className="text-xs text-muted-foreground">+{day.events.length - 2} more</div>
-                          )}
-                        </div>
-                      )}
-                      {isToday(day.date) && (
-                        <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded mt-1">
-                          Today
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Week View */}
-            {view === 'week' && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-7 gap-1">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                    <div key={day} className="p-3 text-sm font-semibold text-muted-foreground text-center">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-1 bg-muted p-1 rounded-lg">
-                  {Array.from({ length: 7 }, (_, i) => {
-                    const weekStart = subDays(currentDate, currentDate.getDay());
-                    const dayDate = addDays(weekStart, i);
-                    const dayEvents = getEventsForDate(dayDate);
-                    
-                    return (
-                      <div
-                        key={i}
-                        className="bg-card border border-border p-3 min-h-32 rounded hover:bg-accent cursor-pointer transition-colors"
-                        onClick={() => handleDateClick(dayDate)}
-                      >
-                        <div className={`text-sm font-semibold mb-2 ${isToday(dayDate) ? "text-primary" : "text-card-foreground"}`}>
-                          {format(dayDate, "d")}
-                        </div>
-                        <div className="space-y-1">
-                          {dayEvents.map((event, eventIndex) => {
+                        <div className={`mt-0.5 space-y-0.5 ${isMobile ? 'max-h-8 overflow-hidden' : ''}`}>
+                          {day.events.slice(0, isMobile ? 2 : 3).map((event, eventIndex) => {
                             const category = eventCategories.find(cat => cat.value === event.event_type);
                             return (
                               <div
@@ -511,66 +451,180 @@ const UserCalendarPage = () => {
                                   e.stopPropagation();
                                   handleEventClick(event);
                                 }}
-                                className={`text-xs px-2 py-1 rounded cursor-pointer transition-colors
-                                  ${category ? `${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}` : 'bg-muted text-muted-foreground'}
-                                  hover:opacity-80
+                                className={`
+                                  ${isMobile ? 'text-xs p-0.5' : 'text-xs p-1'} rounded text-white font-medium cursor-pointer hover:opacity-80 truncate
+                                  ${category ? category.color : 'bg-gray-500'}
                                 `}
+                                title={event.title}
                               >
-                                {event.title}
+                                {isMobile ? event.title.substring(0, 8) + (event.title.length > 8 ? '...' : '') : event.title}
                               </div>
                             );
                           })}
+                          {day.events.length > (isMobile ? 2 : 3) && (
+                            <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground font-medium`}>
+                              +{day.events.length - (isMobile ? 2 : 3)} more
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-            {/* Day View */}
-            {view === 'day' && (
-              <div className="bg-card border border-border rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-4 text-card-foreground">
-                  Events for {format(currentDate, "EEEE, MMMM d, yyyy")}
-                </h3>
-                <div className="space-y-3">
-                  {getEventsForDate(currentDate).map((event) => {
-                    const category = eventCategories.find(cat => cat.value === event.event_type);
-                    return (
-                      <div
-                        key={event.id}
-                        onClick={() => handleEventClick(event)}
-                        className="p-3 border border-border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-semibold text-card-foreground">{event.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(event.start_time), "h:mm a")} - {format(new Date(event.end_time), "h:mm a")}
-                            </p>
-                            {event.location && (
-                              <p className="text-sm text-muted-foreground">{event.location}</p>
+            {/* Week View - Responsive */}
+            {view === 'week' && (
+              <div className="space-y-2">
+                {isMobile ? (
+                  // Mobile week view: vertical stack of days
+                  <div className="space-y-2">
+                    {Array.from({ length: 7 }, (_, i) => {
+                      const weekStart = subDays(currentDate, currentDate.getDay());
+                      const dayDate = addDays(weekStart, i);
+                      const dayEvents = getEventsForDate(dayDate);
+                      
+                      return (
+                        <Card key={i} className="p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="font-semibold text-sm">
+                              {format(dayDate, "EEE, MMM d")}
+                            </div>
+                            {isToday(dayDate) && (
+                              <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Today</span>
                             )}
                           </div>
-                          {category && (
-                            <span className={`px-2 py-1 text-xs rounded-full ${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}`}>
-                              {category.label}
-                            </span>
+                          {dayEvents.length > 0 ? (
+                            <div className="space-y-1">
+                              {dayEvents.map((event, eventIndex) => (
+                                <div
+                                  key={eventIndex}
+                                  onClick={() => handleEventClick(event)}
+                                  className="p-2 bg-muted rounded text-sm cursor-pointer hover:bg-accent"
+                                >
+                                  <div className="font-medium">{event.title}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {format(new Date(event.start_time), "h:mm a")}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-muted-foreground">No events</div>
                           )}
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  // Desktop week view: horizontal grid
+                  <div>
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                        <div key={day} className="p-3 text-sm font-semibold text-muted-foreground text-center">
+                          {day}
                         </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 bg-muted p-1 rounded-lg">
+                      {Array.from({ length: 7 }, (_, i) => {
+                        const weekStart = subDays(currentDate, currentDate.getDay());
+                        const dayDate = addDays(weekStart, i);
+                        const dayEvents = getEventsForDate(dayDate);
+                        
+                        return (
+                          <div
+                            key={i}
+                            className="bg-card border border-border p-3 min-h-32 rounded hover:bg-accent cursor-pointer transition-colors"
+                            onClick={() => handleDateClick(dayDate)}
+                          >
+                            <div className={`text-sm font-semibold mb-2 ${isToday(dayDate) ? "text-primary" : "text-card-foreground"}`}>
+                              {format(dayDate, "d")}
+                              {isToday(dayDate) && (
+                                <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Today</span>
+                              )}
+                            </div>
+                            <div className="space-y-1">
+                              {dayEvents.map((event, eventIndex) => {
+                                const category = eventCategories.find(cat => cat.value === event.event_type);
+                                return (
+                                  <div
+                                    key={eventIndex}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEventClick(event);
+                                    }}
+                                    className={`text-xs px-2 py-1 rounded cursor-pointer transition-colors
+                                      ${category ? `${category.bgLight} dark:${category.bgDark} ${category.text} dark:${category.textDark}` : 'bg-muted text-muted-foreground'}
+                                      hover:opacity-80
+                                    `}
+                                  >
+                                    {event.title}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Day View - Responsive */}
+            {view === 'day' && (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold">
+                    {format(currentDate, "EEEE, MMMM d, yyyy")}
+                  </h3>
+                </div>
+                <Card className={`${isMobile ? 'p-3' : 'p-6'}`}>
+                  {(() => {
+                    const dayEvents = getEventsForDate(currentDate);
+                    return dayEvents.length > 0 ? (
+                      <div className="space-y-3">
+                        {dayEvents.map((event, index) => (
+                          <div
+                            key={index}
+                            onClick={() => handleEventClick(event)}
+                            className="p-3 border border-border rounded-lg cursor-pointer hover:bg-accent"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-card-foreground">{event.title}</h4>
+                                <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                                <div className="flex items-center mt-2 text-xs text-muted-foreground">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {format(new Date(event.start_time), "h:mm a")} - {format(new Date(event.end_time), "h:mm a")}
+                                </div>
+                              </div>
+                              <div className={`
+                                px-2 py-1 rounded text-xs font-medium
+                                ${eventCategories.find(cat => cat.value === event.event_type)?.color || 'bg-gray-500'} text-white
+                              `}>
+                                {eventCategories.find(cat => cat.value === event.event_type)?.label || 'Event'}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No events scheduled for this day</p>
                       </div>
                     );
-                  })}
-                  {getEventsForDate(currentDate).length === 0 && (
-                    <p className="text-muted-foreground text-center py-8">No events scheduled for this day.</p>
-                  )}
-                </div>
+                  })()}
+                </Card>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 bg-muted/30">
+          <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-4 ${isMobile ? 'p-2' : 'p-6'} bg-muted/30`}>
             <div className="bg-card border border-border rounded-lg shadow-lg p-6">
               <h3 className="text-xl font-bold text-card-foreground mb-4">Upcoming Events</h3>
               <Tabs defaultValue="upcoming" className="w-full">
