@@ -624,41 +624,41 @@ const UserCalendarPage = () => {
             )}
           </div>
 
-          <div className={`grid ${isMobile ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1 lg:grid-cols-2'} gap-4 ${isMobile ? 'p-2' : 'p-6'} bg-muted/30`}>
-            <div className={`bg-card border border-border rounded-lg shadow-lg ${isMobile ? 'p-3' : 'p-6'}`}>
-              <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-card-foreground mb-4`}>Upcoming Events</h3>
+          <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-4 ${isMobile ? 'p-2' : 'p-6'} bg-muted/30`}>
+            <div className="bg-card border border-border rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-bold text-card-foreground mb-4">Upcoming Events</h3>
               <Tabs defaultValue="upcoming" className="w-full">
-                <TabsList className={`grid w-full grid-cols-2 ${isMobile ? 'h-8' : ''}`}>
-                  <TabsTrigger value="upcoming" className={isMobile ? 'text-xs' : ''}>Upcoming</TabsTrigger>
-                  <TabsTrigger value="past" className={isMobile ? 'text-xs' : ''}>Past Events</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                  <TabsTrigger value="past">Past Events</TabsTrigger>
                 </TabsList>
-                <TabsContent value="upcoming" className={`space-y-${isMobile ? '2' : '4'}`}>
+                <TabsContent value="upcoming" className="space-y-4">
                   {upcomingEvents.length > 0 ? (
                     <>
                       {upcomingEvents.slice((upcomingPage - 1) * eventsPerPage, upcomingPage * eventsPerPage).map((event) => {
                         const category = eventCategories.find(cat => cat.value === event.event_type);
                         return (
-                          <div key={event.id} className={`flex items-start space-x-${isMobile ? '2' : '4'} ${isMobile ? 'p-2' : 'p-4'} border border-border rounded-lg hover:shadow-md transition-shadow duration-200 bg-card`}>
-                            <div className={`${isMobile ? 'p-1' : 'p-2'} rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
-                              <CalendarIcon className={`${isMobile ? 'h-3 w-3' : 'h-5 w-5'} ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
+                          <div key={event.id} className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:shadow-md transition-shadow duration-200 bg-card">
+                            <div className={`p-2 rounded-full ${category ? `${category.bgLight} dark:${category.bgDark}` : 'bg-muted'}`}>
+                              <CalendarIcon className={`h-5 w-5 ${category ? `${category.text} dark:${category.textDark}` : 'text-muted-foreground'}`} />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className={`${isMobile ? 'text-sm font-medium' : 'font-semibold'} text-card-foreground truncate`}>{event.title}</h4>
-                              <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>
-                                {format(new Date(event.start_time), isMobile ? "MMM d, h:mm a" : "MMMM d, yyyy - h:mm a")}
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-card-foreground">{event.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(event.start_time), "MMMM d, yyyy - h:mm a")}
                               </p>
-                              {event.description && !isMobile && (
+                              {event.description && (
                                 <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
                               )}
-                              <div className={`flex items-center space-x-2 ${isMobile ? 'mt-1' : 'mt-2'}`}>
+                              <div className="flex items-center space-x-2 mt-2">
                                 <Button 
-                                  size={isMobile ? "sm" : "sm"}
+                                  size="sm" 
                                   variant="ghost" 
                                   onClick={() => handleEventClick(event as any)}
                                   className="hover:bg-muted"
                                 >
-                                  <Eye className={`${isMobile ? 'h-2 w-2 mr-0.5' : 'h-3 w-3 mr-1'}`} />
-                                  {isMobile ? 'View' : 'View'}
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  View
                                 </Button>
                               </div>
                             </div>
@@ -770,18 +770,18 @@ const UserCalendarPage = () => {
             </div>
 
             <div className="space-y-6">
-              <div className={`bg-card border border-border rounded-lg shadow-lg ${isMobile ? 'p-3' : 'p-6'}`}>
-                <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-card-foreground mb-4`}>Event Categories</h3>
-                <div className={`space-y-${isMobile ? '2' : '3'}`}>
+              <div className="bg-card border border-border rounded-lg shadow-lg p-6">
+                <h3 className="text-xl font-bold text-card-foreground mb-4">Event Categories</h3>
+                <div className="space-y-3">
                   {eventCategories.map((category) => {
                     const categoryCount = events?.filter(event => event.event_type === category.value).length || 0;
                     return (
-                      <div key={category.value} className={`flex items-center justify-between ${isMobile ? 'py-1' : ''}`}>
+                      <div key={category.value} className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <div className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'} ${category.color} rounded-full ${isMobile ? 'mr-2' : 'mr-3'}`}></div>
-                          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-card-foreground`}>{category.label}</span>
+                          <div className={`w-3 h-3 ${category.color} rounded-full mr-3`}></div>
+                          <span className="text-sm text-card-foreground">{category.label}</span>
                         </div>
-                        <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>{categoryCount}</span>
+                        <span className="text-sm text-muted-foreground">{categoryCount}</span>
                       </div>
                     );
                   })}
