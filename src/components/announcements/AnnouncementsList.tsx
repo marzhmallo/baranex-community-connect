@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import CachedImage from '@/components/ui/CachedImage';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -87,6 +88,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
   selectedVisibility = '',
   sortBy = 'newest'
 }) => {
+  const isMobile = useIsMobile();
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -389,65 +391,66 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 
       {/* View Announcement Modal */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center gap-2 mb-2">
-              {selectedAnnouncement && getCategoryBadge(selectedAnnouncement.category)}
-              {selectedAnnouncement && getStatusBadge(selectedAnnouncement)}
-            </div>
-            <DialogTitle className="text-2xl">{selectedAnnouncement?.title}</DialogTitle>
-          </DialogHeader>
-          
-          {selectedAnnouncement && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground border-b pb-4">
-                <div className="flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  {selectedAnnouncement.authorName}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {format(new Date(selectedAnnouncement.created_at), 'MMM dd, yyyy')}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  {selectedAnnouncement.audience}
-                </div>
-                {selectedAnnouncement.is_pinned && (
+        <DialogContent className={`${isMobile ? 'max-w-full h-full max-h-full rounded-none m-0 p-0' : 'max-w-2xl max-h-[80vh]'} overflow-y-auto`}>
+          <div className={isMobile ? 'p-4' : ''}>
+            <DialogHeader className={isMobile ? 'pb-3' : ''}>
+              <div className={`flex items-center gap-2 ${isMobile ? 'mb-2' : 'mb-2'}`}>
+                {selectedAnnouncement && getCategoryBadge(selectedAnnouncement.category)}
+                {selectedAnnouncement && getStatusBadge(selectedAnnouncement)}
+              </div>
+              <DialogTitle className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>{selectedAnnouncement?.title}</DialogTitle>
+            </DialogHeader>
+            
+            {selectedAnnouncement && (
+              <div className="space-y-4">
+                <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center gap-4'} ${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground border-b pb-4`}>
                   <div className="flex items-center gap-1">
-                    <Pin className="h-4 w-4" />
-                    Pinned
+                    <User className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                    {selectedAnnouncement.authorName}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                    {format(new Date(selectedAnnouncement.created_at), isMobile ? 'MMM dd, yyyy' : 'MMM dd, yyyy')}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Users className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                    {selectedAnnouncement.audience}
+                  </div>
+                  {selectedAnnouncement.is_pinned && (
+                    <div className="flex items-center gap-1">
+                      <Pin className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                      Pinned
+                    </div>
+                  )}
+                </div>
+                
+                <div className="prose max-w-none">
+                  <p className={`text-foreground whitespace-pre-wrap leading-relaxed ${isMobile ? 'text-sm' : ''}`}>
+                    {selectedAnnouncement.content}
+                  </p>
+                </div>
+                
+                {selectedAnnouncement.photo_url && (
+                  <div>
+                    <h4 className={`font-semibold mb-2 ${isMobile ? 'text-sm' : ''}`}>Photo</h4>
+                    <CachedImage 
+                      src={selectedAnnouncement.photo_url} 
+                      alt="Announcement photo" 
+                      className="max-w-full h-auto rounded-lg border"
+                      cacheKey={`announcement_${selectedAnnouncement.id}`}
+                    />
                   </div>
                 )}
-              </div>
-              
-              <div className="prose max-w-none">
-                <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                  {selectedAnnouncement.content}
-                </p>
-              </div>
-              
-              {selectedAnnouncement.photo_url && (
-                <div>
-                  <h4 className="font-semibold mb-2">Photo</h4>
-                  <CachedImage 
-                    src={selectedAnnouncement.photo_url} 
-                    alt="Announcement photo" 
-                    className="max-w-full h-auto rounded-lg border"
-                    cacheKey={`announcement_${selectedAnnouncement.id}`}
-                  />
-                </div>
-              )}
-              
-              {selectedAnnouncement.attachment_url && (
-                <div>
-                  <h4 className="font-semibold mb-2">Attachment</h4>
-                  <a 
-                    href={selectedAnnouncement.attachment_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary hover:underline"
-                  >
+                
+                {selectedAnnouncement.attachment_url && (
+                  <div>
+                    <h4 className={`font-semibold mb-2 ${isMobile ? 'text-sm' : ''}`}>Attachment</h4>
+                    <a 
+                      href={selectedAnnouncement.attachment_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={`flex items-center gap-2 text-primary hover:underline ${isMobile ? 'text-sm' : ''}`}
+                    >
                     <ExternalLink className="h-4 w-4" />
                     View Attachment
                   </a>
@@ -456,9 +459,10 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
             </div>
           )}
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>Close</Button>
+          <DialogFooter className={isMobile ? 'pt-4' : ''}>
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)} className={isMobile ? 'w-full' : ''}>Close</Button>
           </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
