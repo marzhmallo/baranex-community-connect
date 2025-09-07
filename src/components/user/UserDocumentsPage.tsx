@@ -278,7 +278,7 @@ const UserDocumentsPage = () => {
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
       </div>;
   }
-  return <div className="w-full p-6 pt-20 bg-background min-h-screen">
+  return <div className="w-full p-6 bg-background min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
         <p className="text-muted-foreground">Manage official documents, requests, and issuances for the barangay community</p>
