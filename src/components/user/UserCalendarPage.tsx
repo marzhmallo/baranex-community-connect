@@ -357,7 +357,7 @@ const UserCalendarPage = () => {
   }
 
   return (
-    <div className={`w-full ${isMobile ? 'p-2 pt-20' : 'p-6'} bg-background min-h-screen`}>
+    <div className={`w-full ${isMobile ? 'p-2 pt-20' : 'p-6 pt-20'} bg-background min-h-screen`}>
       <div className="max-w-none mx-auto">
         <div className="bg-card border border-border rounded-lg shadow-lg overflow-hidden">
           <div className={`bg-primary text-primary-foreground ${isMobile ? 'p-3' : 'p-6'}`}>
