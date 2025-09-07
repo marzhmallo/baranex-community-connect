@@ -304,7 +304,7 @@ const UserForumPage = () => {
 
 
   return (
-    <div className="w-full mx-auto p-6 bg-background min-h-screen relative">
+    <div className="w-full mx-auto p-6 pt-20 bg-background min-h-screen relative">
       {/* Localized loading screen that only covers this div */}
       {isPageLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">

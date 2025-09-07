@@ -194,7 +194,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className={`${isMobile ? 'p-4 pt-32' : 'p-6'} bg-background min-h-screen`}>
+    <div className={`${isMobile ? 'p-4 pt-20' : 'p-6 pt-20'} bg-background min-h-screen`}>
       {/* Header Card */}
       <div className={`relative overflow-hidden rounded-2xl ${isMobile ? 'p-6' : 'p-8'} mb-6 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 dark:from-blue-500 dark:via-indigo-600 dark:to-purple-700`}>
         {/* Background decorative elements */}
