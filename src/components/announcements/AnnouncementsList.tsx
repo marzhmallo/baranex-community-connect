@@ -389,7 +389,7 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 
       {/* View Announcement Modal */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-4rem)] lg:max-w-2xl max-h-[85vh] mx-4 sm:mx-8 overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:w-[calc(100vw-4rem)] sm:max-w-[calc(100vw-4rem)] lg:max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               {selectedAnnouncement && getCategoryBadge(selectedAnnouncement.category)}
