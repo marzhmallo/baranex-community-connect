@@ -389,34 +389,34 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 
       {/* View Announcement Modal */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-4rem)] lg:max-w-2xl max-h-[85vh] mx-4 sm:mx-8 overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               {selectedAnnouncement && getCategoryBadge(selectedAnnouncement.category)}
               {selectedAnnouncement && getStatusBadge(selectedAnnouncement)}
             </div>
-            <DialogTitle className="text-2xl">{selectedAnnouncement?.title}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl lg:text-2xl leading-tight pr-8">{selectedAnnouncement?.title}</DialogTitle>
           </DialogHeader>
           
           {selectedAnnouncement && (
             <div className="space-y-4">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground border-b pb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-4 text-sm text-muted-foreground border-b pb-4">
                 <div className="flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  {selectedAnnouncement.authorName}
+                  <User className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{selectedAnnouncement.authorName}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {format(new Date(selectedAnnouncement.created_at), 'MMM dd, yyyy')}
+                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                  <span>{format(new Date(selectedAnnouncement.created_at), 'MMM dd, yyyy')}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  {selectedAnnouncement.audience}
+                  <Users className="h-4 w-4 flex-shrink-0" />
+                  <span>{selectedAnnouncement.audience}</span>
                 </div>
                 {selectedAnnouncement.is_pinned && (
                   <div className="flex items-center gap-1">
-                    <Pin className="h-4 w-4" />
-                    Pinned
+                    <Pin className="h-4 w-4 flex-shrink-0" />
+                    <span>Pinned</span>
                   </div>
                 )}
               </div>
