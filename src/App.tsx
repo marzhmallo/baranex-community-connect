@@ -61,6 +61,7 @@ import BarangaysPage from "./pages/BarangaysPage";
 import PlazaPage from "./pages/PlazaPage";
 import ActivityLogPage from "./pages/ActivityLogPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
+import UserLayout from "./components/layout/UserLayout";
 
 // Component to protect glyph-only routes
 const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
@@ -264,18 +265,18 @@ const AppContent = () => {
             )}
             
             {/* User Routes */}
-            <Route path="/hub" element={<UserRoute><HomePage /></UserRoute>} />
-            <Route path="/hub/calendar" element={<UserRoute><UserCalendarPage /></UserRoute>} />
-            <Route path="/hub/announcements" element={<UserRoute><UserAnnouncementsPage /></UserRoute>} />
-            <Route path="/hub/officials" element={<UserRoute><UserOfficialsPage /></UserRoute>} />
-            <Route path="/hub/officials/:id" element={<UserRoute><OfficialDetailsPage /></UserRoute>} />
-            <Route path="/hub/user-officials/:id" element={<UserRoute><UserOfficialDetailsPage /></UserRoute>} />
-            <Route path="/hub/forum" element={<UserRoute><UserForumPage /></UserRoute>} />
-            <Route path="/hub/documents" element={<UserRoute><UserDocumentsPage /></UserRoute>} />
-            <Route path="/hub/emergency" element={<UserRoute><UserEmergencyPage /></UserRoute>} />
-            <Route path="/hub/settings" element={<UserRoute><UserSettingsPage /></UserRoute>} />
-            <Route path="/feedback" element={<UserRoute><UserFeedbackPage /></UserRoute>} />
-            <Route path="/profile" element={<UserRoute><UserProfilePage /></UserRoute>} />
+            <Route path="/hub" element={<UserRoute><UserLayout><HomePage /></UserLayout></UserRoute>} />
+            <Route path="/hub/calendar" element={<UserRoute><UserLayout><UserCalendarPage /></UserLayout></UserRoute>} />
+            <Route path="/hub/announcements" element={<UserRoute><UserLayout><UserAnnouncementsPage /></UserLayout></UserRoute>} />
+            <Route path="/hub/officials" element={<UserRoute><UserLayout><UserOfficialsPage /></UserLayout></UserRoute>} />
+            <Route path="/hub/officials/:id" element={<UserRoute><UserLayout><OfficialDetailsPage /></UserLayout></UserRoute>} />
+            <Route path="/hub/user-officials/:id" element={<UserRoute><UserLayout><UserOfficialDetailsPage /></UserLayout></UserRoute>} />
+            <Route path="/hub/forum" element={<UserRoute><UserLayout><UserForumPage /></UserLayout></UserRoute>} />
+            <Route path="/hub/documents" element={<UserRoute><UserLayout><UserDocumentsPage /></UserLayout></UserRoute>} />
+            <Route path="/hub/emergency" element={<UserRoute><UserLayout><UserEmergencyPage /></UserLayout></UserRoute>} />
+            <Route path="/hub/settings" element={<UserRoute><UserLayout><UserSettingsPage /></UserLayout></UserRoute>} />
+            <Route path="/feedback" element={<UserRoute><UserLayout><UserFeedbackPage /></UserLayout></UserRoute>} />
+            <Route path="/profile" element={<UserRoute><UserLayout><UserProfilePage /></UserLayout></UserRoute>} />
             
             {/* Glyph-only Routes - Always available for proper redirection */}
             <Route path="/echelon" element={<GlyphRoute><EchelonPage /></GlyphRoute>} />
