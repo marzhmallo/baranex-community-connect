@@ -67,9 +67,9 @@ import UserLayout from "./components/layout/UserLayout";
 const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
   const { userProfile } = useAuth();
   
-  // If not authenticated, this should never happen since we have global auth check
+  // If not authenticated, redirect to 404
   if (!userProfile) {
-    return null;
+    return <Navigate to="/404" replace />;
   }
   
   // If not glyph role, redirect to appropriate dashboard based on role
@@ -91,9 +91,9 @@ const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
 const OverseerRoute = ({ children }: { children: React.ReactNode }) => {
   const { userProfile } = useAuth();
   
-  // If not authenticated, this should never happen since we have global auth check
+  // If not authenticated, redirect to 404
   if (!userProfile) {
-    return null;
+    return <Navigate to="/404" replace />;
   }
   
   // If not overseer role, redirect to appropriate dashboard based on role
@@ -125,9 +125,9 @@ const persister = createSyncStoragePersister({ storage: window.localStorage });
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { userProfile } = useAuth();
   
-  // If not authenticated, this should never happen since we have global auth check
+  // If not authenticated, redirect to 404
   if (!userProfile) {
-    return null;
+    return <Navigate to="/404" replace />;
   }
   
   // Redirect users to their hub immediately without showing admin content
@@ -152,9 +152,9 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 const UserRoute = ({ children }: { children: React.ReactNode }) => {
   const { userProfile } = useAuth();
   
-  // If not authenticated, this should never happen since we have global auth check
+  // If not authenticated, redirect to 404
   if (!userProfile) {
-    return null;
+    return <Navigate to="/404" replace />;
   }
   
   // Redirect admin/staff to their dashboard
@@ -306,6 +306,7 @@ const AppContent = () => {
                 <PublicHomePage />
               )
             } />
+            <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
