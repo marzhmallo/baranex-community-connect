@@ -56,8 +56,8 @@ const UserCalendarPage = () => {
   const { userProfile, user } = useAuth();
   const isMobile = useIsMobile();
   
-  // Get barangay ID from URL params (for public access) or selected barangay (from localStorage)
-  const barangayId = searchParams.get('barangay') || selectedBarangay?.id;
+  // Get barangay ID from URL params (for public access), user profile (for logged-in users), or selected barangay (from localStorage)
+  const barangayId = searchParams.get('barangay') || userProfile?.brgyid || selectedBarangay?.id;
 
   // Fetch events from Supabase
   const { data: events, isLoading } = useQuery({
