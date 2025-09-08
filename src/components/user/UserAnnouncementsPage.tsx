@@ -36,8 +36,8 @@ const UserAnnouncementsPage = () => {
   const { selectedBarangay } = useBarangaySelection();
   const isMobile = useIsMobile();
   
-  // Get barangay ID from URL params (for public access), selected barangay (from localStorage), or user's barangay
-  const barangayId = searchParams.get('barangay') || selectedBarangay?.id || userProfile?.brgyid;
+  // Get barangay ID from user's profile (for logged-in users) or URL params/selected barangay (for public access)
+  const barangayId = userProfile?.brgyid || searchParams.get('barangay') || selectedBarangay?.id;
   
   // Debug logging for barangay ID resolution
   console.log('Announcements - barangayId resolution:', {
