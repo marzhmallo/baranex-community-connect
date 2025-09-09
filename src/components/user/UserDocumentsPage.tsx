@@ -407,7 +407,7 @@ const UserDocumentsPage = () => {
                   <p>No document requests found</p>
                 </div>
               ) : paginatedRequests.map(request => (
-                <div key={request.id} className="border border-border rounded-lg hover:shadow-md transition-shadow p-4 bg-card">
+                <div key={request.id} className="w-full max-w-md border border-border rounded-lg hover:shadow-md transition-shadow p-4 bg-card">
                   <div className="flex items-start justify-between mb-3 gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
