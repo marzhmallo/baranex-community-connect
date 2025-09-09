@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileDocumentsPage from "./MobileDocumentsPage";
 import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +35,7 @@ const UserDocumentsPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const isMobile = useIsMobile();
   const {
     userProfile
   } = useAuth();
@@ -278,6 +281,12 @@ const UserDocumentsPage = () => {
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
       </div>;
   }
+
+  // Render mobile version on mobile devices
+  if (isMobile) {
+    return <MobileDocumentsPage />;
+  }
+
   return <div className="w-full p-4 md:p-6 bg-gradient-to-br from-background via-background to-muted/20 min-h-screen">
       {/* Mobile-first Header */}
       <div className="mb-8">
