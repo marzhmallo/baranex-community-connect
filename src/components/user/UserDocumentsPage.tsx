@@ -278,91 +278,112 @@ const UserDocumentsPage = () => {
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
       </div>;
   }
-return <div className="w-full bg-background">
-      {/* Mobile Version */}
-      <div className="md:hidden">
-        <div className="p-4">
-          <h1 className="text-2xl font-bold mb-2">Documents</h1>
-          
-          {/* Status Overview Cards - Horizontal Scrolling */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Status Overview
-              </h2>
-              <button onClick={async () => {
-                setIsRefreshing(true);
-                try {
-                  await Promise.all([
-                    queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
-                    queryClient.invalidateQueries({ queryKey: ['document-types'] })
-                  ]);
-                } finally {
-                  setIsRefreshing(false);
-                }
-              }} disabled={isRefreshing} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
-                <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              </button>
+  
+  return (
+    <div className="w-full p-4 md:p-6 bg-gradient-to-br from-background via-background to-muted/20 min-h-screen">
+      {/* Mobile-first Header */}
+      <div className="mb-8">
+        <div className="relative">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+            Documents
+          </h1>
+          <div className="absolute -bottom-1 left-0 h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
+        </div>
+        <p className="text-muted-foreground hidden md:block mt-3 text-lg">Manage official documents, requests, and issuances for the barangay community</p>
+      </div>
+
+      {/* Status Cards - Horizontal Scroll on Mobile */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-foreground flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 shadow-lg">
+              <TrendingUp className="h-6 w-6 text-primary" />
             </div>
-            
-            {/* Horizontal Scrolling Cards */}
-            <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
-              <div className="min-w-[120px] snap-start rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full mb-2">
-                  <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <p className="text-xs text-muted-foreground">Requests</p>
-                <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
-                  {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
-                </p>
+            Status Overview
+          </h2>
+          <button onClick={async () => {
+            setIsRefreshing(true);
+            try {
+              await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
+                queryClient.invalidateQueries({ queryKey: ['document-types'] })
+              ]);
+            } finally {
+              setIsRefreshing(false);
+            }
+          }} disabled={isRefreshing} className={`p-3 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-xl transition-all duration-200 hover:shadow-md ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
+            <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+        
+        {/* Horizontal Scrolling Status Cards */}
+        <div className="flex gap-6 overflow-x-auto pb-4 md:grid md:grid-cols-5 md:overflow-visible">
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
               </div>
-              
-              <div className="min-w-[120px] snap-start rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full mb-2">
-                  <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <p className="text-xs text-muted-foreground">Processing</p>
-                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                  {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
-                </p>
-              </div>
-              
-              <div className="min-w-[120px] snap-start rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full mb-2">
-                  <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </div>
-                <p className="text-xs text-muted-foreground">Ready</p>
-                <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                  {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
-                </p>
-              </div>
-              
-              <div className="min-w-[120px] snap-start rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full mb-2">
-                  <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <p className="text-xs text-muted-foreground">Released</p>
-                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                  {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
-                </p>
-              </div>
-              
-              <div className="min-w-[120px] snap-start rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full mb-2">
-                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                </div>
-                <p className="text-xs text-muted-foreground">Rejected</p>
-                <p className="text-xl font-bold text-red-600 dark:text-red-400">
-                  {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
-                </p>
-              </div>
-            </div>
-            
-            <div className="text-xs text-muted-foreground mt-2">
-              Total: {documentRequests.length}
+              <p className="text-xs text-muted-foreground font-medium mb-1">Requests</p>
+              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
+                {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
+              </p>
             </div>
           </div>
+          
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-200/50 dark:border-blue-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <Hourglass className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Processing</p>
+              <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
+              </p>
+            </div>
+          </div>
+          
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border border-green-200/50 dark:border-green-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Ready</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
+              </p>
+            </div>
+          </div>
+          
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Released</p>
+              <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
+                {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
+              </p>
+            </div>
+          </div>
+          
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20 border border-red-200/50 dark:border-red-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Rejected</p>
+              <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+                {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-between items-center text-sm text-muted-foreground mt-6 p-4 bg-card/50 rounded-xl border border-border/50 backdrop-blur-sm">
+          <span className="font-medium">Total Documents: <span className="text-primary font-bold">{documentRequests.length}</span></span>
+          <span className="hidden md:block">Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
+        </div>
+      </div>
           
           {/* Document Tracking */}
           <div className="mb-6">
@@ -2194,7 +2215,7 @@ return <div className="w-full bg-background">
         </DialogContent>
       </Dialog>
     </div>
-};
+  );
 
 // Edit Request Form Component
 const EditRequestForm = ({
