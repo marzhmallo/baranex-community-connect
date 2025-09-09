@@ -408,26 +408,28 @@ const UserDocumentsPage = () => {
                 </div>
               ) : paginatedRequests.map(request => (
                 <div key={request.id} className="border border-border rounded-lg hover:shadow-md transition-shadow p-4 bg-card">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
+                  <div className="flex items-start justify-between mb-3 gap-3">
+                    <div className="min-w-0 flex-1">
                       <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
-                      <div className="text-foreground font-semibold">{request.type}</div>
+                      <div className="text-foreground font-semibold truncate">{request.type}</div>
                     </div>
-                    {getStatusBadge(request.status)}
+                    <div className="flex-shrink-0">
+                      {getStatusBadge(request.status)}
+                    </div>
                   </div>
                   
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                       <span className="text-muted-foreground">Requested by:</span>
-                      <span className="text-foreground font-medium">
+                      <span className="text-foreground font-medium break-words">
                         {request.profiles?.firstname && request.profiles?.lastname 
                           ? `${request.profiles.firstname} ${request.profiles.lastname}` 
                           : 'N/A'}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                       <span className="text-muted-foreground">Last update:</span>
-                      <span className="text-foreground">{formatDate(request.updated_at || request.created_at)}</span>
+                      <span className="text-foreground break-words">{formatDate(request.updated_at || request.created_at)}</span>
                     </div>
                   </div>
                   
@@ -437,7 +439,7 @@ const UserDocumentsPage = () => {
                         setSelectedRequest(request);
                         setShowViewDialog(true);
                       }}
-                      className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
+                      className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors flex-shrink-0"
                     >
                       <Eye className="h-4 w-4" />
                       View
@@ -448,7 +450,7 @@ const UserDocumentsPage = () => {
                           setEditingRequest(request);
                           setShowRequestModal(true);
                         }}
-                        className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
+                        className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors flex-shrink-0"
                       >
                         <Edit className="h-4 w-4" />
                         Edit
