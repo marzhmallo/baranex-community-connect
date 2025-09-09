@@ -278,19 +278,19 @@ const UserDocumentsPage = () => {
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
       </div>;
   }
-  return <div className="w-full p-4 md:p-6 bg-background min-h-screen">
+  return <div className="w-full max-w-full p-3 md:p-6 bg-background min-h-screen overflow-x-hidden">
       {/* Mobile-first Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Documents</h1>
+      <div className="mb-4">
+        <h1 className="text-xl md:text-3xl font-bold text-foreground mb-1">Documents</h1>
         <p className="text-sm text-muted-foreground hidden md:block">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
 
       {/* Status Cards - Horizontal Scroll on Mobile */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Status Overview
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            <span className="truncate">Status Overview</span>
           </h2>
           <button onClick={async () => {
           setIsRefreshing(true);
@@ -303,142 +303,144 @@ const UserDocumentsPage = () => {
           } finally {
             setIsRefreshing(false);
           }
-        }} disabled={isRefreshing} className={`p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
+        }} disabled={isRefreshing} className={`p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''} flex-shrink-0`}>
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
         
         {/* Horizontal Scrolling Status Cards */}
-        <div className="flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible">
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full mb-2">
-              <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+        <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible scrollbar-hide">
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <Clock className="h-4 w-4 md:h-5 md:w-5 text-yellow-600 dark:text-yellow-400" />
             </div>
             <p className="text-xs text-muted-foreground">Requests</p>
-            <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+            <p className="text-lg md:text-xl font-bold text-yellow-600 dark:text-yellow-400">
               {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
             </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full mb-2">
-              <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-blue-100 dark:bg-blue-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <Hourglass className="h-4 w-4 md:h-5 md:w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <p className="text-xs text-muted-foreground">Processing</p>
-            <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+            <p className="text-lg md:text-xl font-bold text-blue-600 dark:text-blue-400">
               {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
             </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full mb-2">
-              <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-green-100 dark:bg-green-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <Package className="h-4 w-4 md:h-5 md:w-5 text-green-600 dark:text-green-400" />
             </div>
             <p className="text-xs text-muted-foreground">Ready</p>
-            <p className="text-xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-lg md:text-xl font-bold text-green-600 dark:text-green-400">
               {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
             </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full mb-2">
-              <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-purple-100 dark:bg-purple-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-purple-600 dark:text-purple-400" />
             </div>
             <p className="text-xs text-muted-foreground">Released</p>
-            <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+            <p className="text-lg md:text-xl font-bold text-purple-600 dark:text-purple-400">
               {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
             </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full mb-2">
-              <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-red-100 dark:bg-red-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <XCircle className="h-4 w-4 md:h-5 md:w-5 text-red-600 dark:text-red-400" />
             </div>
             <p className="text-xs text-muted-foreground">Rejected</p>
-            <p className="text-xl font-bold text-red-600 dark:text-red-400">
+            <p className="text-lg md:text-xl font-bold text-red-600 dark:text-red-400">
               {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
             </p>
           </div>
         </div>
         
-        <div className="flex justify-between items-center text-xs text-muted-foreground mt-3">
-          <span>Total: {documentRequests.length}</span>
-          <span className="hidden md:block">Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
+        <div className="flex justify-between items-center text-xs text-muted-foreground mt-2">
+          <span className="truncate">Total: {documentRequests.length}</span>
+          <span className="hidden md:block truncate">Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
         </div>
       </div>
 
       {/* Document Tracking - Mobile Card Layout */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            <span className="hidden md:inline">Document Tracking System</span>
-            <span className="md:hidden">My Requests</span>
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="hidden md:inline truncate">Document Tracking System</span>
+            <span className="md:hidden truncate">My Requests</span>
           </h2>
           {/* Desktop Request Button - Hidden on Mobile */}
-          <Button onClick={() => setShowRequestModal(true)} className="hidden md:flex bg-blue-600 text-white hover:bg-blue-700">
+          <Button onClick={() => setShowRequestModal(true)} className="hidden md:flex bg-blue-600 text-white hover:bg-blue-700 flex-shrink-0">
             <PlusCircle className="h-4 w-4 mr-2" />
             Request Document
           </Button>
         </div>
 
         {/* Mobile-first Search and Filters */}
-        <div className="space-y-3 md:space-y-0 md:flex md:items-center md:justify-between md:gap-4 mb-4">
+        <div className="space-y-2 md:space-y-0 md:flex md:items-center md:justify-between md:gap-4 mb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <input type="text" placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full bg-background text-foreground" />
+            <input type="text" placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full bg-background text-foreground text-sm" />
           </div>
 
           {/* Simplified Mobile Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:flex-wrap">
-            {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map(filter => <button key={filter} onClick={() => setTrackingFilter(filter)} className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${trackingFilter === filter ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+          <div className="flex gap-1 md:gap-2 overflow-x-auto pb-1 md:pb-0 md:flex-wrap scrollbar-hide">
+            {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map(filter => <button key={filter} onClick={() => setTrackingFilter(filter)} className={`px-2 md:px-3 py-1 rounded-full text-xs md:text-sm whitespace-nowrap transition-colors flex-shrink-0 ${trackingFilter === filter ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
                 {filter}
               </button>)}
           </div>
         </div>
         
         {/* Card Feed for Mobile, Table for Desktop */}
-        <div className="md:hidden space-y-3">
-          {isLoading ? <div className="text-center py-8 text-muted-foreground">
+        <div className="md:hidden space-y-2">
+          {isLoading ? <div className="text-center py-6 text-muted-foreground text-sm">
               Loading your document requests...
-            </div> : documentRequests.length === 0 ? <div className="text-center py-8 text-muted-foreground">
+            </div> : documentRequests.length === 0 ? <div className="text-center py-6 text-muted-foreground text-sm">
               No document requests found
             </div> : paginatedRequests.map(request => <Card key={request.id} className="border border-border hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
-                    <div className="text-foreground font-semibold">{request.type}</div>
+              <CardContent className="p-3">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="min-w-0 flex-1 mr-2">
+                    <div className="font-medium text-primary text-xs truncate">#{request.docnumber}</div>
+                    <div className="text-foreground font-semibold text-sm truncate">{request.type}</div>
                   </div>
-                  {getStatusBadge(request.status)}
+                  <div className="flex-shrink-0">
+                    {getStatusBadge(request.status)}
+                  </div>
                 </div>
                 
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Requested by:</span>
-                    <span className="text-foreground font-medium">
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between items-start">
+                    <span className="text-muted-foreground flex-shrink-0 mr-2">Requested by:</span>
+                    <span className="text-foreground font-medium text-right truncate min-w-0">
                       {request.profiles?.firstname && request.profiles?.lastname ? `${request.profiles.firstname} ${request.profiles.lastname}` : 'N/A'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Last update:</span>
-                    <span className="text-foreground">{formatDate(request.updated_at || request.created_at)}</span>
+                  <div className="flex justify-between items-start">
+                    <span className="text-muted-foreground flex-shrink-0 mr-2">Last update:</span>
+                    <span className="text-foreground text-right truncate min-w-0">{formatDate(request.updated_at || request.created_at)}</span>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
+                <div className="flex justify-end gap-1 mt-3 pt-2 border-t border-border">
                   <Button variant="ghost" size="sm" onClick={() => {
                 setSelectedRequest(request);
                 setShowViewDialog(true);
-              }}>
-                    <Eye className="h-4 w-4 mr-1" />
+              }} className="text-xs px-2 py-1 h-auto">
+                    <Eye className="h-3 w-3 mr-1" />
                     View
                   </Button>
                   {request.status === 'Request' && <Button variant="ghost" size="sm" onClick={() => {
                 setEditingRequest(request);
                 setShowRequestModal(true);
-              }}>
-                      <Edit className="h-4 w-4 mr-1" />
+              }} className="text-xs px-2 py-1 h-auto">
+                      <Edit className="h-3 w-3 mr-1" />
                       Edit
                     </Button>}
                 </div>
@@ -510,22 +512,22 @@ const UserDocumentsPage = () => {
         </div>
         
         {/* Pagination */}
-        {requestsTotalPages > 1 && <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-muted-foreground hidden md:block">
+        {requestsTotalPages > 1 && <div className="mt-3 flex flex-col md:flex-row justify-between items-center gap-2">
+            <div className="text-xs text-muted-foreground hidden md:block">
               Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} requests
             </div>
-            <div className="flex items-center gap-2 mx-auto md:mx-0">
-              <button onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} disabled={requestsCurrentPage === 1} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === 1 ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+            <div className="flex items-center gap-1 mx-auto md:mx-0">
+              <button onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} disabled={requestsCurrentPage === 1} className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded-lg transition-colors ${requestsCurrentPage === 1 ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
                 Previous
               </button>
-              <div className="flex">
+              <div className="flex gap-1">
                 {Array.from({
               length: requestsTotalPages
-            }, (_, i) => i + 1).map(page => <button key={page} onClick={() => handleRequestsPageChange(page)} className={`px-3 py-1 text-sm rounded-md font-medium ${requestsCurrentPage === page ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'}`}>
+            }, (_, i) => i + 1).map(page => <button key={page} onClick={() => handleRequestsPageChange(page)} className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded-md font-medium min-w-[24px] ${requestsCurrentPage === page ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'}`}>
                     {page}
                   </button>)}
               </div>
-              <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === requestsTotalPages} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === requestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+              <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === requestsTotalPages} className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded-lg transition-colors ${requestsCurrentPage === requestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
                 Next
               </button>
             </div>
@@ -533,20 +535,20 @@ const UserDocumentsPage = () => {
       </div>
 
       {/* Document Library - Mobile Simplified */}
-      <div className="md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-6">
+      <div className="block md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-6">
         <div className="md:lg:col-span-2">
           <Card className="border-border">
-            <CardHeader className="pb-4">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <CardTitle className="text-lg md:text-xl text-foreground">Available Documents</CardTitle>
-                <div className="flex items-center gap-3">
+            <CardHeader className="pb-3 px-3 md:px-6 pt-3 md:pt-6">
+              <div className="flex flex-col gap-3 md:gap-4 md:flex-row md:items-center md:justify-between">
+                <CardTitle className="text-base md:text-lg md:text-xl text-foreground truncate">Available Documents</CardTitle>
+                <div className="flex items-center gap-2 md:gap-3">
                   {/* Mobile search - simplified */}
-                  <div className="relative flex-1 md:flex-initial">
+                  <div className="relative flex-1 md:flex-initial min-w-0">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 md:w-64 border-border bg-background text-foreground" />
+                    <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 md:w-64 border-border bg-background text-foreground text-sm" />
                   </div>
                   {/* Hide desktop request button */}
-                  <Button className="hidden md:flex bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setShowRequestModal(true)}>
+                  <Button className="hidden md:flex bg-purple-600 hover:bg-purple-700 text-white flex-shrink-0" onClick={() => setShowRequestModal(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Request Document
                   </Button>
@@ -554,44 +556,44 @@ const UserDocumentsPage = () => {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="p-4 md:p-6">
-                <div className="space-y-3">
-                  {isLoadingTemplates ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedTemplates.length > 0 ? paginatedTemplates.map(template => <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
-                        <div className="flex items-center gap-3 md:gap-4 flex-1">
+              <div className="p-3 md:p-6">
+                <div className="space-y-2 md:space-y-3">
+                  {isLoadingTemplates ? <div className="text-center py-6 text-muted-foreground text-sm">Loading document templates...</div> : paginatedTemplates.length > 0 ? paginatedTemplates.map(template => <div key={template.id} className="flex items-center justify-between p-3 md:p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                        <div className="flex items-center gap-2 md:gap-3 md:gap-4 flex-1 min-w-0">
                           {/* Hide checkbox on mobile for cleaner look */}
-                          <input type="checkbox" className="hidden md:block rounded border-border" />
-                          <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20 flex-shrink-0">
-                            <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-500 dark:text-blue-400" />
+                          <input type="checkbox" className="hidden md:block rounded border-border flex-shrink-0" />
+                          <div className="p-1.5 md:p-2 rounded bg-blue-100 dark:bg-blue-900/20 flex-shrink-0">
+                            <FileText className="h-3 w-3 md:h-4 md:w-4 md:h-5 md:w-5 text-blue-500 dark:text-blue-400" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-foreground text-sm md:text-base truncate">{template.name}</h4>
+                            <h4 className="font-medium text-foreground text-xs md:text-sm md:text-base truncate">{template.name}</h4>
                             <p className="text-xs md:text-sm text-muted-foreground">
                               <span className="md:hidden">₱{template.fee || 0}</span>
                               <span className="hidden md:inline">{template.description} • Fee: ₱{template.fee || 0}</span>
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
                           <Badge className="hidden md:block bg-green-500 hover:bg-green-600 text-white">Active</Badge>
                           <button onClick={() => {
                       setSelectedTemplate(template);
                       setShowTemplateDialog(true);
-                    }} className="p-1.5 md:p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View template details">
-                            <Eye className="h-4 w-4" />
+                    }} className="p-1 md:p-1.5 md:p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View template details">
+                            <Eye className="h-3 w-3 md:h-4 md:w-4" />
                           </button>
                         </div>
-                      </div>) : <div className="text-center py-8 text-muted-foreground">No document templates found</div>}
+                      </div>) : <div className="text-center py-6 text-muted-foreground text-sm">No document templates found</div>}
                 </div>
 
                 {/* Mobile-friendly pagination */}
-                <div className="flex items-center justify-center mt-6">
+                <div className="flex items-center justify-center mt-4 md:mt-6">
                   <Pagination>
-                    <PaginationContent>
+                    <PaginationContent className="gap-1">
                       <PaginationItem>
                         <PaginationPrevious onClick={e => {
                         e.preventDefault();
                         handlePageChange(currentPage - 1);
-                      }} className={`hover:bg-accent cursor-pointer ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                      }} className={`hover:bg-accent cursor-pointer text-xs md:text-sm px-2 md:px-3 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`} />
                       </PaginationItem>
                       {Array.from({
                       length: totalPages
@@ -599,7 +601,7 @@ const UserDocumentsPage = () => {
                           <PaginationLink onClick={e => {
                         e.preventDefault();
                         handlePageChange(page);
-                      }} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
+                      }} isActive={currentPage === page} className={`cursor-pointer text-xs md:text-sm px-2 md:px-3 ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
                             {page}
                           </PaginationLink>
                         </PaginationItem>)}
@@ -607,7 +609,7 @@ const UserDocumentsPage = () => {
                         <PaginationNext onClick={e => {
                         e.preventDefault();
                         handlePageChange(currentPage + 1);
-                      }} className={`hover:bg-accent cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                      }} className={`hover:bg-accent cursor-pointer text-xs md:text-sm px-2 md:px-3 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`} />
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>
