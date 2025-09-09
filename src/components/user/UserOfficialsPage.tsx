@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
@@ -177,7 +176,7 @@ const UserOfficialsPage = () => {
   }, [refetch]);
 
   // Filter and sort officials based on the active tab, search query, and term dates
-  const filteredOfficials = officialsData ? officialsData.filter(official => {
+  const allFilteredOfficials = officialsData ? officialsData.filter(official => {
     const now = new Date();
     
     // Get all positions for this official
@@ -268,6 +267,10 @@ const UserOfficialsPage = () => {
     const bPos = b.position_no || 999999;
     return aPos - bPos;
   }) : [];
+
+  // Use all filtered officials directly without pagination
+  const filteredOfficials = allFilteredOfficials;
+
 
   // Count for each category using the same logic as filtering
   const currentCount = officialsData ? officialsData.filter(o => {
@@ -453,16 +456,16 @@ const UserOfficialsPage = () => {
 
       {/* Main tabbed navigation - only show in cards view */}
       {viewMode === 'cards' && (
-        <div className="mx-auto max-w-3xl mb-8 bg-card rounded-full p-1 border">
+        <div className={`mx-auto ${isMobile ? 'max-w-full' : 'max-w-3xl'} mb-6 bg-card rounded-full p-1 border`}>
           <div className="flex justify-center">
-            <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'current' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('current')}>
-              Current Officials ({currentCount})
+            <div className={`flex-1 ${isMobile ? 'text-xs px-2' : 'max-w-[33%] px-4'} text-center py-2 rounded-full cursor-pointer transition-all ${activeTab === 'current' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('current')}>
+              {isMobile ? `Current (${currentCount})` : `Current Officials (${currentCount})`}
             </div>
-            <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'sk' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('sk')}>
-              SK Officials ({skCount})
+            <div className={`flex-1 ${isMobile ? 'text-xs px-2' : 'max-w-[33%] px-4'} text-center py-2 rounded-full cursor-pointer transition-all ${activeTab === 'sk' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('sk')}>
+              {isMobile ? `SK (${skCount})` : `SK Officials (${skCount})`}
             </div>
-            <div className={`flex-1 max-w-[33%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeTab === 'previous' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('previous')}>
-              Previous Officials ({previousCount})
+            <div className={`flex-1 ${isMobile ? 'text-xs px-2' : 'max-w-[33%] px-4'} text-center py-2 rounded-full cursor-pointer transition-all ${activeTab === 'previous' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveTab('previous')}>
+              {isMobile ? `Previous (${previousCount})` : `Previous Officials (${previousCount})`}
             </div>
           </div>
         </div>
@@ -470,13 +473,13 @@ const UserOfficialsPage = () => {
 
       {/* SK Tab sub-navigation - only show in cards view */}
       {viewMode === 'cards' && activeTab === 'sk' && (
-        <div className="mx-auto max-w-xl mb-8 bg-card rounded-full p-1 border">
+        <div className={`mx-auto ${isMobile ? 'max-w-full' : 'max-w-xl'} mb-6 bg-card rounded-full p-1 border`}>
           <div className="flex justify-center">
-            <div className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('current')}>
-              Current SK ({skCurrentCount})
+            <div className={`flex-1 ${isMobile ? 'text-xs px-2' : 'max-w-[50%] px-4'} text-center py-2 rounded-full cursor-pointer transition-all ${activeSKTab === 'current' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('current')}>
+              {isMobile ? `Current (${skCurrentCount})` : `Current SK (${skCurrentCount})`}
             </div>
-            <div className={`flex-1 max-w-[50%] text-center py-2 px-4 rounded-full cursor-pointer transition-all ${activeSKTab === 'previous' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('previous')}>
-              Previous SK ({skPreviousCount})
+            <div className={`flex-1 ${isMobile ? 'text-xs px-2' : 'max-w-[50%] px-4'} text-center py-2 rounded-full cursor-pointer transition-all ${activeSKTab === 'previous' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setActiveSKTab('previous')}>
+              {isMobile ? `Previous (${skPreviousCount})` : `Previous SK (${skPreviousCount})`}
             </div>
           </div>
         </div>
@@ -488,41 +491,44 @@ const UserOfficialsPage = () => {
           <OrganizationalChart officials={officialsData || []} isLoading={isLoading} error={error} />
         </div>
       ) : (
-        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8'}`}>
-          {isLoading ?
-            // Show skeleton loaders while loading
-            Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-lg overflow-hidden border h-[700px]">
-                <Skeleton className="w-full h-80 bg-muted" />
-                <div className="p-6">
-                  <Skeleton className="h-6 w-3/4 mb-2 bg-muted" />
-                  <Skeleton className="h-4 w-1/2 mb-4 bg-muted" />
-                  <Skeleton className="h-20 w-full mb-4 bg-muted" />
-                  <Skeleton className="h-4 w-full mb-2 bg-muted" />
-                  <Skeleton className="h-4 w-full mb-4 bg-muted" />
-                  <div className="flex justify-between">
-                    <Skeleton className="h-4 w-1/3 bg-muted" />
-                    <Skeleton className="h-8 w-20 bg-muted" />
+        <div>
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8'}`}>
+            {isLoading ?
+              // Show skeleton loaders while loading
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-card rounded-lg overflow-hidden border h-[700px]">
+                  <Skeleton className="w-full h-80 bg-muted" />
+                  <div className="p-6">
+                    <Skeleton className="h-6 w-3/4 mb-2 bg-muted" />
+                    <Skeleton className="h-4 w-1/2 mb-4 bg-muted" />
+                    <Skeleton className="h-20 w-full mb-4 bg-muted" />
+                    <Skeleton className="h-4 w-full mb-2 bg-muted" />
+                    <Skeleton className="h-4 w-full mb-4 bg-muted" />
+                    <div className="flex justify-between">
+                      <Skeleton className="h-4 w-1/3 bg-muted" />
+                      <Skeleton className="h-8 w-20 bg-muted" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )) : error ? (
-              <div className="col-span-full p-6 text-destructive bg-card rounded-lg border">
-                Error loading officials: {error.message}
-              </div>
-            ) : filteredOfficials.length === 0 ? (
-              <div className="col-span-full p-6 text-center text-muted-foreground bg-card rounded-lg border mx-[240px]">
-                No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? activeSKTab === 'current' ? 'current SK' : 'previous SK' : 'previous'} officials found.
-              </div>
-            ) : filteredOfficials.map(official => (
-              <OfficialCard 
-                key={official.id}
-                official={official} 
-                currentTab={activeTab}
-                currentSKTab={activeSKTab}
-              />
-            ))
-          }
+              )) : error ? (
+                <div className="col-span-full p-6 text-destructive bg-card rounded-lg border">
+                  Error loading officials: {error.message}
+                </div>
+              ) : filteredOfficials.length === 0 ? (
+                <div className={`col-span-full p-6 text-center text-muted-foreground bg-card rounded-lg border ${isMobile ? '' : 'mx-[240px]'}`}>
+                  No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? activeSKTab === 'current' ? 'current SK' : 'previous SK' : 'previous'} officials found.
+                </div>
+              ) : filteredOfficials.map(official => (
+                <OfficialCard 
+                  key={official.id}
+                  official={official} 
+                  currentTab={activeTab}
+                  currentSKTab={activeSKTab}
+                  isMobile={isMobile}
+                />
+              ))
+            }
+          </div>
         </div>
       )}
 

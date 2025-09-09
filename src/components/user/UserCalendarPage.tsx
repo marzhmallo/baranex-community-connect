@@ -56,8 +56,8 @@ const UserCalendarPage = () => {
   const { userProfile, user } = useAuth();
   const isMobile = useIsMobile();
   
-  // Get barangay ID from URL params (for public access) or selected barangay (from localStorage)
-  const barangayId = searchParams.get('barangay') || selectedBarangay?.id;
+  // Get barangay ID from URL params (for public access), user profile (for logged-in users), or selected barangay (from localStorage)
+  const barangayId = searchParams.get('barangay') || userProfile?.brgyid || selectedBarangay?.id;
 
   // Fetch events from Supabase
   const { data: events, isLoading } = useQuery({
@@ -357,7 +357,7 @@ const UserCalendarPage = () => {
   }
 
   return (
-    <div className={`w-full ${isMobile ? 'p-2 pt-20' : 'p-6'} bg-background min-h-screen`}>
+    <div className={`w-full ${isMobile ? 'p-2' : 'p-6'} bg-background min-h-screen`}>
       <div className="max-w-none mx-auto">
         <div className="bg-card border border-border rounded-lg shadow-lg overflow-hidden">
           <div className={`bg-primary text-primary-foreground ${isMobile ? 'p-3' : 'p-6'}`}>
@@ -794,10 +794,10 @@ const UserCalendarPage = () => {
 
       {/* Enhanced Event Details Modal */}
       <Dialog open={showEventDetails} onOpenChange={setShowEventDetails}>
-        <DialogContent className="max-w-2xl bg-card border-border">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:w-[calc(100vw-4rem)] sm:max-w-[calc(100vw-4rem)] lg:max-w-2xl max-h-[85vh] overflow-y-auto bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-card-foreground flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
+            <DialogTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-card-foreground flex items-center gap-2 leading-tight pr-8">
+              <CalendarIcon className="h-5 w-5 flex-shrink-0" />
               {selectedEvent ? selectedEvent.title : `Events for ${selectedDate ? format(selectedDate, "MMMM d, yyyy") : ""}`}
             </DialogTitle>
           </DialogHeader>
@@ -845,7 +845,7 @@ const UserCalendarPage = () => {
               )}
 
               {/* Event Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
