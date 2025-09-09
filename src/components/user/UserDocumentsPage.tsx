@@ -279,25 +279,21 @@ const UserDocumentsPage = () => {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">trending_up</span>
+                <TrendingUp className="h-5 w-5 text-primary" />
                 Status Overview
               </h2>
-              <button 
-                onClick={async () => {
-                  setIsRefreshing(true);
-                  try {
-                    await Promise.all([
-                      queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
-                      queryClient.invalidateQueries({ queryKey: ['document-types'] })
-                    ]);
-                  } finally {
-                    setIsRefreshing(false);
-                  }
-                }} 
-                disabled={isRefreshing} 
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
-              >
-                <span className="material-symbols-outlined text-lg">refresh</span>
+              <button onClick={async () => {
+                setIsRefreshing(true);
+                try {
+                  await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
+                    queryClient.invalidateQueries({ queryKey: ['document-types'] })
+                  ]);
+                } finally {
+                  setIsRefreshing(false);
+                }
+              }} disabled={isRefreshing} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
               </button>
             </div>
             
@@ -305,7 +301,7 @@ const UserDocumentsPage = () => {
             <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
               <div className="min-w-[120px] snap-start rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex flex-col items-center text-center">
                 <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full mb-2">
-                  <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400">schedule</span>
+                  <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Requests</p>
                 <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
@@ -315,7 +311,7 @@ const UserDocumentsPage = () => {
               
               <div className="min-w-[120px] snap-start rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex flex-col items-center text-center">
                 <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full mb-2">
-                  <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">hourglass_top</span>
+                  <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Processing</p>
                 <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
@@ -325,7 +321,7 @@ const UserDocumentsPage = () => {
               
               <div className="min-w-[120px] snap-start rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex flex-col items-center text-center">
                 <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full mb-2">
-                  <span className="material-symbols-outlined text-green-600 dark:text-green-400">inventory_2</span>
+                  <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Ready</p>
                 <p className="text-xl font-bold text-green-600 dark:text-green-400">
@@ -335,7 +331,7 @@ const UserDocumentsPage = () => {
               
               <div className="min-w-[120px] snap-start rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex flex-col items-center text-center">
                 <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full mb-2">
-                  <span className="material-symbols-outlined text-purple-600 dark:text-purple-400">task_alt</span>
+                  <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Released</p>
                 <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
@@ -345,7 +341,7 @@ const UserDocumentsPage = () => {
               
               <div className="min-w-[120px] snap-start rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex flex-col items-center text-center">
                 <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full mb-2">
-                  <span className="material-symbols-outlined text-red-600 dark:text-red-400">cancel</span>
+                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Rejected</p>
                 <p className="text-xl font-bold text-red-600 dark:text-red-400">
@@ -363,7 +359,7 @@ const UserDocumentsPage = () => {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <span className="material-symbols-outlined">bar_chart</span>
+                <BarChart3 className="h-5 w-5" />
                 My Requests
               </h2>
             </div>
@@ -371,7 +367,7 @@ const UserDocumentsPage = () => {
             {/* Search and Filters */}
             <div className="space-y-3 mb-4">
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">search</span>
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Search by tracking ID..."
@@ -443,7 +439,7 @@ const UserDocumentsPage = () => {
                       }}
                       className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
                     >
-                      <span className="material-symbols-outlined text-base">visibility</span>
+                      <Eye className="h-4 w-4" />
                       View
                     </button>
                     {request.status === 'Request' && (
@@ -454,7 +450,7 @@ const UserDocumentsPage = () => {
                         }}
                         className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
                       >
-                        <span className="material-symbols-outlined text-base">edit</span>
+                        <Edit className="h-4 w-4" />
                         Edit
                       </button>
                     )}
@@ -471,7 +467,7 @@ const UserDocumentsPage = () => {
                   disabled={requestsCurrentPage === 1}
                   className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined">chevron_left</span>
+                  <ArrowRight className="h-4 w-4 rotate-180" />
                 </button>
                 {Array.from({ length: requestsTotalPages }, (_, i) => i + 1).map(page => (
                   <button 
@@ -491,7 +487,7 @@ const UserDocumentsPage = () => {
                   disabled={requestsCurrentPage === requestsTotalPages}
                   className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined">chevron_right</span>
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             )}
@@ -502,7 +498,7 @@ const UserDocumentsPage = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Available Documents</h2>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">search</span>
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -521,7 +517,7 @@ const UserDocumentsPage = () => {
                   <div key={template.id} className="border border-border rounded-lg p-4 hover:bg-accent/30 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
-                        <span className="material-symbols-outlined text-blue-500">description</span>
+                        <FileText className="h-4 w-4 text-blue-500" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-medium text-foreground text-sm truncate">{template.name}</h4>
@@ -534,7 +530,7 @@ const UserDocumentsPage = () => {
                         }}
                         className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
                       >
-                        <span className="material-symbols-outlined text-lg">visibility</span>
+                        <Eye className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -552,25 +548,16 @@ const UserDocumentsPage = () => {
                   disabled={currentPage === 1}
                   className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined">chevron_left</span>
+                  <ArrowRight className="h-4 w-4 rotate-180" />
                 </button>
-                {Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1).map(page => (
-                  <button 
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${
-                      currentPage === page ? "bg-primary/10 text-primary" : "hover:bg-accent"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                <button className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${currentPage === 1 ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>1</button>
+                {totalPages > 1 && <button className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${currentPage === 2 ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>2</button>}
                 <button 
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined">chevron_right</span>
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             )}
@@ -581,7 +568,7 @@ const UserDocumentsPage = () => {
             onClick={() => setShowRequestModal(true)}
             className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg flex items-center justify-center z-40 transform hover:scale-105 transition-all duration-200"
           >
-            <span className="material-symbols-outlined text-2xl">add</span>
+            <Plus className="h-6 w-6" />
           </button>
         </div>
       </div>
