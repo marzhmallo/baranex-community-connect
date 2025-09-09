@@ -356,212 +356,216 @@ const UserDocumentsPage = () => {
           </div>
           
           {/* Document Tracking */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                My Requests
-              </h2>
-            </div>
-            
-            {/* Search and Filters */}
-            <div className="space-y-3 mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Search by tracking ID..."
-                  value={trackingSearchQuery}
-                  onChange={e => setTrackingSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-border rounded-lg w-full bg-background"
-                />
-              </div>
-              
-              <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
-                {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
-                  <button 
-                    key={filter}
-                    onClick={() => setTrackingFilter(filter)}
-                    className={`snap-start px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${
-                      trackingFilter === filter 
-                        ? "bg-primary/10 text-primary" 
-                        : "bg-muted text-foreground hover:bg-muted/80"
-                    }`}
-                  >
-                    {filter}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Document Cards */}
-            <div className="space-y-3">
-              {isLoading ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-3"></div>
-                  <p>Loading your document requests...</p>
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <span className="material-symbols-outlined">bar_chart</span>
+                        My Requests
+                    </h2>
                 </div>
-              ) : documentRequests.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <FileX className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No document requests found</p>
+
+                {/* Search and Filters */}
+                <div className="space-y-3 mb-4">
+                    <div className="relative">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                            search
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Search by tracking ID..."
+                            value={trackingSearchQuery}
+                            onChange={e => setTrackingSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2 border border-border rounded-lg w-full bg-background"
+                        />
+                    </div>
+
+                    <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
+                        {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
+                          <button 
+                            key={filter}
+                            onClick={() => setTrackingFilter(filter)}
+                            className={`snap-start px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${
+                              trackingFilter === filter 
+                                ? "bg-primary/10 text-primary" 
+                                : "bg-muted text-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {filter}
+                          </button>
+                        ))}
+                    </div>
                 </div>
-              ) : paginatedRequests.map(request => (
-                <div key={request.id} className="border border-border rounded-lg hover:shadow-md transition-shadow p-2 sm:p-4 bg-card">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
-                      <div className="text-foreground font-semibold">{request.type}</div>
+
+                {/* Document Cards */}
+                <div className="space-y-3">
+                  {isLoading ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-3"></div>
+                      <p>Loading your document requests...</p>
                     </div>
-                    {getStatusBadge(request.status)}
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Requested by:</span>
-                      <span className="text-foreground font-medium">
-                        {request.profiles?.firstname && request.profiles?.lastname 
-                          ? `${request.profiles.firstname} ${request.profiles.lastname}` 
-                          : 'N/A'}
-                      </span>
+                  ) : documentRequests.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <FileX className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No document requests found</p>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Last update:</span>
-                      <span className="text-foreground">{formatDate(request.updated_at || request.created_at)}</span>
+                  ) : paginatedRequests.map(request => (
+                    <div key={request.id} className="border border-border rounded-lg hover:shadow-md transition-shadow p-4 bg-card">
+                        <div className="flex items-start justify-between mb-3">
+                            <div>
+                                <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
+                                <div className="text-foreground font-semibold">{request.type}</div>
+                            </div>
+                            {getStatusBadge(request.status)}
+                        </div>
+
+                        <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Requested by:</span>
+                                <span className="text-foreground font-medium">
+                                  {request.profiles?.firstname && request.profiles?.lastname 
+                                    ? `${request.profiles.firstname} ${request.profiles.lastname}` 
+                                    : 'N/A'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Last update:</span>
+                                <span className="text-foreground">{formatDate(request.updated_at || request.created_at)}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
+                            <button 
+                              onClick={() => {
+                                setSelectedRequest(request);
+                                setShowViewDialog(true);
+                              }}
+                              className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-base">visibility</span>
+                                View
+                            </button>
+                            {request.status === 'Request' && (
+                              <button 
+                                onClick={() => {
+                                  setEditingRequest(request);
+                                  setShowRequestModal(true);
+                                }}
+                                className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
+                              >
+                                  <span className="material-symbols-outlined text-base">edit</span>
+                                  Edit
+                              </button>
+                            )}
+                        </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
-                    <button 
-                      onClick={() => {
-                        setSelectedRequest(request);
-                        setShowViewDialog(true);
-                      }}
-                      className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
-                    >
-                      <Eye className="h-4 w-4" />
-                      View
-                    </button>
-                    {request.status === 'Request' && (
+                  ))}
+                </div>
+
+                {/* Simple Pagination */}
+                {requestsTotalPages > 1 && (
+                  <div className="flex justify-center mt-6 gap-1">
                       <button 
-                        onClick={() => {
-                          setEditingRequest(request);
-                          setShowRequestModal(true);
-                        }}
-                        className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
+                        onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)}
+                        disabled={requestsCurrentPage === 1}
+                        className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
                       >
-                        <Edit className="h-4 w-4" />
-                        Edit
+                          <span className="material-symbols-outlined">chevron_left</span>
                       </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Simple Pagination */}
-            {requestsTotalPages > 1 && (
-              <div className="flex justify-center mt-6 gap-1">
-                <button 
-                  onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)}
-                  disabled={requestsCurrentPage === 1}
-                  className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
-                >
-                  <ArrowRight className="h-4 w-4 rotate-180" />
-                </button>
-                {Array.from({ length: requestsTotalPages }, (_, i) => i + 1).map(page => (
-                  <button 
-                    key={page}
-                    onClick={() => handleRequestsPageChange(page)}
-                    className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${
-                      requestsCurrentPage === page 
-                        ? "bg-primary/10 text-primary" 
-                        : "hover:bg-accent"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                <button 
-                  onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)}
-                  disabled={requestsCurrentPage === requestsTotalPages}
-                  className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
-          
-          {/* Available Documents */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Available Documents</h2>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-border rounded-lg w-40 bg-background"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              {isLoadingTemplates ? (
-                <div className="text-center py-8 text-muted-foreground">Loading document templates...</div>
-              ) : paginatedTemplates.length > 0 ? (
-                paginatedTemplates.map(template => (
-                  <div key={template.id} className="border border-border rounded-lg p-4 hover:bg-accent/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
-                        <FileText className="h-4 w-4 text-blue-500" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-medium text-foreground text-sm truncate">{template.name}</h4>
-                        <p className="text-xs text-muted-foreground">₱{template.fee || 0}</p>
-                      </div>
+                      {Array.from({ length: requestsTotalPages }, (_, i) => i + 1).map(page => (
+                        <button 
+                          key={page}
+                          onClick={() => handleRequestsPageChange(page)}
+                          className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${
+                            requestsCurrentPage === page 
+                              ? "bg-primary/10 text-primary" 
+                              : "hover:bg-accent"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
                       <button 
-                        onClick={() => {
-                          setSelectedTemplate(template);
-                          setShowTemplateDialog(true);
-                        }}
-                        className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                        onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)}
+                        disabled={requestsCurrentPage === requestsTotalPages}
+                        className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
                       >
-                        <Eye className="h-4 w-4" />
+                          <span className="material-symbols-outlined">chevron_right</span>
                       </button>
-                    </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">No document templates found</div>
-              )}
+                )}
             </div>
-            
-            {/* Simple Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center mt-6 gap-1">
-                <button 
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
-                >
-                  <ArrowRight className="h-4 w-4 rotate-180" />
-                </button>
-                <button className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${currentPage === 1 ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>1</button>
-                {totalPages > 1 && <button className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${currentPage === 2 ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>2</button>}
-                <button 
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
+
+            {/* Available Documents */}
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold">Available Documents</h2>
+                    <div className="relative">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                            search
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2 border border-border rounded-lg w-40 bg-background"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                  {isLoadingTemplates ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading document templates...</div>
+                  ) : paginatedTemplates.length > 0 ? (
+                    paginatedTemplates.map(template => (
+                      <div key={template.id} className="border border-border rounded-lg p-4 hover:bg-accent/30 transition-colors">
+                          <div className="flex items-center gap-3">
+                              <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
+                                  <span className="material-symbols-outlined text-blue-500">description</span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                  <h4 className="font-medium text-foreground text-sm truncate">{template.name}</h4>
+                                  <p className="text-xs text-muted-foreground">₱{template.fee || 0}</p>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setSelectedTemplate(template);
+                                  setShowTemplateDialog(true);
+                                }}
+                                className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                              >
+                                  <span className="material-symbols-outlined text-lg">visibility</span>
+                              </button>
+                          </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">No document templates found</div>
+                  )}
+                </div>
+
+                {/* Simple Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-6 gap-1">
+                      <button 
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
+                      >
+                          <span className="material-symbols-outlined">chevron_left</span>
+                      </button>
+                      <button className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${currentPage === 1 ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>1</button>
+                      {totalPages > 1 && <button className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${currentPage === 2 ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>2</button>}
+                      <button 
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
+                      >
+                          <span className="material-symbols-outlined">chevron_right</span>
+                      </button>
+                  </div>
+                )}
+            </div>
           
           {/* Floating Action Button */}
           <button 
