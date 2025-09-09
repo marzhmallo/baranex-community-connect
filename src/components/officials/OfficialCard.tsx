@@ -13,14 +13,12 @@ interface OfficialCardProps {
   official: Official;
   currentTab?: string;
   currentSKTab?: string;
-  isMobile?: boolean;
 }
 
 const OfficialCard = ({
   official,
   currentTab,
-  currentSKTab,
-  isMobile = false
+  currentSKTab
 }: OfficialCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -148,7 +146,7 @@ const OfficialCard = ({
         <Dialog>
           <DialogTrigger asChild>
             <div 
-              className={`relative cursor-pointer ${isMobile ? 'h-32' : 'h-80'} overflow-hidden`} 
+              className="relative cursor-pointer h-80 overflow-hidden" 
               onMouseEnter={() => setIsHovered(true)} 
               onMouseLeave={() => setIsHovered(false)}
             >
@@ -160,8 +158,8 @@ const OfficialCard = ({
                 />
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">
-                  <Avatar className={`${isMobile ? 'h-16 w-16' : 'h-32 w-32'} bg-secondary text-secondary-foreground`}>
-                    <span className={`${isMobile ? 'text-lg' : 'text-3xl'} font-medium`}>
+                  <Avatar className="h-32 w-32 bg-secondary text-secondary-foreground">
+                    <span className="text-3xl font-medium">
                       {official.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                     </span>
                   </Avatar>
@@ -207,40 +205,38 @@ const OfficialCard = ({
         </Dialog>
       </div>
 
-      <div className={`${isMobile ? 'p-3' : 'p-6'} flex flex-col h-auto ${isMobile ? 'min-h-[180px]' : 'min-h-[300px]'}`}>
+      <div className="p-6 flex flex-col h-auto min-h-[300px]">
         {/* Official name and position */}
-        <h3 className={`font-bold ${isMobile ? 'text-base' : 'text-xl'} text-foreground mb-2 break-words`}>{official.name}</h3>
-        <p className={`text-primary ${isMobile ? 'mb-2 text-sm' : 'mb-4 text-base'} break-words`}>{getPosition()}</p>
+        <h3 className="font-bold text-xl text-foreground mb-2 break-words">{official.name}</h3>
+        <p className="text-primary mb-4 text-base break-words">{getPosition()}</p>
         
         {/* Description */}
-        {!isMobile && (
-          <div className="flex-grow mb-4">
-            <p className="text-muted-foreground text-sm leading-relaxed break-words">
-              {getShortDescription()}
-            </p>
-          </div>
-        )}
+        <div className="flex-grow mb-4">
+          <p className="text-muted-foreground text-sm leading-relaxed break-words">
+            {getShortDescription()}
+          </p>
+        </div>
         
         {/* Contact information */}
-        <div className={`${isMobile ? 'space-y-1 mb-2' : 'space-y-3 mb-4'}`}>
+        <div className="space-y-3 mb-4">
           {official.email && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Mail className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
-              <span className={`${isMobile ? 'text-xs' : 'text-sm'} break-all ${isMobile ? 'truncate' : ''}`}>{official.email}</span>
+              <Mail className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm break-all">{official.email}</span>
             </div>
           )}
           
           {official.phone && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Phone className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
-              <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>{official.phone}</span>
+              <Phone className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm">{official.phone}</span>
             </div>
           )}
         </div>
         
         {/* Term duration */}
-        <div className={`flex flex-col ${isMobile ? 'gap-2' : 'gap-3'} mt-auto`}>
-          <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
+        <div className="flex flex-col gap-3 mt-auto">
+          <div className="text-muted-foreground text-sm">
             <span className="font-medium">Term:</span> {formatDate(getTermStart())} - {formatDate(getTermEnd())}
           </div>
           
@@ -248,8 +244,8 @@ const OfficialCard = ({
           <div className="flex gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size={isMobile ? "sm" : "default"} className="bg-transparent border-border text-foreground hover:bg-accent hover:text-accent-foreground flex-1">
-                  <Eye className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} ${isMobile ? '' : 'mr-1'}`} /> {!isMobile && 'View'}
+                <Button variant="outline" className="bg-transparent border-border text-foreground hover:bg-accent hover:text-accent-foreground flex-1">
+                  <Eye className="w-4 h-4 mr-1" /> View
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-card border-border text-card-foreground max-w-2xl">

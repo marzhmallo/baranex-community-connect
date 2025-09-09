@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useBarangaySelection } from '@/hooks/useBarangaySelection';
-import { useIsMobile } from '@/hooks/use-mobile';
 import AnnouncementsList from '@/components/announcements/AnnouncementsList';
 import { Search, Users, FolderOpen, ArrowUpDown, Megaphone, CheckCircle, Calendar, AlertTriangle, Clock, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -34,10 +33,9 @@ const UserAnnouncementsPage = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { selectedBarangay } = useBarangaySelection();
-  const isMobile = useIsMobile();
   
-  // Get barangay ID from user's profile (for logged-in users) or URL params/selected barangay (for public access)
-  const barangayId = userProfile?.brgyid || searchParams.get('barangay') || selectedBarangay?.id;
+  // Get barangay ID from URL params (for public access), selected barangay (from localStorage), or user's barangay
+  const barangayId = searchParams.get('barangay') || selectedBarangay?.id || userProfile?.brgyid;
   
   // Debug logging for barangay ID resolution
   console.log('Announcements - barangayId resolution:', {
@@ -183,97 +181,80 @@ const UserAnnouncementsPage = () => {
       </div>;
   }
 
-  return <div className={`w-full min-h-screen bg-gradient-to-br from-background to-secondary/20 ${isMobile ? 'p-3' : 'p-6'}`}>
+  return <div className="w-full min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className={`${isMobile ? 'mb-4' : 'mb-8'}`}>
-          <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold text-foreground mb-2`}>Barangay Announcements</h1>
-          <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>Stay updated with community announcements and news</p>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-2">Barangay Announcements</h1>
+          <p className="text-muted-foreground">Stay updated with community announcements and news</p>
         </div>
 
-        {/* Collapsible Quick Stats for Mobile, Regular for Desktop */}
-        <div className={`bg-card border border-border rounded-xl shadow-lg ${isMobile ? 'p-3 mb-4' : 'p-6 mb-8'}`}>
-          <div className={`flex items-center justify-between ${isMobile ? 'mb-3 pb-2' : 'mb-6 pb-4'} border-b border-border`}>
-            <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-foreground`}>Quick Stats</h2>
+        <div className="bg-card border border-border rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+            <h2 className="text-2xl font-bold text-foreground">Quick Stats</h2>
           </div>
-          
-          {/* Mobile: Compact 2x2 Grid, Tablet: 2x2, Desktop: 1x4 */}
-          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6'}`}>
-            <div className={`bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg ${isMobile ? 'p-3' : 'p-4 lg:p-6'} text-white border border-blue-400/30`}>
-              <div className={`flex ${isMobile ? 'flex-col' : 'items-center justify-between'}`}>
-                <div className={isMobile ? 'mb-1' : ''}>
-                  <p className={`text-blue-100 ${isMobile ? 'text-xs' : 'text-sm'}`}>Total</p>
-                  <p className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold`}>{totalAnnouncements}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white border border-blue-400/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm">Total Announcements</p>
+                  <p className="text-3xl font-bold">{totalAnnouncements}</p>
                 </div>
-                {!isMobile && (
-                  <div className="p-2 bg-blue-400/20 rounded-lg border border-blue-300/30">
-                    <Megaphone className={`text-blue-200 ${isMobile ? 'h-5 w-5' : 'h-8 w-8 lg:h-10 lg:w-10'}`} />
-                  </div>
-                )}
+                <div className="p-2 bg-blue-400/20 rounded-lg border border-blue-300/30">
+                  <Megaphone className="text-blue-200 h-10 w-10" />
+                </div>
               </div>
             </div>
-            <div className={`bg-gradient-to-r from-green-500 to-green-600 rounded-lg ${isMobile ? 'p-3' : 'p-4 lg:p-6'} text-white border border-green-400/30`}>
-              <div className={`flex ${isMobile ? 'flex-col' : 'items-center justify-between'}`}>
-                <div className={isMobile ? 'mb-1' : ''}>
-                  <p className={`text-green-100 ${isMobile ? 'text-xs' : 'text-sm'}`}>Active</p>
-                  <p className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold`}>{activeAnnouncements}</p>
+            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white border border-green-400/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm">Active</p>
+                  <p className="text-3xl font-bold">{activeAnnouncements}</p>
                 </div>
-                {!isMobile && (
-                  <div className="p-2 bg-green-400/20 rounded-lg border border-green-300/30">
-                    <CheckCircle className={`text-green-200 ${isMobile ? 'h-5 w-5' : 'h-8 w-8 lg:h-10 lg:w-10'}`} />
-                  </div>
-                )}
+                <div className="p-2 bg-green-400/20 rounded-lg border border-green-300/30">
+                  <CheckCircle className="text-green-200 h-10 w-10" />
+                </div>
               </div>
             </div>
-            <div className={`bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg ${isMobile ? 'p-3' : 'p-4 lg:p-6'} text-white border border-yellow-400/30`}>
-              <div className={`flex ${isMobile ? 'flex-col' : 'items-center justify-between'}`}>
-                <div className={isMobile ? 'mb-1' : ''}>
-                  <p className={`text-yellow-100 ${isMobile ? 'text-xs' : 'text-sm'}`}>Pinned</p>
-                  <p className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold`}>{pinnedAnnouncements}</p>
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-6 text-white border border-yellow-400/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-yellow-100 text-sm">Pinned</p>
+                  <p className="text-3xl font-bold">{pinnedAnnouncements}</p>
                 </div>
-                {!isMobile && (
-                  <div className="p-2 bg-yellow-400/20 rounded-lg border border-yellow-300/30">
-                    <Calendar className={`text-yellow-200 ${isMobile ? 'h-5 w-5' : 'h-8 w-8 lg:h-10 lg:w-10'}`} />
-                  </div>
-                )}
+                <div className="p-2 bg-yellow-400/20 rounded-lg border border-yellow-300/30">
+                  <Calendar className="text-yellow-200 h-10 w-10" />
+                </div>
               </div>
             </div>
-            <div className={`bg-gradient-to-r from-red-500 to-red-600 rounded-lg ${isMobile ? 'p-3' : 'p-4 lg:p-6'} text-white border border-red-400/30`}>
-              <div className={`flex ${isMobile ? 'flex-col' : 'items-center justify-between'}`}>
-                <div className={isMobile ? 'mb-1' : ''}>
-                  <p className={`text-red-100 ${isMobile ? 'text-xs' : 'text-sm'}`}>Emergency</p>
-                  <p className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold`}>{emergencyAnnouncements}</p>
+            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white border border-red-400/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-100 text-sm">Emergency</p>
+                  <p className="text-3xl font-bold">{emergencyAnnouncements}</p>
                 </div>
-                {!isMobile && (
-                  <div className="p-2 bg-red-400/20 rounded-lg border border-red-300/30">
-                    <AlertTriangle className={`text-red-200 ${isMobile ? 'h-5 w-5' : 'h-8 w-8 lg:h-10 lg:w-10'}`} />
-                  </div>
-                )}
+                <div className="p-2 bg-red-400/20 rounded-lg border border-red-300/30">
+                  <AlertTriangle className="text-red-200 h-10 w-10" />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className={`bg-card border border-border rounded-xl shadow-lg ${isMobile ? 'p-3' : 'p-6'}`}>
-          <div className={`flex flex-col ${isMobile ? 'gap-3' : 'lg:flex-row gap-4'} items-start lg:items-center justify-between ${isMobile ? 'mb-4' : 'mb-6'}`}>
-            <div className={`${isMobile ? 'w-full' : 'flex-1 max-w-md'}`}>
+        <div className="bg-card border border-border rounded-xl shadow-lg p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
+            <div className="flex-1 max-w-md">
               <div className="relative">
-                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                <input 
-                  type="text" 
-                  placeholder="Search announcements..." 
-                  value={searchQuery} 
-                  onChange={e => setSearchQuery(e.target.value)} 
-                  className={`w-full ${isMobile ? 'pl-9 pr-3 py-2 text-sm' : 'pl-10 pr-4 py-3'} border border-border bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200`} 
-                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                <input type="text" placeholder="Search announcements..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-border bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200" />
               </div>
             </div>
             
-            <div className={`flex ${isMobile ? 'w-full justify-between gap-2' : 'flex-wrap gap-3'}`}>
+            <div className="flex flex-wrap gap-3">
               {/* Category Filter */}
               <div className="relative dropdown-container">
-                <button onClick={() => setOpenDropdown(openDropdown === 'category' ? null : 'category')} className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2'} rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border`}>
-                  <FolderOpen className={`text-secondary-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                  {isMobile ? 'Cat.' : 'Category'} {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+                <button onClick={() => setOpenDropdown(openDropdown === 'category' ? null : 'category')} className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
+                  <FolderOpen className="text-secondary-foreground h-4 w-4" />
+                  Category {selectedCategories.length > 0 && `(${selectedCategories.length})`}
                   <span className="text-muted-foreground">▼</span>
                 </button>
                 {openDropdown === 'category' && <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
@@ -294,9 +275,9 @@ const UserAnnouncementsPage = () => {
 
               {/* Visibility Filter */}
               <div className="relative dropdown-container">
-                <button onClick={() => setOpenDropdown(openDropdown === 'visibility' ? null : 'visibility')} className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2'} rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border`}>
-                  <Users className={`text-secondary-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                  {isMobile ? 'Vis.' : `Visibility${selectedVisibility ? `: ${getVisibilityLabel(selectedVisibility)}` : ''}`}
+                <button onClick={() => setOpenDropdown(openDropdown === 'visibility' ? null : 'visibility')} className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
+                  <Users className="text-secondary-foreground h-4 w-4" />
+                  Visibility {selectedVisibility && `: ${getVisibilityLabel(selectedVisibility)}`}
                   <span className="text-muted-foreground">▼</span>
                 </button>
                 {openDropdown === 'visibility' && <div className="absolute top-full left-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[180px]">
@@ -319,12 +300,9 @@ const UserAnnouncementsPage = () => {
 
               {/* Sort By */}
               <div className="relative dropdown-container">
-                <button onClick={() => setOpenDropdown(openDropdown === 'sort' ? null : 'sort')} className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2'} rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border`}>
-                  <ArrowUpDown className={`text-secondary-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                  {isMobile ? 
-                    (sortBy === 'newest' ? 'New' : sortBy === 'oldest' ? 'Old' : sortBy === 'priority' ? 'Pri' : sortBy === 'alphabetical' ? 'A-Z' : 'Cat') :
-                    `Sort: ${sortBy === 'newest' ? 'Newest First' : sortBy === 'oldest' ? 'Oldest First' : sortBy === 'priority' ? 'Priority' : sortBy === 'alphabetical' ? 'A-Z' : 'Category'}`
-                  }
+                <button onClick={() => setOpenDropdown(openDropdown === 'sort' ? null : 'sort')} className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors duration-200 flex items-center gap-2 border border-border">
+                  <ArrowUpDown className="text-secondary-foreground h-4 w-4" />
+                  Sort: {sortBy === 'newest' ? 'Newest First' : sortBy === 'oldest' ? 'Oldest First' : sortBy === 'priority' ? 'Priority' : sortBy === 'alphabetical' ? 'A-Z' : 'Category'}
                   <span className="text-muted-foreground">▼</span>
                 </button>
                 {openDropdown === 'sort' && <div className="absolute top-full right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[160px]">

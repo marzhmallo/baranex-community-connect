@@ -1,620 +1,1135 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
+import LocalizedLoadingScreen from "@/components/ui/LocalizedLoadingScreen";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import DocumentIssueForm from "@/components/documents/DocumentIssueForm";
+import DocumentRequestModal from "./DocumentRequestModal";
+import { FileText, Clock, CheckCircle, BarChart3, Package, Hourglass, Eye, XCircle, TrendingUp, Search, Plus, Filter, Download, Edit, Trash2, RefreshCw, FileX, History, PlusCircle, Bell, Upload, ArrowRight, Settings, MoreHorizontal, MessageCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+const UserDocumentsPage = () => {
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showIssueForm, setShowIssueForm] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
+  const [trackingSearchQuery, setTrackingSearchQuery] = useState("");
+  const [trackingFilter, setTrackingFilter] = useState("All Documents");
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingRequest, setEditingRequest] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const {
+    userProfile
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const queryClient = useQueryClient();
 
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, GraduationCap, Award, Briefcase, User, Users, Clock, Share, Check, X } from 'lucide-react';
-import { Official, OfficialPosition } from '@/lib/types';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+  // Define the enriched request type
+  type EnrichedDocumentRequest = {
+    id: string;
+    resident_id: string;
+    type: string;
+    status: string;
+    purpose: string;
+    docnumber: string;
+    created_at: string;
+    updated_at: string;
+    amount?: number;
+    method?: string;
+    notes?: string;
+    receiver?: any;
+    profiles?: {
+      id: string;
+      firstname: string;
+      lastname: string;
+    } | null;
+  } & Record<string, any>;
 
-const UserOfficialDetailsPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [isCoverPhotoModalOpen, setIsCoverPhotoModalOpen] = useState(false);
-  const [isProfilePhotoModalOpen, setIsProfilePhotoModalOpen] = useState(false);
+  // Initial data fetch with master loading state
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        const [documentsData, requestsData] = await Promise.all([
+        // Fetch document types
+        supabase.from('document_types').select('*').order('name'),
+        // Fetch user's document requests
+        userProfile?.id ? supabase.from('docrequests').select('*').eq('resident_id', userProfile.id).order('created_at', {
+          ascending: false
+        }) : {
+          data: [],
+          error: null
+        }]);
 
-  // Fetch official details with barangay information
-  const { data: official, isLoading: officialLoading } = useQuery({
-    queryKey: ['user-official-details', id],
-    queryFn: async () => {
-      if (!id) return null;
-      const { data, error } = await supabase
-        .from('officials')
-        .select(`
-          *,
-          barangays (
-            barangayname,
-            municipality,
-            province,
-            region
-          )
-        `)
-        .eq('id', id)
-        .maybeSingle();
-      if (error) throw error;
-      return data as Official & { barangays?: { barangayname: string; municipality: string; province: string; region: string } } | null;
+        // Initial loading is complete
+        setIsInitialLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setIsInitialLoading(false);
+      }
+    };
+    if (userProfile?.id) {
+      fetchAllData();
+    } else {
+      // If no user profile, still set loading to false
+      setIsInitialLoading(false);
+    }
+  }, [userProfile?.id]);
+
+  // Fetch user's document requests from Supabase with real-time updates
+  const {
+    data: documentRequests = [],
+    isLoading,
+    refetch
+  } = useQuery({
+    queryKey: ['user-document-requests', userProfile?.id],
+    queryFn: async (): Promise<EnrichedDocumentRequest[]> => {
+      if (!userProfile?.id) return [];
+
+      // First get all document requests for the user
+      const {
+        data: requests,
+        error: requestsError
+      } = await supabase.from('docrequests').select('*').eq('resident_id', userProfile.id).order('created_at', {
+        ascending: false
+      });
+      if (requestsError) throw requestsError;
+      if (!requests || requests.length === 0) return [];
+
+      // Get all unique resident IDs from the requests
+      const residentIds = [...new Set(requests.map(req => req.resident_id))];
+
+      // Fetch profile data for all resident IDs
+      const {
+        data: profiles,
+        error: profilesError
+      } = await supabase.from('profiles').select('id, firstname, lastname').in('id', residentIds);
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Still return requests even if profile fetch fails, just without profile data
+        return requests.map(request => ({
+          ...request,
+          profiles: null
+        }));
+      }
+
+      // Create a map of profile data for quick lookup
+      const profileMap = (profiles || []).reduce((acc: any, profile: any) => {
+        acc[profile.id] = profile;
+        return acc;
+      }, {});
+
+      // Combine requests with profile data
+      const enrichedRequests: EnrichedDocumentRequest[] = requests.map(request => ({
+        ...request,
+        profiles: profileMap[request.resident_id] || null
+      }));
+      return enrichedRequests;
     },
-    enabled: !!id
+    enabled: !!userProfile?.id
   });
 
-  // Fetch profile names for created by and updated by
-  const { data: profileNames, isLoading: profileNamesLoading } = useQuery({
-    queryKey: ['user-profile-names', official?.recordedby, official?.editedby],
-    queryFn: async () => {
-      if (!official?.recordedby && !official?.editedby) return { createdBy: null, editedBy: null };
-      
-      const profileIds = [official?.recordedby, official?.editedby].filter(Boolean);
-      if (profileIds.length === 0) return { createdBy: null, editedBy: null };
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, firstname, lastname')
-        .in('id', profileIds);
-      
-      if (error) throw error;
-      
-      const createdBy = data?.find(p => p.id === official?.recordedby);
-      const editedBy = data?.find(p => p.id === official?.editedby);
-      
-      return {
-        createdBy: createdBy ? `${createdBy.firstname || ''} ${createdBy.lastname || ''}`.trim() : null,
-        editedBy: editedBy ? `${editedBy.firstname || ''} ${editedBy.lastname || ''}`.trim() : null
-      };
-    },
-    enabled: !!(official?.recordedby || official?.editedby)
-  });
+  // Set up real-time subscription for user document requests
+  useEffect(() => {
+    if (!userProfile?.id) return;
+    const channel = supabase.channel('user-document-requests-realtime').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'docrequests',
+      filter: `resident_id=eq.${userProfile.id}`
+    }, () => {
+      // Refetch user's document requests when changes occur
+      refetch();
+    }).subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userProfile?.id, refetch]);
 
-  // Fetch positions for the official
-  const { data: positions, isLoading: positionsLoading } = useQuery({
-    queryKey: ['user-official-positions', id],
+  // Fetch document types from Supabase
+  const {
+    data: documentTypes = [],
+    isLoading: isLoadingTemplates
+  } = useQuery({
+    queryKey: ['document-types'],
     queryFn: async () => {
-      if (!id) return [];
-      const { data, error } = await supabase
-        .from('official_positions')
-        .select('*')
-        .eq('official_id', id)
-        .order('term_start', { ascending: false });
+      const {
+        data,
+        error
+      } = await supabase.from('document_types').select('*').order('name');
       if (error) throw error;
-      return data as OfficialPosition[];
-    },
-    enabled: !!id
+      return data || [];
+    }
   });
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(documentTypes.length / itemsPerPage);
+  const requestsPerPage = 4;
 
-  // Format date to readable format
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Present';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  // Filter document requests based on tracking filter and search query
+  const getFilteredRequests = () => {
+    let filteredByStatus = documentRequests;
+
+    // Apply status filter
+    if (trackingFilter !== "All Documents") {
+      filteredByStatus = documentRequests.filter(request => {
+        const status = request.status.toLowerCase();
+        switch (trackingFilter) {
+          case "Requests":
+            return status === "request" || status === "pending";
+          case "Processing":
+            return status === "processing" || status === "pending" || status === "for review";
+          case "Released":
+            return status === "released" || status === "completed";
+          case "Rejected":
+            return status === "rejected";
+          case "Ready":
+            return status === "ready for pickup" || status === "ready" || status === "approved";
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply search filter by tracking ID
+    if (trackingSearchQuery.trim()) {
+      filteredByStatus = filteredByStatus.filter(request => request.docnumber?.toLowerCase().includes(trackingSearchQuery.toLowerCase()));
+    }
+    return filteredByStatus;
+  };
+  const filteredRequests = getFilteredRequests();
+  const requestsTotalPages = Math.ceil(filteredRequests.length / requestsPerPage);
+
+  // Calculate paginated data using real Supabase data
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTemplates = documentTypes.slice(startIndex, endIndex);
+
+  // Calculate paginated document requests
+  const requestsStartIndex = (requestsCurrentPage - 1) * requestsPerPage;
+  const requestsEndIndex = requestsStartIndex + requestsPerPage;
+  const paginatedRequests = filteredRequests.slice(requestsStartIndex, requestsEndIndex);
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+  const handleRequestsPageChange = (page: number) => {
+    if (page >= 1 && page <= requestsTotalPages) {
+      setRequestsCurrentPage(page);
+    }
+  };
+  const getStatusBadge = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">Pending</Badge>;
+      case 'processing':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">Processing</Badge>;
+      case 'for review':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">For Review</Badge>;
+      case 'approved':
+      case 'ready for pickup':
+      case 'completed':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Ready for Pickup</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-50">Rejected</Badge>;
+      case 'released':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 hover:bg-purple-50">Released</Badge>;
+      default:
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 hover:bg-gray-50">{status}</Badge>;
+    }
   };
 
-  // Format date with time for record information
-  const formatDateTime = (dateString?: string) => {
-    if (!dateString) return 'Unknown';
-    return new Date(dateString).toLocaleString('en-US', {
+  // Helper function for case-insensitive status matching
+  const matchesStatus = (requestStatus: string, targetStatus: string): boolean => {
+    return requestStatus.toLowerCase() === targetStatus.toLowerCase();
+  };
+
+  // Helper function for case-insensitive multiple status matching
+  const matchesAnyStatus = (requestStatus: string, targetStatuses: string[]): boolean => {
+    return targetStatuses.some(status => matchesStatus(requestStatus, status));
+  };
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
-
-  // Format date for short display (e.g., "Jan 15, 2024") 
-  const formatShortDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  // Format achievements into bullet points
-  const formatAchievements = (achievements: any) => {
-    if (!achievements) return null;
-    let achievementItems: string[] = [];
-
-    if (Array.isArray(achievements)) {
-      achievementItems = achievements;
-    } else if (typeof achievements === 'object') {
-      achievementItems = Object.values(achievements).map(item => String(item));
-    } else if (typeof achievements === 'string') {
-      try {
-        const parsed = JSON.parse(achievements);
-        if (Array.isArray(parsed)) {
-          achievementItems = parsed;
-        } else if (typeof parsed === 'object') {
-          achievementItems = Object.values(parsed).map(item => String(item));
-        }
-      } catch {
-        achievementItems = [achievements];
-      }
-    }
-
-    if (achievementItems.length === 0) return null;
-    return (
-      <div className="space-y-4">
-        {achievementItems.map((achievement, i) => (
-          <div key={i} className="bg-card rounded-lg p-4 border-l-4 border-yellow-500 hover:shadow-md transition-all duration-300 border">
-            <div className="flex items-center space-x-3 mb-2">
-              <Award className="h-5 w-5 text-yellow-500" />
-              <h3 className="font-semibold text-card-foreground">{achievement}</h3>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Format committees into bullet points
-  const formatCommittees = (committees: any) => {
-    if (!committees) return null;
-    let committeeItems: string[] = [];
-
-    if (Array.isArray(committees)) {
-      committeeItems = committees;
-    } else if (typeof committees === 'object') {
-      committeeItems = Object.values(committees).map(item => String(item));
-    } else if (typeof committees === 'string') {
-      try {
-        const parsed = JSON.parse(committees);
-        if (Array.isArray(parsed)) {
-          committeeItems = parsed;
-        } else if (typeof parsed === 'object') {
-          committeeItems = Object.values(parsed).map(item => String(item));
-        }
-      } catch {
-        committeeItems = [committees];
-      }
-    }
-
-    if (committeeItems.length === 0) return null;
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {committeeItems.map((committee, i) => (
-          <div key={i} className="bg-card rounded-lg p-4 border-l-4 border-primary hover:shadow-md transition-all duration-300 hover:-translate-y-1 border">
-            <div className="flex items-center space-x-3 mb-2">
-              <Users className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold text-card-foreground">{committee}</h3>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Format education into bullet points
-  const formatEducation = (educ: any) => {
-    if (!educ) return null;
-    let educItems: string[] = [];
-
-    if (Array.isArray(educ)) {
-      educItems = educ;
-    } else if (typeof educ === 'object') {
-      educItems = Object.values(educ).map(item => String(item));
-    } else if (typeof educ === 'string') {
-      try {
-        const parsed = JSON.parse(educ);
-        if (Array.isArray(parsed)) {
-          educItems = parsed;
-        } else if (typeof parsed === 'object') {
-          educItems = Object.values(parsed).map(item => String(item));
-        }
-      } catch {
-        educItems = [educ];
-      }
-    }
-
-    if (educItems.length === 0) return null;
-    return (
-      <div className="space-y-4">
-        {educItems.map((education, i) => (
-          <div key={i} className="bg-card rounded-lg p-4 hover:shadow-md transition-all duration-300 border">
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <GraduationCap className="h-6 w-6 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-card-foreground">{education}</h3>
-                <p className="text-sm text-muted-foreground mt-1">Educational Achievement</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Filter positions into current and past
-  const currentPositions = positions?.filter(position => 
-    !position.term_end || new Date(position.term_end) >= new Date()
-  ) || [];
-  const pastPositions = positions?.filter(position => 
-    position.term_end && new Date(position.term_end) < new Date()
-  ) || [];
-
-  const handleShareClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Add share functionality here if needed
-  };
-
-  const handleCoverPhotoClick = (e: React.MouseEvent) => {
-    if (official?.coverurl) {
-      setIsCoverPhotoModalOpen(true);
-    }
-  };
-
-  const handleProfilePhotoClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (official?.photo_url) {
-      setIsProfilePhotoModalOpen(true);
-    }
-  };
-
-  const goBack = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(-1);
-  };
-
-  if (officialLoading) {
-    return (
-      <div className="w-full px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
-        <div className="bg-card rounded-2xl shadow-xl overflow-hidden border">
-          <Skeleton className="h-64 w-full" />
-          <div className="p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-4">
-                <Skeleton className="h-32" />
-                <Skeleton className="h-32" />
-              </div>
-              <div className="space-y-4">
-                <Skeleton className="h-32" />
-                <Skeleton className="h-32" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  if (isInitialLoading) {
+    return <div className="w-full p-6 bg-background min-h-screen relative">
+        <LocalizedLoadingScreen isLoading={isInitialLoading} />
+      </div>;
   }
-
-  if (!official) {
-    return (
-      <div className="w-full px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
-        <div className="bg-card rounded-2xl shadow-xl overflow-hidden p-8 text-center border">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">Official Not Found</h2>
-          <p className="mb-4 text-muted-foreground">The official you are looking for could not be found.</p>
-          <Button onClick={goBack} variant="outline">Go Back</Button>
-        </div>
+  return <div className="w-full p-6 bg-background min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Barangay Document Management</h1>
+        <p className="text-muted-foreground">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
-    );
-  }
 
-  // Get the current position from positions
-  const getCurrentPosition = () => {
-    if (currentPositions.length > 0) {
-      return currentPositions[0];
-    } else if (pastPositions.length > 0) {
-      return pastPositions[0];
-    } else {
-      return null;
-    }
-  };
-
-  const currentPosition = getCurrentPosition();
-
-  return (
-    <div className="w-full px-6 py-8 bg-gradient-to-br from-background to-muted/30 min-h-screen">
-      <div className="bg-card rounded-2xl shadow-xl overflow-hidden border">
-        {/* Header Section with Hero Background */}
-        <div 
-          className={`relative h-64 bg-gradient-to-r from-primary-600 to-primary-800 ${official?.coverurl ? 'cursor-pointer' : ''}`}
-          style={{
-            backgroundImage: official?.coverurl ? `url(${official.coverurl})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
-          onClick={handleCoverPhotoClick}
-        >
-          {/* Overlay for better text readability */}
-          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-          
-          <div className="absolute bottom-6 left-6 flex items-end space-x-6">
-            <div className="relative">
-              {official?.photo_url ? (
-                <img 
-                  src={official.photo_url} 
-                  alt={official.name}
-                  className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover cursor-pointer hover:opacity-90 transition-opacity duration-200"
-                  onClick={handleProfilePhotoClick}
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-muted flex items-center justify-center">
-                  <User className="h-16 w-16 text-muted-foreground" />
-                </div>
-              )}
-              <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center ${
-                currentPositions.length > 0 ? 'bg-green-500' : 'bg-red-500'
-              }`}>
-                {currentPositions.length > 0 ? (
-                  <Check className="h-4 w-4 text-white" />
-                ) : (
-                  <X className="h-4 w-4 text-white" />
-                )}
-              </div>
-            </div>
-            <div className="text-white pb-2">
-              <h1 className="text-3xl font-bold mb-1">{official?.name}</h1>
-              <p className="text-primary-100 text-lg">{currentPosition?.position || 'Barangay Official'}</p>
-              <p className="text-primary-200 text-sm">
-                {official.barangays ? 
-                  `${official.barangays.barangayname}, ${official.barangays.municipality}, ${official.barangays.province}, ${official.barangays.region}` 
-                  : currentPosition?.committee || 'Department'
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+        <div className="bg-card rounded-lg shadow-sm p-4 col-span-full border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              My Document Status
+            </h2>
+            <div className="flex gap-2">
+              <button onClick={async () => {
+                setIsRefreshing(true);
+                try {
+                  // Invalidate all queries to refresh all data
+                  await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
+                    queryClient.invalidateQueries({ queryKey: ['document-types'] })
+                  ]);
+                } finally {
+                  setIsRefreshing(false);
                 }
-              </p>
+              }} disabled={isRefreshing} className={`p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
             </div>
           </div>
-          <div className="absolute top-6 right-6 flex space-x-2">
-            <button 
-              onClick={handleShareClick}
-              className="header-action-button bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
-            >
-              <Share className="h-5 w-5" />
-            </button>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+            <div className="rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Requests</p>
+                <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
+                </p>
+              </div>
+              <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full">
+                <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Processing</p>
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
+                </p>
+              </div>
+              <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Ready to Pickup</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
+                </p>
+              </div>
+              <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Released</p>
+                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                  {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
+                </p>
+              </div>
+              <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full">
+                <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Rejected</p>
+                <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
+                </p>
+              </div>
+              <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full">
+                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
           </div>
-          <button 
-            onClick={goBack}
-            className="header-action-button absolute top-6 left-6 bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm rounded-full p-3 text-white hover:scale-105"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+          
+          <div className="flex justify-between items-center text-xs text-muted-foreground mb-2">
+            <span>Total Documents: {documentRequests.length}</span>
+            <span>Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
+          </div>
+          
+        </div>
+      </div>
+
+      <div className="mb-8 bg-card rounded-lg shadow-sm border border-border">
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Document Tracking System
+            </h2>
+            <div className="flex gap-3">
+              <Button onClick={() => setShowRequestModal(true)} className="bg-blue-600 text-white hover:bg-blue-700">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Request Document
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <input type="text" placeholder="Search by tracking ID..." value={trackingSearchQuery} onChange={e => setTrackingSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-64 bg-background text-foreground" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setTrackingFilter("All Documents")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "All Documents" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                All Documents
+              </button>
+              <button onClick={() => setTrackingFilter("Requests")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Requests" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Requests
+              </button>
+              <button onClick={() => setTrackingFilter("Processing")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Processing" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Processing
+              </button>
+              <button onClick={() => setTrackingFilter("Released")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Released" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Released
+              </button>
+              <button onClick={() => setTrackingFilter("Rejected")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Rejected" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Rejected
+              </button>
+              <button onClick={() => setTrackingFilter("Ready")} className={`px-3 py-1 rounded-full text-sm transition-colors ${trackingFilter === "Ready" ? "bg-primary/10 text-primary" : "bg-muted text-foreground hover:bg-muted/80"}`}>
+                Ready
+              </button>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tracking ID</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Requested By</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Update</th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-card divide-y divide-border">
+                {isLoading ? <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
+                      Loading your document requests...
+                    </td>
+                  </tr> : documentRequests.length === 0 ? <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
+                      No document requests found
+                    </td>
+                  </tr> : paginatedRequests.map(request => <tr key={request.id} className="hover:bg-accent transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
+                        {request.docnumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {request.type}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {request.profiles?.firstname && request.profiles?.lastname ? `${request.profiles.firstname} ${request.profiles.lastname}` : 'N/A'}
+                      </td>
+                       <td className="px-6 py-4 whitespace-nowrap">
+                         {getStatusBadge(request.status)}
+                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {formatDate(request.updated_at || request.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                         <div className="flex justify-end gap-2">
+                           <button onClick={() => {
+                      setSelectedRequest(request);
+                      setShowViewDialog(true);
+                    }} className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="View request details">
+                             <Eye className="h-4 w-4" />
+                           </button>
+                            <button onClick={() => {
+                      if (request.status === 'Request') {
+                        setEditingRequest(request);
+                        setShowRequestModal(true);
+                      }
+                    }} disabled={request.status !== 'Request'} className={`p-1 rounded transition-colors ${request.status === 'Request' ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' : 'text-muted-foreground/50 cursor-not-allowed'}`} title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}>
+                              <Edit className="h-4 w-4" />
+                            </button>
+                         </div>
+                      </td>
+                    </tr>)}
+              </tbody>
+            </table>
+          </div>
+          
+           {requestsTotalPages > 1 && <div className="mt-6 flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} requests
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} disabled={requestsCurrentPage === 1} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === 1 ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+                  Previous
+                </button>
+                <div className="flex">
+                  {Array.from({
+                length: requestsTotalPages
+              }, (_, i) => i + 1).map(page => <button key={page} onClick={() => handleRequestsPageChange(page)} className={`px-3 py-1 text-sm rounded-md font-medium ${requestsCurrentPage === page ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'}`}>
+                      {page}
+                    </button>)}
+                </div>
+                <button onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} disabled={requestsCurrentPage === requestsTotalPages} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${requestsCurrentPage === requestsTotalPages ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground hover:bg-accent'}`}>
+                  Next
+                </button>
+              </div>
+            </div>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card className="border-border">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <CardTitle className="text-foreground">Document Library</CardTitle>
+                <div className="flex items-center gap-3 ml-auto">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input placeholder="Search documents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-64 border-border bg-background text-foreground" />
+                  </div>
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setShowRequestModal(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Request Document
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Tabs value="all" className="w-full">
+                <div className="px-6 border-b border-border">
+                  
+                </div>
+
+                <TabsContent value="all" className="mt-0">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        
+                      </div>
+                      
+                    </div>
+
+                    <div className="space-y-3">
+                      {isLoadingTemplates ? <div className="text-center py-8 text-muted-foreground">Loading document templates...</div> : paginatedTemplates.length > 0 ? paginatedTemplates.map(template => <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                            <div className="flex items-center gap-4">
+                              <input type="checkbox" className="rounded border-border" />
+                              <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
+                                <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-foreground">{template.name}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {template.description} • Fee: ₱{template.fee || 0}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
+                              <button
+                                onClick={() => {
+                                  setSelectedTemplate(template);
+                                  setShowTemplateDialog(true);
+                                }}
+                                className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                                title="View template details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>) : <div className="text-center py-8 text-muted-foreground">No document templates found</div>}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6">
+                      
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(currentPage - 1);
+                          }} className={`hover:bg-accent cursor-pointer ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                          </PaginationItem>
+                          {Array.from({
+                          length: totalPages
+                        }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
+                              <PaginationLink onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }} isActive={currentPage === page} className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>)}
+                          <PaginationItem>
+                            <PaginationNext onClick={e => {
+                            e.preventDefault();
+                            handlePageChange(currentPage + 1);
+                          }} className={`hover:bg-accent cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          
+
         </div>
 
-        <div className="p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Main Content */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Biography Section */}
-              <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
-                <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
-                  <User className="text-primary mr-3 h-6 w-6" />
-                  Biography
-                </h2>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  {official?.bio || `${official?.name || 'This official'} is a dedicated public servant working for the betterment of the community.`}
-                </p>
-                <p className="text-muted-foreground leading-relaxed">
-                  Born and raised in the community, this official has dedicated their career to public service, focusing on sustainable development and community engagement initiatives. Their leadership has been recognized both locally and regionally.
-                </p>
-              </section>
-
-              {/* Committees Section */}
-              {official?.committees && (
-                <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
-                  <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
-                    <Users className="text-primary mr-3 h-6 w-6" />
-                    Committees
-                  </h2>
-                  {formatCommittees(official.committees)}
-                </section>
-              )}
-
-              {/* Education Section */}
-              {official?.educ && (
-                <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
-                  <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
-                    <GraduationCap className="text-primary mr-3 h-6 w-6" />
-                    Education
-                  </h2>
-                  {formatEducation(official.educ)}
-                </section>
-              )}
-
-              {/* Achievements Section */}
-              {official?.achievements && (
-                <section className="bg-muted/30 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 border">
-                  <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
-                    <Award className="text-primary mr-3 h-6 w-6" />
-                    Achievements & Awards
-                  </h2>
-                  {formatAchievements(official.achievements)}
-                </section>
-              )}
+        <div className="space-y-6">
+          <div className="mb-6 bg-card rounded-lg shadow-sm overflow-hidden border border-border">
+            <div className="p-6 border-b border-border">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Document Status Updates
+              </h2>
             </div>
+            <div className="p-0 overflow-visible">
+              <div className="relative">
+                <div className="p-6 relative z-10 overflow-visible">{/* removed z-index line */}
+                  {isLoading ? <div className="text-center py-8">
+                      <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">Loading updates...</p>
+                    </div> : documentRequests.length === 0 ? <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">No document updates yet</p>
+                    </div> : documentRequests.sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()).slice(0, 4).map((request, index) => {
+                  const isLast = index === Math.min(3, documentRequests.length - 1);
 
-            {/* Right Column - Sidebar */}
-            <div className="space-y-6">
-              {/* Current Position */}
-              <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
-                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
-                  <Briefcase className="text-primary mr-2 h-5 w-5" />
-                  Current Position
-                </h2>
-                <div className="space-y-4">
-                  {currentPositions.length > 0 ? (
-                    currentPositions.map(position => (
-                      <div key={position.id} className="bg-primary/10 rounded-lg p-4 border border-primary/20">
-                        <h3 className="font-semibold text-foreground mb-2">{position.position}</h3>
-                        {position.committee && (
-                          <p className="text-sm text-primary mb-2">{position.committee}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground mb-3">Since {formatDate(position.term_start)}</p>
-                        <div className="flex space-x-2">
-                          <span className="inline-block bg-primary/20 text-primary px-2 py-1 rounded-full text-xs">
-                            {position.sk ? 'SK' : 'Full-time'}
-                          </span>
-                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                            {position.tenure || 'Active'}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="bg-muted/30 rounded-lg p-4 border">
-                      <p className="text-muted-foreground text-sm">No current position found</p>
-                    </div>
-                  )}
+                  // Normalize status for better matching
+                  const normalizedStatus = request.status.toLowerCase();
+
+                  // Determine status display and styling
+                  let statusInfo;
+                  if (matchesAnyStatus(request.status, ['approved', 'ready for pickup', 'ready'])) {
+                    statusInfo = {
+                      text: 'Ready for Pickup',
+                      dotClass: 'bg-green-500',
+                      bgClass: 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800',
+                      badgeClass: 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200',
+                      description: 'You can now pick up your document at the barangay office.'
+                    };
+                  } else if (matchesAnyStatus(request.status, ['completed', 'released'])) {
+                    statusInfo = {
+                      text: 'Released',
+                      dotClass: 'bg-purple-500',
+                      bgClass: 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800',
+                      badgeClass: 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200',
+                      description: 'Your document has been successfully released.'
+                    };
+                  } else if (matchesStatus(request.status, 'processing')) {
+                    statusInfo = {
+                      text: 'Processing',
+                      dotClass: 'bg-blue-500',
+                      bgClass: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800',
+                      badgeClass: 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200',
+                      description: 'Please wait while we process your request.'
+                    };
+                  } else if (matchesStatus(request.status, 'rejected')) {
+                    statusInfo = {
+                      text: 'Rejected',
+                      dotClass: 'bg-red-500',
+                      bgClass: 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800',
+                      badgeClass: 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200',
+                      description: 'Please contact the office for more details.'
+                    };
+                  } else {
+                    statusInfo = {
+                      text: 'Pending',
+                      dotClass: 'bg-yellow-500',
+                      bgClass: 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800',
+                      badgeClass: 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200',
+                      description: 'Your request is being reviewed.'
+                    };
+                  }
+                  return <div key={request.id} className={`grid grid-cols-[auto_1fr] gap-4 ${!isLast ? 'mb-6' : ''}`}>
+                            <div className="flex flex-col items-center">
+                              <div className={`h-6 w-6 rounded-full ${statusInfo.dotClass} border-2 border-background shadow-md flex items-center justify-center`}>
+                                <div className="h-1.5 w-1.5 bg-background rounded-full"></div>
+                              </div>
+                              {!isLast && <div className="w-0.5 bg-border flex-1 mt-2"></div>}
+                            </div>
+                            <div className={`${statusInfo.bgClass} border p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
+                              <div className="mb-3">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="font-semibold text-foreground text-sm">
+                                    {request.type}
+                                  </h3>
+                                  <span className={`text-xs px-2 py-1 ${statusInfo.badgeClass} rounded-full font-medium`}>
+                                    {statusInfo.text}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-muted-foreground font-mono">
+                                  {request.docnumber}
+                                </p>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <p className="text-sm text-foreground">
+                                  <span className="font-medium">Purpose:</span> {request.purpose}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {statusInfo.description}
+                                </p>
+                                {request.notes && <div className="mt-3 p-3 bg-muted rounded-md border-l-4 border-primary">
+                                    <p className="text-xs text-muted-foreground font-medium mb-1">ADMIN NOTE</p>
+                                    <p className="text-xs text-foreground">{request.notes}</p>
+                                  </div>}
+                              </div>
+                              
+                              <div className="flex justify-end mt-3 pt-2 border-t border-border">
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDate(request.updated_at || request.created_at)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>;
+                })}
                 </div>
-              </section>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Past Positions */}
-              {pastPositions.length > 0 && (
-                <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
-                  <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
-                    <Clock className="text-muted-foreground mr-2 h-5 w-5" />
-                    Past Positions
-                  </h2>
-                  <div className="space-y-3">
-                    {pastPositions.map(position => (
-                      <div key={position.id} className="bg-muted/30 rounded-lg p-3 hover:bg-muted/50 transition-colors duration-200 border">
-                        <h4 className="font-medium text-foreground text-sm mb-1">{position.position}</h4>
-                        {position.committee && (
-                          <p className="text-xs text-muted-foreground mb-1">{position.committee}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">{formatDate(position.term_start)} - {formatDate(position.term_end)}</p>
-                      </div>
-                    ))}
+      {showIssueForm && <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border">
+            <DocumentIssueForm onClose={() => setShowIssueForm(false)} />
+          </div>
+        </div>}
+
+      {showRequestModal && <DocumentRequestModal onClose={() => {
+      setShowRequestModal(false);
+      setEditingRequest(null);
+    }} editingRequest={editingRequest} />}
+
+      {/* View Request Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader className="pb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-semibold">Document Request Details</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">Complete information about your document request</p>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          {selectedRequest && (
+            <div className="space-y-6">
+              {/* Status Banner */}
+              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">Current Status</h3>
+                      <p className="text-sm text-muted-foreground">Track your request progress</p>
+                    </div>
                   </div>
-                </section>
+                  {getStatusBadge(selectedRequest.status)}
+                </div>
+                
+                {/* Status Description */}
+                <div className="mt-3 p-3 bg-background rounded-md border border-border">
+                  <p className="text-sm text-foreground">
+                    {selectedRequest.status.toLowerCase() === 'pending' && 'Your request is being reviewed by the barangay office.'}
+                    {selectedRequest.status.toLowerCase() === 'processing' && 'Your document is currently being processed.'}
+                    {(selectedRequest.status.toLowerCase() === 'ready' || selectedRequest.status.toLowerCase() === 'approved') && 'Your document is ready for pickup at the barangay office.'}
+                    {selectedRequest.status.toLowerCase() === 'released' && 'Your document has been successfully released.'}
+                    {selectedRequest.status.toLowerCase() === 'rejected' && 'Your request has been rejected. Please check admin notes below.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Request Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <Package className="h-5 w-5 text-primary" />
+                    Request Information
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Tracking ID</Label>
+                      </div>
+                      <p className="text-lg font-mono font-semibold text-primary pl-6">{selectedRequest.docnumber}</p>
+                    </div>
+                    
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Document Type</Label>
+                      </div>
+                      <p className="text-sm text-foreground pl-6">{selectedRequest.type}</p>
+                    </div>
+                    
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Request Date</Label>
+                      </div>
+                      <p className="text-sm text-foreground pl-6">{formatDate(selectedRequest.created_at)}</p>
+                    </div>
+                    
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <History className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Last Updated</Label>
+                      </div>
+                      <p className="text-sm text-foreground pl-6">{formatDate(selectedRequest.updated_at || selectedRequest.created_at)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment & Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Payment & Details
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <BarChart3 className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Amount</Label>
+                      </div>
+                      <p className="text-lg font-semibold text-green-600 dark:text-green-400 pl-6">₱{selectedRequest.amount || 0}</p>
+                    </div>
+                    
+                    <div className="p-3 border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Package className="h-4 w-4 text-primary" />
+                        <Label className="text-sm font-medium text-foreground">Payment Method</Label>
+                      </div>
+                      <p className="text-sm text-foreground pl-6">{selectedRequest.method || 'Not specified'}</p>
+                    </div>
+                    
+                    {selectedRequest.ornumber && (
+                      <div className="p-3 border border-border rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FileText className="h-4 w-4 text-primary" />
+                          <Label className="text-sm font-medium text-foreground">OR Number</Label>
+                        </div>
+                        <p className="text-sm font-mono text-foreground pl-6">{selectedRequest.ornumber}</p>
+                      </div>
+                    )}
+                    
+                    {selectedRequest.paydate && (
+                      <div className="p-3 border border-border rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="h-4 w-4 text-primary" />
+                          <Label className="text-sm font-medium text-foreground">Payment Date</Label>
+                        </div>
+                        <p className="text-sm text-foreground pl-6">{formatDate(selectedRequest.paydate)}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Purpose Section */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <Label className="text-sm font-medium text-blue-800 dark:text-blue-200">Purpose</Label>
+                </div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 pl-6 leading-relaxed">{selectedRequest.purpose}</p>
+              </div>
+
+              {/* Recipient Information */}
+              {selectedRequest.receiver && (
+                <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <Label className="text-sm font-medium text-green-800 dark:text-green-200">Recipient Information</Label>
+                  </div>
+                  <p className="text-sm text-green-700 dark:text-green-300 pl-6">
+                    {typeof selectedRequest.receiver === 'object' ? selectedRequest.receiver.name : selectedRequest.receiver}
+                  </p>
+                </div>
+              )}
+
+              {/* Admin Notes */}
+              {selectedRequest.notes && (
+                <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bell className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <Label className="text-sm font-medium text-amber-800 dark:text-amber-200">Administrative Notes</Label>
+                  </div>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 pl-6 leading-relaxed">{selectedRequest.notes}</p>
+                </div>
               )}
 
               {/* Contact Information */}
-              <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
-                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
-                  <Mail className="text-muted-foreground mr-2 h-5 w-5" />
-                  Contact Information
-                </h2>
-                <div className="space-y-3">
-                  {official?.email && (
-                    <div className="flex items-center space-x-3 text-sm">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-foreground">{official.email}</span>
-                    </div>
-                  )}
-                  {official?.phone && (
-                    <div className="flex items-center space-x-3 text-sm">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-foreground">{official.phone}</span>
-                    </div>
-                  )}
-                  {official?.address && (
-                    <div className="flex items-center space-x-3 text-sm">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-foreground">{official.address}</span>
-                    </div>
-                  )}
-                  {official?.birthdate && (
-                    <div className="flex items-center space-x-3 text-sm">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-foreground">Born: {formatDate(official.birthdate)}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center space-x-3 text-sm">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">Mon-Fri, 9:00 AM - 5:00 PM</span>
+              {(selectedRequest.email || selectedRequest['contact#']) && (
+                <div className="p-4 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MessageCircle className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    <Label className="text-sm font-medium text-purple-800 dark:text-purple-200">Contact Information</Label>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                    {selectedRequest.email && (
+                      <div>
+                        <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">Email</Label>
+                        <p className="text-sm text-purple-600 dark:text-purple-300">{selectedRequest.email}</p>
+                      </div>
+                    )}
+                    {selectedRequest['contact#'] && (
+                      <div>
+                        <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">Contact Number</Label>
+                        <p className="text-sm text-purple-600 dark:text-purple-300">{selectedRequest['contact#']}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </section>
-
-              {/* Record Information */}
-              <section className="bg-card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border">
-                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
-                  <Clock className="text-muted-foreground mr-2 h-5 w-5" />
-                  Record Information
-                </h2>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Profile Created:</span>
-                    <span className="text-foreground font-medium">{formatShortDate(official.created_at)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Last Updated:</span>
-                    <span className="text-foreground font-medium">{formatShortDate(official.updated_at)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Created By:</span>
-                    <span className="text-foreground font-medium">
-                      {profileNames?.createdBy || (official.recordedby ? 'Admin User' : 'N/A')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Updated By:</span>
-                    <span className="text-foreground font-medium">
-                      {profileNames?.editedBy || (official.editedby ? 'Admin User' : 'N/A')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Status:</span>
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                      currentPositions.length > 0 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {currentPositions.length > 0 ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                  <div className="pt-3 border-t border-border">
-                    <button className="w-full bg-muted hover:bg-muted/80 text-foreground py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
-                      <Clock className="h-4 w-4" />
-                      <span>View Edit History</span>
-                    </button>
-                  </div>
-                </div>
-              </section>
+              )}
+              
+              {/* Action Buttons */}
+              <div className="flex justify-end pt-4 border-t border-border">
+                <Button onClick={() => setShowViewDialog(false)} className="px-6">
+                  Close
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Cover Photo Modal */}
-      <Dialog open={isCoverPhotoModalOpen} onOpenChange={setIsCoverPhotoModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0" hideCloseButton>
-          <div className="relative">
-            <button
-              onClick={() => setIsCoverPhotoModalOpen(false)}
-              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            {official?.coverurl && (
-              <img
-                src={official.coverurl}
-                alt={`${official.name} cover photo`}
-                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-              />
-            )}
-          </div>
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* Profile Photo Modal */}
-      <Dialog open={isProfilePhotoModalOpen} onOpenChange={setIsProfilePhotoModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0" hideCloseButton>
-          <div className="relative">
-            <button
-              onClick={() => setIsProfilePhotoModalOpen(false)}
-              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            {official?.photo_url && (
-              <img
-                src={official.photo_url}
-                alt={`${official.name} profile photo`}
-                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-              />
-            )}
-          </div>
+      {/* Edit Request Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Request</DialogTitle>
+          </DialogHeader>
+          {editingRequest && <EditRequestForm request={editingRequest} onSuccess={() => {
+          setShowEditDialog(false);
+          setEditingRequest(null);
+          refetch();
+        }} onCancel={() => {
+          setShowEditDialog(false);
+          setEditingRequest(null);
+        }} />}
         </DialogContent>
       </Dialog>
-    </div>
-  );
+
+      {/* Template Details Dialog */}
+      <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader className="pb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-semibold">Document Information</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">Complete details about this document template</p>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          {selectedTemplate && (
+            <div className="space-y-6">
+              {/* Main Document Info */}
+              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">{selectedTemplate.name}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {selectedTemplate.description || 'Official barangay document for various administrative purposes.'}
+                    </p>
+                  </div>
+                  <Badge className="bg-green-500 hover:bg-green-500 text-white ml-4">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Active
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Document Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Package className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium text-foreground">Document Type</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground pl-6">
+                      {selectedTemplate.type || 'Barangay Certificate'}
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium text-foreground">Processing Time</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground pl-6">
+                      {selectedTemplate.processing_time || '1-3 business days'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium text-foreground">Document Fee</Label>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground pl-6">₱{selectedTemplate.fee || 0}</p>
+                  </div>
+                  
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <History className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium text-foreground">Validity Period</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground pl-6">
+                      {selectedTemplate.validity_days 
+                        ? `${selectedTemplate.validity_days} days from issuance`
+                        : 'Indefinite'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              {(selectedTemplate.notes || selectedTemplate.usage) && (
+                <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bell className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <Label className="text-sm font-medium text-blue-800 dark:text-blue-200">Important Notes</Label>
+                  </div>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 pl-6">
+                    {selectedTemplate.notes || selectedTemplate.usage || 'Please ensure all requirements are complete before submitting your request.'}
+                  </p>
+                </div>
+              )}
+              
+              {/* Close Button */}
+              <div className="flex justify-end pt-4 border-t border-border">
+                <Button onClick={() => setShowTemplateDialog(false)} className="px-6">
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>;
 };
 
-export default UserOfficialDetailsPage;
+// Edit Request Form Component
+const EditRequestForm = ({
+  request,
+  onSuccess,
+  onCancel
+}: {
+  request: any;
+  onSuccess: () => void;
+  onCancel: () => void;
+}) => {
+  const [purpose, setPurpose] = useState(request.purpose || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    toast
+  } = useToast();
+  const updateRequest = useMutation({
+    mutationFn: async (data: any) => {
+      const {
+        error
+      } = await supabase.from('docrequests').update(data).eq('id', request.id);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Request updated successfully"
+      });
+      onSuccess();
+    },
+    onError: error => {
+      console.error('Error updating request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update request",
+        variant: "destructive"
+      });
+    }
+  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!purpose.trim()) return;
+    setIsSubmitting(true);
+    try {
+      await updateRequest.mutateAsync({
+        purpose: purpose.trim(),
+        updated_at: new Date().toISOString()
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  return <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label className="text-sm font-medium">Document Type</Label>
+        <p className="text-sm text-muted-foreground mt-1">{request.type}</p>
+      </div>
+      <div>
+        <Label htmlFor="purpose" className="text-sm font-medium">Purpose *</Label>
+        <Textarea id="purpose" value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Enter the purpose for this document..." className="mt-2 min-h-[100px]" required />
+      </div>
+      <div className="flex justify-end gap-3 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isSubmitting || !purpose.trim()}>
+          {isSubmitting ? 'Updating...' : 'Update Request'}
+        </Button>
+      </div>
+    </form>;
+};
+export default UserDocumentsPage;
