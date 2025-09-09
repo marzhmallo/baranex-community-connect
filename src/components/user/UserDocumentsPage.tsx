@@ -278,161 +278,717 @@ const UserDocumentsPage = () => {
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
       </div>;
   }
-  return <div className="w-full p-4 md:p-6 bg-gradient-to-br from-background via-background to-muted/20 min-h-screen">
-      {/* Mobile-first Header */}
-      <div className="mb-8">
-        <div className="relative">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-            Documents
-          </h1>
-          <div className="absolute -bottom-1 left-0 h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
-        </div>
-        <p className="text-muted-foreground hidden md:block mt-3 text-lg">Manage official documents, requests, and issuances for the barangay community</p>
-      </div>
-
-      {/* Status Cards - Horizontal Scroll on Mobile */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-foreground flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 shadow-lg">
-              <TrendingUp className="h-6 w-6 text-primary" />
+return <div className="w-full bg-background">
+      {/* Mobile Version */}
+      <div className="md:hidden">
+        <div className="p-4">
+          <h1 className="text-2xl font-bold mb-2">Documents</h1>
+          
+          {/* Status Overview Cards - Horizontal Scrolling */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Status Overview
+              </h2>
+              <button onClick={async () => {
+                setIsRefreshing(true);
+                try {
+                  await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
+                    queryClient.invalidateQueries({ queryKey: ['document-types'] })
+                  ]);
+                } finally {
+                  setIsRefreshing(false);
+                }
+              }} disabled={isRefreshing} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
             </div>
-            Status Overview
-          </h2>
-          <button onClick={async () => {
-            setIsRefreshing(true);
-            try {
-              await Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
-                queryClient.invalidateQueries({ queryKey: ['document-types'] })
-              ]);
-            } finally {
-              setIsRefreshing(false);
-            }
-          }} disabled={isRefreshing} className={`p-3 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-xl transition-all duration-200 hover:shadow-md ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
-            <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            
+            {/* Horizontal Scrolling Cards */}
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
+              <div className="min-w-[120px] snap-start rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex flex-col items-center text-center">
+                <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full mb-2">
+                  <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <p className="text-xs text-muted-foreground">Requests</p>
+                <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
+                </p>
+              </div>
+              
+              <div className="min-w-[120px] snap-start rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex flex-col items-center text-center">
+                <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full mb-2">
+                  <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-xs text-muted-foreground">Processing</p>
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
+                </p>
+              </div>
+              
+              <div className="min-w-[120px] snap-start rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex flex-col items-center text-center">
+                <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full mb-2">
+                  <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <p className="text-xs text-muted-foreground">Ready</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
+                </p>
+              </div>
+              
+              <div className="min-w-[120px] snap-start rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex flex-col items-center text-center">
+                <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full mb-2">
+                  <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <p className="text-xs text-muted-foreground">Released</p>
+                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                  {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
+                </p>
+              </div>
+              
+              <div className="min-w-[120px] snap-start rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex flex-col items-center text-center">
+                <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full mb-2">
+                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                </div>
+                <p className="text-xs text-muted-foreground">Rejected</p>
+                <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
+                </p>
+              </div>
+            </div>
+            
+            <div className="text-xs text-muted-foreground mt-2">
+              Total: {documentRequests.length}
+            </div>
+          </div>
+          
+          {/* Document Tracking */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                My Requests
+              </h2>
+            </div>
+            
+            {/* Search and Filters */}
+            <div className="space-y-3 mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Search by tracking ID..."
+                  value={trackingSearchQuery}
+                  onChange={e => setTrackingSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-border rounded-lg w-full bg-background"
+                />
+              </div>
+              
+              <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
+                {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
+                  <button 
+                    key={filter}
+                    onClick={() => setTrackingFilter(filter)}
+                    className={`snap-start px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${
+                      trackingFilter === filter 
+                        ? "bg-primary/10 text-primary" 
+                        : "bg-muted text-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Document Cards */}
+            <div className="space-y-3">
+              {isLoading ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-3"></div>
+                  <p>Loading your document requests...</p>
+                </div>
+              ) : documentRequests.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileX className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No document requests found</p>
+                </div>
+              ) : paginatedRequests.map(request => (
+                <div key={request.id} className="border border-border rounded-lg hover:shadow-md transition-shadow p-4 bg-card">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
+                      <div className="text-foreground font-semibold">{request.type}</div>
+                    </div>
+                    {getStatusBadge(request.status)}
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Requested by:</span>
+                      <span className="text-foreground font-medium">
+                        {request.profiles?.firstname && request.profiles?.lastname 
+                          ? `${request.profiles.firstname} ${request.profiles.lastname}` 
+                          : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Last update:</span>
+                      <span className="text-foreground">{formatDate(request.updated_at || request.created_at)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
+                    <button 
+                      onClick={() => {
+                        setSelectedRequest(request);
+                        setShowViewDialog(true);
+                      }}
+                      className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
+                    >
+                      <Eye className="h-4 w-4" />
+                      View
+                    </button>
+                    {request.status === 'Request' && (
+                      <button 
+                        onClick={() => {
+                          setEditingRequest(request);
+                          setShowRequestModal(true);
+                        }}
+                        className="px-3 py-1 text-sm rounded-md bg-transparent hover:bg-accent flex items-center gap-1 transition-colors"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Simple Pagination */}
+            {requestsTotalPages > 1 && (
+              <div className="flex justify-center mt-6 gap-1">
+                <button 
+                  onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)}
+                  disabled={requestsCurrentPage === 1}
+                  className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
+                >
+                  <ArrowRight className="h-4 w-4 rotate-180" />
+                </button>
+                {Array.from({ length: requestsTotalPages }, (_, i) => i + 1).map(page => (
+                  <button 
+                    key={page}
+                    onClick={() => handleRequestsPageChange(page)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${
+                      requestsCurrentPage === page 
+                        ? "bg-primary/10 text-primary" 
+                        : "hover:bg-accent"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button 
+                  onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)}
+                  disabled={requestsCurrentPage === requestsTotalPages}
+                  className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Available Documents */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Available Documents</h2>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-border rounded-lg w-40 bg-background"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              {isLoadingTemplates ? (
+                <div className="text-center py-8 text-muted-foreground">Loading document templates...</div>
+              ) : paginatedTemplates.length > 0 ? (
+                paginatedTemplates.map(template => (
+                  <div key={template.id} className="border border-border rounded-lg p-4 hover:bg-accent/30 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
+                        <FileText className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-foreground text-sm truncate">{template.name}</h4>
+                        <p className="text-xs text-muted-foreground">₱{template.fee || 0}</p>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          setSelectedTemplate(template);
+                          setShowTemplateDialog(true);
+                        }}
+                        className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">No document templates found</div>
+              )}
+            </div>
+            
+            {/* Simple Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-6 gap-1">
+                <button 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
+                >
+                  <ArrowRight className="h-4 w-4 rotate-180" />
+                </button>
+                <button className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${currentPage === 1 ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>1</button>
+                {totalPages > 1 && <button className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${currentPage === 2 ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>2</button>}
+                <button 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Floating Action Button */}
+          <button 
+            onClick={() => setShowRequestModal(true)}
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg flex items-center justify-center z-40 transform hover:scale-105 transition-all duration-200"
+          >
+            <Plus className="h-6 w-6" />
           </button>
         </div>
-        
-        {/* Horizontal Scrolling Status Cards */}
-        <div className="flex gap-6 overflow-x-auto pb-4 md:grid md:grid-cols-5 md:overflow-visible">
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
-            <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-              <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+      </div>
+      
+      {/* Tablet Version - Hidden on Mobile */}
+      <div className="hidden md:block lg:hidden">
+        <div className="p-6">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-1">Documents</h1>
+            <p className="text-sm text-muted-foreground">Manage official documents, requests, and issuances for the barangay community</p>
+          </div>
+          
+          {/* Status Overview Grid */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Status Overview
+              </h2>
+              <button onClick={async () => {
+                setIsRefreshing(true);
+                try {
+                  await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
+                    queryClient.invalidateQueries({ queryKey: ['document-types'] })
+                  ]);
+                } finally {
+                  setIsRefreshing(false);
+                }
+              }} disabled={isRefreshing} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-5 gap-4">
+              <div className="rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-4 flex flex-col items-center text-center">
+                <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2.5 rounded-full mb-3">
+                  <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <p className="text-xs text-muted-foreground mb-1">Requests</p>
+                <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground font-medium mb-1">Requests</p>
-              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
-                {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
-              </p>
+              
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-4 flex flex-col items-center text-center">
+                <div className="bg-blue-100 dark:bg-blue-900/50 p-2.5 rounded-full mb-3">
+                  <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-xs text-muted-foreground mb-1">Processing</p>
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
+                </p>
+              </div>
+              
+              <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-4 flex flex-col items-center text-center">
+                <div className="bg-green-100 dark:bg-green-900/50 p-2.5 rounded-full mb-3">
+                  <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <p className="text-xs text-muted-foreground mb-1">Ready</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
+                </p>
+              </div>
+              
+              <div className="rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-4 flex flex-col items-center text-center">
+                <div className="bg-purple-100 dark:bg-purple-900/50 p-2.5 rounded-full mb-3">
+                  <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <p className="text-xs text-muted-foreground mb-1">Released</p>
+                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                  {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
+                </p>
+              </div>
+              
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-4 flex flex-col items-center text-center">
+                <div className="bg-red-100 dark:bg-red-900/50 p-2.5 rounded-full mb-3">
+                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                </div>
+                <p className="text-xs text-muted-foreground mb-1">Rejected</p>
+                <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-between items-center text-xs text-muted-foreground mt-3">
+              <span>Total: {documentRequests.length}</span>
+              <span>Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
             </div>
           </div>
           
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
-            <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-200/50 dark:border-blue-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-              <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                <Hourglass className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          {/* Document Tracking and Available Documents */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Document Tracking */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Document Tracking
+                </h2>
+                <Button 
+                  onClick={() => setShowRequestModal(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Request Document
+                </Button>
               </div>
-              <p className="text-xs text-muted-foreground font-medium mb-1">Processing</p>
-              <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-                {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
-              </p>
+              
+              {/* Search and Filters */}
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <input
+                    type="text"
+                    placeholder="Search by tracking ID..."
+                    value={trackingSearchQuery}
+                    onChange={e => setTrackingSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-border rounded-lg w-full bg-background"
+                  />
+                </div>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-1">
+                      <Filter className="h-4 w-4" />
+                      <span>Filter</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
+                      <DropdownMenuItem 
+                        key={filter}
+                        onClick={() => setTrackingFilter(filter)}
+                        className={trackingFilter === filter ? "bg-primary/10 text-primary" : ""}
+                      >
+                        {filter}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              
+              {/* Table View */}
+              <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-card divide-y divide-border">
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-2"></div>
+                          <p>Loading...</p>
+                        </td>
+                      </tr>
+                    ) : paginatedRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No requests found</td>
+                      </tr>
+                    ) : (
+                      paginatedRequests.map(request => (
+                        <tr key={request.id} className="hover:bg-accent/50 transition-colors">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-primary">#{request.docnumber}</td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm">{request.type}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {getStatusBadge(request.status)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                            <div className="flex justify-end gap-1">
+                              <button 
+                                onClick={() => {
+                                  setSelectedRequest(request);
+                                  setShowViewDialog(true);
+                                }}
+                                className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                              {request.status === 'Request' && (
+                                <button 
+                                  onClick={() => {
+                                    setEditingRequest(request);
+                                    setShowRequestModal(true);
+                                  }}
+                                  className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            {/* Available Documents */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Available Documents</h2>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-border rounded-lg w-48 bg-background"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                {isLoadingTemplates ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                ) : paginatedTemplates.length > 0 ? (
+                  paginatedTemplates.map(template => (
+                    <div key={template.id} className="border border-border rounded-lg p-4 hover:bg-accent/30 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20">
+                          <FileText className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-medium text-foreground text-sm truncate">{template.name}</h4>
+                          <p className="text-xs text-muted-foreground">₱{template.fee || 0}</p>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setSelectedTemplate(template);
+                            setShowTemplateDialog(true);
+                          }}
+                          className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">No documents found</div>
+                )}
+              </div>
             </div>
           </div>
-          
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
-            <div className="rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border border-green-200/50 dark:border-green-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-              <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <p className="text-xs text-muted-foreground font-medium mb-1">Ready</p>
-              <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-                {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
-              </p>
-            </div>
-          </div>
-          
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
-            <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-              <div className="bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <p className="text-xs text-muted-foreground font-medium mb-1">Released</p>
-              <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
-                {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
-              </p>
-            </div>
-          </div>
-          
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
-            <div className="rounded-2xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20 border border-red-200/50 dark:border-red-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-              <div className="bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
-              </div>
-              <p className="text-xs text-muted-foreground font-medium mb-1">Rejected</p>
-              <p className="text-2xl font-bold text-red-700 dark:text-red-400">
-                {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-between items-center text-sm text-muted-foreground mt-6 p-4 bg-card/50 rounded-xl border border-border/50 backdrop-blur-sm">
-          <span className="font-medium">Total Documents: <span className="text-primary font-bold">{documentRequests.length}</span></span>
-          <span className="hidden md:block">Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
         </div>
       </div>
 
-      {/* Document Tracking - Mobile Card Layout */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-foreground flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 shadow-lg">
-              <BarChart3 className="h-6 w-6 text-primary" />
-            </div>
-            <span className="hidden md:inline">Document Tracking System</span>
-            <span className="md:hidden">My Requests</span>
-          </h2>
-          {/* Desktop Request Button - Hidden on Mobile */}
-          <Button 
-            onClick={() => setShowRequestModal(true)} 
-            className="hidden md:flex bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Request Document
-          </Button>
-        </div>
-
-        {/* Mobile-first Search and Filters */}
-        <div className="space-y-4 md:space-y-0 md:flex md:items-center md:justify-between md:gap-6 mb-6">
+      {/* Desktop Version - Starts from lg: breakpoint */}
+      <div className="hidden lg:block w-full p-4 md:p-6 bg-gradient-to-br from-background via-background to-muted/20 min-h-screen">
+        {/* Desktop Header */}
+        <div className="mb-8">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-            <input 
-              type="text" 
-              placeholder="Search by tracking ID..." 
-              value={trackingSearchQuery} 
-              onChange={e => setTrackingSearchQuery(e.target.value)} 
-              className="pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 w-full bg-card/50 text-foreground backdrop-blur-sm shadow-sm hover:shadow-md" 
-            />
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+              Documents
+            </h1>
+            <div className="absolute -bottom-1 left-0 h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
           </div>
+          <p className="text-muted-foreground mt-3 text-lg">Manage official documents, requests, and issuances for the barangay community</p>
+        </div>
 
-          {/* Simplified Mobile Filters */}
-          <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0 md:flex-wrap">
-            {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
-              <button 
-                key={filter}
-                onClick={() => setTrackingFilter(filter)} 
-                className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-200 font-medium shadow-sm hover:shadow-md ${
-                  trackingFilter === filter 
-                    ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-lg transform scale-105" 
-                    : "bg-card/70 text-foreground hover:bg-accent/50 border border-border/50"
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
+        {/* Desktop Status Cards */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 shadow-lg">
+                <TrendingUp className="h-6 w-6 text-primary" />
+              </div>
+              Status Overview
+            </h2>
+            <button onClick={async () => {
+              setIsRefreshing(true);
+              try {
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
+                  queryClient.invalidateQueries({ queryKey: ['document-types'] })
+                ]);
+              } finally {
+                setIsRefreshing(false);
+              }
+            }} disabled={isRefreshing} className={`p-3 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-xl transition-all duration-200 hover:shadow-md ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
+              <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+          
+          {/* Desktop Grid Status Cards */}
+          <div className="grid grid-cols-5 gap-6">
+            <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+              <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                  <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <p className="text-xs text-muted-foreground font-medium mb-1">Requests</p>
+                <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
+                </p>
+              </div>
+            </div>
+            
+            <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+              <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-200/50 dark:border-blue-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                  <Hourglass className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-xs text-muted-foreground font-medium mb-1">Processing</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
+                </p>
+              </div>
+            </div>
+            
+            <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+              <div className="rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border border-green-200/50 dark:border-green-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                  <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <p className="text-xs text-muted-foreground font-medium mb-1">Ready</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
+                </p>
+              </div>
+            </div>
+            
+            <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+              <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                  <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <p className="text-xs text-muted-foreground font-medium mb-1">Released</p>
+                <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
+                  {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
+                </p>
+              </div>
+            </div>
+            
+            <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+              <div className="rounded-2xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20 border border-red-200/50 dark:border-red-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                  <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                </div>
+                <p className="text-xs text-muted-foreground font-medium mb-1">Rejected</p>
+                <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+                  {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center text-sm text-muted-foreground mt-6 p-4 bg-card/50 rounded-xl border border-border/50 backdrop-blur-sm">
+            <span className="font-medium">Total Documents: <span className="text-primary font-bold">{documentRequests.length}</span></span>
+            <span>Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
           </div>
         </div>
+
+        {/* Desktop Document Tracking */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 shadow-lg">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
+              Document Tracking System
+            </h2>
+            <Button 
+              onClick={() => setShowRequestModal(true)} 
+              className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Request Document
+            </Button>
+          </div>
+
+          {/* Desktop Search and Filters */}
+          <div className="flex items-center justify-between gap-6 mb-6">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+              <input 
+                type="text" 
+                placeholder="Search by tracking ID..." 
+                value={trackingSearchQuery} 
+                onChange={e => setTrackingSearchQuery(e.target.value)} 
+                className="pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 w-full bg-card/50 text-foreground backdrop-blur-sm shadow-sm hover:shadow-md" 
+              />
+            </div>
+
+            <div className="flex gap-3 flex-wrap">
+              {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
+                <button 
+                  key={filter}
+                  onClick={() => setTrackingFilter(filter)} 
+                  className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-200 font-medium shadow-sm hover:shadow-md ${
+                    trackingFilter === filter 
+                      ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-lg transform scale-105" 
+                      : "bg-card/70 text-foreground hover:bg-accent/50 border border-border/50"
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </div>
         
         {/* Card Feed for Mobile, Table for Desktop */}
         <div className="md:hidden space-y-4">
@@ -506,8 +1062,370 @@ const UserDocumentsPage = () => {
             </Card>
           ))}
         </div>
+          
+          {/* Desktop Table - Hidden on Mobile */}
+          <div className="bg-gradient-to-br from-card/80 to-card/40 rounded-2xl shadow-lg border border-border/50 overflow-hidden backdrop-blur-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border/30">
+                <thead className="bg-gradient-to-r from-muted/50 to-muted/30">
+                  <tr>
+                    <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Tracking ID</th>
+                    <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Document</th>
+                    <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Requested By</th>
+                    <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</th>
+                    <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Last Update</th>
+                    <th scope="col" className="px-8 py-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-card/30 divide-y divide-border/20">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={6} className="px-8 py-12 text-center text-muted-foreground">
+                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-3"></div>
+                        <p>Loading your document requests...</p>
+                      </td>
+                    </tr>
+                  ) : documentRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-8 py-12 text-center text-muted-foreground">
+                        <FileX className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p>No document requests found</p>
+                      </td>
+                    </tr>
+                  ) : paginatedRequests.map(request => (
+                    <tr key={request.id} className="hover:bg-accent/30 transition-all duration-200 group">
+                      <td className="px-8 py-6 whitespace-nowrap text-sm font-mono text-primary font-bold group-hover:text-primary/80">
+                        {request.docnumber}
+                      </td>
+                      <td className="px-8 py-6 whitespace-nowrap text-sm text-foreground font-medium">
+                        {request.type}
+                      </td>
+                      <td className="px-8 py-6 whitespace-nowrap text-sm text-foreground">
+                        {request.profiles?.firstname && request.profiles?.lastname 
+                          ? `${request.profiles.firstname} ${request.profiles.lastname}` 
+                          : 'N/A'}
+                      </td>
+                      <td className="px-8 py-6 whitespace-nowrap">
+                        {getStatusBadge(request.status)}
+                      </td>
+                      <td className="px-8 py-6 whitespace-nowrap text-sm text-muted-foreground">
+                        {formatDate(request.updated_at || request.created_at)}
+                      </td>
+                      <td className="px-8 py-6 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end gap-3">
+                          <button 
+                            onClick={() => {
+                              setSelectedRequest(request);
+                              setShowViewDialog(true);
+                            }} 
+                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200 hover:shadow-md" 
+                            title="View request details"
+                          >
+                            <Eye className="h-5 w-5" />
+                          </button>
+                          <button 
+                            onClick={() => {
+                              if (request.status === 'Request') {
+                                setEditingRequest(request);
+                                setShowRequestModal(true);
+                              }
+                            }} 
+                            disabled={request.status !== 'Request'} 
+                            className={`p-2 rounded-xl transition-all duration-200 ${
+                              request.status === 'Request' 
+                                ? 'text-muted-foreground hover:text-secondary hover:bg-secondary/10 hover:shadow-md' 
+                                : 'text-muted-foreground/30 cursor-not-allowed'
+                            }`} 
+                            title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}
+                          >
+                            <Edit className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          {/* Pagination */}
+          {requestsTotalPages > 1 && (
+            <div className="mt-4 flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} requests
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} 
+                  disabled={requestsCurrentPage === 1} 
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    requestsCurrentPage === 1 
+                      ? 'text-muted-foreground cursor-not-allowed' 
+                      : 'text-foreground hover:bg-accent'
+                  }`}
+                >
+                  Previous
+                </button>
+                <div className="flex">
+                  {Array.from({ length: requestsTotalPages }, (_, i) => i + 1).map(page => (
+                    <button 
+                      key={page} 
+                      onClick={() => handleRequestsPageChange(page)} 
+                      className={`px-3 py-1 text-sm rounded-md font-medium ${
+                        requestsCurrentPage === page 
+                          ? 'bg-primary/10 text-primary' 
+                          : 'text-foreground hover:bg-accent'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} 
+                  disabled={requestsCurrentPage === requestsTotalPages} 
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    requestsCurrentPage === requestsTotalPages 
+                      ? 'text-muted-foreground cursor-not-allowed' 
+                      : 'text-foreground hover:bg-accent'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
-        {/* Desktop Table - Hidden on Mobile */}
+        {/* Document Library */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card className="border-border">
+              <CardHeader className="pb-4">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <CardTitle className="text-lg md:text-xl text-foreground">Available Documents</CardTitle>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1 md:flex-initial">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input 
+                        placeholder="Search documents..." 
+                        value={searchQuery} 
+                        onChange={e => setSearchQuery(e.target.value)} 
+                        className="pl-10 md:w-64 border-border bg-background text-foreground" 
+                      />
+                    </div>
+                    <Button 
+                      className="bg-purple-600 hover:bg-purple-700 text-white" 
+                      onClick={() => setShowRequestModal(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Request Document
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="p-4 md:p-6">
+                  <div className="space-y-3">
+                    {isLoadingTemplates ? (
+                      <div className="text-center py-8 text-muted-foreground">Loading document templates...</div>
+                    ) : paginatedTemplates.length > 0 ? (
+                      paginatedTemplates.map(template => (
+                        <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                          <div className="flex items-center gap-3 md:gap-4 flex-1">
+                            <input type="checkbox" className="rounded border-border" />
+                            <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20 flex-shrink-0">
+                              <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-500 dark:text-blue-400" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-medium text-foreground text-sm md:text-base truncate">{template.name}</h4>
+                              <p className="text-xs md:text-sm text-muted-foreground">
+                                {template.description} • Fee: ₱{template.fee || 0}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
+                            <button
+                              onClick={() => {
+                                setSelectedTemplate(template);
+                                setShowTemplateDialog(true);
+                              }}
+                              className="p-1.5 md:p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                              title="View template details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">No document templates found</div>
+                    )}
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="flex items-center justify-center mt-6">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={e => {
+                              e.preventDefault();
+                              handlePageChange(currentPage - 1);
+                            }} 
+                            className={`hover:bg-accent cursor-pointer ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                          <PaginationItem key={page}>
+                            <PaginationLink 
+                              onClick={e => {
+                                e.preventDefault();
+                                handlePageChange(page);
+                              }} 
+                              isActive={currentPage === page} 
+                              className={`cursor-pointer ${currentPage === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={e => {
+                              e.preventDefault();
+                              handlePageChange(currentPage + 1);
+                            }} 
+                            className={`hover:bg-accent cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Status Updates */}
+          <div className="space-y-6">
+            <div className="mb-6 bg-card rounded-lg shadow-sm overflow-hidden border border-border">
+              <div className="p-6 border-b border-border">
+                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Document Status Updates
+                </h2>
+              </div>
+              <div className="p-0 overflow-visible">
+                <div className="relative">
+                  <div className="p-6 relative z-10 overflow-visible">
+                    {isLoading ? <div className="text-center py-8">
+                        <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
+                        <p className="mt-2 text-sm text-muted-foreground">Loading updates...</p>
+                      </div> : documentRequests.length === 0 ? <div className="text-center py-8">
+                        <p className="text-sm text-muted-foreground">No document updates yet</p>
+                      </div> : documentRequests.sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()).slice(0, 4).map((request, index) => {
+                    const isLast = index === Math.min(3, documentRequests.length - 1);
+
+                    // Normalize status for better matching
+                    const normalizedStatus = request.status.toLowerCase();
+
+                    // Determine status display and styling
+                    let statusInfo;
+                    if (matchesAnyStatus(request.status, ['approved', 'ready for pickup', 'ready'])) {
+                      statusInfo = {
+                        text: 'Ready for Pickup',
+                        dotClass: 'bg-green-500',
+                        bgClass: 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800',
+                        badgeClass: 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200',
+                        description: 'You can now pick up your document at the barangay office.'
+                      };
+                    } else if (matchesAnyStatus(request.status, ['completed', 'released'])) {
+                      statusInfo = {
+                        text: 'Released',
+                        dotClass: 'bg-purple-500',
+                        bgClass: 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800',
+                        badgeClass: 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200',
+                        description: 'Your document has been successfully released.'
+                      };
+                    } else if (matchesStatus(request.status, 'processing')) {
+                      statusInfo = {
+                        text: 'Processing',
+                        dotClass: 'bg-blue-500',
+                        bgClass: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800',
+                        badgeClass: 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200',
+                        description: 'Please wait while we process your request.'
+                      };
+                    } else if (matchesStatus(request.status, 'rejected')) {
+                      statusInfo = {
+                        text: 'Rejected',
+                        dotClass: 'bg-red-500',
+                        bgClass: 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800',
+                        badgeClass: 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200',
+                        description: 'Please contact the office for more details.'
+                      };
+                    } else {
+                      statusInfo = {
+                        text: 'Pending',
+                        dotClass: 'bg-yellow-500',
+                        bgClass: 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800',
+                        badgeClass: 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200',
+                        description: 'Your request is being reviewed.'
+                      };
+                    }
+                    return <div key={request.id} className={`grid grid-cols-[auto_1fr] gap-4 ${!isLast ? 'mb-6' : ''}`}>
+                              <div className="flex flex-col items-center">
+                                <div className={`h-6 w-6 rounded-full ${statusInfo.dotClass} border-2 border-background shadow-md flex items-center justify-center`}>
+                                  <div className="h-1.5 w-1.5 bg-background rounded-full"></div>
+                                </div>
+                                {!isLast && <div className="w-0.5 bg-border flex-1 mt-2"></div>}
+                              </div>
+                              <div className={`${statusInfo.bgClass} border p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
+                                <div className="mb-3">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h3 className="font-semibold text-foreground text-sm">
+                                      {request.type}
+                                    </h3>
+                                    <span className={`text-xs px-2 py-1 ${statusInfo.badgeClass} rounded-full font-medium`}>
+                                      {statusInfo.text}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground font-mono">
+                                    {request.docnumber}
+                                  </p>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <p className="text-sm text-foreground">
+                                    <span className="font-medium">Purpose:</span> {request.purpose}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {statusInfo.description}
+                                  </p>
+                                  {request.notes && <div className="mt-3 p-3 bg-muted rounded-md border-l-4 border-primary">
+                                      <p className="text-xs text-muted-foreground font-medium mb-1">ADMIN NOTE</p>
+                                      <p className="text-xs text-foreground">{request.notes}</p>
+                                    </div>}
+                                </div>
+                                
+                                <div className="flex justify-end mt-3 pt-2 border-t border-border">
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatDate(request.updated_at || request.created_at)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>;
+                  })}
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
         <div className="hidden md:block bg-gradient-to-br from-card/80 to-card/40 rounded-2xl shadow-lg border border-border/50 overflow-hidden backdrop-blur-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border/30">
@@ -1213,12 +2131,69 @@ const UserDocumentsPage = () => {
       {/* Floating Action Button - Mobile Only */}
       <Button
         onClick={() => setShowRequestModal(true)}
-        className="md:hidden fixed bottom-6 right-6 h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground shadow-2xl hover:shadow-xl transition-all duration-300 z-50 group animate-pulse-slow hover:animate-none"
+        className="lg:hidden fixed bottom-6 right-6 h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground shadow-2xl hover:shadow-xl transition-all duration-300 z-50 group animate-pulse-slow hover:animate-none"
         size="icon"
       >
         <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform duration-300" />
       </Button>
-    </div>;
+
+      {/* All dialogs and modals go here... */}
+      {showIssueForm && (
+        <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border">
+            <DocumentIssueForm onClose={() => setShowIssueForm(false)} />
+          </div>
+        </div>
+      )}
+
+      {showRequestModal && (
+        <DocumentRequestModal 
+          onClose={() => {
+            setShowRequestModal(false);
+            setEditingRequest(null);
+          }} 
+          editingRequest={editingRequest} 
+        />
+      )}
+
+      {/* View Request Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader className="pb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-semibold">Document Request Details</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">Complete information about your document request</p>
+              </div>
+            </div>
+          </DialogHeader>
+          {selectedRequest && <div>Request details content...</div>}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Request Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Request</DialogTitle>
+          </DialogHeader>
+          {editingRequest && <EditRequestForm request={editingRequest} onSuccess={() => { setShowEditDialog(false); setEditingRequest(null); refetch(); }} onCancel={() => { setShowEditDialog(false); setEditingRequest(null); }} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Template Details Dialog */}
+      <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Document Information</DialogTitle>
+          </DialogHeader>
+          {selectedTemplate && <div>Template details content...</div>}
+        </DialogContent>
+      </Dialog>
+    </div>
 };
 
 // Edit Request Form Component
