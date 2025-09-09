@@ -407,10 +407,10 @@ const UserDocumentsPage = () => {
                   <p>No document requests found</p>
                 </div>
               ) : paginatedRequests.map(request => (
-                <div key={request.id} className="border border-border rounded-lg hover:shadow-md transition-shadow p-4 bg-card w-full max-w-full overflow-hidden">
-                  <div className="flex items-start justify-between mb-3 gap-3 w-full">
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <div className="font-medium text-primary text-sm truncate">#{request.docnumber}</div>
+                <div key={request.id} className="border border-border rounded-lg hover:shadow-md transition-shadow p-4 bg-card">
+                  <div className="flex items-start justify-between mb-3 gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
                       <div className="text-foreground font-semibold truncate">{request.type}</div>
                     </div>
                     <div className="flex-shrink-0">
@@ -418,22 +418,22 @@ const UserDocumentsPage = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-2 text-sm w-full overflow-hidden">
-                    <div className="flex flex-col gap-1 w-full">
-                      <span className="text-muted-foreground text-xs">Requested by:</span>
-                      <span className="text-foreground font-medium truncate">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                      <span className="text-muted-foreground">Requested by:</span>
+                      <span className="text-foreground font-medium break-words">
                         {request.profiles?.firstname && request.profiles?.lastname 
                           ? `${request.profiles.firstname} ${request.profiles.lastname}` 
                           : 'N/A'}
                       </span>
                     </div>
-                    <div className="flex flex-col gap-1 w-full">
-                      <span className="text-muted-foreground text-xs">Last update:</span>
-                      <span className="text-foreground truncate">{formatDate(request.updated_at || request.created_at)}</span>
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                      <span className="text-muted-foreground">Last update:</span>
+                      <span className="text-foreground break-words">{formatDate(request.updated_at || request.created_at)}</span>
                     </div>
                   </div>
                   
-                  <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border w-full">
+                  <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
                     <button 
                       onClick={() => {
                         setSelectedRequest(request);
