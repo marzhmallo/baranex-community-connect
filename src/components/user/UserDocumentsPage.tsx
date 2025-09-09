@@ -278,18 +278,25 @@ const UserDocumentsPage = () => {
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
       </div>;
   }
-  return <div className="w-full p-4 md:p-6 bg-background min-h-screen">
+  return <div className="w-full p-4 md:p-6 bg-gradient-to-br from-background via-background to-muted/20 min-h-screen">
       {/* Mobile-first Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Documents</h1>
-        <p className="text-sm text-muted-foreground hidden md:block">Manage official documents, requests, and issuances for the barangay community</p>
+      <div className="mb-8">
+        <div className="relative">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+            Documents
+          </h1>
+          <div className="absolute -bottom-1 left-0 h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
+        </div>
+        <p className="text-muted-foreground hidden md:block mt-3 text-lg">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
 
       {/* Status Cards - Horizontal Scroll on Mobile */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-foreground flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 shadow-lg">
+              <TrendingUp className="h-6 w-6 text-primary" />
+            </div>
             Status Overview
           </h2>
           <button onClick={async () => {
@@ -302,82 +309,94 @@ const UserDocumentsPage = () => {
             } finally {
               setIsRefreshing(false);
             }
-          }} disabled={isRefreshing} className={`p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          }} disabled={isRefreshing} className={`p-3 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-xl transition-all duration-200 hover:shadow-md ${isRefreshing ? 'cursor-not-allowed opacity-75' : ''}`}>
+            <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
         
         {/* Horizontal Scrolling Status Cards */}
-        <div className="flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible">
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full mb-2">
-              <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+        <div className="flex gap-6 overflow-x-auto pb-4 md:grid md:grid-cols-5 md:overflow-visible">
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Requests</p>
+              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
+                {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">Requests</p>
-            <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
-              {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
-            </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full mb-2">
-              <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-200/50 dark:border-blue-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <Hourglass className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Processing</p>
+              <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">Processing</p>
-            <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
-              {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
-            </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full mb-2">
-              <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border border-green-200/50 dark:border-green-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Ready</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">Ready</p>
-            <p className="text-xl font-bold text-green-600 dark:text-green-400">
-              {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
-            </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full mb-2">
-              <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Released</p>
+              <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
+                {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">Released</p>
-            <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
-              {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
-            </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full mb-2">
-              <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+            <div className="rounded-2xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20 border border-red-200/50 dark:border-red-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+              <div className="bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Rejected</p>
+              <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+                {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">Rejected</p>
-            <p className="text-xl font-bold text-red-600 dark:text-red-400">
-              {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
-            </p>
           </div>
         </div>
         
-        <div className="flex justify-between items-center text-xs text-muted-foreground mt-3">
-          <span>Total: {documentRequests.length}</span>
+        <div className="flex justify-between items-center text-sm text-muted-foreground mt-6 p-4 bg-card/50 rounded-xl border border-border/50 backdrop-blur-sm">
+          <span className="font-medium">Total Documents: <span className="text-primary font-bold">{documentRequests.length}</span></span>
           <span className="hidden md:block">Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
         </div>
       </div>
 
       {/* Document Tracking - Mobile Card Layout */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-foreground flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 shadow-lg">
+              <BarChart3 className="h-6 w-6 text-primary" />
+            </div>
             <span className="hidden md:inline">Document Tracking System</span>
             <span className="md:hidden">My Requests</span>
           </h2>
           {/* Desktop Request Button - Hidden on Mobile */}
           <Button 
             onClick={() => setShowRequestModal(true)} 
-            className="hidden md:flex bg-blue-600 text-white hover:bg-blue-700"
+            className="hidden md:flex bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
             <PlusCircle className="h-4 w-4 mr-2" />
             Request Document
@@ -385,28 +404,28 @@ const UserDocumentsPage = () => {
         </div>
 
         {/* Mobile-first Search and Filters */}
-        <div className="space-y-3 md:space-y-0 md:flex md:items-center md:justify-between md:gap-4 mb-4">
+        <div className="space-y-4 md:space-y-0 md:flex md:items-center md:justify-between md:gap-6 mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <input 
               type="text" 
               placeholder="Search by tracking ID..." 
               value={trackingSearchQuery} 
               onChange={e => setTrackingSearchQuery(e.target.value)} 
-              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full bg-background text-foreground" 
+              className="pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 w-full bg-card/50 text-foreground backdrop-blur-sm shadow-sm hover:shadow-md" 
             />
           </div>
 
           {/* Simplified Mobile Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:flex-wrap">
+          <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0 md:flex-wrap">
             {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
               <button 
                 key={filter}
                 onClick={() => setTrackingFilter(filter)} 
-                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${
+                className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-200 font-medium shadow-sm hover:shadow-md ${
                   trackingFilter === filter 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-foreground hover:bg-muted/80"
+                    ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-lg transform scale-105" 
+                    : "bg-card/70 text-foreground hover:bg-accent/50 border border-border/50"
                 }`}
               >
                 {filter}
@@ -416,42 +435,46 @@ const UserDocumentsPage = () => {
         </div>
         
         {/* Card Feed for Mobile, Table for Desktop */}
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden space-y-4">
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading your document requests...
+            <div className="text-center py-12 text-muted-foreground">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-3"></div>
+              <p>Loading your document requests...</p>
             </div>
           ) : documentRequests.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No document requests found
+            <div className="text-center py-12 text-muted-foreground">
+              <FileX className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No document requests found</p>
             </div>
           ) : paginatedRequests.map(request => (
-            <Card key={request.id} className="border border-border hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
-                    <div className="text-foreground font-semibold">{request.type}</div>
+            <Card key={request.id} className="border border-border/50 hover:shadow-lg transition-all duration-300 hover:border-primary/30 bg-card/70 backdrop-blur-sm overflow-hidden group">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="font-mono text-sm text-primary/80 mb-1">#{request.docnumber}</div>
+                    <div className="text-foreground font-semibold text-lg group-hover:text-primary transition-colors duration-200">{request.type}</div>
                   </div>
-                  {getStatusBadge(request.status)}
+                  <div className="ml-3">
+                    {getStatusBadge(request.status)}
+                  </div>
                 </div>
                 
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Requested by:</span>
-                    <span className="text-foreground font-medium">
+                <div className="space-y-3 text-sm bg-muted/30 rounded-lg p-3 mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground font-medium">Requested by:</span>
+                    <span className="text-foreground font-semibold">
                       {request.profiles?.firstname && request.profiles?.lastname 
                         ? `${request.profiles.firstname} ${request.profiles.lastname}` 
                         : 'N/A'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Last update:</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground font-medium">Last update:</span>
                     <span className="text-foreground">{formatDate(request.updated_at || request.created_at)}</span>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
+                <div className="flex justify-end gap-3 pt-3 border-t border-border/30">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -459,8 +482,9 @@ const UserDocumentsPage = () => {
                       setSelectedRequest(request);
                       setShowViewDialog(true);
                     }}
+                    className="hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   >
-                    <Eye className="h-4 w-4 mr-1" />
+                    <Eye className="h-4 w-4 mr-2" />
                     View
                   </Button>
                   {request.status === 'Request' && (
@@ -471,8 +495,9 @@ const UserDocumentsPage = () => {
                         setEditingRequest(request);
                         setShowRequestModal(true);
                       }}
+                      className="hover:bg-secondary/10 hover:text-secondary transition-all duration-200"
                     >
-                      <Edit className="h-4 w-4 mr-1" />
+                      <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
                   )}
@@ -483,62 +508,64 @@ const UserDocumentsPage = () => {
         </div>
 
         {/* Desktop Table - Hidden on Mobile */}
-        <div className="hidden md:block bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+        <div className="hidden md:block bg-gradient-to-br from-card/80 to-card/40 rounded-2xl shadow-lg border border-border/50 overflow-hidden backdrop-blur-sm">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted">
+            <table className="min-w-full divide-y divide-border/30">
+              <thead className="bg-gradient-to-r from-muted/50 to-muted/30">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tracking ID</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Document</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Requested By</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Update</th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                  <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Tracking ID</th>
+                  <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Document</th>
+                  <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Requested By</th>
+                  <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Last Update</th>
+                  <th scope="col" className="px-8 py-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-card divide-y divide-border">
+              <tbody className="bg-card/30 divide-y divide-border/20">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
-                      Loading your document requests...
+                    <td colSpan={6} className="px-8 py-12 text-center text-muted-foreground">
+                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-3"></div>
+                      <p>Loading your document requests...</p>
                     </td>
                   </tr>
                 ) : documentRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">
-                      No document requests found
+                    <td colSpan={6} className="px-8 py-12 text-center text-muted-foreground">
+                      <FileX className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No document requests found</p>
                     </td>
                   </tr>
                 ) : paginatedRequests.map(request => (
-                  <tr key={request.id} className="hover:bg-accent transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
+                  <tr key={request.id} className="hover:bg-accent/30 transition-all duration-200 group">
+                    <td className="px-8 py-6 whitespace-nowrap text-sm font-mono text-primary font-bold group-hover:text-primary/80">
                       {request.docnumber}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    <td className="px-8 py-6 whitespace-nowrap text-sm text-foreground font-medium">
                       {request.type}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    <td className="px-8 py-6 whitespace-nowrap text-sm text-foreground">
                       {request.profiles?.firstname && request.profiles?.lastname 
                         ? `${request.profiles.firstname} ${request.profiles.lastname}` 
                         : 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-8 py-6 whitespace-nowrap">
                       {getStatusBadge(request.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    <td className="px-8 py-6 whitespace-nowrap text-sm text-muted-foreground">
                       {formatDate(request.updated_at || request.created_at)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-2">
+                    <td className="px-8 py-6 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end gap-3">
                         <button 
                           onClick={() => {
                             setSelectedRequest(request);
                             setShowViewDialog(true);
                           }} 
-                          className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" 
+                          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-200 hover:shadow-md" 
                           title="View request details"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-5 w-5" />
                         </button>
                         <button 
                           onClick={() => {
@@ -548,14 +575,14 @@ const UserDocumentsPage = () => {
                             }
                           }} 
                           disabled={request.status !== 'Request'} 
-                          className={`p-1 rounded transition-colors ${
+                          className={`p-2 rounded-xl transition-all duration-200 ${
                             request.status === 'Request' 
-                              ? 'text-muted-foreground hover:text-primary hover:bg-primary/10' 
-                              : 'text-muted-foreground/50 cursor-not-allowed'
+                              ? 'text-muted-foreground hover:text-secondary hover:bg-secondary/10 hover:shadow-md' 
+                              : 'text-muted-foreground/30 cursor-not-allowed'
                           }`} 
                           title={request.status === 'Request' ? 'Edit request' : 'Cannot edit processed request'}
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-5 w-5" />
                         </button>
                       </div>
                     </td>
@@ -1186,10 +1213,10 @@ const UserDocumentsPage = () => {
       {/* Floating Action Button - Mobile Only */}
       <Button
         onClick={() => setShowRequestModal(true)}
-        className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 z-50"
+        className="md:hidden fixed bottom-6 right-6 h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground shadow-2xl hover:shadow-xl transition-all duration-300 z-50 group animate-pulse-slow hover:animate-none"
         size="icon"
       >
-        <Plus className="h-6 w-6" />
+        <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform duration-300" />
       </Button>
     </div>;
 };
