@@ -98,8 +98,8 @@ const PublicPagesSidebar = () => {
                 className={cn(
                   "flex items-center py-3 px-3 rounded-lg transition-all duration-200 group",
                   isActive(item.path)
-                    ? "bg-primary-foreground/20 text-primary-foreground shadow-md"
-                    : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                    ? "bg-white/20 text-white shadow-md"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
                 )}
               >
                 <Icon className="h-5 w-5 flex-shrink-0" />

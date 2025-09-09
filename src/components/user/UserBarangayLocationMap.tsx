@@ -197,7 +197,7 @@ const UserBarangayLocationMap: React.FC<UserBarangayLocationMapProps> = ({ baran
       <CardContent>
         <div 
           ref={mapRef} 
-          className="w-full h-[400px] rounded-lg border border-border bg-gray-100"
+          className="w-full h-[400px] rounded-lg border border-border bg-gray-100 relative z-10"
           style={{ minHeight: '400px' }}
         />
         {currentLocation && (
