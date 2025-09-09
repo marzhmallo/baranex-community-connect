@@ -24,8 +24,6 @@ const UserOfficialsPage = () => {
   const [termStartYear, setTermStartYear] = useState('');
   const [termEndYear, setTermEndYear] = useState('');
   const isMobile = useIsMobile();
-  const [currentPage, setCurrentPage] = useState(1);
-  const cardsPerPage = isMobile ? 3 : 12;
 
   // Get barangay ID from URL params (for public access) or user profile (for authenticated users)
   const barangayId = searchParams.get('barangay') || userProfile?.brgyid;
@@ -270,15 +268,9 @@ const UserOfficialsPage = () => {
     return aPos - bPos;
   }) : [];
 
-  // Pagination logic
-  const totalPages = Math.ceil(allFilteredOfficials.length / cardsPerPage);
-  const startIndex = (currentPage - 1) * cardsPerPage;
-  const endIndex = startIndex + cardsPerPage;
-  const filteredOfficials = allFilteredOfficials.slice(startIndex, endIndex);
-
-  // Reset page when filters change
+  // Reset search when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    // No pagination reset needed
   }, [activeTab, activeSKTab, searchQuery, termStartYear, termEndYear]);
 
   // Count for each category using the same logic as filtering
@@ -501,7 +493,7 @@ const UserOfficialsPage = () => {
         </div>
       ) : (
         <div>
-          <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8'}`}>
+          <div className={`grid ${isMobile ? 'grid-cols-3 gap-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8'}`}>
             {isLoading ?
               // Show skeleton loaders while loading
               Array.from({ length: 4 }).map((_, i) => (
@@ -523,11 +515,11 @@ const UserOfficialsPage = () => {
                 <div className="col-span-full p-6 text-destructive bg-card rounded-lg border">
                   Error loading officials: {error.message}
                 </div>
-              ) : filteredOfficials.length === 0 ? (
+              ) : allFilteredOfficials.length === 0 ? (
                 <div className={`col-span-full p-6 text-center text-muted-foreground bg-card rounded-lg border ${isMobile ? '' : 'mx-[240px]'}`}>
                   No {activeTab === 'current' ? 'current' : activeTab === 'sk' ? activeSKTab === 'current' ? 'current SK' : 'previous SK' : 'previous'} officials found.
                 </div>
-              ) : filteredOfficials.map(official => (
+              ) : allFilteredOfficials.map(official => (
                 <OfficialCard 
                   key={official.id}
                   official={official} 
@@ -538,45 +530,6 @@ const UserOfficialsPage = () => {
               ))
             }
           </div>
-
-          {/* Pagination - only show if there are multiple pages */}
-          {totalPages > 1 && (
-            <div className={`flex justify-center items-center gap-2 ${isMobile ? 'mt-4' : 'mt-8'}`}>
-              <Button
-                variant="outline"
-                size={isMobile ? "sm" : "default"}
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3"
-              >
-                Previous
-              </Button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size={isMobile ? "sm" : "default"}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 p-0 ${isMobile ? 'text-xs' : ''}`}
-                  >
-                    {page}
-                  </Button>
-                ))}
-              </div>
-              
-              <Button
-                variant="outline"
-                size={isMobile ? "sm" : "default"}
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="px-3"
-              >
-                Next
-              </Button>
-            </div>
-          )}
         </div>
       )}
 
