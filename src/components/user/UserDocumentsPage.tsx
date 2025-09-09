@@ -278,19 +278,20 @@ const UserDocumentsPage = () => {
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
       </div>;
   }
-  return <div className="w-full p-4 md:p-6 bg-background min-h-screen">
+  return <div className="w-full p-3 md:p-6 bg-background min-h-screen">
       {/* Mobile-first Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Documents</h1>
-        <p className="text-sm text-muted-foreground hidden md:block">Manage official documents, requests, and issuances for the barangay community</p>
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-xl md:text-3xl font-bold text-foreground mb-1">Documents</h1>
+        <p className="text-xs md:text-sm text-muted-foreground hidden md:block">Manage official documents, requests, and issuances for the barangay community</p>
       </div>
 
       {/* Status Cards - Horizontal Scroll on Mobile */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Status Overview
+      <div className="mb-4 md:mb-6">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <h2 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            <span className="hidden sm:inline">Status Overview</span>
+            <span className="sm:hidden">Status</span>
           </h2>
           <button onClick={async () => {
             setIsRefreshing(true);
@@ -307,70 +308,70 @@ const UserDocumentsPage = () => {
           </button>
         </div>
         
-        {/* Horizontal Scrolling Status Cards */}
-        <div className="flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible">
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full mb-2">
-              <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+        {/* Mobile-optimized Horizontal Scrolling Status Cards */}
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible scrollbar-hide">
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <Clock className="h-4 w-4 md:h-5 md:w-5 text-yellow-600 dark:text-yellow-400" />
             </div>
             <p className="text-xs text-muted-foreground">Requests</p>
-            <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+            <p className="text-lg md:text-xl font-bold text-yellow-600 dark:text-yellow-400">
               {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
             </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full mb-2">
-              <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-blue-100 dark:bg-blue-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <Hourglass className="h-4 w-4 md:h-5 md:w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <p className="text-xs text-muted-foreground">Processing</p>
-            <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+            <p className="text-lg md:text-xl font-bold text-blue-600 dark:text-blue-400">
               {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
             </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full mb-2">
-              <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-green-100 dark:bg-green-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <Package className="h-4 w-4 md:h-5 md:w-5 text-green-600 dark:text-green-400" />
             </div>
             <p className="text-xs text-muted-foreground">Ready</p>
-            <p className="text-xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-lg md:text-xl font-bold text-green-600 dark:text-green-400">
               {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
             </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full mb-2">
-              <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-purple-100 dark:bg-purple-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-purple-600 dark:text-purple-400" />
             </div>
             <p className="text-xs text-muted-foreground">Released</p>
-            <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+            <p className="text-lg md:text-xl font-bold text-purple-600 dark:text-purple-400">
               {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
             </p>
           </div>
           
-          <div className="min-w-[140px] md:min-w-0 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex flex-col items-center text-center">
-            <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full mb-2">
-              <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+          <div className="min-w-[120px] md:min-w-0 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-2 md:p-3 flex flex-col items-center text-center flex-shrink-0">
+            <div className="bg-red-100 dark:bg-red-900/50 p-1.5 md:p-2 rounded-full mb-1 md:mb-2">
+              <XCircle className="h-4 w-4 md:h-5 md:w-5 text-red-600 dark:text-red-400" />
             </div>
             <p className="text-xs text-muted-foreground">Rejected</p>
-            <p className="text-xl font-bold text-red-600 dark:text-red-400">
+            <p className="text-lg md:text-xl font-bold text-red-600 dark:text-red-400">
               {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
             </p>
           </div>
         </div>
         
-        <div className="flex justify-between items-center text-xs text-muted-foreground mt-3">
+        <div className="flex justify-between items-center text-xs text-muted-foreground mt-2 md:mt-3">
           <span>Total: {documentRequests.length}</span>
           <span className="hidden md:block">Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
         </div>
       </div>
 
       {/* Document Tracking - Mobile Card Layout */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
+      <div className="mb-4 md:mb-6">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <h2 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
             <span className="hidden md:inline">Document Tracking System</span>
             <span className="md:hidden">My Requests</span>
           </h2>
@@ -385,7 +386,7 @@ const UserDocumentsPage = () => {
         </div>
 
         {/* Mobile-first Search and Filters */}
-        <div className="space-y-3 md:space-y-0 md:flex md:items-center md:justify-between md:gap-4 mb-4">
+        <div className="space-y-2 md:space-y-0 md:flex md:items-center md:justify-between md:gap-4 mb-3 md:mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <input 
@@ -393,17 +394,17 @@ const UserDocumentsPage = () => {
               placeholder="Search by tracking ID..." 
               value={trackingSearchQuery} 
               onChange={e => setTrackingSearchQuery(e.target.value)} 
-              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full bg-background text-foreground" 
+              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-full bg-background text-foreground text-sm" 
             />
           </div>
 
-          {/* Simplified Mobile Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:flex-wrap">
+          {/* Mobile-optimized Filters */}
+          <div className="flex gap-1.5 md:gap-2 overflow-x-auto pb-1 md:pb-0 md:flex-wrap scrollbar-hide">
             {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
               <button 
                 key={filter}
                 onClick={() => setTrackingFilter(filter)} 
-                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${
+                className={`px-2.5 md:px-3 py-1.5 md:py-1 rounded-full text-xs md:text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
                   trackingFilter === filter 
                     ? "bg-primary/10 text-primary" 
                     : "bg-muted text-foreground hover:bg-muted/80"
@@ -415,64 +416,68 @@ const UserDocumentsPage = () => {
           </div>
         </div>
         
-        {/* Card Feed for Mobile, Table for Desktop */}
-        <div className="md:hidden space-y-3">
+        {/* Mobile Card Feed - Optimized */}
+        <div className="md:hidden space-y-2.5">
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
-              Loading your document requests...
+              <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-2"></div>
+              <p className="text-sm">Loading your requests...</p>
             </div>
           ) : documentRequests.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No document requests found
+              <FileX className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No document requests found</p>
             </div>
           ) : paginatedRequests.map(request => (
-            <Card key={request.id} className="border border-border hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="font-medium text-primary text-sm">#{request.docnumber}</div>
-                    <div className="text-foreground font-semibold">{request.type}</div>
+            <Card key={request.id} className="border border-border hover:shadow-sm transition-shadow">
+              <CardContent className="p-3">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-primary text-xs">#{request.docnumber}</div>
+                    <div className="text-foreground font-semibold text-sm truncate">{request.type}</div>
                   </div>
                   {getStatusBadge(request.status)}
                 </div>
                 
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Requested by:</span>
-                    <span className="text-foreground font-medium">
+                    <span className="text-foreground font-medium text-right truncate max-w-[120px]">
                       {request.profiles?.firstname && request.profiles?.lastname 
                         ? `${request.profiles.firstname} ${request.profiles.lastname}` 
                         : 'N/A'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Last update:</span>
-                    <span className="text-foreground">{formatDate(request.updated_at || request.created_at)}</span>
+                    <span className="text-foreground text-xs">{formatDate(request.updated_at || request.created_at)}</span>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
+                <div className="flex justify-end gap-1.5 mt-3 pt-2 border-t border-border">
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-8 px-3 text-xs"
                     onClick={() => {
                       setSelectedRequest(request);
                       setShowViewDialog(true);
                     }}
                   >
-                    <Eye className="h-4 w-4 mr-1" />
+                    <Eye className="h-3 w-3 mr-1" />
                     View
                   </Button>
                   {request.status === 'Request' && (
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="h-8 px-3 text-xs"
                       onClick={() => {
                         setEditingRequest(request);
                         setShowRequestModal(true);
                       }}
                     >
-                      <Edit className="h-4 w-4 mr-1" />
+                      <Edit className="h-3 w-3 mr-1" />
                       Edit
                     </Button>
                   )}
@@ -566,30 +571,30 @@ const UserDocumentsPage = () => {
           </div>
         </div>
         
-        {/* Pagination */}
+        {/* Mobile-optimized Pagination */}
         {requestsTotalPages > 1 && (
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-muted-foreground hidden md:block">
+          <div className="mt-3 md:mt-4 flex justify-between items-center">
+            <div className="text-xs md:text-sm text-muted-foreground hidden md:block">
               Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} requests
             </div>
-            <div className="flex items-center gap-2 mx-auto md:mx-0">
+            <div className="flex items-center gap-1 md:gap-2 mx-auto md:mx-0">
               <button 
                 onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} 
                 disabled={requestsCurrentPage === 1} 
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                className={`px-2 md:px-3 py-1.5 text-xs md:text-sm rounded-lg transition-colors ${
                   requestsCurrentPage === 1 
                     ? 'text-muted-foreground cursor-not-allowed' 
                     : 'text-foreground hover:bg-accent'
                 }`}
               >
-                Previous
+                Prev
               </button>
-              <div className="flex">
+              <div className="flex gap-0.5">
                 {Array.from({ length: requestsTotalPages }, (_, i) => i + 1).map(page => (
                   <button 
                     key={page} 
                     onClick={() => handleRequestsPageChange(page)} 
-                    className={`px-3 py-1 text-sm rounded-md font-medium ${
+                    className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded-md font-medium ${
                       requestsCurrentPage === page 
                         ? 'bg-primary/10 text-primary' 
                         : 'text-foreground hover:bg-accent'
@@ -602,7 +607,7 @@ const UserDocumentsPage = () => {
               <button 
                 onClick={() => handleRequestsPageChange(requestsCurrentPage + 1)} 
                 disabled={requestsCurrentPage === requestsTotalPages} 
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                className={`px-2 md:px-3 py-1.5 text-xs md:text-sm rounded-lg transition-colors ${
                   requestsCurrentPage === requestsTotalPages 
                     ? 'text-muted-foreground cursor-not-allowed' 
                     : 'text-foreground hover:bg-accent'
@@ -619,18 +624,18 @@ const UserDocumentsPage = () => {
       <div className="md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-6">
         <div className="md:lg:col-span-2">
           <Card className="border-border">
-            <CardHeader className="pb-4">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <CardTitle className="text-lg md:text-xl text-foreground">Available Documents</CardTitle>
-                <div className="flex items-center gap-3">
-                  {/* Mobile search - simplified */}
+            <CardHeader className="pb-3 md:pb-4">
+              <div className="flex flex-col gap-3 md:gap-4 md:flex-row md:items-center md:justify-between">
+                <CardTitle className="text-base md:text-xl text-foreground">Available Documents</CardTitle>
+                <div className="flex items-center gap-2 md:gap-3">
+                  {/* Mobile search - compact */}
                   <div className="relative flex-1 md:flex-initial">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input 
                       placeholder="Search documents..." 
                       value={searchQuery} 
                       onChange={e => setSearchQuery(e.target.value)} 
-                      className="pl-10 md:w-64 border-border bg-background text-foreground" 
+                      className="pl-10 md:w-64 border-border bg-background text-foreground h-9 text-sm" 
                     />
                   </div>
                   {/* Hide desktop request button */}
@@ -645,35 +650,38 @@ const UserDocumentsPage = () => {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="p-4 md:p-6">
-                <div className="space-y-3">
+              <div className="p-3 md:p-6">
+                <div className="space-y-2 md:space-y-3">
                   {isLoadingTemplates ? (
-                    <div className="text-center py-8 text-muted-foreground">Loading document templates...</div>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-2"></div>
+                      <p className="text-sm">Loading documents...</p>
+                    </div>
                   ) : paginatedTemplates.length > 0 ? (
                     paginatedTemplates.map(template => (
-                      <div key={template.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
-                        <div className="flex items-center gap-3 md:gap-4 flex-1">
+                      <div key={template.id} className="flex items-center justify-between p-3 md:p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                        <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
                           {/* Hide checkbox on mobile for cleaner look */}
                           <input type="checkbox" className="hidden md:block rounded border-border" />
-                          <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20 flex-shrink-0">
-                            <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-500 dark:text-blue-400" />
+                          <div className="p-1.5 md:p-2 rounded bg-blue-100 dark:bg-blue-900/20 flex-shrink-0">
+                            <FileText className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-foreground text-sm md:text-base truncate">{template.name}</h4>
-                            <p className="text-xs md:text-sm text-muted-foreground">
+                            <h4 className="font-medium text-foreground text-sm truncate">{template.name}</h4>
+                            <p className="text-xs text-muted-foreground">
                               <span className="md:hidden">₱{template.fee || 0}</span>
                               <span className="hidden md:inline">{template.description} • Fee: ₱{template.fee || 0}</span>
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge className="hidden md:block bg-green-500 hover:bg-green-600 text-white">Active</Badge>
+                        <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+                          <Badge className="hidden md:block bg-green-500 hover:bg-green-600 text-white text-xs">Active</Badge>
                           <button
                             onClick={() => {
                               setSelectedTemplate(template);
                               setShowTemplateDialog(true);
                             }}
-                            className="p-1.5 md:p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                            className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
                             title="View template details"
                           >
                             <Eye className="h-4 w-4" />
@@ -682,12 +690,15 @@ const UserDocumentsPage = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground">No document templates found</div>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileX className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No document templates found</p>
+                    </div>
                   )}
                 </div>
 
                 {/* Mobile-friendly pagination */}
-                <div className="flex items-center justify-center mt-6">
+                <div className="flex items-center justify-center mt-4 md:mt-6">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
@@ -845,6 +856,17 @@ const UserDocumentsPage = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Floating Action Button */}
+      <div className="md:hidden fixed bottom-20 right-4 z-40">
+        <Button 
+          onClick={() => setShowRequestModal(true)} 
+          className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+          size="lg"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
       </div>
 
       {showIssueForm && <div className="fixed inset-0 z-50 overflow-auto bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
