@@ -272,7 +272,7 @@ const UserDocumentsPage = () => {
     <div className="w-full bg-background">
       {/* Mobile Version */}
       <div className="md:hidden">
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           <h1 className="text-2xl font-bold mb-2">Documents</h1>
           
           {/* Status Overview Cards - Horizontal Scrolling */}
@@ -298,53 +298,53 @@ const UserDocumentsPage = () => {
             </div>
             
             {/* Horizontal Scrolling Cards */}
-            <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
-              <div className="min-w-[120px] snap-start rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-yellow-100 dark:bg-yellow-900/50 p-2 rounded-full mb-2">
-                  <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+            <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
+              <div className="min-w-[85px] snap-start rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-2.5 flex flex-col items-center text-center">
+                <div className="bg-yellow-100 dark:bg-yellow-900/50 p-1.5 rounded-full mb-1.5">
+                  <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Requests</p>
-                <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                <p className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
                   {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
                 </p>
               </div>
               
-              <div className="min-w-[120px] snap-start rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full mb-2">
-                  <Hourglass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="min-w-[85px] snap-start rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-2.5 flex flex-col items-center text-center">
+                <div className="bg-blue-100 dark:bg-blue-900/50 p-1.5 rounded-full mb-1.5">
+                  <Hourglass className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Processing</p>
-                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
                   {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
                 </p>
               </div>
               
-              <div className="min-w-[120px] snap-start rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full mb-2">
-                  <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="min-w-[85px] snap-start rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-2.5 flex flex-col items-center text-center">
+                <div className="bg-green-100 dark:bg-green-900/50 p-1.5 rounded-full mb-1.5">
+                  <Package className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Ready</p>
-                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                <p className="text-lg font-bold text-green-600 dark:text-green-400">
                   {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
                 </p>
               </div>
               
-              <div className="min-w-[120px] snap-start rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-full mb-2">
-                  <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <div className="min-w-[85px] snap-start rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-2.5 flex flex-col items-center text-center">
+                <div className="bg-purple-100 dark:bg-purple-900/50 p-1.5 rounded-full mb-1.5">
+                  <CheckCircle className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Released</p>
-                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
                   {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
                 </p>
               </div>
               
-              <div className="min-w-[120px] snap-start rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 flex flex-col items-center text-center">
-                <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full mb-2">
-                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="min-w-[85px] snap-start rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-2.5 flex flex-col items-center text-center">
+                <div className="bg-red-100 dark:bg-red-900/50 p-1.5 rounded-full mb-1.5">
+                  <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                 </div>
                 <p className="text-xs text-muted-foreground">Rejected</p>
-                <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                <p className="text-lg font-bold text-red-600 dark:text-red-400">
                   {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
                 </p>
               </div>
