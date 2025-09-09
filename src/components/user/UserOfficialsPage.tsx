@@ -24,8 +24,6 @@ const UserOfficialsPage = () => {
   const [termStartYear, setTermStartYear] = useState('');
   const [termEndYear, setTermEndYear] = useState('');
   const isMobile = useIsMobile();
-  const [currentPage, setCurrentPage] = useState(1);
-  const cardsPerPage = isMobile ? 3 : 12;
 
   // Get barangay ID from URL params (for public access) or user profile (for authenticated users)
   const barangayId = searchParams.get('barangay') || userProfile?.brgyid;
@@ -270,16 +268,9 @@ const UserOfficialsPage = () => {
     return aPos - bPos;
   }) : [];
 
-  // Pagination logic
-  const totalPages = Math.ceil(allFilteredOfficials.length / cardsPerPage);
-  const startIndex = (currentPage - 1) * cardsPerPage;
-  const endIndex = startIndex + cardsPerPage;
-  const filteredOfficials = allFilteredOfficials.slice(startIndex, endIndex);
+  // Use all filtered officials directly without pagination
+  const filteredOfficials = allFilteredOfficials;
 
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab, activeSKTab, searchQuery, termStartYear, termEndYear]);
 
   // Count for each category using the same logic as filtering
   const currentCount = officialsData ? officialsData.filter(o => {
@@ -538,45 +529,6 @@ const UserOfficialsPage = () => {
               ))
             }
           </div>
-
-          {/* Pagination - only show if there are multiple pages */}
-          {totalPages > 1 && (
-            <div className={`flex justify-center items-center gap-2 ${isMobile ? 'mt-4' : 'mt-8'}`}>
-              <Button
-                variant="outline"
-                size={isMobile ? "sm" : "default"}
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3"
-              >
-                Previous
-              </Button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size={isMobile ? "sm" : "default"}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 p-0 ${isMobile ? 'text-xs' : ''}`}
-                  >
-                    {page}
-                  </Button>
-                ))}
-              </div>
-              
-              <Button
-                variant="outline"
-                size={isMobile ? "sm" : "default"}
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="px-3"
-              >
-                Next
-              </Button>
-            </div>
-          )}
         </div>
       )}
 
