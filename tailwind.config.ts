@@ -119,20 +119,17 @@ export default {
 		require("tailwindcss-animate"),
 		function({ addUtilities }) {
 			addUtilities({
-				'.scroll-snap-type-x': {
+				'.scroll-snap-x-mandatory': {
 					'scroll-snap-type': 'x mandatory',
 				},
-				'.scroll-snap-mandatory': {
-					'scroll-snap-type': 'x mandatory',
-				},
-				'.scroll-snap-align-start': {
+				'.scroll-snap-start': {
 					'scroll-snap-align': 'start',
 				},
-				'.scrollbar-none': {
+				'.no-scrollbar': {
 					'-ms-overflow-style': 'none',
 					'scrollbar-width': 'none',
 				},
-				'.scrollbar-none::-webkit-scrollbar': {
+				'.no-scrollbar::-webkit-scrollbar': {
 					display: 'none',
 				},
 			})
