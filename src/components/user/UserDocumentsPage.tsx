@@ -449,9 +449,9 @@ const UserDocumentsPage = () => {
           ) : paginatedRequests.map(request => (
             <div 
               key={request.id} 
-              className="bg-white dark:bg-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden max-w-lg mx-auto"
+              className="bg-white dark:bg-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden max-w-lg ml-0 mr-auto"
             >
-              <div className="p-6">
+              <div className="p-4">
                 {/* Card Header */}
                 <div className="flex justify-between items-start mb-5">
                   <div className="flex-1 min-w-0">
