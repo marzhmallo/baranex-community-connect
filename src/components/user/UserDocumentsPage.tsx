@@ -324,7 +324,10 @@ const UserDocumentsPage = () => {
             modules={[FreeMode]}
             slidesPerView="auto"
             spaceBetween={12}
-            freeMode={true}
+            freeMode={{
+              enabled: true,
+              momentum: true,
+            }}
             className="!pb-4 md:!hidden"
           >
             <SwiperSlide className="!w-40">
