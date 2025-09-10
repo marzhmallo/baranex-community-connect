@@ -512,8 +512,41 @@ const UserDocumentsPage = () => {
             />
           </div>
 
-          {/* Simplified Mobile Filters */}
-          <div className="flex gap-3 pb-2 md:pb-0">
+          {/* Mobile Dropdown Filter */}
+          <div className="md:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-between bg-card/70 border-border/50 hover:bg-accent/50 backdrop-blur-sm shadow-sm hover:shadow-md"
+                >
+                  <span className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    {trackingFilter}
+                  </span>
+                  <div className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-card/95 backdrop-blur-sm border-border/50 shadow-xl z-50">
+                {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
+                  <DropdownMenuItem
+                    key={filter}
+                    onClick={() => setTrackingFilter(filter)}
+                    className={`cursor-pointer hover:bg-accent/50 focus:bg-accent/50 ${
+                      trackingFilter === filter 
+                        ? "bg-primary/10 text-primary font-medium" 
+                        : "text-foreground"
+                    }`}
+                  >
+                    {filter}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Desktop Horizontal Filters */}
+          <div className="hidden md:flex gap-3 pb-2 md:pb-0">
             {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
               <button 
                 key={filter}
