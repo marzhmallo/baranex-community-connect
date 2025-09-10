@@ -506,8 +506,37 @@ const UserDocumentsPage = () => {
             />
           </div>
 
-          {/* Simplified Mobile Filters */}
-          <div className="flex gap-3 pb-2 md:pb-0">
+          {/* Mobile Swiper Filters */}
+          <div className="md:hidden">
+            <Swiper
+              modules={[FreeMode]}
+              slidesPerView="auto"
+              spaceBetween={12}
+              freeMode={{
+                enabled: true,
+                momentum: true,
+              }}
+              className="!pb-2"
+            >
+              {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
+                <SwiperSlide key={filter} className="!w-auto">
+                  <button 
+                    onClick={() => setTrackingFilter(filter)} 
+                    className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-200 font-medium shadow-sm hover:shadow-md ${
+                      trackingFilter === filter 
+                        ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-lg transform scale-105" 
+                        : "bg-card/70 text-foreground hover:bg-accent/50 border border-border/50"
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+
+          {/* Desktop Filters */}
+          <div className="hidden md:flex gap-3">
             {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
               <button 
                 key={filter}
