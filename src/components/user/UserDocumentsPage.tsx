@@ -66,32 +66,10 @@ const UserDocumentsPage = () => {
     } | null;
   } & Record<string, any>;
 
-  // Initial data fetch with master loading state
+  // Initial loading state management
   useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        const [documentsData, requestsData] = await Promise.all([
-        // Fetch document types
-        supabase.from('document_types').select('*').order('name'),
-        // Fetch user's document requests
-        userProfile?.id ? supabase.from('docrequests').select('*').eq('resident_id', userProfile.id).order('created_at', {
-          ascending: false
-        }) : {
-          data: [],
-          error: null
-        }]);
-
-        // Initial loading is complete
-        setIsInitialLoading(false);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setIsInitialLoading(false);
-      }
-    };
     if (userProfile?.id) {
-      fetchAllData();
-    } else {
-      // If no user profile, still set loading to false
+      // Only set loading to false once we have a user profile
       setIsInitialLoading(false);
     }
   }, [userProfile?.id]);
@@ -100,67 +78,95 @@ const UserDocumentsPage = () => {
   const {
     data: documentRequests = [],
     isLoading,
-    refetch
+    refetch,
+    error
   } = useQuery({
     queryKey: ['user-document-requests', userProfile?.id],
     queryFn: async (): Promise<EnrichedDocumentRequest[]> => {
       if (!userProfile?.id) return [];
 
-      // First get all document requests for the user
-      const {
-        data: requests,
-        error: requestsError
-      } = await supabase.from('docrequests').select('*').eq('resident_id', userProfile.id).order('created_at', {
-        ascending: false
-      });
-      if (requestsError) throw requestsError;
-      if (!requests || requests.length === 0) return [];
+      try {
+        // First get all document requests for the user
+        const {
+          data: requests,
+          error: requestsError
+        } = await supabase.from('docrequests')
+          .select('*')
+          .eq('resident_id', userProfile.id)
+          .order('created_at', { ascending: false });
+          
+        if (requestsError) {
+          console.error('Error fetching document requests:', requestsError);
+          throw requestsError;
+        }
+        
+        if (!requests || requests.length === 0) return [];
 
-      // Get all unique resident IDs from the requests
-      const residentIds = [...new Set(requests.map(req => req.resident_id))];
+        // Get all unique resident IDs from the requests
+        const residentIds = [...new Set(requests.map(req => req.resident_id))];
 
-      // Fetch profile data for all resident IDs
-      const {
-        data: profiles,
-        error: profilesError
-      } = await supabase.from('profiles').select('id, firstname, lastname').in('id', residentIds);
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        // Still return requests even if profile fetch fails, just without profile data
-        return requests.map(request => ({
+        // Fetch profile data for all resident IDs
+        const {
+          data: profiles,
+          error: profilesError
+        } = await supabase.from('profiles')
+          .select('id, firstname, lastname')
+          .in('id', residentIds);
+          
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          // Still return requests even if profile fetch fails, just without profile data
+          return requests.map(request => ({
+            ...request,
+            profiles: null
+          }));
+        }
+
+        // Create a map of profile data for quick lookup
+        const profileMap = (profiles || []).reduce((acc: any, profile: any) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {});
+
+        // Combine requests with profile data
+        const enrichedRequests: EnrichedDocumentRequest[] = requests.map(request => ({
           ...request,
-          profiles: null
+          profiles: profileMap[request.resident_id] || null
         }));
+        
+        console.log('Fetched document requests:', enrichedRequests.length);
+        return enrichedRequests;
+      } catch (error) {
+        console.error('Query function error:', error);
+        throw error;
       }
-
-      // Create a map of profile data for quick lookup
-      const profileMap = (profiles || []).reduce((acc: any, profile: any) => {
-        acc[profile.id] = profile;
-        return acc;
-      }, {});
-
-      // Combine requests with profile data
-      const enrichedRequests: EnrichedDocumentRequest[] = requests.map(request => ({
-        ...request,
-        profiles: profileMap[request.resident_id] || null
-      }));
-      return enrichedRequests;
     },
-    enabled: !!userProfile?.id
+    enabled: !!userProfile?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000)
   });
 
   // Set up real-time subscription for user document requests
   useEffect(() => {
     if (!userProfile?.id) return;
-    const channel = supabase.channel('user-document-requests-realtime').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'docrequests',
-      filter: `resident_id=eq.${userProfile.id}`
-    }, () => {
-      // Refetch user's document requests when changes occur
-      refetch();
-    }).subscribe();
+    
+    const channel = supabase.channel(`user-document-requests-${userProfile.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'docrequests',
+        filter: `resident_id=eq.${userProfile.id}`
+      }, (payload) => {
+        console.log('Real-time update received:', payload);
+        // Add a small delay to prevent race conditions
+        setTimeout(() => {
+          refetch();
+        }, 100);
+      })
+      .subscribe();
+    
     return () => {
       supabase.removeChannel(channel);
     };
