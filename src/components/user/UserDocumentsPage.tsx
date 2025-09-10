@@ -405,14 +405,14 @@ const UserDocumentsPage = () => {
 
         {/* Mobile-first Search and Filters */}
         <div className="space-y-4 md:space-y-0 md:flex md:items-center md:justify-between md:gap-6 mb-6">
-          <div className="relative">
+          <div className="relative w-80 ml-0 mr-auto">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <input 
               type="text" 
               placeholder="Search by tracking ID..." 
               value={trackingSearchQuery} 
               onChange={e => setTrackingSearchQuery(e.target.value)} 
-              className="pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 w-full bg-card/50 text-foreground backdrop-blur-sm shadow-sm hover:shadow-md" 
+              className="pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 w-full bg-card/50 text-foreground backdrop-blur-sm shadow-sm hover:shadow-md"
             />
           </div>
 
