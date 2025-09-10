@@ -615,7 +615,7 @@ const UserDocumentsPage = () => {
         {requestsTotalPages > 1 && (
           <div className="mt-4 w-80 ml-0 mr-auto md:w-full md:ml-0 md:mr-0">
             <div className="flex justify-center items-center gap-1">
-              <span className="text-sm text-muted-foreground mr-4">
+              <span className="hidden md:block text-sm text-muted-foreground mr-4">
                 Showing {requestsStartIndex + 1}-{Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} documents
               </span>
               <button 
