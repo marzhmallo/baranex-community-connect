@@ -377,7 +377,7 @@ const UserDocumentsPage = () => {
           </div>
         </div>
         
-        <div className="flex justify-between items-center text-sm text-muted-foreground mt-6 p-4 bg-card/50 rounded-xl border border-border/50 backdrop-blur-sm w-80 ml-0 mr-auto">
+        <div className="flex justify-between items-center text-sm text-muted-foreground mt-6 p-4 bg-card/50 rounded-xl border border-border/50 backdrop-blur-sm w-80 ml-0 mr-auto md:w-full md:ml-0 md:mr-0">
           <span className="font-medium">Total Documents: <span className="text-primary font-bold">{documentRequests.length}</span></span>
           <span className="hidden md:block">Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
         </div>
@@ -405,7 +405,7 @@ const UserDocumentsPage = () => {
 
         {/* Mobile-first Search and Filters */}
         <div className="space-y-4 md:space-y-0 md:flex md:items-center md:justify-between md:gap-6 mb-6">
-          <div className="relative w-80 ml-0 mr-auto">
+          <div className="relative w-80 ml-0 mr-auto md:w-full md:ml-0 md:mr-0">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <input 
               type="text" 
@@ -613,7 +613,7 @@ const UserDocumentsPage = () => {
         
         {/* Pagination */}
         {requestsTotalPages > 1 && (
-          <div className="mt-4 w-80 ml-0 mr-auto">
+          <div className="mt-4 w-80 ml-0 mr-auto md:w-full md:ml-0 md:mr-0">
             <div className="flex justify-center items-center gap-1">
               <button 
                 onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} 
