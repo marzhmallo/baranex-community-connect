@@ -613,11 +613,8 @@ const UserDocumentsPage = () => {
         
         {/* Pagination */}
         {requestsTotalPages > 1 && (
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-muted-foreground hidden md:block">
-              Showing {requestsStartIndex + 1} to {Math.min(requestsEndIndex, filteredRequests.length)} of {filteredRequests.length} requests
-            </div>
-            <div className="flex items-center gap-2 mx-auto md:mx-0">
+          <div className="mt-4 w-80 ml-0 mr-auto">
+            <div className="flex justify-center items-center gap-1">
               <button 
                 onClick={() => handleRequestsPageChange(requestsCurrentPage - 1)} 
                 disabled={requestsCurrentPage === 1} 
