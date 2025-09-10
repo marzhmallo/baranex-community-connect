@@ -733,6 +733,9 @@ const UserDocumentsPage = () => {
 
                 {/* Mobile-friendly pagination */}
                 <div className="flex items-center justify-center mt-6">
+                  <div className="text-sm text-muted-foreground mb-4">
+                    Showing {startIndex + 1}-{Math.min(endIndex, documentTypes.length)} of {documentTypes.length} documents
+                  </div>
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
