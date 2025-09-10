@@ -507,7 +507,7 @@ const UserDocumentsPage = () => {
           </div>
 
           {/* Mobile Swiper Filters */}
-          <div className="md:hidden">
+          <div className="md:hidden w-full">
             <Swiper
               modules={[FreeMode]}
               slidesPerView="auto"
@@ -516,7 +516,11 @@ const UserDocumentsPage = () => {
                 enabled: true,
                 momentum: true,
               }}
-              className="!pb-2"
+              className="w-full !pb-2"
+              style={{
+                overflow: 'hidden',
+                WebkitOverflowScrolling: 'touch'
+              }}
             >
               {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
                 <SwiperSlide key={filter} className="!w-auto">
