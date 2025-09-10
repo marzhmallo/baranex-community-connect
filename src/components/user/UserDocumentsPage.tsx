@@ -315,7 +315,7 @@ const UserDocumentsPage = () => {
         </div>
         
         {/* Status Cards - Clean Flex/Grid Layout */}
-        <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-none md:grid md:grid-cols-5 md:overflow-visible md:mx-0 md:px-0 md:gap-6" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+        <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory md:grid md:grid-cols-5 md:overflow-visible md:mx-0 md:px-0 md:gap-6">
           <div className="flex-shrink-0 w-40 snap-start md:w-auto">
             <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
               <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
