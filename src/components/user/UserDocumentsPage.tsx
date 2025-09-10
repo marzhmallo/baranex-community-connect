@@ -315,7 +315,7 @@ const UserDocumentsPage = () => {
         </div>
         
         {/* Horizontal Scrolling Status Cards */}
-        <div className="flex gap-6 overflow-x-auto pb-4 md:grid md:grid-cols-5 md:overflow-visible scrollbar-thin scrollbar-thumb-muted scrollbar-track-background">
+        <div className="flex gap-6 overflow-x-auto pb-4 md:grid md:grid-cols-5 md:overflow-visible scrollbar-thin scrollbar-thumb-muted scrollbar-track-background scroll-smooth">
           <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
             <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
               <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
