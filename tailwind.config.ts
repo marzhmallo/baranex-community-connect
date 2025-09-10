@@ -115,5 +115,27 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function({ addUtilities }) {
+			addUtilities({
+				'.scroll-snap-type-x': {
+					'scroll-snap-type': 'x mandatory',
+				},
+				'.scroll-snap-mandatory': {
+					'scroll-snap-type': 'x mandatory',
+				},
+				'.scroll-snap-align-start': {
+					'scroll-snap-align': 'start',
+				},
+				'.scrollbar-none': {
+					'-ms-overflow-style': 'none',
+					'scrollbar-width': 'none',
+				},
+				'.scrollbar-none::-webkit-scrollbar': {
+					display: 'none',
+				},
+			})
+		}
+	],
 } satisfies Config;

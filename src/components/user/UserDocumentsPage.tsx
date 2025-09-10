@@ -314,9 +314,9 @@ const UserDocumentsPage = () => {
           </button>
         </div>
         
-        {/* Horizontal Scrolling Status Cards */}
-        <div className="flex gap-6 overflow-x-auto pb-4 md:grid md:grid-cols-5 md:overflow-visible scrollbar-thin scrollbar-thumb-muted scrollbar-track-background">
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+        {/* Swipeable Status Cards */}
+        <div className="flex gap-6 overflow-x-auto pb-4 md:grid md:grid-cols-5 md:overflow-visible scroll-snap-type-x scrollbar-none">
+          <div className="w-48 flex-shrink-0 scroll-snap-align-start md:w-auto md:flex-shrink group cursor-pointer transition-all duration-300 hover:scale-105">
             <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
               <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
                 <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
@@ -328,7 +328,7 @@ const UserDocumentsPage = () => {
             </div>
           </div>
           
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+          <div className="w-48 flex-shrink-0 scroll-snap-align-start md:w-auto md:flex-shrink group cursor-pointer transition-all duration-300 hover:scale-105">
             <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-200/50 dark:border-blue-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
               <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
                 <Hourglass className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -340,7 +340,7 @@ const UserDocumentsPage = () => {
             </div>
           </div>
           
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+          <div className="w-48 flex-shrink-0 scroll-snap-align-start md:w-auto md:flex-shrink group cursor-pointer transition-all duration-300 hover:scale-105">
             <div className="rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border border-green-200/50 dark:border-green-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
               <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
                 <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -352,7 +352,7 @@ const UserDocumentsPage = () => {
             </div>
           </div>
           
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+          <div className="w-48 flex-shrink-0 scroll-snap-align-start md:w-auto md:flex-shrink group cursor-pointer transition-all duration-300 hover:scale-105">
             <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
               <div className="bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
                 <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -364,7 +364,7 @@ const UserDocumentsPage = () => {
             </div>
           </div>
           
-          <div className="min-w-[160px] md:min-w-0 group cursor-pointer transition-all duration-300 hover:scale-105">
+          <div className="w-48 flex-shrink-0 scroll-snap-align-start md:w-auto md:flex-shrink group cursor-pointer transition-all duration-300 hover:scale-105">
             <div className="rounded-2xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20 border border-red-200/50 dark:border-red-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
               <div className="bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
                 <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
