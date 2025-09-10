@@ -320,90 +320,86 @@ const UserDocumentsPage = () => {
         
         {/* Swipeable Status Cards */}
         <div className="w-full -mx-4 px-4 md:mx-0 md:px-0">
-          <div className="min-w-0 md:hidden">
-            <Swiper
-              modules={[FreeMode]}
-              slidesPerView="auto"
-              spaceBetween={12}
-              freeMode={{
-                enabled: true,
-                momentum: true,
-                sticky: false,
-              }}
-              resistanceRatio={0}
-              className="!pb-4"
-            >
-              <SwiperSlide className="!w-40">
-                <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
-                  <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-                    <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                      <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-medium mb-1">Requests</p>
-                    <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
-                      {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
-                    </p>
+          <Swiper
+            modules={[FreeMode]}
+            slidesPerView="auto"
+            spaceBetween={12}
+            freeMode={{
+              enabled: true,
+              momentum: true,
+            }}
+            className="!pb-4 md:!hidden"
+          >
+            <SwiperSlide className="!w-40">
+              <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+                <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                  <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                    <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                   </div>
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Requests</p>
+                  <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
+                    {documentRequests.filter(req => matchesStatus(req.status, 'Request')).length}
+                  </p>
                 </div>
-              </SwiperSlide>
-              
-              <SwiperSlide className="!w-40">
-                <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
-                  <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-200/50 dark:border-blue-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-                    <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                      <Hourglass className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-medium mb-1">Processing</p>
-                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-                      {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
-                    </p>
+              </div>
+            </SwiperSlide>
+            
+            <SwiperSlide className="!w-40">
+              <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+                <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-200/50 dark:border-blue-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                  <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                    <Hourglass className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Processing</p>
+                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                    {documentRequests.filter(req => matchesStatus(req.status, 'processing')).length}
+                  </p>
                 </div>
-              </SwiperSlide>
-              
-              <SwiperSlide className="!w-40">
-                <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
-                  <div className="rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border border-green-200/50 dark:border-green-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-                    <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                      <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-medium mb-1">Ready</p>
-                    <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-                      {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
-                    </p>
+              </div>
+            </SwiperSlide>
+            
+            <SwiperSlide className="!w-40">
+              <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+                <div className="rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border border-green-200/50 dark:border-green-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                  <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                    <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div>
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Ready</p>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                    {documentRequests.filter(req => matchesStatus(req.status, 'ready')).length}
+                  </p>
                 </div>
-              </SwiperSlide>
-              
-              <SwiperSlide className="!w-40">
-                <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
-                  <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-                    <div className="bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                      <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-medium mb-1">Released</p>
-                    <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
-                      {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
-                    </p>
+              </div>
+            </SwiperSlide>
+            
+            <SwiperSlide className="!w-40">
+              <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+                <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                  <div className="bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                    <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                   </div>
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Released</p>
+                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
+                    {documentRequests.filter(req => matchesAnyStatus(req.status, ['released', 'completed'])).length}
+                  </p>
                 </div>
-              </SwiperSlide>
-              
-              <SwiperSlide className="!w-40">
-                <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
-                  <div className="rounded-2xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20 border border-red-200/50 dark:border-red-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-                    <div className="bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
-                      <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-medium mb-1">Rejected</p>
-                    <p className="text-2xl font-bold text-red-700 dark:text-red-400">
-                      {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
-                    </p>
+              </div>
+            </SwiperSlide>
+            
+            <SwiperSlide className="!w-40">
+              <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
+                <div className="rounded-2xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20 border border-red-200/50 dark:border-red-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                  <div className="bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
+                    <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
                   </div>
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Rejected</p>
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+                    {documentRequests.filter(req => matchesStatus(req.status, 'rejected')).length}
+                  </p>
                 </div>
-              </SwiperSlide>
-            </Swiper>
-          </div>
+              </div>
+            </SwiperSlide>
+          </Swiper>
 
           {/* Desktop Grid */}
           <div className="hidden md:grid md:grid-cols-5 gap-6">
