@@ -417,7 +417,7 @@ const UserDocumentsPage = () => {
           </div>
 
           {/* Simplified Mobile Filters */}
-          <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0 md:flex-wrap">
+          <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0 md:flex-wrap scrollbar-thin scrollbar-thumb-muted scrollbar-track-background">
             {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
               <button 
                 key={filter}
