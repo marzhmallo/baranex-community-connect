@@ -507,36 +507,34 @@ const UserDocumentsPage = () => {
           </div>
 
           {/* Mobile Swiper Filters */}
-          <div className="md:hidden w-full">
-            <Swiper
-              modules={[FreeMode]}
-              slidesPerView="auto"
-              spaceBetween={12}
-              freeMode={{
-                enabled: true,
-                momentum: true,
-              }}
-              className="w-full !pb-2"
-              style={{
-                overflow: 'hidden',
-                WebkitOverflowScrolling: 'touch'
-              }}
-            >
-              {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
-                <SwiperSlide key={filter} className="!w-auto">
-                  <button 
-                    onClick={() => setTrackingFilter(filter)} 
-                    className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-200 font-medium shadow-sm hover:shadow-md ${
-                      trackingFilter === filter 
-                        ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-lg transform scale-105" 
-                        : "bg-card/70 text-foreground hover:bg-accent/50 border border-border/50"
-                    }`}
-                  >
-                    {filter}
-                  </button>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+          <div className="md:hidden w-full -mx-4 px-4">
+            <div className="min-w-0 flex-1">
+              <Swiper
+                modules={[FreeMode]}
+                slidesPerView="auto"
+                spaceBetween={12}
+                freeMode={{
+                  enabled: true,
+                  momentum: true,
+                }}
+                className="w-full !pb-2"
+              >
+                {["All Documents", "Requests", "Processing", "Released", "Ready", "Rejected"].map((filter) => (
+                  <SwiperSlide key={filter} className="!w-auto">
+                    <button 
+                      onClick={() => setTrackingFilter(filter)} 
+                      className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all duration-200 font-medium shadow-sm hover:shadow-md ${
+                        trackingFilter === filter 
+                          ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-lg transform scale-105" 
+                          : "bg-card/70 text-foreground hover:bg-accent/50 border border-border/50"
+                      }`}
+                    >
+                      {filter}
+                    </button>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
           </div>
 
           {/* Desktop Filters */}
