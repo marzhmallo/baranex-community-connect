@@ -518,7 +518,7 @@ const UserDocumentsPage = () => {
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className="w-full justify-between bg-card/70 border-border/50 hover:bg-accent/50 backdrop-blur-sm shadow-sm hover:shadow-md"
+                  className="justify-between bg-card/70 border-border/50 hover:bg-accent/50 backdrop-blur-sm shadow-sm hover:shadow-md min-w-fit"
                 >
                   <span className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
