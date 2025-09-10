@@ -315,7 +315,7 @@ const UserDocumentsPage = () => {
         </div>
         
         {/* Swipeable Status Cards */}
-        <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scroll-snap-x-mandatory no-scrollbar md:grid md:grid-cols-5 md:overflow-visible md:mx-0 md:px-0">
+        <div className="w-full flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scroll-snap-x-mandatory no-scrollbar md:grid md:grid-cols-5 md:overflow-visible md:mx-0 md:px-0">
           <div className="flex-shrink-0 w-40 scroll-snap-start md:w-auto md:flex-shrink group cursor-pointer transition-all duration-300 hover:scale-105">
             <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
               <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/30 p-3 rounded-xl mb-4 shadow-inner group-hover:shadow-md transition-shadow duration-300">
