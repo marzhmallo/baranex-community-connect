@@ -660,7 +660,7 @@ const UserDocumentsPage = () => {
       {/* Document Library - Mobile Simplified */}
       <div className="md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-6">
         <div className="md:lg:col-span-2">
-          <Card className="border-border w-80 ml-0 mr-auto">
+          <Card className="border-border w-80 ml-0 mr-auto md:w-full md:ml-0 md:mr-0">
             <CardHeader className="pb-4">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <CardTitle className="text-lg md:text-xl text-foreground">Available Documents</CardTitle>
