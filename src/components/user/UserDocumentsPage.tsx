@@ -328,7 +328,9 @@ const UserDocumentsPage = () => {
               freeMode={{
                 enabled: true,
                 momentum: true,
+                sticky: false,
               }}
+              resistanceRatio={0}
               className="!pb-4"
             >
               <SwiperSlide className="!w-40">
