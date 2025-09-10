@@ -320,7 +320,8 @@ const UserDocumentsPage = () => {
         
         {/* Mobile Swiper - Clean Implementation */}
         <div className="md:hidden -mx-4 px-4">
-          <Swiper
+          <div className="flex-1 min-w-0">
+            <Swiper
             modules={[FreeMode]}
             slidesPerView="auto"
             spaceBetween={12}
@@ -399,7 +400,8 @@ const UserDocumentsPage = () => {
                 </div>
               </div>
             </SwiperSlide>
-          </Swiper>
+            </Swiper>
+          </div>
         </div>
 
         {/* Desktop Grid - Clean Implementation */}
