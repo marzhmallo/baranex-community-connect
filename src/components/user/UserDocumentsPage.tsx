@@ -447,67 +447,81 @@ const UserDocumentsPage = () => {
               <p>No document requests found</p>
             </div>
           ) : paginatedRequests.map(request => (
-         <Card key={request.id} className="border border-border/50 hover:shadow-lg transition-all duration-300 hover:border-primary/30 bg-card/70 backdrop-blur-sm overflow-hidden group">
-  <CardContent className="p-5">
-    <div className="flex items-start justify-between mb-4">
-      <div className="flex-1 min-w-0"> {/* Added min-w-0 to allow shrinking */}
-        <div className="font-mono text-sm text-primary/80 mb-1 truncate">#{request.docnumber}</div> {/* Added truncate for safety */}
-        <div className="text-foreground font-semibold text-lg group-hover:text-primary transition-colors duration-200 break-words"> {/* Use break-words for long types */}
-          {request.type}
-        </div>
-      </div>
-      <div className="ml-3 flex-shrink-0"> {/* Added flex-shrink-0 to prevent badge from shrinking */}
-        {getStatusBadge(request.status)}
-      </div>
-    </div>
-
-    <div className="space-y-3 text-sm bg-muted/30 rounded-lg p-3 mb-4">
-      {/* This section will now stack on mobile and go side-by-side on larger screens */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-        <span className="text-muted-foreground font-medium mb-1 sm:mb-0">Requested by:</span>
-        <span className="text-foreground font-semibold text-right break-words"> {/* Align right and break long names */}
-          {request.profiles?.firstname && request.profiles?.lastname
-            ? `${request.profiles.firstname} ${request.profiles.lastname}`
-            : 'N/A'}
-        </span>
-      </div>
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-        <span className="text-muted-foreground font-medium mb-1 sm:mb-0">Last update:</span>
-        <span className="text-foreground">{formatDate(request.updated_at || request.created_at)}</span>
-      </div>
-    </div>
-
-    {/* Added flex-wrap to allow buttons to stack on very small screens */}
-    <div className="flex flex-wrap justify-end gap-3 pt-3 border-t border-border/30">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          setSelectedRequest(request);
-          setShowViewDialog(true);
-        }}
-        className="hover:bg-primary/10 hover:text-primary transition-all duration-200"
-      >
-        <Eye className="h-4 w-4 mr-2" />
-        View
-      </Button>
-      {request.status === 'Request' && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            setEditingRequest(request);
-            setShowRequestModal(true);
-          }}
-          className="hover:bg-secondary/10 hover:text-secondary transition-all duration-200"
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
-        </Button>
-      )}
-    </div>
-  </CardContent>
-</Card>
+            <div 
+              key={request.id} 
+              className="bg-white dark:bg-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden max-w-lg mx-auto"
+            >
+              <div className="p-6">
+                {/* Card Header */}
+                <div className="flex justify-between items-start mb-5">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono text-sm text-primary opacity-80 mb-2 truncate">
+                      #{request.docnumber}
+                    </div>
+                    <div className="text-foreground font-semibold text-xl leading-tight break-words">
+                      {request.type}
+                    </div>
+                  </div>
+                  <div className="ml-3 flex-shrink-0">
+                    {getStatusBadge(request.status)}
+                  </div>
+                </div>
+                
+                {/* Info Section */}
+                <div className="bg-muted/20 rounded-xl p-4 mb-5">
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex flex-col">
+                      <span className="text-muted-foreground font-medium text-sm mb-1">
+                        Requested by:
+                      </span>
+                      <span className="text-foreground font-semibold break-words">
+                        {request.profiles?.firstname && request.profiles?.lastname
+                          ? `${request.profiles.firstname} ${request.profiles.lastname}`
+                          : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-muted-foreground font-medium text-sm mb-1">
+                        Last update:
+                      </span>
+                      <span className="text-foreground font-semibold">
+                        {formatDate(request.updated_at || request.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Card Actions */}
+                <div className="flex flex-wrap justify-end gap-3 pt-3 border-t border-border/20">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedRequest(request);
+                      setShowViewDialog(true);
+                    }}
+                    className="text-primary hover:bg-primary/10 hover:text-primary font-medium transition-all duration-200"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                  {request.status === 'Request' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingRequest(request);
+                        setShowRequestModal(true);
+                      }}
+                      className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 font-medium transition-all duration-200"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
           ))}
         </div>
 
