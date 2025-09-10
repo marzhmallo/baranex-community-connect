@@ -412,7 +412,7 @@ const UserDocumentsPage = () => {
               placeholder="Search by tracking ID..." 
               value={trackingSearchQuery} 
               onChange={e => setTrackingSearchQuery(e.target.value)} 
-              className="pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 w-full bg-card/50 text-foreground backdrop-blur-sm shadow-sm hover:shadow-md"
+              className="pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 w-full md:w-1/2 bg-card/50 text-foreground backdrop-blur-sm shadow-sm hover:shadow-md"
             />
           </div>
 
