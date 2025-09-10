@@ -320,7 +320,7 @@ const UserDocumentsPage = () => {
         
         {/* Swipeable Status Cards */}
         <div className="w-full -mx-4 px-4 md:mx-0 md:px-0">
-          <div className="min-w-0 md:hidden">
+          <div className="min-w-0 flex-1 md:hidden">
             <Swiper
               modules={[FreeMode]}
               slidesPerView="auto"
