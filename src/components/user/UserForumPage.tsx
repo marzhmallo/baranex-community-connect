@@ -102,15 +102,10 @@ const UserForumPage = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   
   const fetchForums = async () => {
-    if (!barangayId) {
-      return [];
-    }
-    
     try {
       const { data, error } = await supabase
         .from('forums')
         .select('*')
-        .eq('brgyid', barangayId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -127,11 +122,11 @@ const UserForumPage = () => {
   };
 
   const { data: forums, isLoading, error, refetch } = useQuery({
-    queryKey: ['forums', barangayId],
+    queryKey: ['forums'],
     queryFn: fetchForums,
     staleTime: 0,
     gcTime: 0,
-    enabled: !!barangayId
+    enabled: !!userProfile
   });
 
   console.log('Forum loading state:', { isLoading, forumsCount: forums?.length });
