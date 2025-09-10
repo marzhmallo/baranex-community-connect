@@ -329,6 +329,7 @@ const UserDocumentsPage = () => {
                 enabled: true,
                 momentum: true,
                 sticky: false,
+                momentumBounce: false,
               }}
               resistanceRatio={0}
               className="!pb-4"
