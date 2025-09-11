@@ -301,11 +301,14 @@ const UserDocumentsPage = () => {
     });
   };
   if (isInitialLoading) {
-    return <div className="w-full p-6 bg-background min-h-screen relative">
+    return (
+      <div className="w-full p-6 bg-background min-h-screen relative">
         <LocalizedLoadingScreen isLoading={isInitialLoading} />
-      </div>;
+      </div>
+    );
   }
-  return <div className="w-full p-4 md:p-6 bg-gradient-to-br from-background via-background to-muted/20 min-h-screen">
+  return (
+    <div className="w-full p-4 md:p-6 bg-gradient-to-br from-background via-background to-muted/20 min-h-screen">
       {/* Mobile-first Header */}
       <div className="mb-8">
         <div className="relative">
@@ -1448,7 +1451,8 @@ const EditRequestForm = ({
       setIsSubmitting(false);
     }
   };
-  return <form onSubmit={handleSubmit} className="space-y-4">
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label className="text-sm font-medium">Document Type</Label>
         <p className="text-sm text-muted-foreground mt-1">{request.type}</p>
