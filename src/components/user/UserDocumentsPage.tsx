@@ -95,23 +95,14 @@ const UserDocumentsPage = () => {
     queryFn: async (): Promise<EnrichedDocumentRequest[]> => {
       if (!userProfile?.id) return [];
 
-      console.log('Fetching document requests for user:', userProfile.id);
-
       try {
-        // Use Supabase join to get requests with profile data in one query
+        // Simplified query to fetch all user's document requests without JOIN
         const {
           data: requests,
           error: requestsError
         } = await supabase
           .from('docrequests')
-          .select(`
-            *,
-            profiles:resident_id (
-              id,
-              firstname,
-              lastname
-            )
-          `)
+          .select('*')
           .eq('resident_id', userProfile.id)
           .order('created_at', { ascending: false });
           
@@ -120,35 +111,20 @@ const UserDocumentsPage = () => {
           throw requestsError;
         }
         
-        console.log('Raw requests data:', requests?.length, requests);
-        
         if (!requests || requests.length === 0) {
-          console.log('No document requests found for user');
           return [];
         }
 
-        // Process the joined data and add fallback profile data
-        const enrichedRequests: EnrichedDocumentRequest[] = requests.map(request => {
-          // If profile join failed, use the current user's profile as fallback
-          // since users can only see their own documents
-          let profileData = request.profiles;
-          
-          if (!profileData || (!profileData.firstname && !profileData.lastname)) {
-            console.log('Profile join failed for request:', request.id, 'using fallback');
-            profileData = {
-              id: userProfile.id,
-              firstname: userProfile.firstname || 'Unknown',
-              lastname: userProfile.lastname || 'User'
-            };
+        // Add profile data from current user context since users can only see their own documents
+        const enrichedRequests: EnrichedDocumentRequest[] = requests.map(request => ({
+          ...request,
+          profiles: {
+            id: userProfile.id,
+            firstname: userProfile.firstname || 'Unknown',
+            lastname: userProfile.lastname || 'User'
           }
-
-          return {
-            ...request,
-            profiles: profileData
-          };
-        });
+        }));
         
-        console.log('Processed document requests:', enrichedRequests.length, enrichedRequests);
         return enrichedRequests;
       } catch (error) {
         console.error('Query function error:', error);
