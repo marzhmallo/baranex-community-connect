@@ -59,7 +59,7 @@ const UserDocumentsPage = () => {
     method?: string;
     notes?: string;
     receiver?: any;
-    profiles?: {
+    profiles: {
       id: string;
       firstname: string;
       lastname: string;
@@ -85,13 +85,23 @@ const UserDocumentsPage = () => {
     queryFn: async (): Promise<EnrichedDocumentRequest[]> => {
       if (!userProfile?.id) return [];
 
+      console.log('Fetching document requests for user:', userProfile.id);
+
       try {
-        // First get all document requests for the user
+        // Use Supabase join to get requests with profile data in one query
         const {
           data: requests,
           error: requestsError
-        } = await supabase.from('docrequests')
-          .select('*')
+        } = await supabase
+          .from('docrequests')
+          .select(`
+            *,
+            profiles:resident_id (
+              id,
+              firstname,
+              lastname
+            )
+          `)
           .eq('resident_id', userProfile.id)
           .order('created_at', { ascending: false });
           
@@ -100,41 +110,35 @@ const UserDocumentsPage = () => {
           throw requestsError;
         }
         
-        if (!requests || requests.length === 0) return [];
-
-        // Get all unique resident IDs from the requests
-        const residentIds = [...new Set(requests.map(req => req.resident_id))];
-
-        // Fetch profile data for all resident IDs
-        const {
-          data: profiles,
-          error: profilesError
-        } = await supabase.from('profiles')
-          .select('id, firstname, lastname')
-          .in('id', residentIds);
-          
-        if (profilesError) {
-          console.error('Error fetching profiles:', profilesError);
-          // Still return requests even if profile fetch fails, just without profile data
-          return requests.map(request => ({
-            ...request,
-            profiles: null
-          }));
+        console.log('Raw requests data:', requests?.length, requests);
+        
+        if (!requests || requests.length === 0) {
+          console.log('No document requests found for user');
+          return [];
         }
 
-        // Create a map of profile data for quick lookup
-        const profileMap = (profiles || []).reduce((acc: any, profile: any) => {
-          acc[profile.id] = profile;
-          return acc;
-        }, {});
+        // Process the joined data and add fallback profile data
+        const enrichedRequests: EnrichedDocumentRequest[] = requests.map(request => {
+          // If profile join failed, use the current user's profile as fallback
+          // since users can only see their own documents
+          let profileData = request.profiles;
+          
+          if (!profileData || (!profileData.firstname && !profileData.lastname)) {
+            console.log('Profile join failed for request:', request.id, 'using fallback');
+            profileData = {
+              id: userProfile.id,
+              firstname: userProfile.firstname || 'Unknown',
+              lastname: userProfile.lastname || 'User'
+            };
+          }
 
-        // Combine requests with profile data
-        const enrichedRequests: EnrichedDocumentRequest[] = requests.map(request => ({
-          ...request,
-          profiles: profileMap[request.resident_id] || null
-        }));
+          return {
+            ...request,
+            profiles: profileData
+          };
+        });
         
-        console.log('Fetched document requests:', enrichedRequests.length);
+        console.log('Processed document requests:', enrichedRequests.length, enrichedRequests);
         return enrichedRequests;
       } catch (error) {
         console.error('Query function error:', error);
@@ -142,7 +146,7 @@ const UserDocumentsPage = () => {
       }
     },
     enabled: !!userProfile?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes - reduced for better real-time consistency
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000)
@@ -152,6 +156,8 @@ const UserDocumentsPage = () => {
   useEffect(() => {
     if (!userProfile?.id) return;
     
+    console.log('Setting up real-time subscription for user:', userProfile.id);
+    
     const channel = supabase.channel(`user-document-requests-${userProfile.id}`)
       .on('postgres_changes', {
         event: '*',
@@ -159,18 +165,19 @@ const UserDocumentsPage = () => {
         table: 'docrequests',
         filter: `resident_id=eq.${userProfile.id}`
       }, (payload) => {
-        console.log('Real-time update received:', payload);
-        // Add a small delay to prevent race conditions
-        setTimeout(() => {
-          refetch();
-        }, 100);
+        console.log('Real-time update received:', payload.eventType, payload.new || payload.old);
+        // Use query invalidation instead of refetch to avoid conflicts
+        queryClient.invalidateQueries({ 
+          queryKey: ['user-document-requests', userProfile.id] 
+        });
       })
       .subscribe();
     
     return () => {
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [userProfile?.id, refetch]);
+  }, [userProfile?.id, queryClient]);
 
   // Fetch document types from Supabase
   const {
@@ -597,28 +604,30 @@ const UserDocumentsPage = () => {
                 </div>
                 
                 {/* Info Section */}
-                <div className="bg-muted/20 rounded-xl p-4 mb-5">
-                  <div className="flex flex-col space-y-3">
-                    <div className="flex flex-col">
-                      <span className="text-muted-foreground font-medium text-sm mb-1">
-                        Requested by:
-                      </span>
-                      <span className="text-foreground font-semibold break-words">
-                        {request.profiles?.firstname && request.profiles?.lastname
-                          ? `${request.profiles.firstname} ${request.profiles.lastname}`
-                          : 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-muted-foreground font-medium text-sm mb-1">
-                        Last update:
-                      </span>
-                      <span className="text-foreground font-semibold">
-                        {formatDate(request.updated_at || request.created_at)}
-                      </span>
+                  <div className="bg-muted/20 rounded-xl p-4 mb-5">
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground font-medium text-sm mb-1">
+                          Requested by:
+                        </span>
+                        <span className="text-foreground font-semibold break-words">
+                          {request.profiles?.firstname && request.profiles?.lastname
+                            ? `${request.profiles.firstname} ${request.profiles.lastname}`
+                            : userProfile?.firstname && userProfile?.lastname
+                            ? `${userProfile.firstname} ${userProfile.lastname}`
+                            : 'You'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground font-medium text-sm mb-1">
+                          Last update:
+                        </span>
+                        <span className="text-foreground font-semibold">
+                          {formatDate(request.updated_at || request.created_at)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
                 
                 {/* Card Actions */}
                 <div className="flex flex-wrap justify-end gap-3 pt-3 border-t border-border/20">
@@ -694,7 +703,9 @@ const UserDocumentsPage = () => {
                     <td className="px-8 py-6 whitespace-nowrap text-sm text-foreground">
                       {request.profiles?.firstname && request.profiles?.lastname 
                         ? `${request.profiles.firstname} ${request.profiles.lastname}` 
-                        : 'N/A'}
+                        : userProfile?.firstname && userProfile?.lastname
+                        ? `${userProfile.firstname} ${userProfile.lastname}`
+                        : 'You'}
                     </td>
                     <td className="px-8 py-6 whitespace-nowrap">
                       {getStatusBadge(request.status)}
