@@ -318,26 +318,18 @@ const UserDocumentsPage = () => {
         </div>
         
         {/* Swipeable Status Cards */}
-        <div className="w-full md:mx-0 md:px-0">
-          <div className="flex-1 min-w-0 md:hidden">
-            <div className="px-4 overflow-hidden">
-              <div className="-mx-4">
-                <Swiper
-                modules={[FreeMode]}
-                slidesPerView="auto"
-                spaceBetween={12}
-                freeMode={{
-                  enabled: true,
-                  momentum: true,
-                  momentumRatio: 0.5,
-                  momentumVelocityRatio: 0.5,
-                  minimumVelocity: 0.01,
-                  momentumBounce: false,
-                }}
-                resistance={false}
-                className="!pb-4 px-4"
-                wrapperClass="!box-content !w-auto"
-              >
+        <div className="w-full -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="min-w-0 md:hidden">
+            <Swiper
+              modules={[FreeMode]}
+              slidesPerView="auto"
+              spaceBetween={12}
+              freeMode={{
+                enabled: true,
+                momentum: true,
+              }}
+              className="!pb-4"
+            >
               <SwiperSlide className="!w-40">
                 <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
                   <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-5 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
@@ -408,8 +400,6 @@ const UserDocumentsPage = () => {
                 </div>
               </SwiperSlide>
             </Swiper>
-              </div>
-            </div>
           </div>
 
           {/* Desktop Grid */}
