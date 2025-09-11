@@ -498,7 +498,9 @@ const UserDocumentsPage = () => {
         
         <div className="flex justify-between items-center text-sm text-muted-foreground mt-6 p-4 bg-card/50 rounded-xl border border-border/50 backdrop-blur-sm w-80 ml-0 mr-auto md:w-full md:ml-0 md:mr-0">
           <span className="font-medium">Total Documents: <span className="text-primary font-bold">{documentRequests.length}</span></span>
-          <span className="hidden md:block">Last Updated: {documentRequests.length > 0 ? formatDate(new Date(Math.max(...documentRequests.map(req => new Date(req.updated_at || req.created_at).getTime()))).toISOString()) : 'No documents'}</span>
+          <span className="hidden md:block">
+            Last Updated: {documentRequests.length > 0 ? 'Recently updated' : 'No documents'}
+          </span>
         </div>
       </div>
 
