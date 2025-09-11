@@ -74,6 +74,16 @@ const UserDocumentsPage = () => {
     }
   }, [userProfile?.id]);
 
+  // Reset pagination when tracking filter changes
+  useEffect(() => {
+    setRequestsCurrentPage(1);
+  }, [trackingFilter]);
+
+  // Reset pagination when search query changes
+  useEffect(() => {
+    setRequestsCurrentPage(1);
+  }, [trackingSearchQuery]);
+
   // Fetch user's document requests from Supabase with real-time updates
   const {
     data: documentRequests = [],
