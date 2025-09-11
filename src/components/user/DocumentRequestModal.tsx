@@ -223,20 +223,20 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-background rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border/50 animate-scale-in">
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-2 md:p-4">
+      <div className="bg-background rounded-2xl shadow-2xl w-full max-w-3xl max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col border border-border/50 animate-scale-in mx-2 md:mx-0">
         {/* Header */}
-        <div className="p-6 border-b border-border bg-gradient-to-r from-primary/5 to-primary/10">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <FileText className="h-6 w-6 text-primary" />
+        <div className="p-4 md:p-6 border-b border-border bg-gradient-to-r from-primary/5 to-primary/10">
+          <div className="flex justify-between items-start md:items-center gap-3">
+            <div className="flex items-start md:items-center gap-3 flex-1 min-w-0">
+              <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                <FileText className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">
-                  {editingRequest ? 'Edit Document Request' : 'Request Document'}
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg md:text-2xl font-bold text-foreground truncate">
+                  {editingRequest ? 'Edit Request' : 'Request Document'}
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
                   {editingRequest ? 'Update your document request details' : 'Submit your document request with ease'}
                 </p>
               </div>
@@ -245,15 +245,15 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-10 w-10 p-0 hover:bg-destructive/10 hover:text-destructive rounded-full"
+              className="h-8 w-8 md:h-10 md:w-10 p-0 hover:bg-destructive/10 hover:text-destructive rounded-full flex-shrink-0"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-auto">
-          <div className="p-6 space-y-8">
+          <div className="p-3 md:p-6 space-y-6 md:space-y-8">
             {/* Document Type Selection */}
             <Card className="border-0 shadow-sm bg-gradient-to-br from-background to-muted/20">
               <CardHeader className="pb-4">
@@ -419,7 +419,7 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Label className="text-sm font-medium text-foreground flex items-center gap-2 mb-3">
                       Payment Method <span className="text-destructive">*</span>
                     </Label>
                     {isLoadingPaymentMethods ? (
@@ -431,25 +431,25 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                         No payment methods configured
                       </div>
                      ) : (
-                       <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-3 space-y-3">
+                       <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-2 md:space-y-3">
                          {/* Default Cash/Walk-in Payment Option */}
-                         <div className={`flex items-center space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all ${barangayInfo?.payreq ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                         <div className={`flex items-start space-x-3 p-3 md:p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all ${barangayInfo?.payreq ? 'opacity-50 cursor-not-allowed' : ''}`}>
                            <RadioGroupItem 
                              value="cash" 
                              id="cash" 
-                             className="border-2" 
+                             className="border-2 mt-1 flex-shrink-0" 
                              disabled={barangayInfo?.payreq}
                            />
-                           <Label htmlFor="cash" className={`flex-1 ${!barangayInfo?.payreq ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                             <div className="flex items-center justify-between">
-                               <div>
-                                 <span className="font-medium">Cash Payment (Walk-in)</span>
-                                 <p className="text-xs text-muted-foreground mt-1">
+                           <Label htmlFor="cash" className={`flex-1 min-w-0 ${!barangayInfo?.payreq ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                             <div className="flex items-start justify-between gap-3">
+                               <div className="min-w-0 flex-1">
+                                 <span className="font-medium text-sm md:text-base block truncate">Cash Payment (Walk-in)</span>
+                                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                    {barangayInfo?.payreq ? 'Advance payment required' : 'Pay in person at the barangay office'}
                                  </p>
                                </div>
-                               <div className="w-8 h-8 flex items-center justify-center bg-green-100 dark:bg-green-900/30 rounded">
-                                 <span className="text-green-600 dark:text-green-400 text-lg">💰</span>
+                               <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center bg-green-100 dark:bg-green-900/30 rounded flex-shrink-0">
+                                 <span className="text-green-600 dark:text-green-400 text-sm md:text-lg">💰</span>
                                </div>
                              </div>
                            </Label>
@@ -457,20 +457,20 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
 
                          {/* Online Payment Methods */}
                          {paymentMethods.map((method) => (
-                           <div key={method.id} className="flex items-center space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all">
-                             <RadioGroupItem value={method.id} id={method.id} className="border-2" />
-                             <Label htmlFor={method.id} className="flex-1 cursor-pointer">
-                               <div className="flex items-center justify-between">
-                                 <div>
-                                   <span className="font-medium">{method.gname}</span>
+                           <div key={method.id} className="flex items-start space-x-3 p-3 md:p-4 rounded-lg border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all">
+                             <RadioGroupItem value={method.id} id={method.id} className="border-2 mt-1 flex-shrink-0" />
+                             <Label htmlFor={method.id} className="flex-1 cursor-pointer min-w-0">
+                               <div className="flex items-start justify-between gap-3">
+                                 <div className="min-w-0 flex-1">
+                                   <span className="font-medium text-sm md:text-base block truncate">{method.gname}</span>
                                    {method.credz && (
-                                     <p className="text-xs text-muted-foreground mt-1">
+                                     <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                                        {method.gname?.toLowerCase().includes('gcash') ? 'Digital Payment' : 'Traditional Payment'}
                                      </p>
                                    )}
                                  </div>
                                  {method.url && (
-                                   <img src={method.url} alt={method.gname} className="w-8 h-8 object-contain rounded" />
+                                   <img src={method.url} alt={method.gname} className="w-6 h-6 md:w-8 md:h-8 object-contain rounded flex-shrink-0" />
                                  )}
                                </div>
                              </Label>
@@ -480,102 +480,104 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                     )}
 
                     {selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && (
-                      <div className="mt-6 space-y-4 p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 animate-fade-in">
-                        <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
-                          <CreditCard className="h-5 w-5" />
-                          GCash Payment Details
+                      <div className="mt-4 md:mt-6 space-y-4 p-4 md:p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 animate-fade-in">
+                        <h4 className="text-base md:text-lg font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
+                          <span className="truncate">GCash Payment Details</span>
                         </h4>
                         
                         {/* Payment Information Display */}
                         {selectedPaymentMethod.credz && (
-                          <div className="bg-white/50 dark:bg-black/20 p-4 rounded-lg space-y-2">
+                          <div className="bg-white/50 dark:bg-black/20 p-3 md:p-4 rounded-lg space-y-2">
                             {typeof selectedPaymentMethod.credz === 'object' && selectedPaymentMethod.credz !== null && (
                               Object.entries(selectedPaymentMethod.credz as Record<string, any>).map(([key, value]) => (
-                                <p key={key} className="text-sm">
+                                <p key={key} className="text-xs md:text-sm break-words">
                                   <span className="font-medium text-blue-700 dark:text-blue-300 capitalize">{key}:</span>
-                                  <span className="ml-2 text-blue-600 dark:text-blue-400">{String(value)}</span>
+                                  <span className="ml-2 text-blue-600 dark:text-blue-400 break-all">{String(value)}</span>
                                 </p>
                               ))
                             )}
                             {selectedPaymentMethod.url && (
                               <div className="mt-3">
-                                <p className="font-medium text-blue-700 dark:text-blue-300 mb-2">QR Code:</p>
-                                <img src={selectedPaymentMethod.url} alt="Payment QR Code" className="w-32 h-32 object-contain border rounded-lg bg-white" />
+                                <p className="font-medium text-blue-700 dark:text-blue-300 mb-2 text-xs md:text-sm">QR Code:</p>
+                                <div className="flex justify-center md:justify-start">
+                                  <img src={selectedPaymentMethod.url} alt="Payment QR Code" className="w-24 h-24 md:w-32 md:h-32 object-contain border rounded-lg bg-white" />
+                                </div>
                               </div>
                             )}
                           </div>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="amount" className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                              Amount *
-                            </Label>
-                            <Input 
-                              id="amount" 
-                              type="number" 
-                              value={amount} 
-                              onChange={(e) => setAmount(e.target.value)} 
-                              placeholder={`₱${selectedDoc.fee}`} 
-                              className="mt-1 bg-white/70 dark:bg-black/20 border-blue-200 dark:border-blue-700" 
-                            />
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                            <div>
+                              <Label htmlFor="amount" className="text-xs md:text-sm font-medium text-blue-800 dark:text-blue-200 block mb-1">
+                                Amount *
+                              </Label>
+                              <Input 
+                                id="amount" 
+                                type="number" 
+                                value={amount} 
+                                onChange={(e) => setAmount(e.target.value)} 
+                                placeholder={`₱${selectedDoc.fee}`} 
+                                className="h-10 md:h-11 bg-white/70 dark:bg-black/20 border-blue-200 dark:border-blue-700 text-sm" 
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="orNumber" className="text-xs md:text-sm font-medium text-blue-800 dark:text-blue-200 block mb-1">
+                                Reference Number *
+                              </Label>
+                              <Input 
+                                id="orNumber" 
+                                value={orNumber} 
+                                onChange={(e) => setOrNumber(e.target.value)} 
+                                placeholder="Enter reference number..." 
+                                className="h-10 md:h-11 bg-white/70 dark:bg-black/20 border-blue-200 dark:border-blue-700 text-sm" 
+                              />
+                            </div>
                           </div>
                           
                           <div>
-                            <Label htmlFor="orNumber" className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                              Reference Number *
+                            <Label htmlFor="paymentScreenshots" className="text-xs md:text-sm font-medium text-blue-800 dark:text-blue-200 block mb-2">
+                              Payment Screenshots *
                             </Label>
-                            <Input 
-                              id="orNumber" 
-                              value={orNumber} 
-                              onChange={(e) => setOrNumber(e.target.value)} 
-                              placeholder="Enter reference number..." 
-                              className="mt-1 bg-white/70 dark:bg-black/20 border-blue-200 dark:border-blue-700" 
-                            />
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="paymentScreenshots" className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                            Payment Screenshots *
-                          </Label>
-                          <div className="mt-2">
                             <input 
                               id="paymentScreenshots"
                               type="file" 
                               accept="image/*" 
                               multiple
                               onChange={(e) => setPaymentScreenshots(Array.from(e.target.files || []))} 
-                              className="block w-full text-sm text-blue-700 dark:text-blue-300 file:mr-4 file:py-3 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:transition-colors cursor-pointer bg-white/70 dark:bg-black/20 border border-blue-200 dark:border-blue-700 rounded-lg" 
+                              className="block w-full text-xs md:text-sm text-blue-700 dark:text-blue-300 file:mr-2 md:file:mr-4 file:py-2 md:file:py-3 file:px-3 md:file:px-4 file:rounded-lg file:border-0 file:text-xs md:file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:transition-colors cursor-pointer bg-white/70 dark:bg-black/20 border border-blue-200 dark:border-blue-700 rounded-lg" 
                             />
                             {paymentScreenshots.length > 0 && (
                               <div className="mt-3 animate-fade-in">
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                                   {paymentScreenshots.map((screenshot, index) => (
                                     <div key={index} className="relative">
                                       <img 
                                         src={URL.createObjectURL(screenshot)} 
                                         alt={`Payment screenshot ${index + 1}`} 
-                                        className="w-full h-32 object-cover border-2 border-blue-200 dark:border-blue-700 rounded-lg shadow-sm" 
+                                        className="w-full h-20 md:h-32 object-cover border-2 border-blue-200 dark:border-blue-700 rounded-lg shadow-sm" 
                                       />
                                       <Button
                                         type="button"
                                         variant="destructive"
                                         size="sm"
-                                        className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                                        className="absolute top-1 right-1 h-5 w-5 md:h-6 md:w-6 p-0 rounded-full"
                                         onClick={() => setPaymentScreenshots(prev => prev.filter((_, i) => i !== index))}
                                       >
-                                        <X className="h-3 w-3" />
+                                        <X className="h-2 w-2 md:h-3 md:w-3" />
                                       </Button>
                                     </div>
                                   ))}
                                 </div>
                               </div>
                             )}
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 leading-relaxed">
+                              Upload clear screenshots of your payment confirmation (multiple files allowed)
+                            </p>
                           </div>
-                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                            Upload clear screenshots of your payment confirmation (multiple files allowed)
-                          </p>
                         </div>
                       </div>
                     )}
@@ -586,14 +588,14 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-border bg-gradient-to-r from-muted/20 to-muted/10">
-            <div className="flex justify-end gap-4">
+          <div className="p-3 md:p-6 border-t border-border bg-gradient-to-r from-muted/20 to-muted/10">
+            <div className="flex flex-col-reverse md:flex-row justify-end gap-3 md:gap-4">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={onClose} 
                 disabled={isSubmitting}
-                className="px-6 py-2 h-11"
+                className="w-full md:w-auto px-6 py-2 h-10 md:h-11"
               >
                 Cancel
               </Button>
@@ -607,15 +609,15 @@ const DocumentRequestModal = ({ onClose, editingRequest }: DocumentRequestModalP
                   (selectedPaymentMethod?.gname?.toLowerCase().includes('gcash') && selectedDoc?.fee > 0 && (!amount || !orNumber || paymentScreenshots.length === 0)) ||
                   (selectedDoc?.fee > 0 && barangayInfo?.payreq && paymentMethod === 'cash')
                 }
-                className="px-8 py-2 h-11 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all"
+                className="w-full md:w-auto px-8 py-2 h-10 md:h-11 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all"
               >
                 {isSubmitting ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Submitting...
+                    <span className="truncate">Submitting...</span>
                   </div>
                 ) : (
-                  editingRequest ? "Update Request" : "Submit Request"
+                  <span className="truncate">{editingRequest ? "Update Request" : "Submit Request"}</span>
                 )}
               </Button>
             </div>
