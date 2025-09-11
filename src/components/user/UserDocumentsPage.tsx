@@ -1278,7 +1278,7 @@ const UserDocumentsPage = () => {
 
       {/* Template Details Dialog */}
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-3xl p-4 md:p-6">
           <DialogHeader className="pb-6">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
