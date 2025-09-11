@@ -342,8 +342,8 @@ const UserDocumentsPage = () => {
         </div>
         
         {/* Swipeable Status Cards */}
-        <div className="w-full -mx-4 px-4 md:mx-0 md:px-0">
-          <div className="min-w-0 md:hidden">
+        <div className="w-full overflow-hidden">
+          <div className="min-w-0 md:hidden -mx-4">
             <Swiper
               modules={[FreeMode]}
               slidesPerView="auto"
@@ -351,8 +351,10 @@ const UserDocumentsPage = () => {
               freeMode={{
                 enabled: true,
                 momentum: true,
+                sticky: false,
               }}
-              className="!pb-4"
+              className="!pb-4 !px-4"
+              style={{ paddingRight: '16px' }}
             >
               <SwiperSlide className="!w-40">
                 <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
@@ -425,6 +427,7 @@ const UserDocumentsPage = () => {
               </SwiperSlide>
             </Swiper>
           </div>
+        </div>
 
           {/* Desktop Grid */}
           <div className="hidden md:grid md:grid-cols-5 gap-6">
@@ -1389,7 +1392,8 @@ const UserDocumentsPage = () => {
       >
         <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform duration-300" />
       </Button>
-    </div>;
+    </div>
+  );
 };
 
 // Edit Request Form Component
@@ -1461,6 +1465,7 @@ const EditRequestForm = ({
           {isSubmitting ? 'Updating...' : 'Update Request'}
         </Button>
       </div>
-    </form>;
+    </form>
+  );
 };
 export default UserDocumentsPage;
