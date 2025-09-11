@@ -45,6 +45,23 @@ const UserDocumentsPage = () => {
   } = useToast();
   const queryClient = useQueryClient();
 
+  // Auto-refresh data on page visit
+  useEffect(() => {
+    const refreshData = async () => {
+      setIsRefreshing(true);
+      try {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['user-document-requests'] }),
+          queryClient.invalidateQueries({ queryKey: ['document-types'] })
+        ]);
+      } finally {
+        setIsRefreshing(false);
+      }
+    };
+    
+    refreshData();
+  }, [queryClient]);
+
   // Define the enriched request type
   type EnrichedDocumentRequest = {
     id: string;
