@@ -19,15 +19,34 @@ interface DashboardData {
   totalRelocated: number;
   isLoading: boolean;
   error: string | null;
+  refreshData: () => Promise<void>;
 }
 
 export const useDashboardData = (brgyid?: string) => {
-  // Check localStorage synchronously to avoid flash
+  // Check localStorage synchronously to avoid flash, with 5-minute expiration
   const getCachedData = (): DashboardData | null => {
     try {
       const cacheKey = brgyid ? `dashboardData_${brgyid}` : 'preloadedDashboardData';
+      const timestampKey = brgyid ? `dashboardData_timestamp_${brgyid}` : 'preloadedDashboardData_timestamp';
+      
       const cached = localStorage.getItem(cacheKey);
-      return cached ? JSON.parse(cached) : null;
+      const timestamp = localStorage.getItem(timestampKey);
+      
+      if (!cached || !timestamp) return null;
+      
+      // Check if cache is older than 5 minutes (300000 ms)
+      const now = Date.now();
+      const cacheAge = now - parseInt(timestamp);
+      const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+      
+      if (cacheAge > CACHE_EXPIRY) {
+        // Cache expired, remove it
+        localStorage.removeItem(cacheKey);
+        localStorage.removeItem(timestampKey);
+        return null;
+      }
+      
+      return JSON.parse(cached);
     } catch {
       return null;
     }
@@ -36,8 +55,10 @@ export const useDashboardData = (brgyid?: string) => {
   // Initialize with cached data if available
   const [data, setData] = useState<DashboardData>(() => {
     const cachedData = getCachedData();
+    const refreshDataPlaceholder = async () => {}; // Placeholder, will be replaced
+    
     if (cachedData) {
-      return { ...cachedData, isLoading: false };
+      return { ...cachedData, isLoading: false, refreshData: refreshDataPlaceholder };
     }
     
     return {
@@ -57,16 +78,23 @@ export const useDashboardData = (brgyid?: string) => {
       totalRelocated: 0,
       isLoading: true,
       error: null,
+      refreshData: refreshDataPlaceholder,
     };
   });
 
-  useEffect(() => {
-    // Skip fetching if we already have cached data
-    if (getCachedData()) {
-      return;
-    }
+  // Add a refresh function that can be called manually
+  const refreshData = async () => {
+    // Clear cache before fetching fresh data
+    const cacheKey = brgyid ? `dashboardData_${brgyid}` : 'preloadedDashboardData';
+    const timestampKey = brgyid ? `dashboardData_timestamp_${brgyid}` : 'preloadedDashboardData_timestamp';
+    localStorage.removeItem(cacheKey);
+    localStorage.removeItem(timestampKey);
+    
+    setData(prev => ({ ...prev, isLoading: true }));
+    await fetchDashboardData();
+  };
 
-    const fetchDashboardData = async () => {
+  const fetchDashboardData = async () => {
       try {
         // Fetch total active residents (excluding deceased and relocated)
         const { count: residentsCount, error: residentsError } = await supabase
@@ -243,11 +271,14 @@ export const useDashboardData = (brgyid?: string) => {
           totalRelocated: relocatedCount || 0,
           isLoading: false,
           error: null,
+          refreshData,
         };
 
-        // Cache the data
+        // Cache the data with timestamp
         const cacheKey = brgyid ? `dashboardData_${brgyid}` : 'preloadedDashboardData';
+        const timestampKey = brgyid ? `dashboardData_timestamp_${brgyid}` : 'preloadedDashboardData_timestamp';
         localStorage.setItem(cacheKey, JSON.stringify(dashboardData));
+        localStorage.setItem(timestampKey, Date.now().toString());
         
         setData(dashboardData);
       } catch (error) {
@@ -260,10 +291,16 @@ export const useDashboardData = (brgyid?: string) => {
       }
     };
 
-    fetchDashboardData();
+  useEffect(() => {
+    // Check if we have valid cached data, if not fetch fresh data
+    const cachedData = getCachedData();
+    if (!cachedData) {
+      fetchDashboardData();
+    }
   }, [brgyid]);
 
-  return data;
+  // Expose refresh function alongside data
+  return { ...data, refreshData };
 };
 
 // Helper function to process monthly data (only up to current month)

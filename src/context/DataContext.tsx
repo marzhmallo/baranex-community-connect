@@ -277,6 +277,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 prev.filter(resident => resident.id !== payload.old.id)
               );
             }
+            
+            // Clear dashboard cache when residents change
+            const cacheKey = `dashboardData_${userProfile.brgyid}`;
+            const timestampKey = `dashboardData_timestamp_${userProfile.brgyid}`;
+            localStorage.removeItem(cacheKey);
+            localStorage.removeItem(timestampKey);
           }
         )
         .subscribe();
@@ -307,6 +313,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
                 prev.filter(household => household.id !== payload.old.id)
               );
             }
+            
+            // Clear dashboard cache when households change
+            const cacheKey = `dashboardData_${userProfile.brgyid}`;
+            const timestampKey = `dashboardData_timestamp_${userProfile.brgyid}`;
+            localStorage.removeItem(cacheKey);
+            localStorage.removeItem(timestampKey);
           }
         )
         .subscribe();

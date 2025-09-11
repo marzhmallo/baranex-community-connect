@@ -1,11 +1,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { Users, Home, Calendar, TrendingUp, TrendingDown, Megaphone } from "lucide-react";
+import { Users, Home, Calendar, TrendingUp, TrendingDown, Megaphone, RefreshCw } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAuth } from "@/components/AuthProvider";
+import { toast } from "@/hooks/use-toast";
 
 const DashboardStats = () => {
   const { residents, households, loading: dataLoading } = useData();
@@ -19,8 +21,11 @@ const DashboardStats = () => {
     newHouseholdsThisMonth,
     newAnnouncementsThisWeek,
     nextEventDays,
-    isLoading: dashboardLoading 
+    isLoading: dashboardLoading,
+    refreshData
   } = useDashboardData(userProfile?.brgyid);
+  
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Initialize progress with cached value to prevent flash
   const [progress, setProgress] = useState(() => {
@@ -79,6 +84,25 @@ const DashboardStats = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshData();
+      toast({
+        title: "Dashboard Refreshed",
+        description: "Statistics have been updated with the latest data.",
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh dashboard data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -99,7 +123,22 @@ const DashboardStats = () => {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Dashboard Statistics</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing || isLoading}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
+      </div>
+      
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
       <Card className="overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
         <div className="flex">
           <div className="flex-grow">
@@ -200,6 +239,7 @@ const DashboardStats = () => {
         </div>
       </Card>
     </div>
+  </div>
   );
 };
 
