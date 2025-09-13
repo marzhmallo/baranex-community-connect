@@ -2,3 +2,6 @@ project_id = "dssjspakagyerrmtaakm"
 
 [functions.upload-user-ids]
 verify_jwt = false
+
+[functions.login-alert]
+verify_jwt = false
