@@ -1318,7 +1318,7 @@ const DocumentsPage = () => {
                   <TableCell className="text-foreground">{doc.document}</TableCell>
                   <TableCell className="text-foreground">{doc.requestedBy}</TableCell>
                   <TableCell>
-                    <Badge className={`${doc.statusColor} text-white`}>
+                    <Badge className={doc.statusColor}>
                       {doc.status}
                     </Badge>
                   </TableCell>
