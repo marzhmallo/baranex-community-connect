@@ -12,6 +12,7 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Settings, User, Shield, Bell, Eye, Bot } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { MFAManagementModal } from '@/components/security/MFAManagementModal';
 
 const UserSettingsPage = () => {
   const { userProfile, loading: authLoading } = useAuth();
@@ -26,6 +27,9 @@ const UserSettingsPage = () => {
   const [chatbotEnabled, setChatbotEnabled] = useState(true);
   const [chatbotMode, setChatbotMode] = useState('offline');
   const [settingsLoading, setSettingsLoading] = useState(true);
+  
+  // MFA management modal state
+  const [showMFAModal, setShowMFAModal] = useState(false);
 
   // Load chatbot settings from settings table
   useEffect(() => {
@@ -289,7 +293,7 @@ const UserSettingsPage = () => {
               Security
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div>
                 <Label htmlFor="currentPassword">Current Password</Label>
@@ -328,6 +332,26 @@ const UserSettingsPage = () => {
                 {isChangingPassword ? "Updating..." : "Update Password"}
               </Button>
             </form>
+            
+            <Separator />
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base">Two-Factor Authentication</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Add an extra layer of security to your account
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => setShowMFAModal(true)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Manage
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -385,6 +409,9 @@ const UserSettingsPage = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* MFA Management Modal */}
+      <MFAManagementModal open={showMFAModal} onOpenChange={setShowMFAModal} />
     </div>
   );
 };

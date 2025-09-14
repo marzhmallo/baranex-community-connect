@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { MFAManagementModal } from "@/components/security/MFAManagementModal";
 
 interface Barangay {
   id: string;
@@ -38,6 +39,9 @@ const ProfilePage = () => {
     confirmPassword: ""
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
+  
+  // MFA management modal state
+  const [showMFAModal, setShowMFAModal] = useState(false);
 
   const [editData, setEditData] = useState({
     firstname: userProfile?.firstname || "",
@@ -651,7 +655,10 @@ const ProfilePage = () => {
               <div className="space-y-1">
                 <div className="flex justify-between items-center py-4 border-b border-border">
                   <p className="font-semibold text-foreground">Multi-Factor Authentication</p>
-                  <button className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-3 py-1 rounded text-sm font-semibold transition-colors">
+                  <button 
+                    onClick={() => setShowMFAModal(true)}
+                    className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-3 py-1 rounded text-sm font-semibold transition-colors"
+                  >
                     Manage
                   </button>
                 </div>
@@ -770,6 +777,9 @@ const ProfilePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* MFA Management Modal */}
+      <MFAManagementModal open={showMFAModal} onOpenChange={setShowMFAModal} />
     </div>
   );
 };

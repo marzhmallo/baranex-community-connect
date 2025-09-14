@@ -5,3 +5,15 @@ verify_jwt = false
 
 [functions.login-alert]
 verify_jwt = false
+
+[functions.mfa-enroll-start]
+verify_jwt = true
+
+[functions.mfa-verify-code]
+verify_jwt = true
+
+[functions.mfa-disable]
+verify_jwt = true
+
+[functions.mfa-status]
+verify_jwt = true
