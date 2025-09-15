@@ -235,6 +235,10 @@ const Auth = () => {
       setIsLoading(false);
       return;
     }
+    
+    // Set the flag BEFORE any authentication attempts to prevent race conditions
+    localStorage.setItem('smartLoginPending', '1');
+    
     try {
       console.log("Attempting login with:", values.emailOrUsername);
 
@@ -259,6 +263,7 @@ const Auth = () => {
             description: "An error occurred while looking up the username",
             variant: "destructive"
           });
+          localStorage.removeItem('smartLoginPending'); // Clear flag on error
           setIsLoading(false);
           captchaRef.current?.resetCaptcha();
           setCaptchaToken(null);
@@ -273,6 +278,7 @@ const Auth = () => {
             description: "No user found with that username",
             variant: "destructive"
           });
+          localStorage.removeItem('smartLoginPending'); // Clear flag on error
           setIsLoading(false);
           captchaRef.current?.resetCaptcha();
           setCaptchaToken(null);
@@ -353,6 +359,7 @@ const Auth = () => {
             description: error.message,
             variant: "destructive"
           });
+          localStorage.removeItem('smartLoginPending'); // Clear flag on error
         }
       } else if (user && session) {
         console.log("Login successful, user authenticated");
@@ -367,6 +374,7 @@ const Auth = () => {
             console.log("MFA is enabled for this user, requiring verification");
             setAuthStep('mfa'); // Switch the UI to show the MFA input
             setIsLoading(false);
+            // Keep the smartLoginPending flag set - MFA flow will clear it when complete
             return; // EXIT the function here. Do not proceed to the dashboard.
           }
         } catch (mfaErr) {
@@ -390,6 +398,7 @@ const Auth = () => {
           });
           // Sign out the user
           await supabase.auth.signOut();
+          localStorage.removeItem('smartLoginPending'); // Clear flag on error
           return;
         }
 
@@ -402,6 +411,7 @@ const Auth = () => {
             description: "Please reset your password to continue logging in.",
             variant: "destructive"
           });
+          localStorage.removeItem('smartLoginPending'); // Clear flag on error
           setIsLoading(false);
           captchaRef.current?.resetCaptcha();
           setCaptchaToken(null);
@@ -450,6 +460,7 @@ const Auth = () => {
               });
               break;
           }
+          localStorage.removeItem('smartLoginPending'); // Clear flag on error
           return;
         }
 
@@ -520,6 +531,7 @@ const Auth = () => {
         description: "An unexpected error occurred",
         variant: "destructive"
       });
+      localStorage.removeItem('smartLoginPending'); // Clear flag on error
       console.error("Authentication error:", error);
     } finally {
       setIsLoading(false);
@@ -544,6 +556,7 @@ const Auth = () => {
           description: "Invalid code. Please try again.",
           variant: "destructive"
         });
+        localStorage.removeItem('smartLoginPending'); // Clear flag on error
         otpForm.reset();
         return;
       }
@@ -558,6 +571,7 @@ const Auth = () => {
           description: "Invalid code. Please try again.",
           variant: "destructive"
         });
+        localStorage.removeItem('smartLoginPending'); // Clear flag on error
         otpForm.reset();
       }
     } catch (error) {
@@ -567,6 +581,7 @@ const Auth = () => {
         description: "An error occurred during verification",
         variant: "destructive"
       });
+      localStorage.removeItem('smartLoginPending'); // Clear flag on error
       otpForm.reset();
     } finally {
       setIsLoading(false);
