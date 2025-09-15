@@ -591,7 +591,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               if (!isLocked && isApproved && isBarangayApproved) {
                 console.log('Redirecting based on role:', profileData.role);
                 const smartPending = localStorage.getItem('smartLoginPending') === '1';
-                if (!smartPending) {
+                
+                // Check MFA status - get current user info to check AAL
+                const { data: { user: currentUser } } = await supabase.auth.getUser();
+                const currentAAL = (currentUser as any)?.aal;
+                
+                // If user has MFA enabled but only AAL1, redirect back to login for MFA verification
+                if (currentAAL === 'aal1' && !smartPending) {
+                  console.log('User has MFA enabled but not verified (AAL1), redirecting to login');
+                  navigate('/login');
+                  return;
+                }
+                
+                if (!smartPending && (currentAAL === 'aal2' || currentAAL === null)) {
                   if (profileData.role === "user") {
                     navigate("/hub");
                   } else if (profileData.role === "admin" || profileData.role === "staff") {
@@ -686,14 +698,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
             if (!isLocked && isApproved && isBarangayApproved) {
               console.log('Redirecting based on role:', profileData.role);
-              if (profileData.role === "user") {
-                navigate("/hub");
-              } else if (profileData.role === "admin" || profileData.role === "staff") {
-                navigate("/dashboard");
-              } else if (profileData.role === "glyph") {
-                navigate("/echelon");
-              } else if (profileData.role === "overseer") {
-                navigate("/plaza");
+              
+              // Check MFA status - get current user info to check AAL
+              const { data: { user: currentUser } } = await supabase.auth.getUser();
+              const currentAAL = (currentUser as any)?.aal;
+              
+              // If user has MFA enabled but only AAL1, redirect back to login for MFA verification
+              if (currentAAL === 'aal1') {
+                console.log('User has MFA enabled but not verified (AAL1), redirecting to login');
+                navigate('/login');
+                return;
+              }
+              
+              // Only redirect if fully authenticated (AAL2) or no MFA (null)
+              if (currentAAL === 'aal2' || currentAAL === null) {
+                if (profileData.role === "user") {
+                  navigate("/hub");
+                } else if (profileData.role === "admin" || profileData.role === "staff") {
+                  navigate("/dashboard");
+                } else if (profileData.role === "glyph") {
+                  navigate("/echelon");
+                } else if (profileData.role === "overseer") {
+                  navigate("/plaza");
+                }
               }
             } else {
               console.log('User not approved, padlocked, or barangay not approved; skipping redirect on initial session');

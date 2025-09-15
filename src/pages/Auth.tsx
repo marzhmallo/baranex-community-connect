@@ -691,7 +691,7 @@ const Auth = () => {
 
       // Continue with successful login flow
       setSmartLoading(true);
-      localStorage.setItem('smartLoginPending', 'true');
+      localStorage.setItem('smartLoginPending', '1');
 
       const role = userProfile?.role as string | undefined;
       const brgyid = userProfile?.brgyid as string | undefined;
