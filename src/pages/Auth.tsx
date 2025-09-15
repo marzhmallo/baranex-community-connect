@@ -124,7 +124,6 @@ const Auth = () => {
 
   // MFA states - Two-step authentication flow
   const [authStep, setAuthStep] = useState<'password' | 'mfa'>('password');
-  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   
   const captchaRef = useRef<HCaptcha>(null);
   const idFilesInputRef = useRef<HTMLInputElement>(null);
