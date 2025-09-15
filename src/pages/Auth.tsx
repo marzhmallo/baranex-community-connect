@@ -1487,12 +1487,11 @@ const Auth = () => {
                         <FormItem>
                           <FormControl>
                             <div className="flex justify-center">
-                              <InputOTP 
-                                maxLength={6} 
+                              <InputOTP
+                                maxLength={6}
                                 {...field}
                                 disabled={false}
                                 autoFocus
-                                value={field.value || ""}
                               >
                                 <InputOTPGroup>
                                   <InputOTPSlot index={0} />
