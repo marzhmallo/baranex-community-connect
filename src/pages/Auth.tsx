@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Mail, User, Lock, Building, MapPin, X, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, User, Lock, Building, MapPin, X, AlertCircle, Shield } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Separator } from "@/components/ui/separator";
@@ -121,6 +121,12 @@ const Auth = () => {
   const [rememberMe, setRememberMe] = useState(() => {
     return localStorage.getItem('rememberMe') === 'true';
   });
+
+  // MFA states
+  const [showMfaModal, setShowMfaModal] = useState(false);
+  const [mfaUser, setMfaUser] = useState<any>(null);
+  const [mfaCode, setMfaCode] = useState("");
+  const [isMfaVerifying, setIsMfaVerifying] = useState(false);
   
   const captchaRef = useRef<HCaptcha>(null);
   const idFilesInputRef = useRef<HTMLInputElement>(null);
@@ -351,8 +357,25 @@ const Auth = () => {
             variant: "destructive"
           });
         }
-      } else if (user) {
+      } else if (user && session) {
         console.log("Login successful, user authenticated");
+
+        // Check if user has MFA enabled
+        try {
+          const { data: mfaStatus, error: mfaError } = await supabase.functions.invoke('mfa-status');
+          
+          if (mfaError) {
+            console.error("Error checking MFA status:", mfaError);
+          } else if (mfaStatus?.enabled) {
+            console.log("MFA is enabled for this user, requiring verification");
+            setMfaUser(user);
+            setShowMfaModal(true);
+            setIsLoading(false);
+            return;
+          }
+        } catch (mfaErr) {
+          console.error("Error checking MFA status:", mfaErr);
+        }
 
         // Check user status and padlock in profiles table
         const {
@@ -506,6 +529,192 @@ const Auth = () => {
       setIsLoading(false);
       captchaRef.current?.resetCaptcha();
       setCaptchaToken(null);
+    }
+  };
+
+  const handleMfaVerification = async () => {
+    if (!mfaCode || mfaCode.length !== 6) {
+      toast({
+        title: "Invalid Code",
+        description: "Please enter a valid 6-digit code",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsMfaVerifying(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('mfa-verify-code', {
+        body: { code: mfaCode }
+      });
+
+      if (error) {
+        console.error("MFA verification error:", error);
+        toast({
+          title: "Verification Failed",
+          description: "Invalid code. Please try again.",
+          variant: "destructive"
+        });
+        setMfaCode("");
+        return;
+      }
+
+      if (data?.success) {
+        console.log("MFA verification successful");
+        setShowMfaModal(false);
+        setMfaCode("");
+        
+        // Continue with the login flow
+        await completeMfaLogin();
+      } else {
+        toast({
+          title: "Verification Failed", 
+          description: "Invalid code. Please try again.",
+          variant: "destructive"
+        });
+        setMfaCode("");
+      }
+    } catch (error) {
+      console.error("MFA verification error:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred during verification",
+        variant: "destructive"
+      });
+      setMfaCode("");
+    } finally {
+      setIsMfaVerifying(false);
+    }
+  };
+
+  const completeMfaLogin = async () => {
+    if (!mfaUser) return;
+
+    try {
+      // Check user status and padlock in profiles table  
+      const {
+        data: userProfile,
+        error: profileError
+      } = (await supabase.from('profiles').select('status, notes, padlock').eq('id', mfaUser.id).maybeSingle()) as {
+        data: any;
+        error: any;
+      };
+
+      if (profileError) {
+        console.error("Error fetching user profile:", profileError);
+        toast({
+          title: "Login Failed",
+          description: "An unexpected error occurred. Please try again later or contact support if the problem persists.",
+          variant: "destructive"
+        });
+        await supabase.auth.signOut();
+        return;
+      }
+
+      // Check padlock status first - if true, require password reset and stay on login
+      if (userProfile?.padlock === true) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Password Reset Required",
+          description: "Please reset your password to continue logging in.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if user status allows login
+      if (userProfile?.status !== 'approved') {
+        await supabase.auth.signOut();
+        const status = userProfile?.status;
+        const notes = userProfile?.notes;
+        let rejectionReason = "";
+
+        if (notes && typeof notes === 'string') {
+          const rejectionMatch = notes.match(/Rejection Reason:\s*(.+?)(?:\n|$)/);
+          if (rejectionMatch) {
+            rejectionReason = rejectionMatch[1].trim();
+          }
+        }
+
+        if (status === 'rejected') {
+          toast({
+            title: "Account Rejected",
+            description: rejectionReason ? `Your account was rejected. Reason: ${rejectionReason}` : "Your account was rejected. Please contact support for assistance.",
+            variant: "destructive"
+          });
+        } else if (status === 'pending') {
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account is still pending approval. Please wait for an administrator to review your request.",
+            variant: "destructive"
+          });
+        } else if (status === 'banned') {
+          toast({
+            title: "Account Banned",
+            description: rejectionReason ? `Your account has been banned. Reason: ${rejectionReason}` : "Your account has been banned. Please contact support for assistance.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Account Not Approved",
+            description: "Your account is not approved for login. Please contact support for assistance.",
+            variant: "destructive"
+          });
+        }
+        return;
+      }
+
+      // Continue with successful login flow
+      setSmartLoading(true);
+      localStorage.setItem('smartLoginPending', 'true');
+
+      const {
+        data: profileFull,
+        error: profileFullError
+      } = await supabase.from('profiles').select('id, role, brgyid').eq('id', mfaUser.id).maybeSingle();
+      const role = profileFull?.role as string | undefined;
+      const brgyid = profileFull?.brgyid as string | undefined;
+
+      // Block login if barangay is not yet approved
+      if (brgyid) {
+        const { data: bData, error: bErr } = await supabase
+          .from('barangays')
+          .select('is_custom')
+          .eq('id', brgyid)
+          .single();
+        if (bErr) {
+          console.error('Error checking barangay approval status:', bErr);
+        }
+        if (bData && bData.is_custom === false) {
+          await supabase.auth.signOut();
+          toast({
+            title: "Barangay Not Yet Approved",
+            description: "Your barangay is still pending approval. Login is disabled until approval.",
+            variant: "destructive"
+          });
+          localStorage.removeItem('smartLoginPending');
+          setSmartLoading(false);
+          return;
+        }
+      }
+
+      // Prefetch all dashboard data and cache it
+      if (brgyid) {
+        await prefetchDashboard(brgyid, mfaUser.id);
+      }
+      const dest = role === 'user' ? '/hub' : role === 'admin' || role === 'staff' ? '/dashboard' : role === 'glyph' ? '/echelon' : role === 'overseer' ? '/plaza' : '/hub';
+
+      // Clear smart flag and navigate
+      localStorage.removeItem('smartLoginPending');
+      setSmartLoading(false);
+      navigate(dest, { replace: true });
+
+    } catch (error) {
+      console.error('MFA login completion failed:', error);
+      localStorage.removeItem('smartLoginPending');
+      setSmartLoading(false);
+      navigate('/hub', { replace: true });
     }
   };
 
@@ -1856,6 +2065,68 @@ const Auth = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* MFA Verification Modal */}
+      <Dialog open={showMfaModal} onOpenChange={() => {}}>
+        <DialogContent className={`w-full max-w-md mx-auto p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`} onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-3">
+              <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
+                <Shield className={`h-5 w-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
+              </div>
+              <DialogTitle className={`text-base md:text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                Two-Factor Authentication
+              </DialogTitle>
+            </div>
+            <DialogDescription className={`text-xs md:text-sm leading-relaxed ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+              Enter the 6-digit verification code from your authenticator app.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 pt-4">
+            <div className="flex justify-center">
+              <InputOTP
+                maxLength={6}
+                value={mfaCode}
+                onChange={(value) => setMfaCode(value)}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1 py-2 md:py-3 text-sm md:text-base"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  setShowMfaModal(false);
+                  setMfaCode("");
+                  setMfaUser(null);
+                }}
+                disabled={isMfaVerifying}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleMfaVerification}
+                disabled={isMfaVerifying || mfaCode.length !== 6}
+                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 py-2 md:py-3 text-sm md:text-base"
+              >
+                {isMfaVerifying ? "Verifying..." : "Verify"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>;
 };
+
 export default Auth;
