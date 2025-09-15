@@ -122,7 +122,8 @@ const Auth = () => {
     return localStorage.getItem('rememberMe') === 'true';
   });
 
-  // MFA states - Two-step authentication flow
+  // MFA states - Modal-based MFA flow
+  const [showMfaModal, setShowMfaModal] = useState(false);
   const [authStep, setAuthStep] = useState<'password' | 'mfa'>('password');
   
   const captchaRef = useRef<HCaptcha>(null);
@@ -219,14 +220,12 @@ const Auth = () => {
   const isNewBarangay = selectedBarangayId === "new-barangay";
   const selectedRole = 'admin' as const;
   
-  // Reset OTP form when switching to MFA step
+  // Reset OTP form when MFA modal opens
   useEffect(() => {
-    if (authStep === 'mfa') {
+    if (showMfaModal) {
       otpForm.reset({ otp: "" });
-      // Explicitly clear the OTP field value to prevent autocomplete interference
-      otpForm.setValue('otp', '');
     }
-  }, [authStep, otpForm]);
+  }, [showMfaModal, otpForm]);
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
     if (token) {
@@ -382,7 +381,8 @@ const Auth = () => {
           } else if (mfaStatus?.enabled) {
             console.log("MFA is enabled for this user, requiring verification");
             otpForm.reset(); // Reset the MFA form to clear any existing values
-            setAuthStep('mfa'); // Switch the UI to show the MFA input
+            setShowMfaModal(true); // Show the MFA modal
+            setAuthStep('mfa'); // Switch the auth step to MFA
             setIsLoading(false);
             // Keep the smartLoginPending flag set - MFA flow will clear it when complete
             return; // EXIT the function here. Do not proceed to the dashboard.
@@ -1412,131 +1412,69 @@ const Auth = () => {
               {/* Header text */}
               <div className="text-center mb-4 sm:mb-5 md:mb-6">
                 <h2 className={`text-lg sm:text-xl md:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
-                  {activeTab === "login" ? (authStep === 'password' ? "Welcome Back!" : "Two-Factor Authentication") : activeTab === "signup" ? "Create an Account" : activeTab === "forgot-password" ? "Reset Password" : "Set New Password"}
+                  {activeTab === "login" ? "Welcome Back!" : activeTab === "signup" ? "Create an Account" : activeTab === "forgot-password" ? "Reset Password" : "Set New Password"}
                 </h2>
                 <p className={`text-sm sm:text-sm md:text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {activeTab === "login" ? (authStep === 'password' ? "Sign in to your dashboard" : "Enter the 6-digit code from your authenticator app") : activeTab === "signup" ? "Join Baranex to manage your community" : activeTab === "forgot-password" ? "Enter your email to receive a password reset link" : "Enter your new password"}
+                  {activeTab === "login" ? "Sign in to your dashboard" : activeTab === "signup" ? "Join Baranex to manage your community" : activeTab === "forgot-password" ? "Enter your email to receive a password reset link" : "Enter your new password"}
                 </p>
               </div>
               
               <TabsContent value="login">
-                {authStep === 'password' ? (
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                      <FormField control={loginForm.control} name="emailOrUsername" render={({
-                      field
-                    }) => <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email Address or Username</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                                <Input placeholder="Enter your email or username" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>} />
-                    
-                    <FormField control={loginForm.control} name="password" render={({
-                      field
-                    }) => <FormItem>
-                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Password</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                                <Input type={showPassword ? "text" : "password"} placeholder="Enter your password" className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
-                                <button type="button" className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setShowPassword(!showPassword)}>
-                                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                </button>
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>} />
-
-                    <div className="flex items-center justify-between text-sm">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={rememberMe}
-                          onChange={(e) => setRememberMe(e.target.checked)}
-                          className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} 
-                        />
-                        <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
-                      </label>
-                      <button type="button" onClick={() => setActiveTab("forgot-password")} className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</button>
-                    </div>
-                    
-                    <div className="flex justify-center my-3 sm:my-4 w-full overflow-hidden">
-                      <div className="transform scale-75 sm:scale-100 w-full flex justify-center max-w-full overflow-hidden">
-                        <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
-                      </div>
-                    </div>
-                    
-                    <Button type="submit" className="w-full max-w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-2.5 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" disabled={isLoading || !captchaToken}>
-                      {isLoading ? "Signing in..." : "Sign In"}
-                    </Button>
-                  </form>
-                </Form>
-                ) : (
-                  <Form {...otpForm}>
-                    <form onSubmit={otpForm.handleSubmit(handleMfaVerification)} className="space-y-6">
-                      <div className="flex items-center justify-center gap-3 mb-6">
-                        <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
-                          <Shield className={`h-5 w-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-                        </div>
-                      </div>
-                      
-                       <FormField control={otpForm.control} name="otp" render={({ field }) => (
-                        <FormItem>
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                    <FormField control={loginForm.control} name="emailOrUsername" render={({
+                    field
+                  }) => <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email Address or Username</FormLabel>
                           <FormControl>
-                            <div className="flex justify-center">
-                              <InputOTP
-                                key={authStep} // Force re-render when switching to MFA
-                                maxLength={6}
-                                {...field}
-                                disabled={false}
-                                autoFocus
-                                autoComplete="off"
-                                data-form-type="other"
-                              >
-                                <InputOTPGroup>
-                                  <InputOTPSlot index={0} />
-                                  <InputOTPSlot index={1} />
-                                  <InputOTPSlot index={2} />
-                                  <InputOTPSlot index={3} />
-                                  <InputOTPSlot index={4} />
-                                  <InputOTPSlot index={5} />
-                                </InputOTPGroup>
-                              </InputOTP>
+                            <div className="relative">
+                              <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <Input placeholder="Enter your email or username" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )} />
-                      
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="flex-1 py-2.5 text-sm font-medium"
-                          onClick={() => {
-                            setAuthStep('password');
-                            otpForm.reset();
-                          }}
-                          disabled={isLoading}
-                        >
-                          Back
-                        </Button>
-                        <Button
-                          type="submit"
-                          className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 py-2.5 text-sm font-medium"
-                          disabled={isLoading}
-                        >
-                          {isLoading ? "Verifying..." : "Verify & Sign In"}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
+                        </FormItem>} />
+                  
+                  <FormField control={loginForm.control} name="password" render={({
+                    field
+                  }) => <FormItem>
+                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <Input type={showPassword ? "text" : "password"} placeholder="Enter your password" className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                              <button type="button" className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setShowPassword(!showPassword)}>
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
+
+                  <div className="flex items-center justify-between text-sm">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} 
+                      />
+                      <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
+                    </label>
+                    <button type="button" onClick={() => setActiveTab("forgot-password")} className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</button>
+                  </div>
+                  
+                  <div className="flex justify-center my-3 sm:my-4 w-full overflow-hidden">
+                    <div className="transform scale-75 sm:scale-100 w-full flex justify-center max-w-full overflow-hidden">
+                      <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
+                    </div>
+                  </div>
+                  
+                  <Button type="submit" className="w-full max-w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-2.5 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" disabled={isLoading || !captchaToken}>
+                    {isLoading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </form>
+              </Form>
               </TabsContent>
 
               <TabsContent value="signup">
@@ -2154,6 +2092,89 @@ const Auth = () => {
         </DialogContent>
       </Dialog>
 
+      {/* MFA Modal */}
+      <Dialog open={showMfaModal} onOpenChange={(open) => {
+        if (!open) {
+          setShowMfaModal(false);
+          setAuthStep('password');
+          localStorage.removeItem('smartLoginPending');
+          loginForm.reset();
+          otpForm.reset();
+          captchaRef.current?.resetCaptcha();
+          setCaptchaToken(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center justify-center mb-4">
+              <Shield className="h-12 w-12 text-primary" />
+            </div>
+            <DialogTitle className="text-center">Two-Factor Authentication</DialogTitle>
+            <DialogDescription className="text-center">
+              Please enter the 6-digit code from your authenticator app to complete your login.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...otpForm}>
+            <form onSubmit={otpForm.handleSubmit(handleMfaVerification)} className="space-y-6">
+              <FormField
+                control={otpForm.control}
+                name="otp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="sr-only">Verification Code</FormLabel>
+                    <FormControl>
+                      <div className="flex justify-center">
+                        <InputOTP
+                          maxLength={6}
+                          {...field}
+                          autoFocus
+                          autoComplete="off"
+                          data-form-type="other"
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowMfaModal(false);
+                    setAuthStep('password');
+                    localStorage.removeItem('smartLoginPending');
+                    loginForm.reset();
+                    otpForm.reset();
+                    captchaRef.current?.resetCaptcha();
+                    setCaptchaToken(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Verifying..." : "Verify Code"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>;
 };
 
