@@ -223,6 +223,8 @@ const Auth = () => {
   useEffect(() => {
     if (authStep === 'mfa') {
       otpForm.reset({ otp: "" });
+      // Explicitly clear the OTP field value to prevent autocomplete interference
+      otpForm.setValue('otp', '');
     }
   }, [authStep, otpForm]);
   const handleCaptchaChange = (token: string | null) => {
@@ -1488,10 +1490,13 @@ const Auth = () => {
                           <FormControl>
                             <div className="flex justify-center">
                               <InputOTP
+                                key={authStep} // Force re-render when switching to MFA
                                 maxLength={6}
                                 {...field}
                                 disabled={false}
                                 autoFocus
+                                autoComplete="off"
+                                data-form-type="other"
                               >
                                 <InputOTPGroup>
                                   <InputOTPSlot index={0} />
