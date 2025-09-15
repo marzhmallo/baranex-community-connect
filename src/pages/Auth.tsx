@@ -218,6 +218,13 @@ const Auth = () => {
   const selectedBarangayId = signupForm.watch("barangayId");
   const isNewBarangay = selectedBarangayId === "new-barangay";
   const selectedRole = 'admin' as const;
+  
+  // Reset OTP form when switching to MFA step
+  useEffect(() => {
+    if (authStep === 'mfa') {
+      otpForm.reset({ otp: "" });
+    }
+  }, [authStep, otpForm]);
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
     if (token) {
@@ -372,6 +379,7 @@ const Auth = () => {
             console.error("Error checking MFA status:", mfaError);
           } else if (mfaStatus?.enabled) {
             console.log("MFA is enabled for this user, requiring verification");
+            otpForm.reset(); // Reset the MFA form to clear any existing values
             setAuthStep('mfa'); // Switch the UI to show the MFA input
             setIsLoading(false);
             // Keep the smartLoginPending flag set - MFA flow will clear it when complete
@@ -1484,6 +1492,7 @@ const Auth = () => {
                                 {...field}
                                 disabled={false}
                                 autoFocus
+                                value={field.value || ""}
                               >
                                 <InputOTPGroup>
                                   <InputOTPSlot index={0} />
