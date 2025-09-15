@@ -122,11 +122,9 @@ const Auth = () => {
     return localStorage.getItem('rememberMe') === 'true';
   });
 
-  // MFA states
-  const [showMfaModal, setShowMfaModal] = useState(false);
-  const [mfaUser, setMfaUser] = useState<any>(null);
-  const [mfaCode, setMfaCode] = useState("");
-  const [isMfaVerifying, setIsMfaVerifying] = useState(false);
+  // MFA states - Two-step authentication flow
+  const [authStep, setAuthStep] = useState<'password' | 'mfa'>('password');
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   
   const captchaRef = useRef<HCaptcha>(null);
   const idFilesInputRef = useRef<HTMLInputElement>(null);
@@ -360,7 +358,7 @@ const Auth = () => {
       } else if (user && session) {
         console.log("Login successful, user authenticated");
 
-        // Check if user has MFA enabled
+        // Check if user has MFA enabled using the edge function
         try {
           const { data: mfaStatus, error: mfaError } = await supabase.functions.invoke('mfa-status');
           
@@ -368,10 +366,9 @@ const Auth = () => {
             console.error("Error checking MFA status:", mfaError);
           } else if (mfaStatus?.enabled) {
             console.log("MFA is enabled for this user, requiring verification");
-            setMfaUser(user);
-            setShowMfaModal(true);
+            setAuthStep('mfa'); // Switch the UI to show the MFA input
             setIsLoading(false);
-            return;
+            return; // EXIT the function here. Do not proceed to the dashboard.
           }
         } catch (mfaErr) {
           console.error("Error checking MFA status:", mfaErr);
@@ -532,21 +529,13 @@ const Auth = () => {
     }
   };
 
-  const handleMfaVerification = async () => {
-    if (!mfaCode || mfaCode.length !== 6) {
-      toast({
-        title: "Invalid Code",
-        description: "Please enter a valid 6-digit code",
-        variant: "destructive"
-      });
-      return;
-    }
+  // New Handler for MFA Verification - Two-step authentication flow
+  const handleMfaVerification = async (values: OtpVerificationFormValues) => {
+    setIsLoading(true);
 
-    setIsMfaVerifying(true);
-    
     try {
       const { data, error } = await supabase.functions.invoke('mfa-verify-code', {
-        body: { code: mfaCode }
+        body: { code: values.otp, enable: false }
       });
 
       if (error) {
@@ -556,16 +545,13 @@ const Auth = () => {
           description: "Invalid code. Please try again.",
           variant: "destructive"
         });
-        setMfaCode("");
+        otpForm.reset();
         return;
       }
 
       if (data?.success) {
         console.log("MFA verification successful");
-        setShowMfaModal(false);
-        setMfaCode("");
-        
-        // Continue with the login flow
+        // Continue with the complete login flow
         await completeMfaLogin();
       } else {
         toast({
@@ -573,7 +559,7 @@ const Auth = () => {
           description: "Invalid code. Please try again.",
           variant: "destructive"
         });
-        setMfaCode("");
+        otpForm.reset();
       }
     } catch (error) {
       console.error("MFA verification error:", error);
@@ -582,24 +568,33 @@ const Auth = () => {
         description: "An error occurred during verification",
         variant: "destructive"
       });
-      setMfaCode("");
+      otpForm.reset();
     } finally {
-      setIsMfaVerifying(false);
+      setIsLoading(false);
     }
   };
 
   const completeMfaLogin = async () => {
-    if (!mfaUser) return;
-
     try {
-      // Check user status and padlock in profiles table  
-      const {
-        data: userProfile,
-        error: profileError
-      } = (await supabase.from('profiles').select('status, notes, padlock').eq('id', mfaUser.id).maybeSingle()) as {
-        data: any;
-        error: any;
-      };
+      // Get current user after MFA verification
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error("Error getting user after MFA:", userError);
+        toast({
+          title: "Login Failed",
+          description: "Unable to complete login. Please try again.",
+          variant: "destructive"
+        });
+        setAuthStep('password');
+        return;
+      }
+
+      // Check user status and padlock in profiles table
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('status, notes, padlock, role, brgyid')
+        .eq('id', user.id)
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching user profile:", profileError);
@@ -609,10 +604,11 @@ const Auth = () => {
           variant: "destructive"
         });
         await supabase.auth.signOut();
+        setAuthStep('password');
         return;
       }
 
-      // Check padlock status first - if true, require password reset and stay on login
+      // Check padlock status first
       if (userProfile?.padlock === true) {
         await supabase.auth.signOut();
         toast({
@@ -620,6 +616,7 @@ const Auth = () => {
           description: "Please reset your password to continue logging in.",
           variant: "destructive"
         });
+        setAuthStep('password');
         return;
       }
 
@@ -637,31 +634,36 @@ const Auth = () => {
           }
         }
 
-        if (status === 'rejected') {
-          toast({
-            title: "Account Rejected",
-            description: rejectionReason ? `Your account was rejected. Reason: ${rejectionReason}` : "Your account was rejected. Please contact support for assistance.",
-            variant: "destructive"
-          });
-        } else if (status === 'pending') {
-          toast({
-            title: "Account Pending Approval",
-            description: "Your account is still pending approval. Please wait for an administrator to review your request.",
-            variant: "destructive"
-          });
-        } else if (status === 'banned') {
-          toast({
-            title: "Account Banned",
-            description: rejectionReason ? `Your account has been banned. Reason: ${rejectionReason}` : "Your account has been banned. Please contact support for assistance.",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Account Not Approved",
-            description: "Your account is not approved for login. Please contact support for assistance.",
-            variant: "destructive"
-          });
+        switch (status) {
+          case 'banned':
+            toast({
+              title: "Account Banned",
+              description: rejectionReason ? `Your account has been banned. Reason: ${rejectionReason}` : "Your account has been banned. Please contact support for assistance.",
+              variant: "destructive"
+            });
+            break;
+          case 'rejected':
+            toast({
+              title: "Account Rejected",
+              description: rejectionReason ? `Your account was rejected. Reason: ${rejectionReason}` : "Your account was rejected. Please contact support for assistance.",
+              variant: "destructive"
+            });
+            break;
+          case 'pending':
+            toast({
+              title: "Account Pending Approval",
+              description: "Your account is still pending approval. Please wait for an administrator to review your request.",
+              variant: "destructive"
+            });
+            break;
+          default:
+            toast({
+              title: "Account Not Approved",
+              description: "Your account is not approved for login. Please contact support for assistance.",
+              variant: "destructive"
+            });
         }
+        setAuthStep('password');
         return;
       }
 
@@ -669,12 +671,8 @@ const Auth = () => {
       setSmartLoading(true);
       localStorage.setItem('smartLoginPending', 'true');
 
-      const {
-        data: profileFull,
-        error: profileFullError
-      } = await supabase.from('profiles').select('id, role, brgyid').eq('id', mfaUser.id).maybeSingle();
-      const role = profileFull?.role as string | undefined;
-      const brgyid = profileFull?.brgyid as string | undefined;
+      const role = userProfile?.role as string | undefined;
+      const brgyid = userProfile?.brgyid as string | undefined;
 
       // Block login if barangay is not yet approved
       if (brgyid) {
@@ -695,15 +693,19 @@ const Auth = () => {
           });
           localStorage.removeItem('smartLoginPending');
           setSmartLoading(false);
+          setAuthStep('password');
           return;
         }
       }
 
       // Prefetch all dashboard data and cache it
       if (brgyid) {
-        await prefetchDashboard(brgyid, mfaUser.id);
+        await prefetchDashboard(brgyid, user.id);
       }
-      const dest = role === 'user' ? '/hub' : role === 'admin' || role === 'staff' ? '/dashboard' : role === 'glyph' ? '/echelon' : role === 'overseer' ? '/plaza' : '/hub';
+      const dest = role === 'user' ? '/hub' : 
+                   role === 'admin' || role === 'staff' ? '/dashboard' : 
+                   role === 'glyph' ? '/echelon' : 
+                   role === 'overseer' ? '/plaza' : '/hub';
 
       // Clear smart flag and navigate
       localStorage.removeItem('smartLoginPending');
@@ -714,7 +716,7 @@ const Auth = () => {
       console.error('MFA login completion failed:', error);
       localStorage.removeItem('smartLoginPending');
       setSmartLoading(false);
-      navigate('/hub', { replace: true });
+      setAuthStep('password');
     }
   };
 
@@ -1386,69 +1388,123 @@ const Auth = () => {
               {/* Header text */}
               <div className="text-center mb-4 sm:mb-5 md:mb-6">
                 <h2 className={`text-lg sm:text-xl md:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
-                  {activeTab === "login" ? "Welcome Back!" : activeTab === "signup" ? "Create an Account" : activeTab === "forgot-password" ? "Reset Password" : "Set New Password"}
+                  {activeTab === "login" ? (authStep === 'password' ? "Welcome Back!" : "Two-Factor Authentication") : activeTab === "signup" ? "Create an Account" : activeTab === "forgot-password" ? "Reset Password" : "Set New Password"}
                 </h2>
                 <p className={`text-sm sm:text-sm md:text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {activeTab === "login" ? "Sign in to your dashboard" : activeTab === "signup" ? "Join Baranex to manage your community" : activeTab === "forgot-password" ? "Enter your email to receive a password reset link" : "Enter your new password"}
+                  {activeTab === "login" ? (authStep === 'password' ? "Sign in to your dashboard" : "Enter the 6-digit code from your authenticator app") : activeTab === "signup" ? "Join Baranex to manage your community" : activeTab === "forgot-password" ? "Enter your email to receive a password reset link" : "Enter your new password"}
                 </p>
               </div>
               
               <TabsContent value="login">
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                    <FormField control={loginForm.control} name="emailOrUsername" render={({
-                    field
-                  }) => <FormItem>
-                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email Address or Username</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                              <Input placeholder="Enter your email or username" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
-                  
-                  <FormField control={loginForm.control} name="password" render={({
-                    field
-                  }) => <FormItem>
-                          <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Password</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                              <Input type={showPassword ? "text" : "password"} placeholder="Enter your password" className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
-                              <button type="button" className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setShowPassword(!showPassword)}>
-                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                              </button>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
+                {authStep === 'password' ? (
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                      <FormField control={loginForm.control} name="emailOrUsername" render={({
+                      field
+                    }) => <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email Address or Username</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                                <Input placeholder="Enter your email or username" className={`w-full pl-11 pr-4 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>} />
+                    
+                    <FormField control={loginForm.control} name="password" render={({
+                      field
+                    }) => <FormItem>
+                            <FormLabel className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Password</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                                <Input type={showPassword ? "text" : "password"} placeholder="Enter your password" className={`w-full pl-11 pr-12 py-3 rounded-xl transition-all duration-200 ${theme === 'dark' ? 'border-slate-600 bg-slate-700/50 text-white focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400' : 'border-blue-200 bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500'}`} {...field} />
+                                <button type="button" className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setShowPassword(!showPassword)}>
+                                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>} />
 
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} 
-                      />
-                      <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
-                    </label>
-                    <button type="button" onClick={() => setActiveTab("forgot-password")} className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</button>
-                  </div>
-                  
-                  <div className="flex justify-center my-3 sm:my-4 w-full overflow-hidden">
-                    <div className="transform scale-75 sm:scale-100 w-full flex justify-center max-w-full overflow-hidden">
-                      <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
+                    <div className="flex items-center justify-between text-sm">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          className={`w-4 h-4 rounded focus:ring-blue-500 ${theme === 'dark' ? 'text-indigo-600 border-gray-500 bg-slate-700' : 'text-blue-600 border-gray-300 bg-white'}`} 
+                        />
+                        <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Remember me</span>
+                      </label>
+                      <button type="button" onClick={() => setActiveTab("forgot-password")} className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-indigo-400 hover:text-indigo-300' : 'text-blue-600 hover:text-blue-500'}`}>Forgot password?</button>
                     </div>
-                  </div>
-                  
-                  <Button type="submit" className="w-full max-w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-2.5 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" disabled={isLoading || !captchaToken}>
-                    {isLoading ? "Signing in..." : "Sign In"}
-                  </Button>
-                </form>
-              </Form>
+                    
+                    <div className="flex justify-center my-3 sm:my-4 w-full overflow-hidden">
+                      <div className="transform scale-75 sm:scale-100 w-full flex justify-center max-w-full overflow-hidden">
+                        <HCaptcha ref={captchaRef} sitekey={hcaptchaSiteKey} onVerify={handleCaptchaChange} onExpire={() => setCaptchaToken(null)} />
+                      </div>
+                    </div>
+                    
+                    <Button type="submit" className="w-full max-w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-2.5 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl" disabled={isLoading || !captchaToken}>
+                      {isLoading ? "Signing in..." : "Sign In"}
+                    </Button>
+                  </form>
+                </Form>
+                ) : (
+                  <Form {...otpForm}>
+                    <form onSubmit={otpForm.handleSubmit(handleMfaVerification)} className="space-y-6">
+                      <div className="flex items-center justify-center gap-3 mb-6">
+                        <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
+                          <Shield className={`h-5 w-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
+                        </div>
+                      </div>
+                      
+                      <FormField control={otpForm.control} name="otp" render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <div className="flex justify-center">
+                              <InputOTP maxLength={6} {...field}>
+                                <InputOTPGroup>
+                                  <InputOTPSlot index={0} />
+                                  <InputOTPSlot index={1} />
+                                  <InputOTPSlot index={2} />
+                                  <InputOTPSlot index={3} />
+                                  <InputOTPSlot index={4} />
+                                  <InputOTPSlot index={5} />
+                                </InputOTPGroup>
+                              </InputOTP>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1 py-2.5 text-sm font-medium"
+                          onClick={() => {
+                            setAuthStep('password');
+                            otpForm.reset();
+                          }}
+                          disabled={isLoading}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 py-2.5 text-sm font-medium"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? "Verifying..." : "Verify & Sign In"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                )}
               </TabsContent>
 
               <TabsContent value="signup">
@@ -2066,66 +2122,6 @@ const Auth = () => {
         </DialogContent>
       </Dialog>
 
-      {/* MFA Verification Modal */}
-      <Dialog open={showMfaModal} onOpenChange={() => {}}>
-        <DialogContent className={`w-full max-w-md mx-auto p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`} onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-3">
-              <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
-                <Shield className={`h-5 w-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-              </div>
-              <DialogTitle className={`text-base md:text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                Two-Factor Authentication
-              </DialogTitle>
-            </div>
-            <DialogDescription className={`text-xs md:text-sm leading-relaxed ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-              Enter the 6-digit verification code from your authenticator app.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 pt-4">
-            <div className="flex justify-center">
-              <InputOTP
-                maxLength={6}
-                value={mfaCode}
-                onChange={(value) => setMfaCode(value)}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button
-                variant="outline"
-                className="flex-1 py-2 md:py-3 text-sm md:text-base"
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  setShowMfaModal(false);
-                  setMfaCode("");
-                  setMfaUser(null);
-                }}
-                disabled={isMfaVerifying}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleMfaVerification}
-                disabled={isMfaVerifying || mfaCode.length !== 6}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 py-2 md:py-3 text-sm md:text-base"
-              >
-                {isMfaVerifying ? "Verifying..." : "Verify"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>;
 };
 
