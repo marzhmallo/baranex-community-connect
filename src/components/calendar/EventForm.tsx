@@ -370,18 +370,12 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
               
               <div className="space-y-2">
                 <Label htmlFor="target-audience" className="text-sm font-medium">Target Audience</Label>
-                <Select value={targetAudience} onValueChange={setTargetAudience}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select target audience" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-popover border border-border shadow-lg text-foreground">
-                    <SelectItem value="All">All</SelectItem>
-                    <SelectItem value="SK Youth">SK Youth</SelectItem>
-                    <SelectItem value="Officials only">Officials only</SelectItem>
-                    <SelectItem value="Senior Citizens">Senior Citizens</SelectItem>
-                    <SelectItem value="PWD">PWD</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="target-audience"
+                  value={targetAudience}
+                  onChange={(e) => setTargetAudience(e.target.value)}
+                  placeholder="Enter target audience"
+                />
               </div>
             </div>
             
