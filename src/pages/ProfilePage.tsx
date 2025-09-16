@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -668,7 +669,7 @@ const ProfilePage = () => {
                 </div>
                 <div className="flex justify-between items-center py-4">
                   <p className="font-semibold text-foreground">Activity Log</p>
-                  <a href="#" className="text-primary hover:underline font-semibold">View Log</a>
+                  <Link to="/activitylog" className="text-primary hover:underline font-semibold">View Log</Link>
                 </div>
               </div>
             </div>
