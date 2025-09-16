@@ -281,7 +281,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         variant="outline"
                         className="w-full sm:w-[160px] justify-start text-left font-normal"
                       >
-                        {format(startDate, "PPP")}
+                        {format(startDate, "MMM d, yyyy")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 z-50 bg-popover border border-border shadow-lg">
@@ -320,7 +320,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
                         variant="outline"
                         className="w-full sm:w-[160px] justify-start text-left font-normal"
                       >
-                        {format(eventEndDate, "PPP")}
+                        {format(eventEndDate, "MMM d, yyyy")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 z-50 bg-popover border border-border shadow-lg">
