@@ -388,7 +388,7 @@ const EventForm = ({ event, selectedDate, onClose, onSubmit }: EventFormProps) =
             <div className="space-y-2">
               <Label htmlFor="visibility" className="text-sm font-medium">Event Visibility</Label>
               <Select value={visibility} onValueChange={setVisibility}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-1/2">
                   <SelectValue placeholder="Select visibility" />
                 </SelectTrigger>
                 <SelectContent className="z-50 bg-popover border border-border shadow-lg text-foreground">
