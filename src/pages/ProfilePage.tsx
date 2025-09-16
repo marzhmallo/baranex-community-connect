@@ -665,7 +665,7 @@ const ProfilePage = () => {
                 </div>
                 <div className="flex justify-between items-center py-4 border-b border-border">
                   <p className="font-semibold text-foreground">Active Sessions</p>
-                  <a href="#" className="text-primary hover:underline font-semibold">View Sessions</a>
+                  <Link to="/view-sessions" className="text-primary hover:underline font-semibold">View Sessions</Link>
                 </div>
                 <div className="flex justify-between items-center py-4">
                   <p className="font-semibold text-foreground">Activity Log</p>

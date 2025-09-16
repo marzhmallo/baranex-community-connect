@@ -60,6 +60,7 @@ import MunicipalitiesPage from "./pages/MunicipalitiesPage";
 import BarangaysPage from "./pages/BarangaysPage";
 import PlazaPage from "./pages/PlazaPage";
 import ActivityLogPage from "./pages/ActivityLogPage";
+import ViewSessionsPage from "./pages/ViewSessionsPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 import UserLayout from "./components/layout/UserLayout";
 
@@ -261,6 +262,7 @@ const AppContent = () => {
                 <Route path="/management" element={<AdminRoute><UserAccountManagement /></AdminRoute>} />
                 <Route path="/nexus" element={<AdminRoute><NexusPage /></AdminRoute>} />
                 <Route path="/activitylog" element={<AdminRoute><ActivityLogPage /></AdminRoute>} />
+                <Route path="/view-sessions" element={<AdminRoute><ViewSessionsPage /></AdminRoute>} />
               </>
             )}
             
