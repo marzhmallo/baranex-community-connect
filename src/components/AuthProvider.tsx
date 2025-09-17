@@ -416,10 +416,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const currentUserId = user?.id;
       const currentUserProfile = userProfile;
       
-      // Log the sign out activity before clearing state
+      // Log the sign out activity before clearing state (non-blocking)
       if (currentUserId && currentUserProfile) {
         console.log('Logging sign out activity...');
-        await logUserSignOut(currentUserId, currentUserProfile);
+        logUserSignOut(currentUserId, currentUserProfile).catch(error => {
+          console.error('Non-blocking sign-out activity logging error:', error);
+        });
       }
       
       // Clear local state FIRST to prevent any UI issues
@@ -568,7 +570,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             if (profileData) {
               console.log('Logging sign in activity for actual SIGNED_IN event:', currentSession.user.id);
-              await logUserSignIn(currentSession.user.id, profileData);
+              // Make activity logging non-blocking for better performance
+              logUserSignIn(currentSession.user.id, profileData).catch(error => {
+                console.error('Non-blocking sign-in activity logging error:', error);
+              });
             }
             
             if (profileData) {

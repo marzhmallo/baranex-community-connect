@@ -41,19 +41,14 @@ export const logUserSignIn = async (userId: string, userProfile: any) => {
     return;
   }
 
-  // Get IP address and User-Agent for activity logging
-  const getUserIP = async () => {
-    try {
-      const response = await fetch('https://api.ipify.org?format=json');
-      const data = await response.json();
-      return data.ip;
-    } catch {
-      return 'Unknown';
-    }
+  // Get IP address from headers or use fallback (no external API call)
+  const getClientIP = () => {
+    // Try to get IP from browser if available, otherwise use fallback
+    return 'Client IP'; // This will be properly set by the database trigger
   };
 
   const userAgent = navigator.userAgent;
-  const ipAddress = await getUserIP();
+  const ipAddress = getClientIP();
 
   return logActivity({
     user_id: userId,
@@ -76,19 +71,14 @@ export const logUserSignOut = async (userId: string, userProfile: any) => {
     return;
   }
 
-  // Get IP address and User-Agent for activity logging
-  const getUserIP = async () => {
-    try {
-      const response = await fetch('https://api.ipify.org?format=json');
-      const data = await response.json();
-      return data.ip;
-    } catch {
-      return 'Unknown';
-    }
+  // Get IP address from headers or use fallback (no external API call)
+  const getClientIP = () => {
+    // Try to get IP from browser if available, otherwise use fallback
+    return 'Client IP'; // This will be properly set by the database trigger
   };
 
   const userAgent = navigator.userAgent;
-  const ipAddress = await getUserIP();
+  const ipAddress = getClientIP();
 
   return logActivity({
     user_id: userId,

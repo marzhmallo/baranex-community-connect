@@ -15,14 +15,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { record: user } = await req.json();
+    const body = await req.json();
+    console.log('Received login alert request:', body);
 
-    // Get login details from the request
-    const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0] || 
+    // Extract data from the request body (sent by database trigger)
+    const userId = body.user_id;
+    const ipAddress = body.ip_address || req.headers.get('x-forwarded-for')?.split(',')[0] || 
                      req.headers.get('x-real-ip') || 
                      'Unknown IP';
-    const userAgent = req.headers.get('user-agent') || 'Unknown Device';
-    const timestamp = new Date().toLocaleString('en-US', { 
+    const userAgent = body.user_agent || req.headers.get('user-agent') || 'Unknown Device';
+    const timestamp = new Date(body.timestamp || new Date()).toLocaleString('en-US', { 
       timeZone: 'Asia/Manila',
       year: 'numeric',
       month: 'long',
@@ -31,6 +33,27 @@ const handler = async (req: Request): Promise<Response> => {
       minute: '2-digit',
       second: '2-digit'
     });
+
+    // Get user profile for email details
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: user, error: userError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !user) {
+      console.error('Error fetching user for login alert:', userError);
+      return new Response(JSON.stringify({ error: 'User not found' }), { 
+        status: 404, 
+        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+      });
+    }
     
     // Parse device info from user agent
     let deviceInfo = 'Unknown Device';
@@ -68,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Content -->
             <div style="padding: 32px 24px;">
               <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #374151;">
-                Hello <strong style="color: #1f2937;">${user.raw_user_meta_data?.firstname || user.email}</strong>,
+                Hello <strong style="color: #1f2937;">${user.firstname || user.username || user.email}</strong>,
               </p>
               
               <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #374151;">
@@ -152,6 +175,32 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log('Login alert email sent successfully:', data);
+
+    // Log session to activity_logs for tracking (optional, since trigger already handled the sign-in log)
+    console.log('Attempting to log session for user:', userId);
+    
+    const { error: logError } = await supabase
+      .from('activity_logs')
+      .insert({
+        user_id: userId,
+        brgyid: user.brgyid,
+        action: 'login_alert_sent',
+        details: {
+          email_sent_to: user.email,
+          device_info: deviceInfo,
+          ip_address: ipAddress,
+          timestamp: timestamp
+        },
+        ip: ipAddress,
+        agent: userAgent,
+        created_at: new Date().toISOString()
+      });
+
+    if (logError) {
+      console.error('Error logging login alert activity:', logError);
+    } else {
+      console.log('Login alert activity logged successfully');
+    }
 
     return new Response(JSON.stringify({ 
       message: "Login alert email sent successfully",

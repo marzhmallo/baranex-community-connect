@@ -1085,6 +1085,48 @@ export type Database = {
         }
         Relationships: []
       }
+      hieroglyphics: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          last_verified_at: string | null
+          secret: string | null
+          userid: string
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_verified_at?: string | null
+          secret?: string | null
+          userid: string
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_verified_at?: string | null
+          secret?: string | null
+          userid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mfa_settings_user_id_fkey"
+            columns: ["userid"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_mfa_settings_user_id_fkey"
+            columns: ["userid"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       householdmembers: {
         Row: {
           created_at: string | null
@@ -2036,6 +2078,45 @@ export type Database = {
             columns: ["household_id"]
             isOneToOne: false
             referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          userid: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          userid: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          userid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_userid_fkey"
+            columns: ["userid"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_userid_fkey"
+            columns: ["userid"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
