@@ -6,25 +6,37 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Laptop, Smartphone, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+interface Session {
+    id: string;
+    userid: string;
+    created_at: string;
+    updated_at: string;
+    factor_id: string;
+    aal: string;
+    not_after: string;
+    user_agent: string;
+    ip: string;
+}
+
 const ViewSessions = () => {
     const { data: sessions, isLoading, refetch } = useQuery({
         queryKey: ['user-sessions'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('activity_logs')
-                .select('*')
-                .eq('action', 'user_sign_in')
-                .order('created_at', { ascending: false })
-                .limit(50);
+            const { data, error } = await (supabase as any).rpc('get_user_sessions');
             
             if (error) throw error;
-            return data;
+            return (data as Session[]) || [];
         }
     });
 
     const handleSignOutEverywhere = async () => {
         if (window.confirm("Are you sure you want to sign out from all other devices?")) {
             try {
+                // First delete all other sessions from database
+                const { error: deleteError } = await (supabase as any).rpc('delete_user_sessions');
+                if (deleteError) throw deleteError;
+
+                // Then sign out globally
                 const { error } = await supabase.auth.signOut({ scope: 'global' });
                 if (error) {
                     toast({
@@ -75,11 +87,10 @@ const ViewSessions = () => {
                                 </p>
                             ) : (
                                 sessions?.map(session => {
-                                    const parser = new UAParser(session.agent || '');
+                                    const parser = new UAParser(session.user_agent || '');
                                     const result = parser.getResult();
                                     const deviceInfo = `${result.os.name || 'Unknown OS'} - ${result.browser.name || 'Unknown Browser'}`;
                                     const isMobile = result.device.type === 'mobile';
-                                    const details = session.details as any;
 
                                     return (
                                         <div key={session.id} className="p-4 border border-border rounded-lg flex justify-between items-center bg-card">
@@ -91,10 +102,10 @@ const ViewSessions = () => {
                                                 <div>
                                                     <p className="font-semibold text-foreground">{deviceInfo}</p>
                                                     <p className="text-sm text-muted-foreground">
-                                                        IP: {session.ip || 'Unknown'} • {details?.username || 'Unknown User'}
+                                                        IP: {session.ip || 'Unknown'} • Session: {session.aal || 'Unknown'}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        Signed in: {new Date(session.created_at || '').toLocaleString()}
+                                                        Created: {new Date(session.created_at || '').toLocaleString()}
                                                     </p>
                                                 </div>
                                             </div>
