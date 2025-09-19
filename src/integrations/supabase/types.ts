@@ -2394,6 +2394,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      delete_user_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_age_distribution: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -2488,6 +2492,20 @@ export type Database = {
         Returns: {
           count: number
           purok: string
+        }[]
+      }
+      get_user_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          aal: string
+          created_at: string
+          factor_id: string
+          id: string
+          ip: unknown
+          not_after: string
+          updated_at: string
+          user_agent: string
+          userid: string
         }[]
       }
       is_admin: {
