@@ -2377,6 +2377,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          aal: "aal1" | "aal2" | "aal3" | null
+          created_at: string | null
+          factor_id: string | null
+          id: string | null
+          ip: unknown | null
+          not_after: string | null
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          aal?: "aal1" | "aal2" | "aal3" | null
+          created_at?: string | null
+          factor_id?: string | null
+          id?: string | null
+          ip?: unknown | null
+          not_after?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          aal?: "aal1" | "aal2" | "aal3" | null
+          created_at?: string | null
+          factor_id?: string | null
+          id?: string | null
+          ip?: unknown | null
+          not_after?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_data_transfer: {
@@ -2393,6 +2429,10 @@ export type Database = {
       delete_rejected_unprocessed_requests: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      delete_user_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       get_age_distribution: {
         Args: Record<PropertyKey, never>
@@ -2488,6 +2528,20 @@ export type Database = {
         Returns: {
           count: number
           purok: string
+        }[]
+      }
+      get_user_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          aal: string
+          created_at: string
+          factor_id: string
+          id: string
+          ip: string
+          not_after: string
+          updated_at: string
+          user_agent: string
+          user_id: string
         }[]
       }
       is_admin: {
