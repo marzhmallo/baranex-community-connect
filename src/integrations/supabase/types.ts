@@ -2501,11 +2501,11 @@ export type Database = {
           created_at: string
           factor_id: string
           id: string
-          ip: unknown
+          ip: string
           not_after: string
           updated_at: string
           user_agent: string
-          userid: string
+          user_id: string
         }[]
       }
       is_admin: {
