@@ -16,6 +16,7 @@ import RelationshipManager from '@/components/residents/RelationshipManager';
 import HouseholdSelector from '@/components/residents/HouseholdSelector';
 import ResidentForm from '@/components/residents/ResidentForm';
 import ResidentIDsManager from '@/components/residents/ResidentIDsManager';
+import ResidentActivityHistory from '@/components/residents/ResidentActivityHistory';
 import { supabase } from '@/integrations/supabase/client';
 import { useResidentPhoto } from '@/hooks/useResidentPhoto';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -795,7 +796,7 @@ const ResidentMoreDetailsPage = () => {
         <TabsContent value="history">
           <ScrollArea className="h-[calc(100vh-200px)]">
             <div className="grid gap-6 pb-8">
-              {/* Record Information - moved here */}
+              <ResidentActivityHistory residentId={resident.id} />
             </div>
           </ScrollArea>
         </TabsContent>
