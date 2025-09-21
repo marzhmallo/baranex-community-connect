@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import HouseholdForm from '@/components/households/HouseholdForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import HouseholdMembersManager from '@/components/households/HouseholdMembersManager';
+import HouseholdActivityHistory from '@/components/households/HouseholdActivityHistory';
 import { supabase } from '@/integrations/supabase/client';
 
 const HouseholdMoreDetailsPage = () => {
@@ -384,15 +385,10 @@ const HouseholdMoreDetailsPage = () => {
         </TabsContent>
         
         <TabsContent value="history">
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-xl font-semibold mb-4">History</h2>
-              
-              <p className="text-muted-foreground text-center py-10">
-                No history records available
-              </p>
-            </CardContent>
-          </Card>
+          <HouseholdActivityHistory 
+            householdId={householdId || ''} 
+            householdName={household.name}
+          />
         </TabsContent>
       </Tabs>
       
