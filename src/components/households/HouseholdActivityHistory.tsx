@@ -1,184 +1,230 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Clock, 
-  Users, 
-  Edit, 
-  Plus, 
-  Trash2, 
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-  Home
-} from 'lucide-react';
-import { useHouseholdActivityLogs } from '@/hooks/useHouseholdActivityLogs';
-import CachedAvatar from '@/components/ui/CachedAvatar';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from "react";
+import { formatDistanceToNow, format } from "date-fns";
+import { Activity, RefreshCw, Eye, Clock, User, ChevronLeft, ChevronRight, Home } from "lucide-react";
+import { useHouseholdActivityLogs } from "@/hooks/useHouseholdActivityLogs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import CachedAvatar from "@/components/ui/CachedAvatar";
+import { UAParser } from 'ua-parser-js';
+
+interface ActivityLog {
+  id: string;
+  user_id: string;
+  action: string;
+  details: any;
+  created_at: string;
+  ip?: string;
+  agent?: string;
+  brgyid: string;
+}
+
+interface UserProfile {
+  id: string;
+  firstname?: string;
+  lastname?: string;
+  username: string;
+  email: string;
+  role: string;
+  profile_picture?: string;
+}
 
 interface HouseholdActivityHistoryProps {
   householdId: string;
   householdName: string;
 }
 
-const HouseholdActivityHistory: React.FC<HouseholdActivityHistoryProps> = ({
-  householdId,
-  householdName
-}) => {
+export default function HouseholdActivityHistory({ householdId, householdName }: HouseholdActivityHistoryProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedLog, setSelectedLog] = useState<any>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [itemsPerPage] = useState(10);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<ActivityLog | null>(null);
 
-  const { data: logsData, isLoading, error } = useHouseholdActivityLogs(householdId, currentPage, 10);
-
-  // Fetch user profiles for the logs
-  const userIds = logsData?.logs?.map(log => log.user_id).filter(Boolean) || [];
-  const { data: userProfiles } = useQuery({
-    queryKey: ['user-profiles-household-logs', userIds],
-    queryFn: async () => {
-      if (userIds.length === 0) return {};
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, firstname, lastname, username')
-        .in('id', userIds);
-
-      if (error) {
-        console.error('Error fetching user profiles:', error);
-        return {};
-      }
-
-      const profileMap: Record<string, any> = {};
-      data?.forEach(profile => {
-        profileMap[profile.id] = profile;
-      });
-
-      return profileMap;
-    },
-    enabled: userIds.length > 0,
+  const { activities, userProfiles, loading, totalItems, refetch } = useHouseholdActivityLogs({
+    householdId,
+    currentPage,
+    itemsPerPage
   });
 
-  const getActionIcon = (action: string) => {
-    switch (action.toLowerCase()) {
-      case 'insert':
-      case 'household_created':
-        return <Plus className="h-4 w-4 text-green-600" />;
-      case 'update':
-      case 'household_updated':
-        return <Edit className="h-4 w-4 text-blue-600" />;
-      case 'delete':
-      case 'household_deleted':
-        return <Trash2 className="h-4 w-4 text-red-600" />;
-      default:
-        return <Home className="h-4 w-4 text-gray-600" />;
+  const parseDeviceInfo = (userAgent?: string): string => {
+    if (!userAgent) return 'Unknown Device';
+    
+    try {
+      const parser = new UAParser(userAgent);
+      const result = parser.getResult();
+      
+      const { browser, os, device } = result;
+      
+      if (device.type === 'mobile' || device.type === 'tablet') {
+        if (device.vendor && device.model) {
+          return `${device.vendor} ${device.model} (${browser.name || 'Unknown Browser'})`;
+        } else if (os.name && os.version) {
+          return `${os.name} ${os.version} (${browser.name || 'Unknown Browser'})`;
+        } else {
+          return `Mobile Device (${browser.name || 'Unknown Browser'})`;
+        }
+      }
+      
+      let deviceInfo = '';
+      
+      if (os.name) {
+        deviceInfo = os.name;
+        if (os.version) {
+          deviceInfo += ` ${os.version}`;
+        }
+      } else {
+        deviceInfo = 'Unknown OS';
+      }
+      
+      if (browser.name) {
+        deviceInfo += ` (${browser.name}`;
+        if (browser.version) {
+          const majorVersion = browser.version.split('.')[0];
+          deviceInfo += ` ${majorVersion}`;
+        }
+        deviceInfo += ')';
+      }
+      
+      return deviceInfo || 'Unknown Device';
+    } catch (error) {
+      console.error('Error parsing user agent:', error);
+      return 'Unknown Device';
     }
   };
 
-  const getActionLabel = (action: string) => {
+  const getActionIcon = (action: string) => {
     switch (action.toLowerCase()) {
+      case 'household_added':
+      case 'insert':
+      case 'create':
+        return '➕';
+      case 'household_updated':
+      case 'update':
+        return '✏️';
+      case 'household_deleted':
+      case 'delete':
+        return '🗑️';
+      case 'member_added':
+        return '👥';
+      case 'member_removed':
+        return '👤';
+      default:
+        return '🏠';
+    }
+  };
+
+  const getActionColor = (action: string) => {
+    switch (action.toLowerCase()) {
+      case 'household_added':
+      case 'insert':
+      case 'create':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'household_updated':
+      case 'update':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'household_deleted':
+      case 'delete':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'member_added':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'member_removed':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
+      default:
+        return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
+  };
+
+  const getUserName = (userId: string) => {
+    const profile = userProfiles[userId];
+    if (!profile) return 'Unknown User';
+    
+    if (profile.firstname && profile.lastname) {
+      return `${profile.firstname} ${profile.lastname}`;
+    }
+    return profile.username || profile.email || 'Unknown User';
+  };
+
+  const getUserRole = (userId: string) => {
+    const profile = userProfiles[userId];
+    return profile?.role || 'Unknown';
+  };
+
+  const getActionTitle = (action: string) => {
+    switch (action.toLowerCase()) {
+      case 'household_added':
+        return 'Household Created';
+      case 'household_updated':
+        return 'Household Updated';
+      case 'household_deleted':
+        return 'Household Deleted';
+      case 'member_added':
+        return 'Member Added';
+      case 'member_removed':
+        return 'Member Removed';
       case 'insert':
         return 'Created';
       case 'update':
         return 'Updated';
       case 'delete':
         return 'Deleted';
-      case 'household_created':
-        return 'Household Created';
-      case 'household_updated':
-        return 'Household Updated';
-      case 'household_deleted':
-        return 'Household Deleted';
       default:
-        return action;
+        return action.charAt(0).toUpperCase() + action.slice(1);
     }
   };
 
-  const getActionBadgeVariant = (action: string) => {
+  const getActionDescription = (action: string, details: any) => {
     switch (action.toLowerCase()) {
+      case 'household_added':
       case 'insert':
-      case 'household_created':
-        return 'default';
-      case 'update':
+        return 'New household record was created in the system';
       case 'household_updated':
-        return 'secondary';
-      case 'delete':
+      case 'update':
+        return 'Household information was modified';
       case 'household_deleted':
-        return 'destructive';
+      case 'delete':
+        return 'Household record was removed from the system';
+      case 'member_added':
+        return 'New member was added to the household';
+      case 'member_removed':
+        return 'Member was removed from the household';
       default:
-        return 'outline';
+        return 'Action was performed on this household';
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handleViewDetails = (activity: ActivityLog) => {
+    setSelectedActivity(activity);
+    setShowModal(true);
   };
 
-  const handleViewDetails = (log: any) => {
-    setSelectedLog(log);
-    setIsDetailModalOpen(true);
-  };
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Activity History
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="flex items-center space-x-4">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[200px]" />
-                <Skeleton className="h-3 w-[150px]" />
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Activity className="h-5 w-5 text-primary" />
               </div>
+              <CardTitle>Activity History</CardTitle>
             </div>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-10">
-            <p className="text-muted-foreground">Failed to load activity history</p>
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!logsData?.logs || logsData.logs.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Activity History
-          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-10">
-            <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No activity history found for this household</p>
+          <div className="animate-pulse space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center space-x-4 p-4 bg-muted/30 rounded-lg">
+                <div className="h-10 w-10 bg-muted rounded-full"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded w-1/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </div>
+                <div className="h-6 w-16 bg-muted rounded"></div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -188,143 +234,233 @@ const HouseholdActivityHistory: React.FC<HouseholdActivityHistoryProps> = ({
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Activity History for {householdName}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {logsData.logs.map((log) => {
-              const user = userProfiles?.[log.user_id];
-              const userName = user ? `${user.firstname} ${user.lastname}`.trim() || user.username : 'Unknown User';
-              
-              return (
-                <div key={log.id} className="flex items-start space-x-4 p-4 rounded-lg border bg-card/50">
-                  <div className="flex-shrink-0">
-                    <CachedAvatar
-                      userId={log.user_id}
-                      fallback={userName.charAt(0).toUpperCase()}
-                      className="h-8 w-8"
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      {getActionIcon(log.action)}
-                      <Badge variant={getActionBadgeVariant(log.action)}>
-                        {getActionLabel(log.action)}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        by {userName}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                      <Clock className="h-3 w-3" />
-                      {formatDate(log.created_at)}
-                    </div>
-                    
-                    {log.details && Object.keys(log.details).length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewDetails(log)}
-                        className="mt-2 h-7 text-xs"
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        View Details
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {logsData.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <p className="text-sm text-muted-foreground">
-                Showing {logsData.logs.length} of {logsData.totalCount} activities
-              </p>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                <span className="text-sm">
-                  Page {currentPage} of {logsData.totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(logsData.totalPages, prev + 1))}
-                  disabled={currentPage === logsData.totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Activity className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>Activity History</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  All activities related to {householdName}
+                </p>
               </div>
             </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant="outline" className="text-xs">
+                {totalItems} Total Activities
+              </Badge>
+              <Button
+                onClick={refetch}
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {activities.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                <Home className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Activity Found</h3>
+              <p className="text-muted-foreground">
+                No activity logs found for this household yet.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {activities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start space-x-4 p-4 bg-card border border-border rounded-lg hover:bg-accent/50 transition-all duration-200"
+                  >
+                    <div className="flex-shrink-0">
+                      <CachedAvatar
+                        userId={activity.user_id}
+                        profilePicture={userProfiles[activity.user_id]?.profile_picture}
+                        fallback={getUserName(activity.user_id).substring(0, 2).toUpperCase()}
+                        className="h-10 w-10"
+                      />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-lg">{getActionIcon(activity.action)}</span>
+                            <Badge 
+                              variant="outline" 
+                              className={`text-xs ${getActionColor(activity.action)}`}
+                            >
+                              {getActionTitle(activity.action)}
+                            </Badge>
+                          </div>
+                          
+                          <div className="text-sm">
+                            <span className="font-medium text-foreground">
+                              {getUserName(activity.user_id)}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {' '}• {getActionDescription(activity.action, activity.details)}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                            <div className="flex items-center space-x-1">
+                              <Clock className="h-3 w-3" />
+                              <span>{formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <User className="h-3 w-3" />
+                              <span className="capitalize">{getUserRole(activity.user_id)}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <Button
+                          onClick={() => handleViewDetails(activity)}
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 opacity-60 hover:opacity-100"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} activities
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const page = i + 1;
+                        return (
+                          <Button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            className="h-8 w-8 p-0 text-xs"
+                          >
+                            {page}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
 
-      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedLog && getActionIcon(selectedLog.action)}
-              Activity Details
-            </DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh]">
-            {selectedLog && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="font-medium text-muted-foreground">Action</p>
-                    <p>{getActionLabel(selectedLog.action)}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">Date</p>
-                    <p>{formatDate(selectedLog.created_at)}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">User</p>
-                    <p>{userProfiles?.[selectedLog.user_id] ? 
-                      `${userProfiles[selectedLog.user_id].firstname} ${userProfiles[selectedLog.user_id].lastname}`.trim() || 
-                      userProfiles[selectedLog.user_id].username : 'Unknown User'}</p>
-                  </div>
-                  {selectedLog.ip && (
+      {/* Activity Details Modal */}
+      {selectedActivity && (
+        <Dialog open={showModal} onOpenChange={setShowModal}>
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <span className="text-xl">{getActionIcon(selectedActivity.action)}</span>
+                <span>{getActionTitle(selectedActivity.action)} Details</span>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Performed By</label>
+                  <div className="flex items-center space-x-2">
+                    <CachedAvatar
+                      userId={selectedActivity.user_id}
+                      profilePicture={userProfiles[selectedActivity.user_id]?.profile_picture}
+                      fallback={getUserName(selectedActivity.user_id).substring(0, 2).toUpperCase()}
+                      className="h-8 w-8"
+                    />
                     <div>
-                      <p className="font-medium text-muted-foreground">IP Address</p>
-                      <p>{selectedLog.ip}</p>
+                      <div className="font-medium">{getUserName(selectedActivity.user_id)}</div>
+                      <div className="text-xs text-muted-foreground capitalize">{getUserRole(selectedActivity.user_id)}</div>
                     </div>
-                  )}
+                  </div>
                 </div>
                 
-                {selectedLog.details && (
-                  <div>
-                    <p className="font-medium text-muted-foreground mb-2">Details</p>
-                    <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
-                      {JSON.stringify(selectedLog.details, null, 2)}
-                    </pre>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Date & Time</label>
+                  <div className="text-sm">
+                    <div>{format(new Date(selectedActivity.created_at), 'PPpp')}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(selectedActivity.created_at), { addSuffix: true })}
+                    </div>
+                  </div>
+                </div>
+                
+                {selectedActivity.ip && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">IP Address</label>
+                    <div className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                      {selectedActivity.ip}
+                    </div>
+                  </div>
+                )}
+                
+                {selectedActivity.agent && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Device</label>
+                    <div className="text-sm">
+                      {parseDeviceInfo(selectedActivity.agent)}
+                    </div>
                   </div>
                 )}
               </div>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+              
+              {selectedActivity.details && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Details</label>
+                  <div className="bg-muted p-4 rounded-lg">
+                    <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
+                      {JSON.stringify(selectedActivity.details, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
-};
-
-export default HouseholdActivityHistory;
+}
