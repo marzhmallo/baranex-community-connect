@@ -392,7 +392,7 @@ export default function HouseholdActivityHistory({ householdId, householdName }:
       {/* Activity Details Modal */}
       {selectedActivity && (
         <Dialog open={showModal} onOpenChange={setShowModal}>
-          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden">
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-2">
                 <span className="text-xl">{getActionIcon(selectedActivity.action)}</span>
