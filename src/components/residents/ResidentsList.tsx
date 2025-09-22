@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Resident } from '@/lib/types';
 import { getResidents, deleteResident } from '@/lib/api/residents';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import ResidentForm from './ResidentForm';
+import EditResidentModal from './EditResidentModal';
 import ResidentStatusCard from './ResidentStatusCard';
 import ClassificationStatusCard from './ClassificationStatusCard';
 import ResidentDetails from './ResidentDetails';
@@ -615,37 +615,9 @@ const ResidentsList: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
               
-              <Dialog open={isAddResidentOpen} onOpenChange={isOpen => {
-              if (!isOpen) {
-                // First close the dialog through state
-                setIsAddResidentOpen(false);
-
-                // Then clean up any lingering effects to ensure UI remains interactive
-                setTimeout(() => {
-                  document.body.classList.remove('overflow-hidden');
-                  document.body.style.pointerEvents = '';
-
-                  // Remove any focus traps or aria-hidden attributes that might be lingering
-                  const elements = document.querySelectorAll('[aria-hidden="true"]');
-                  elements.forEach(el => {
-                    el.setAttribute('aria-hidden', 'false');
-                  });
-                }, 150);
-              } else {
-                setIsAddResidentOpen(true);
-              }
-            }}>
-                <DialogContent className="sm:max-w-[600px]" onInteractOutside={e => {
-                // Prevent issues with outside clicks
-                e.preventDefault();
-              }}>
-                  <DialogHeader>
-                    <DialogTitle>Add New Resident</DialogTitle>
-                    <DialogDescription>
-                      Enter the resident's information below. Required fields are marked with an asterisk (*).
-                    </DialogDescription>
-                  </DialogHeader>
-                  <ResidentForm onSubmit={() => {
+              <EditResidentModal 
+                isOpen={isAddResidentOpen} 
+                onClose={() => {
                   // First close the dialog through state
                   setIsAddResidentOpen(false);
 
@@ -660,9 +632,9 @@ const ResidentsList: React.FC = () => {
                       el.setAttribute('aria-hidden', 'false');
                     });
                   }, 150);
-                }} />
-                </DialogContent>
-              </Dialog>
+                }}
+                resident={null}
+              />
             </div>
           </div>
           
@@ -811,22 +783,12 @@ const ResidentsList: React.FC = () => {
       {/* Resident Details Dialog */}
       {selectedResident && <ResidentDetails resident={selectedResident} open={isDetailsOpen} onOpenChange={setIsDetailsOpen} />}
       
-      {/* Edit Resident Dialog */}
-      <Dialog open={isEditResidentOpen} onOpenChange={isOpen => {
-      if (!isOpen) {
-        handleCloseEditDialog();
-      }
-    }}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Resident</DialogTitle>
-            <DialogDescription>
-              Update the resident's information below.
-            </DialogDescription>
-          </DialogHeader>
-          {residentToEdit && <ResidentForm resident={residentToEdit} onSubmit={handleCloseEditDialog} />}
-        </DialogContent>
-      </Dialog>
+      {/* Edit Resident Modal */}
+      <EditResidentModal 
+        isOpen={isEditResidentOpen} 
+        onClose={handleCloseEditDialog}
+        resident={residentToEdit}
+      />
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

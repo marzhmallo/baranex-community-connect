@@ -439,10 +439,7 @@ const ResidentForm = ({
           <div className="pr-4 space-y-6">
             <h3 className="text-lg font-medium mb-4">Personal Information</h3>
             
-            {/* Photo upload component */}
-            <div className="flex justify-center mb-4">
-              <ResidentPhotoUpload residentId={resident?.id} existingPhotoUrl={photoUrl} onPhotoUploaded={handlePhotoUploaded} />
-            </div>
+            {/* Photo upload component removed - now handled by EditResidentModal */}
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField control={form.control} name="firstName" render={({

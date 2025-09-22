@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Resident } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import ResidentForm from "./ResidentForm";
+import EditResidentModal from './EditResidentModal';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ZoomIn, X, Clock, History, Skull, Home } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
@@ -183,13 +183,11 @@ const ResidentDetails = ({ resident, open, onOpenChange }: ResidentDetailsProps)
       >
         {isEditMode ? (
           <>
-            <DialogHeader className="shrink-0">
-              <DialogTitle>Edit Resident</DialogTitle>
-              <DialogDescription>
-                Update information for {resident.firstName} {resident.lastName}
-              </DialogDescription>
-            </DialogHeader>
-            <ResidentForm onSubmit={handleFormSubmit} resident={resident} />
+            <EditResidentModal 
+              isOpen={true} 
+              onClose={handleFormSubmit}
+              resident={resident}
+            />
           </>
         ) : (
           <>

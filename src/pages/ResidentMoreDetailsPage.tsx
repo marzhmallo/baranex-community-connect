@@ -14,7 +14,7 @@ import {RefreshCw } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import RelationshipManager from '@/components/residents/RelationshipManager';
 import HouseholdSelector from '@/components/residents/HouseholdSelector';
-import ResidentForm from '@/components/residents/ResidentForm';
+import EditResidentModal from '@/components/residents/EditResidentModal';
 import ResidentIDsManager from '@/components/residents/ResidentIDsManager';
 import ResidentActivityHistory from '@/components/residents/ResidentActivityHistory';
 import { supabase } from '@/integrations/supabase/client';
@@ -835,20 +835,12 @@ const ResidentMoreDetailsPage = () => {
         </Dialog>
       )}
 
-      {/* Edit resident dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-semibold">Edit Resident</h2>
-              <p className="text-sm text-muted-foreground">
-                Update information for {resident.first_name} {resident.last_name}
-              </p>
-            </div>
-          </div>
-          <ResidentForm onSubmit={handleEditFormSubmit} resident={resident} />
-        </DialogContent>
-      </Dialog>
+      {/* Edit resident modal */}
+      <EditResidentModal 
+        isOpen={isEditDialogOpen} 
+        onClose={() => setIsEditDialogOpen(false)}
+        resident={resident}
+      />
     </div>
   );
 };

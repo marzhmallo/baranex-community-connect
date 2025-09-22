@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import ResidentForm from '@/components/residents/ResidentForm';
+import EditResidentModal from '@/components/residents/EditResidentModal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/components/AuthProvider';
 import { useQuery } from '@tanstack/react-query';
@@ -95,38 +95,12 @@ const ResidentsPage = () => {
         </CardContent>
       </Card>
       
-      {/* Add Resident Dialog */}
-      <Dialog 
-        open={isAddResidentOpen} 
-        onOpenChange={(isOpen) => {
-          console.log("Dialog open state changed to:", isOpen);
-          if (!isOpen) {
-            handleCloseDialog();
-          } else {
-            setIsAddResidentOpen(true);
-          }
-        }}
-      >
-        <DialogContent 
-          className="sm:max-w-[600px]"
-          onInteractOutside={(e) => {
-            console.log("Interaction outside dialog detected");
-            e.preventDefault();
-          }}
-          onEscapeKeyDown={(e) => {
-            console.log("Escape key pressed");
-            e.preventDefault();
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Add New Resident</DialogTitle>
-            <DialogDescription>
-              Enter the resident's information below. Required fields are marked with an asterisk (*).
-            </DialogDescription>
-          </DialogHeader>
-          <ResidentForm onSubmit={handleCloseDialog} />
-        </DialogContent>
-      </Dialog>
+      {/* Add Resident Modal */}
+      <EditResidentModal 
+        isOpen={isAddResidentOpen} 
+        onClose={handleCloseDialog}
+        resident={null}
+      />
       
       {/* Make sure Toaster is included on the page */}
       <Toaster />
