@@ -189,59 +189,121 @@ const EnhancedResidentPhotoUpload = ({
   };
 
   const getCroppedImg = useCallback(async (): Promise<Blob | null> => {
-    if (!completedCrop || !imgRef.current || !canvasRef.current) return null;
+    console.log('Starting getCroppedImg...');
+    console.log('completedCrop:', completedCrop);
+    console.log('imgRef.current:', imgRef.current);
+    console.log('canvasRef.current:', canvasRef.current);
+
+    if (!completedCrop || !imgRef.current || !canvasRef.current) {
+      console.error('Missing required elements for cropping');
+      return null;
+    }
+
+    if (completedCrop.width === 0 || completedCrop.height === 0) {
+      console.error('Invalid crop dimensions');
+      return null;
+    }
 
     const image = imgRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    if (!ctx) return null;
+    if (!ctx) {
+      console.error('Failed to get canvas context');
+      return null;
+    }
+
+    console.log('Image natural dimensions:', image.naturalWidth, image.naturalHeight);
+    console.log('Image display dimensions:', image.width, image.height);
 
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    canvas.width = completedCrop.width;
-    canvas.height = completedCrop.height;
+    console.log('Scale factors:', scaleX, scaleY);
 
-    ctx.drawImage(
-      image,
-      completedCrop.x * scaleX,
-      completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
-      0,
-      0,
-      completedCrop.width,
-      completedCrop.height,
-    );
+    // Set canvas dimensions to crop size
+    const pixelRatio = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(completedCrop.width * pixelRatio);
+    canvas.height = Math.floor(completedCrop.height * pixelRatio);
 
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        resolve(blob);
-      }, 'image/jpeg', 0.8);
-    });
+    ctx.scale(pixelRatio, pixelRatio);
+    ctx.imageSmoothingQuality = 'high';
+
+    const cropX = completedCrop.x * scaleX;
+    const cropY = completedCrop.y * scaleY;
+    const cropWidth = completedCrop.width * scaleX;
+    const cropHeight = completedCrop.height * scaleY;
+
+    console.log('Crop parameters:', { cropX, cropY, cropWidth, cropHeight });
+
+    try {
+      ctx.drawImage(
+        image,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        completedCrop.width,
+        completedCrop.height,
+      );
+
+      console.log('Canvas drawing completed successfully');
+
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          console.log('Blob created:', blob);
+          resolve(blob);
+        }, 'image/jpeg', 0.9);
+      });
+    } catch (error) {
+      console.error('Error drawing on canvas:', error);
+      return null;
+    }
   }, [completedCrop]);
 
   const handleCropSave = async () => {
+    console.log('handleCropSave called');
     try {
-      const croppedBlob = await getCroppedImg();
-      if (!croppedBlob) {
+      if (!completedCrop) {
+        console.error('No completed crop available');
         toast({
           title: "Crop Error",
-          description: "Failed to crop image. Please try again.",
+          description: "Please select an area to crop first.",
           variant: "destructive"
         });
         return;
       }
 
+      console.log('Getting cropped image...');
+      const croppedBlob = await getCroppedImg();
+      console.log('Cropped blob result:', croppedBlob);
+      
+      if (!croppedBlob) {
+        console.error('Failed to create cropped blob');
+        toast({
+          title: "Crop Error",
+          description: "Failed to process the cropped image. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Uploading cropped image...');
       await uploadFile(croppedBlob);
       setShowCropModal(false);
       setImageSrc('');
+      
+      // Clean up blob URL if it was created from fetch
+      if (imageSrc.startsWith('blob:')) {
+        URL.revokeObjectURL(imageSrc);
+      }
     } catch (error) {
-      console.error('Error cropping image:', error);
+      console.error('Error in handleCropSave:', error);
       toast({
         title: "Crop Error",
-        description: "Failed to crop image. Please try again.",
+        description: `Failed to save cropped image: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     }
