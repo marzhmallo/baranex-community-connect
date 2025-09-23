@@ -108,24 +108,42 @@ const EnhancedResidentPhotoUpload = ({
 
   const startCamera = async () => {
     try {
+      console.log('Starting camera...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
       });
+      console.log('Media stream obtained:', mediaStream);
+      
       setStream(mediaStream);
       setShowCamera(true);
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        
-        // Ensure video plays when metadata is loaded
-        const handleLoadedMetadata = () => {
-          if (videoRef.current) {
-            videoRef.current.play().catch(console.error);
+      // Wait for next tick to ensure video element is rendered
+      setTimeout(() => {
+        if (videoRef.current) {
+          console.log('Setting video srcObject');
+          videoRef.current.srcObject = mediaStream;
+          
+          const handleLoadedMetadata = () => {
+            console.log('Video metadata loaded, starting playback');
+            if (videoRef.current) {
+              videoRef.current.play().then(() => {
+                console.log('Video playback started successfully');
+              }).catch((err) => {
+                console.error('Video play failed:', err);
+              });
+            }
+          };
+          
+          videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+          
+          // Force load if stream is already ready
+          if (mediaStream.active) {
+            videoRef.current.load();
           }
-        };
-        
-        videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
-      }
+        } else {
+          console.error('Video ref not available');
+        }
+      }, 100);
     } catch (error) {
       console.error('Error accessing camera:', error);
       toast({
@@ -436,11 +454,20 @@ const EnhancedResidentPhotoUpload = ({
               autoPlay
               playsInline
               muted
-              className="w-full max-w-sm rounded-lg bg-muted"
+              width={320}
+              height={240}
+              className="w-full max-w-sm rounded-lg bg-muted border"
               onLoadedMetadata={() => {
+                console.log('Video onLoadedMetadata triggered');
                 if (videoRef.current) {
                   videoRef.current.play().catch(console.error);
                 }
+              }}
+              onCanPlay={() => {
+                console.log('Video can play');
+              }}
+              onError={(e) => {
+                console.error('Video error:', e);
               }}
             />
             <canvas ref={canvasRef} className="hidden" />
