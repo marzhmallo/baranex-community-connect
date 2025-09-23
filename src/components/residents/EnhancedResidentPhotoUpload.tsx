@@ -109,12 +109,22 @@ const EnhancedResidentPhotoUpload = ({
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' }
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
       });
       setStream(mediaStream);
       setShowCamera(true);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        
+        // Ensure video plays when metadata is loaded
+        const handleLoadedMetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play().catch(console.error);
+          }
+        };
+        
+        videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
@@ -342,10 +352,22 @@ const EnhancedResidentPhotoUpload = ({
               variant="outline"
               size="icon"
               className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-lg bg-background"
-              onClick={() => {
-                // Re-open crop modal with current photo for editing
-                setImageSrc(photoUrl);
-                setShowCropModal(true);
+              onClick={async () => {
+                // Convert signed URL to blob to avoid CORS taint issues
+                try {
+                  const response = await fetch(photoUrl);
+                  const blob = await response.blob();
+                  const blobUrl = URL.createObjectURL(blob);
+                  setImageSrc(blobUrl);
+                  setShowCropModal(true);
+                } catch (error) {
+                  console.error('Error preparing image for crop:', error);
+                  toast({
+                    title: "Error",
+                    description: "Failed to load image for editing",
+                    variant: "destructive"
+                  });
+                }
               }}
             >
               <Edit3 className="h-3 w-3" />
@@ -413,7 +435,13 @@ const EnhancedResidentPhotoUpload = ({
               ref={videoRef}
               autoPlay
               playsInline
-              className="w-full max-w-sm rounded-lg"
+              muted
+              className="w-full max-w-sm rounded-lg bg-muted"
+              onLoadedMetadata={() => {
+                if (videoRef.current) {
+                  videoRef.current.play().catch(console.error);
+                }
+              }}
             />
             <canvas ref={canvasRef} className="hidden" />
             <div className="flex space-x-2">
@@ -450,6 +478,7 @@ const EnhancedResidentPhotoUpload = ({
                     alt="Crop me"
                     src={imageSrc}
                     onLoad={onImageLoad}
+                    crossOrigin="anonymous"
                     className="max-w-full max-h-96"
                   />
                 </ReactCrop>
