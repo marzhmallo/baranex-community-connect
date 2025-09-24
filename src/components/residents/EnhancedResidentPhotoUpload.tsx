@@ -29,7 +29,8 @@ const EnhancedResidentPhotoUpload = ({
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const imgRef = useRef<HTMLImageElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cropCanvasRef = useRef<HTMLCanvasElement>(null); // Separate canvas for cropping
+  const cameraCanvasRef = useRef<HTMLCanvasElement>(null); // Separate canvas for camera capture
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -140,30 +141,86 @@ const EnhancedResidentPhotoUpload = ({
     }
   };
 
-  // FIXED: Capture photo function with proper CORS handling
+  // FIXED: Capture photo function with separate canvas and improved error handling
   const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    console.log('capturePhoto: Starting photo capture...');
+    
+    if (!videoRef.current || !cameraCanvasRef.current) {
+      console.error('capturePhoto: Missing video or camera canvas element');
+      toast({
+        title: "Capture Error",
+        description: "Camera elements not ready. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) return;
-
-    // Set canvas dimensions to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const canvas = cameraCanvasRef.current;
     
-    // Draw the current video frame to canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    try {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('capturePhoto: Failed to get canvas context');
+        toast({
+          title: "Capture Error", 
+          description: "Failed to initialize canvas. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    // Convert canvas to data URL instead of blob to avoid CORS issues
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-    
-    // Use the data URL directly for cropping
-    setImageSrc(dataUrl);
-    setShowCropModal(true);
-    stopCamera();
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      console.log('capturePhoto: Canvas dimensions set to', canvas.width, 'x', canvas.height);
+      
+      // Draw the current video frame to canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Convert canvas to blob to avoid data URL length issues
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          console.error('capturePhoto: Failed to create blob from canvas');
+          toast({
+            title: "Capture Error",
+            description: "Failed to process captured image. Please try again.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        console.log('capturePhoto: Successfully created blob, size:', blob.size);
+        
+        // Convert blob to data URL for cropping
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result as string;
+          console.log('capturePhoto: Data URL created, length:', dataUrl.length);
+          setImageSrc(dataUrl);
+          setShowCropModal(true);
+          stopCamera();
+        };
+        reader.onerror = () => {
+          console.error('capturePhoto: FileReader error');
+          toast({
+            title: "Capture Error",
+            description: "Failed to process captured image. Please try again.",
+            variant: "destructive"
+          });
+        };
+        reader.readAsDataURL(blob);
+      }, 'image/jpeg', 0.8);
+      
+    } catch (error) {
+      console.error('capturePhoto: Error during capture:', error);
+      toast({
+        title: "Capture Error",
+        description: "Failed to capture photo. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const stopCamera = () => {
@@ -174,42 +231,72 @@ const EnhancedResidentPhotoUpload = ({
     setShowCamera(false);
   };
 
-  // FIXED: Improved crop function with better error handling
+  // FIXED: Improved crop function with separate canvas and better error handling
   const getCroppedImg = useCallback(async (): Promise<Blob | null> => {
-    if (!completedCrop || !imgRef.current || !canvasRef.current) {
-      console.error('Missing required elements for cropping');
+    console.log('getCroppedImg: Starting crop operation...');
+    
+    if (!completedCrop || !imgRef.current || !cropCanvasRef.current) {
+      console.error('getCroppedImg: Missing required elements - completedCrop:', !!completedCrop, 'imgRef:', !!imgRef.current, 'cropCanvasRef:', !!cropCanvasRef.current);
       return null;
     }
 
     const image = imgRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) {
-      console.error('Failed to get canvas context');
-      return null;
-    }
-
-    // Calculate scale factors
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-
-    // Set canvas dimensions to crop size
-    const pixelRatio = window.devicePixelRatio || 1;
-    canvas.width = Math.floor(completedCrop.width * scaleX * pixelRatio);
-    canvas.height = Math.floor(completedCrop.height * scaleY * pixelRatio);
-
-    ctx.scale(pixelRatio, pixelRatio);
-    ctx.imageSmoothingQuality = 'high';
-
-    const cropX = completedCrop.x * scaleX;
-    const cropY = completedCrop.y * scaleY;
-    const cropWidth = completedCrop.width * scaleX;
-    const cropHeight = completedCrop.height * scaleY;
-
+    const canvas = cropCanvasRef.current;
+    
     try {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('getCroppedImg: Failed to get canvas context');
+        return null;
+      }
+
+      // Validate image is loaded
+      if (!image.complete || image.naturalWidth === 0) {
+        console.error('getCroppedImg: Image not fully loaded');
+        return null;
+      }
+
+      console.log('getCroppedImg: Image dimensions - natural:', image.naturalWidth, 'x', image.naturalHeight, 'display:', image.width, 'x', image.height);
+      console.log('getCroppedImg: Crop dimensions:', completedCrop);
+
+      // Calculate scale factors
+      const scaleX = image.naturalWidth / image.width;
+      const scaleY = image.naturalHeight / image.height;
+
+      console.log('getCroppedImg: Scale factors - X:', scaleX, 'Y:', scaleY);
+
+      // Set canvas dimensions to crop size
+      const pixelRatio = window.devicePixelRatio || 1;
+      const canvasWidth = Math.floor(completedCrop.width * scaleX * pixelRatio);
+      const canvasHeight = Math.floor(completedCrop.height * scaleY * pixelRatio);
+      
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      console.log('getCroppedImg: Canvas dimensions set to', canvasWidth, 'x', canvasHeight);
+
+      // Reset canvas transform and set high quality
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      ctx.imageSmoothingQuality = 'high';
+
+      const cropX = completedCrop.x * scaleX;
+      const cropY = completedCrop.y * scaleY;
+      const cropWidth = completedCrop.width * scaleX;
+      const cropHeight = completedCrop.height * scaleY;
+
+      console.log('getCroppedImg: Crop coordinates - X:', cropX, 'Y:', cropY, 'Width:', cropWidth, 'Height:', cropHeight);
+
       // Clear canvas first
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      
+      // Check for canvas taint before drawing
+      try {
+        // Test if we can read the canvas (will throw if tainted)
+        ctx.getImageData(0, 0, 1, 1);
+      } catch (taintError) {
+        console.error('getCroppedImg: Canvas is tainted (CORS issue):', taintError);
+        return null;
+      }
       
       // Draw the cropped portion
       ctx.drawImage(
@@ -224,13 +311,31 @@ const EnhancedResidentPhotoUpload = ({
         completedCrop.height * scaleY
       );
 
+      console.log('getCroppedImg: Image drawn to canvas successfully');
+
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
+          if (blob) {
+            console.log('getCroppedImg: Blob created successfully, size:', blob.size);
+          } else {
+            console.error('getCroppedImg: Failed to create blob from canvas');
+          }
           resolve(blob);
         }, 'image/jpeg', 0.9);
       });
     } catch (error) {
-      console.error('Error drawing on canvas:', error);
+      console.error('getCroppedImg: Error during crop operation:', error);
+      
+      // Check for specific canvas taint errors
+      if (error instanceof DOMException && error.name === 'SecurityError') {
+        console.error('getCroppedImg: Security error - likely canvas taint issue');
+        toast({
+          title: "Crop Error",
+          description: "Image security error. Please try uploading the image again.",
+          variant: "destructive"
+        });
+      }
+      
       return null;
     }
   }, [completedCrop]);
@@ -479,7 +584,7 @@ const EnhancedResidentPhotoUpload = ({
                 }
               }}
             />
-            <canvas ref={canvasRef} className="hidden" />
+            <canvas ref={cameraCanvasRef} className="hidden" />
             <div className="flex space-x-2">
               <Button onClick={capturePhoto} className="flex-1">
                 <Camera className="h-4 w-4 mr-2" />
@@ -519,7 +624,7 @@ const EnhancedResidentPhotoUpload = ({
                 </ReactCrop>
               </div>
             )}
-            <canvas ref={canvasRef} className="hidden" />
+            <canvas ref={cropCanvasRef} className="hidden" />
             <div className="flex justify-end space-x-2">
               <Button onClick={() => setShowCropModal(false)} variant="outline">
                 <X className="h-4 w-4 mr-2" />
