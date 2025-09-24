@@ -400,7 +400,7 @@ const FloatingChatButton = () => {
                   style={{ objectPosition: 'center' }}
                 />
                 <div>
-                  <CardTitle className="text-lg">Alexander Cabalan</CardTitle>
+                  <CardTitle className="text-lg">Alexander "Allan" Cabalan</CardTitle>
                    <div className="flex items-center space-x-2 mt-1">
                      <span className="text-xs opacity-80">
                        {chatbotSettings.mode === 'online' ? "Online" : "Offline"}
