@@ -17,3 +17,9 @@ verify_jwt = true
 
 [functions.mfa-status]
 verify_jwt = true
+
+[functions.generate-embeddings]
+verify_jwt = false
+
+[functions.allan-core]
+verify_jwt = false
