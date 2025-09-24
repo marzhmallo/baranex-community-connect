@@ -340,7 +340,7 @@ const ProfilePage = () => {
                 userInitials={getInitials()}
                 previewMode="circle"
                 size="144px"
-                showOverlay={true}
+                showOverlay={editing}
                 className="mx-auto"
               />
             </div>
