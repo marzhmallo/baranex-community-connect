@@ -635,7 +635,7 @@ const ProfilePictureUpload = ({
           </Avatar>
 
           {/* Hover Overlay - View Mode */}
-          {!showOverlay && onViewPhoto && (
+          {!showOverlay && onViewPhoto && photoUrl && (
             <div 
               className={`absolute inset-0 bg-black/60 ${previewMode === 'circle' ? 'rounded-full' : 'rounded-xl'} opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center cursor-pointer`}
               onClick={(e) => {
