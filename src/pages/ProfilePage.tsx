@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { MFAManagementModal } from "@/components/security/MFAManagementModal";
+import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
 
 interface Barangay {
   id: string;
@@ -28,9 +29,8 @@ const ProfilePage = () => {
   const [canEdit, setCanEdit] = useState(true);
   const [activeTab, setActiveTab] = useState<'personal' | 'barangay' | 'security'>('personal');
   const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
-  const [photoLoading, setPhotoLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   
   // Password change modal state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -111,7 +111,6 @@ const ProfilePage = () => {
           return;
         }
 
-        setPhotoLoading(true);
         try {
           const { data } = await supabase.storage
             .from('profilepictures')
@@ -123,8 +122,6 @@ const ProfilePage = () => {
           }
         } catch (error) {
           console.error('Error fetching profile photo:', error);
-        } finally {
-          setPhotoLoading(false);
         }
       }
     };
@@ -185,55 +182,9 @@ const ProfilePage = () => {
     }
   }, [userProfile]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    setUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}.${fileExt}`;
-      const filePath = `admins/${fileName}`;
-
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('profilepictures')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Update profile with new photo path
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ profile_picture: filePath })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Get new signed URL
-      const { data } = await supabase.storage
-        .from('profilepictures')
-        .createSignedUrl(filePath, 3600);
-
-      if (data?.signedUrl) {
-        setProfilePhotoUrl(data.signedUrl);
-        setCachedData('profile_photo', data.signedUrl);
-      }
-
-      toast({
-        title: "Success",
-        description: "Profile picture updated successfully",
-      });
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload profile picture",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-    }
+  const handlePhotoUploaded = (newPhotoUrl: string) => {
+    setProfilePhotoUrl(newPhotoUrl);
+    setCachedData('profile_photo', newPhotoUrl);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -244,7 +195,7 @@ const ProfilePage = () => {
   const handleSave = async () => {
     if (!user) return;
     
-    setUploading(true);
+    setSaving(true);
     try {
       const { error } = await supabase
         .from("profiles")
@@ -276,7 +227,7 @@ const ProfilePage = () => {
         variant: "destructive",
       });
     } finally {
-      setUploading(false);
+      setSaving(false);
     }
   };
 
@@ -380,42 +331,17 @@ const ProfilePage = () => {
         {/* Main Profile Header Card */}
         <div className="bg-card border border-border rounded-xl p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            {/* Avatar */}
-            <div className="relative w-24 h-24 cursor-pointer group">
-              {photoLoading ? (
-                <div className="w-24 h-24 rounded-full ring-4 ring-border bg-muted flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-              ) : (
-                <img 
-                  src={profilePhotoUrl || `https://placehold.co/96x96/3B82F6/FFFFFF?text=${getInitials()}`}
-                  alt="User Avatar" 
-                  className="w-24 h-24 rounded-full ring-4 ring-border object-cover"
-                  onClick={() => editing ? document.getElementById('avatar-upload')?.click() : setShowPhotoModal(true)}
-                />
-              )}
-              <div className="absolute inset-0 bg-black bg-opacity-60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                {uploading ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-white" />
-                ) : editing ? (
-                  <>
-                    <Camera className="w-5 h-5 text-white mb-1" />
-                    <span className="text-xs font-semibold text-white">Change</span>
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-5 h-5 text-white mb-1" />
-                    <span className="text-xs font-semibold text-white">View</span>
-                  </>
-                )}
-              </div>
-              <input 
-                type="file" 
-                id="avatar-upload" 
-                className="hidden" 
-                accept="image/*"
-                onChange={handleFileUpload}
-                disabled={uploading}
+            {/* Profile Picture Section */}
+            <div className="w-36 h-36">
+              <ProfilePictureUpload
+                userId={user?.id || ''}
+                currentPhotoUrl={profilePhotoUrl}
+                onPhotoUploaded={handlePhotoUploaded}
+                userInitials={getInitials()}
+                previewMode="circle"
+                size="144px"
+                showOverlay={editing}
+                className="mx-auto"
               />
             </div>
             
@@ -450,10 +376,10 @@ const ProfilePage = () => {
               <div className="flex-shrink-0 flex gap-3">
                 <button 
                   onClick={handleSave}
-                  disabled={uploading}
+                  disabled={saving}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
-                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save Changes
                 </button>
                 <button 
