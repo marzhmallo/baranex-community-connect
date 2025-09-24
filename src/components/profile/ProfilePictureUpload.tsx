@@ -15,13 +15,21 @@ interface ProfilePictureUploadProps {
   currentPhotoUrl?: string;
   onPhotoUploaded: (url: string) => void;
   userInitials?: string;
+  previewMode?: 'circle' | 'square';
+  size?: string;
+  showOverlay?: boolean;
+  className?: string;
 }
 
 const ProfilePictureUpload = ({
   userId,
   currentPhotoUrl,
   onPhotoUploaded,
-  userInitials = "U"
+  userInitials = "U",
+  previewMode = 'circle',
+  size = '96px',
+  showOverlay = true,
+  className = ''
 }: ProfilePictureUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -556,57 +564,135 @@ const ProfilePictureUpload = ({
     }
   };
 
+  // Camera permission check
+  const checkCameraPermission = useCallback(async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported');
+      }
+      return true;
+    } catch (error) {
+      console.warn('Camera access not available:', error);
+      return false;
+    }
+  }, []);
+
+  // Handle photo option clicks
+  const handleTakePhoto = useCallback(async () => {
+    const hasCamera = await checkCameraPermission();
+    if (hasCamera) {
+      startCamera();
+    } else {
+      toast({
+        title: "Camera Unavailable",
+        description: "Camera access is not available. Please use file upload instead.",
+        variant: "destructive"
+      });
+    }
+  }, []);
+
+  const handleUploadClick = useCallback(() => {
+    const input = document.getElementById('profile-picture-upload') as HTMLInputElement;
+    if (input) {
+      input.click();
+    }
+  }, []);
+
   return (
     <>
-      <div className="flex flex-col items-center space-y-4">
-        {/* Enhanced Upload Area with Drag & Drop */}
-        <div {...getRootProps()} className={`relative ${isDragActive ? 'border-primary border-dashed border-2 bg-primary/5 rounded-lg p-2' : ''}`}>
-          <div className="relative">
-            <Avatar className="h-36 w-36">
-              {photoUrl && (
-                <AvatarImage 
-                  src={photoUrl} 
-                  alt="Profile picture" 
-                  onError={(e) => {
-                    console.error('Failed to load image:', photoUrl);
-                    setPhotoUrl(undefined);
-                  }}
-                />
-              )}
-              <AvatarFallback className="text-2xl bg-muted text-muted-foreground">
-                {userInitials}
-              </AvatarFallback>
-            </Avatar>
+      <div className={`relative group ${className}`}>
+        {/* Enhanced Upload Area with Hover Overlay */}
+        <div 
+          {...getRootProps()} 
+          className={`relative cursor-pointer transition-all duration-200 ${
+            isDragActive ? 'scale-105' : ''
+          }`}
+          style={{ width: size, height: size }}
+        >
+          <Avatar 
+            className={`w-full h-full ${previewMode === 'circle' ? 'rounded-full' : 'rounded-xl'} border-4 border-border transition-all duration-200 group-hover:border-primary`}
+            style={{ width: size, height: size }}
+          >
             {photoUrl && (
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                onClick={handleRemovePhoto}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <AvatarImage 
+                src={photoUrl} 
+                alt="Profile picture" 
+                className={`w-full h-full object-cover ${previewMode === 'circle' ? 'rounded-full' : 'rounded-xl'}`}
+                onError={(e) => {
+                  console.error('Failed to load image:', photoUrl);
+                  setPhotoUrl(undefined);
+                }}
+              />
             )}
-          </div>
-          
-          {isDragActive && (
-            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg border-2 border-dashed border-primary">
-              <p className="text-primary font-medium">Drop image here</p>
+            <AvatarFallback 
+              className={`text-2xl bg-muted text-muted-foreground ${previewMode === 'circle' ? 'rounded-full' : 'rounded-xl'}`}
+              style={{ fontSize: `calc(${size} * 0.3)` }}
+            >
+              {userInitials}
+            </AvatarFallback>
+          </Avatar>
+
+          {/* Hover Overlay */}
+          {showOverlay && (
+            <div 
+              className={`absolute inset-0 bg-black/70 ${previewMode === 'circle' ? 'rounded-full' : 'rounded-xl'} opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center`}
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUploadClick();
+                    }}
+                    className="h-8 px-3 text-xs bg-white/20 hover:bg-white/30 text-white border-white/20"
+                  >
+                    <Upload className="h-3 w-3 mr-1" />
+                    Upload
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTakePhoto();
+                    }}
+                    className="h-8 px-3 text-xs bg-white/20 hover:bg-white/30 text-white border-white/20"
+                  >
+                    <Camera className="h-3 w-3 mr-1" />
+                    Camera
+                  </Button>
+                </div>
+                {photoUrl && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemovePhoto();
+                    }}
+                    className="h-8 px-3 text-xs bg-red-500/80 hover:bg-red-600 text-white"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
           )}
-        </div>
-        
-        {/* Upload Progress */}
-        {uploading && (
-          <div className="w-full max-w-xs">
-            <Progress value={uploadProgress} className="h-2" />
-            <p className="text-sm text-muted-foreground mt-1 text-center">Uploading...</p>
-          </div>
-        )}
-        
-        {/* Upload Buttons */}
-        <div className="flex items-center gap-2">
+
+          {/* Drag Active Overlay */}
+          {isDragActive && (
+            <div className={`absolute inset-0 flex items-center justify-center bg-primary/20 ${previewMode === 'circle' ? 'rounded-full' : 'rounded-xl'} border-2 border-dashed border-primary`}>
+              <p className="text-primary font-medium text-sm">Drop here</p>
+            </div>
+          )}
+
+          {/* Hidden File Input */}
           <input
             {...getInputProps()}
             type="file"
@@ -616,32 +702,17 @@ const ProfilePictureUpload = ({
             disabled={uploading}
             className="hidden"
           />
-          <label htmlFor="profile-picture-upload">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={uploading}
-              className="cursor-pointer border-border text-foreground hover:bg-muted"
-              asChild
-            >
-              <span>
-                <Upload className="h-4 w-4 mr-2" />
-                {uploading ? "Uploading..." : "Upload Photo"}
-              </span>
-            </Button>
-          </label>
-          
-          <Button
-            type="button"
-            variant="outline"
-            disabled={uploading}
-            onClick={startCamera}
-            className="border-border text-foreground hover:bg-muted"
-          >
-            <Camera className="h-4 w-4 mr-2" />
-            Camera
-          </Button>
         </div>
+        
+        {/* Upload Progress */}
+        {uploading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className={`bg-black/80 ${previewMode === 'circle' ? 'rounded-full' : 'rounded-xl'} p-4 flex flex-col items-center space-y-2`}>
+              <Progress value={uploadProgress} className="w-20 h-2" />
+              <p className="text-white text-xs">Uploading...</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Camera Modal */}

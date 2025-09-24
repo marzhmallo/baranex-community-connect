@@ -331,13 +331,17 @@ const ProfilePage = () => {
         {/* Main Profile Header Card */}
         <div className="bg-card border border-border rounded-xl p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            {/* Avatar */}
-            <div className="w-24 h-24">
+            {/* Profile Picture Section */}
+            <div className="w-36 h-36">
               <ProfilePictureUpload
                 userId={user?.id || ''}
                 currentPhotoUrl={profilePhotoUrl}
                 onPhotoUploaded={handlePhotoUploaded}
                 userInitials={getInitials()}
+                previewMode="circle"
+                size="144px"
+                showOverlay={true}
+                className="mx-auto"
               />
             </div>
             
