@@ -371,7 +371,7 @@ export function AddEditOfficialDialog({
               
               <OfficialPhotoUpload 
                 officialId={official?.id} 
-                existingPhotoUrl={form.watch('photo_url')} 
+                existingPhotoUrl={official?.photo_url || ''} 
                 onPhotoUploaded={handlePhotoUploaded} 
               />
               

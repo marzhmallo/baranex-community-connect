@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ReactCrop, { Crop, centerCrop, makeAspectCrop, PixelCrop } from 'react-image-crop';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -35,6 +35,11 @@ const OfficialPhotoUpload = ({
   const cameraCanvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
+
+  // Sync internal state with prop changes
+  useEffect(() => {
+    setPhotoUrl(existingPhotoUrl);
+  }, [existingPhotoUrl]);
 
   // Image load callback for cropping
   const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
