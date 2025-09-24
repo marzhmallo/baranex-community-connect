@@ -481,7 +481,7 @@ const FloatingChatButton = () => {
                               AI
                             </span>
                           )}
-                          {message.source === 'Greetings' && (
+                          {message.source === 'offline' && (
                             <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded flex-shrink-0">
                               Offline
                             </span>
