@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Upload, X, Camera, RotateCcw, Check } from 'lucide-react';
+import { Upload, X, Camera, RotateCcw, Check, Eye } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import 'react-image-crop/dist/ReactCrop.css';
 
@@ -18,6 +18,7 @@ interface ProfilePictureUploadProps {
   previewMode?: 'circle' | 'square';
   size?: string;
   showOverlay?: boolean;
+  onViewPhoto?: () => void;
   className?: string;
 }
 
@@ -29,6 +30,7 @@ const ProfilePictureUpload = ({
   previewMode = 'circle',
   size = '96px',
   showOverlay = true,
+  onViewPhoto,
   className = ''
 }: ProfilePictureUploadProps) => {
   const [uploading, setUploading] = useState(false);
@@ -632,7 +634,21 @@ const ProfilePictureUpload = ({
             </AvatarFallback>
           </Avatar>
 
-          {/* Hover Overlay */}
+          {/* Hover Overlay - View Mode */}
+          {!showOverlay && onViewPhoto && (
+            <div 
+              className={`absolute inset-0 bg-black/60 ${previewMode === 'circle' ? 'rounded-full' : 'rounded-xl'} opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center cursor-pointer`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewPhoto();
+              }}
+            >
+              <Eye className="h-6 w-6 text-white mb-1" />
+              <span className="text-white text-sm font-medium">View</span>
+            </div>
+          )}
+
+          {/* Hover Overlay - Edit Mode */}
           {showOverlay && (
             <div 
               className={`absolute inset-0 bg-black/70 ${previewMode === 'circle' ? 'rounded-full' : 'rounded-xl'} opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center`}

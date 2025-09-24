@@ -341,6 +341,7 @@ const ProfilePage = () => {
                 previewMode="circle"
                 size="144px"
                 showOverlay={editing}
+                onViewPhoto={() => setShowPhotoModal(true)}
                 className="mx-auto"
               />
             </div>
@@ -704,6 +705,29 @@ const ProfilePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Photo Viewer Modal */}
+      {showPhotoModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50" 
+          onClick={() => setShowPhotoModal(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] p-4">
+            <button 
+              onClick={() => setShowPhotoModal(false)}
+              className="absolute top-2 right-2 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img 
+              src={profilePhotoUrl || `https://placehold.co/400x400/3B82F6/FFFFFF?text=${getInitials()}`}
+              alt="Profile picture full view"
+              className="max-w-full max-h-full object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
 
       {/* MFA Management Modal */}
       <MFAManagementModal open={showMFAModal} onOpenChange={setShowMFAModal} />
