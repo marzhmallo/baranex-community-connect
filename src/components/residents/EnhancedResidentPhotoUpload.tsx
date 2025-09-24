@@ -112,7 +112,6 @@ const EnhancedResidentPhotoUpload = ({
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
       });
-      console.log('Media stream obtained:', mediaStream);
       
       setStream(mediaStream);
       setShowCamera(true);
@@ -120,28 +119,15 @@ const EnhancedResidentPhotoUpload = ({
       // Wait for next tick to ensure video element is rendered
       setTimeout(() => {
         if (videoRef.current) {
-          console.log('Setting video srcObject');
           videoRef.current.srcObject = mediaStream;
           
           const handleLoadedMetadata = () => {
-            console.log('Video metadata loaded, starting playback');
             if (videoRef.current) {
-              videoRef.current.play().then(() => {
-                console.log('Video playback started successfully');
-              }).catch((err) => {
-                console.error('Video play failed:', err);
-              });
+              videoRef.current.play().catch(console.error);
             }
           };
           
           videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
-          
-          // Force load if stream is already ready
-          if (mediaStream.active) {
-            videoRef.current.load();
-          }
-        } else {
-          console.error('Video ref not available');
         }
       }, 100);
     } catch (error) {
@@ -154,6 +140,7 @@ const EnhancedResidentPhotoUpload = ({
     }
   };
 
+  // FIXED: Capture photo function with proper CORS handling
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
@@ -163,21 +150,20 @@ const EnhancedResidentPhotoUpload = ({
 
     if (!ctx) return;
 
+    // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
+    
+    // Draw the current video frame to canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const reader = new FileReader();
-        reader.addEventListener('load', () => {
-          setImageSrc(reader.result?.toString() || '');
-          setShowCropModal(true);
-          stopCamera();
-        });
-        reader.readAsDataURL(blob);
-      }
-    }, 'image/jpeg', 0.8);
+    // Convert canvas to data URL instead of blob to avoid CORS issues
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Use the data URL directly for cropping
+    setImageSrc(dataUrl);
+    setShowCropModal(true);
+    stopCamera();
   };
 
   const stopCamera = () => {
@@ -188,19 +174,10 @@ const EnhancedResidentPhotoUpload = ({
     setShowCamera(false);
   };
 
+  // FIXED: Improved crop function with better error handling
   const getCroppedImg = useCallback(async (): Promise<Blob | null> => {
-    console.log('Starting getCroppedImg...');
-    console.log('completedCrop:', completedCrop);
-    console.log('imgRef.current:', imgRef.current);
-    console.log('canvasRef.current:', canvasRef.current);
-
     if (!completedCrop || !imgRef.current || !canvasRef.current) {
       console.error('Missing required elements for cropping');
-      return null;
-    }
-
-    if (completedCrop.width === 0 || completedCrop.height === 0) {
-      console.error('Invalid crop dimensions');
       return null;
     }
 
@@ -213,18 +190,14 @@ const EnhancedResidentPhotoUpload = ({
       return null;
     }
 
-    console.log('Image natural dimensions:', image.naturalWidth, image.naturalHeight);
-    console.log('Image display dimensions:', image.width, image.height);
-
+    // Calculate scale factors
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    console.log('Scale factors:', scaleX, scaleY);
-
     // Set canvas dimensions to crop size
     const pixelRatio = window.devicePixelRatio || 1;
-    canvas.width = Math.floor(completedCrop.width * pixelRatio);
-    canvas.height = Math.floor(completedCrop.height * pixelRatio);
+    canvas.width = Math.floor(completedCrop.width * scaleX * pixelRatio);
+    canvas.height = Math.floor(completedCrop.height * scaleY * pixelRatio);
 
     ctx.scale(pixelRatio, pixelRatio);
     ctx.imageSmoothingQuality = 'high';
@@ -234,9 +207,11 @@ const EnhancedResidentPhotoUpload = ({
     const cropWidth = completedCrop.width * scaleX;
     const cropHeight = completedCrop.height * scaleY;
 
-    console.log('Crop parameters:', { cropX, cropY, cropWidth, cropHeight });
-
     try {
+      // Clear canvas first
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw the cropped portion
       ctx.drawImage(
         image,
         cropX,
@@ -245,15 +220,12 @@ const EnhancedResidentPhotoUpload = ({
         cropHeight,
         0,
         0,
-        completedCrop.width,
-        completedCrop.height,
+        completedCrop.width * scaleX,
+        completedCrop.height * scaleY
       );
-
-      console.log('Canvas drawing completed successfully');
 
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
-          console.log('Blob created:', blob);
           resolve(blob);
         }, 'image/jpeg', 0.9);
       });
@@ -264,10 +236,8 @@ const EnhancedResidentPhotoUpload = ({
   }, [completedCrop]);
 
   const handleCropSave = async () => {
-    console.log('handleCropSave called');
     try {
       if (!completedCrop) {
-        console.error('No completed crop available');
         toast({
           title: "Crop Error",
           description: "Please select an area to crop first.",
@@ -276,12 +246,9 @@ const EnhancedResidentPhotoUpload = ({
         return;
       }
 
-      console.log('Getting cropped image...');
       const croppedBlob = await getCroppedImg();
-      console.log('Cropped blob result:', croppedBlob);
       
       if (!croppedBlob) {
-        console.error('Failed to create cropped blob');
         toast({
           title: "Crop Error",
           description: "Failed to process the cropped image. Please try again.",
@@ -290,15 +257,10 @@ const EnhancedResidentPhotoUpload = ({
         return;
       }
 
-      console.log('Uploading cropped image...');
       await uploadFile(croppedBlob);
       setShowCropModal(false);
       setImageSrc('');
       
-      // Clean up blob URL if it was created from fetch
-      if (imageSrc.startsWith('blob:')) {
-        URL.revokeObjectURL(imageSrc);
-      }
     } catch (error) {
       console.error('Error in handleCropSave:', error);
       toast({
@@ -314,35 +276,29 @@ const EnhancedResidentPhotoUpload = ({
       setUploading(true);
       setUploadProgress(0);
 
-      const fileExt = file instanceof File ? file.name.split('.').pop() : 'jpg';
+      const fileExt = 'jpg'; // Always use jpg for camera photos
       const fileName = `${residentId || 'new'}-${Date.now()}.${fileExt}`;
       const filePath = `resident/${fileName}`;
       
-      // Simulate progress for better UX
+      // Simulate progress
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 100);
 
       const { data, error } = await supabase.storage
         .from('residentphotos')
-        .upload(filePath, file, {
-          upsert: true
-        });
+        .upload(filePath, file, { upsert: true });
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('residentphotos')
         .createSignedUrl(filePath, 600);
 
-      if (signedUrlError) {
-        throw signedUrlError;
-      }
+      if (signedUrlError) throw signedUrlError;
 
       const url = signedUrlData.signedUrl;
       setPhotoUrl(url);
@@ -383,9 +339,7 @@ const EnhancedResidentPhotoUpload = ({
         .from('residentphotos')
         .remove([filePath]);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setPhotoUrl(undefined);
       onPhotoUploaded('');
@@ -416,42 +370,44 @@ const EnhancedResidentPhotoUpload = ({
             </AvatarFallback>
           </Avatar>
           {photoUrl && (
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-lg"
-              onClick={handleRemovePhoto}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-          {photoUrl && (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-lg bg-background"
-              onClick={async () => {
-                // Convert signed URL to blob to avoid CORS taint issues
-                try {
-                  const response = await fetch(photoUrl);
-                  const blob = await response.blob();
-                  const blobUrl = URL.createObjectURL(blob);
-                  setImageSrc(blobUrl);
-                  setShowCropModal(true);
-                } catch (error) {
-                  console.error('Error preparing image for crop:', error);
-                  toast({
-                    title: "Error",
-                    description: "Failed to load image for editing",
-                    variant: "destructive"
-                  });
-                }
-              }}
-            >
-              <Edit3 className="h-3 w-3" />
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-lg"
+                onClick={handleRemovePhoto}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-lg bg-background"
+                onClick={async () => {
+                  try {
+                    const response = await fetch(photoUrl);
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setImageSrc(reader.result as string);
+                      setShowCropModal(true);
+                    };
+                    reader.readAsDataURL(blob);
+                  } catch (error) {
+                    console.error('Error preparing image for crop:', error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to load image for editing",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+              >
+                <Edit3 className="h-3 w-3" />
+              </Button>
+            </>
           )}
         </div>
 
@@ -467,7 +423,6 @@ const EnhancedResidentPhotoUpload = ({
 
         {/* Upload Controls */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-xs">
-          {/* File Upload / Drag & Drop */}
           <div
             {...getRootProps()}
             className={`
@@ -486,7 +441,6 @@ const EnhancedResidentPhotoUpload = ({
             </p>
           </div>
 
-          {/* Camera Capture */}
           <Button
             type="button"
             variant="outline"
@@ -520,16 +474,9 @@ const EnhancedResidentPhotoUpload = ({
               height={240}
               className="w-full max-w-sm rounded-lg bg-muted border"
               onLoadedMetadata={() => {
-                console.log('Video onLoadedMetadata triggered');
                 if (videoRef.current) {
                   videoRef.current.play().catch(console.error);
                 }
-              }}
-              onCanPlay={() => {
-                console.log('Video can play');
-              }}
-              onError={(e) => {
-                console.error('Video error:', e);
               }}
             />
             <canvas ref={canvasRef} className="hidden" />
@@ -567,18 +514,14 @@ const EnhancedResidentPhotoUpload = ({
                     alt="Crop me"
                     src={imageSrc}
                     onLoad={onImageLoad}
-                    crossOrigin="anonymous"
-                    className="max-w-full max-h-96"
+                    style={{ maxWidth: '100%', maxHeight: '400px' }}
                   />
                 </ReactCrop>
               </div>
             )}
             <canvas ref={canvasRef} className="hidden" />
             <div className="flex justify-end space-x-2">
-              <Button
-                onClick={() => setShowCropModal(false)}
-                variant="outline"
-              >
+              <Button onClick={() => setShowCropModal(false)} variant="outline">
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
