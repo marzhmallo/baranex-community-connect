@@ -134,26 +134,9 @@ const ProfilePictureUpload = ({
     return profile?.role === 'admin';
   };
 
-  // Generate signed URL when currentPhotoUrl changes with caching
+  // Sync internal photoUrl state directly with parent's currentPhotoUrl
   useEffect(() => {
-    if (currentPhotoUrl) {
-      // Check cache first
-      const cachedUrl = getCachedData('signed_url');
-      if (cachedUrl) {
-        setPhotoUrl(cachedUrl);
-        return;
-      }
-
-      generateSignedUrl(currentPhotoUrl).then(signedUrl => {
-        if (signedUrl) {
-          setPhotoUrl(signedUrl);
-          setCachedData('signed_url', signedUrl);
-        }
-      });
-    } else {
-      setPhotoUrl(undefined);
-      clearPhotoCache();
-    }
+    setPhotoUrl(currentPhotoUrl || undefined);
   }, [currentPhotoUrl]);
 
   // Image load callback for cropping

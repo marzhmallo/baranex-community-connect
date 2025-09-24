@@ -182,9 +182,21 @@ const ProfilePage = () => {
     }
   }, [userProfile]);
 
-  const handlePhotoUploaded = (newPhotoUrl: string) => {
-    setProfilePhotoUrl(newPhotoUrl);
-    setCachedData('profile_photo', newPhotoUrl);
+  const handlePhotoUploaded = async (filePath: string) => {
+    try {
+      // Generate signed URL from the file path
+      const { data } = await supabase.storage
+        .from('profilepictures')
+        .createSignedUrl(filePath, 3600);
+      
+      if (data?.signedUrl) {
+        setProfilePhotoUrl(data.signedUrl);
+        setCachedData('profile_photo', data.signedUrl);
+        clearProfileCache(); // Clear old cache entries
+      }
+    } catch (error) {
+      console.error('Error generating signed URL after upload:', error);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
