@@ -347,7 +347,7 @@ const FloatingChatButton = () => {
           {/* Main button */}
           <div className="relative w-16 h-16 rounded-full shadow-2xl overflow-hidden transition-all duration-300 group-hover:shadow-primary/25 group-hover:shadow-2xl bg-gradient-to-br from-background to-muted border border-border/20">
             <img 
-              src="/lovable-uploads/allan-avatar.png"
+              src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
               alt="Alan - Barangay Assistant"
               className="w-full h-full object-cover scale-125 transition-transform duration-300 group-hover:scale-130"
               draggable={false}
@@ -385,7 +385,7 @@ const FloatingChatButton = () => {
           <div className="flex items-center space-x-3">
             <div className="relative">
               <img 
-                src="/lovable-uploads/allan-avatar.png"
+                src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
                 alt="Alan"
                 className="h-8 w-8 rounded-full object-cover scale-125 shadow-md"
                 style={{ objectPosition: 'center' }}
@@ -406,7 +406,7 @@ const FloatingChatButton = () => {
       )}
 
       {isOpen && !isMinimized && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
           <Card 
             ref={chatRef}
             className="w-full max-w-md h-[600px] flex flex-col shadow-2xl bg-gradient-to-b from-background to-background/95 border border-border/20 backdrop-blur-sm animate-scale-in"
@@ -415,7 +415,7 @@ const FloatingChatButton = () => {
               <div className="flex items-center space-x-3">
                 <div className="relative">
                   <img 
-                    src="/lovable-uploads/allan-avatar.png"
+                    src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
                     alt="Alan"
                     className="h-10 w-10 rounded-full object-cover scale-125 shadow-lg ring-2 ring-background/20"
                     style={{ objectPosition: 'center' }}
@@ -476,7 +476,7 @@ const FloatingChatButton = () => {
                         {message.role === 'assistant' && (
                           <div className="flex items-center space-x-2 mb-2 pb-2 border-b border-border/20">
                             <img 
-                              src="/lovable-uploads/allan-avatar.png"
+                              src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
                               alt="Allan"
                               className="h-5 w-5 rounded-full object-cover scale-125"
                               style={{ objectPosition: 'center' }}
@@ -530,7 +530,7 @@ const FloatingChatButton = () => {
                       <div className="bg-gradient-to-br from-muted to-muted/80 rounded-2xl rounded-bl-md p-4 text-sm max-w-[85%] mr-8 border border-border/20 shadow-md">
                         <div className="flex items-center space-x-2 mb-2 pb-2 border-b border-border/20">
                           <img 
-                            src="/lovable-uploads/allan-avatar.png"
+                            src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
                             alt="Allan"
                             className="h-5 w-5 rounded-full object-cover scale-125"
                             style={{ objectPosition: 'center' }}
