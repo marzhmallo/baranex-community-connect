@@ -406,7 +406,7 @@ const FloatingChatButton = () => {
       )}
 
       {isOpen && !isMinimized && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
           <Card 
             ref={chatRef}
             className="w-full max-w-md h-[600px] flex flex-col shadow-2xl bg-gradient-to-b from-background to-background/95 border border-border/20 backdrop-blur-sm animate-scale-in"
