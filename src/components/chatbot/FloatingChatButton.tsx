@@ -329,27 +329,40 @@ const FloatingChatButton = () => {
         ref={dragRef}
         className={cn(
           "fixed z-50 select-none",
-          isDragging ? "cursor-grabbing" : "cursor-grab hover:scale-105",
+          isDragging ? "cursor-grabbing" : "cursor-grab hover:scale-110",
           (isOpen && !isMinimized) && "opacity-0 pointer-events-none"
         )}
         style={{
           left: position.x,
           top: position.y,
           transform: isDragging ? 'none' : 'translateZ(0)',
-          transition: isDragging ? 'none' : 'transform 0.2s ease-out'
+          transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
         onMouseDown={handleMouseDown}
       >
-        <div className="relative">
-          <div className="w-16 h-16 rounded-full shadow-xl relative overflow-hidden transition-shadow duration-200 hover:shadow-2xl">
+        <div className="relative group">
+          {/* Glow effect */}
+          <div className="absolute inset-0 w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 blur-md group-hover:blur-lg transition-all duration-300" />
+          
+          {/* Main button */}
+          <div className="relative w-16 h-16 rounded-full shadow-2xl overflow-hidden transition-all duration-300 group-hover:shadow-primary/25 group-hover:shadow-2xl bg-gradient-to-br from-background to-muted border border-border/20">
             <img 
               src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
               alt="Alan - Barangay Assistant"
-              className="w-full h-full object-cover scale-125"
+              className="w-full h-full object-cover scale-125 transition-transform duration-300 group-hover:scale-130"
               draggable={false}
               style={{ objectPosition: 'center' }}
             />
+            
+            {/* Status indicator */}
+            <div className={cn(
+              "absolute bottom-1 right-1 w-3 h-3 rounded-full border-2 border-background animate-pulse",
+              chatbotSettings.mode === 'online' ? "bg-green-500" : "bg-orange-500"
+            )} />
           </div>
+          
+          {/* Ripple effect on hover */}
+          <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-primary/30 animate-ping group-hover:block hidden" />
           
           <button
             onClick={() => {
@@ -366,50 +379,59 @@ const FloatingChatButton = () => {
       {/* Minimized Chat Indicator */}
       {isOpen && isMinimized && (
         <div 
-          className="fixed z-50 bottom-4 right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+          className="fixed z-50 bottom-4 right-4 bg-gradient-to-r from-primary via-primary to-secondary/80 text-primary-foreground p-4 rounded-2xl shadow-2xl cursor-pointer hover:shadow-primary/25 hover:shadow-2xl transition-all duration-300 hover:scale-105 backdrop-blur-sm border border-border/20"
           onClick={() => setIsMinimized(false)}
         >
-          <div className="flex items-center space-x-2">
-            <img 
-              src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
-              alt="Alan"
-              className="h-6 w-6 rounded-full object-cover scale-125"
-              style={{ objectPosition: 'center' }}
-            />
-            <span className="text-sm font-medium">Alan</span>
-            <div className={cn(
-              "w-2 h-2 rounded-full animate-pulse",
-              chatbotSettings.mode === 'online' ? "bg-green-400" : "bg-orange-400"
-            )} title={chatbotSettings.mode === 'online' ? "Online Mode" : "Offline Mode"} />
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <img 
+                src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
+                alt="Alan"
+                className="h-8 w-8 rounded-full object-cover scale-125 shadow-md"
+                style={{ objectPosition: 'center' }}
+              />
+              <div className={cn(
+                "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background animate-pulse",
+                chatbotSettings.mode === 'online' ? "bg-green-500" : "bg-orange-500"
+              )} />
+            </div>
+            <div>
+              <span className="text-sm font-semibold">Allan</span>
+              <p className="text-xs opacity-80">
+                {chatbotSettings.mode === 'online' ? "Online & Ready" : "Offline Mode"}
+              </p>
+            </div>
           </div>
         </div>
       )}
 
       {isOpen && !isMinimized && (
-        <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
           <Card 
             ref={chatRef}
-            className="w-full max-w-md h-[600px] flex flex-col shadow-2xl"
+            className="w-full max-w-md h-[600px] flex flex-col shadow-2xl bg-gradient-to-b from-background to-background/95 border border-border/20 backdrop-blur-sm animate-scale-in"
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg flex-shrink-0">
-              <div className="flex items-center space-x-2">
-                <img 
-                  src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
-                  alt="Alan"
-                  className="h-8 w-8 rounded-full object-cover scale-125"
-                  style={{ objectPosition: 'center' }}
-                />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-primary via-primary to-secondary/80 text-primary-foreground rounded-t-xl flex-shrink-0 border-b border-border/10">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <img 
+                    src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
+                    alt="Alan"
+                    className="h-10 w-10 rounded-full object-cover scale-125 shadow-lg ring-2 ring-background/20"
+                    style={{ objectPosition: 'center' }}
+                  />
+                  <div className={cn(
+                    "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background animate-pulse shadow-sm",
+                    chatbotSettings.mode === 'online' ? "bg-green-500" : "bg-orange-500"
+                  )} />
+                </div>
                 <div>
-                  <CardTitle className="text-lg">Allan</CardTitle>
-                   <div className="flex items-center space-x-2 mt-1">
-                     <span className="text-xs opacity-80">
-                       {chatbotSettings.mode === 'online' ? "Online" : "Offline"}
+                  <CardTitle className="text-lg font-semibold">Allan</CardTitle>
+                   <div className="flex items-center space-x-2 mt-0.5">
+                     <span className="text-xs opacity-90 font-medium">
+                       {chatbotSettings.mode === 'online' ? "Online & Smart" : "Offline Mode"}
                      </span>
-                    <div className={cn(
-                      "w-2 h-2 rounded-full animate-pulse ml-1",
-                      chatbotSettings.mode === 'online' ? "bg-green-400" : "bg-orange-400"
-                    )} />
-                  </div>
+                   </div>
                 </div>
               </div>
               <div className="flex items-center space-x-1">
@@ -417,7 +439,7 @@ const FloatingChatButton = () => {
                   variant="ghost"
                   size="sm"
                   onClick={minimizeChat}
-                  className="text-white hover:bg-white/20"
+                  className="text-primary-foreground hover:bg-background/20 hover:text-primary-foreground rounded-lg transition-colors"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -425,64 +447,77 @@ const FloatingChatButton = () => {
                   variant="ghost"
                   size="sm"
                   onClick={closeChat}
-                  className="text-white hover:bg-white/20"
+                  className="text-primary-foreground hover:bg-background/20 hover:text-primary-foreground rounded-lg transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             </CardHeader>
 
-            <CardContent className="flex-1 flex flex-col p-0 min-h-0">
+            <CardContent className="flex-1 flex flex-col p-0 min-h-0 bg-gradient-to-b from-background to-muted/20">
               <ScrollArea className="flex-1 h-full">
-                <div className="p-4 space-y-4">
+                <div className="p-6 space-y-6">
                   {messages.map((message) => (
                     <div
                       key={message.id}
                       className={cn(
-                        "flex",
+                        "flex animate-fade-in",
                         message.role === 'user' ? "justify-end" : "justify-start"
                       )}
                     >
                       <div
                         className={cn(
-                          "max-w-[80%] rounded-lg p-3 text-sm relative",
+                          "max-w-[85%] rounded-2xl p-4 text-sm relative shadow-md backdrop-blur-sm transition-all duration-200 hover:shadow-lg",
                           message.role === 'user'
-                            ? "bg-primary text-white"
-                            : "bg-muted"
+                            ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground ml-8 rounded-br-md"
+                            : "bg-gradient-to-br from-muted to-muted/80 text-foreground mr-8 rounded-bl-md border border-border/20"
                         )}
                       >
+                        {message.role === 'assistant' && (
+                          <div className="flex items-center space-x-2 mb-2 pb-2 border-b border-border/20">
+                            <img 
+                              src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
+                              alt="Allan"
+                              className="h-5 w-5 rounded-full object-cover scale-125"
+                              style={{ objectPosition: 'center' }}
+                            />
+                            <span className="text-xs font-medium text-muted-foreground">Allan</span>
+                          </div>
+                        )}
+                        
                         <div 
-                          className="whitespace-pre-wrap break-words"
+                          className="whitespace-pre-wrap break-words leading-relaxed"
                           dangerouslySetInnerHTML={{ 
                             __html: renderMarkdown(message.content) 
                           }}
                         />
-                        <div className="flex items-center justify-between mt-2 gap-2">
-                          <p className="text-xs opacity-70 flex-shrink-0">
+                        
+                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/10 gap-2">
+                          <p className="text-xs opacity-70 flex-shrink-0 font-medium">
                             {formatTime(message.timestamp)}
                           </p>
                           {message.source === 'faq' && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded flex-shrink-0">
+                            <span className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full flex-shrink-0 font-medium">
                               FAQ
                             </span>
                           )}
                           {message.source === 'supabase' && (
-                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex-shrink-0">
+                            <span className="text-xs bg-purple-500/20 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full flex-shrink-0 font-medium">
                               Local Data
                             </span>
                           )}
                           {message.source === 'gemini_with_data' && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex-shrink-0">
+                            <span className="text-xs bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-1 rounded-full flex-shrink-0 font-medium">
                               AI + Data
                             </span>
                           )}
                           {message.source === 'gemini' && (
-                            <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded flex-shrink-0">
+                            <span className="text-xs bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-full flex-shrink-0 font-medium">
                               AI
                             </span>
                           )}
                           {message.source === 'offline' && (
-                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded flex-shrink-0">
+                            <span className="text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full flex-shrink-0 font-medium">
                               Offline
                             </span>
                           )}
@@ -491,12 +526,21 @@ const FloatingChatButton = () => {
                     </div>
                   ))}
                   {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-muted rounded-lg p-3 text-sm">
+                    <div className="flex justify-start animate-fade-in">
+                      <div className="bg-gradient-to-br from-muted to-muted/80 rounded-2xl rounded-bl-md p-4 text-sm max-w-[85%] mr-8 border border-border/20 shadow-md">
+                        <div className="flex items-center space-x-2 mb-2 pb-2 border-b border-border/20">
+                          <img 
+                            src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
+                            alt="Allan"
+                            className="h-5 w-5 rounded-full object-cover scale-125"
+                            style={{ objectPosition: 'center' }}
+                          />
+                          <span className="text-xs font-medium text-muted-foreground">Allan is thinking...</span>
+                        </div>
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         </div>
                       </div>
                     </div>
@@ -505,28 +549,28 @@ const FloatingChatButton = () => {
                 </div>
               </ScrollArea>
 
-              <div className="p-4 border-t flex-shrink-0">
-                <div className="flex space-x-2">
+              <div className="p-6 border-t border-border/20 flex-shrink-0 bg-gradient-to-t from-background to-background/80 backdrop-blur-sm">
+                <div className="flex space-x-3">
                   <Textarea
                     ref={textareaRef}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={chatbotSettings.mode === 'online' ? "Ask me anything..." : "Ask me anything..."}
+                    placeholder={chatbotSettings.mode === 'online' ? "Ask Allan anything..." : "Chat with Allan..."}
                     disabled={isLoading}
-                    className="flex-1 min-h-[40px] max-h-[120px] resize-none"
+                    className="flex-1 min-h-[48px] max-h-[120px] resize-none rounded-2xl border-border/20 bg-muted/50 backdrop-blur-sm focus:bg-background/80 transition-all duration-200 placeholder:text-muted-foreground/60"
                     rows={1}
                   />
                   <Button 
                     onClick={sendMessage} 
                     disabled={!inputMessage.trim() || isLoading}
                     size="sm"
-                    className="self-end flex-shrink-0"
+                    className="self-end flex-shrink-0 h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-primary/25 transition-all duration-200 disabled:opacity-50"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
+                <p className="text-xs text-muted-foreground/80 mt-3 text-center font-medium">
                   Press Enter to send • Shift+Enter for new line
                 </p>
               </div>
