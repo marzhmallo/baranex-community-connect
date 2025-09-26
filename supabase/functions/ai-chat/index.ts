@@ -11,19 +11,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ✅ CORRECT GEMINI API ENDPOINT
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+
 // Enhanced FAQ search for offline mode only
 async function searchFAQ(userQuery: string, supabase: any) {
   const normalizedQuery = userQuery.toLowerCase().trim();
-  
   if (normalizedQuery.length < 3) {
     return null;
   }
   
   try {
-    const { data: faqs, error } = await supabase
-      .from('chatbot_faq')
-      .select('*');
-    
+    const { data: faqs, error } = await supabase.from('chatbot_faq').select('*');
     if (error) {
       console.error('FAQ search error:', error);
       return null;
@@ -62,7 +61,6 @@ async function searchFAQ(userQuery: string, supabase: any) {
     if (bestMatch) {
       console.log(`FAQ match found: ${bestMatch.category} (confidence: ${maxScore})`);
     }
-    
     return bestMatch;
   } catch (error) {
     console.error('FAQ search failed:', error);
@@ -70,18 +68,23 @@ async function searchFAQ(userQuery: string, supabase: any) {
   }
 }
 
-// Get all accessible tables dynamically
-async function getAccessibleTables(supabase: any): Promise<string[]> {
+// Get accessible tables
+async function getAccessibleTables(supabase: any) {
   try {
-    // Fallback to known tables since information_schema query fails
     return [
-      'residents', 'households', 'officials', 'announcements', 'events',
-      'incident_reports', 'emergency_contacts', 'evacuation_centers',
-      'document_types', 'issued_documents', 'forums', 'threads', 'comments'
+      'residents',
+      'households',
+      'officials',
+      'announcements',
+      'events',
+      'incident_reports',
+      'emergency_contacts',
+      'evacuation_centers',
+      'document_types',
+      'issued_documents'
     ];
   } catch (error) {
     console.error('Failed to get accessible tables:', error);
-    // Return core tables as fallback
     return ['residents', 'households', 'officials', 'announcements', 'events'];
   }
 }
@@ -90,34 +93,13 @@ async function getAccessibleTables(supabase: any): Promise<string[]> {
 function isDataQuery(userQuery: string): boolean {
   const normalizedQuery = userQuery.toLowerCase().trim();
   
-  // Patterns that suggest looking for specific data
-  const dataPatterns = [
-    // Direct name searches with context
-    /^[a-z]+ [a-z]+$/i, // Simple "First Last" pattern
-    /\b(find|search|look|locate)\b.*\b(resident|official|household|person|family)\b/i,
-    /\b(who is|tell me about|show me|give me info)\b/i,
-    /\b(resident|official|household|family|person)\b.*\b(named|called)\b/i,
-    /\bis.*\b(resident|official|household member)\b/i,
-    /\b(list|show).*\b(residents|officials|households)\b/i,
-    /\b(population|demographics|statistics|how many)\b/i,
-    
-    // Specific table indicators
-    /\b(resident|residents)\b/i,
-    /\b(household|family|pamily)\b/i,
-    /\b(official|officials|captain|kagawad|chairman)\b/i,
-    
-    // Name-like patterns with question words
-    /\b(what|who|where|how).*[A-Z][a-z]+\s+[A-Z][a-z]+/i,
-  ];
-  
-  // General conversation patterns that should NOT trigger data search
+  // Conversation patterns that should NOT trigger data search
   const conversationPatterns = [
-    /^(hello|hi|hey|yo|sup|what\'s up|what up)/i,
-    /^(how are you|what\'s your name|who are you)/i,
+    /^(hello|hi|hey|yo|sup|what'?s up|what up)/i,
+    /^(how are you|what'?s your name|who are you)/i,
     /^(thanks|thank you|ok|okay|yes|no)/i,
-    /^(what the hell|wtf|damn|shit|fuck)/i,
     /^(help|assist|guide)/i,
-    /\b(joke|funny|laugh)\b/i,
+    /\b(joke|funny|laugh)\b/i
   ];
   
   // Check conversation patterns first (these override data patterns)
@@ -127,6 +109,18 @@ function isDataQuery(userQuery: string): boolean {
     }
   }
   
+  // Data query patterns
+  const dataPatterns = [
+    /\b(find|search|look|locate)\b.*\b(resident|official|household|person|family)\b/i,
+    /\b(who is|tell me about|show me|give me info)\b/i,
+    /\b(resident|official|household|family|person)\b.*\b(named|called)\b/i,
+    /\b(list|show).*\b(residents|officials|households)\b/i,
+    /\b(population|demographics|statistics|how many)\b/i,
+    /\b(resident|residents)\b/i,
+    /\b(household|family|pamily)\b/i,
+    /\b(official|officials|captain|kagawad|chairman)\b/i
+  ];
+  
   // Check data patterns
   for (const pattern of dataPatterns) {
     if (pattern.test(normalizedQuery)) {
@@ -134,56 +128,37 @@ function isDataQuery(userQuery: string): boolean {
     }
   }
   
-  // Check if it contains a name-like structure but in a conversational way
-  const namePattern = /\b[A-Z][a-z]+\b/g;
-  const nameMatches = normalizedQuery.match(namePattern);
-  
-  if (nameMatches && nameMatches.length >= 1) {
-    // If it has conversational words with names, it might be asking about that person
-    const conversationalWords = ['what', 'tell', 'about', 'know', 'got', 'info', 'details'];
-    const hasConversational = conversationalWords.some(word => 
-      normalizedQuery.includes(word)
-    );
-    
-    if (hasConversational) {
-      return true; // "Peter, what you got?" should be treated as data query
-    }
+  // Check for name-like patterns
+  const namePattern = /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/;
+  if (namePattern.test(userQuery)) {
+    return true;
   }
   
   return false;
 }
 
-// Helper function to extract names from query with better context awareness
+// Simplified name extraction
 function extractNamesFromQuery(userQuery: string): string[] {
-  const commonWords = ['tell', 'me', 'about', 'who', 'is', 'find', 'search', 'for', 'show', 'information', 'details', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'from', 'with', 'by', 'what', 'do', 'you', 'know', 'resident', 'official', 'household', 'family', 'pamily', 'got', 'have', 'any', 'info'];
-  
-  // Clean the query and split into words
   const cleanQuery = userQuery.replace(/[^\w\s]/g, ' ').toLowerCase();
-  const words = cleanQuery.split(/\s+/).filter(word => 
-    word.length > 2 && 
-    !commonWords.includes(word) && 
-    isNaN(Number(word))
-  );
+  const commonWords = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 
+    'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 
+    'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 
+    'may', 'might', 'must', 'can', 'what', 'who', 'where', 'when', 'why', 
+    'how', 'which', 'that', 'this', 'these', 'those', 'tell', 'me', 'about',
+    'show', 'find', 'search', 'info', 'information', 'details', 'know'
+  ]);
   
-  // Also look for capitalized words in original query (likely names/proper nouns)
-  const originalWords = userQuery.split(/\s+/);
-  for (const word of originalWords) {
-    const cleanWord = word.replace(/[^\w]/g, '');
-    if (cleanWord.length > 2 && /^[A-Z]/.test(cleanWord) && !commonWords.includes(cleanWord.toLowerCase())) {
-      words.push(cleanWord.toLowerCase());
-    }
-  }
-  
-  // Remove duplicates and return
-  return [...new Set(words)];
+  return cleanQuery.split(/\s+/)
+    .filter(word => word.length > 2 && !commonWords.has(word));
 }
 
-// Determine search intent from user query with improved logic
-function determineSearchIntent(userQuery: string): { type: 'specific' | 'fuzzy', target: 'residents' | 'households' | 'officials' | 'all' } {
+// Determine search intent
+function determineSearchIntent(userQuery: string) {
   const normalizedQuery = userQuery.toLowerCase();
   
-  // Check for specific table indicators
-  if ((normalizedQuery.includes('resident') || normalizedQuery.includes('person')) && !normalizedQuery.includes('household') && !normalizedQuery.includes('official')) {
+  if ((normalizedQuery.includes('resident') || normalizedQuery.includes('person')) && 
+      !normalizedQuery.includes('household') && !normalizedQuery.includes('official')) {
     return { type: 'specific', target: 'residents' };
   }
   
@@ -191,133 +166,64 @@ function determineSearchIntent(userQuery: string): { type: 'specific' | 'fuzzy',
     return { type: 'specific', target: 'households' };
   }
   
-  if (normalizedQuery.includes('official') || normalizedQuery.includes('captain') || normalizedQuery.includes('kagawad') || normalizedQuery.includes('chairman')) {
+  if (normalizedQuery.includes('official') || normalizedQuery.includes('captain') || normalizedQuery.includes('kagawad')) {
     return { type: 'specific', target: 'officials' };
   }
   
-  // If no specific indicator, it's a fuzzy search across all tables
   return { type: 'fuzzy', target: 'all' };
 }
 
-// Privacy-compliant data formatter
-function formatResidentData(resident: any): string {
-  const fullName = [resident.first_name, resident.middle_name, resident.last_name].filter(Boolean).join(' ');
+// Privacy-compliant data formatters
+function formatResidentData(resident: any) {
+  const fullName = [resident.first_name, resident.middle_name, resident.last_name]
+    .filter(Boolean).join(' ');
   let result = `**${fullName}**\n`;
-  
-  if (resident.purok) {
-    result += `📍 Purok: ${resident.purok}\n`;
-  }
-  
+  if (resident.purok) result += `📍 Purok: ${resident.purok}\n`;
   if (resident.mobile_number) {
-    // Mask phone number for privacy (show first 4 digits)
     const masked = resident.mobile_number.substring(0, 4) + 'xxxxxxx';
     result += `📞 Contact: ${masked}\n`;
   }
-  
   result += `👤 Status: Resident\n`;
-  
   return result;
 }
 
-function formatHouseholdData(household: any): string {
+function formatHouseholdData(household: any) {
   let result = `**${household.name}**\n`;
   result += `🏠 Type: Household\n`;
   result += `📍 Purok: ${household.purok}\n`;
-  
-  if (household.headname) {
-    result += `👤 Head: ${household.headname}\n`;
-  }
-  
+  if (household.headname) result += `👤 Head: ${household.headname}\n`;
   result += `📊 Status: ${household.status}\n`;
-  
   return result;
 }
 
-function formatOfficialData(official: any): string {
+function formatOfficialData(official: any) {
   let result = `**${official.name}**\n`;
   result += `🏛️ Position: ${official.position}\n`;
-  
   if (official.phone) {
-    // Mask phone number for privacy
     const masked = official.phone.substring(0, 4) + 'xxxxxxx';
     result += `📞 Contact: ${masked}\n`;
   }
-  
-  if (official.bio) {
-    result += `📝 Bio: ${official.bio}\n`;
-  }
-  
+  if (official.bio) result += `📝 Bio: ${official.bio}\n`;
   return result;
 }
 
-// Enhanced search function with intent-based logic
-async function enhancedSearch(userQuery: string, supabase: any): Promise<string | null> {
-  const searchIntent = determineSearchIntent(userQuery);
-  const searchTerms = extractNamesFromQuery(userQuery);
+// Enhanced search functions with error handling and brgyid filtering
+async function searchResidents(searchTerms: string[], supabase: any, brgyid?: string) {
+  const searchConditions = searchTerms.flatMap(term => [
+    `first_name.ilike.%${term}%`,
+    `middle_name.ilike.%${term}%`, 
+    `last_name.ilike.%${term}%`
+  ]);
   
-  console.log('Search intent:', searchIntent);
-  console.log('Search terms extracted:', searchTerms);
-  
-  if (searchTerms.length === 0) {
-    return "Could you please provide a name to search for?";
-  }
-  
-  let results: { type: string, data: any[] } = { type: '', data: [] };
-  
-  // Specific searches
-  if (searchIntent.type === 'specific') {
-    switch (searchIntent.target) {
-      case 'residents':
-        results = await searchResidents(searchTerms, supabase);
-        break;
-      case 'households':
-        results = await searchHouseholds(searchTerms, supabase);
-        break;
-      case 'officials':
-        results = await searchOfficials(searchTerms, supabase);
-        break;
-    }
-    
-    if (results.data.length > 0) {
-      return formatSpecificResults(results);
-    } else {
-      return `I couldn't find any ${searchIntent.target} matching "${searchTerms.join(' ')}" in our records.`;
-    }
-  }
-  
-  // Fuzzy search across all tables
-  const allResults = await searchAllTables(searchTerms, supabase);
-  
-  if (allResults.total === 0) {
-    return `I couldn't find anyone named "${searchTerms.join(' ')}" in our records. Please check the spelling or try a different name.`;
-  }
-  
-  if (allResults.total === 1) {
-    // Single match found, return detailed info
-    const singleResult = allResults.residents[0] || allResults.households[0] || allResults.officials[0];
-    const type = allResults.residents.length > 0 ? 'resident' : 
-                 allResults.households.length > 0 ? 'household' : 'official';
-    
-    return formatSingleResult(singleResult, type);
-  }
-  
-  // Multiple matches found, ask for clarification
-  return formatClarificationResponse(allResults, searchTerms);
-}
-
-async function searchResidents(searchTerms: string[], supabase: any) {
-  const searchConditions = [];
-  for (const term of searchTerms) {
-    searchConditions.push(`first_name.ilike.%${term}%`);
-    searchConditions.push(`middle_name.ilike.%${term}%`);
-    searchConditions.push(`last_name.ilike.%${term}%`);
-  }
-  
-  const { data, error } = await supabase
+  let query = supabase
     .from('residents')
     .select('first_name, middle_name, last_name, purok, mobile_number')
     .or(searchConditions.join(','))
     .limit(10);
+  
+  if (brgyid) query = query.eq('brgyid', brgyid);
+  
+  const { data, error } = await query;
   
   if (error) {
     console.error('Error searching residents:', error);
@@ -327,18 +233,21 @@ async function searchResidents(searchTerms: string[], supabase: any) {
   return { type: 'residents', data: data || [] };
 }
 
-async function searchHouseholds(searchTerms: string[], supabase: any) {
-  const searchConditions = [];
-  for (const term of searchTerms) {
-    searchConditions.push(`name.ilike.%${term}%`);
-    searchConditions.push(`headname.ilike.%${term}%`);
-  }
+async function searchHouseholds(searchTerms: string[], supabase: any, brgyid?: string) {
+  const searchConditions = searchTerms.flatMap(term => [
+    `name.ilike.%${term}%`,
+    `headname.ilike.%${term}%`
+  ]);
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('households')
     .select('name, purok, headname, status')
     .or(searchConditions.join(','))
     .limit(10);
+  
+  if (brgyid) query = query.eq('brgyid', brgyid);
+  
+  const { data, error } = await query;
   
   if (error) {
     console.error('Error searching households:', error);
@@ -348,18 +257,21 @@ async function searchHouseholds(searchTerms: string[], supabase: any) {
   return { type: 'households', data: data || [] };
 }
 
-async function searchOfficials(searchTerms: string[], supabase: any) {
-  const searchConditions = [];
-  for (const term of searchTerms) {
-    searchConditions.push(`name.ilike.%${term}%`);
-    searchConditions.push(`position.ilike.%${term}%`);
-  }
+async function searchOfficials(searchTerms: string[], supabase: any, brgyid?: string) {
+  const searchConditions = searchTerms.flatMap(term => [
+    `name.ilike.%${term}%`,
+    `position.ilike.%${term}%`
+  ]);
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('officials')
     .select('name, position, phone, bio')
     .or(searchConditions.join(','))
     .limit(10);
+  
+  if (brgyid) query = query.eq('brgyid', brgyid);
+  
+  const { data, error } = await query;
   
   if (error) {
     console.error('Error searching officials:', error);
@@ -369,19 +281,160 @@ async function searchOfficials(searchTerms: string[], supabase: any) {
   return { type: 'officials', data: data || [] };
 }
 
-async function searchAllTables(searchTerms: string[], supabase: any) {
-  const [residents, households, officials] = await Promise.all([
-    searchResidents(searchTerms, supabase),
-    searchHouseholds(searchTerms, supabase),
-    searchOfficials(searchTerms, supabase)
-  ]);
+// Enhanced search function with intent-based logic
+async function enhancedSearch(userQuery: string, supabase: any, brgyid?: string) {
+  const searchIntent = determineSearchIntent(userQuery);
+  const searchTerms = extractNamesFromQuery(userQuery);
   
-  return {
-    residents: residents.data,
-    households: households.data,
-    officials: officials.data,
-    total: residents.data.length + households.data.length + officials.data.length
-  };
+  console.log('Search intent:', searchIntent);
+  console.log('Search terms extracted:', searchTerms);
+  
+  if (searchTerms.length === 0) {
+    return "Could you please provide a name or more details to search for?";
+  }
+  
+  try {
+    // Specific searches
+    if (searchIntent.type === 'specific') {
+      let results;
+      switch(searchIntent.target) {
+        case 'residents':
+          results = await searchResidents(searchTerms, supabase, brgyid);
+          break;
+        case 'households':
+          results = await searchHouseholds(searchTerms, supabase, brgyid);
+          break;
+        case 'officials':
+          results = await searchOfficials(searchTerms, supabase, brgyid);
+          break;
+        default:
+          results = { type: 'unknown', data: [] };
+      }
+      
+      if (results.data.length > 0) {
+        return formatSpecificResults(results);
+      } else {
+        return `I couldn't find any ${searchIntent.target} matching "${searchTerms.join(' ')}" in our records.`;
+      }
+    }
+    
+    // Fuzzy search across all tables
+    const [residents, households, officials] = await Promise.all([
+      searchResidents(searchTerms, supabase, brgyid),
+      searchHouseholds(searchTerms, supabase, brgyid),
+      searchOfficials(searchTerms, supabase, brgyid)
+    ]);
+    
+    const allResults = {
+      residents: residents.data,
+      households: households.data,
+      officials: officials.data,
+      total: residents.data.length + households.data.length + officials.data.length
+    };
+    
+    if (allResults.total === 0) {
+      return `I couldn't find anyone named "${searchTerms.join(' ')}" in our records. Please check the spelling or try a different name.`;
+    }
+    
+    if (allResults.total === 1) {
+      const singleResult = allResults.residents[0] || allResults.households[0] || allResults.officials[0];
+      const type = allResults.residents.length > 0 ? 'resident' : 
+                   allResults.households.length > 0 ? 'household' : 'official';
+      return formatSingleResult(singleResult, type);
+    }
+    
+    return formatClarificationResponse(allResults, searchTerms);
+    
+  } catch (error) {
+    console.error('Search error:', error);
+    return "I'm having trouble searching the database right now. Please try again in a moment.";
+  }
+}
+
+// Enhanced query function with improved logic
+async function querySupabaseData(userQuery: string, supabase: any, brgyid?: string) {
+  try {
+    // Use enhanced search with intent detection
+    const searchResult = await enhancedSearch(userQuery, supabase, brgyid);
+    if (searchResult && !searchResult.includes("couldn't find")) {
+      return searchResult;
+    }
+    
+    console.log('No specific data found in enhanced search');
+    return null;
+  } catch (error) {
+    console.error('Error in querySupabaseData:', error);
+    return null;
+  }
+}
+
+// Check user access and get their profile
+async function checkUserAccess(supabase: any) {
+  try {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, firstname, lastname, brgyid')
+      .eq('id', supabase.auth.getUser()?.id)
+      .single();
+      
+    if (profileError || !profile) {
+      console.log('No profile found for user');
+      return { hasAccess: false, userProfile: null, brgyid: null };
+    }
+    
+    const hasAccess = ['admin', 'staff', 'user'].includes(profile.role);
+    console.log(`User role: ${profile.role}, hasAccess: ${hasAccess}, brgyid: ${profile.brgyid}`);
+    
+    return { hasAccess, userProfile: profile, brgyid: profile.brgyid };
+  } catch (error) {
+    console.error('Error checking user access:', error);
+    return { hasAccess: false, userProfile: null, brgyid: null };
+  }
+}
+
+// Call Gemini API with proper error handling
+async function callGeminiAPI(messages: any[], conversationHistory: any[], hasDataAccess: boolean, userRole: string, supabaseData: string | null) {
+  if (!geminiApiKey) {
+    throw new Error('Gemini API key not configured');
+  }
+  
+  const systemInstructions = `You are ALLAN (Automated Learning Live Artificial Neurointelligence), the AI assistant for Baranex barangay management system.
+
+User Role: ${userRole}
+Data Access: ${hasDataAccess ? 'Full access' : 'Limited access'}
+
+${supabaseData ? `Database Results: ${supabaseData}` : 'No specific database results.'}
+
+Respond naturally and helpfully. Be conversational but professional. If you have data, use it. If not, be honest about what you can help with.`;
+
+  try {
+    const response = await fetch(GEMINI_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `${systemInstructions}\n\nCurrent conversation: ${JSON.stringify(conversationHistory)}\n\nUser message: ${messages[messages.length - 1]?.content}`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    return data.candidates[0]?.content?.parts[0]?.text || "I apologize, but I couldn't generate a response.";
+  } catch (error) {
+    console.error('Gemini API call failed:', error);
+    throw new Error('AI service is temporarily unavailable. Please try again later.');
+  }
 }
 
 function formatSpecificResults(results: { type: string, data: any[] }): string {
