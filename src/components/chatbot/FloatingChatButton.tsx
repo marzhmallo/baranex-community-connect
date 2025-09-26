@@ -204,14 +204,16 @@ const FloatingChatButton = () => {
       }));
 
       const requestData = { 
-        query: userMessage.content,
-        userRole: userProfile?.role || 'user',
-        brgyid: userProfile?.brgyid
+        messages: chatMessages,
+        conversationHistory: conversationHistory,
+        isOnlineMode: chatbotSettings.mode === 'online',
+        authToken: session.access_token,
+        userBrgyId: userProfile?.brgyid
       };
 
-      console.log('Request data:', requestData);
+      console.log('Request data:', { ...requestData, authToken: '[PRESENT]' });
 
-      const { data, error } = await supabase.functions.invoke('allan-core', {
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: requestData
       });
 
@@ -222,16 +224,24 @@ const FloatingChatButton = () => {
         throw new Error(`API Error: ${error.message}`);
       }
 
-      if (!data || !data.response) {
+      if (!data || !data.message) {
         throw new Error('Invalid response from chatbot service');
+      }
+
+      let messageContent: string;
+      if (Array.isArray(data.message)) {
+        messageContent = data.message[Math.floor(Math.random() * data.message.length)];
+      } else {
+        messageContent = data.message;
       }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.response,
+        content: messageContent,
         role: 'assistant',
         timestamp: new Date(),
-        source: data.source || 'allan_semantic'
+        source: data.source,
+        category: data.category
       };
 
       setMessages(prev => [...prev, assistantMessage]);

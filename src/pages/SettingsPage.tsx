@@ -11,7 +11,6 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { EmbeddingManager } from "@/components/settings/EmbeddingManager";
 
 const SettingsPage = () => {
   const { userProfile, userSettings, loading, refreshSettings } = useAuth();
@@ -357,13 +356,6 @@ const SettingsPage = () => {
             </div>
           </div>
         </section>
-
-        {/* AI Chatbot Setup Section - Only for Admins */}
-        {userProfile?.role === 'admin' && (
-          <section>
-            <EmbeddingManager />
-          </section>
-        )}
 
         {/* Chatbot Section */}
         <section>

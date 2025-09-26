@@ -56,7 +56,6 @@ export type Database = {
           content: string
           created_at: string
           created_by: string
-          embedding: string | null
           id: string
           is_pinned: boolean | null
           photo_url: string | null
@@ -72,7 +71,6 @@ export type Database = {
           content: string
           created_at?: string
           created_by: string
-          embedding?: string | null
           id?: string
           is_pinned?: boolean | null
           photo_url?: string | null
@@ -88,7 +86,6 @@ export type Database = {
           content?: string
           created_at?: string
           created_by?: string
-          embedding?: string | null
           id?: string
           is_pinned?: boolean | null
           photo_url?: string | null
@@ -462,7 +459,6 @@ export type Database = {
           created_at: string
           docnumber: string
           email: string | null
-          embedding: string | null
           id: string
           issued_at: string
           method: string | null
@@ -485,7 +481,6 @@ export type Database = {
           created_at?: string
           docnumber: string
           email?: string | null
-          embedding?: string | null
           id?: string
           issued_at: string
           method?: string | null
@@ -508,7 +503,6 @@ export type Database = {
           created_at?: string
           docnumber?: string
           email?: string | null
-          embedding?: string | null
           id?: string
           issued_at?: string
           method?: string | null
@@ -858,7 +852,6 @@ export type Database = {
           created_at: string | null
           created_by: string
           description: string | null
-          embedding: string | null
           end_time: string | null
           event_type: string | null
           id: string
@@ -876,7 +869,6 @@ export type Database = {
           created_at?: string | null
           created_by: string
           description?: string | null
-          embedding?: string | null
           end_time?: string | null
           event_type?: string | null
           id?: string
@@ -894,7 +886,6 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           description?: string | null
-          embedding?: string | null
           end_time?: string | null
           event_type?: string | null
           id?: string
@@ -1184,7 +1175,6 @@ export type Database = {
           country: string | null
           created_at: string | null
           electricity_source: string | null
-          embedding: string | null
           garbage_disposal: string | null
           head_of_family: string | null
           headname: string | null
@@ -1216,7 +1206,6 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           electricity_source?: string | null
-          embedding?: string | null
           garbage_disposal?: string | null
           head_of_family?: string | null
           headname?: string | null
@@ -1248,7 +1237,6 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           electricity_source?: string | null
-          embedding?: string | null
           garbage_disposal?: string | null
           head_of_family?: string | null
           headname?: string | null
@@ -1949,7 +1937,6 @@ export type Database = {
           died_on: string | null
           editedby: string | null
           email: string | null
-          embedding: string | null
           emcontact: number | null
           emname: string | null
           emrelation: string | null
@@ -1992,7 +1979,6 @@ export type Database = {
           died_on?: string | null
           editedby?: string | null
           email?: string | null
-          embedding?: string | null
           emcontact?: number | null
           emname?: string | null
           emrelation?: string | null
@@ -2035,7 +2021,6 @@ export type Database = {
           died_on?: string | null
           editedby?: string | null
           email?: string | null
-          embedding?: string | null
           emcontact?: number | null
           emname?: string | null
           emrelation?: string | null
@@ -2100,37 +2085,22 @@ export type Database = {
       sessions: {
         Row: {
           created_at: string | null
-          fingerprint: string | null
-          first_seen_at: string | null
           id: string
           ip_address: string | null
-          is_active: boolean | null
-          last_seen_at: string | null
-          login_count: number | null
           user_agent: string | null
           userid: string
         }
         Insert: {
           created_at?: string | null
-          fingerprint?: string | null
-          first_seen_at?: string | null
           id?: string
           ip_address?: string | null
-          is_active?: boolean | null
-          last_seen_at?: string | null
-          login_count?: number | null
           user_agent?: string | null
           userid: string
         }
         Update: {
           created_at?: string | null
-          fingerprint?: string | null
-          first_seen_at?: string | null
           id?: string
           ip_address?: string | null
-          is_active?: boolean | null
-          last_seen_at?: string | null
-          login_count?: number | null
           user_agent?: string | null
           userid?: string
         }
@@ -2456,10 +2426,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      binary_quantize: {
-        Args: { "": string } | { "": unknown }
-        Returns: unknown
-      }
       delete_rejected_unprocessed_requests: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -2578,38 +2544,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      halfvec_avg: {
-        Args: { "": number[] }
-        Returns: unknown
-      }
-      halfvec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      halfvec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      halfvec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
-      hnsw_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_sparsevec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnswhandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -2617,78 +2551,6 @@ export type Database = {
       is_service_role: {
         Args: Record<PropertyKey, never>
         Returns: boolean
-      }
-      ivfflat_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflathandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      l2_norm: {
-        Args: { "": unknown } | { "": unknown }
-        Returns: number
-      }
-      l2_normalize: {
-        Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: string
-      }
-      semantic_search_all: {
-        Args: {
-          brgyid_filter: string
-          match_count?: number
-          match_threshold?: number
-          query_embedding: string
-        }
-        Returns: {
-          description: string
-          display_name: string
-          entity_id: string
-          entity_type: string
-          metadata: Json
-          relevance: number
-        }[]
-      }
-      sparsevec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      sparsevec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      sparsevec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
-      vector_avg: {
-        Args: { "": number[] }
-        Returns: string
-      }
-      vector_dims: {
-        Args: { "": string } | { "": unknown }
-        Returns: number
-      }
-      vector_norm: {
-        Args: { "": string }
-        Returns: number
-      }
-      vector_out: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      vector_send: {
-        Args: { "": string }
-        Returns: string
-      }
-      vector_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
     }
     Enums: {
