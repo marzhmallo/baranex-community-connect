@@ -351,91 +351,6 @@ async function enhancedSearch(userQuery: string, supabase: any, brgyid?: string)
   }
 }
 
-// Enhanced query function with improved logic
-async function querySupabaseData(userQuery: string, supabase: any, brgyid?: string) {
-  try {
-    // Use enhanced search with intent detection
-    const searchResult = await enhancedSearch(userQuery, supabase, brgyid);
-    if (searchResult && !searchResult.includes("couldn't find")) {
-      return searchResult;
-    }
-    
-    console.log('No specific data found in enhanced search');
-    return null;
-  } catch (error) {
-    console.error('Error in querySupabaseData:', error);
-    return null;
-  }
-}
-
-// Check user access and get their profile
-async function checkUserAccess(supabase: any) {
-  try {
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, firstname, lastname, brgyid')
-      .eq('id', supabase.auth.getUser()?.id)
-      .single();
-      
-    if (profileError || !profile) {
-      console.log('No profile found for user');
-      return { hasAccess: false, userProfile: null, brgyid: null };
-    }
-    
-    const hasAccess = ['admin', 'staff', 'user'].includes(profile.role);
-    console.log(`User role: ${profile.role}, hasAccess: ${hasAccess}, brgyid: ${profile.brgyid}`);
-    
-    return { hasAccess, userProfile: profile, brgyid: profile.brgyid };
-  } catch (error) {
-    console.error('Error checking user access:', error);
-    return { hasAccess: false, userProfile: null, brgyid: null };
-  }
-}
-
-// Call Gemini API with proper error handling
-async function callGeminiAPI(messages: any[], conversationHistory: any[], hasDataAccess: boolean, userRole: string, supabaseData: string | null) {
-  if (!geminiApiKey) {
-    throw new Error('Gemini API key not configured');
-  }
-  
-  const systemInstructions = `You are ALLAN (Automated Learning Live Artificial Neurointelligence), the AI assistant for Baranex barangay management system.
-
-User Role: ${userRole}
-Data Access: ${hasDataAccess ? 'Full access' : 'Limited access'}
-
-${supabaseData ? `Database Results: ${supabaseData}` : 'No specific database results.'}
-
-Respond naturally and helpfully. Be conversational but professional. If you have data, use it. If not, be honest about what you can help with.`;
-
-  try {
-    const response = await fetch(GEMINI_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `${systemInstructions}\n\nCurrent conversation: ${JSON.stringify(conversationHistory)}\n\nUser message: ${messages[messages.length - 1]?.content}`
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1000
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    return data.candidates[0]?.content?.parts[0]?.text || "I apologize, but I couldn't generate a response.";
-  } catch (error) {
-    console.error('Gemini API call failed:', error);
-    throw new Error('AI service is temporarily unavailable. Please try again later.');
-  }
-}
 
 function formatSpecificResults(results: { type: string, data: any[] }): string {
   if (results.data.length === 0) return "No results found.";
@@ -824,7 +739,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       message: fallbackMessage,
       source: 'error_fallback',
-      error: error.message 
+      error: error instanceof Error ? error.message : 'Unknown error' 
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

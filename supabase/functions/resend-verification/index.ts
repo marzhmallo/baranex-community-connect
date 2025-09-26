@@ -38,7 +38,8 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     // Check if user exists and get their creation time
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    const { data: users, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    const user = users?.users?.find(u => u.email === email);
     
     if (userError || !user) {
       return new Response(
@@ -54,8 +55,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (checkOnly) {
       return new Response(
         JSON.stringify({ 
-          user_created_at: user.user.created_at,
-          verified: !!user.user.email_confirmed_at
+          user_created_at: user.created_at,
+          verified: !!user.email_confirmed_at
         }),
         {
           status: 200,
@@ -65,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if user is already verified
-    if (user.user.email_confirmed_at) {
+    if (user.email_confirmed_at) {
       return new Response(
         JSON.stringify({ 
           error: "Email is already verified",
@@ -106,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         message: "Verification email sent successfully",
-        user_created_at: user.user.created_at 
+        user_created_at: user.created_at 
       }),
       {
         status: 200,

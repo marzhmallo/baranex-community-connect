@@ -80,7 +80,7 @@ serve(async (req) => {
     let context = 'No relevant information found in database.';
     
     if (searchResults && searchResults.length > 0) {
-      context = searchResults.map((result) => {
+      context = searchResults.map((result: any) => {
         switch (result.entity_type) {
           case 'resident':
             return `RESIDENT: ${result.display_name}
@@ -174,7 +174,7 @@ RESPONSE:`;
 
     return new Response(JSON.stringify({
       response: finalAnswer,
-      searchResults: searchResults?.map(r => ({
+      searchResults: searchResults?.map((r: any) => ({
         type: r.entity_type,
         name: r.display_name,
         relevance: Math.round(r.relevance * 100)
@@ -190,7 +190,7 @@ RESPONSE:`;
     console.error('ALLAN-core error:', error);
     
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       response: "I'm experiencing technical difficulties. Please try again in a moment.",
       source: 'allan_error'
     }), {
