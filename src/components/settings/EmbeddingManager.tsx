@@ -3,10 +3,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/AuthProvider";
-import { Database, Loader2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { 
+  Database, 
+  Loader2, 
+  CheckCircle2, 
+  AlertCircle, 
+  RefreshCw, 
+  TestTube,
+  Key,
+  Info
+} from 'lucide-react';
 
 interface TableStatus {
   name: string;
@@ -14,6 +24,11 @@ interface TableStatus {
   processed?: number;
   errors?: number;
   message?: string;
+}
+
+interface ApiKeyTestResult {
+  valid: boolean;
+  error?: string;
 }
 
 const TABLES_TO_EMBED = [
@@ -28,6 +43,8 @@ export const EmbeddingManager = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyTestResult | null>(null);
   const [tableStatuses, setTableStatuses] = useState<TableStatus[]>(
     TABLES_TO_EMBED.map(table => ({ name: table.name, status: 'idle' }))
   );
@@ -36,6 +53,87 @@ export const EmbeddingManager = () => {
     setTableStatuses(prev => prev.map(table => 
       table.name === tableName ? { ...table, ...updates } : table
     ));
+  };
+
+  const testApiKey = async () => {
+    setIsTesting(true);
+    setApiKeyStatus(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-embeddings', {
+        body: { testApiKey: true }
+      });
+
+      if (error) throw error;
+
+      setApiKeyStatus(data);
+      toast({
+        title: data.valid ? "API Key Valid" : "API Key Invalid",
+        description: data.valid ? "Gemini API key is working correctly" : data.error,
+        variant: data.valid ? "default" : "destructive"
+      });
+    } catch (error: any) {
+      console.error('Error testing API key:', error);
+      setApiKeyStatus({ valid: false, error: error.message });
+      toast({
+        title: "Test Failed",
+        description: error.message || 'Failed to test API key',
+        variant: "destructive"
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const runTestMode = async () => {
+    if (!userProfile?.brgyid) {
+      toast({
+        title: "Error",
+        description: "No barangay ID found",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      // Test with residents table first (usually has data)
+      const testTable = 'residents';
+      updateTableStatus(testTable, { status: 'processing', message: 'Testing with 1 record...' });
+
+      const { data, error } = await supabase.functions.invoke('generate-embeddings', {
+        body: { tableName: testTable, brgyid: userProfile.brgyid, testMode: true }
+      });
+
+      if (error) throw error;
+
+      updateTableStatus(testTable, { 
+        status: data.processed > 0 ? 'completed' : 'error',
+        processed: data.processed,
+        errors: data.errors,
+        message: data.message || `Test completed: ${data.processed} processed, ${data.errors} errors`
+      });
+
+      toast({
+        title: "Test Complete",
+        description: data.message || `Processed ${data.processed} record(s) successfully`,
+      });
+
+    } catch (error: any) {
+      console.error('Test mode error:', error);
+      updateTableStatus('residents', { 
+        status: 'error', 
+        message: error.message || 'Test failed'
+      });
+      toast({
+        title: "Test Failed",
+        description: error.message || "Failed to run test mode",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const processTable = async (tableName: string, brgyid: string) => {
@@ -154,6 +252,47 @@ export const EmbeddingManager = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* API Key Status */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-foreground">Gemini API Key Status</h3>
+            <Button
+              onClick={testApiKey}
+              disabled={isTesting || userProfile?.role !== 'admin'}
+              variant="outline"
+              size="sm"
+            >
+              {isTesting ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                <>
+                  <Key className="h-3 w-3 mr-2" />
+                  Test API Key
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {apiKeyStatus && (
+            <Alert className={apiKeyStatus.valid ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+              {apiKeyStatus.valid ? (
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+              ) : (
+                <AlertCircle className="h-4 w-4 text-red-600" />
+              )}
+              <AlertDescription className={apiKeyStatus.valid ? 'text-green-800' : 'text-red-800'}>
+                {apiKeyStatus.valid 
+                  ? "✓ Gemini API key is valid and working correctly" 
+                  : `✗ ${apiKeyStatus.error || 'API key test failed'}`
+                }
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
         {/* Progress Overview */}
         {isProcessing && (
           <div className="space-y-2">
@@ -191,6 +330,25 @@ export const EmbeddingManager = () => {
         {/* Actions */}
         <div className="flex gap-3">
           <Button
+            onClick={runTestMode}
+            disabled={isProcessing || userProfile?.role !== 'admin'}
+            variant="outline"
+            className="flex-1"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Testing...
+              </>
+            ) : (
+              <>
+                <TestTube className="h-4 w-4 mr-2" />
+                Test Mode (1 Record)
+              </>
+            )}
+          </Button>
+          
+          <Button
             onClick={generateAllEmbeddings}
             disabled={isProcessing || userProfile?.role !== 'admin'}
             className="flex-1"
@@ -219,11 +377,26 @@ export const EmbeddingManager = () => {
           )}
         </div>
 
-        {/* Info */}
-        <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg">
-          <p><strong>Note:</strong> This process may take a few minutes depending on your data size. 
-          Once completed, your chatbot will be able to search and answer questions about your residents, 
-          announcements, documents, events, and households. Future records will be automatically indexed.</p>
+        {/* Enhanced Info */}
+        <div className="space-y-3">
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Embedding Generation Process:</strong>
+              <br />
+              1. First, test your Gemini API key to ensure it's working
+              <br />
+              2. Use "Test Mode" to process just 1 record and verify everything works
+              <br />
+              3. Once successful, run "Generate All Embeddings" for full processing
+            </AlertDescription>
+          </Alert>
+          
+          <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg">
+            <p><strong>Note:</strong> Embedding generation enables AI-powered search in your chatbot. 
+            The process analyzes your data and creates vector embeddings for semantic search. 
+            Future records will be automatically indexed when added.</p>
+          </div>
         </div>
       </CardContent>
     </Card>
