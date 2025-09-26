@@ -345,20 +345,14 @@ const FloatingChatButton = () => {
           <div className="absolute inset-0 w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 blur-md group-hover:blur-lg transition-all duration-300" />
           
           {/* Main button */}
-          <div className="relative w-16 h-16 rounded-full shadow-2xl overflow-hidden transition-all duration-300 group-hover:shadow-primary/25 group-hover:shadow-2xl bg-gradient-to-br from-background to-muted border border-border/20">
+          <div className="relative w-16 h-16 rounded-full shadow-2xl overflow-hidden transition-all duration-300 group-hover:shadow-primary/25 group-hover:shadow-2xl border border-border/20">
             <img 
               src="/lovable-uploads/43ff519e-4f25-47b8-8652-24d3085861ba.png"
               alt="Alan - Barangay Assistant"
-              className="w-full h-full object-cover scale-125 transition-transform duration-300 group-hover:scale-130"
+              className="w-full h-full object-cover scale-150 transition-transform duration-300 group-hover:scale-[160%]"
               draggable={false}
               style={{ objectPosition: 'center' }}
             />
-            
-            {/* Status indicator */}
-            <div className={cn(
-              "absolute bottom-1 right-1 w-3 h-3 rounded-full border-2 border-background animate-pulse",
-              chatbotSettings.mode === 'online' ? "bg-green-500" : "bg-orange-500"
-            )} />
           </div>
           
           {/* Ripple effect on hover */}
@@ -390,10 +384,6 @@ const FloatingChatButton = () => {
                 className="h-8 w-8 rounded-full object-cover scale-125 shadow-md"
                 style={{ objectPosition: 'center' }}
               />
-              <div className={cn(
-                "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background animate-pulse",
-                chatbotSettings.mode === 'online' ? "bg-green-500" : "bg-orange-500"
-              )} />
             </div>
             <div>
               <span className="text-sm font-semibold">Allan</span>
@@ -420,10 +410,6 @@ const FloatingChatButton = () => {
                     className="h-10 w-10 rounded-full object-cover scale-125 shadow-lg ring-2 ring-background/20"
                     style={{ objectPosition: 'center' }}
                   />
-                  <div className={cn(
-                    "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background animate-pulse shadow-sm",
-                    chatbotSettings.mode === 'online' ? "bg-green-500" : "bg-orange-500"
-                  )} />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-semibold">Allan</CardTitle>
