@@ -41,8 +41,8 @@ const getCategoryLabel = (category: string) => {
 };
 
 export const NotificationsPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedPriority, setSelectedPriority] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedPriority, setSelectedPriority] = useState<string>('all');
   
   const { 
     notifications, 
@@ -53,7 +53,7 @@ export const NotificationsPage = () => {
     markAllAsRead, 
     loadMore,
     archiveNotification 
-  } = useNotifications(20, selectedCategory || undefined, selectedPriority || undefined);
+  } = useNotifications(20, selectedCategory === 'all' ? undefined : selectedCategory, selectedPriority === 'all' ? undefined : selectedPriority);
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
@@ -169,7 +169,7 @@ export const NotificationsPage = () => {
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All categories</SelectItem>
+                <SelectItem value="all">All categories</SelectItem>
                 <SelectItem value="announcement">Announcements</SelectItem>
                 <SelectItem value="event">Events</SelectItem>
                 <SelectItem value="document">Documents</SelectItem>
@@ -182,7 +182,7 @@ export const NotificationsPage = () => {
                 <SelectValue placeholder="All priorities" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All priorities</SelectItem>
+                <SelectItem value="all">All priorities</SelectItem>
                 <SelectItem value="urgent">Urgent</SelectItem>
                 <SelectItem value="high">High</SelectItem>
                 <SelectItem value="normal">Normal</SelectItem>
