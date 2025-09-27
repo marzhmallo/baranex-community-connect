@@ -35,20 +35,39 @@ export const logActivity = async (entry: ActivityLogEntry) => {
   }
 };
 
+// Get client IP address from external service
+const getClientIP = async (): Promise<string> => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch('https://api.ipify.org?format=json', {
+      method: 'GET',
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.ip || 'Unknown IP';
+    }
+    
+    return 'Unknown IP';
+  } catch (error) {
+    console.warn('Failed to fetch client IP:', error);
+    return 'Unknown IP';
+  }
+};
+
 export const logUserSignIn = async (userId: string, userProfile: any) => {
   if (!userProfile?.brgyid) {
     console.warn('Cannot log sign in: missing brgyid');
     return;
   }
 
-  // Get IP address from headers or use fallback (no external API call)
-  const getClientIP = () => {
-    // Try to get IP from browser if available, otherwise use fallback
-    return 'Client IP'; // This will be properly set by the database trigger
-  };
-
   const userAgent = navigator.userAgent;
-  const ipAddress = getClientIP();
+  const ipAddress = await getClientIP();
 
   return logActivity({
     user_id: userId,
@@ -71,14 +90,8 @@ export const logUserSignOut = async (userId: string, userProfile: any) => {
     return;
   }
 
-  // Get IP address from headers or use fallback (no external API call)
-  const getClientIP = () => {
-    // Try to get IP from browser if available, otherwise use fallback
-    return 'Client IP'; // This will be properly set by the database trigger
-  };
-
   const userAgent = navigator.userAgent;
-  const ipAddress = getClientIP();
+  const ipAddress = await getClientIP();
 
   return logActivity({
     user_id: userId,
