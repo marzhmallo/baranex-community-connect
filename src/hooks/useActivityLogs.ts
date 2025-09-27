@@ -28,7 +28,7 @@ interface UserProfile {
 interface UseActivityLogsParams {
   searchQuery: string;
   selectedUser: string;
-  selectedAction: string;
+  selectedAction: string | string[];
   dateRange: DateRange | undefined;
   currentPage: number;
   itemsPerPage: number;
@@ -138,7 +138,9 @@ export function useActivityLogs(params: UseActivityLogsParams): UseActivityLogsR
     }
 
     // Apply action filter
-    if (params.selectedAction !== 'all') {
+    if (Array.isArray(params.selectedAction) && params.selectedAction.length > 0) {
+      filtered = filtered.filter(activity => params.selectedAction.includes(activity.action));
+    } else if (typeof params.selectedAction === 'string' && params.selectedAction !== 'all') {
       filtered = filtered.filter(activity => activity.action === params.selectedAction);
     }
 

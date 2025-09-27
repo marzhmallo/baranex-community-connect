@@ -32,6 +32,18 @@ interface UserProfile {
   profile_picture?: string;
 }
 
+// Action mapping system to connect dropdown options to actual database actions
+const ACTION_MAPPING: Record<string, string[]> = {
+  'all': [],
+  'create': ['INSERT', 'resident_added'],
+  'update': ['UPDATE', 'resident_updated'],
+  'login': ['user_sign_in', 'recognized_device_login'],
+  'logout': ['user_sign_out'],
+  'alerts': ['login_alert_sent', 'new_device_login_alert'],
+  'delete': ['DELETE'], // Future implementation
+  'export': ['EXPORT'] // Future implementation
+};
+
 export default function ActivityLogPage() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,7 +60,7 @@ export default function ActivityLogPage() {
   const { activities, userProfiles, loading, totalItems, refetch } = useActivityLogs({
     searchQuery,
     selectedUser,
-    selectedAction,
+    selectedAction: ACTION_MAPPING[selectedAction] || [selectedAction],
     dateRange,
     currentPage,
     itemsPerPage
@@ -111,19 +123,26 @@ export default function ActivityLogPage() {
       case 'login':
       case 'sign_in':
       case 'user_sign_in':
+      case 'recognized_device_login':
         return '👤';
       case 'logout':
       case 'sign_out':
       case 'user_sign_out':
         return '🚪';
       case 'create':
+      case 'insert':
+      case 'resident_added':
         return '➕';
       case 'update':
+      case 'resident_updated':
         return '✏️';
       case 'delete':
         return '🗑️';
       case 'export':
         return '📤';
+      case 'login_alert_sent':
+      case 'new_device_login_alert':
+        return '🔔';
       default:
         return '📝';
     }
@@ -134,19 +153,26 @@ export default function ActivityLogPage() {
       case 'login':
       case 'sign_in':
       case 'user_sign_in':
+      case 'recognized_device_login':
         return 'bg-green-100 text-green-800';
       case 'logout':
       case 'sign_out':
       case 'user_sign_out':
         return 'bg-gray-100 text-gray-800';
       case 'create':
+      case 'insert':
+      case 'resident_added':
         return 'bg-blue-100 text-blue-800';
       case 'update':
+      case 'resident_updated':
         return 'bg-yellow-100 text-yellow-800';
       case 'delete':
         return 'bg-red-100 text-red-800';
       case 'export':
         return 'bg-purple-100 text-purple-800';
+      case 'login_alert_sent':
+      case 'new_device_login_alert':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -183,20 +209,31 @@ export default function ActivityLogPage() {
       case 'sign_in':
       case 'user_sign_in':
         return 'Login';
+      case 'recognized_device_login':
+        return 'Recognized Login';
       case 'logout':
       case 'sign_out':
       case 'user_sign_out':
         return 'Logout';
       case 'create':
+      case 'insert':
         return 'Create';
+      case 'resident_added':
+        return 'Resident Added';
       case 'update':
         return 'Update';
+      case 'resident_updated':
+        return 'Resident Updated';
       case 'delete':
         return 'Delete';
       case 'export':
         return 'Export';
+      case 'login_alert_sent':
+        return 'Login Alert';
+      case 'new_device_login_alert':
+        return 'New Device Alert';
       default:
-        return action.charAt(0).toUpperCase() + action.slice(1);
+        return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
   };
 
@@ -339,10 +376,11 @@ export default function ActivityLogPage() {
                   className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 bg-background text-sm"
                 >
                   <option value="all">All Actions</option>
-                  <option value="user_sign_in">Login</option>
-                  <option value="user_sign_out">Logout</option>
+                  <option value="login">Login</option>
+                  <option value="logout">Logout</option>
                   <option value="create">Create</option>
                   <option value="update">Update</option>
+                  <option value="alerts">Alerts</option>
                   <option value="delete">Delete</option>
                   <option value="export">Export</option>
                 </select>
