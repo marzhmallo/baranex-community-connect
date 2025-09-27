@@ -255,7 +255,7 @@ export default function ActivityLogPage() {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-background p-6">
+      <div className="w-full min-h-screen bg-background p-2 sm:p-4 lg:p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded w-1/4"></div>
           <div className="h-4 bg-muted rounded w-1/2"></div>
@@ -270,39 +270,39 @@ export default function ActivityLogPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-background p-6">
-      <div className="w-full">
+    <div className="w-full min-h-screen bg-background p-2 sm:p-4 lg:p-6 overflow-x-hidden">
+      <div className="w-full max-w-full">
         <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-primary/90 px-6 py-5">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-primary to-primary/90 px-3 sm:px-6 py-4 sm:py-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                  <Activity className="text-white" size={24} />
+                  <Activity className="text-white" size={20} />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">Activity Logs</h1>
-                  <p className="text-primary-foreground/80 text-sm">Track all user activities and system events</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-white">Activity Logs</h1>
+                  <p className="text-primary-foreground/80 text-xs sm:text-sm">Track all user activities and system events</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="px-3 py-1 bg-white bg-opacity-20 rounded-full">
-                  <span className="text-white text-sm font-medium">{totalItems} Total Logs</span>
+                <div className="px-2 sm:px-3 py-1 bg-white bg-opacity-20 rounded-full">
+                  <span className="text-white text-xs sm:text-sm font-medium">{totalItems} Total Logs</span>
                 </div>
                 <button 
                   onClick={refetch}
                   className="p-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-all duration-200"
                 >
-                  <RefreshCw className="text-white" size={20} />
+                  <RefreshCw className="text-white" size={18} />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="p-6 border-b border-border">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-3 sm:p-6 border-b border-border">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
               <div className="relative">
                 <label className="block text-sm font-medium text-foreground mb-2">Search Activities</label>
                 <div className="relative">
@@ -355,7 +355,7 @@ export default function ActivityLogPage() {
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-full justify-start text-left font-normal text-xs sm:text-sm",
                         !dateRange && "text-muted-foreground"
                       )}
                     >
@@ -478,114 +478,116 @@ export default function ActivityLogPage() {
             </div>
           </div>
 
-          {/* Table */}
+          {/* Table Container with Horizontal Scroll */}
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Timestamp</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Resource</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Details</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">IP Address</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-card divide-y divide-border">
-                {activities.map((activity) => (
-                  <tr key={activity.id} className="hover:bg-muted/50 transition-colors duration-200">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-foreground">{format(new Date(activity.created_at), "yyyy-MM-dd HH:mm:ss")}</div>
-                      <div className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(activity.created_at))} ago</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <CachedAvatar
-                          userId={activity.user_id}
-                          profilePicture={userProfiles[activity.user_id]?.profile_picture}
-                          fallback={getUserInitials(activity.user_id)}
-                          className="w-8 h-8"
-                        />
-                        <div className="ml-3">
-                          <div className="text-sm font-medium text-foreground">{getUserName(activity.user_id)}</div>
-                          <div className="text-sm text-muted-foreground capitalize">{getUserRole(activity.user_id)}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getActionColor(activity.action)}`}>
-                        <span className="mr-1">{getActionIcon(activity.action)}</span>
-                        {getActionTitle(activity.action)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {activity.details?.resource || 'System'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-foreground">{getActionDescription(activity.action)}</div>
-                      {activity.agent && (
-                        <div className="text-xs text-muted-foreground">{parseDeviceInfo(activity.agent)}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-mono">
-                      {activity.ip || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Success
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleViewDetails(activity)}
-                        className="p-2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors duration-200"
-                      >
-                        <Eye size={16} />
-                      </button>
-                    </td>
+            <div className="min-w-full">
+              <table className="w-full table-auto">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider min-w-[120px]">Timestamp</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider min-w-[150px]">User</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider min-w-[100px]">Action</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider min-w-[100px] hidden sm:table-cell">Resource</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider min-w-[150px] hidden md:table-cell">Details</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider min-w-[120px] hidden lg:table-cell">IP Address</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider min-w-[80px] hidden lg:table-cell">Status</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider min-w-[80px]">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-card divide-y divide-border">
+                  {activities.map((activity) => (
+                    <tr key={activity.id} className="hover:bg-muted/50 transition-colors duration-200">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap min-w-[120px]">
+                        <div className="text-xs sm:text-sm text-foreground">{format(new Date(activity.created_at), "yyyy-MM-dd HH:mm:ss")}</div>
+                        <div className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(activity.created_at))} ago</div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap min-w-[150px]">
+                        <div className="flex items-center">
+                          <CachedAvatar
+                            userId={activity.user_id}
+                            profilePicture={userProfiles[activity.user_id]?.profile_picture}
+                            fallback={getUserInitials(activity.user_id)}
+                            className="w-6 h-6 sm:w-8 sm:h-8"
+                          />
+                          <div className="ml-2 sm:ml-3">
+                            <div className="text-xs sm:text-sm font-medium text-foreground truncate max-w-[120px]">{getUserName(activity.user_id)}</div>
+                            <div className="text-xs text-muted-foreground capitalize">{getUserRole(activity.user_id)}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap min-w-[100px]">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getActionColor(activity.action)}`}>
+                          <span className="mr-1">{getActionIcon(activity.action)}</span>
+                          <span className="hidden sm:inline">{getActionTitle(activity.action)}</span>
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-foreground hidden sm:table-cell min-w-[100px]">
+                        {activity.details?.resource || 'System'}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 hidden md:table-cell min-w-[150px]">
+                        <div className="text-xs sm:text-sm text-foreground">{getActionDescription(activity.action)}</div>
+                        {activity.agent && (
+                          <div className="text-xs text-muted-foreground truncate max-w-[150px]">{parseDeviceInfo(activity.agent)}</div>
+                        )}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-foreground font-mono hidden lg:table-cell min-w-[120px]">
+                        {activity.ip || 'N/A'}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell min-w-[80px]">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Success
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap min-w-[80px]">
+                        <button
+                          onClick={() => handleViewDetails(activity)}
+                          className="p-2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors duration-200"
+                        >
+                          <Eye size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Pagination */}
-          <div className="bg-muted/50 px-6 py-4 border-t border-border">
-            <div className="flex items-center justify-between">
+          <div className="bg-muted/50 px-3 sm:px-6 py-4 border-t border-border">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-foreground">Showing</span>
+                <span className="text-xs sm:text-sm text-foreground">Showing</span>
                 <select 
                   value={itemsPerPage}
                   onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="px-3 py-1 border border-input rounded bg-background"
+                  className="px-2 sm:px-3 py-1 border border-input rounded bg-background text-xs sm:text-sm"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={25}>25</option>
                   <option value={50}>50</option>
                 </select>
-                <span className="text-sm text-foreground">of {totalItems} results</span>
+                <span className="text-xs sm:text-sm text-foreground">of {totalItems} results</span>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <button 
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border border-input rounded hover:bg-muted transition-colors duration-200 disabled:opacity-50"
+                  className="px-2 sm:px-3 py-1 border border-input rounded hover:bg-muted transition-colors duration-200 disabled:opacity-50"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={14} />
                 </button>
                 
-                {/* Page numbers */}
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                {/* Page numbers - responsive */}
+                {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
                   const page = i + 1;
                   return (
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 rounded transition-colors duration-200 ${
+                      className={`px-2 sm:px-3 py-1 rounded transition-colors duration-200 text-xs sm:text-sm ${
                         currentPage === page 
                           ? 'bg-primary text-primary-foreground' 
                           : 'border border-input hover:bg-muted'
@@ -596,21 +598,25 @@ export default function ActivityLogPage() {
                   );
                 })}
                 
+                {totalPages > 3 && (
+                  <span className="px-2 text-muted-foreground">...</span>
+                )}
+                
                 <button 
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border border-input rounded hover:bg-muted transition-colors duration-200 disabled:opacity-50"
+                  className="px-2 sm:px-3 py-1 border border-input rounded hover:bg-muted transition-colors duration-200 disabled:opacity-50"
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={14} />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 bg-card border-t border-border">
+          <div className="px-3 sm:px-6 py-4 bg-card border-t border-border">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
                 <Activity size={16} />
                 <span>Last updated: {formatDistanceToNow(new Date())} ago</span>
               </div>
@@ -621,69 +627,71 @@ export default function ActivityLogPage() {
 
       {/* Details Modal */}
       {showModal && selectedActivity && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-primary to-primary/90 px-6 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-primary to-primary/90 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                  <Eye className="text-white" size={20} />
+                  <Eye className="text-white" size={18} />
                 </div>
-                <h2 className="text-xl font-bold text-white">Audit Log Details</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-white">Audit Log Details</h2>
               </div>
               <button 
                 onClick={() => setShowModal(false)}
                 className="p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all duration-200 text-white"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto">
+            <div className="p-4 sm:p-6 overflow-y-auto">
               <div className="border-b border-border pb-4 mb-4">
-                <div className="flex items-center space-x-4 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
                   <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
                     <span className="text-primary-foreground text-sm font-medium">{getUserInitials(selectedActivity.user_id)}</span>
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-lg font-semibold">{getActionTitle(selectedActivity.action)} Activity</h3>
-                    <p className="text-muted-foreground">Performed by {getUserName(selectedActivity.user_id)} ({getUserRole(selectedActivity.user_id)}) • {formatDistanceToNow(new Date(selectedActivity.created_at))} ago</p>
+                    <p className="text-muted-foreground text-sm">
+                      Performed by {getUserName(selectedActivity.user_id)} ({getUserRole(selectedActivity.user_id)}) • {formatDistanceToNow(new Date(selectedActivity.created_at))} ago
+                    </p>
                   </div>
-                  <span className="ml-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 self-start sm:self-center">
                     Success
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground uppercase mb-2">Event Information</h4>
-                    <div className="bg-muted rounded-lg p-4 space-y-3">
-                      <div className="flex">
-                        <span className="text-muted-foreground w-1/3">Timestamp:</span>
-                        <span className="font-medium">{format(new Date(selectedActivity.created_at), "MMMM d, yyyy, h:mm a")}</span>
+                    <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-3">
+                      <div className="flex flex-col sm:flex-row">
+                        <span className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 sm:mb-0 sm:w-1/3">Timestamp:</span>
+                        <span className="font-medium text-xs sm:text-sm">{format(new Date(selectedActivity.created_at), "MMMM d, yyyy, h:mm a")}</span>
                       </div>
-                      <div className="flex">
-                        <span className="text-muted-foreground w-1/3">Event ID:</span>
-                        <span className="font-medium">{selectedActivity.id}</span>
+                      <div className="flex flex-col sm:flex-row">
+                        <span className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 sm:mb-0 sm:w-1/3">Event ID:</span>
+                        <span className="font-medium text-xs sm:text-sm break-all">{selectedActivity.id}</span>
                       </div>
-                      <div className="flex">
-                        <span className="text-muted-foreground w-1/3">IP Address:</span>
-                        <span className="font-medium">{selectedActivity.ip || 'N/A'}</span>
+                      <div className="flex flex-col sm:flex-row">
+                        <span className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 sm:mb-0 sm:w-1/3">IP Address:</span>
+                        <span className="font-medium text-xs sm:text-sm">{selectedActivity.ip || 'N/A'}</span>
                       </div>
-                      <div className="flex">
-                        <span className="text-muted-foreground w-1/3">Action:</span>
-                        <span className="font-medium">{selectedActivity.action}</span>
+                      <div className="flex flex-col sm:flex-row">
+                        <span className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 sm:mb-0 sm:w-1/3">Action:</span>
+                        <span className="font-medium text-xs sm:text-sm">{selectedActivity.action}</span>
                       </div>
                     </div>
                   </div>
                   
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground uppercase mb-2">Device Information</h4>
-                    <div className="bg-muted rounded-lg p-4 space-y-4">
+                    <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-4">
                       {selectedActivity.agent ? (
                         <>
                           <div className="space-y-1">
                             <div className="text-xs text-muted-foreground uppercase tracking-wide">Device</div>
-                            <div className="font-medium">{parseDeviceInfo(selectedActivity.agent)}</div>
+                            <div className="font-medium text-xs sm:text-sm">{parseDeviceInfo(selectedActivity.agent)}</div>
                           </div>
                           <div className="space-y-1">
                             <div className="text-xs text-muted-foreground uppercase tracking-wide">User Agent</div>
@@ -691,7 +699,7 @@ export default function ActivityLogPage() {
                           </div>
                         </>
                       ) : (
-                        <div className="text-muted-foreground">No device information available</div>
+                        <div className="text-muted-foreground text-xs sm:text-sm">No device information available</div>
                       )}
                     </div>
                   </div>
@@ -700,24 +708,24 @@ export default function ActivityLogPage() {
               
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-muted-foreground uppercase mb-2">Detailed Event Data</h4>
-                <div className="bg-muted rounded-lg p-4">
-                  <pre className="whitespace-pre-wrap text-sm font-mono text-foreground">
+                <div className="bg-muted rounded-lg p-3 sm:p-4">
+                  <pre className="whitespace-pre-wrap text-xs sm:text-sm font-mono text-foreground overflow-x-auto">
                     {JSON.stringify(selectedActivity.details || {}, null, 2)}
                   </pre>
                 </div>
               </div>
             </div>
             
-            <div className="bg-muted px-6 py-4 border-t border-border flex items-center justify-between">
+            <div className="bg-muted px-4 sm:px-6 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
               <div className="flex items-center space-x-2">
-                <button className="flex items-center space-x-2 px-4 py-2 border border-input rounded-lg hover:bg-background transition-colors duration-200">
-                  <FileDown size={16} />
+                <button className="flex items-center space-x-2 px-3 sm:px-4 py-2 border border-input rounded-lg hover:bg-background transition-colors duration-200 text-xs sm:text-sm">
+                  <FileDown size={14} />
                   <span>Export</span>
                 </button>
               </div>
               <button 
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors duration-200"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors duration-200 text-sm w-full sm:w-auto"
               >
                 Close
               </button>
