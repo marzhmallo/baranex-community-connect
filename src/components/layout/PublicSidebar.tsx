@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSquare, AlertTriangle, ChevronLeft, ChevronRight, Home, Award, Briefcase, BellRing, Settings, Sun, Moon, X, Menu, Shield, Users } from 'lucide-react';
+import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSquare, AlertTriangle, ChevronLeft, ChevronRight, Home, Award, Briefcase, BellRing, Bell, Settings, Sun, Moon, X, Menu, Shield, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
@@ -54,6 +54,7 @@ const PublicSidebar = () => {
           { to: "/hub", icon: Home, label: "Home" },
           { to: "/hub/calendar", icon: Calendar, label: "Calendar" },
           { to: "/hub/announcements", icon: BellRing, label: "Announcements" },
+          { to: "/hub/notifications", icon: Bell, label: "Notifications" },
           { to: "/hub/officials", icon: Award, label: "Officials" },
           { to: "/hub/forum", icon: MessageSquare, label: "Forum" },
           { to: "/hub/documents", icon: FileText, label: "Documents" },

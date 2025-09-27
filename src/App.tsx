@@ -63,6 +63,7 @@ import ActivityLogPage from "./pages/ActivityLogPage";
 import ViewSessionsPage from "./pages/ViewSessionsPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 import UserLayout from "./components/layout/UserLayout";
+import { NotificationsPage } from "./components/notifications/NotificationsPage";
 
 // Component to protect glyph-only routes
 const GlyphRoute = ({ children }: { children: React.ReactNode }) => {
@@ -261,6 +262,7 @@ const AppContent = () => {
                 <Route path="/profile" element={<AdminRoute><ProfilePage /></AdminRoute>} />
                 <Route path="/management" element={<AdminRoute><UserAccountManagement /></AdminRoute>} />
                 <Route path="/nexus" element={<AdminRoute><NexusPage /></AdminRoute>} />
+                <Route path="/notifications" element={<AdminRoute><NotificationsPage /></AdminRoute>} />
                 <Route path="/activitylog" element={<AdminRoute><ActivityLogPage /></AdminRoute>} />
                 <Route path="/view-sessions" element={<AdminRoute><ViewSessionsPage /></AdminRoute>} />
               </>
@@ -276,6 +278,7 @@ const AppContent = () => {
             <Route path="/hub/forum" element={<UserRoute><UserLayout><UserForumPage /></UserLayout></UserRoute>} />
             <Route path="/hub/documents" element={<UserRoute><UserLayout><UserDocumentsPage /></UserLayout></UserRoute>} />
             <Route path="/hub/emergency" element={<UserRoute><UserLayout><UserEmergencyPage /></UserLayout></UserRoute>} />
+            <Route path="/hub/notifications" element={<UserRoute><UserLayout><NotificationsPage /></UserLayout></UserRoute>} />
             <Route path="/hub/settings" element={<UserRoute><UserLayout><UserSettingsPage /></UserLayout></UserRoute>} />
             <Route path="/feedback" element={<UserRoute><UserLayout><UserFeedbackPage /></UserLayout></UserRoute>} />
             <Route path="/profile" element={<UserRoute><UserLayout><UserProfilePage /></UserLayout></UserRoute>} />

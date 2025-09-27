@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
-import { Bell, Check, CheckCheck, Dot } from "lucide-react";
+import { Bell, Check, CheckCheck, Dot, AlertCircle, Clock, Zap, Star, Archive } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,27 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+
+const getPriorityIcon = (priority: string) => {
+  switch (priority) {
+    case 'urgent': return <AlertCircle className="h-3 w-3 text-red-500" />;
+    case 'high': return <Zap className="h-3 w-3 text-orange-500" />;
+    case 'normal': return <Star className="h-3 w-3 text-blue-500" />;
+    case 'low': return <Clock className="h-3 w-3 text-gray-500" />;
+    default: return <Bell className="h-3 w-3 text-gray-500" />;
+  }
+};
+
+const getPriorityBadgeColor = (priority: string) => {
+  switch (priority) {
+    case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
+    case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+    case 'normal': return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'low': return 'bg-gray-100 text-gray-800 border-gray-200';
+    default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
 
 export const NotificationDropdown = () => {
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
@@ -39,7 +60,14 @@ export const NotificationDropdown = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-96 p-0 rounded-xl bg-popover/95 supports-[backdrop-filter]:bg-popover/80 backdrop-blur shadow-xl ring-1 ring-border z-50 overflow-hidden">
         <DropdownMenuLabel className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-popover border-b">
-          <span className="text-base font-semibold">Notifications</span>
+          <div className="flex items-center gap-2">
+            <span className="text-base font-semibold">Notifications</span>
+            <Link to="/notifications">
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                View all
+              </Button>
+            </Link>
+          </div>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -96,15 +124,29 @@ export const NotificationDropdown = () => {
 
 const NotificationContent = ({ notification }: { notification: any }) => (
   <>
-    <div className="flex-shrink-0">
-      {!notification.read ? (
-        <Dot className="h-6 w-6 text-primary" />
-      ) : (
-        <div className="h-6 w-6" />
+    <div className="flex-shrink-0 flex flex-col items-center gap-1">
+      {getPriorityIcon(notification.priority)}
+      {!notification.read && (
+        <Dot className="h-4 w-4 text-primary" />
       )}
     </div>
     <div className="flex-1 min-w-0">
-      <p className={`text-sm leading-snug ${!notification.read ? 'font-medium' : 'text-muted-foreground'} group-hover:text-foreground`}>
+      <div className="flex items-center gap-1 mb-1">
+        <Badge 
+          variant="outline" 
+          className={cn("text-xs px-1.5 py-0.5", getPriorityBadgeColor(notification.priority))}
+        >
+          {notification.priority}
+        </Badge>
+        <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+          {notification.category}
+        </Badge>
+      </div>
+      <p className={cn(
+        "text-sm leading-snug",
+        !notification.read ? 'font-medium' : 'text-muted-foreground',
+        'group-hover:text-foreground'
+      )}>
         {notification.message || 'No message'}
       </p>
       <p className="text-xs text-muted-foreground mt-1">

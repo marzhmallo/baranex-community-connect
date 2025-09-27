@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSquare, AlertTriangle, ChevronLeft, ChevronRight, Home, Award, Briefcase, BellRing, Settings, Sun, Moon, X, Menu, Shield, Users, Network } from 'lucide-react';
+import { LogOut, User, Calendar, LayoutDashboard, FileText, BarChart3, MessageSquare, AlertTriangle, ChevronLeft, ChevronRight, Home, Award, Briefcase, BellRing, Bell, Settings, Sun, Moon, X, Menu, Shield, Users, Network } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
@@ -87,6 +87,11 @@ const Sidebar = () => {
           <Link to="/announcements" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/announcements") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
             <BellRing className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Announcements</span>}
+          </Link>
+
+          <Link to="/notifications" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/notifications") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
+            <Bell className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Notifications</span>}
           </Link>
 
           <Link to="/forum" className={cn("flex items-center py-2 px-3 rounded-md", isActive("/forum") ? "bg-sidebar-accent text-white" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
