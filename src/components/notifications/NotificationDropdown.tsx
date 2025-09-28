@@ -181,8 +181,7 @@ export const NotificationDropdown = () => {
             <h3 className="text-xl font-semibold text-foreground">Notifications</h3>
             <Button variant="ghost" size="sm" asChild className="h-8 px-3 text-xs hover:bg-accent/50">
               <Link to="/notifications">
-                <Settings className="h-3 w-3 mr-1" />
-                Settings
+                View all
               </Link>
             </Button>
           </div>
