@@ -213,127 +213,6 @@ const AnnouncementModal = ({
     setPhotoFile(null);
     setAttachmentFile(null);
   };
-  const FormContent = () => <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField control={form.control} name="title" render={({
-        field
-      }) => <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter announcement title" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>} />
-
-        <FormField control={form.control} name="content" render={({
-        field
-      }) => <FormItem>
-              <FormLabel>Content</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Enter announcement content" className="min-h-[150px]" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>} />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="category" render={({
-          field
-        }) => <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Event">Event</SelectItem>
-                    <SelectItem value="News">News</SelectItem>
-                    <SelectItem value="Alert">Alert</SelectItem>
-                    <SelectItem value="Service">Service</SelectItem>
-                    <SelectItem value="Health">Health</SelectItem>
-                    <SelectItem value="Education">Education</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>} />
-
-          <FormField control={form.control} name="audience" render={({
-          field
-        }) => <FormItem>
-                <FormLabel>Target Audience</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter target audience (e.g., Public, Officials, SK Members, etc.)" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>} />
-        </div>
-
-        {mode === 'create' && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <FormLabel>Photo</FormLabel>
-              <Input type="file" accept="image/*" onChange={handlePhotoChange} className="mt-1" />
-              <FormDescription>
-                Optional: Upload an image for this announcement (max 5MB)
-              </FormDescription>
-            </div>
-
-            <div>
-              <FormLabel>Attachment</FormLabel>
-              <Input type="file" onChange={handleAttachmentChange} className="mt-1" />
-              <FormDescription>
-                Optional: Attach a document (PDF, DOC, etc. - max 10MB)
-              </FormDescription>
-            </div>
-          </div>}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <FormField control={form.control} name="is_pinned" render={({
-          field
-        }) => <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Pin Announcement</FormLabel>
-                  
-                </div>
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-              </FormItem>} />
-
-          <FormField control={form.control} name="visibility" render={({
-          field
-        }) => <FormItem>
-                <FormLabel>Visibility</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select visibility" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="internal">Internal</SelectItem>
-                    <SelectItem value="users">All Logged-in Users</SelectItem>
-                    <SelectItem value="public">Public</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>} />
-        </div>
-
-        <div className="flex justify-end space-x-4">
-          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting} type="button">
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                {mode === 'create' ? 'Creating...' : 'Updating...'}
-              </> : mode === 'create' ? 'Publish Announcement' : 'Update Announcement'}
-          </Button>
-        </div>
-      </form>
-    </Form>;
   if (mode === 'edit') {
     return <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -343,7 +222,109 @@ const AnnouncementModal = ({
               Update the announcement details below.
             </DialogDescription>
           </DialogHeader>
-          <FormContent />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField control={form.control} name="title" render={({
+              field
+            }) => <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter announcement title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>} />
+
+              <FormField control={form.control} name="content" render={({
+              field
+            }) => <FormItem>
+                    <FormLabel>Content</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter announcement content" className="min-h-[150px]" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>} />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField control={form.control} name="category" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Event">Event</SelectItem>
+                          <SelectItem value="News">News</SelectItem>
+                          <SelectItem value="Alert">Alert</SelectItem>
+                          <SelectItem value="Service">Service</SelectItem>
+                          <SelectItem value="Health">Health</SelectItem>
+                          <SelectItem value="Education">Education</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="audience" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>Target Audience</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter target audience (e.g., Public, Officials, SK Members, etc.)" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <FormField control={form.control} name="is_pinned" render={({
+                field
+              }) => <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Pin Announcement</FormLabel>
+                        
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>} />
+
+                <FormField control={form.control} name="visibility" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>Visibility</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select visibility" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="internal">Internal</SelectItem>
+                          <SelectItem value="users">All Logged-in Users</SelectItem>
+                          <SelectItem value="public">Public</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>} />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button variant="outline" onClick={handleCancel} disabled={isSubmitting} type="button">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                      Updating...
+                    </> : 'Update Announcement'}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>;
   }
@@ -353,7 +334,127 @@ const AnnouncementModal = ({
           <CardTitle>Create New Announcement</CardTitle>
         </CardHeader>
         <CardContent className="px-0">
-          <FormContent />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField control={form.control} name="title" render={({
+              field
+            }) => <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter announcement title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>} />
+
+              <FormField control={form.control} name="content" render={({
+              field
+            }) => <FormItem>
+                    <FormLabel>Content</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter announcement content" className="min-h-[150px]" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>} />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField control={form.control} name="category" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Event">Event</SelectItem>
+                          <SelectItem value="News">News</SelectItem>
+                          <SelectItem value="Alert">Alert</SelectItem>
+                          <SelectItem value="Service">Service</SelectItem>
+                          <SelectItem value="Health">Health</SelectItem>
+                          <SelectItem value="Education">Education</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="audience" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>Target Audience</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter target audience (e.g., Public, Officials, SK Members, etc.)" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+              </div>
+
+              {mode === 'create' && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <FormLabel>Photo</FormLabel>
+                    <Input type="file" accept="image/*" onChange={handlePhotoChange} className="mt-1" />
+                    <FormDescription>
+                      Optional: Upload an image for this announcement (max 5MB)
+                    </FormDescription>
+                  </div>
+
+                  <div>
+                    <FormLabel>Attachment</FormLabel>
+                    <Input type="file" onChange={handleAttachmentChange} className="mt-1" />
+                    <FormDescription>
+                      Optional: Attach a document (PDF, DOC, etc. - max 10MB)
+                    </FormDescription>
+                  </div>
+                </div>}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <FormField control={form.control} name="is_pinned" render={({
+                field
+              }) => <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Pin Announcement</FormLabel>
+                        
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>} />
+
+                <FormField control={form.control} name="visibility" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>Visibility</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select visibility" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="internal">Internal</SelectItem>
+                          <SelectItem value="users">All Logged-in Users</SelectItem>
+                          <SelectItem value="public">Public</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>} />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button variant="outline" onClick={handleCancel} disabled={isSubmitting} type="button">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                      Creating...
+                    </> : 'Publish Announcement'}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>;
