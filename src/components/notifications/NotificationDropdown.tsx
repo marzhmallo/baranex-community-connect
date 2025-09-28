@@ -12,6 +12,41 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
+const getNotificationRoute = (notification: any): string => {
+  // Handle special cases first
+  if (notification.type === 'dnexus' || notification.type === 'dnexus_status') {
+    return '/nexus';
+  }
+
+  // Map categories to appropriate routes
+  switch (notification.category) {
+    case 'announcement':
+      return '/announcements';
+    case 'event':
+      return '/calendar';
+    case 'document':
+      return '/documents';
+    case 'emergency':
+      return '/emergency';
+    case 'profile':
+    case 'user_management':
+      return '/profile';
+    case 'feedback':
+      return '/feedback';
+    case 'blotter':
+      return '/blotter';
+    case 'household':
+      return '/households';
+    case 'resident':
+      return '/residents';
+    case 'official':
+      return '/officials';
+    default:
+      // Fallback to dashboard if no specific route is found
+      return '/dashboard';
+  }
+};
+
 const getPriorityIcon = (priority: string) => {
   switch (priority) {
     case 'urgent': return <AlertCircle className="h-4 w-4 text-destructive" />;
@@ -125,25 +160,13 @@ const NotificationItem = ({ notification, onMarkAsRead }: { notification: any; o
       </div>
     );
 
-    // Wrap with appropriate link if needed
-    if (notification.type === 'dnexus' || notification.type === 'dnexus_status') {
-      return (
-        <Link to="/nexus" className="block" onClick={handleClick}>
-          {baseContent}
-        </Link>
-      );
-    } else if (notification.linkurl) {
-      return (
-        <Link to={String(notification.linkurl)} className="block" onClick={handleClick}>
-          {baseContent}
-        </Link>
-      );
-    }
-
+    // Use smart routing
+    const route = getNotificationRoute(notification);
+    
     return (
-      <div onClick={handleClick}>
+      <Link to={route} className="block" onClick={handleClick}>
         {baseContent}
-      </div>
+      </Link>
     );
   };
 
