@@ -1,13 +1,10 @@
-import { formatDistanceToNow } from "date-fns";
-import { Bell, Check, CheckCheck, Dot, AlertCircle, Clock, Zap, Star, Archive } from "lucide-react";
+import { formatDistanceToNow, isToday, isThisWeek, isYesterday } from "date-fns";
+import { Bell, Check, CheckCheck, Dot, AlertCircle, Clock, Zap, Star, Archive, Settings, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,26 +14,145 @@ import { cn } from "@/lib/utils";
 
 const getPriorityIcon = (priority: string) => {
   switch (priority) {
-    case 'urgent': return <AlertCircle className="h-3 w-3 text-red-500" />;
-    case 'high': return <Zap className="h-3 w-3 text-orange-500" />;
-    case 'normal': return <Star className="h-3 w-3 text-blue-500" />;
-    case 'low': return <Clock className="h-3 w-3 text-gray-500" />;
-    default: return <Bell className="h-3 w-3 text-gray-500" />;
+    case 'urgent': return <AlertCircle className="h-4 w-4 text-destructive" />;
+    case 'high': return <Zap className="h-4 w-4 text-orange-500" />;
+    case 'normal': return <Star className="h-4 w-4 text-primary" />;
+    case 'low': return <Clock className="h-4 w-4 text-muted-foreground" />;
+    default: return <Bell className="h-4 w-4 text-muted-foreground" />;
   }
 };
 
-const getPriorityBadgeColor = (priority: string) => {
-  switch (priority) {
-    case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
-    case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-    case 'normal': return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'low': return 'bg-gray-100 text-gray-800 border-gray-200';
-    default: return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
+const groupNotificationsByDate = (notifications: any[]) => {
+  const groups: { [key: string]: any[] } = {
+    'Today': [],
+    'Yesterday': [],
+    'This Week': [],
+    'Earlier': []
+  };
+
+  notifications.forEach(notification => {
+    if (!notification.created_at) {
+      groups['Today'].push(notification);
+      return;
+    }
+
+    const date = new Date(notification.created_at);
+    if (isToday(date)) {
+      groups['Today'].push(notification);
+    } else if (isYesterday(date)) {
+      groups['Yesterday'].push(notification);
+    } else if (isThisWeek(date)) {
+      groups['This Week'].push(notification);
+    } else {
+      groups['Earlier'].push(notification);
+    }
+  });
+
+  return groups;
+};
+
+const NotificationItem = ({ notification, onMarkAsRead }: { notification: any; onMarkAsRead: (id: string) => void }) => {
+  const handleClick = () => {
+    if (!notification.read) {
+      onMarkAsRead(notification.id);
+    }
+  };
+
+  const getNotificationContent = () => {
+    const baseContent = (
+      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/30 transition-colors cursor-pointer group">
+        {/* Avatar/Icon */}
+        <div className="relative flex-shrink-0 mt-1">
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+            {getPriorityIcon(notification.priority)}
+          </div>
+          {!notification.read && (
+            <div className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full border-2 border-background" />
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant="secondary" 
+              className="text-xs px-2 py-0.5 capitalize"
+            >
+              {notification.category}
+            </Badge>
+            {notification.priority === 'urgent' && (
+              <Badge 
+                variant="destructive" 
+                className="text-xs px-2 py-0.5"
+              >
+                Urgent
+              </Badge>
+            )}
+          </div>
+          
+          <p className={cn(
+            "text-sm leading-relaxed",
+            !notification.read ? 'font-medium text-foreground' : 'text-muted-foreground'
+          )}>
+            {notification.message || 'No message'}
+          </p>
+          
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {notification.created_at ? 
+              formatDistanceToNow(new Date(notification.created_at), { addSuffix: true }) : 
+              'Just now'
+            }
+          </p>
+        </div>
+
+        {/* Action button */}
+        {!notification.read && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onMarkAsRead(notification.id);
+            }}
+            aria-label="Mark notification as read"
+          >
+            <Check className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
+    );
+
+    // Wrap with appropriate link if needed
+    if (notification.type === 'dnexus' || notification.type === 'dnexus_status') {
+      return (
+        <Link to="/nexus" className="block" onClick={handleClick}>
+          {baseContent}
+        </Link>
+      );
+    } else if (notification.linkurl) {
+      return (
+        <Link to={String(notification.linkurl)} className="block" onClick={handleClick}>
+          {baseContent}
+        </Link>
+      );
+    }
+
+    return (
+      <div onClick={handleClick}>
+        {baseContent}
+      </div>
+    );
+  };
+
+  return getNotificationContent();
 };
 
 export const NotificationDropdown = () => {
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
+  const groupedNotifications = groupNotificationsByDate(notifications);
 
   if (loading) {
     return (
@@ -49,126 +165,77 @@ export const NotificationDropdown = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative hover:bg-accent/50 transition-colors">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-destructive text-destructive-foreground border-0">
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-96 p-0 rounded-xl bg-popover/95 supports-[backdrop-filter]:bg-popover/80 backdrop-blur shadow-xl ring-1 ring-border z-50 overflow-hidden">
-        <DropdownMenuLabel className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-popover border-b">
-          <div className="flex items-center gap-2">
-            <span className="text-base font-semibold">Notifications</span>
-            <Link to="/notifications">
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                View all
-              </Button>
-            </Link>
+      <DropdownMenuContent align="end" className="w-[400px] p-0 rounded-2xl bg-background border shadow-2xl z-50 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b bg-background/95 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xl font-semibold text-foreground">Notifications</h3>
+            <Button variant="ghost" size="sm" asChild className="h-8 px-3 text-xs hover:bg-accent/50">
+              <Link to="/notifications">
+                <Settings className="h-3 w-3 mr-1" />
+                Settings
+              </Link>
+            </Button>
           </div>
+          <p className="text-sm text-muted-foreground">
+            You have <span className="font-medium text-primary">{unreadCount}</span> {unreadCount === 1 ? 'notification' : 'notifications'} today.
+          </p>
           {unreadCount > 0 && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={markAllAsRead}
-              className="h-7 px-2 text-xs"
+              className="mt-3 h-7 px-3 text-xs"
             >
               <CheckCheck className="h-3 w-3 mr-1" />
-              Mark all
+              Mark all as read
             </Button>
           )}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className="hidden" />
-        
+        </div>
+
+        {/* Content */}
         {notifications.length === 0 ? (
-          <div className="px-6 py-10 text-center text-muted-foreground">
-            <Bell className="h-10 w-10 mx-auto mb-3 opacity-60" />
-            <p className="text-sm">You’re all caught up</p>
+          <div className="px-6 py-12 text-center">
+            <Bell className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
+            <h4 className="font-medium text-foreground mb-1">All caught up!</h4>
+            <p className="text-sm text-muted-foreground">No new notifications right now.</p>
           </div>
         ) : (
-          <ScrollArea className="h-[420px] max-h-[60vh]">
-            {notifications.map((notification) => (
-              <DropdownMenuItem
-                key={notification.id}
-                className={`group flex items-start gap-3 p-4 cursor-pointer rounded-none border-b last:border-b-0 border-border/60 hover:bg-accent/40 focus:bg-accent/50 ${!notification.read ? 'bg-accent/25' : ''}`}
-                onClick={() => {
-                  if (!notification.read) {
-                    markAsRead(notification.id);
-                  }
-                }}
-                asChild
-              >
-                <div className={`${(notification.type === 'dnexus' || notification.type === 'dnexus_status' || notification.linkurl) ? 'cursor-pointer' : 'cursor-default'} w-full`}>
-                  {(notification.type === 'dnexus' || notification.type === 'dnexus_status') ? (
-                    <Link to="/nexus" className="w-full">
-                      <NotificationContent notification={notification} />
-                    </Link>
-                  ) : notification.linkurl ? (
-                    <Link to={String(notification.linkurl)} className="w-full">
-                      <NotificationContent notification={notification} />
-                    </Link>
-                  ) : (
-                    <NotificationContent notification={notification} />
-                  )}
-                </div>
-              </DropdownMenuItem>
-            ))}
+          <ScrollArea className="h-[480px] max-h-[60vh]">
+            <div className="p-2">
+              {Object.entries(groupedNotifications).map(([period, periodNotifications]) => {
+                if (periodNotifications.length === 0) return null;
+                
+                return (
+                  <div key={period} className="mb-4 last:mb-0">
+                    <div className="px-4 py-2">
+                      <h4 className="text-sm font-medium text-muted-foreground">{period}</h4>
+                    </div>
+                    <div className="space-y-1">
+                      {periodNotifications.map((notification) => (
+                        <NotificationItem
+                          key={notification.id}
+                          notification={notification}
+                          onMarkAsRead={markAsRead}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </ScrollArea>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 };
-
-const NotificationContent = ({ notification }: { notification: any }) => (
-  <>
-    <div className="flex-shrink-0 flex flex-col items-center gap-1">
-      {getPriorityIcon(notification.priority)}
-      {!notification.read && (
-        <Dot className="h-4 w-4 text-primary" />
-      )}
-    </div>
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-1 mb-1">
-        <Badge 
-          variant="outline" 
-          className={cn("text-xs px-1.5 py-0.5", getPriorityBadgeColor(notification.priority))}
-        >
-          {notification.priority}
-        </Badge>
-        <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
-          {notification.category}
-        </Badge>
-      </div>
-      <p className={cn(
-        "text-sm leading-snug",
-        !notification.read ? 'font-medium' : 'text-muted-foreground',
-        'group-hover:text-foreground'
-      )}>
-        {notification.message || 'No message'}
-      </p>
-      <p className="text-xs text-muted-foreground mt-1">
-        {notification.created_at ? 
-          formatDistanceToNow(new Date(notification.created_at), { addSuffix: true }) : 
-          'Just now'
-        }
-      </p>
-    </div>
-    {!notification.read && (
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        aria-label="Mark notification as read"
-      >
-        <Check className="h-3 w-3" />
-      </Button>
-    )}
-  </>
-);
