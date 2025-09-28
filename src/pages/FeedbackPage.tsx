@@ -16,11 +16,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-
 const SUPABASE_URL = "https://dssjspakagyerrmtaakm.supabase.co";
-
 const FeedbackPage = () => {
-  const { userProfile } = useAuth();
+  const {
+    userProfile
+  } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<FeedbackType | 'all'>('all');
@@ -49,30 +49,31 @@ const FeedbackPage = () => {
   // Filter reports client-side to avoid loading states
   const filteredReports = useMemo(() => {
     if (!allReports) return [];
-    
     return allReports.filter(report => {
       // Type filter
       if (filterType !== 'all' && report.type !== filterType) return false;
-      
+
       // Status filter
       if (filterStatus !== 'all' && report.status !== filterStatus) return false;
-      
+
       // Search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        return (
-          report.description.toLowerCase().includes(searchLower) ||
-          report.category.toLowerCase().includes(searchLower) ||
-          (report.user_name && report.user_name.toLowerCase().includes(searchLower))
-        );
+        return report.description.toLowerCase().includes(searchLower) || report.category.toLowerCase().includes(searchLower) || report.user_name && report.user_name.toLowerCase().includes(searchLower);
       }
-      
       return true;
     });
   }, [allReports, filterType, filterStatus, searchTerm]);
-
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ reportId, status, notes }: { reportId: string; status: FeedbackStatus; notes?: string }) => {
+    mutationFn: async ({
+      reportId,
+      status,
+      notes
+    }: {
+      reportId: string;
+      status: FeedbackStatus;
+      notes?: string;
+    }) => {
       return await feedbackAPI.updateReportStatus(reportId, status, notes);
     },
     onSuccess: () => {
@@ -80,12 +81,14 @@ const FeedbackPage = () => {
         title: "Status updated",
         description: "Report status has been updated successfully"
       });
-      queryClient.invalidateQueries({ queryKey: ['feedback-reports'] });
+      queryClient.invalidateQueries({
+        queryKey: ['feedback-reports']
+      });
       setShowStatusDialog(false);
       setSelectedReport(null);
       setAdminNotes('');
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: "Error",
         description: `Failed to update status: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -93,18 +96,15 @@ const FeedbackPage = () => {
       });
     }
   });
-
   const handleUpdateStatus = (report: FeedbackReport, status: FeedbackStatus) => {
     setSelectedReport(report);
     setNewStatus(status);
     setShowStatusDialog(true);
   };
-
   const handleViewDetails = (report: FeedbackReport) => {
     setSelectedReport(report);
     setShowDetailsDialog(true);
   };
-
   const handleStatusSubmit = () => {
     if (!selectedReport) return;
     updateStatusMutation.mutate({
@@ -113,7 +113,6 @@ const FeedbackPage = () => {
       notes: adminNotes
     });
   };
-
   const clearFilters = () => {
     setSearchTerm('');
     setFilterType('all');
@@ -137,16 +136,8 @@ const FeedbackPage = () => {
   const categoryData = Object.entries(categoryStats).map(([name, value]) => ({
     name,
     value,
-    color: name === 'Road Maintenance' ? '#EF4444' : 
-           name === 'Garbage Collection' ? '#10B981' :
-           name === 'Street Lighting' ? '#3B82F6' :
-           name === 'Water Supply' ? '#8B5CF6' :
-           name === 'Drainage Issues' ? '#F59E0B' :
-           name === 'Public Safety' ? '#EF4444' :
-           name === 'Noise Complaints' ? '#8B5CF6' :
-           '#6B7280'
+    color: name === 'Road Maintenance' ? '#EF4444' : name === 'Garbage Collection' ? '#10B981' : name === 'Street Lighting' ? '#3B82F6' : name === 'Water Supply' ? '#8B5CF6' : name === 'Drainage Issues' ? '#F59E0B' : name === 'Public Safety' ? '#EF4444' : name === 'Noise Complaints' ? '#8B5CF6' : '#6B7280'
   }));
-
   const monthlyData = [{
     month: 'Jan',
     reports: 35,
@@ -196,7 +187,6 @@ const FeedbackPage = () => {
     reports: 34,
     resolved: 29
   }];
-
   const resolutionTimeData = [{
     category: 'Infrastructure',
     days: 4.3
@@ -213,7 +203,6 @@ const FeedbackPage = () => {
     category: 'General',
     days: 1.9
   }];
-
   const sentimentData = [{
     name: 'Positive',
     value: 68,
@@ -227,7 +216,6 @@ const FeedbackPage = () => {
     value: 10,
     color: '#EF4444'
   }];
-
   const chartConfig = {
     reports: {
       label: "Reports",
@@ -242,7 +230,6 @@ const FeedbackPage = () => {
       color: "#3B82F6"
     }
   };
-
   const getStatusBadge = (status: FeedbackStatus) => {
     const colors = {
       pending: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
@@ -250,18 +237,13 @@ const FeedbackPage = () => {
       resolved: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
       rejected: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
     };
-
-    return (
-      <span className={`px-3 py-1 text-xs font-medium rounded-full ${colors[status]}`}>
+    return <span className={`px-3 py-1 text-xs font-medium rounded-full ${colors[status]}`}>
         {status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}
-      </span>
-    );
+      </span>;
   };
-
   const getTypeIcon = (type: FeedbackType) => {
     return type === 'barangay' ? AlertTriangle : MessageSquare;
   };
-
   const getCategoryIcon = (category: string) => {
     if (category.toLowerCase().includes('road') || category.toLowerCase().includes('infrastructure')) return Construction;
     if (category.toLowerCase().includes('garbage') || category.toLowerCase().includes('environment')) return Trees;
@@ -279,7 +261,6 @@ const FeedbackPage = () => {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>;
   }
-
   return <div className="w-full bg-background p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
@@ -355,14 +336,7 @@ const FeedbackPage = () => {
                         <div className="space-y-2">
                           <Label htmlFor="search">Search Reports</Label>
                           <div className="relative">
-                            <Input
-                              id="search"
-                              type="text"
-                              placeholder="Search by description or category..."
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                              className="pl-10"
-                            />
+                            <Input id="search" type="text" placeholder="Search by description or category..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
                             <Search className="h-4 w-4 absolute left-3 top-2.5 text-muted-foreground" />
                           </div>
                         </div>
@@ -412,19 +386,13 @@ const FeedbackPage = () => {
               </div>
 
               <div className="space-y-4">
-                {filteredReports && filteredReports.length > 0 ? (
-                  filteredReports.map((report) => {
-                    const IconComponent = getCategoryIcon(report.category);
-                    return (
-                      <div key={report.id} className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
+                {filteredReports && filteredReports.length > 0 ? filteredReports.map(report => {
+                const IconComponent = getCategoryIcon(report.category);
+                return <div key={report.id} className="border border-border bg-card rounded-lg p-4 hover:border-border/80 transition-all duration-300">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              report.type === 'barangay' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
-                            }`}>
-                              <IconComponent className={`h-5 w-5 ${
-                                report.type === 'barangay' ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400'
-                              }`} />
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${report.type === 'barangay' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'}`}>
+                              <IconComponent className={`h-5 w-5 ${report.type === 'barangay' ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400'}`} />
                             </div>
                             <div>
                               <h3 className="font-medium text-foreground">{report.category}</h3>
@@ -434,33 +402,20 @@ const FeedbackPage = () => {
                           {getStatusBadge(report.status)}
                         </div>
                         <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{report.description}</p>
-                        {report.attachments && report.attachments.length > 0 && (
-                          <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                        {report.attachments && report.attachments.length > 0 && <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
                             {report.attachments.map((attachment, index) => {
-                              const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
-                              return (
-                                <div 
-                                  key={index} 
-                                  className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border cursor-pointer"
-                                  onClick={() => setEnlargedImage(imageUrl)}
-                                >
-                                  <img 
-                                    src={imageUrl} 
-                                    alt={`Attachment ${index + 1}`} 
-                                    className="h-full w-full object-cover" 
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.style.display = 'none';
-                                    }}
-                                  />
+                      const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
+                      return <div key={index} className="relative group h-16 w-16 flex-shrink-0 rounded-md overflow-hidden border border-border cursor-pointer" onClick={() => setEnlargedImage(imageUrl)}>
+                                  <img src={imageUrl} alt={`Attachment ${index + 1}`} className="h-full w-full object-cover" onError={e => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }} />
                                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                                     <ZoomIn className="h-4 w-4 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                                   </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
+                                </div>;
+                    })}
+                          </div>}
                         <div className="flex items-center justify-between mt-4">
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>By: {report.user_name || 'Anonymous'}</span>
@@ -468,95 +423,44 @@ const FeedbackPage = () => {
                             <span>{new Date(report.created_at).toLocaleDateString()}</span>
                           </div>
                           <div className="flex gap-2">
-                            {report.status === 'pending' && (
-                              <>
-                                <Button 
-                                  size="sm" 
-                                  onClick={() => handleUpdateStatus(report, 'in_progress')}
-                                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                                >
+                            {report.status === 'pending' && <>
+                                <Button size="sm" onClick={() => handleUpdateStatus(report, 'in_progress')} className="bg-blue-600 hover:bg-blue-700 text-white">
                                   Assign
                                 </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => handleUpdateStatus(report, 'rejected')}
-                                >
+                                <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(report, 'rejected')}>
                                   Reject
                                 </Button>
-                              </>
-                            )}
-                            {report.status === 'in_progress' && (
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleUpdateStatus(report, 'resolved')}
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                              >
+                              </>}
+                            {report.status === 'in_progress' && <Button size="sm" onClick={() => handleUpdateStatus(report, 'resolved')} className="bg-green-600 hover:bg-green-700 text-white">
                                 Mark Resolved
-                              </Button>
-                            )}
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleViewDetails(report)}
-                              className="gap-2"
-                            >
+                              </Button>}
+                            <Button size="sm" variant="outline" onClick={() => handleViewDetails(report)} className="gap-2">
                               <Eye className="h-4 w-4" />
                               View Details
                             </Button>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-8">
+                      </div>;
+              }) : <div className="text-center py-8">
                     <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2 text-foreground">No reports found</h3>
                     <p className="text-muted-foreground">
-                      {searchTerm || filterType !== 'all' || filterStatus !== 'all' 
-                        ? 'Try adjusting your search or filters'
-                        : 'No feedback reports have been submitted yet'
-                      }
+                      {searchTerm || filterType !== 'all' || filterStatus !== 'all' ? 'Try adjusting your search or filters' : 'No feedback reports have been submitted yet'}
                     </p>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-card rounded-xl shadow-sm border border-border p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <button className="w-full flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors group">
-                  <PlusCircle className="h-5 w-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
-                  <span className="text-purple-700 dark:text-purple-300 font-medium flex-1 text-left">Create New Report</span>
-                  <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">New</span>
-                </button>
-                <button className="w-full flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors group">
-                  <Upload className="h-5 w-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
-                  <span className="text-blue-700 dark:text-blue-300 font-medium flex-1 text-left">Import Reports</span>
-                </button>
-                <button className="w-full flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg transition-colors group">
-                  <Download className="h-5 w-5 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform" />
-                  <span className="text-green-700 dark:text-green-300 font-medium flex-1 text-left">Export Data</span>
-                </button>
-                <button className="w-full flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg transition-colors group">
-                  <BarChart3 className="h-5 w-5 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform" />
-                  <span className="text-orange-700 dark:text-orange-300 font-medium flex-1 text-left">View Analytics</span>
-                </button>
-              </div>
-            </div>
+            
 
             <div className="bg-card rounded-xl shadow-sm border border-border p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Report Categories</h3>
               <div className="space-y-3">
-                {Object.entries(categoryStats).length > 0 ? (
-                  Object.entries(categoryStats).map(([category, count]) => {
-                    const IconComponent = getCategoryIcon(category);
-                    return (
-                      <div key={category} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                {Object.entries(categoryStats).length > 0 ? Object.entries(categoryStats).map(([category, count]) => {
+                const IconComponent = getCategoryIcon(category);
+                return <div key={category} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                             <IconComponent className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -564,50 +468,12 @@ const FeedbackPage = () => {
                           <span className="text-foreground font-medium">{category}</span>
                         </div>
                         <span className="text-sm text-muted-foreground bg-background px-2 py-1 rounded">{count}</span>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-muted-foreground text-sm">No categories to display</p>
-                )}
+                      </div>;
+              }) : <p className="text-muted-foreground text-sm">No categories to display</p>}
               </div>
             </div>
 
-            <div className="bg-card rounded-xl shadow-sm border border-border p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Assigned Officers</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">John Santos</p>
-                    <p className="text-sm text-muted-foreground">Infrastructure Officer</p>
-                  </div>
-                  <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">Active</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">Maria Rodriguez</p>
-                    <p className="text-sm text-muted-foreground">Environment Officer</p>
-                  </div>
-                  <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">Active</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">Robert Lopez</p>
-                    <p className="text-sm text-muted-foreground">Safety Officer</p>
-                  </div>
-                  <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">Active</span>
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
 
@@ -617,15 +483,11 @@ const FeedbackPage = () => {
             <DialogHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    selectedReport?.type === 'barangay' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
-                  }`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${selectedReport?.type === 'barangay' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'}`}>
                     {selectedReport && (() => {
-                      const IconComponent = getCategoryIcon(selectedReport.category);
-                      return <IconComponent className={`h-6 w-6 ${
-                        selectedReport.type === 'barangay' ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400'
-                      }`} />;
-                    })()}
+                    const IconComponent = getCategoryIcon(selectedReport.category);
+                    return <IconComponent className={`h-6 w-6 ${selectedReport.type === 'barangay' ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400'}`} />;
+                  })()}
                   </div>
                   <div>
                     <DialogTitle className="text-xl font-semibold">
@@ -642,8 +504,7 @@ const FeedbackPage = () => {
               </div>
             </DialogHeader>
 
-            {selectedReport && (
-              <div className="space-y-6">
+            {selectedReport && <div className="space-y-6">
                 {/* Report Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-muted/50 rounded-lg p-4">
@@ -653,12 +514,12 @@ const FeedbackPage = () => {
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {new Date(selectedReport.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                     </p>
                   </div>
 
@@ -696,31 +557,20 @@ const FeedbackPage = () => {
                 </div>
 
                 {/* Attachments */}
-                {selectedReport.attachments && selectedReport.attachments.length > 0 && (
-                  <div>
+                {selectedReport.attachments && selectedReport.attachments.length > 0 && <div>
                     <h3 className="text-lg font-semibold mb-3">
                       Attachments ({selectedReport.attachments.length})
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {selectedReport.attachments.map((attachment, index) => {
-                        const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
-                        return (
-                          <div 
-                            key={index} 
-                            className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 cursor-pointer"
-                            onClick={() => setEnlargedImage(imageUrl)}
-                          >
-                            <img
-                              src={imageUrl}
-                              alt={`Attachment ${index + 1}`}
-                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                                const fallback = target.nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }}
-                            />
+                  const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/reportfeedback/userreports/${attachment}`;
+                  return <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted/50 cursor-pointer" onClick={() => setEnlargedImage(imageUrl)}>
+                            <img src={imageUrl} alt={`Attachment ${index + 1}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" onError={e => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }} />
                             <div className="hidden w-full h-full bg-muted/50 items-center justify-center flex-col p-4">
                               <FileText className="h-8 w-8 text-muted-foreground mb-2" />
                               <span className="text-xs text-muted-foreground text-center break-all">
@@ -730,68 +580,50 @@ const FeedbackPage = () => {
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
                               <ZoomIn className="h-6 w-6 text-white scale-0 group-hover:scale-100 transition-all duration-300" />
                             </div>
-                          </div>
-                        );
-                      })}
+                          </div>;
+                })}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Admin Notes */}
-                {selectedReport.admin_notes && (
-                  <div>
+                {selectedReport.admin_notes && <div>
                     <h3 className="text-lg font-semibold mb-3">Admin Response</h3>
                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                       <p className="text-foreground leading-relaxed">
                         {selectedReport.admin_notes}
                       </p>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 <Separator />
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 justify-end">
-                  {selectedReport.status === 'pending' && (
-                    <>
-                      <Button 
-                        onClick={() => {
-                          setShowDetailsDialog(false);
-                          handleUpdateStatus(selectedReport, 'in_progress');
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
+                  {selectedReport.status === 'pending' && <>
+                      <Button onClick={() => {
+                  setShowDetailsDialog(false);
+                  handleUpdateStatus(selectedReport, 'in_progress');
+                }} className="bg-blue-600 hover:bg-blue-700 text-white">
                         Assign & Start Progress
                       </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => {
-                          setShowDetailsDialog(false);
-                          handleUpdateStatus(selectedReport, 'rejected');
-                        }}
-                      >
+                      <Button variant="outline" onClick={() => {
+                  setShowDetailsDialog(false);
+                  handleUpdateStatus(selectedReport, 'rejected');
+                }}>
                         Reject Report
                       </Button>
-                    </>
-                  )}
-                  {selectedReport.status === 'in_progress' && (
-                    <Button 
-                      onClick={() => {
-                        setShowDetailsDialog(false);
-                        handleUpdateStatus(selectedReport, 'resolved');
-                      }}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
+                    </>}
+                  {selectedReport.status === 'in_progress' && <Button onClick={() => {
+                setShowDetailsDialog(false);
+                handleUpdateStatus(selectedReport, 'resolved');
+              }} className="bg-green-600 hover:bg-green-700 text-white">
                       Mark as Resolved
-                    </Button>
-                  )}
+                    </Button>}
                   <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
                     Close
                   </Button>
                 </div>
-              </div>
-            )}
+              </div>}
           </DialogContent>
         </Dialog>
 
@@ -818,21 +650,13 @@ const FeedbackPage = () => {
               </div>
               <div>
                 <label className="text-sm font-medium">Admin Notes (Optional)</label>
-                <Textarea
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="Add notes about this status change..."
-                  rows={3}
-                />
+                <Textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder="Add notes about this status change..." rows={3} />
               </div>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
                   Cancel
                 </Button>
-                <Button 
-                  onClick={handleStatusSubmit}
-                  disabled={updateStatusMutation.isPending}
-                >
+                <Button onClick={handleStatusSubmit} disabled={updateStatusMutation.isPending}>
                   {updateStatusMutation.isPending ? 'Updating...' : 'Update Status'}
                 </Button>
               </div>
@@ -844,16 +668,11 @@ const FeedbackPage = () => {
         <Dialog open={!!enlargedImage} onOpenChange={() => setEnlargedImage(null)}>
           <DialogContent className="max-w-5xl max-h-[90vh] p-0 bg-transparent border-none">
             <div className="relative">
-              <img
-                src={enlargedImage || ''}
-                alt="Enlarged attachment"
-                className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
-              />
+              <img src={enlargedImage || ''} alt="Enlarged attachment" className="w-full h-auto max-h-[90vh] object-contain rounded-lg" />
             </div>
           </DialogContent>
         </Dialog>
       </div>
     </div>;
 };
-
 export default FeedbackPage;
