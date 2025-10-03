@@ -81,28 +81,15 @@ const UserAccountManagement = () => {
       const {
         data,
         error
-      } = await supabase.from('profiles').select(`
-        *,
-        user_roles(role)
-      `).eq('brgyid', userProfile.brgyid).order('created_at', {
+      } = await supabase.from('profiles').select('*').eq('brgyid', userProfile.brgyid).in('role', ['user', 'admin', 'staff']).order('created_at', {
         ascending: false
       });
       if (error) {
         console.error('Error fetching users:', error);
         throw error;
       }
-
-      // Transform data to extract role from user_roles and filter valid roles
-      const usersWithRoles = data?.map((user: any) => ({
-        ...user,
-        role: user.user_roles?.[0]?.role || 'user',
-        user_roles: undefined // Clean up
-      })).filter((user: any) => 
-        ['user', 'admin', 'staff'].includes(user.role)
-      ) || [];
-
-      console.log('Fetched users with roles:', usersWithRoles);
-      return usersWithRoles as UserProfile[];
+      console.log('Fetched users:', data);
+      return data as UserProfile[];
     },
     enabled: !!userProfile?.brgyid
   });
