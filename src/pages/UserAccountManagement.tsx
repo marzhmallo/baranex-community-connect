@@ -17,6 +17,8 @@ import { useAuth } from '@/components/AuthProvider';
 import { Crown, Shield, User, Info, Users, Search, Eye, Check, X, Mail, AlertTriangle, Edit, MoreVertical, UserX, Play, Blocks, ZoomIn, KeyRound, Trash2, Settings } from 'lucide-react';
 import CachedAvatar from '@/components/ui/CachedAvatar';
 import UserIDsViewer from '@/components/user/UserIDsViewer';
+import { RoleAuditHistory } from '@/components/user/RoleAuditHistory';
+import { Textarea } from '@/components/ui/textarea';
 interface UserProfile {
   id: string;
   firstname?: string;
@@ -48,6 +50,7 @@ const UserAccountManagement = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
   const [newRole, setNewRole] = useState('');
+  const [roleChangeReason, setRoleChangeReason] = useState('');
   const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false);
   const [banUserDialogOpen, setBanUserDialogOpen] = useState(false);
   const [adminRoleConfirmOpen, setAdminRoleConfirmOpen] = useState(false);
@@ -229,7 +232,7 @@ const UserAccountManagement = () => {
     return !user.superior_admin;
   };
 
-  const changeUserRole = async (userId: string, newRole: string) => {
+  const changeUserRole = async (userId: string, newRole: string, reason?: string) => {
     const targetUser = users?.find(u => u.id === userId);
     if (targetUser?.superior_admin && !userProfile?.superior_admin) {
       toast({
@@ -240,11 +243,29 @@ const UserAccountManagement = () => {
       return;
     }
 
+    // Get current roles to determine old_role
+    const { data: currentRoles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+
+    const oldRole = currentRoles?.[0]?.role || 'user';
+
+    // Remove old roles
+    if (currentRoles && currentRoles.length > 0) {
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+    }
+
+    // Add new role
     const { error } = await supabase
-      .from('profiles')
-      .update({ role: newRole })
-      .eq('id', userId)
-      .eq('brgyid', userProfile?.brgyid);
+      .from('user_roles')
+      .insert({ 
+        user_id: userId, 
+        role: newRole as any
+      });
 
     if (error) {
       toast({
@@ -252,15 +273,28 @@ const UserAccountManagement = () => {
         description: "Failed to update user role",
         variant: "destructive"
       });
-    } else {
-      toast({
-        title: "Success",
-        description: `User role updated to ${newRole}`
-      });
-      setChangeRoleDialogOpen(false);
-      setNewRole('');
-      refetch();
+      return;
     }
+
+    // Create audit log entry manually (no trigger needed)
+    await supabase
+      .from('role_audit_log')
+      .insert({
+        user_id: userId,
+        old_role: oldRole as any,
+        new_role: newRole as any,
+        changed_by: userProfile?.id,
+        reason: reason || null
+      });
+
+    toast({
+      title: "Success",
+      description: `User role updated to ${newRole}`
+    });
+    setChangeRoleDialogOpen(false);
+    setNewRole('');
+    setRoleChangeReason('');
+    refetch();
   };
 
   const deleteUser = async (userId: string) => {
@@ -817,6 +851,9 @@ const UserAccountManagement = () => {
                 {/* Identification Documents */}
                 <UserIDsViewer userId={selectedUser.id} />
 
+                {/* Role History */}
+                <RoleAuditHistory userId={selectedUser.id} />
+
                 {/* Security Notice */}
                 {selectedUser.superior_admin && <Alert className="border-purple-200 bg-purple-50 dark:bg-purple-900/20">
                     <Crown className="h-4 w-4 text-purple-600" />
@@ -951,9 +988,25 @@ const UserAccountManagement = () => {
                   <SelectContent>
                     <SelectItem value="user">User</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="role-change-reason">Reason (Optional)</Label>
+                <Textarea
+                  id="role-change-reason"
+                  placeholder="e.g., Promoted for excellent performance, Temporary admin access needed"
+                  value={roleChangeReason}
+                  onChange={(e) => setRoleChangeReason(e.target.value)}
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Adding a reason helps maintain clear audit trails
+                </p>
+              </div>
+
               <div className="flex gap-2 pt-4">
                 <Button 
                   variant="outline" 
@@ -961,6 +1014,7 @@ const UserAccountManagement = () => {
                   onClick={() => {
                     setChangeRoleDialogOpen(false);
                     setNewRole('');
+                    setRoleChangeReason('');
                   }}
                 >
                   Cancel
@@ -973,7 +1027,7 @@ const UserAccountManagement = () => {
                       if (newRole === 'admin') {
                         setAdminRoleConfirmOpen(true);
                       } else {
-                        changeUserRole(selectedUser.id, newRole);
+                        changeUserRole(selectedUser.id, newRole, roleChangeReason);
                       }
                     }
                   }}
@@ -1007,7 +1061,7 @@ const UserAccountManagement = () => {
               <AlertDialogAction 
                 onClick={() => {
                   if (selectedUser && newRole) {
-                    changeUserRole(selectedUser.id, newRole);
+                    changeUserRole(selectedUser.id, newRole, roleChangeReason);
                     setAdminRoleConfirmOpen(false);
                   }
                 }}
