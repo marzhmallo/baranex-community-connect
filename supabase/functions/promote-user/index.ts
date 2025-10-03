@@ -54,6 +54,30 @@ Deno.serve(async (req) => {
       })
     }
 
+    // SECURITY FIX: Check if caller has permission to promote users
+    const { data: callerProfile, error: profileErr } = await admin
+      .from('profiles')
+      .select('role, superior_admin')
+      .eq('id', caller.id)
+      .maybeSingle()
+
+    if (profileErr || !callerProfile) {
+      console.error('Error fetching caller profile:', profileErr)
+      return new Response(JSON.stringify({ error: 'Forbidden: Profile not found' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      })
+    }
+
+    // Only allow glyph role or superior admins to promote users
+    if (callerProfile.role !== 'glyph' && !callerProfile.superior_admin) {
+      console.warn(`Unauthorized promotion attempt by user ${caller.id} with role ${callerProfile.role}`)
+      return new Response(JSON.stringify({ error: 'Forbidden: Insufficient permissions to promote users' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      })
+    }
+
     // Optional: if barangayId is provided, ensure the user is the submitter
     if (barangayId) {
       const { data: brgy, error: brgyErr } = await admin
@@ -90,6 +114,22 @@ Deno.serve(async (req) => {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       })
     }
+
+    // Add user to user_roles table with admin role
+    const { error: roleErr } = await admin
+      .from('user_roles')
+      .upsert({ 
+        user_id: userId, 
+        role: 'admin',
+        assigned_by: caller.id 
+      }, { onConflict: 'user_id,role' })
+
+    if (roleErr) {
+      console.error('promote-user role assignment error:', roleErr)
+      // Continue even if role assignment fails (profiles is source of truth for now)
+    }
+
+    console.log(`User ${userId} promoted to admin by ${caller.id}`)
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
