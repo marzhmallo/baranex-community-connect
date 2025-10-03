@@ -81,28 +81,15 @@ const UserAccountManagement = () => {
       const {
         data,
         error
-      } = await supabase.from('profiles').select(`
-        *,
-        user_roles(role)
-      `).eq('brgyid', userProfile.brgyid).order('created_at', {
+      } = await supabase.from('profiles').select('*').eq('brgyid', userProfile.brgyid).in('role', ['user', 'admin', 'staff']).order('created_at', {
         ascending: false
       });
       if (error) {
         console.error('Error fetching users:', error);
         throw error;
       }
-
-      // Transform data to extract role from user_roles and filter valid roles
-      const usersWithRoles = data?.map((user: any) => ({
-        ...user,
-        role: user.user_roles?.[0]?.role || 'user',
-        user_roles: undefined // Clean up
-      })).filter((user: any) => 
-        ['user', 'admin', 'staff'].includes(user.role)
-      ) || [];
-
-      console.log('Fetched users with roles:', usersWithRoles);
-      return usersWithRoles as UserProfile[];
+      console.log('Fetched users:', data);
+      return data as UserProfile[];
     },
     enabled: !!userProfile?.brgyid
   });
@@ -256,16 +243,6 @@ const UserAccountManagement = () => {
       return;
     }
 
-    // Prevent self-demotion
-    if (userId === userProfile?.id && newRole !== 'admin') {
-      toast({
-        title: "Warning",
-        description: "You cannot demote yourself. Ask another admin to change your role.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     // Get current roles to determine old_role
     const { data: currentRoles } = await supabase
       .from('user_roles')
@@ -274,32 +251,23 @@ const UserAccountManagement = () => {
 
     const oldRole = currentRoles?.[0]?.role || 'user';
 
-    // Delete all existing roles for this user
-    const { error: deleteError } = await supabase
-      .from('user_roles')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deleteError) {
-      console.error('Error deleting old roles:', deleteError);
-      toast({
-        title: "Error",
-        description: "Failed to remove old roles",
-        variant: "destructive"
-      });
-      return;
+    // Remove old roles
+    if (currentRoles && currentRoles.length > 0) {
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
     }
 
     // Add new role
-    const { error: insertError } = await supabase
+    const { error } = await supabase
       .from('user_roles')
       .insert({ 
         user_id: userId, 
         role: newRole as any
       });
 
-    if (insertError) {
-      console.error('Error inserting new role:', insertError);
+    if (error) {
       toast({
         title: "Error",
         description: "Failed to update user role",
