@@ -92,14 +92,21 @@ const UserAccountManagement = () => {
         throw error;
       }
 
-      // Transform data to extract role from user_roles and filter valid roles
-      const usersWithRoles = data?.map((user: any) => ({
-        ...user,
-        role: user.user_roles?.[0]?.role || 'user',
-        user_roles: undefined // Clean up
-      })).filter((user: any) => 
-        ['user', 'admin', 'staff'].includes(user.role)
-      ) || [];
+      console.log('Raw data from query:', data);
+      console.log('Sample user_roles structure:', data?.[0]?.user_roles);
+
+      // Transform data to extract role from user_roles with proper fallback
+      const usersWithRoles = data?.map((user: any) => {
+        const roleFromJoin = Array.isArray(user.user_roles) && user.user_roles.length > 0 
+          ? user.user_roles[0].role 
+          : null;
+          
+        return {
+          ...user,
+          role: roleFromJoin || 'user', // Default to 'user' if no role found
+          user_roles: undefined // Clean up
+        };
+      }) || [];
 
       console.log('Fetched users with roles:', usersWithRoles);
       return usersWithRoles as UserProfile[];
