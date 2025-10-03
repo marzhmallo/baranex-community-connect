@@ -2631,6 +2631,10 @@ export type Database = {
           purok: string
         }[]
       }
+      get_user_brgyid: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       get_user_sessions: {
         Args: Record<PropertyKey, never>
         Returns: {
