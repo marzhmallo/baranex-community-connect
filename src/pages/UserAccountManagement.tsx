@@ -67,7 +67,7 @@ const UserAccountManagement = () => {
   });
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
-  // ✅ FIXED: Updated query to join with user_roles table
+  // ✅ FIXED: Separate queries to avoid RLS JOIN issues
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users', userProfile?.brgyid],
     queryFn: async () => {
@@ -78,13 +78,10 @@ const UserAccountManagement = () => {
       
       console.log('Fetching users for barangay:', userProfile.brgyid);
       
-      // ✅ CORRECTED: Join with user_roles table to get actual roles
+      // Step 1: Fetch profiles only (no JOIN)
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles(role)
-        `)
+        .select('*')
         .eq('brgyid', userProfile.brgyid)
         .order('created_at', { ascending: false });
 
@@ -93,16 +90,38 @@ const UserAccountManagement = () => {
         throw error;
       }
 
-      // ✅ Transform the data to inject role from user_roles
-      const usersWithRoles = data?.map(user => ({
-        ...user,
-        role: user.user_roles?.[0]?.role || 'user', // Default to 'user' if no role
-        user_roles: undefined // Clean up to match UserProfile interface
-      })).filter(user => 
-        ['user', 'admin', 'staff'].includes(user.role || '')
-      ) || [];
+      console.log('Fetched profiles:', data?.length || 0);
 
-      console.log('Fetched users with roles:', usersWithRoles);
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Step 2: Fetch roles separately
+      const userIds = data.map(u => u.id);
+
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+        // Continue without roles rather than failing
+      }
+
+      console.log('Fetched roles:', rolesData?.length || 0);
+
+      // Step 3: Map roles to users
+      const rolesMap = new Map(
+        rolesData?.map(r => [r.user_id, r.role]) || []
+      );
+
+      const usersWithRoles = data.map(user => ({
+        ...user,
+        role: rolesMap.get(user.id) || 'user'
+      }));
+
+      console.log('Users with mapped roles:', usersWithRoles.length);
       return usersWithRoles as UserProfile[];
     },
     enabled: !!userProfile?.brgyid
