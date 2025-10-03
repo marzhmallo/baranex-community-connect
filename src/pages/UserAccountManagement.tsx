@@ -77,19 +77,56 @@ const UserAccountManagement = () => {
         console.log('No barangay ID available for filtering');
         return [];
       }
+      
       console.log('Fetching users for barangay:', userProfile.brgyid);
-      const {
-        data,
-        error
-      } = await supabase.from('profiles').select('*').eq('brgyid', userProfile.brgyid).in('role', ['user', 'admin', 'staff']).order('created_at', {
-        ascending: false
-      });
+      
+      // Step 1: Fetch all profiles in the barangay (no role filtering)
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('brgyid', userProfile.brgyid)
+        .order('created_at', { ascending: false });
+
       if (error) {
         console.error('Error fetching users:', error);
         throw error;
       }
-      console.log('Fetched users:', data);
-      return data as UserProfile[];
+
+      console.log('Fetched profiles:', data?.length || 0);
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Step 2: Fetch roles separately from user_roles table
+      const userIds = data.map(u => u.id);
+      
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+        // Continue without roles rather than failing completely
+      }
+
+      console.log('Fetched roles:', rolesData?.length || 0);
+
+      // Step 3: Map roles to users using efficient Map lookup
+      const rolesMap = new Map(
+        rolesData?.map(r => [r.user_id, r.role]) || []
+      );
+
+      const usersWithRoles = data.map(user => ({
+        ...user,
+        role: rolesMap.get(user.id) || 'user' // Default to 'user' if no role found
+      }));
+
+      console.log('Users with mapped roles:', usersWithRoles.length);
+      console.log('Sample user:', usersWithRoles[0]);
+
+      return usersWithRoles as UserProfile[];
     },
     enabled: !!userProfile?.brgyid
   });
