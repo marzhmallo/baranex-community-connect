@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     // SECURITY FIX: Check if caller has permission to promote users
     const { data: callerProfile, error: profileErr } = await admin
       .from('profiles')
-      .select('role, superior_admin')
+      .select('superior_admin')
       .eq('id', caller.id)
       .maybeSingle()
 
@@ -69,9 +69,21 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Check if caller has glyph role using has_role function
+    const { data: isGlyph, error: glyphErr } = await admin
+      .rpc('has_role', { _user_id: caller.id, _role: 'glyph' })
+    
+    if (glyphErr) {
+      console.error('Role check error:', glyphErr)
+      return new Response(JSON.stringify({ error: 'Failed to verify permissions' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      })
+    }
+
     // Only allow glyph role or superior admins to promote users
-    if (callerProfile.role !== 'glyph' && !callerProfile.superior_admin) {
-      console.warn(`Unauthorized promotion attempt by user ${caller.id} with role ${callerProfile.role}`)
+    if (!isGlyph && !callerProfile.superior_admin) {
+      console.warn(`Unauthorized promotion attempt by user ${caller.id}`)
       return new Response(JSON.stringify({ error: 'Forbidden: Insufficient permissions to promote users' }), {
         status: 403,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -101,10 +113,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Promote the user to admin, set superior_admin = true and status = 'approved'
+    // Promote the user: set superior_admin = true and status = 'approved'
     const { error: updateErr } = await admin
       .from('profiles')
-      .update({ role: 'admin', superior_admin: true, status: 'approved' })
+      .update({ superior_admin: true, status: 'approved' })
       .eq('id', userId)
 
     if (updateErr) {
@@ -126,7 +138,10 @@ Deno.serve(async (req) => {
 
     if (roleErr) {
       console.error('promote-user role assignment error:', roleErr)
-      // Continue even if role assignment fails (profiles is source of truth for now)
+      return new Response(JSON.stringify({ error: 'Failed to assign admin role' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      })
     }
 
     console.log(`User ${userId} promoted to admin by ${caller.id}`)

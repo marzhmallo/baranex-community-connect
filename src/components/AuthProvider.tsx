@@ -156,6 +156,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (profileData) {
         console.log('User found in profiles table:', profileData);
         
+        // Fetch user roles from user_roles table
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId);
+        
+        // Get primary role (first role found, or 'user' as default)
+        const primaryRole = rolesData && rolesData.length > 0 ? rolesData[0].role : 'user';
+        console.log('User roles from user_roles table:', rolesData, 'Primary role:', primaryRole);
+        
+        // Add role to profile data
+        const profileWithRole = {
+          ...profileData,
+          role: primaryRole
+        };
+        
         // CRITICAL: Check padlock status FIRST - if true, require password reset and stay on login
         // EXCEPT allow access to update-password page
         if (profileData.padlock === true) {
@@ -246,13 +262,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             return;
           }
         }
-
+        
         // Set user to ONLINE when successfully fetching profile (login)
         await updateUserOnlineStatus(userId, true);
-        setUserProfile(profileData as UserProfile);
+        setUserProfile(profileWithRole as UserProfile);
         
         // Pre-fetch document processing stats for admin/staff users
-        if (profileData.role === 'admin' || profileData.role === 'staff') {
+        if (primaryRole === 'admin' || primaryRole === 'staff') {
           try {
             console.log('Pre-fetching document processing stats...');
             const { data: docData, error: docError } = await supabase

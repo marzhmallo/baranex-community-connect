@@ -67,11 +67,19 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Target profile not found' }), { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } })
     }
 
+    // Check caller's roles using has_role function
+    const { data: isAdmin, error: roleErr } = await admin
+      .rpc('has_role', { _user_id: callerId, _role: 'admin' })
+    
+    if (roleErr) {
+      console.error('Role check error:', roleErr)
+      return new Response(JSON.stringify({ error: 'Failed to verify permissions' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } })
+    }
+
     // Authorization rules:
     // - Superior admins can delete anyone
     // - Admins can delete users within their barangay but not superior admins
     const isSuperior = !!callerProfile.superior_admin
-    const isAdmin = callerProfile.role === 'admin'
     const sameBarangay = callerProfile.brgyid && targetProfile.brgyid && callerProfile.brgyid === targetProfile.brgyid
 
     if (!(isSuperior || (isAdmin && sameBarangay && !targetProfile.superior_admin))) {
