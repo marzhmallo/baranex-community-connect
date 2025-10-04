@@ -859,7 +859,7 @@ const RiskMapPage = () => {
 
       {/* Map Container */}
       <main className="flex-1 relative">
-        <div ref={mapRef} className="h-full w-full bg-muted" />
+        <div ref={mapRef} className="h-full w-full bg-muted relative z-10" />
       </main>
 
       {/* Modal */}
