@@ -29,24 +29,40 @@ export const RoleAuditHistory = ({ userId }: RoleAuditHistoryProps) => {
   const { data: auditLogs, isLoading } = useQuery({
     queryKey: ['role-audit-logs', userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch audit logs
+      const { data: logs, error: logsError } = await supabase
         .from('role_audit_log')
-        .select(`
-          *,
-          changer_profile:profiles!changed_by(
-            firstname,
-            lastname,
-            profile_picture
-          )
-        `)
+        .select('*')
         .eq('user_id', userId)
         .order('changed_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching role audit logs:', error);
-        throw error;
+      if (logsError) {
+        console.error('Error fetching role audit logs:', logsError);
+        throw logsError;
       }
-      return data as RoleAuditLog[];
+
+      if (!logs || logs.length === 0) return [];
+
+      // Get unique changer IDs
+      const changerIds = [...new Set(logs.map(log => log.changed_by))];
+
+      // Fetch profiles for all changers
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, firstname, lastname, profile_picture')
+        .in('id', changerIds);
+
+      if (profilesError) {
+        console.error('Error fetching changer profiles:', profilesError);
+      }
+
+      // Manually join the data
+      const logsWithProfiles = logs.map(log => ({
+        ...log,
+        changer_profile: profiles?.find(p => p.id === log.changed_by) || null
+      }));
+
+      return logsWithProfiles as RoleAuditLog[];
     },
   });
 
