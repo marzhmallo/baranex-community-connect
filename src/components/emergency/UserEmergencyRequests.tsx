@@ -39,6 +39,7 @@ interface UserEmergencyRequestsProps {
 export const UserEmergencyRequests = ({ isOpen, onClose }: UserEmergencyRequestsProps) => {
   const [requests, setRequests] = useState<EmergencyRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState<string>('All');
 
   useEffect(() => {
     fetchRequests();
@@ -94,6 +95,17 @@ export const UserEmergencyRequests = ({ isOpen, onClose }: UserEmergencyRequests
     };
   };
 
+  const filteredRequests = requests.filter(req => 
+    filterStatus === 'All' || req.status === filterStatus
+  );
+
+  const statusCounts = {
+    'All': requests.length,
+    'Pending': requests.filter(r => r.status === 'Pending').length,
+    'In Progress': requests.filter(r => r.status === 'In Progress').length,
+    'Responded': requests.filter(r => r.status === 'Responded').length,
+  };
+
   return (
     <div 
       className={`
@@ -105,21 +117,38 @@ export const UserEmergencyRequests = ({ isOpen, onClose }: UserEmergencyRequests
         ${isOpen ? 'translate-x-0' : 'translate-x-full'}
       `}
     >
-      <div className="p-4 border-b flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-primary" />
-            My Emergency Requests
-          </h2>
-          {requests.length > 0 && (
+      <div className="p-4 border-b space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-primary" />
+              My Emergency Requests
+            </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {requests.length} {requests.length === 1 ? 'request' : 'requests'}
+              {filteredRequests.length} {filteredRequests.length === 1 ? 'request' : 'requests'}
             </p>
-          )}
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-5 w-5" />
-        </Button>
+
+        <div className="flex gap-2 flex-wrap">
+          {Object.entries(statusCounts).map(([status, count]) => (
+            <Button
+              key={status}
+              variant={filterStatus === status ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilterStatus(status)}
+              className="text-xs"
+            >
+              {status}
+              <Badge variant="secondary" className="ml-1.5 text-xs">
+                {count}
+              </Badge>
+            </Button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -132,17 +161,17 @@ export const UserEmergencyRequests = ({ isOpen, onClose }: UserEmergencyRequests
         </div>
       ) : (
         <ScrollArea className="flex-1">
-          <div className="p-4 space-y-3">{requests.length === 0 ? (
+          <div className="p-4 space-y-3">{filteredRequests.length === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="pt-6 text-center">
                   <AlertCircle className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
                   <p className="text-sm text-muted-foreground">
-                    No emergency requests yet
+                    {filterStatus === 'All' ? 'No emergency requests yet' : `No ${filterStatus.toLowerCase()} requests`}
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              requests.map((request) => {
+              filteredRequests.map((request) => {
                 const Icon = requestTypeIcons[request.request_type] || AlertCircle;
                 const status = statusConfig[request.status as keyof typeof statusConfig] || statusConfig['Pending'];
 
