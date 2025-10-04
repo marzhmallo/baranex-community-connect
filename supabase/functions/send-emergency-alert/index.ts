@@ -145,26 +145,30 @@ serve(async (req) => {
       );
     }
 
-    // Prepare Textbee API calls
+    // Prepare Textbee Gateway API calls
     const textbeeApiKey = Deno.env.get('TEXTBEE_API_KEY');
+    const textbeeDeviceId = Deno.env.get('TEXTBEE_DEVICE_ID');
+    
     if (!textbeeApiKey) {
       throw new Error('TEXTBEE_API_KEY not configured');
     }
+    if (!textbeeDeviceId) {
+      throw new Error('TEXTBEE_DEVICE_ID not configured');
+    }
 
-    const senderId = "Baranex"; // Your approved Textbee Sender ID
-
-    console.log(`[send-emergency-alert] Sending to ${validPhones.length} recipients via Textbee`);
+    console.log(`[send-emergency-alert] Sending to ${validPhones.length} recipients via Textbee Gateway (Device: ${textbeeDeviceId})`);
 
     const sendPromises = validPhones.map(number => {
       const normalizedNumber = normalizePhoneNumber(number);
-      return fetch('https://textbee.dev/api/v1/sms/send', {
+      return fetch(`https://api.textbee.dev/api/v1/gateway/devices/${textbeeDeviceId}/sendSMS`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': textbeeApiKey
+        },
         body: JSON.stringify({
-          api_key: textbeeApiKey,
-          phone_number: normalizedNumber,
-          sms: message,
-          sender_id: senderId
+          recipients: [normalizedNumber],
+          message: message
         })
       });
     });
