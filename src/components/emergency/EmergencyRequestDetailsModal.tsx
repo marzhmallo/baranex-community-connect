@@ -191,9 +191,6 @@ export const EmergencyRequestDetailsModal = ({
                 <div className="text-lg font-bold text-foreground break-words">
                   📍 {geocodedAddress || 'Loading location...'}
                 </div>
-                <div className="text-sm font-normal text-muted-foreground mt-1">
-                  Type: {request.request_type}
-                </div>
                 <div className="text-xs font-normal text-muted-foreground mt-1">
                   Request ID: {request.id.slice(0, 8)}...
                 </div>

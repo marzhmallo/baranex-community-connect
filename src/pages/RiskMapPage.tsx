@@ -697,11 +697,6 @@ const RiskMapPage = () => {
                 <h3 style="color: white; font-size: 16px; font-weight: 700; margin: 0; text-shadow: 0 1px 3px rgba(0,0,0,0.2); line-height: 1.4;">
                   📍 ${geocodedAddress || geocodeCache.get(req.id) || 'Loading location...'}
                 </h3>
-                ${req.request_type ? `
-                  <div style="font-size: 12px; color: rgba(255,255,255,0.85); font-weight: 500; margin-top: 6px;">
-                    Type: ${req.request_type}
-                  </div>
-                ` : ''}
               </div>
 
               <!-- Status Section -->
