@@ -14,6 +14,7 @@ import PublicSidebar from "./components/layout/PublicSidebar";
 import FloatingChatButton from "./components/chatbot/FloatingChatButton";
 import GlobalLoadingScreen from "./components/ui/GlobalLoadingScreen";
 import GlobalAuthTransitionOverlay from "./components/ui/GlobalAuthTransitionOverlay";
+import MobileBlocker from "./components/layout/MobileBlocker";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -225,6 +226,7 @@ const AppContent = () => {
   return (
     <DataProvider>
       <GlobalAuthTransitionOverlay />
+      <MobileBlocker />
       <div className="flex">
         {showAdminSidebar && <Sidebar />}
         {showUserSidebar && <PublicSidebar />}
