@@ -649,108 +649,19 @@ const RiskMapPage = () => {
           };
           
           marker.bindPopup(`
-            <div class="p-4 min-w-[320px] max-w-[360px] space-y-3">
-              <!-- Location Header -->
-              <div class="border-b pb-2">
-                <h3 class="font-bold text-base mb-1">
-                  ${request.latitude && request.longitude 
-                    ? `Location ${request.id.slice(0, 6)}`
-                    : 'Unknown Location'
-                  }
-                </h3>
-                <p class="text-xs text-gray-500">
-                  ${request.latitude && request.longitude 
-                    ? `${request.latitude.toFixed(6)}, ${request.longitude.toFixed(6)}`
-                    : 'Coordinates unavailable'
-                  }
-                </p>
-              </div>
-
-              <!-- Urgency Level -->
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-700">Urgency:</span>
-                <span class="px-2 py-0.5 rounded text-xs font-medium ${
-                  request.status === 'Pending' ? 'bg-red-100 text-red-700' :
-                  request.status === 'In Progress' ? 'bg-orange-100 text-orange-700' :
-                  'bg-green-100 text-green-700'
-                }">
-                  High Priority
-                </span>
-              </div>
-
-              <!-- People Affected -->
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-700">People:</span>
-                <span class="text-sm text-gray-600">1 person affected</span>
-              </div>
-
-              <!-- Needs -->
-              <div>
-                <span class="text-sm font-semibold text-gray-700 block mb-1">Needs:</span>
-                <div class="flex flex-wrap gap-1">
-                  <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                    ${request.request_type}
-                  </span>
-                  <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                    Emergency
-                  </span>
-                </div>
-              </div>
-
-              <!-- Contact -->
-              <div>
-                <span class="text-sm font-semibold text-gray-700">Contact:</span>
-                <span class="text-sm text-gray-600 ml-1">+63 XXX XXX XXXX</span>
-              </div>
-
-              <!-- Details -->
-              ${request.details ? `
-                <div>
-                  <span class="text-sm font-semibold text-gray-700 block mb-1">Details:</span>
-                  <p class="text-sm text-gray-600 leading-relaxed">${request.details}</p>
-                </div>
-              ` : ''}
-
-              <!-- Situation Status -->
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-700">Situation Status:</span>
-                <span class="text-sm font-medium ${
-                  request.status === 'Pending' ? 'text-red-600' :
-                  request.status === 'In Progress' ? 'text-orange-600' :
-                  'text-green-600'
-                }">
-                  ${request.status}
-                </span>
-              </div>
-
-              <!-- Information Verification -->
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-700">Information Verification:</span>
-                <span class="text-sm text-green-600 font-medium">Verified</span>
-              </div>
-
-              <!-- Time -->
-              <div class="text-xs text-gray-500 border-t pt-2">
-                Reported ${formatTimeAgo(request.created_at)}
-              </div>
-
-              <!-- Action Buttons -->
-              <div class="grid grid-cols-2 gap-2 pt-2">
-                <a 
-                  href="https://www.google.com/maps/dir/?api=1&destination=${request.latitude},${request.longitude}"
-                  target="_blank"
-                  class="bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 text-center text-sm font-medium no-underline"
-                >
-                  Google Maps
-                </a>
-                <a 
-                  href="https://waze.com/ul?ll=${request.latitude},${request.longitude}&navigate=yes"
-                  target="_blank"
-                  class="bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 text-center text-sm font-medium no-underline"
-                >
-                  Waze Maps
-                </a>
-              </div>
+            <div class="p-2 min-w-[200px]">
+              <h3 class="font-bold text-lg mb-2">${request.request_type}</h3>
+              <p class="text-sm text-gray-600 mb-1">
+                Status: <span class="font-semibold">${statusEmoji[request.status as keyof typeof statusEmoji]} ${request.status}</span>
+              </p>
+              <p class="text-sm text-gray-600 mb-2">Time: ${formatTimeAgo(request.created_at)}</p>
+              ${request.details ? `<p class="text-sm mb-2">${request.details}</p>` : ''}
+              <button 
+                onclick="document.dispatchEvent(new CustomEvent('openRequestDetails', { detail: '${request.id}' }))"
+                class="w-full bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700 text-sm"
+              >
+                View Details
+              </button>
             </div>
           `);
           
