@@ -25,6 +25,9 @@ interface EmergencyRequest {
   created_at: string;
   resident_id: string;
   brgyid: string;
+  needs: string[] | null;
+  specificplace: string | null;
+  contactno: string | null;
 }
 
 interface EmergencyRequestDetailsModalProps {
@@ -59,6 +62,7 @@ export const EmergencyRequestDetailsModal = ({
   const [updating, setUpdating] = useState(false);
   const [newStatus, setNewStatus] = useState<string>('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [geocodedAddress, setGeocodedAddress] = useState<string>('');
 
   useEffect(() => {
     if (requestId && isOpen) {
@@ -75,11 +79,37 @@ export const EmergencyRequestDetailsModal = ({
         .from('emergency_requests' as any)
         .select('*')
         .eq('id', requestId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      setRequest(data as any);
-      setNewStatus((data as any).status);
+      
+      if (!data) {
+        toast({
+          title: "Not Found",
+          description: "Emergency request not found",
+          variant: "destructive",
+        });
+        onClose();
+        return;
+      }
+      
+      const requestData = data as unknown as EmergencyRequest;
+      setRequest(requestData);
+      setNewStatus(requestData.status);
+      
+      // Fetch geocoded address if coordinates exist
+      if (requestData.latitude && requestData.longitude) {
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${requestData.latitude}&lon=${requestData.longitude}`
+          );
+          const geoData = await response.json();
+          setGeocodedAddress(geoData.display_name || 'Unknown Location');
+        } catch (geoError) {
+          console.error('Geocoding error:', geoError);
+          setGeocodedAddress('Location unavailable');
+        }
+      }
     } catch (error) {
       console.error('Error fetching request details:', error);
       toast({
@@ -152,14 +182,21 @@ export const EmergencyRequestDetailsModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <div className={`p-3 rounded-lg ${status.color} bg-opacity-10`}>
-              <Icon className={`h-6 w-6 ${status.textColor}`} />
-            </div>
-            <div>
-              <div className="text-xl font-bold">{request.request_type}</div>
-              <div className="text-sm font-normal text-muted-foreground">
-                Request ID: {request.id.slice(0, 8)}...
+          <DialogTitle className="space-y-2">
+            <div className="flex items-start gap-3">
+              <div className={`p-3 rounded-lg ${status.color} bg-opacity-10 flex-shrink-0`}>
+                <Icon className={`h-6 w-6 ${status.textColor}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg font-bold text-foreground break-words">
+                  📍 {geocodedAddress || 'Loading location...'}
+                </div>
+                <div className="text-sm font-normal text-muted-foreground mt-1">
+                  Type: {request.request_type}
+                </div>
+                <div className="text-xs font-normal text-muted-foreground mt-1">
+                  Request ID: {request.id.slice(0, 8)}...
+                </div>
               </div>
             </div>
           </DialogTitle>
@@ -175,6 +212,25 @@ export const EmergencyRequestDetailsModal = ({
           </div>
 
           <Separator />
+
+          {/* Needs Section */}
+          {request.needs && request.needs.length > 0 && (
+            <>
+              <div>
+                <h3 className="font-semibold mb-3 text-red-600 flex items-center gap-2">
+                  🆘 Urgent Needs
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {request.needs.map((need, index) => (
+                    <Badge key={index} variant="destructive" className="text-sm py-1.5 px-3">
+                      {need}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
 
           {/* Time Information */}
           <div>
@@ -207,17 +263,61 @@ export const EmergencyRequestDetailsModal = ({
           {request.latitude && request.longitude && (
             <>
               <div>
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  Location
+                  Location Details
                 </h3>
-                <div className="space-y-2">
-                  <p className="text-sm font-mono bg-muted p-2 rounded">
-                    {request.latitude.toFixed(6)}, {request.longitude.toFixed(6)}
-                  </p>
+                <div className="space-y-3">
+                  {request.specificplace && (
+                    <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-lg">
+                      <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 flex items-center gap-2">
+                        🏷️ Landmark/Specific Place
+                      </p>
+                      <p className="text-sm text-amber-800 dark:text-amber-200 mt-1">
+                        {request.specificplace}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">GPS Coordinates</p>
+                    <p className="text-sm font-mono bg-muted p-2 rounded">
+                      📐 {request.latitude.toFixed(6)}, {request.longitude.toFixed(6)}
+                    </p>
+                  </div>
                   <Button onClick={openInMaps} variant="outline" size="sm" className="w-full">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Open in Google Maps
+                  </Button>
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
+          {/* Contact Information */}
+          {request.contactno && (
+            <>
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Resident Contact
+                </h3>
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-4 rounded-lg space-y-3">
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                      Contact Number
+                    </p>
+                    <p className="text-lg font-bold text-blue-700 dark:text-blue-300 mt-1">
+                      {request.contactno}
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => window.open(`tel:${request.contactno}`, '_self')}
+                    className="w-full"
+                    variant="default"
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call Now
                   </Button>
                 </div>
               </div>
