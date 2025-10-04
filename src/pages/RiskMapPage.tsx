@@ -67,6 +67,9 @@ interface EmergencyRequest {
   created_at: string;
   resident_id: string;
   brgyid: string;
+  needs: string[] | null;
+  specificplace: string | null;
+  contactno: string | null;
 }
 
 const RiskMapPage = () => {
@@ -114,6 +117,7 @@ const RiskMapPage = () => {
   const [evacCenters, setEvacCenters] = useState<EvacCenter[]>([]);
   const [safeRoutes, setSafeRoutes] = useState<SafeRoute[]>([]);
   const [emergencyRequests, setEmergencyRequests] = useState<EmergencyRequest[]>([]);
+  const [geocodeCache, setGeocodeCache] = useState<Map<string, string>>(new Map());
 
   // Form state
   const [formData, setFormData] = useState({
@@ -638,6 +642,25 @@ const RiskMapPage = () => {
             'Responded': '🟢'
           };
           
+          const reverseGeocode = async (lat: number, lng: number, id: string): Promise<string> => {
+            if (geocodeCache.has(id)) {
+              return geocodeCache.get(id)!;
+            }
+            
+            try {
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+              );
+              const data = await response.json();
+              const address = data.display_name || 'Unknown Location';
+              setGeocodeCache(prev => new Map(prev).set(id, address));
+              return address;
+            } catch (error) {
+              console.error('Reverse geocoding error:', error);
+              return 'Unknown Location';
+            }
+          };
+          
           const formatTimeAgo = (date: string) => {
             const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
             if (seconds < 60) return `${seconds}s ago`;
@@ -651,7 +674,15 @@ const RiskMapPage = () => {
           const urgencyColor = request.status === 'Pending' ? '#ef4444' : request.status === 'In Progress' ? '#f59e0b' : '#10b981';
           const urgencyLabel = request.status === 'Pending' ? 'URGENT' : request.status === 'In Progress' ? 'RESPONDING' : 'RESOLVED';
           
-          marker.bindPopup(`
+          // Fetch geocoded address on marker open
+          marker.on('popupopen', async () => {
+            if (request.latitude && request.longitude && !geocodeCache.has(request.id)) {
+              const address = await reverseGeocode(request.latitude, request.longitude, request.id);
+              marker.setPopupContent(generatePopupContent(request, address));
+            }
+          });
+          
+          const generatePopupContent = (req: EmergencyRequest, geocodedAddress?: string) => `
             <div class="emergency-popup" style="min-width: 320px; max-width: 380px; font-family: system-ui, -apple-system, sans-serif;">
               <!-- Header with Urgency Banner -->
               <div style="background: linear-gradient(135deg, ${urgencyColor} 0%, ${urgencyColor}dd 100%); padding: 12px 16px; margin: -12px -16px 16px -16px; border-radius: 8px 8px 0 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
@@ -663,38 +694,64 @@ const RiskMapPage = () => {
                     🕐 ${formatTimeAgo(request.created_at)}
                   </span>
                 </div>
-                <h3 style="color: white; font-size: 18px; font-weight: 700; margin: 0; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-                  🚨 ${request.request_type}
+                <h3 style="color: white; font-size: 16px; font-weight: 700; margin: 0; text-shadow: 0 1px 3px rgba(0,0,0,0.2); line-height: 1.4;">
+                  📍 ${geocodedAddress || geocodeCache.get(req.id) || 'Loading location...'}
                 </h3>
+                ${req.request_type ? `
+                  <div style="font-size: 12px; color: rgba(255,255,255,0.85); font-weight: 500; margin-top: 6px;">
+                    Type: ${req.request_type}
+                  </div>
+                ` : ''}
               </div>
 
               <!-- Status Section -->
               <div style="background: #f8fafc; border-left: 4px solid ${urgencyColor}; padding: 12px; margin-bottom: 12px; border-radius: 4px;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                  <span style="font-size: 20px;">${statusEmoji[request.status as keyof typeof statusEmoji]}</span>
+                  <span style="font-size: 20px;">${statusEmoji[req.status as keyof typeof statusEmoji]}</span>
                   <div>
                     <div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Status</div>
-                    <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${request.status}</div>
+                    <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${req.status}</div>
                   </div>
                 </div>
               </div>
+
+              ${req.needs && Array.isArray(req.needs) && req.needs.length > 0 ? `
+              <!-- Needs Section -->
+              <div style="margin-bottom: 12px; padding: 10px; background: #fef3f2; border-radius: 6px; border: 1px solid #fca5a5;">
+                <div style="font-size: 11px; color: #991b1b; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+                  🆘 Needs
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  ${req.needs.map((need: string) => `
+                    <span style="background: #dc2626; color: white; padding: 5px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">
+                      ${need}
+                    </span>
+                  `).join('')}
+                </div>
+              </div>
+              ` : ''}
 
               <!-- Location Info -->
               <div style="margin-bottom: 12px; padding: 10px; background: #fef3c7; border-radius: 6px; border: 1px solid #fcd34d;">
                 <div style="display: flex; align-items: start; gap: 8px;">
                   <span style="font-size: 16px; margin-top: 2px;">📍</span>
                   <div style="flex: 1;">
-                    <div style="font-size: 11px; color: #92400e; font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Location</div>
-                    <div style="font-size: 13px; color: #78350f; font-weight: 500; line-height: 1.4;">
-                      ${request.latitude && request.longitude ? 
-                        `Lat: ${request.latitude.toFixed(6)}, Long: ${request.longitude.toFixed(6)}` : 
-                        'Location unavailable'}
+                    <div style="font-size: 11px; color: #92400e; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Location Details</div>
+                    ${req.specificplace ? `
+                      <div style="font-size: 13px; color: #78350f; font-weight: 600; margin-bottom: 6px; padding: 6px; background: rgba(251, 191, 36, 0.2); border-radius: 4px;">
+                        🏷️ ${req.specificplace}
+                      </div>
+                    ` : ''}
+                    <div style="font-size: 12px; color: #92400e; font-weight: 500;">
+                      ${req.latitude && req.longitude ? 
+                        `📐 ${req.latitude.toFixed(6)}, ${req.longitude.toFixed(6)}` : 
+                        'Coordinates unavailable'}
                     </div>
                   </div>
                 </div>
               </div>
 
-              ${request.details ? `
+              ${req.details ? `
               <!-- Details Section -->
               <div style="margin-bottom: 12px; padding: 10px; background: #f1f5f9; border-radius: 6px; border: 1px solid #cbd5e1;">
                 <div style="display: flex; align-items: start; gap: 8px;">
@@ -702,7 +759,7 @@ const RiskMapPage = () => {
                   <div style="flex: 1;">
                     <div style="font-size: 11px; color: #475569; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Situation Details</div>
                     <div style="font-size: 13px; color: #334155; line-height: 1.5; max-height: 60px; overflow-y: auto;">
-                      ${request.details}
+                      ${req.details}
                     </div>
                   </div>
                 </div>
@@ -713,9 +770,16 @@ const RiskMapPage = () => {
               <div style="margin-bottom: 16px; padding: 10px; background: #dbeafe; border-radius: 6px; border: 1px solid #93c5fd;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 16px;">📞</span>
-                  <div>
-                    <div style="font-size: 11px; color: #1e40af; font-weight: 600; text-transform: uppercase;">Emergency Contact</div>
-                    <div style="font-size: 13px; color: #1e3a8a; font-weight: 500;">Barangay Emergency Hotline</div>
+                  <div style="flex: 1;">
+                    <div style="font-size: 11px; color: #1e40af; font-weight: 600; text-transform: uppercase;">Resident Contact</div>
+                    <div style="font-size: 14px; color: #1e3a8a; font-weight: 600;">
+                      ${req.contactno || 'No contact provided'}
+                    </div>
+                    ${req.contactno ? `
+                      <a href="tel:${req.contactno}" style="font-size: 12px; color: #2563eb; text-decoration: none; display: inline-block; margin-top: 4px;">
+                        📱 Call Now
+                      </a>
+                    ` : ''}
                   </div>
                 </div>
               </div>
@@ -723,7 +787,7 @@ const RiskMapPage = () => {
               <!-- Action Buttons -->
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;">
                 <a 
-                  href="https://www.google.com/maps/dir/?api=1&destination=${request.latitude},${request.longitude}"
+                  href="https://www.google.com/maps/dir/?api=1&destination=${req.latitude},${req.longitude}"
                   target="_blank"
                   style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 10px; border-radius: 6px; text-align: center; text-decoration: none; font-size: 13px; font-weight: 600; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); transition: transform 0.2s;"
                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.4)'"
@@ -732,7 +796,7 @@ const RiskMapPage = () => {
                   🗺️ Navigate
                 </a>
                 <button 
-                  onclick="document.dispatchEvent(new CustomEvent('openRequestDetails', { detail: '${request.id}' }))"
+                  onclick="document.dispatchEvent(new CustomEvent('openRequestDetails', { detail: '${req.id}' }))"
                   style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 600; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3); transition: transform 0.2s;"
                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(139, 92, 246, 0.4)'"
                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(139, 92, 246, 0.3)'"
@@ -748,16 +812,18 @@ const RiskMapPage = () => {
                 </span>
               </div>
             </div>
-          `, {
+          `;
+          
+          marker.bindPopup(generatePopupContent(request), {
             maxWidth: 400,
-            className: 'emergency-popup-container'
+            className: 'emergency-request-popup'
           });
           
           layer.addLayer(marker);
         }
       });
     }
-  }, [map, emergencyRequests, showEmergencyRequests]);
+  }, [map, emergencyRequests, showEmergencyRequests, geocodeCache]);
 
   // Listen for custom event to open request details
   useEffect(() => {
