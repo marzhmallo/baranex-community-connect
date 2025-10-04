@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import { Monitor, ArrowLeft, Home, ChevronRight } from 'lucide-react';
+import { Monitor, LogOut, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 
 const MobileBlocker: React.FC = () => {
-  const { userProfile } = useAuth();
-  const navigate = useNavigate();
+  const { userProfile, signOut } = useAuth();
   const [shouldBlock, setShouldBlock] = useState(false);
 
   useEffect(() => {
     const checkDeviceAndRole = () => {
       const isAdminOrStaff = userProfile?.role === 'admin' || userProfile?.role === 'staff';
-      const isMobile = window.innerWidth < 768;
+      const isMobileOrTablet = window.innerWidth < 1024;
       
-      setShouldBlock(isAdminOrStaff && isMobile);
+      setShouldBlock(isAdminOrStaff && isMobileOrTablet);
     };
 
     checkDeviceAndRole();
@@ -77,31 +75,14 @@ const MobileBlocker: React.FC = () => {
         {/* Actions */}
         <div className="space-y-3 pt-2">
           <Button
-            onClick={() => window.history.back()}
-            variant="default"
+            onClick={signOut}
+            variant="destructive"
             className="w-full"
             size="lg"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Go Back
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
           </Button>
-          
-          <Button
-            onClick={() => navigate('/')}
-            variant="outline"
-            className="w-full"
-            size="lg"
-          >
-            <Home className="h-4 w-4 mr-2" />
-            Return to Home
-          </Button>
-
-          <button
-            onClick={() => setShouldBlock(false)}
-            className="text-xs text-muted-foreground hover:text-foreground underline transition-colors mt-4"
-          >
-            Proceed anyway (not recommended)
-          </button>
         </div>
       </div>
     </div>
