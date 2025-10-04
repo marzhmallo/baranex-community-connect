@@ -67,7 +67,7 @@ const EmergencyResponsePage = () => {
           </TabsList>
 
         <TabsContent value="dashboard" className="mt-6">
-          <EmergencyDashboard />
+          <EmergencyDashboard onTabChange={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="riskmap" className="mt-6">

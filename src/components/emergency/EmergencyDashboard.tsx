@@ -57,7 +57,11 @@ interface SafeRoute {
   coordinates: [number, number][];
 }
 
-const EmergencyDashboard = () => {
+interface EmergencyDashboardProps {
+  onTabChange?: (tab: string) => void;
+}
+
+const EmergencyDashboard = ({ onTabChange }: EmergencyDashboardProps) => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -416,7 +420,15 @@ const EmergencyDashboard = () => {
   };
 
   const handleViewRiskMap = () => {
-    navigate('/emergency?tab=riskmap');
+    if (onTabChange) {
+      onTabChange('riskmap');
+    }
+  };
+
+  const handleSendAlert = () => {
+    if (onTabChange) {
+      onTabChange('sms');
+    }
   };
 
   if (loading) {
@@ -582,6 +594,7 @@ const EmergencyDashboard = () => {
             <Button 
               variant="outline" 
               className="w-full justify-start h-12 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 hover:bg-orange-100/80 dark:hover:bg-orange-900/30 hover:shadow-lg transition-all duration-200"
+              onClick={handleSendAlert}
             >
               <div className="p-1 bg-red-500/20 rounded-full mr-3">
                 <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
@@ -601,6 +614,7 @@ const EmergencyDashboard = () => {
             <Button 
               variant="outline" 
               className="w-full justify-start h-12 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 hover:bg-orange-100/80 dark:hover:bg-orange-900/30 hover:shadow-lg transition-all duration-200"
+              onClick={handleViewRiskMap}
             >
               <div className="p-1 bg-green-500/20 rounded-full mr-3">
                 <Navigation className="h-4 w-4 text-green-600 dark:text-green-400" />
