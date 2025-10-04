@@ -12,6 +12,9 @@ import { DisasterZoneDetailsModal } from "@/components/emergency/DisasterZoneDet
 import { EvacuationCenterDetailsModal } from "@/components/emergency/EvacuationCenterDetailsModal";
 import { EvacuationRouteDetailsModal } from "@/components/emergency/EvacuationRouteDetailsModal";
 import { EmergencyRequestForm } from "@/components/emergency/EmergencyRequestForm";
+import { UserEmergencyRequests } from "@/components/emergency/UserEmergencyRequests";
+import { EmergencyTriageFeed } from "@/components/emergency/EmergencyTriageFeed";
+import { EmergencyRequestDetailsModal } from "@/components/emergency/EmergencyRequestDetailsModal";
 import { Eye, AlertCircle } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -53,6 +56,18 @@ interface SafeRoute {
   estimated_time_minutes?: number | null;
 }
 
+interface EmergencyRequest {
+  id: string;
+  request_type: string;
+  status: string;
+  latitude: number | null;
+  longitude: number | null;
+  details: string | null;
+  created_at: string;
+  resident_id: string;
+  brgyid: string;
+}
+
 const RiskMapPage = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -60,6 +75,7 @@ const RiskMapPage = () => {
   const [showZones, setShowZones] = useState(true);
   const [showCenters, setShowCenters] = useState(true);
   const [showRoutes, setShowRoutes] = useState(true);
+  const [showEmergencyRequests, setShowEmergencyRequests] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showCenterModal, setShowCenterModal] = useState(false);
@@ -72,9 +88,11 @@ const RiskMapPage = () => {
   const [showZoneDetails, setShowZoneDetails] = useState(false);
   const [showCenterDetails, setShowCenterDetails] = useState(false);
   const [showRouteDetails, setShowRouteDetails] = useState(false);
+  const [showRequestDetails, setShowRequestDetails] = useState(false);
   const [selectedZone, setSelectedZone] = useState<DisasterZone | null>(null);
   const [selectedCenter, setSelectedCenter] = useState<EvacCenter | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<SafeRoute | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   
   const { toast } = useToast();
   const { userProfile } = useAuth();
@@ -85,6 +103,7 @@ const RiskMapPage = () => {
   const zonesLayerRef = useRef<L.FeatureGroup | null>(null);
   const centersLayerRef = useRef<L.FeatureGroup | null>(null);
   const routesLayerRef = useRef<L.FeatureGroup | null>(null);
+  const emergencyRequestsLayerRef = useRef<L.FeatureGroup | null>(null);
   const drawControlRef = useRef<L.Control.Draw | null>(null);
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
 
@@ -92,6 +111,7 @@ const RiskMapPage = () => {
   const [disasterZones, setDisasterZones] = useState<DisasterZone[]>([]);
   const [evacCenters, setEvacCenters] = useState<EvacCenter[]>([]);
   const [safeRoutes, setSafeRoutes] = useState<SafeRoute[]>([]);
+  const [emergencyRequests, setEmergencyRequests] = useState<EmergencyRequest[]>([]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -167,12 +187,67 @@ const RiskMapPage = () => {
     }
   };
 
+  const fetchEmergencyRequests = async () => {
+    if (!userProfile?.brgyid) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('emergency_requests' as any)
+        .select('*')
+        .eq('brgyid', userProfile.brgyid)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setEmergencyRequests((data as any) || []);
+      return (data as any) || [];
+    } catch (error) {
+      console.error('Error fetching emergency requests:', error);
+      return [];
+    }
+  };
+
+  const setupRealtimeSubscription = () => {
+    if (!userProfile?.brgyid) return;
+    
+    const channel = supabase
+      .channel('emergency-requests-map')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'emergency_requests',
+          filter: `brgyid=eq.${userProfile.brgyid}`
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setEmergencyRequests(prev => [payload.new as any, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setEmergencyRequests(prev =>
+              prev.map(req => req.id === (payload.new as any).id ? payload.new as any : req)
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setEmergencyRequests(prev => prev.filter(req => req.id !== (payload.old as any).id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
   // Load data on component mount
   useEffect(() => {
     fetchDisasterZones();
     fetchEvacCenters();
     fetchSafeRoutes();
-  }, []);
+    if (userProfile?.brgyid) {
+      fetchEmergencyRequests();
+      setupRealtimeSubscription();
+    }
+  }, [userProfile?.brgyid]);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -423,6 +498,40 @@ const RiskMapPage = () => {
     });
   };
 
+  const createEmergencyPin = (request: EmergencyRequest) => {
+    const statusColors = {
+      'Pending': '#EF4444',      // red-500
+      'In Progress': '#EAB308',  // yellow-500
+      'Responded': '#22C55E'     // green-500
+    };
+    
+    const color = statusColors[request.status as keyof typeof statusColors] || '#EF4444';
+    
+    const icon = L.divIcon({
+      className: 'emergency-request-pin',
+      html: `
+        <div class="relative">
+          <div class="absolute -translate-x-1/2 -translate-y-full">
+            <div 
+              class="w-10 h-10 rounded-full border-4 border-white shadow-xl flex items-center justify-center animate-pulse" 
+              style="background-color: ${color}"
+            >
+              <span class="text-white font-bold text-lg">!</span>
+            </div>
+            <div 
+              class="w-0 h-0 border-l-[10px] border-r-[10px] border-t-[10px] border-transparent mx-auto"
+              style="border-top-color: ${color}"
+            ></div>
+          </div>
+        </div>
+      `,
+      iconSize: [40, 60],
+      iconAnchor: [20, 60]
+    });
+    
+    return icon;
+  };
+
   const renderMapData = (mapInstance: L.Map, zonesLayer: L.FeatureGroup, centersLayer: L.FeatureGroup, routesLayer: L.FeatureGroup) => {
     // Clear existing layers
     zonesLayer.clearLayers();
@@ -502,6 +611,77 @@ const RiskMapPage = () => {
     }
   }, [disasterZones, evacCenters, safeRoutes, map]);
 
+  // Render emergency request pins
+  useEffect(() => {
+    if (!map || !emergencyRequests.length) return;
+    
+    if (!emergencyRequestsLayerRef.current) {
+      emergencyRequestsLayerRef.current = L.featureGroup().addTo(map);
+    }
+    
+    const layer = emergencyRequestsLayerRef.current;
+    layer.clearLayers();
+    
+    if (showEmergencyRequests) {
+      emergencyRequests.forEach(request => {
+        if (request.latitude && request.longitude) {
+          const marker = L.marker(
+            [request.latitude, request.longitude],
+            { icon: createEmergencyPin(request) }
+          );
+          
+          const statusEmoji = {
+            'Pending': '🔴',
+            'In Progress': '🟡',
+            'Responded': '🟢'
+          };
+          
+          const formatTimeAgo = (date: string) => {
+            const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+            if (seconds < 60) return `${seconds}s ago`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return `${Math.floor(hours / 24)}d ago`;
+          };
+          
+          marker.bindPopup(`
+            <div class="p-2 min-w-[200px]">
+              <h3 class="font-bold text-lg mb-2">${request.request_type}</h3>
+              <p class="text-sm text-gray-600 mb-1">
+                Status: <span class="font-semibold">${statusEmoji[request.status as keyof typeof statusEmoji]} ${request.status}</span>
+              </p>
+              <p class="text-sm text-gray-600 mb-2">Time: ${formatTimeAgo(request.created_at)}</p>
+              ${request.details ? `<p class="text-sm mb-2">${request.details}</p>` : ''}
+              <button 
+                onclick="document.dispatchEvent(new CustomEvent('openRequestDetails', { detail: '${request.id}' }))"
+                class="w-full bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700 text-sm"
+              >
+                View Details
+              </button>
+            </div>
+          `);
+          
+          layer.addLayer(marker);
+        }
+      });
+    }
+  }, [map, emergencyRequests, showEmergencyRequests]);
+
+  // Listen for custom event to open request details
+  useEffect(() => {
+    const handleOpenRequestDetails = (e: any) => {
+      setSelectedRequestId(e.detail);
+      setShowRequestDetails(true);
+    };
+    
+    document.addEventListener('openRequestDetails' as any, handleOpenRequestDetails);
+    return () => {
+      document.removeEventListener('openRequestDetails' as any, handleOpenRequestDetails);
+    };
+  }, []);
+
   const toggleDrawing = () => {
     if (!map || !drawControlRef.current) return;
 
@@ -514,7 +694,7 @@ const RiskMapPage = () => {
     }
   };
 
-  const handleLayerToggle = (layer: 'zones' | 'centers' | 'routes') => {
+  const handleLayerToggle = (layer: 'zones' | 'centers' | 'routes' | 'emergencyRequests') => {
     if (!map) return;
 
     switch (layer) {
@@ -541,6 +721,16 @@ const RiskMapPage = () => {
           map.addLayer(routesLayerRef.current!);
         }
         setShowRoutes(!showRoutes);
+        break;
+      case 'emergencyRequests':
+        if (emergencyRequestsLayerRef.current) {
+          if (showEmergencyRequests) {
+            map.removeLayer(emergencyRequestsLayerRef.current);
+          } else {
+            map.addLayer(emergencyRequestsLayerRef.current);
+          }
+        }
+        setShowEmergencyRequests(!showEmergencyRequests);
         break;
     }
   };
@@ -705,6 +895,22 @@ const RiskMapPage = () => {
             />
             <span className="text-sm text-primary">Safe Routes</span>
           </label>
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={showEmergencyRequests}
+              onChange={() => handleLayerToggle('emergencyRequests')}
+              className="form-checkbox accent-destructive" 
+            />
+            <span className="text-sm text-destructive flex items-center gap-1">
+              🚨 Emergency Requests
+              {emergencyRequests.length > 0 && (
+                <span className="bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
+                  {emergencyRequests.length}
+                </span>
+              )}
+            </span>
+          </label>
         </div>
 
         {/* Accordion Lists */}
@@ -862,6 +1068,19 @@ const RiskMapPage = () => {
         <div ref={mapRef} className="h-full w-full bg-muted relative z-10" />
       </main>
 
+      {/* Right Sidebar - Emergency Requests Feed */}
+      {isAdmin ? (
+        <EmergencyTriageFeed
+          brgyid={userProfile?.brgyid || ''}
+          onRequestClick={(requestId) => {
+            setSelectedRequestId(requestId);
+            setShowRequestDetails(true);
+          }}
+        />
+      ) : (
+        <UserEmergencyRequests />
+      )}
+
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[2000]">
@@ -1012,6 +1231,16 @@ const RiskMapPage = () => {
           userProfile={userProfile}
         />
       )}
+
+      <EmergencyRequestDetailsModal
+        requestId={selectedRequestId}
+        isOpen={showRequestDetails}
+        onClose={() => {
+          setShowRequestDetails(false);
+          setSelectedRequestId(null);
+        }}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 };
