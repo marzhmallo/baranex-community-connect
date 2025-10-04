@@ -62,7 +62,7 @@ const EmergencyResponsePage = () => {
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-200"
             >
               <MessageSquare className="h-4 w-4" />
-              Mass SMS
+              Send SMS Alert
             </TabsTrigger>
           </TabsList>
 
