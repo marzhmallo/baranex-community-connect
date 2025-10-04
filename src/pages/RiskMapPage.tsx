@@ -1205,10 +1205,9 @@ const RiskMapPage = () => {
           ) : (
             <button 
               onClick={() => setShowEmergencyForm(true)}
-              className="w-full font-semibold py-3 rounded-lg transition bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+              className="w-full font-semibold py-3 rounded-lg transition bg-red-600 hover:bg-red-700 text-white"
             >
-              <AlertCircle className="h-5 w-5" />
-              🆘 Request Emergency Help
+              Request Emergency Help
             </button>
           )}
         </div>
