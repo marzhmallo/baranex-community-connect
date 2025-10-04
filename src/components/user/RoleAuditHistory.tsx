@@ -33,7 +33,7 @@ export const RoleAuditHistory = ({ userId }: RoleAuditHistoryProps) => {
         .from('role_audit_log')
         .select(`
           *,
-          changer_profile:profiles!role_audit_log_changed_by_fkey(
+          changer_profile:profiles!changed_by(
             firstname,
             lastname,
             profile_picture
@@ -42,7 +42,10 @@ export const RoleAuditHistory = ({ userId }: RoleAuditHistoryProps) => {
         .eq('user_id', userId)
         .order('changed_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching role audit logs:', error);
+        throw error;
+      }
       return data as RoleAuditLog[];
     },
   });
