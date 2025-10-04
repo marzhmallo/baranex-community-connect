@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, MapPin, Phone, AlertTriangle, MessageSquare } from "lucide-react";
+import { Shield, MapPin, Phone, AlertTriangle } from "lucide-react";
 import EmergencyContactsManager from "@/components/emergency/EmergencyContactsManager";
 import EmergencyDashboard from "@/components/emergency/EmergencyDashboard";
 import RiskMapPage from "@/pages/RiskMapPage";
-import EmergencyAlertSender from "@/components/emergency/EmergencyAlertSender";
 import { useAuth } from "@/components/AuthProvider";
 
 const UserEmergencyPage = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { userProfile } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-950/20 dark:via-orange-950/20 dark:to-yellow-950/20">
@@ -35,7 +33,7 @@ const UserEmergencyPage = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4 w-full bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border border-white/20 dark:border-gray-700/50 p-1 rounded-xl shadow-lg">
+          <TabsList className="grid grid-cols-3 w-full bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border border-white/20 dark:border-gray-700/50 p-1 rounded-xl shadow-lg">
             <TabsTrigger 
               value="dashboard" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-200"
@@ -56,13 +54,6 @@ const UserEmergencyPage = () => {
             >
               <Phone className="h-4 w-4" />
               Emergency Contacts
-            </TabsTrigger>
-            <TabsTrigger 
-              value="sms" 
-              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-200"
-            >
-              <MessageSquare className="h-4 w-4" />
-              Send SMS Alert
             </TabsTrigger>
           </TabsList>
 
@@ -89,10 +80,6 @@ const UserEmergencyPage = () => {
                 <EmergencyContactsManager />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="sms" className="mt-6">
-            {userProfile?.brgyid && <EmergencyAlertSender brgyid={userProfile.brgyid} />}
           </TabsContent>
         </Tabs>
       </div>
