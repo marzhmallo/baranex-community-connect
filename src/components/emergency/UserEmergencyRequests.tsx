@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Clock, MapPin, X, Flame, Droplets, Heart, Wrench, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EmergencyRequest {
   id: string;
@@ -133,21 +134,25 @@ export const UserEmergencyRequests = ({ isOpen, onClose }: UserEmergencyRequests
           </Button>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          {Object.entries(statusCounts).map(([status, count]) => (
-            <Button
-              key={status}
-              variant={filterStatus === status ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilterStatus(status)}
-              className="text-xs"
-            >
-              {status}
-              <Badge variant="secondary" className="ml-1.5 text-xs">
-                {count}
-              </Badge>
-            </Button>
-          ))}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Filter by Status:</label>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(statusCounts).map(([status, count]) => (
+                <SelectItem key={status} value={status}>
+                  <div className="flex items-center gap-2">
+                    {status}
+                    <Badge variant="secondary" className="text-xs">
+                      {count}
+                    </Badge>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
