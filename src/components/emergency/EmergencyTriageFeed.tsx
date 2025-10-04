@@ -216,50 +216,48 @@ export const EmergencyTriageFeed = ({ brgyid, isOpen, onClose, onRequestClick }:
                   className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer hover:border-primary/50"
                   onClick={() => onRequestClick(request.id)}
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`p-2 rounded-lg ${status.color} bg-opacity-10`}>
-                          <Icon className={`h-4 w-4 ${status.textColor}`} />
-                        </div>
-                        <div>
-                          <CardTitle className="text-sm font-medium">
+                  <CardHeader className="pb-3 space-y-3">
+                    {/* Avatar and Location Header */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                        U
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate">
+                          {request.latitude && request.longitude 
+                            ? `Location ${request.id.slice(0, 6)}`
+                            : 'Unknown Location'
+                          }
+                        </h3>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                          <Users className="h-3.5 w-3.5" />
+                          <span>1</span>
+                          <span className="text-orange-500 font-medium ml-1">
                             {request.request_type}
-                          </CardTitle>
-                          <p className="text-xs text-muted-foreground">
-                            ID: {request.id.slice(0, 8)}...
-                          </p>
+                          </span>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Need Badges */}
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs px-2 py-0.5">
+                        {request.request_type}
+                      </Badge>
+                      {request.details && request.details.length > 0 && (
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs px-2 py-0.5">
+                          Emergency
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Status Badge */}
+                    <div>
                       <Badge variant={status.badgeVariant} className="text-xs">
-                        {status.icon} {request.status}
+                        {request.status}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span className="font-medium">
-                        {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
-                      </span>
-                    </div>
-                    {request.details && (
-                      <p className="text-sm text-foreground line-clamp-2 leading-relaxed">
-                        {request.details}
-                      </p>
-                    )}
-                    {request.latitude && request.longitude && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
-                        <MapPin className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate font-mono">
-                          {request.latitude.toFixed(6)}, {request.longitude.toFixed(6)}
-                        </span>
-                      </div>
-                    )}
-                    <Button size="sm" className="w-full mt-2" variant="outline">
-                      View Details
-                    </Button>
-                  </CardContent>
                 </Card>
               );
             })
