@@ -7,6 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
+import { MFAManagementModal } from "@/components/security/MFAManagementModal";
+import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
 
 interface Barangay {
   id: string;
@@ -26,9 +29,10 @@ const UserProfilePage = () => {
   const [canEdit, setCanEdit] = useState(true);
   const [activeTab, setActiveTab] = useState<'personal' | 'barangay' | 'security'>('personal');
   const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [photoLoading, setPhotoLoading] = useState(false);
+  const [showMFAModal, setShowMFAModal] = useState(false);
   
   // Password change modal state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -180,32 +184,9 @@ const UserProfilePage = () => {
     }
   }, [userProfile]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    setUploading(true);
+  const handlePhotoUploaded = async (filePath: string) => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}.${fileExt}`;
-      const filePath = `admins/${fileName}`;
-
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('profilepictures')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Update profile with new photo path
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ profile_picture: filePath })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Get new signed URL
+      // Generate signed URL for the new photo
       const { data } = await supabase.storage
         .from('profilepictures')
         .createSignedUrl(filePath, 3600);
@@ -214,20 +195,8 @@ const UserProfilePage = () => {
         setProfilePhotoUrl(data.signedUrl);
         setCachedData('profile_photo', data.signedUrl);
       }
-
-      toast({
-        title: "Success",
-        description: "Profile picture updated successfully",
-      });
     } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload profile picture",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
+      console.error('Error generating signed URL:', error);
     }
   };
 
@@ -239,7 +208,7 @@ const UserProfilePage = () => {
   const handleSave = async () => {
     if (!user) return;
     
-    setUploading(true);
+    setSaving(true);
     try {
       const { error } = await supabase
         .from("profiles")
@@ -271,7 +240,7 @@ const UserProfilePage = () => {
         variant: "destructive",
       });
     } finally {
-      setUploading(false);
+      setSaving(false);
     }
   };
 
@@ -376,41 +345,17 @@ const UserProfilePage = () => {
         <div className="bg-card border border-border rounded-xl p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
             {/* Avatar */}
-            <div className="relative w-24 h-24 cursor-pointer group">
-              {photoLoading ? (
-                <div className="w-24 h-24 rounded-full ring-4 ring-border bg-muted flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-              ) : (
-                <img 
-                  src={profilePhotoUrl || `https://placehold.co/96x96/3B82F6/FFFFFF?text=${getInitials()}`}
-                  alt="User Avatar" 
-                  className="w-24 h-24 rounded-full ring-4 ring-border object-cover"
-                  onClick={() => editing ? document.getElementById('avatar-upload')?.click() : setShowPhotoModal(true)}
-                />
-              )}
-              <div className="absolute inset-0 bg-black bg-opacity-60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                {uploading ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-white" />
-                ) : editing ? (
-                  <>
-                    <Camera className="w-5 h-5 text-white mb-1" />
-                    <span className="text-xs font-semibold text-white">Change</span>
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-5 h-5 text-white mb-1" />
-                    <span className="text-xs font-semibold text-white">View</span>
-                  </>
-                )}
-              </div>
-              <input 
-                type="file" 
-                id="avatar-upload" 
-                className="hidden" 
-                accept="image/*"
-                onChange={handleFileUpload}
-                disabled={uploading}
+            <div className="w-36 h-36">
+              <ProfilePictureUpload
+                userId={user?.id || ''}
+                currentPhotoUrl={profilePhotoUrl}
+                onPhotoUploaded={handlePhotoUploaded}
+                userInitials={getInitials()}
+                previewMode="circle"
+                size="144px"
+                showOverlay={editing}
+                onViewPhoto={() => setShowPhotoModal(true)}
+                className="mx-auto"
               />
             </div>
             
@@ -445,10 +390,10 @@ const UserProfilePage = () => {
               <div className="flex-shrink-0 flex gap-3">
                 <button 
                   onClick={handleSave}
-                  disabled={uploading}
+                  disabled={saving}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
-                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save Changes
                 </button>
                 <button 
@@ -629,7 +574,7 @@ const UserProfilePage = () => {
                     <span className="text-muted-foreground">Region</span>
                     <span className="font-semibold text-foreground">{barangay.region}</span>
                   </div>
-                  <div className="flex justify-between items-center py-4 border-b border-border">
+                  <div className="flex justify-between items-center py-4">
                     <span className="text-muted-foreground">Country</span>
                     <span className="font-semibold text-foreground">{barangay.country}</span>
                   </div>
@@ -651,17 +596,20 @@ const UserProfilePage = () => {
               <div className="space-y-1">
                 <div className="flex justify-between items-center py-4 border-b border-border">
                   <p className="font-semibold text-foreground">Multi-Factor Authentication</p>
-                  <button className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-3 py-1 rounded text-sm font-semibold transition-colors">
+                  <button 
+                    onClick={() => setShowMFAModal(true)}
+                    className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-3 py-1 rounded text-sm font-semibold transition-colors"
+                  >
                     Manage
                   </button>
                 </div>
                 <div className="flex justify-between items-center py-4 border-b border-border">
                   <p className="font-semibold text-foreground">Active Sessions</p>
-                  <a href="#" className="text-primary hover:underline font-semibold">View Sessions</a>
+                  <Link to="/view-sessions" className="text-primary hover:underline font-semibold">View Sessions</Link>
                 </div>
                 <div className="flex justify-between items-center py-4">
                   <p className="font-semibold text-foreground">Activity Log</p>
-                  <a href="#" className="text-primary hover:underline font-semibold">View Log</a>
+                  <Link to="/activitylog" className="text-primary hover:underline font-semibold">View Log</Link>
                 </div>
               </div>
             </div>
@@ -672,20 +620,24 @@ const UserProfilePage = () => {
       {/* Photo Viewer Modal */}
       {showPhotoModal && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 transition-opacity"
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
           onClick={() => setShowPhotoModal(false)}
         >
-          <div className="relative">
+          <div className="relative max-w-4xl max-h-[90vh] p-4">
             <button 
-              onClick={() => setShowPhotoModal(false)}
-              className="absolute top-4 right-4 text-white text-2xl cursor-pointer hover:text-gray-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPhotoModal(false);
+              }}
+              className="absolute -top-2 -right-2 bg-background hover:bg-accent text-foreground rounded-full p-2 shadow-lg transition-colors z-10"
             >
-              ×
+              <X className="w-5 h-5" />
             </button>
             <img 
               src={profilePhotoUrl || `https://placehold.co/400x400/3B82F6/FFFFFF?text=${getInitials()}`}
               alt="Full size profile picture"
-              className="max-w-90vw max-h-80vh rounded-lg"
+              className="max-w-full max-h-[85vh] rounded-lg object-contain"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         </div>
@@ -770,6 +722,12 @@ const UserProfilePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* MFA Management Modal */}
+      <MFAManagementModal
+        open={showMFAModal}
+        onOpenChange={setShowMFAModal}
+      />
     </div>
   );
 };
