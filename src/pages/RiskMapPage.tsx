@@ -11,7 +11,9 @@ import { AddEvacuationRouteModal } from "@/components/emergency/AddEvacuationRou
 import { DisasterZoneDetailsModal } from "@/components/emergency/DisasterZoneDetailsModal";
 import { EvacuationCenterDetailsModal } from "@/components/emergency/EvacuationCenterDetailsModal";
 import { EvacuationRouteDetailsModal } from "@/components/emergency/EvacuationRouteDetailsModal";
-import { Eye } from "lucide-react";
+import { EmergencyRequestForm } from "@/components/emergency/EmergencyRequestForm";
+import { Eye, AlertCircle } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -62,6 +64,7 @@ const RiskMapPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [showCenterModal, setShowCenterModal] = useState(false);
   const [showRouteModal, setShowRouteModal] = useState(false);
+  const [showEmergencyForm, setShowEmergencyForm] = useState(false);
   const [tempLayer, setTempLayer] = useState<L.Layer | null>(null);
   const [tempCoordinates, setTempCoordinates] = useState<any>(null);
   
@@ -74,6 +77,9 @@ const RiskMapPage = () => {
   const [selectedRoute, setSelectedRoute] = useState<SafeRoute | null>(null);
   
   const { toast } = useToast();
+  const { userProfile } = useAuth();
+  
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'staff';
   
   // Layer groups
   const zonesLayerRef = useRef<L.FeatureGroup | null>(null);
@@ -828,16 +834,26 @@ const RiskMapPage = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-border">
-          <button 
-            onClick={toggleDrawing}
-            className={`w-full font-semibold py-3 rounded-lg transition ${
-              isDrawing 
-                ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' 
-                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-            }`}
-          >
-            {isDrawing ? 'Cancel Drawing' : '+ Add New Location'}
-          </button>
+          {isAdmin ? (
+            <button 
+              onClick={toggleDrawing}
+              className={`w-full font-semibold py-3 rounded-lg transition ${
+                isDrawing 
+                  ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' 
+                  : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+              }`}
+            >
+              {isDrawing ? 'Cancel Drawing' : '+ Add New Location'}
+            </button>
+          ) : (
+            <button 
+              onClick={() => setShowEmergencyForm(true)}
+              className="w-full font-semibold py-3 rounded-lg transition bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+            >
+              <AlertCircle className="h-5 w-5" />
+              🆘 Request Emergency Help
+            </button>
+          )}
         </div>
       </aside>
 
@@ -988,6 +1004,14 @@ const RiskMapPage = () => {
           }
         }}
       />
+
+      {userProfile && (
+        <EmergencyRequestForm
+          isOpen={showEmergencyForm}
+          onClose={() => setShowEmergencyForm(false)}
+          userProfile={userProfile}
+        />
+      )}
     </div>
   );
 };
