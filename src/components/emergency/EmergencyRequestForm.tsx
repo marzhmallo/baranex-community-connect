@@ -28,7 +28,7 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
-  const [selectedType, setSelectedType] = useState<string>("");
+  const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
   const [contactNumber, setContactNumber] = useState("");
   const [details, setDetails] = useState("");
   const [location, setLocation] = useState<{
@@ -89,13 +89,21 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
     );
   };
 
+  const toggleNeed = (need: string) => {
+    setSelectedNeeds(prev => 
+      prev.includes(need) 
+        ? prev.filter(n => n !== need)
+        : [...prev, need]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedType) {
+    if (selectedNeeds.length === 0) {
       toast({
-        title: "Select request type",
-        description: "Please select what kind of help you need.",
+        title: "Select needs",
+        description: "Please select at least one type of help you need.",
         variant: "destructive",
       });
       return;
@@ -127,7 +135,9 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
         .insert({
           resident_id: userProfile.id,
           brgyid: userProfile.brgyid,
-          request_type: selectedType,
+          request_type: selectedNeeds[0], // Primary need
+          needs: selectedNeeds, // All selected needs as jsonb array
+          contactno: contactNumber,
           details: details || null,
           latitude: location.latitude,
           longitude: location.longitude,
@@ -142,7 +152,7 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
       });
 
       // Reset form
-      setSelectedType("");
+      setSelectedNeeds([]);
       setContactNumber("");
       setDetails("");
       setLocation(null);
@@ -227,24 +237,51 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
             />
           </div>
 
-          {/* Request Type Selection */}
+          {/* Request Type Selection - Multiple Selection */}
           <div className="space-y-3">
-            <Label className="text-base font-semibold">What do you need? *</Label>
+            <Label className="text-base font-semibold">What do you need? * (Select multiple)</Label>
+            {selectedNeeds.length > 0 && (
+              <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg">
+                {selectedNeeds.map((need) => (
+                  <span
+                    key={need}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm"
+                  >
+                    {need}
+                    <button
+                      type="button"
+                      onClick={() => toggleNeed(need)}
+                      className="hover:bg-primary-foreground/20 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {requestTypes.map((type) => {
                 const Icon = type.icon;
+                const isSelected = selectedNeeds.includes(type.value);
                 return (
                   <button
                     key={type.value}
                     type="button"
-                    onClick={() => setSelectedType(type.value)}
+                    onClick={() => toggleNeed(type.value)}
                     className={cn(
-                      "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
-                      selectedType === type.value
+                      "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all relative",
+                      isSelected
                         ? "border-primary bg-primary/10 shadow-md"
                         : "border-border hover:border-primary/50 hover:bg-accent"
                     )}
                   >
+                    {isSelected && (
+                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
                     <div className={cn("p-3 rounded-full text-white", type.color)}>
                       <Icon className="h-6 w-6" />
                     </div>
@@ -285,7 +322,7 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
             <Button
               type="submit"
               className="flex-1 bg-red-600 hover:bg-red-700"
-              disabled={loading || !location || !selectedType || !contactNumber}
+              disabled={loading || !location || selectedNeeds.length === 0 || !contactNumber}
             >
               {loading ? (
                 <>
