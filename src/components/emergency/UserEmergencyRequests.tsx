@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Clock, MapPin, Phone, Flame, Droplets, Heart, Wrench, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, Clock, MapPin, X, Flame, Droplets, Heart, Wrench, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -30,7 +31,12 @@ const statusConfig = {
   'Responded': { color: 'bg-green-500', textColor: 'text-green-500', icon: '🟢' },
 };
 
-export const UserEmergencyRequests = () => {
+interface UserEmergencyRequestsProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const UserEmergencyRequests = ({ isOpen, onClose }: UserEmergencyRequestsProps) => {
   const [requests, setRequests] = useState<EmergencyRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -88,90 +94,101 @@ export const UserEmergencyRequests = () => {
     };
   };
 
-  if (loading) {
-    return (
-      <div className="w-80 h-full border-l bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded" />
-          <div className="h-32 bg-muted rounded" />
-          <div className="h-32 bg-muted rounded" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <aside className="w-80 h-full border-l bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex flex-col">
-      <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-primary" />
-          My Emergency Requests
-        </h2>
-        {requests.length > 0 && (
-          <p className="text-sm text-muted-foreground mt-1">
-            {requests.length} {requests.length === 1 ? 'request' : 'requests'}
-          </p>
-        )}
-      </div>
-
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-3">
-          {requests.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="pt-6 text-center">
-                <AlertCircle className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-                <p className="text-sm text-muted-foreground">
-                  No emergency requests yet
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            requests.map((request) => {
-              const Icon = requestTypeIcons[request.request_type] || AlertCircle;
-              const status = statusConfig[request.status as keyof typeof statusConfig] || statusConfig['Pending'];
-
-              return (
-                <Card key={request.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`p-2 rounded-lg ${status.color} bg-opacity-10`}>
-                          <Icon className={`h-4 w-4 ${status.textColor}`} />
-                        </div>
-                        <CardTitle className="text-sm font-medium">
-                          {request.request_type}
-                        </CardTitle>
-                      </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {status.icon} {request.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}</span>
-                    </div>
-                    {request.details && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {request.details}
-                      </p>
-                    )}
-                    {request.latitude && request.longitude && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
-                        <span className="truncate">
-                          {request.latitude.toFixed(6)}, {request.longitude.toFixed(6)}
-                        </span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })
+    <div 
+      className={`
+        fixed right-0 top-0 h-screen w-full md:w-[400px]
+        bg-background/95 backdrop-blur-lg shadow-2xl
+        border-l border-border
+        z-[999] flex flex-col
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+      `}
+    >
+      <div className="p-4 border-b flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-primary" />
+            My Emergency Requests
+          </h2>
+          {requests.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              {requests.length} {requests.length === 1 ? 'request' : 'requests'}
+            </p>
           )}
         </div>
-      </ScrollArea>
-    </aside>
+        <Button variant="ghost" size="icon" onClick={onClose}>
+          <X className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex-1 p-4">
+          <div className="animate-pulse space-y-4">
+            <div className="h-32 bg-muted rounded" />
+            <div className="h-32 bg-muted rounded" />
+            <div className="h-32 bg-muted rounded" />
+          </div>
+        </div>
+      ) : (
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-3">{requests.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="pt-6 text-center">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+                  <p className="text-sm text-muted-foreground">
+                    No emergency requests yet
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              requests.map((request) => {
+                const Icon = requestTypeIcons[request.request_type] || AlertCircle;
+                const status = statusConfig[request.status as keyof typeof statusConfig] || statusConfig['Pending'];
+
+                return (
+                  <Card key={request.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-2 rounded-lg ${status.color} bg-opacity-10`}>
+                            <Icon className={`h-4 w-4 ${status.textColor}`} />
+                          </div>
+                          <CardTitle className="text-sm font-medium">
+                            {request.request_type}
+                          </CardTitle>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {status.icon} {request.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}</span>
+                      </div>
+                      {request.details && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {request.details}
+                        </p>
+                      )}
+                      {request.latitude && request.longitude && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          <span className="truncate">
+                            {request.latitude.toFixed(6)}, {request.longitude.toFixed(6)}
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </ScrollArea>
+      )}
+    </div>
   );
 };

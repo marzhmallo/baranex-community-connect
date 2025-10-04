@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertCircle, Clock, MapPin, Phone, Search, Flame, Droplets, Heart, Wrench, Users } from 'lucide-react';
+import { AlertCircle, Clock, MapPin, Search, X, Flame, Droplets, Heart, Wrench, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
@@ -22,6 +22,8 @@ interface EmergencyRequest {
 
 interface EmergencyTriageFeedProps {
   brgyid: string;
+  isOpen: boolean;
+  onClose: () => void;
   onRequestClick: (requestId: string) => void;
 }
 
@@ -39,7 +41,7 @@ const statusConfig = {
   'Responded': { color: 'bg-green-500', textColor: 'text-green-500', icon: '🟢', badgeVariant: 'default' as const },
 };
 
-export const EmergencyTriageFeed = ({ brgyid, onRequestClick }: EmergencyTriageFeedProps) => {
+export const EmergencyTriageFeed = ({ brgyid, isOpen, onClose, onRequestClick }: EmergencyTriageFeedProps) => {
   const [requests, setRequests] = useState<EmergencyRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('All');
@@ -128,30 +130,31 @@ export const EmergencyTriageFeed = ({ brgyid, onRequestClick }: EmergencyTriageF
     'Responded': requests.filter(r => r.status === 'Responded').length,
   };
 
-  if (loading) {
-    return (
-      <div className="w-80 h-full border-l bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded" />
-          <div className="h-10 bg-muted rounded" />
-          <div className="h-32 bg-muted rounded" />
-          <div className="h-32 bg-muted rounded" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <aside className="w-80 h-full border-l bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex flex-col">
+    <div 
+      className={`
+        fixed right-0 top-0 h-screen w-full md:w-[400px]
+        bg-background/95 backdrop-blur-lg shadow-2xl
+        border-l border-border
+        z-[999] flex flex-col
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+      `}
+    >
       <div className="p-4 border-b space-y-3">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-destructive" />
-            Emergency Triage
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {filteredRequests.length} {filteredRequests.length === 1 ? 'request' : 'requests'}
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Emergency Triage
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {filteredRequests.length} {filteredRequests.length === 1 ? 'request' : 'requests'}
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
 
         <div className="relative">
@@ -182,7 +185,16 @@ export const EmergencyTriageFeed = ({ brgyid, onRequestClick }: EmergencyTriageF
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      {loading ? (
+        <div className="flex-1 p-4">
+          <div className="animate-pulse space-y-4">
+            <div className="h-32 bg-muted rounded" />
+            <div className="h-32 bg-muted rounded" />
+            <div className="h-32 bg-muted rounded" />
+          </div>
+        </div>
+      ) : (
+        <ScrollArea className="flex-1">
         <div className="p-4 space-y-3">
           {filteredRequests.length === 0 ? (
             <Card className="border-dashed">
@@ -254,6 +266,7 @@ export const EmergencyTriageFeed = ({ brgyid, onRequestClick }: EmergencyTriageF
           )}
         </div>
       </ScrollArea>
-    </aside>
+      )}
+    </div>
   );
 };

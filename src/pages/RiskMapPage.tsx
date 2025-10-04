@@ -15,6 +15,7 @@ import { EmergencyRequestForm } from "@/components/emergency/EmergencyRequestFor
 import { UserEmergencyRequests } from "@/components/emergency/UserEmergencyRequests";
 import { EmergencyTriageFeed } from "@/components/emergency/EmergencyTriageFeed";
 import { EmergencyRequestDetailsModal } from "@/components/emergency/EmergencyRequestDetailsModal";
+import { EmergencyFeedToggle } from "@/components/emergency/EmergencyFeedToggle";
 import { Eye, AlertCircle } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -93,6 +94,7 @@ const RiskMapPage = () => {
   const [selectedCenter, setSelectedCenter] = useState<EvacCenter | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<SafeRoute | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [isFeedOpen, setIsFeedOpen] = useState(false);
   
   const { toast } = useToast();
   const { userProfile } = useAuth();
@@ -1066,20 +1068,32 @@ const RiskMapPage = () => {
       {/* Map Container */}
       <main className="flex-1 relative">
         <div ref={mapRef} className="h-full w-full bg-muted relative z-10" />
-      </main>
-
-      {/* Right Sidebar - Emergency Requests Feed */}
-      {isAdmin ? (
-        <EmergencyTriageFeed
-          brgyid={userProfile?.brgyid || ''}
-          onRequestClick={(requestId) => {
-            setSelectedRequestId(requestId);
-            setShowRequestDetails(true);
-          }}
+        
+        {/* Floating Toggle Button */}
+        <EmergencyFeedToggle 
+          requestCount={emergencyRequests.length}
+          isOpen={isFeedOpen}
+          onToggle={() => setIsFeedOpen(!isFeedOpen)}
         />
-      ) : (
-        <UserEmergencyRequests />
-      )}
+        
+        {/* Floating Emergency Feed Panel */}
+        {isAdmin ? (
+          <EmergencyTriageFeed
+            brgyid={userProfile?.brgyid || ''}
+            isOpen={isFeedOpen}
+            onClose={() => setIsFeedOpen(false)}
+            onRequestClick={(requestId) => {
+              setSelectedRequestId(requestId);
+              setShowRequestDetails(true);
+            }}
+          />
+        ) : (
+          <UserEmergencyRequests 
+            isOpen={isFeedOpen}
+            onClose={() => setIsFeedOpen(false)}
+          />
+        )}
+      </main>
 
       {/* Modal */}
       {showModal && (
