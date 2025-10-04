@@ -722,6 +722,80 @@ export type Database = {
           },
         ]
       }
+      emergency_requests: {
+        Row: {
+          brgyid: string
+          contactno: string | null
+          created_at: string | null
+          details: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          needs: Json | null
+          request_type: string
+          resident_id: string
+          specificplace: string | null
+          status: string
+        }
+        Insert: {
+          brgyid: string
+          contactno?: string | null
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          needs?: Json | null
+          request_type: string
+          resident_id: string
+          specificplace?: string | null
+          status?: string
+        }
+        Update: {
+          brgyid?: string
+          contactno?: string | null
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          needs?: Json | null
+          request_type?: string
+          resident_id?: string
+          specificplace?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_requests_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_requests_brgyid_fkey"
+            columns: ["brgyid"]
+            isOneToOne: false
+            referencedRelation: "public_barangays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_requests_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_requests_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evacuation_centers: {
         Row: {
           address: string

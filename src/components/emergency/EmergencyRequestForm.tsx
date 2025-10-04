@@ -30,6 +30,7 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
   const [gettingLocation, setGettingLocation] = useState(false);
   const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
   const [contactNumber, setContactNumber] = useState("");
+  const [specificPlace, setSpecificPlace] = useState("");
   const [details, setDetails] = useState("");
   const [location, setLocation] = useState<{
     latitude: number;
@@ -127,6 +128,34 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
       return;
     }
 
+    if (!specificPlace.trim()) {
+      toast({
+        title: "Specific place required",
+        description: "Please provide a specific place or landmark.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Input validation
+    if (contactNumber.trim().length < 7 || contactNumber.trim().length > 15) {
+      toast({
+        title: "Invalid contact number",
+        description: "Contact number must be between 7-15 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (specificPlace.trim().length > 200) {
+      toast({
+        title: "Specific place too long",
+        description: "Please keep the location description under 200 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -137,8 +166,9 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
           brgyid: userProfile.brgyid,
           request_type: selectedNeeds[0], // Primary need
           needs: selectedNeeds, // All selected needs as jsonb array
-          contactno: contactNumber,
-          details: details || null,
+          contactno: contactNumber.trim(),
+          specificplace: specificPlace.trim() || null,
+          details: details.trim() || null,
           latitude: location.latitude,
           longitude: location.longitude,
           status: "Pending",
@@ -154,6 +184,7 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
       // Reset form
       setSelectedNeeds([]);
       setContactNumber("");
+      setSpecificPlace("");
       setDetails("");
       setLocation(null);
       onClose();
@@ -233,8 +264,26 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
               placeholder="e.g., 09171234567"
               value={contactNumber}
               onChange={(e) => setContactNumber(e.target.value)}
+              maxLength={15}
               required
             />
+          </div>
+
+          {/* Specific Place/Landmark */}
+          <div className="space-y-2">
+            <Label htmlFor="specificPlace">Specific Place or Landmark *</Label>
+            <Input
+              id="specificPlace"
+              type="text"
+              placeholder="e.g., Near City Hall, Beside ABC Store, Green House"
+              value={specificPlace}
+              onChange={(e) => setSpecificPlace(e.target.value)}
+              maxLength={200}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Help responders find you faster by providing a nearby landmark or specific location description
+            </p>
           </div>
 
           {/* Request Type Selection - Multiple Selection */}
@@ -322,7 +371,7 @@ export const EmergencyRequestForm = ({ isOpen, onClose, userProfile }: Emergency
             <Button
               type="submit"
               className="flex-1 bg-red-600 hover:bg-red-700"
-              disabled={loading || !location || selectedNeeds.length === 0 || !contactNumber}
+              disabled={loading || !location || selectedNeeds.length === 0 || !contactNumber || !specificPlace}
             >
               {loading ? (
                 <>
