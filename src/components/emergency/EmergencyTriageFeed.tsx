@@ -133,9 +133,9 @@ export const EmergencyTriageFeed = ({ brgyid, isOpen, onClose, onRequestClick }:
   return (
     <div 
       className={`
-        fixed right-0 top-0 h-screen w-full md:w-[400px]
+        fixed right-4 top-20 h-[45vh] w-full md:w-[380px]
         bg-background/95 backdrop-blur-lg shadow-2xl
-        border-l border-border
+        border border-border rounded-lg
         z-[999] flex flex-col
         transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : 'translate-x-full'}
