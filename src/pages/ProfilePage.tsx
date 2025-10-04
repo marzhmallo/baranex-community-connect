@@ -573,7 +573,7 @@ const ProfilePage = () => {
                     <span className="text-muted-foreground">Region</span>
                     <span className="font-semibold text-foreground">{barangay.region}</span>
                   </div>
-                  <div className="flex justify-between items-center py-4 border-b border-border">
+                  <div className="flex justify-between items-center py-4">
                     <span className="text-muted-foreground">Country</span>
                     <span className="font-semibold text-foreground">{barangay.country}</span>
                   </div>
